@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "curve_id": "01936c00-0000-7000-8000-000000000001",
+  "curve_version_id": "01936c00-0000-7000-8000-000000000002",
+  "code": "progression.default",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "description": "Đường cong XP mặc định Release 1.0 [Proposed] — hiệu chỉnh bằng dữ liệu pilot.",
+  "max_level": 60,
+  "formula": { "kind": "power_linear", "base": 100, "exponent": 1.35, "linear": 20 },
+  "level_overrides": [
+    { "level": 1, "xp_to_next": 120 }
+  ],
+  "titles": [
+    { "code": "beginner", "from_level": 1, "name": { "vi": "Tân binh", "en": "Beginner" } },
+    { "code": "explorer", "from_level": 10, "name": { "vi": "Nhà thám hiểm", "en": "Explorer" } },
+    { "code": "adventurer", "from_level": 20, "name": { "vi": "Người phiêu lưu", "en": "Adventurer" } },
+    { "code": "champion", "from_level": 35, "name": { "vi": "Nhà vô địch", "en": "Champion" } },
+    { "code": "master", "from_level": 50, "name": { "vi": "Bậc thầy", "en": "Master" } }
+  ],
+  "level_rewards": [
+    { "level": 2, "rewards": [ { "type": "item", "item_id": "emote_dance" } ] },
+    { "level": 5, "rewards": [ { "type": "currency", "currency_code": "xu", "amount": 100 }, { "type": "item", "item_id": "frame_bronze_leaf" } ] },
+    { "level": 10, "rewards": [ { "type": "title", "title_code": "explorer" }, { "type": "item", "item_id": "pet_owl_baby" } ] }
+  ],
+  "level_floor_protection": true
+}

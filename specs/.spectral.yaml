@@ -1,0 +1,39 @@
+# Spectral ruleset cho mọi file OpenAPI trong specs/ (public gộp, public theo service, internal, SIS contract).
+# Chạy: npx @stoplight/spectral-cli@6.11.1 lint -r specs/.spectral.yaml "specs/openapi/**/*.v1.yaml" specs/sis/*.yaml
+# (file thư viện specs/openapi/services/common/* không lint độc lập — được kiểm tra qua file tham chiếu nó).
+extends:
+  - spectral:oas
+functionsDir: ./spectral-functions
+functions:
+  - stringMaxLength
+rules:
+  # ADR-0041 — mọi string phải có maxLength (đồng bộ với scripts/specs/check-maxlength.mjs).
+  string-must-have-maxlength:
+    description: Schema kiểu string phải có maxLength (trừ enum/const/format uuid|date|date-time|time|duration|binary|byte).
+    message: '{{error}}'
+    severity: error
+    given: "$..[?(@ && @.type)]"
+    then:
+      function: stringMaxLength
+  # ADR-0036 — operation của spec public (gộp và theo service) phải khai báo service sở hữu; bật qua overrides.
+  operation-must-declare-service:
+    description: Operation trong spec public phải có x-service (ADR-0036).
+    severity: "off"
+    formats: [oas3_1]
+    given: "$.paths[*][get,put,post,patch,delete]"
+    then:
+      field: x-service
+      function: truthy
+  # Nới các rule chỉ mang tính trình bày (đã có summary + description ở mức tài liệu).
+  operation-description: off
+  info-contact: off
+overrides:
+  - files:
+      - "openapi/eduworld-api.v1.yaml"
+      - "openapi/services/identity.v1.yaml"
+      - "openapi/services/learning.v1.yaml"
+      - "openapi/services/game.v1.yaml"
+      - "openapi/services/competition.v1.yaml"
+      - "openapi/services/chat.v1.yaml"
+    rules:
+      operation-must-declare-service: error

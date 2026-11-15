@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "activity_id": "01936a10-0000-7000-8000-000000000101",
+  "activity_version_id": "01936a10-0000-7000-8000-000000000102",
+  "version": 1,
+  "activity_type": "video_lesson",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "title": {
+    "vi": "Vòng tuần hoàn của nước",
+    "en": "The water cycle"
+  },
+  "description": {
+    "vi": "Video 6 phút về bay hơi, ngưng tụ, mưa, có 3 câu hỏi chèn."
+  },
+  "grade_levels": [
+    4
+  ],
+  "subject_id": "01936a10-0000-7000-8000-000000000201",
+  "topic_id": "01936a10-0000-7000-8000-000000000202",
+  "objective_ids": [
+    "01936a10-0000-7000-8000-000000000203"
+  ],
+  "difficulty": 2,
+  "instructions": {
+    "vi": "Xem video và trả lời câu hỏi khi video dừng lại."
+  },
+  "evaluation": {
+    "strategies": [
+      "completion",
+      "auto"
+    ],
+    "max_score": 30,
+    "pass_threshold": 0.6
+  },
+  "feedback": {
+    "timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": true
+  },
+  "completion_rule": {
+    "mode": "min_watched_ratio",
+    "min_watched_ratio": 0.9,
+    "require_required_cues": true
+  },
+  "media_refs": [
+    "01936a10-0000-7000-8000-000000000301",
+    "01936a10-0000-7000-8000-000000000302"
+  ],
+  "status": "published",
+  "content": {
+    "video_asset_id": "01936a10-0000-7000-8000-000000000301",
+    "duration_ms": 362000,
+    "chapters": [
+      {
+        "chapter_id": "bay-hoi",
+        "title": {
+          "vi": "Bay hơi"
+        },
+        "start_ms": 0,
+        "end_ms": 120000
+      },
+      {
+        "chapter_id": "ngung-tu",
+        "title": {
+          "vi": "Ngưng tụ"
+        },
+        "start_ms": 120000,
+        "end_ms": 240000
+      },
+      {
+        "chapter_id": "mua",
+        "title": {
+          "vi": "Mưa và dòng chảy"
+        },
+        "start_ms": 240000,
+        "end_ms": 362000
+      }
+    ],
+    "subtitles": [
+      {
+        "language": "vi",
+        "subtitle_asset_id": "01936a10-0000-7000-8000-000000000302",
+        "is_default": true
+      }
+    ],
+    "embedded_questions": [
+      {
+        "cue_id": "q1",
+        "at_ms": 90000,
+        "question_version_id": "01936a10-0000-7000-8000-000000000401",
+        "pause": true,
+        "required": true,
+        "allow_skip_after_wrong": true
+      },
+      {
+        "cue_id": "q2",
+        "at_ms": 210000,
+        "question_version_id": "01936a10-0000-7000-8000-000000000402",
+        "pause": true,
+        "required": true,
+        "allow_skip_after_wrong": true
+      },
+      {
+        "cue_id": "q3",
+        "at_ms": 350000,
+        "question_version_id": "01936a10-0000-7000-8000-000000000403",
+        "pause": true,
+        "required": false,
+        "allow_skip_after_wrong": true
+      }
+    ]
+  },
+  "interaction": {
+    "allow_seek": "watched_only",
+    "playback_rates": [
+      0.75,
+      1,
+      1.25
+    ],
+    "allow_subtitles_toggle": true,
+    "autoplay_next_chapter": true
+  },
+  "content_language": "vi"
+}

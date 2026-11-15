@@ -1,0 +1,27 @@
+{
+  "name": "eduworld-spec-tooling",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tooling cho specs/ và docs/ (tách OpenAPI theo service, kiểm tra maxLength, Mermaid, link, ma trận truy vết). Chạy: npm ci --prefix scripts",
+  "type": "module",
+  "scripts": {
+    "openapi:split": "node openapi/split-public.mjs",
+    "specs:check-maxlength": "node specs/check-maxlength.mjs",
+    "specs:validate-schemas": "node specs/validate-schemas.mjs",
+    "specs:validate-reference-data": "node specs/validate-reference-data.mjs",
+    "specs:check-problem-codes": "node specs/check-problem-codes.mjs",
+    "openapi:sync-platform-ops": "node openapi/sync-platform-ops.mjs",
+    "docs:check-mermaid": "node docs/check-mermaid.mjs",
+    "docs:check-links": "node docs/check-links.mjs",
+    "docs:build-rtm": "node docs/build-rtm.mjs",
+    "docs:check-rtm": "node docs/build-rtm.mjs --check",
+    "docs:check": "node docs/check-mermaid.mjs && node docs/check-links.mjs && node docs/build-rtm.mjs --check"
+  },
+  "devDependencies": {
+    "js-yaml": "4.1.0",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "mermaid": "11.4.1",
+    "jsdom": "25.0.1"
+  }
+}

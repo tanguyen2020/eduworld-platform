@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:shop-item:1",
+  "title": "ShopItemVersion",
+  "description": "Mặt hàng trong Shop (game-service). Chỉ cosmetic, giá bằng tiền trong game (Xu), vật phẩm xác định — không mua bằng tiền thật, không hộp ngẫu nhiên (ADR-0049). Xem docs/01-game-design/INVENTORY_ECONOMY.md §5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "shop_item_id", "shop_item_version_id", "version", "status", "owner_scope", "item_id", "item_kind", "price", "purchase_limit"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "shop_item_id": { "$ref": "#/$defs/uuid" },
+    "shop_item_version_id": { "$ref": "#/$defs/uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "in_review", "approved", "published", "archived", "rejected"] },
+    "owner_scope": { "const": "platform" },
+    "tenant_id": { "type": "null" },
+    "item_id": { "type": "string", "maxLength": 64 },
+    "item_kind": { "enum": ["outfit", "hair", "accessory", "emote", "pet", "title", "frame", "decoration", "consumable_cosmetic"], "description": "Không có loại tăng sức mạnh, tăng XP hay bỏ qua bài học" },
+    "price": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency_code", "amount"],
+      "properties": {
+        "currency_code": { "const": "xu", "description": "Chỉ tiền trong game; loại tiền khác chờ OQ-14" },
+        "amount": { "type": "integer", "minimum": 1, "maximum": 100000 }
+      }
+    },
+    "purchase_limit": { "type": "integer", "minimum": 1, "maximum": 999, "description": "Số lần mua tối đa mỗi học sinh" },
+    "available_from": { "type": "string", "format": "date-time" },
+    "available_to": { "type": "string", "format": "date-time" },
+    "grade_levels": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
+    "featured_order": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "returns_in_season_code": { "type": "string", "maxLength": 64, "description": "Vật phẩm sự kiện quay lại ở mùa này (tránh FOMO)" }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "maxLength": 64, "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
+  }
+}

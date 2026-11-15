@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/reference/province.schema.json",
+  "title": "Danh mục tỉnh/thành cấp 1 theo quốc gia (ADR-0060)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset", "schema_version", "country_code", "source", "items"],
+  "properties": {
+    "dataset": { "type": "string", "const": "provinces" },
+    "schema_version": { "type": "integer", "const": 1 },
+    "country_code": { "type": "string", "pattern": "^[A-Z]{2}$", "maxLength": 2 },
+    "source": { "type": "string", "maxLength": 255 },
+    "verification": { "type": "string", "maxLength": 500 },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": { "$ref": "#/$defs/province" }
+    }
+  },
+  "$defs": {
+    "localizedName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": {
+        "vi": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "en": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "province": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "country_code", "official_code", "name", "short_name", "type", "effective_from", "effective_to", "status"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(\\.old)?\\.[a-z0-9-]+$",
+          "maxLength": 64,
+          "description": "Mã nội bộ ổn định của EduWorld (không phải mã hành chính chính thức)"
+        },
+        "country_code": { "type": "string", "pattern": "^[A-Z]{2}$", "maxLength": 2 },
+        "official_code": {
+          "type": ["string", "null"],
+          "maxLength": 16,
+          "description": "Mã đơn vị hành chính chính thức — TBD, nhập từ danh mục của cơ quan nhà nước"
+        },
+        "name": { "$ref": "#/$defs/localizedName" },
+        "short_name": { "$ref": "#/$defs/localizedName" },
+        "type": { "type": "string", "enum": ["municipality", "province"] },
+        "effective_from": { "type": ["string", "null"], "format": "date" },
+        "effective_to": { "type": ["string", "null"], "format": "date" },
+        "status": { "type": "string", "enum": ["active", "inactive"] }
+      }
+    }
+  }
+}

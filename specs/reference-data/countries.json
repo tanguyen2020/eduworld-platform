@@ -1,0 +1,44 @@
+{
+  "dataset": "countries",
+  "schema_version": 1,
+  "source": "ISO 3166-1 alpha-2",
+  "verification": "Chỉ VN được bật trong Release 1.0; các quốc gia khác là mẫu để mở rộng",
+  "items": [
+    {
+      "country_code": "VN",
+      "name": {
+        "vi": "Việt Nam",
+        "en": "Viet Nam"
+      },
+      "default_locale": "vi-VN",
+      "status": "active"
+    },
+    {
+      "country_code": "LA",
+      "name": {
+        "vi": "Lào",
+        "en": "Lao PDR"
+      },
+      "default_locale": "en-US",
+      "status": "inactive"
+    },
+    {
+      "country_code": "KH",
+      "name": {
+        "vi": "Campuchia",
+        "en": "Cambodia"
+      },
+      "default_locale": "en-US",
+      "status": "inactive"
+    },
+    {
+      "country_code": "TH",
+      "name": {
+        "vi": "Thái Lan",
+        "en": "Thailand"
+      },
+      "default_locale": "en-US",
+      "status": "inactive"
+    }
+  ]
+}

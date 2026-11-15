@@ -1,0 +1,387 @@
+{
+  "dataset": "province_successions",
+  "schema_version": 1,
+  "country_code": "VN",
+  "source": "Nghị quyết 202/2025/QH15 về sắp xếp đơn vị hành chính cấp tỉnh (hiệu lực 01/7/2025)",
+  "verification": "TBD — đối chiếu tên, loại và mã đơn vị hành chính với văn bản chính thức trước khi seed production; official_code để null cho tới khi có danh mục chính thức",
+  "items": [
+    {
+      "old_code": "vn.old.ha-noi",
+      "new_code": "vn.ha-noi",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.hue",
+      "new_code": "vn.hue",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.hai-duong",
+      "new_code": "vn.hai-phong",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.hai-phong",
+      "new_code": "vn.hai-phong",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.quang-nam",
+      "new_code": "vn.da-nang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.da-nang",
+      "new_code": "vn.da-nang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ba-ria-vung-tau",
+      "new_code": "vn.thanh-pho-ho-chi-minh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.binh-duong",
+      "new_code": "vn.thanh-pho-ho-chi-minh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.thanh-pho-ho-chi-minh",
+      "new_code": "vn.thanh-pho-ho-chi-minh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.soc-trang",
+      "new_code": "vn.can-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.hau-giang",
+      "new_code": "vn.can-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.can-tho",
+      "new_code": "vn.can-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.lai-chau",
+      "new_code": "vn.lai-chau",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.dien-bien",
+      "new_code": "vn.dien-bien",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.son-la",
+      "new_code": "vn.son-la",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.lang-son",
+      "new_code": "vn.lang-son",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.quang-ninh",
+      "new_code": "vn.quang-ninh",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.thanh-hoa",
+      "new_code": "vn.thanh-hoa",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.nghe-an",
+      "new_code": "vn.nghe-an",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.ha-tinh",
+      "new_code": "vn.ha-tinh",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.cao-bang",
+      "new_code": "vn.cao-bang",
+      "effective_date": "2025-07-01",
+      "kind": "unchanged"
+    },
+    {
+      "old_code": "vn.old.ha-giang",
+      "new_code": "vn.tuyen-quang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.tuyen-quang",
+      "new_code": "vn.tuyen-quang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.yen-bai",
+      "new_code": "vn.lao-cai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.lao-cai",
+      "new_code": "vn.lao-cai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.bac-kan",
+      "new_code": "vn.thai-nguyen",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.thai-nguyen",
+      "new_code": "vn.thai-nguyen",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.vinh-phuc",
+      "new_code": "vn.phu-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.phu-tho",
+      "new_code": "vn.phu-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.hoa-binh",
+      "new_code": "vn.phu-tho",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.bac-giang",
+      "new_code": "vn.bac-ninh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.bac-ninh",
+      "new_code": "vn.bac-ninh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.thai-binh",
+      "new_code": "vn.hung-yen",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.hung-yen",
+      "new_code": "vn.hung-yen",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ha-nam",
+      "new_code": "vn.ninh-binh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.nam-dinh",
+      "new_code": "vn.ninh-binh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ninh-binh",
+      "new_code": "vn.ninh-binh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.quang-binh",
+      "new_code": "vn.quang-tri",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.quang-tri",
+      "new_code": "vn.quang-tri",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.kon-tum",
+      "new_code": "vn.quang-ngai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.quang-ngai",
+      "new_code": "vn.quang-ngai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.gia-lai",
+      "new_code": "vn.gia-lai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.binh-dinh",
+      "new_code": "vn.gia-lai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ninh-thuan",
+      "new_code": "vn.khanh-hoa",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.khanh-hoa",
+      "new_code": "vn.khanh-hoa",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.dak-nong",
+      "new_code": "vn.lam-dong",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.binh-thuan",
+      "new_code": "vn.lam-dong",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.lam-dong",
+      "new_code": "vn.lam-dong",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.phu-yen",
+      "new_code": "vn.dak-lak",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.dak-lak",
+      "new_code": "vn.dak-lak",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.binh-phuoc",
+      "new_code": "vn.dong-nai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.dong-nai",
+      "new_code": "vn.dong-nai",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.long-an",
+      "new_code": "vn.tay-ninh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.tay-ninh",
+      "new_code": "vn.tay-ninh",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ben-tre",
+      "new_code": "vn.vinh-long",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.tra-vinh",
+      "new_code": "vn.vinh-long",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.vinh-long",
+      "new_code": "vn.vinh-long",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.tien-giang",
+      "new_code": "vn.dong-thap",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.dong-thap",
+      "new_code": "vn.dong-thap",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.bac-lieu",
+      "new_code": "vn.ca-mau",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.ca-mau",
+      "new_code": "vn.ca-mau",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.kien-giang",
+      "new_code": "vn.an-giang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    },
+    {
+      "old_code": "vn.old.an-giang",
+      "new_code": "vn.an-giang",
+      "effective_date": "2025-07-01",
+      "kind": "merged"
+    }
+  ]
+}

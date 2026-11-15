@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user_role.changed.v1.schema.json",
+  "title": "Payload user_role.changed v1 (identity-service, ADR-0066)",
+  "description": "Gán/thu hồi/hết hạn/sửa một UserRole. Consumer: audit, vô hiệu cache Principal và menu portal, đồng bộ membership Keycloak Organization + realm role tenant_staff/platform_staff. Thay role_assignment.changed. Không PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_role_id", "user_id", "role_id", "role_code", "tenant_id", "scope_type", "scope_id", "source", "op"],
+  "properties": {
+    "user_role_id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string", "format": "uuid" },
+    "role_id": { "type": "string", "format": "uuid" },
+    "role_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null khi scope_type = platform" },
+    "scope_type": { "type": "string", "enum": ["platform", "tenant", "school", "class", "subject"] },
+    "scope_id": { "type": ["string", "null"], "format": "uuid" },
+    "source": { "type": "string", "enum": ["sis", "manual"] },
+    "op": { "type": "string", "enum": ["granted", "revoked", "expired", "updated"] },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_to": { "type": ["string", "null"], "format": "date-time" },
+    "actor_id": { "type": ["string", "null"], "format": "uuid", "description": "null khi do đồng bộ SIS hoặc job hết hạn" }
+  }
+}

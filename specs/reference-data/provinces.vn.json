@@ -1,0 +1,1658 @@
+{
+  "dataset": "provinces",
+  "schema_version": 1,
+  "country_code": "VN",
+  "source": "Nghị quyết 202/2025/QH15 về sắp xếp đơn vị hành chính cấp tỉnh (hiệu lực 01/7/2025)",
+  "verification": "TBD — đối chiếu tên, loại và mã đơn vị hành chính với văn bản chính thức trước khi seed production; official_code để null cho tới khi có danh mục chính thức",
+  "items": [
+    {
+      "code": "vn.ha-noi",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hà Nội",
+        "en": "Ha Noi City"
+      },
+      "short_name": {
+        "vi": "Hà Nội",
+        "en": "Ha Noi"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.hue",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Huế",
+        "en": "Hue City"
+      },
+      "short_name": {
+        "vi": "Huế",
+        "en": "Hue"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.hai-phong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hải Phòng",
+        "en": "Hai Phong City"
+      },
+      "short_name": {
+        "vi": "Hải Phòng",
+        "en": "Hai Phong"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.da-nang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Đà Nẵng",
+        "en": "Da Nang City"
+      },
+      "short_name": {
+        "vi": "Đà Nẵng",
+        "en": "Da Nang"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.thanh-pho-ho-chi-minh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hồ Chí Minh",
+        "en": "Ho Chi Minh City"
+      },
+      "short_name": {
+        "vi": "Thành phố Hồ Chí Minh",
+        "en": "Thanh pho Ho Chi Minh"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.can-tho",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Cần Thơ",
+        "en": "Can Tho City"
+      },
+      "short_name": {
+        "vi": "Cần Thơ",
+        "en": "Can Tho"
+      },
+      "type": "municipality",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.lai-chau",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lai Châu",
+        "en": "Lai Chau Province"
+      },
+      "short_name": {
+        "vi": "Lai Châu",
+        "en": "Lai Chau"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.dien-bien",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Điện Biên",
+        "en": "Dien Bien Province"
+      },
+      "short_name": {
+        "vi": "Điện Biên",
+        "en": "Dien Bien"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.son-la",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Sơn La",
+        "en": "Son La Province"
+      },
+      "short_name": {
+        "vi": "Sơn La",
+        "en": "Son La"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.lang-son",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lạng Sơn",
+        "en": "Lang Son Province"
+      },
+      "short_name": {
+        "vi": "Lạng Sơn",
+        "en": "Lang Son"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.quang-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Ninh",
+        "en": "Quang Ninh Province"
+      },
+      "short_name": {
+        "vi": "Quảng Ninh",
+        "en": "Quang Ninh"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.thanh-hoa",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Thanh Hóa",
+        "en": "Thanh Hoa Province"
+      },
+      "short_name": {
+        "vi": "Thanh Hóa",
+        "en": "Thanh Hoa"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.nghe-an",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Nghệ An",
+        "en": "Nghe An Province"
+      },
+      "short_name": {
+        "vi": "Nghệ An",
+        "en": "Nghe An"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.ha-tinh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hà Tĩnh",
+        "en": "Ha Tinh Province"
+      },
+      "short_name": {
+        "vi": "Hà Tĩnh",
+        "en": "Ha Tinh"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.cao-bang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Cao Bằng",
+        "en": "Cao Bang Province"
+      },
+      "short_name": {
+        "vi": "Cao Bằng",
+        "en": "Cao Bang"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.tuyen-quang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Tuyên Quang",
+        "en": "Tuyen Quang Province"
+      },
+      "short_name": {
+        "vi": "Tuyên Quang",
+        "en": "Tuyen Quang"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.lao-cai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lào Cai",
+        "en": "Lao Cai Province"
+      },
+      "short_name": {
+        "vi": "Lào Cai",
+        "en": "Lao Cai"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.thai-nguyen",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Thái Nguyên",
+        "en": "Thai Nguyen Province"
+      },
+      "short_name": {
+        "vi": "Thái Nguyên",
+        "en": "Thai Nguyen"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.phu-tho",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Phú Thọ",
+        "en": "Phu Tho Province"
+      },
+      "short_name": {
+        "vi": "Phú Thọ",
+        "en": "Phu Tho"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.bac-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bắc Ninh",
+        "en": "Bac Ninh Province"
+      },
+      "short_name": {
+        "vi": "Bắc Ninh",
+        "en": "Bac Ninh"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.hung-yen",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hưng Yên",
+        "en": "Hung Yen Province"
+      },
+      "short_name": {
+        "vi": "Hưng Yên",
+        "en": "Hung Yen"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.ninh-binh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Ninh Bình",
+        "en": "Ninh Binh Province"
+      },
+      "short_name": {
+        "vi": "Ninh Bình",
+        "en": "Ninh Binh"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.quang-tri",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Trị",
+        "en": "Quang Tri Province"
+      },
+      "short_name": {
+        "vi": "Quảng Trị",
+        "en": "Quang Tri"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.quang-ngai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Ngãi",
+        "en": "Quang Ngai Province"
+      },
+      "short_name": {
+        "vi": "Quảng Ngãi",
+        "en": "Quang Ngai"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.gia-lai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Gia Lai",
+        "en": "Gia Lai Province"
+      },
+      "short_name": {
+        "vi": "Gia Lai",
+        "en": "Gia Lai"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.khanh-hoa",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Khánh Hòa",
+        "en": "Khanh Hoa Province"
+      },
+      "short_name": {
+        "vi": "Khánh Hòa",
+        "en": "Khanh Hoa"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.lam-dong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lâm Đồng",
+        "en": "Lam Dong Province"
+      },
+      "short_name": {
+        "vi": "Lâm Đồng",
+        "en": "Lam Dong"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.dak-lak",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đắk Lắk",
+        "en": "Dak Lak Province"
+      },
+      "short_name": {
+        "vi": "Đắk Lắk",
+        "en": "Dak Lak"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.dong-nai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đồng Nai",
+        "en": "Dong Nai Province"
+      },
+      "short_name": {
+        "vi": "Đồng Nai",
+        "en": "Dong Nai"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.tay-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Tây Ninh",
+        "en": "Tay Ninh Province"
+      },
+      "short_name": {
+        "vi": "Tây Ninh",
+        "en": "Tay Ninh"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.vinh-long",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Vĩnh Long",
+        "en": "Vinh Long Province"
+      },
+      "short_name": {
+        "vi": "Vĩnh Long",
+        "en": "Vinh Long"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.dong-thap",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đồng Tháp",
+        "en": "Dong Thap Province"
+      },
+      "short_name": {
+        "vi": "Đồng Tháp",
+        "en": "Dong Thap"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.ca-mau",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Cà Mau",
+        "en": "Ca Mau Province"
+      },
+      "short_name": {
+        "vi": "Cà Mau",
+        "en": "Ca Mau"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.an-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh An Giang",
+        "en": "An Giang Province"
+      },
+      "short_name": {
+        "vi": "An Giang",
+        "en": "An Giang"
+      },
+      "type": "province",
+      "effective_from": "2025-07-01",
+      "effective_to": null,
+      "status": "active"
+    },
+    {
+      "code": "vn.old.ha-noi",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hà Nội",
+        "en": "Ha Noi City"
+      },
+      "short_name": {
+        "vi": "Hà Nội",
+        "en": "Ha Noi"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hue",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Huế",
+        "en": "Hue City"
+      },
+      "short_name": {
+        "vi": "Huế",
+        "en": "Hue"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hai-duong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hải Dương",
+        "en": "Hai Duong Province"
+      },
+      "short_name": {
+        "vi": "Hải Dương",
+        "en": "Hai Duong"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hai-phong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hải Phòng",
+        "en": "Hai Phong City"
+      },
+      "short_name": {
+        "vi": "Hải Phòng",
+        "en": "Hai Phong"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.quang-nam",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Nam",
+        "en": "Quang Nam Province"
+      },
+      "short_name": {
+        "vi": "Quảng Nam",
+        "en": "Quang Nam"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.da-nang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Đà Nẵng",
+        "en": "Da Nang City"
+      },
+      "short_name": {
+        "vi": "Đà Nẵng",
+        "en": "Da Nang"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ba-ria-vung-tau",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bà Rịa – Vũng Tàu",
+        "en": "Ba Ria - Vung Tau Province"
+      },
+      "short_name": {
+        "vi": "Bà Rịa – Vũng Tàu",
+        "en": "Ba Ria - Vung Tau"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.binh-duong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bình Dương",
+        "en": "Binh Duong Province"
+      },
+      "short_name": {
+        "vi": "Bình Dương",
+        "en": "Binh Duong"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.thanh-pho-ho-chi-minh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Hồ Chí Minh",
+        "en": "Ho Chi Minh City"
+      },
+      "short_name": {
+        "vi": "Thành phố Hồ Chí Minh",
+        "en": "Thanh pho Ho Chi Minh"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.soc-trang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Sóc Trăng",
+        "en": "Soc Trang Province"
+      },
+      "short_name": {
+        "vi": "Sóc Trăng",
+        "en": "Soc Trang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hau-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hậu Giang",
+        "en": "Hau Giang Province"
+      },
+      "short_name": {
+        "vi": "Hậu Giang",
+        "en": "Hau Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.can-tho",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Thành phố Cần Thơ",
+        "en": "Can Tho City"
+      },
+      "short_name": {
+        "vi": "Cần Thơ",
+        "en": "Can Tho"
+      },
+      "type": "municipality",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.lai-chau",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lai Châu",
+        "en": "Lai Chau Province"
+      },
+      "short_name": {
+        "vi": "Lai Châu",
+        "en": "Lai Chau"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.dien-bien",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Điện Biên",
+        "en": "Dien Bien Province"
+      },
+      "short_name": {
+        "vi": "Điện Biên",
+        "en": "Dien Bien"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.son-la",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Sơn La",
+        "en": "Son La Province"
+      },
+      "short_name": {
+        "vi": "Sơn La",
+        "en": "Son La"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.lang-son",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lạng Sơn",
+        "en": "Lang Son Province"
+      },
+      "short_name": {
+        "vi": "Lạng Sơn",
+        "en": "Lang Son"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.quang-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Ninh",
+        "en": "Quang Ninh Province"
+      },
+      "short_name": {
+        "vi": "Quảng Ninh",
+        "en": "Quang Ninh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.thanh-hoa",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Thanh Hóa",
+        "en": "Thanh Hoa Province"
+      },
+      "short_name": {
+        "vi": "Thanh Hóa",
+        "en": "Thanh Hoa"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.nghe-an",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Nghệ An",
+        "en": "Nghe An Province"
+      },
+      "short_name": {
+        "vi": "Nghệ An",
+        "en": "Nghe An"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ha-tinh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hà Tĩnh",
+        "en": "Ha Tinh Province"
+      },
+      "short_name": {
+        "vi": "Hà Tĩnh",
+        "en": "Ha Tinh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.cao-bang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Cao Bằng",
+        "en": "Cao Bang Province"
+      },
+      "short_name": {
+        "vi": "Cao Bằng",
+        "en": "Cao Bang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ha-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hà Giang",
+        "en": "Ha Giang Province"
+      },
+      "short_name": {
+        "vi": "Hà Giang",
+        "en": "Ha Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.tuyen-quang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Tuyên Quang",
+        "en": "Tuyen Quang Province"
+      },
+      "short_name": {
+        "vi": "Tuyên Quang",
+        "en": "Tuyen Quang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.yen-bai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Yên Bái",
+        "en": "Yen Bai Province"
+      },
+      "short_name": {
+        "vi": "Yên Bái",
+        "en": "Yen Bai"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.lao-cai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lào Cai",
+        "en": "Lao Cai Province"
+      },
+      "short_name": {
+        "vi": "Lào Cai",
+        "en": "Lao Cai"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.bac-kan",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bắc Kạn",
+        "en": "Bac Kan Province"
+      },
+      "short_name": {
+        "vi": "Bắc Kạn",
+        "en": "Bac Kan"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.thai-nguyen",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Thái Nguyên",
+        "en": "Thai Nguyen Province"
+      },
+      "short_name": {
+        "vi": "Thái Nguyên",
+        "en": "Thai Nguyen"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.vinh-phuc",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Vĩnh Phúc",
+        "en": "Vinh Phuc Province"
+      },
+      "short_name": {
+        "vi": "Vĩnh Phúc",
+        "en": "Vinh Phuc"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.phu-tho",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Phú Thọ",
+        "en": "Phu Tho Province"
+      },
+      "short_name": {
+        "vi": "Phú Thọ",
+        "en": "Phu Tho"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hoa-binh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hòa Bình",
+        "en": "Hoa Binh Province"
+      },
+      "short_name": {
+        "vi": "Hòa Bình",
+        "en": "Hoa Binh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.bac-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bắc Giang",
+        "en": "Bac Giang Province"
+      },
+      "short_name": {
+        "vi": "Bắc Giang",
+        "en": "Bac Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.bac-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bắc Ninh",
+        "en": "Bac Ninh Province"
+      },
+      "short_name": {
+        "vi": "Bắc Ninh",
+        "en": "Bac Ninh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.thai-binh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Thái Bình",
+        "en": "Thai Binh Province"
+      },
+      "short_name": {
+        "vi": "Thái Bình",
+        "en": "Thai Binh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.hung-yen",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hưng Yên",
+        "en": "Hung Yen Province"
+      },
+      "short_name": {
+        "vi": "Hưng Yên",
+        "en": "Hung Yen"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ha-nam",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Hà Nam",
+        "en": "Ha Nam Province"
+      },
+      "short_name": {
+        "vi": "Hà Nam",
+        "en": "Ha Nam"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.nam-dinh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Nam Định",
+        "en": "Nam Dinh Province"
+      },
+      "short_name": {
+        "vi": "Nam Định",
+        "en": "Nam Dinh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ninh-binh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Ninh Bình",
+        "en": "Ninh Binh Province"
+      },
+      "short_name": {
+        "vi": "Ninh Bình",
+        "en": "Ninh Binh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.quang-binh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Bình",
+        "en": "Quang Binh Province"
+      },
+      "short_name": {
+        "vi": "Quảng Bình",
+        "en": "Quang Binh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.quang-tri",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Trị",
+        "en": "Quang Tri Province"
+      },
+      "short_name": {
+        "vi": "Quảng Trị",
+        "en": "Quang Tri"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.kon-tum",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Kon Tum",
+        "en": "Kon Tum Province"
+      },
+      "short_name": {
+        "vi": "Kon Tum",
+        "en": "Kon Tum"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.quang-ngai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Quảng Ngãi",
+        "en": "Quang Ngai Province"
+      },
+      "short_name": {
+        "vi": "Quảng Ngãi",
+        "en": "Quang Ngai"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.gia-lai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Gia Lai",
+        "en": "Gia Lai Province"
+      },
+      "short_name": {
+        "vi": "Gia Lai",
+        "en": "Gia Lai"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.binh-dinh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bình Định",
+        "en": "Binh Dinh Province"
+      },
+      "short_name": {
+        "vi": "Bình Định",
+        "en": "Binh Dinh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ninh-thuan",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Ninh Thuận",
+        "en": "Ninh Thuan Province"
+      },
+      "short_name": {
+        "vi": "Ninh Thuận",
+        "en": "Ninh Thuan"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.khanh-hoa",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Khánh Hòa",
+        "en": "Khanh Hoa Province"
+      },
+      "short_name": {
+        "vi": "Khánh Hòa",
+        "en": "Khanh Hoa"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.dak-nong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đắk Nông",
+        "en": "Dak Nong Province"
+      },
+      "short_name": {
+        "vi": "Đắk Nông",
+        "en": "Dak Nong"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.binh-thuan",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bình Thuận",
+        "en": "Binh Thuan Province"
+      },
+      "short_name": {
+        "vi": "Bình Thuận",
+        "en": "Binh Thuan"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.lam-dong",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Lâm Đồng",
+        "en": "Lam Dong Province"
+      },
+      "short_name": {
+        "vi": "Lâm Đồng",
+        "en": "Lam Dong"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.phu-yen",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Phú Yên",
+        "en": "Phu Yen Province"
+      },
+      "short_name": {
+        "vi": "Phú Yên",
+        "en": "Phu Yen"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.dak-lak",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đắk Lắk",
+        "en": "Dak Lak Province"
+      },
+      "short_name": {
+        "vi": "Đắk Lắk",
+        "en": "Dak Lak"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.binh-phuoc",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bình Phước",
+        "en": "Binh Phuoc Province"
+      },
+      "short_name": {
+        "vi": "Bình Phước",
+        "en": "Binh Phuoc"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.dong-nai",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đồng Nai",
+        "en": "Dong Nai Province"
+      },
+      "short_name": {
+        "vi": "Đồng Nai",
+        "en": "Dong Nai"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.long-an",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Long An",
+        "en": "Long An Province"
+      },
+      "short_name": {
+        "vi": "Long An",
+        "en": "Long An"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.tay-ninh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Tây Ninh",
+        "en": "Tay Ninh Province"
+      },
+      "short_name": {
+        "vi": "Tây Ninh",
+        "en": "Tay Ninh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ben-tre",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bến Tre",
+        "en": "Ben Tre Province"
+      },
+      "short_name": {
+        "vi": "Bến Tre",
+        "en": "Ben Tre"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.tra-vinh",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Trà Vinh",
+        "en": "Tra Vinh Province"
+      },
+      "short_name": {
+        "vi": "Trà Vinh",
+        "en": "Tra Vinh"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.vinh-long",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Vĩnh Long",
+        "en": "Vinh Long Province"
+      },
+      "short_name": {
+        "vi": "Vĩnh Long",
+        "en": "Vinh Long"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.tien-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Tiền Giang",
+        "en": "Tien Giang Province"
+      },
+      "short_name": {
+        "vi": "Tiền Giang",
+        "en": "Tien Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.dong-thap",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Đồng Tháp",
+        "en": "Dong Thap Province"
+      },
+      "short_name": {
+        "vi": "Đồng Tháp",
+        "en": "Dong Thap"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.bac-lieu",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Bạc Liêu",
+        "en": "Bac Lieu Province"
+      },
+      "short_name": {
+        "vi": "Bạc Liêu",
+        "en": "Bac Lieu"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.ca-mau",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Cà Mau",
+        "en": "Ca Mau Province"
+      },
+      "short_name": {
+        "vi": "Cà Mau",
+        "en": "Ca Mau"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.kien-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh Kiên Giang",
+        "en": "Kien Giang Province"
+      },
+      "short_name": {
+        "vi": "Kiên Giang",
+        "en": "Kien Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    },
+    {
+      "code": "vn.old.an-giang",
+      "country_code": "VN",
+      "official_code": null,
+      "name": {
+        "vi": "Tỉnh An Giang",
+        "en": "An Giang Province"
+      },
+      "short_name": {
+        "vi": "An Giang",
+        "en": "An Giang"
+      },
+      "type": "province",
+      "effective_from": null,
+      "effective_to": "2025-06-30",
+      "status": "inactive"
+    }
+  ]
+}

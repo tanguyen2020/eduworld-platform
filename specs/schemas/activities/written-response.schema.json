@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/written-response.schema.json",
+  "title": "WrittenResponseActivityVersion",
+  "description": "activity_type = written_response (short_answer, long_answer, essay, math_solution). Cấu hình phía server: accepted_answers/numeric_answer là đáp án, không gửi xuống client (ADR-0016). Công thức trong đề chỉ để hiển thị (ADR-0055, math_assets); học sinh không nhập công thức trong game. Xem docs/02-learning/WRITTEN_RESPONSE_RUBRIC.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "written_response" },
+    "content": {
+      "type": "object",
+      "required": ["response_kind", "prompt"],
+      "properties": {
+        "response_kind": { "type": "string", "enum": ["short_answer", "long_answer", "essay", "math_solution"] },
+        "prompt": { "$ref": "activity-base.schema.json#/$defs/i18nLong" },
+        "min_words": { "type": "integer", "minimum": 0, "maximum": 2000 },
+        "max_words": { "type": "integer", "minimum": 1, "maximum": 2000 },
+        "max_chars": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "accepted_answers": {
+          "type": "array",
+          "maxItems": 30,
+          "items": { "type": "string", "minLength": 1, "maxLength": 255 }
+        },
+        "accept_without_diacritics": { "type": "boolean", "default": false },
+        "max_typo_distance": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "numeric_answer": {
+          "$ref": "activity-base.schema.json#/$defs/numericAnswer",
+          "description": "math_solution: đáp số học sinh nhập dạng số; các bước giải là văn bản (ADR-0055: game không nhập công thức)"
+        },
+        "allow_photo_submission": {
+          "type": "boolean",
+          "default": false,
+          "description": "[Proposed] Cho phép nộp ảnh bài làm giấy (bucket private, quét virus) để giáo viên chấm lời giải có công thức"
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "autosave_seconds": { "type": "integer", "minimum": 5, "maximum": 120 },
+        "allow_resubmit_after_return": { "type": "boolean", "default": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false
+}

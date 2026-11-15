@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/sensitive-term-catalog.schema.json",
+  "title": "SensitiveTermCatalog",
+  "description": "Định dạng export/import danh mục từ nhạy cảm (ADR-0030): category, term, allowlist ở một phạm vi (platform hoặc tenant). Dùng cho import hàng loạt trong CMS và làm fixture test hồi quy. Danh mục là dữ liệu nhạy cảm: không đưa vào client game, không commit danh mục thật vào repo (chỉ ví dụ placeholder). Xem docs/03-social-multiplayer/MODERATION.md §11.",
+  "type": "object",
+  "required": ["schema_version", "scope", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "scope": { "enum": ["platform", "tenant"] },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "catalog_version": { "type": "integer", "minimum": 1 },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/category" }
+    },
+    "allowlist": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/allowlist_entry" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "scope": { "const": "platform" } } },
+      "then": { "properties": { "tenant_id": { "type": "null" } } },
+      "else": { "required": ["tenant_id"], "properties": { "tenant_id": { "type": "string", "maxLength": 64 } } }
+    }
+  ],
+  "$defs": {
+    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{1,40}$" },
+    "severity": { "enum": ["watch", "low", "medium", "high", "critical"] },
+    "action": { "enum": ["allow", "mask", "block", "hold_for_review", "block_and_alert"] },
+    "locale": { "enum": ["vi", "en"] },
+    "category": {
+      "type": "object",
+      "required": ["code", "name", "severity", "default_action", "enabled", "terms"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "$ref": "#/$defs/code" },
+        "name": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "severity": { "$ref": "#/$defs/severity" },
+        "default_action": { "$ref": "#/$defs/action" },
+        "enabled": { "type": "boolean" },
+        "allow_tenant_toggle": { "type": "boolean", "default": false },
+        "terms": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/term" }
+        }
+      }
+    },
+    "term": {
+      "type": "object",
+      "required": ["term", "match_type", "locale", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "term": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "match_type": { "enum": ["word", "phrase", "contains", "pattern"] },
+        "locale": { "$ref": "#/$defs/locale" },
+        "variants": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+        },
+        "severity_override": { "$ref": "#/$defs/severity" },
+        "action_override": { "$ref": "#/$defs/action" },
+        "enabled": { "type": "boolean" },
+        "note": { "type": "string", "maxLength": 500 }
+      },
+      "if": { "properties": { "match_type": { "const": "pattern" } } },
+      "then": {
+        "properties": {
+          "term": { "type": "string", "maxLength": 200, "description": "RE2; không backreference/lookaround (kiểm tra thêm ở backend)" }
+        }
+      }
+    },
+    "allowlist_entry": {
+      "type": "object",
+      "required": ["phrase", "locale"],
+      "additionalProperties": false,
+      "properties": {
+        "phrase": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "locale": { "$ref": "#/$defs/locale" },
+        "reason": { "type": "string", "maxLength": 500 }
+      }
+    }
+  }
+}

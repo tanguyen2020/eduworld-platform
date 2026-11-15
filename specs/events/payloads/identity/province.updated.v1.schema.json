@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/province.updated.v1.schema.json",
+  "title": "Payload province.updated v1 (identity-service, ADR-0060)",
+  "description": "Tạo/sửa/đổi trạng thái một đơn vị hành chính cấp tỉnh hoặc ghi kế thừa. Envelope tenant_id = null (dữ liệu platform). Consumer: projection ref.provinces (learning, game), ref.schools (tên tỉnh phi chuẩn hóa).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["province_id", "code", "country_code", "name", "status", "op"],
+  "properties": {
+    "province_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z]{2}(\\.old)?\\.[a-z0-9-]+$" },
+    "country_code": { "type": "string", "maxLength": 2, "pattern": "^[A-Z]{2}$" },
+    "official_code": { "type": ["string", "null"], "maxLength": 16 },
+    "name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": {
+        "vi": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "en": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "status": { "type": "string", "enum": ["active", "inactive"] },
+    "effective_to": { "type": ["string", "null"], "format": "date" },
+    "successor_code": { "type": ["string", "null"], "maxLength": 64 },
+    "op": { "type": "string", "enum": ["created", "updated", "deactivated", "succession_recorded"] }
+  }
+}

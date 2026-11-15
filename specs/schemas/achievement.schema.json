@@ -1,0 +1,453 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:achievement:1",
+  "title": "AchievementVersion",
+  "description": "Định nghĩa thành tựu (game-service). Đánh giá bởi consumer achievement-evaluator, idempotent theo (student_id, achievement_id, tier). Xem docs/01-game-design/INVENTORY_ECONOMY.md §7.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "achievement_id",
+    "achievement_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "category",
+    "name",
+    "trigger",
+    "progress_metric",
+    "visibility",
+    "tiers"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "achievement_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "achievement_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "category": {
+      "enum": [
+        "first_time",
+        "progress",
+        "learning",
+        "exploration",
+        "social",
+        "team",
+        "competition",
+        "seasonal",
+        "hidden"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "icon_ref": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_types"
+      ],
+      "properties": {
+        "event_types": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "avatar.created",
+              "quest.completed",
+              "lesson.completed",
+              "exercise.submitted",
+              "learning_objective.mastered",
+              "challenge.completed",
+              "boss.encounter_completed",
+              "world.discovery_found",
+              "world.area_completed",
+              "world.area_unlocked",
+              "level.reached",
+              "party.activity_completed",
+              "match.completed",
+              "collection.completed",
+              "shop.item_purchased"
+            ]
+          }
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Bộ lọc trên payload event",
+          "properties": {
+            "subject_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "area_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "quest_types": {
+              "type": "array",
+              "maxItems": 12,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "min_difficulty": {
+              "enum": [
+                "easy",
+                "normal",
+                "hard",
+                "expert",
+                "legendary"
+              ]
+            },
+            "result": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        }
+      }
+    },
+    "progress_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "count",
+            "distinct_count",
+            "distinct_days_in_week",
+            "sum"
+          ]
+        },
+        "distinct_field": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Trường payload để đếm khác nhau (vd objective_id)"
+        },
+        "sum_field": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "distinct_count"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "distinct_field"
+            ],
+            "properties": {
+              "distinct_field": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "sum"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sum_field"
+            ],
+            "properties": {
+              "sum_field": true
+            }
+          }
+        }
+      ]
+    },
+    "visibility": {
+      "enum": [
+        "visible",
+        "hidden_until_unlocked"
+      ]
+    },
+    "tiers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tier",
+          "threshold"
+        ],
+        "properties": {
+          "tier": {
+            "enum": [
+              "single",
+              "bronze",
+              "silver",
+              "gold",
+              "platinum"
+            ]
+          },
+          "threshold": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "rewards": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/$defs/reward"
+            }
+          }
+        }
+      }
+    },
+    "available_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "available_to": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "description": "Văn bản hiển thị song ngữ bắt buộc đủ vi và en (ADR-0056 mục 2).",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "xp",
+                  "currency"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code"
+            ],
+            "properties": {
+              "currency_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

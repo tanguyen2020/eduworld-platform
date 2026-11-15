@@ -1,0 +1,521 @@
+# THƯ VIỆN DÙNG CHUNG cho internal API của các service (ADR-0036, ADR-0040).
+# Không phải tài liệu OpenAPI độc lập: các file `<service>.internal.v1.yaml` tham chiếu tới
+# `#/paths/...` (interface platform ops chuẩn) và `#/components/...` trong file này.
+# Mọi `type: string` phải có `maxLength` (ADR-0041) — kiểm tra bằng scripts/specs/check-maxlength.mjs.
+
+paths:
+  /internal/v1/platform/tenant-clones/{job_id}/steps:
+    post:
+      tags: [platform-ops]
+      operationId: executeTenantCloneStep
+      summary: Thực thi bước clone thuộc service này trong một job clone tenant (saga do identity-service điều phối)
+      description: |
+        Clone sâu các tài nguyên thuộc service này từ tenant nguồn sang tenant đích (ADR-0029).
+        Idempotent theo `(job_id, resource_type)`: gọi lại trả kết quả lần trước. Không bao giờ clone
+        dữ liệu cá nhân/học tập của học sinh. Bản sao có `cloned_from_id`, `cloned_from_tenant_id`.
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/OnBehalfOf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantCloneStepRequest' }
+      responses:
+        '200':
+          description: Kết quả bước clone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantCloneStepResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/DependencyUnavailable' }
+
+  /internal/v1/platform/trash:
+    get:
+      tags: [platform-ops]
+      operationId: listTrash
+      summary: Liệt kê bản ghi đã soft-delete của service này (Thùng rác, ADR-0028)
+      description: Identity-service gộp kết quả từ mọi service để trả cho `/api/v1/admin/trash` và `/api/v1/tenant/trash`.
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/OnBehalfOf'
+        - name: tenant_ids
+          in: query
+          required: false
+          description: Lọc tenant. Vắng mặt = mọi tenant (chỉ hợp lệ khi người gọi gốc là System Admin, kiểm tra bởi identity-service).
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 100
+            items: { type: string, format: uuid }
+        - name: resource_type
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/ResourceType' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Một trang bản ghi đã xóa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrashPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/platform/trash/{resource_type}/{resource_id}:restore:
+    post:
+      tags: [platform-ops]
+      operationId: restoreTrashItem
+      summary: Khôi phục một bản ghi đã soft-delete (đặt lại deleted_at = NULL)
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/ResourceTypePath'
+        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/OnBehalfOf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RestoreRequest' }
+      responses:
+        '200':
+          description: Đã khôi phục
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RestoreResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /internal/v1/platform/students/{student_id}:cleanup:
+    post:
+      tags: [platform-ops]
+      operationId: cleanupStudentData
+      summary: Soft-delete dữ liệu của học sinh trong service này khi bị dọn do không đăng nhập (ADR-0032)
+      description: |
+        Bước của saga dọn học sinh do identity-service điều phối. Chỉ soft-delete (ADR-0028), đặt
+        `delete_reason = inactive_cleanup`. Service trả `blocked` nếu học sinh đang có hoạt động không
+        được dọn (trận đang chạy, bài kiểm tra chưa nộp, moderation case mở) để saga hủy và bù trừ.
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StudentCleanupRequest' }
+      responses:
+        '200':
+          description: Kết quả bước dọn
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentLifecycleResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /internal/v1/platform/students/{student_id}:restore:
+    post:
+      tags: [platform-ops]
+      operationId: restoreStudentData
+      summary: Khôi phục dữ liệu học sinh đã bị dọn khi học sinh đăng nhập lại (ADR-0032 mục 5)
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StudentRestoreRequest' }
+      responses:
+        '200':
+          description: Kết quả bước khôi phục
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentLifecycleResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /internal/v1/platform/users/{user_id}:merge-into:
+    post:
+      tags: [platform-ops]
+      operationId: mergeUserData
+      summary: Chuyển dữ liệu của một user sang user đích khi gộp tài khoản trùng (identity-service điều phối)
+      description: |
+        Bước của saga gộp tài khoản (ACCOUNT_PROVISIONING §7b, IDENTITY_MAPPING). Service cập nhật mọi tham chiếu
+        `user_id` nguồn sang `target_user_id` trong cùng tenant; bản ghi nguồn bị soft-delete (ADR-0028).
+        Idempotent theo `merge_id`. Trả `blocked` nếu có xung đột không tự gộp được (vd. hai attempt cùng lúc).
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserMergeRequest' }
+      responses:
+        '200':
+          description: Kết quả bước gộp
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserLifecycleResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /internal/v1/platform/users/{user_id}:anonymize:
+    post:
+      tags: [platform-ops]
+      operationId: anonymizeUserData
+      summary: Ẩn danh hóa dữ liệu cá nhân của user trong service này (nghĩa vụ xóa theo luật, ADR-0028 mục 8)
+      description: |
+        Ghi đè trường PII (tên hiển thị, nội dung tự do do user tạo, metadata thiết bị…) bằng giá trị ẩn danh,
+        giữ bản ghi để thống kê và tính toàn vẹn. Không xóa dòng. Idempotent theo `erasure_request_id`.
+      x-allowed-callers: [svc-identity]
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/Traceparent'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserAnonymizeRequest' }
+      responses:
+        '200':
+          description: Kết quả bước ẩn danh hóa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserLifecycleResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    serviceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token Keycloak lấy bằng client credentials của client service (`svc-identity`, `svc-learning`,
+        `svc-game`, `svc-competition`, `svc-chat`, `svc-realtime`). Token có `aud = svc-<callee>-api` (vd. `svc-learning-api`)
+        và scope `internal-<callee>` (vd. `internal-learning`). Bên nhận kiểm tra chữ ký, `aud`, scope và `azp`
+        nằm trong `x-allowed-callers` của operation; sai → `403 CALLER_NOT_ALLOWED`. Bên gọi cache token đến gần hết hạn.
+
+  parameters:
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      description: W3C Trace Context (OpenTelemetry), bắt buộc truyền tiếp.
+      schema: { type: string, maxLength: 128 }
+    RequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      schema: { type: string, maxLength: 64 }
+    TenantIdHeader:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant đang xử lý. Bên nhận vẫn tự kiểm tra tài nguyên thuộc tenant này (ADR-0005).
+      schema: { type: string, format: uuid }
+    OnBehalfOf:
+      name: X-On-Behalf-Of
+      in: header
+      required: false
+      description: user_id của người dùng gốc (để audit và kiểm tra quyền phía nghiệp vụ).
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema: { type: string, maxLength: 512 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    JobIdPath:
+      name: job_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    StudentIdPath:
+      name: student_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    UserIdPath:
+      name: user_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    TenantIdPath:
+      name: tenant_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ResourceTypePath:
+      name: resource_type
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ResourceType' }
+    ResourceIdPath:
+      name: resource_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    BadRequest:
+      description: Request không hợp lệ
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Thiếu/sai service token
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    CallerNotAllowed:
+      description: Service gọi không nằm trong allowlist (`CALLER_NOT_ALLOWED`) hoặc thiếu quyền nghiệp vụ (`PERMISSION_DENIED`)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Không tồn tại hoặc ngoài tenant
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Xung đột trạng thái (vd. unique khi khôi phục)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationFailed:
+      description: '`VALIDATION_FAILED` — vi phạm schema, gồm vượt `maxLength` (ADR-0041)'
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    DependencyUnavailable:
+      description: '`UNAVAILABLE` — service phụ thuộc không phản hồi hoặc circuit breaker đang mở'
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri, maxLength: 2048 }
+        title: { type: string, maxLength: 255 }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string, maxLength: 64 }
+        detail: { type: string, maxLength: 1000 }
+        instance: { type: string, maxLength: 2048 }
+        trace_id: { type: string, maxLength: 64 }
+        errors:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field: { type: string, maxLength: 255 }
+              code: { type: string, maxLength: 64 }
+              message: { type: string, maxLength: 1000 }
+
+    PageInfo:
+      type: object
+      required: [has_more]
+      properties:
+        next_cursor: { type: [string, 'null'], maxLength: 512 }
+        has_more: { type: boolean }
+
+    ResourceType:
+      type: string
+      description: Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
+      enum: [curriculum, lesson, question, question_set, assessment_blueprint, media, assignment, course, learning_path, challenge, challenge_template, tournament_template, quest, minigame_config, item, class_template, school_settings, tenant_settings]
+
+    TenantCloneStepRequest:
+      type: object
+      required: [source_tenant_id, target_tenant_id, resource_type, resource_ids]
+      properties:
+        source_tenant_id: { type: string, format: uuid }
+        target_tenant_id: { type: string, format: uuid }
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: { type: string, format: uuid }
+        id_map:
+          type: object
+          description: Ánh xạ ID nguồn → ID đích của các bước trước (để nối lại tham chiếu giữa service).
+          maxProperties: 10000
+          additionalProperties: { type: string, format: uuid }
+
+    TenantCloneStepResult:
+      type: object
+      required: [job_id, resource_type, status, cloned]
+      properties:
+        job_id: { type: string, format: uuid }
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        status: { type: string, enum: [completed, partially_failed, failed] }
+        cloned:
+          type: array
+          maxItems: 10000
+          items:
+            type: object
+            required: [source_id, target_id]
+            properties:
+              source_id: { type: string, format: uuid }
+              target_id: { type: string, format: uuid }
+        skipped:
+          type: array
+          maxItems: 10000
+          items:
+            type: object
+            required: [source_id, reason]
+            properties:
+              source_id: { type: string, format: uuid }
+              reason: { type: string, maxLength: 1000 }
+        errors:
+          type: array
+          maxItems: 1000
+          items: { $ref: '#/components/schemas/Problem' }
+
+    TrashItem:
+      type: object
+      required: [resource_type, resource_id, deleted_at]
+      properties:
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_id: { type: string, format: uuid }
+        tenant_id: { type: [string, 'null'], format: uuid }
+        title: { type: string, maxLength: 255 }
+        deleted_at: { type: string, format: date-time }
+        deleted_by: { type: [string, 'null'], format: uuid }
+        delete_reason: { type: [string, 'null'], maxLength: 1000 }
+
+    TrashPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/TrashItem' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+
+    RestoreRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 3, maxLength: 1000 }
+
+    RestoreResult:
+      type: object
+      required: [resource_type, resource_id, restored_at]
+      properties:
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_id: { type: string, format: uuid }
+        restored_at: { type: string, format: date-time }
+
+    StudentCleanupRequest:
+      type: object
+      required: [cleanup_run_id, reason]
+      properties:
+        cleanup_run_id: { type: string, format: uuid }
+        reason: { type: string, enum: [inactive_cleanup] }
+        last_login_at: { type: [string, 'null'], format: date-time }
+
+    StudentRestoreRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, enum: [student_logged_in_again, admin_restore] }
+
+    StudentLifecycleResult:
+      type: object
+      required: [student_id, status]
+      properties:
+        student_id: { type: string, format: uuid }
+        status: { type: string, enum: [done, blocked, nothing_to_do] }
+        blocked_reason: { type: [string, 'null'], enum: [active_game_session, active_match, open_exam_attempt, open_moderation_case, null] }
+        affected:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [resource_type, count]
+            properties:
+              resource_type: { $ref: '#/components/schemas/ResourceType' }
+              count: { type: integer, minimum: 0 }
+
+    UserMergeRequest:
+      type: object
+      required: [merge_id, target_user_id, reason]
+      properties:
+        merge_id: { type: string, format: uuid }
+        target_user_id: { type: string, format: uuid }
+        reason: { type: string, minLength: 3, maxLength: 1000 }
+
+    UserAnonymizeRequest:
+      type: object
+      required: [erasure_request_id, reason]
+      properties:
+        erasure_request_id: { type: string, format: uuid }
+        reason: { type: string, enum: [data_subject_request, retention_expired, legal_order] }
+
+    UserLifecycleResult:
+      type: object
+      required: [user_id, status]
+      properties:
+        user_id: { type: string, format: uuid }
+        status: { type: string, enum: [done, blocked, nothing_to_do] }
+        blocked_reason: { type: [string, 'null'], maxLength: 1000 }
+        affected:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [resource_type, count]
+            properties:
+              resource_type: { type: string, maxLength: 64 }
+              count: { type: integer, minimum: 0 }

@@ -1,0 +1,794 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:event:1",
+  "title": "EventVersion",
+  "description": "Phiên bản sự kiện live-ops (game-service). Bất biến sau khi publish (ADR-0043). Xem docs/01-game-design/EVENT_SEASON_SYSTEM.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "event_kind",
+    "name",
+    "description",
+    "schedule",
+    "audience",
+    "components"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "event_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "event_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/uuid"
+        }
+      ]
+    },
+    "template_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template_id",
+        "template_version"
+      ],
+      "properties": {
+        "template_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "template_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "event_kind": {
+      "enum": [
+        "world_festival",
+        "weekend",
+        "school",
+        "community_goal",
+        "learning_campaign",
+        "special_boss",
+        "limited_quest"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "short_tagline": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "theme_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "banner_asset_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_at",
+        "end_at",
+        "timezone"
+      ],
+      "properties": {
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "const": "Asia/Ho_Chi_Minh"
+        },
+        "weekday_windows": {
+          "type": "array",
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
+            ]
+          }
+        },
+        "claim_grace_hours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 336,
+          "default": 72
+        }
+      }
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "grade_levels"
+      ],
+      "properties": {
+        "scope": {
+          "enum": [
+            "platform",
+            "tenant",
+            "school",
+            "class"
+          ]
+        },
+        "tenant_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "school_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "class_ids": {
+          "type": "array",
+          "maxItems": 500,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "grade_levels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_ids": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        }
+      }
+    },
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Điều kiện tham gia; không dùng để khóa nội dung học tập.",
+      "properties": {
+        "completed_chapter_codes": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "min_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quest_ids": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "challenge_ids": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "boss_ids": {
+          "type": "array",
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "shop_item_ids": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "collection_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "community_goal": {
+          "$ref": "#/$defs/community_goal"
+        },
+        "decoration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "areas"
+          ],
+          "properties": {
+            "environment_preset_id": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "bundle_id": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "low_preset_bundle_id": {
+              "type": "string",
+              "maxLength": 64,
+              "description": "Biến thể rút gọn cho preset Thấp (ADR-0057)"
+            },
+            "areas": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        }
+      }
+    },
+    "event_points": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "sources": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_code",
+              "points"
+            ],
+            "properties": {
+              "source_code": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "points": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "participation_rewards": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/reward"
+      }
+    },
+    "milestone_rewards": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "milestone_id",
+          "event_points",
+          "rewards"
+        ],
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "event_points": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rewards": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/$defs/reward"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner_scope": {
+            "const": "platform"
+          }
+        },
+        "required": [
+          "owner_scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "tenant_id": {
+            "type": "null"
+          },
+          "name": {
+            "required": [
+              "vi",
+              "en"
+            ],
+            "properties": {
+              "vi": true,
+              "en": true
+            },
+            "type": "object"
+          },
+          "description": {
+            "required": [
+              "vi",
+              "en"
+            ],
+            "properties": {
+              "vi": true,
+              "en": true
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "owner_scope": {
+            "const": "tenant"
+          }
+        },
+        "required": [
+          "owner_scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "tenant_id",
+          "template_ref"
+        ],
+        "properties": {
+          "tenant_id": {
+            "$ref": "#/$defs/uuid"
+          },
+          "template_ref": true,
+          "event_kind": {
+            "enum": [
+              "school",
+              "community_goal",
+              "learning_campaign"
+            ]
+          },
+          "audience": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "tenant",
+                  "school",
+                  "class"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_points": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "event_points"
+        ]
+      },
+      "then": {
+        "properties": {
+          "event_points": {
+            "required": [
+              "daily_cap",
+              "sources"
+            ],
+            "properties": {
+              "daily_cap": true,
+              "sources": true
+            },
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "required": [
+        "vi"
+      ],
+      "properties": {
+        "vi": true
+      },
+      "propertyNames": {
+        "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "community_goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goal_code",
+        "metric",
+        "scope",
+        "target",
+        "milestones"
+      ],
+      "properties": {
+        "goal_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "name": {
+          "$ref": "#/$defs/localized_text"
+        },
+        "metric": {
+          "enum": [
+            "correct_answers",
+            "activities_completed",
+            "quests_completed",
+            "discoveries_found",
+            "boss_phases_cleared",
+            "coop_sessions"
+          ]
+        },
+        "metric_filter": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "subject_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "objective_ids": {
+              "type": "array",
+              "maxItems": 50,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            }
+          }
+        },
+        "scope": {
+          "enum": [
+            "school",
+            "tenant",
+            "platform"
+          ]
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "per_student_daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 50
+        },
+        "show_class_contributions": {
+          "type": "boolean",
+          "default": true
+        },
+        "milestones": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "percent",
+              "rewards"
+            ],
+            "properties": {
+              "percent": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "rewards": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                  "$ref": "#/$defs/reward"
+                }
+              },
+              "world_change_code": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Thay đổi trang trí thế giới khi đạt mốc"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "xp",
+                  "currency"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code"
+            ],
+            "properties": {
+              "currency_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

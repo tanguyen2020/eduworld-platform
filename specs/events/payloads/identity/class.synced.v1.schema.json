@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/class.synced.v1.schema.json",
+  "title": "Payload class.synced v1 (identity-service, ADR-0060, ADR-0061)",
+  "description": "Lớp được tạo/cập nhật/đóng từ đồng bộ SIS (đồng bộ định kỳ hoặc khi học sinh đăng nhập). Consumer: projection ref.classes (learning, game, chat), cache Principal, dashboard (sĩ số). Không chứa danh sách học sinh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["class_id", "school_id", "grade_level", "name", "academic_year", "status", "op", "trigger"],
+  "properties": {
+    "class_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "name": { "type": "string", "maxLength": 255 },
+    "academic_year": { "type": "string", "maxLength": 9, "pattern": "^[0-9]{4}-[0-9]{4}$" },
+    "status": { "type": "string", "enum": ["active", "closed"] },
+    "student_count": { "type": "integer", "minimum": 0 },
+    "op": { "type": "string", "enum": ["created", "updated", "closed"] },
+    "trigger": { "type": "string", "enum": ["scheduled_sync", "login_sync", "manual_import"] },
+    "sis_connection_id": { "type": ["string", "null"], "format": "uuid" },
+    "sync_run_id": { "type": ["string", "null"], "format": "uuid" },
+    "changed_fields": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } }
+  }
+}

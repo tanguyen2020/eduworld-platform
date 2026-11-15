@@ -1,0 +1,6102 @@
+# GENERATED — do not edit. Source: specs/openapi/eduworld-api.v1.yaml
+openapi: 3.1.0
+info:
+  title: EduWorld learning-service — Public API
+  version: 1.0.0-draft.1
+  summary: REST API của nền tảng EduWorld (Godot game client, CMS/LMS web).
+  description: |-
+    FILE SINH TỰ ĐỘNG từ specs/openapi/eduworld-api.v1.yaml bởi scripts/openapi/split-public.mjs — KHÔNG sửa tay.
+
+    Các operation public do `learning-service` phục vụ (ADR-0036). APISIX định tuyến theo prefix tới service này.
+  contact:
+    name: EduWorld Backend Team
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://api.{env}.eduworld.example/api/v1
+    description: |
+      Gateway public (APISIX). Domain thật [TBD — OQ-10]; `eduworld.example` là placeholder.
+      Local dev: `http://localhost:9080/api/v1` (APISIX trong docker compose, xem docs/11-operations/LOCAL_DEVELOPMENT.md) —
+      không khai báo thành server ở đây để spec không trỏ tới localhost.
+    variables:
+      env:
+        default: dev
+        enum:
+          - dev
+          - staging
+security:
+  - keycloakBearer: []
+tags:
+  - name: students
+    description: Hồ sơ học sinh (tối giản cho học sinh, đầy đủ hơn cho giáo viên trong scope)
+  - name: learning
+    description: Curriculum, lesson, progress, activity & attempt (một họ API duy nhất `/learning/activity-attempts` — ADR-0059), bài được giao cho học sinh
+  - name: exams
+    description: Exam session, làm đề, nộp bài, kết quả
+  - name: cms
+    description: Learning Management — nội dung học tập (curriculum, question bank, bài học, blueprint, workflow) phạm vi trường/organization/platform. Không chứa cấu hình game (ADR-0027)
+  - name: lms
+    description: Khóa học, lộ trình, giao bài, thử thách từ template platform, catalog hoạt động game đã publish (chỉ đọc), dashboard giáo viên
+  - name: admin
+    description: INTERNAL — không publish trên public gateway. Gồm quản lý tenant, gán/clone dữ liệu giữa tenant (ADR-0029), Thùng rác (ADR-0028); chỉ System Admin
+  - name: tenant
+    description: 'Tự quản trị của tenant (tenant của phiên): cài đặt, trường trong đơn vị, phân quyền, Thùng rác tenant [Proposed]'
+paths:
+  /students/{student_id}/progress:
+    get:
+      x-service: learning
+      tags:
+        - students
+      operationId: getStudentProgress
+      summary: Tiến độ & mastery của một học sinh (học sinh xem của mình, giáo viên lớp được phân công, quản trị trường)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningProgress'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/curricula:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listCurricula
+      summary: Curriculum + version đang áp dụng cho trường của người dùng
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    maxItems: 200
+                    items:
+                      $ref: '#/components/schemas/CurriculumSummary'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/subjects:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listSubjects
+      summary: Môn học theo khối
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Subject'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/topics:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listTopics
+      summary: Cây chủ đề theo môn và khối
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+      responses:
+        '200':
+          description: Cây chủ đề
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Topic'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/objectives:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listLearningObjectives
+      summary: Danh sách learning objective
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: topic_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LearningObjective'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/progress/me:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getMyProgress
+      summary: Tiến độ và mastery của mình
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+      responses:
+        '200':
+          description: Tiến độ + mastery (dạng thân thiện)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningProgress'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/lessons/{lesson_id}:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getLesson
+      summary: Lesson đã publish + danh sách activity (không đáp án; version ghim theo level session — ADR-0043)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/LessonIdPath'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/lessons/{lesson_id}:complete:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: completeLesson
+      summary: Đánh dấu hoàn thành bài học (server kiểm tra điều kiện xem/activity theo completion_rule)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/LessonIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã hoàn thành (gọi lại trả cùng kết quả)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonCompletion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/recommendations/me:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getMyRecommendations
+      summary: Gợi ý ôn tập theo LO yếu, câu sai đến hạn ôn, bài được giao sắp hết hạn
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /exams/sessions:
+    get:
+      x-service: learning
+      tags:
+        - exams
+      operationId: listExamSessions
+      summary: Exam session khả dụng
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ExamType'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExamSession'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /exams/sessions/{exam_session_id}/attempts:
+    post:
+      x-service: learning
+      tags:
+        - exams
+      operationId: startExamAttempt
+      summary: Bắt đầu làm đề — sinh đề từ blueprint, deadline_at theo đồng hồ server
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/ExamSessionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /exams/attempts/{attempt_id}/answers/{position}:
+    put:
+      x-service: learning
+      tags:
+        - exams
+      operationId: saveExamAnswer
+      summary: Autosave câu trả lời (không trả đúng/sai)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - name: position
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityResponseSubmission'
+      responses:
+        '204':
+          description: Đã lưu
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /exams/attempts/{attempt_id}:submit:
+    post:
+      x-service: learning
+      tags:
+        - exams
+      operationId: submitExamAttempt
+      summary: Nộp bài thi
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã nộp (kết quả có thể hiển thị sau theo result_visibility)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /exams/attempts/{attempt_id}/result:
+    get:
+      x-service: learning
+      tags:
+        - exams
+      operationId: getExamResult
+      summary: Kết quả bài thi và phân tích câu sai
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+      responses:
+        '200':
+          description: Kết quả + phân tích câu sai + gợi ý ôn tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptReview'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/questions:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: searchQuestions
+      summary: Tìm kiếm question bank
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/QuestionType'
+        - name: source
+          in: query
+          description: own = dữ liệu của tenant; assigned = dữ liệu platform được gán cho tenant (chỉ đọc); platform = dữ liệu platform (chỉ role platform)
+          schema:
+            type: string
+            enum:
+              - own
+              - assigned
+              - platform
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuestionAuthoring'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createQuestion
+      summary: Tạo question (version 1, draft)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionAuthoringInput'
+      responses:
+        '201':
+          description: Question + version 1 (draft)
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionAuthoring'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/questions/{question_id}:
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteQuestion
+      summary: Xóa câu hỏi = soft-delete (ADR-0028); bài đã làm vẫn xem lại được, bản ghi vào Thùng rác
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+  /cms/learning/questions/{question_id}/versions/{version}:
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateQuestionDraft
+      summary: Sửa question version ở trạng thái draft
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/QuestionAuthoringInput'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionAuthoring'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/content/{content_type}/{content_id}/versions/{version}:transition:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: transitionContentVersion
+      summary: Workflow Draft → Review → Approved → Published → Archived
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - question
+              - question_set
+              - assessment_blueprint
+              - lesson
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - submit_review
+                    - approve
+                    - reject
+                    - archive
+                  description: Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
+                note:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Trạng thái mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersion'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/content/{content_type}/{content_id}/versions:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listContentVersions
+      summary: Lịch sử version của một item nội dung học tập (ADR-0043)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Danh sách version, mới nhất trước; kèm con trỏ release hiện hành
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersionHistory'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/content/{content_type}/{content_id}/versions/{version}:diff:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: diffContentVersions
+      summary: So sánh hai version của một item (diff theo field/khối)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/Version'
+        - name: with
+          in: query
+          required: true
+          description: Số version để so sánh
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersionDiff'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/content/{content_type}/{content_id}/versions/{version}:publish:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: publishContentVersion
+      summary: Xuất bản version đã duyệt (ngay hoặc hẹn giờ) — dựng snapshot, đổi con trỏ release
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '200':
+          description: Đã xuất bản (con trỏ đã đổi)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '202':
+          description: Đã hẹn giờ xuất bản (publish_at trong tương lai)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/content/{content_type}/{content_id}:rollback:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: rollbackContent
+      summary: Dùng lại một version đã publish cho học sinh (đổi con trỏ, không tạo version mới)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackRequest'
+      responses:
+        '200':
+          description: Con trỏ đã trỏ về version được chọn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/content/{content_type}/{content_id}:unpublish:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: unpublishContent
+      summary: Gỡ xuất bản (con trỏ về rỗng; lượt đang chơi/học không bị ngắt)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: Đã gỡ xuất bản
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /cms/learning/content/{content_type}/{content_id}/releases:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listContentReleases
+      summary: Lịch sử publish/rollback/unpublish của một item
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Danh sách release, mới nhất trước
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentRelease'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/translations:export:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: exportLearningTranslations
+      summary: Xuất file dịch XLIFF/CSV (learning_content.translate) — bất đồng bộ
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationExportRequest'
+      responses:
+        '202':
+          description: Job đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/translations:import:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: importLearningTranslations
+      summary: Nhập bản dịch (learning_content.translate); bản dịch tạo version Draft mới, không sửa version đã publish (ADR-0043)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationImportRequest'
+      responses:
+        '202':
+          description: Job đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/translations/jobs/{job_id}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getLearningTranslationJob
+      summary: Trạng thái job dịch
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/TranslationJobIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/media:presign-upload:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: presignMediaUpload
+      summary: Xin presigned PUT để upload media lên bucket quarantine (ADR-0044)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaPresignRequest'
+      responses:
+        '201':
+          description: Asset ở trạng thái quarantined + URL upload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaPresignResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/media:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listMediaAssets
+      summary: Thư viện media (lọc loại, trạng thái, tìm theo tên/alt text)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/MediaKind'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/MediaStatus'
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MediaAsset'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /cms/media/{asset_id}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getMediaAsset
+      summary: Chi tiết media asset (trạng thái pipeline, biến thể, nơi đang dùng)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/AssetIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAsset'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lms/assignments:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: listAssignments
+      summary: Bài đã giao (giáo viên, quản lý). Học sinh dùng GET /learning/my-assignments (listMyAssignments)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIds'
+        - name: class_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Bài đã giao trong scope
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: createAssignment
+      summary: Giao bài
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+      responses:
+        '201':
+          description: Đã giao bài
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/classes/{class_id}/dashboard:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: getClassDashboard
+      summary: Teacher dashboard của lớp
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: class_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/DashboardFrom'
+        - $ref: '#/components/parameters/DashboardTo'
+      responses:
+        '200':
+          description: Tiến độ lớp, LO yếu, hoạt động gần đây
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassDashboard'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+        '504':
+          $ref: '#/components/responses/DashboardTimeout'
+  /lms/dashboards/teacher:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: getTeacherDashboard
+      summary: Gói widget trang chủ giáo viên trong một lần gọi (rollup, read replica — ADR-0062)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: class_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/DashboardFrom'
+        - $ref: '#/components/parameters/DashboardTo'
+        - $ref: '#/components/parameters/DashboardPageSize'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherDashboard'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+        '504':
+          $ref: '#/components/responses/DashboardTimeout'
+  /lms/schools/{school_id}/analytics/series:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: getSchoolAnalyticsSeries
+      summary: Chuỗi thời gian học tập cấp trường (analytics.school.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - name: metric
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - active_students
+              - active_minutes
+              - attempts_completed
+              - accuracy
+              - assignment_completion_rate
+              - lessons_completed
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/DashboardFrom'
+        - $ref: '#/components/parameters/DashboardTo'
+        - $ref: '#/components/parameters/DashboardGrain'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSeries'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+        '504':
+          $ref: '#/components/responses/DashboardTimeout'
+  /lms/challenges:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: listChallenges
+      summary: Thử thách lớp / giải trường trong scope
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIds'
+        - name: class_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - scheduled
+              - running
+              - completed
+              - cancelled
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Challenge'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: createChallenge
+      summary: Tạo thử thách lớp / giải trường từ template do platform publish
+      description: |
+        Tenant chỉ điền tham số template cho phép (`allowed_params`); luật chơi, phần thưởng, cấu hình
+        thi đấu lấy từ template (ADR-0027). Tham số ngoài `allowed_params` → 422. Permission `lms.challenge.write`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChallengeCreate'
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/catalog/challenge-templates:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: listChallengeTemplates
+      summary: Template thử thách/giải đấu do platform publish (chỉ đọc)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChallengeTemplate'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /lms/catalog/game-activities:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: listGameActivities
+      summary: Quest / mini-game đã publish để giao bài (chỉ đọc, không cấu hình)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - name: objective_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameActivityCatalogItem'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /tenant/analytics/learning/summary:
+    get:
+      x-service: learning
+      tags:
+        - tenant
+      operationId: getTenantLearningSummary
+      summary: Tổng hợp học tập cấp tenant (analytics.tenant.read; SA trong trường — analytics.school.read; ẩn ô < 5)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: school_ids
+          in: query
+          required: false
+          schema:
+            type: array
+            maxItems: 100
+            items:
+              $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/DashboardFrom'
+        - $ref: '#/components/parameters/DashboardTo'
+        - $ref: '#/components/parameters/DashboardGrain'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningSummary'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+        '504':
+          $ref: '#/components/responses/DashboardTimeout'
+  /tenant/reports:
+    post:
+      x-service: learning
+      tags:
+        - tenant
+      operationId: createTenantReport
+      summary: Xuất báo cáo cấp tenant bất đồng bộ (report.export) — 202 + report_id
+      description: Worker đọc read replica theo lô, ghi object storage `ew-exports`, URL ký 15 phút, audit `report.exported`. Vượt giới hạn export đồng thời → `429 EXPORT_LIMIT_REACHED`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '202':
+          description: Đã nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+  /tenant/reports/{report_id}:
+    get:
+      x-service: learning
+      tags:
+        - tenant
+      operationId: getTenantReport
+      summary: Trạng thái export + link ký (chỉ người tạo)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReportIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/analytics/learning/summary:
+    get:
+      x-service: learning
+      tags:
+        - admin
+      operationId: getPlatformLearningSummary
+      security:
+        - keycloakAdminBearer: []
+      x-internal: true
+      summary: Tổng hợp học tập liên tenant (System Admin, platform.cross_tenant.read; không gửi X-Tenant-Id)
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/DashboardFrom'
+        - $ref: '#/components/parameters/DashboardTo'
+        - $ref: '#/components/parameters/DashboardGrain'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningSummary'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+        '504':
+          $ref: '#/components/responses/DashboardTimeout'
+  /admin/reports:
+    post:
+      x-service: learning
+      tags:
+        - admin
+      operationId: createPlatformReport
+      security:
+        - keycloakAdminBearer: []
+      x-internal: true
+      summary: Export liên tenant bất đồng bộ (System Admin, report.export) — 202
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '202':
+          description: Đã nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/DashboardBusy'
+  /admin/reports/{report_id}:
+    get:
+      x-service: learning
+      tags:
+        - admin
+      operationId: getPlatformReport
+      security:
+        - keycloakAdminBearer: []
+      x-internal: true
+      summary: Trạng thái export liên tenant + link ký
+      parameters:
+        - $ref: '#/components/parameters/ReportIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/activities/{activity_id}:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getLearningActivity
+      summary: Activity đang publish (render payload, không đáp án; công thức kèm SVG — ADR-0055)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/ActivityIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityRender'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activities/{activity_id}/attempts:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: startActivityAttempt
+      summary: Bắt đầu attempt (ghim version, ADR-0043) — trả render payload và vị trí tiếp tục (video/audio)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/ActivityIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityAttemptStart'
+      responses:
+        '201':
+          description: Attempt đã tạo (hoặc attempt đang dở được tiếp tục)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listMyActivityAttempts
+      summary: Lịch sử attempt của mình
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: mode
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AttemptMode'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AttemptStatus'
+        - name: activity_type
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ActivityType'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AttemptSummary'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: startAdHocAttempt
+      summary: Bắt đầu attempt không gắn activity cố định (question set, chọn theo chủ đề/LO/độ khó, làm lại câu sai)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdHocAttemptStart'
+      responses:
+        '201':
+          description: Attempt đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /learning/activity-attempts/{attempt_id}:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getActivityAttempt
+      summary: Trạng thái, tiến độ, evaluation có hiệu lực (giáo viên xem được trong lớp được phân công)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/activity-attempts/{attempt_id}/progress:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: reportActivityProgress
+      summary: Heartbeat tiến độ video/audio (idempotent theo client_seq; VIDEO_SEEK_NOT_ALLOWED)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityProgressReport'
+      responses:
+        '200':
+          description: Tiến độ đã ghi nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityProgressState'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/responses:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: submitActivityResponse
+      summary: Trả lời một item (câu hỏi, câu chèn video/audio, chọn nhánh, câu hỏi kèm mô phỏng) — server chấm, practice trả kết quả ngay
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityResponseSubmission'
+      responses:
+        '200':
+          description: Kết quả (đúng/sai, giải thích theo feedback policy)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponseResult'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/written-response:
+    put:
+      x-service: learning
+      tags:
+        - learning
+      operationId: saveWrittenResponseDraft
+      summary: Lưu nháp bài viết (văn bản thường, đáp số — không nhập công thức trong game, ADR-0055)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WrittenResponseDraft'
+      responses:
+        '200':
+          description: Đã lưu nháp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WrittenResponseState'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/recordings:presign:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: presignActivityRecording
+      summary: Xin URL upload ghi âm (bucket private ew-student-submissions; SPEAKING_NOT_ENABLED)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mime_type
+                - size_bytes
+              properties:
+                mime_type:
+                  type: string
+                  enum:
+                    - audio/ogg
+                    - audio/webm
+                    - audio/wav
+                size_bytes:
+                  type: integer
+                  minimum: 1
+                  maximum: 10485760
+                duration_ms:
+                  type: integer
+                  minimum: 1
+                  maximum: 90000
+      responses:
+        '201':
+          description: URL upload ngắn hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPresign'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/recordings/{recording_id}:complete:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: completeActivityRecording
+      summary: Xác nhận upload ghi âm xong — quét virus, xếp hàng xử lý (SUBMISSION_FILE_REJECTED)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/RecordingIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Đã nhận, đang xử lý
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioRecording'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/recordings/{recording_id}:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getActivityRecording
+      summary: Thông tin ghi âm + signed URL nghe lại 15 phút (chủ sở hữu, giáo viên được phân công)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/RecordingIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioRecording'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/activity-attempts/{attempt_id}/submissions:presign:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: presignActivitySubmission
+      summary: Xin URL upload sản phẩm dự án hoặc ảnh bài làm (allow_photo_submission, tắt mặc định) [Proposed]
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - kind
+                - mime_type
+                - size_bytes
+              properties:
+                kind:
+                  type: string
+                  enum:
+                    - project_file
+                    - solution_photo
+                mime_type:
+                  type: string
+                  enum:
+                    - image/jpeg
+                    - image/png
+                    - image/webp
+                    - application/pdf
+                size_bytes:
+                  type: integer
+                  minimum: 1
+                  maximum: 20971520
+                milestone_id:
+                  type: string
+                  maxLength: 64
+      responses:
+        '201':
+          description: URL upload ngắn hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPresign'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}/simulation-runs:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: submitSimulationRun
+      summary: Gửi tham số + action log để server kiểm chứng xác định (ADR-0052; SIMULATION_LOG_INVALID)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunInput'
+      responses:
+        '200':
+          description: Kết quả kiểm chứng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunResult'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}:submit:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: submitActivityAttempt
+      summary: Nộp — chấm tự động hoặc chuyển pending_review (CUE_ANSWER_REQUIRED, RESPONSE_TOO_SHORT, ATTEMPT_ALREADY_SUBMITTED)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Attempt sau khi nộp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /learning/activity-attempts/{attempt_id}:pause:
+    post:
+      x-service: learning
+      tags:
+        - learning
+      operationId: pauseActivityAttempt
+      summary: Tạm dừng attempt theo resume policy (ACTIVITY_ENGINE)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã tạm dừng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /learning/activity-attempts/{attempt_id}/review:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getActivityAttemptReview
+      summary: 'Xem lại attempt: đúng/sai, giải thích, điểm rubric (theo result_visibility)'
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/AttemptId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptReview'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /learning/wrong-questions:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listMyWrongQuestions
+      summary: Câu sai của mình để ôn tập (nguồn cho retry_wrong)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WrongQuestion'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /learning/my-assignments:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listMyAssignments
+      summary: Bài thầy cô giao cho học sinh đang đăng nhập (Quest journal, S05)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 32
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MyAssignment'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /cms/learning/activities:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listCmsActivities
+      summary: Danh sách learning activity (mọi activity_type) trong scope
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: activity_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ActivityType'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ActivityDefinition'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createCmsActivity
+      summary: Tạo activity (version draft đầu tiên); config validate theo schema của loại (ACTIVITY_CONFIG_INVALID, MATH_RENDER_FAILED)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityDefinitionInput'
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDefinition'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/activities/{activity_id}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getCmsActivity
+      summary: Activity + version draft/published (có đáp án/scoring chỉ với permission learning_content.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/ActivityIdPath'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDefinition'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateCmsActivityDraft
+      summary: Sửa version draft (If-Match bắt buộc); version published không sửa được (CONTENT_NOT_EDITABLE) — publish/rollback qua endpoint chung content/{content_type}
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/ActivityIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityDefinitionInput'
+      responses:
+        '200':
+          description: Đã cập nhật
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityDefinition'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/activity-types:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listActivityTypes
+      summary: Danh mục activity_type đã đăng ký + JSON Schema cấu hình (editor registry của portal)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    maxItems: 50
+                    items:
+                      $ref: '#/components/schemas/ActivityTypeInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /cms/learning/rubrics:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listRubrics
+      summary: Danh sách rubric trong scope
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rubric'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createRubric
+      summary: Tạo rubric (version draft) — permission rubric.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RubricInput'
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rubric'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/rubrics/{rubric_id}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getRubric
+      summary: Chi tiết rubric
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/RubricIdPath'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rubric'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateRubricDraft
+      summary: Sửa rubric draft (If-Match) — publish/rollback qua endpoint chung content/rubric
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/RubricIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RubricInput'
+      responses:
+        '200':
+          description: Đã cập nhật
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rubric'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/simulation-templates:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listSimulationTemplates
+      summary: Template mô phỏng đã đăng ký kèm parameter_schema (chỉ đọc; platform đăng ký khi phát hành game, ADR-0052)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    maxItems: 200
+                    items:
+                      $ref: '#/components/schemas/SimulationTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /lms/reviews:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: listReviewTasks
+      summary: Hàng đợi chấm bài (tự luận, nói, dự án) của giáo viên được phân công
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: class_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - in_progress
+              - graded
+              - returned
+        - name: due_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReviewTaskSummary'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /lms/reviews/{review_task_id}:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: getReviewTask
+      summary: Bài làm + rubric (version đã ghim) + gợi ý AI nếu tenant bật (ADR-0053, chỉ gợi ý)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReviewTaskIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewTaskDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lms/reviews/{review_task_id}:grade:
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: gradeReviewTask
+      summary: Chấm theo rubric + nhận xét (RUBRIC_INCOMPLETE) — permission lms.review.grade
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReviewTaskIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewGradeInput'
+      responses:
+        '200':
+          description: Evaluation có hiệu lực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/reviews/{review_task_id}:return:
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: returnReviewTask
+      summary: Trả bài cho học sinh làm tiếp (attempt → returned)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReviewTaskIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - feedback
+              properties:
+                feedback:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+      responses:
+        '200':
+          description: Đã trả bài
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewTaskSummary'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /lms/reviews/{review_task_id}:regrade:
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: regradeReviewTask
+      summary: Chấm lại (reason bắt buộc) → evaluation mới, evaluation cũ superseded
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReviewTaskIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ReviewGradeInput'
+                - type: object
+                  required:
+                    - reason
+                  properties:
+                    reason:
+                      type: string
+                      minLength: 5
+                      maxLength: 1000
+      responses:
+        '200':
+          description: Evaluation mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/project-groups:
+    post:
+      x-service: learning
+      tags:
+        - lms
+      operationId: createProjectGroup
+      summary: Lập nhóm dự án trong lớp (mỗi học sinh vẫn có attempt và learning record riêng)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - activity_id
+                - class_id
+                - name
+                - member_ids
+              properties:
+                activity_id:
+                  $ref: '#/components/schemas/Uuid'
+                class_id:
+                  $ref: '#/components/schemas/Uuid'
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                member_ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  items:
+                    $ref: '#/components/schemas/Uuid'
+      responses:
+        '201':
+          description: Đã tạo nhóm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectGroup'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+components:
+  parameters:
+    TenantIdHeader:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: |
+        Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+        Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+        lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    StudentId:
+      name: student_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    SubjectIdQuery:
+      name: subject_id
+      in: query
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    GradeLevelQuery:
+      name: grade_level
+      in: query
+      schema:
+        $ref: '#/components/schemas/GradeLevel'
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en.
+      schema:
+        type: string
+        maxLength: 64
+        examples:
+          - vi-VN
+          - en-US
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: Cursor opaque từ page.next_cursor
+      schema:
+        type: string
+        maxLength: 512
+    LessonIdPath:
+      name: lesson_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID do client sinh; lưu 24h (ADR-0010)
+      schema:
+        type: string
+        format: uuid
+    ExamSessionId:
+      name: exam_session_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    AttemptId:
+      name: attempt_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TenantIdHeaderOptional:
+      name: X-Tenant-Id
+      in: header
+      required: false
+      description: |
+        Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+        vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+        Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TenantIds:
+      name: tenant_ids
+      in: query
+      required: false
+      description: |
+        Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+        Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 100
+        items:
+          $ref: '#/components/schemas/Uuid'
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 512
+    Version:
+      name: version
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    LearningContentType:
+      name: content_type
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+          - question
+          - question_set
+          - assessment_blueprint
+          - lesson
+          - learning_material
+          - learning_path
+          - activity
+          - rubric
+    ContentIdPath:
+      name: content_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TranslationJobIdPath:
+      name: job_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    AssetIdPath:
+      name: asset_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DashboardFrom:
+      name: from
+      in: query
+      required: true
+      description: Ngày bắt đầu (bao gồm, theo múi giờ tenant). Khoảng `from`–`to` tối đa 730 ngày (`dashboard_max_range_days`) — vượt → `422 DASHBOARD_RANGE_TOO_LARGE` (DASHBOARD_DATA §8).
+      schema:
+        type: string
+        format: date
+    DashboardTo:
+      name: to
+      in: query
+      required: true
+      description: Ngày kết thúc (bao gồm). Phải ≥ `from`.
+      schema:
+        type: string
+        format: date
+    DashboardPageSize:
+      name: page_size
+      in: query
+      required: false
+      description: Số dòng của danh sách chi tiết (tối đa 100, phân trang cursor — DASHBOARD_DATA §8)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    SchoolId:
+      name: school_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DashboardGrain:
+      name: grain
+      in: query
+      required: false
+      description: |
+        Độ hạt **gợi ý**; server quyết định theo khoảng (≤ 31 ngày → day; 32 ngày–1 năm → week; > 1 năm → month) và chỉ chấp nhận
+        độ hạt **thô hơn** quy tắc, không mịn hơn (DASHBOARD_DATA §8). Phản hồi luôn trả `grain` thực dùng.
+      schema:
+        $ref: '#/components/schemas/DashboardGrain'
+    ReportIdPath:
+      name: report_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ActivityIdPath:
+      name: activity_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    RecordingIdPath:
+      name: recording_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    RubricIdPath:
+      name: rubric_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ReviewTaskIdPath:
+      name: review_task_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+      description: UUIDv7
+    LearningProgress:
+      type: object
+      required:
+        - student_id
+        - objectives
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        totals:
+          type: object
+          properties:
+            lessons_completed:
+              type: integer
+            items_answered:
+              type: integer
+            accuracy:
+              type: number
+              minimum: 0
+              maximum: 1
+            active_minutes:
+              type: integer
+        objectives:
+          type: array
+          items:
+            type: object
+            required:
+              - objective_id
+              - level
+            properties:
+              objective_id:
+                $ref: '#/components/schemas/Uuid'
+              level:
+                $ref: '#/components/schemas/MasteryLevel'
+              evidence_count:
+                type: integer
+              last_evidence_at:
+                $ref: '#/components/schemas/Timestamp'
+    MasteryLevel:
+      type: string
+      enum:
+        - not_started
+        - beginning
+        - developing
+        - proficient
+        - mastered
+    Timestamp:
+      type: string
+      format: date-time
+    Problem:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - code
+      properties:
+        type:
+          type: string
+          maxLength: 2048
+          format: uri
+        title:
+          type: string
+          maxLength: 255
+        status:
+          type: integer
+        code:
+          description: Mã ổn định; client phải chấp nhận giá trị chưa biết
+          anyOf:
+            - $ref: '#/components/schemas/ProblemCode'
+            - type: string
+              maxLength: 64
+        detail:
+          type: string
+          maxLength: 1000
+        instance:
+          type: string
+          maxLength: 2048
+        trace_id:
+          type: string
+          maxLength: 64
+        policy_reason:
+          type: string
+          maxLength: 1000
+    ProblemCode:
+      type: string
+      description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
+      enum:
+        - BAD_REQUEST
+        - TENANT_HEADER_REQUIRED
+        - UNAUTHENTICATED
+        - TOKEN_EXPIRED
+        - PERMISSION_DENIED
+        - MFA_REQUIRED
+        - CALLER_NOT_ALLOWED
+        - FORBIDDEN_SCOPE
+        - POLICY_DENIED
+        - NOT_FOUND
+        - CONFLICT
+        - VALIDATION_FAILED
+        - INVALID_STATE_TRANSITION
+        - VERSION_MISMATCH
+        - PRECONDITION_REQUIRED
+        - IDEMPOTENCY_KEY_REQUIRED
+        - IDEMPOTENCY_KEY_REUSED
+        - IDEMPOTENCY_IN_PROGRESS
+        - RATE_LIMITED
+        - INTERNAL
+        - UNAVAILABLE
+        - MAINTENANCE
+        - ACCOUNT_NOT_PROVISIONED
+        - INVALID_CREDENTIALS
+        - LOGIN_TICKET_INVALID
+        - CLIENT_VERSION_UNSUPPORTED
+        - LOGIN_QUEUE_BUSY
+        - PORTAL_ACCESS_STAFF_ONLY
+        - USERNAME_TAKEN
+        - EMAIL_TAKEN
+        - ACCOUNT_LOCKED
+        - ACCOUNT_DEACTIVATED
+        - NO_ACTIVE_ENROLLMENT
+        - TENANT_ACCESS_DISABLED
+        - ACCESS_OUTSIDE_ALLOWED_HOURS
+        - IDENTITY_CONFLICT
+        - TENANT_NOT_SELECTED
+        - TENANT_MISMATCH
+        - GAME_ACCESS_STUDENT_ONLY
+        - ACTIVE_SESSION_ON_OTHER_DEVICE
+        - RETENTION_BELOW_MINIMUM
+        - RESOURCE_NOT_ASSIGNED
+        - CONTENT_NOT_EDITABLE
+        - CONTENT_VERSION_CONFLICT
+        - CONTENT_NOT_PUBLISHED
+        - ROLLBACK_TARGET_INVALID
+        - MEDIA_TYPE_NOT_ALLOWED
+        - MEDIA_TOO_LARGE
+        - MEDIA_NOT_READY
+        - SIS_SCHOOL_ALREADY_CONNECTED
+        - QUESTION_POOL_INSUFFICIENT
+        - ATTEMPT_NOT_FOUND
+        - ATTEMPT_NOT_IN_PROGRESS
+        - ATTEMPT_ALREADY_SUBMITTED
+        - ATTEMPT_DEADLINE_PASSED
+        - ATTEMPT_EXPIRED
+        - ANSWER_LIMIT_REACHED
+        - INVALID_RESPONSE
+        - ASSIGNMENT_NOT_OPEN
+        - ASSIGNMENT_MAX_ATTEMPTS
+        - ACTIVITY_TYPE_NOT_SUPPORTED
+        - ACTIVITY_CONFIG_INVALID
+        - ATTEMPT_PENDING_REVIEW
+        - EVALUATION_NOT_EDITABLE
+        - MATH_RENDER_FAILED
+        - VIDEO_NOT_READY
+        - VIDEO_SEEK_NOT_ALLOWED
+        - CUE_ANSWER_REQUIRED
+        - RESPONSE_TOO_LONG
+        - RESPONSE_TOO_SHORT
+        - REVIEW_NOT_ASSIGNED
+        - RUBRIC_INCOMPLETE
+        - SUBMISSION_FILE_REJECTED
+        - SIMULATION_LOG_INVALID
+        - SPEAKING_NOT_ENABLED
+        - EXAM_NOT_ASSIGNED
+        - EXAM_NOT_OPEN
+        - EXAM_WINDOW_CLOSED
+        - EXAM_MAX_ATTEMPTS
+        - EXAM_ACTIVE_ON_OTHER_DEVICE
+        - EXAM_TIME_OVER
+        - EXAM_ALREADY_SUBMITTED
+        - EXAM_RESULTS_NOT_RELEASED
+        - STEP_PRECONDITION_FAILED
+        - ITEM_NOT_OWNED
+        - EQUIP_SLOT_INVALID
+        - QUEST_ALREADY_COMPLETED
+        - QUEST_COOLDOWN
+        - AREA_LOCKED
+        - DISCOVERY_ALREADY_FOUND
+        - CHALLENGE_NOT_ELIGIBLE
+        - CHALLENGE_ATTEMPT_LIMIT
+        - BOSS_ENCOUNTER_FULL
+        - BOSS_PHASE_CLOSED
+        - INSUFFICIENT_BALANCE
+        - PURCHASE_LIMIT_REACHED
+        - SHOP_ITEM_UNAVAILABLE
+        - ITEM_ALREADY_OWNED
+        - TRADE_DISABLED
+        - PARTY_ALREADY_IN_PARTY
+        - PARTY_FULL
+        - PARTY_NOT_FOUND
+        - PARTY_NOT_LEADER
+        - PARTY_INVITE_NOT_ALLOWED
+        - PARTY_INVITE_RATE_LIMITED
+        - PARTY_INVITATION_EXPIRED
+        - PARTY_POLICY_VIOLATION
+        - PARTY_MEMBER_NOT_ONLINE
+        - PARTY_ACTIVITY_NOT_ELIGIBLE
+        - ROOM_NOT_MEMBER
+        - MM_TICKET_ALREADY_ACTIVE
+        - MATCH_RESULT_ALREADY_RECORDED
+        - DUEL_EXPIRED
+        - SOCIAL_SCOPE_VIOLATION
+        - FRIEND_LIMIT_REACHED
+        - FRIEND_CODE_INVALID
+        - CLUB_FULL
+        - CLUB_LIMIT_REACHED
+        - CLUB_NOT_APPROVED
+        - CHAT_NOT_ALLOWED
+        - CHAT_KIND_NOT_ALLOWED
+        - CHAT_CONTENT_BLOCKED
+        - CHAT_MUTED
+        - CHAT_RATE_LIMITED
+        - CHAT_POLICY_ALWAYS_ON
+        - CHAT_CHANNEL_CLOSED
+        - CHAT_POLICY_RELAX_NOT_ALLOWED
+        - CHAT_EDIT_WINDOW_EXPIRED
+        - CHAT_RECALL_WINDOW_EXPIRED
+        - CHAT_FORWARD_NOT_ALLOWED
+        - CHAT_PIN_LIMIT_REACHED
+        - CHAT_MENTION_LIMIT
+        - CHAT_TEMPORARILY_UNAVAILABLE
+        - CHAT_FEATURE_DISABLED
+        - CHAT_ASSET_NOT_AVAILABLE
+        - CHAT_CONTENT_HELD
+        - MODERATION_SWITCH_REASON_REQUIRED
+        - TENANT_TOGGLE_NOT_ALLOWED
+        - SENSITIVE_TERM_INVALID
+        - SENSITIVE_CATALOG_REGRESSION_FAILED
+        - ITEM_REF_INVALID
+        - TRANSLATION_INCOMPLETE
+        - EVENT_NOT_AVAILABLE
+        - EVENT_ENDED
+        - EVENT_MILESTONE_NOT_REACHED
+        - SEASON_TIER_NOT_REACHED
+        - EVENT_TEMPLATE_PARAM_NOT_ALLOWED
+        - DASHBOARD_RANGE_TOO_LARGE
+        - DASHBOARD_BUSY
+        - DASHBOARD_QUERY_TIMEOUT
+        - EXPORT_LIMIT_REACHED
+    GradeLevel:
+      type: integer
+      minimum: 1
+      maximum: 9
+    CurriculumSummary:
+      type: object
+      required:
+        - curriculum_id
+        - code
+        - name
+        - version
+      properties:
+        curriculum_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+        name:
+          $ref: '#/components/schemas/LearningName'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        version:
+          type: integer
+          minimum: 1
+          description: Version đang áp dụng cho trường (ADR-0043)
+    LearningName:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: 'Văn bản nội dung học tập: ngôn ngữ gốc (content_language) bắt buộc, bản dịch tùy chọn (ADR-0056 mục 3)'
+      properties:
+        vi:
+          type: string
+          maxLength: 255
+        en:
+          type: string
+          maxLength: 255
+    Subject:
+      type: object
+      required:
+        - subject_id
+        - code
+        - name
+      properties:
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+        name:
+          $ref: '#/components/schemas/LearningName'
+        grade_levels:
+          type: array
+          maxItems: 9
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        icon_url:
+          type: string
+          maxLength: 2048
+          format: uri
+    Topic:
+      type: object
+      required:
+        - topic_id
+        - name
+      properties:
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        parent_topic_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 255
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+    LearningObjective:
+      type: object
+      required:
+        - objective_id
+        - code
+        - description
+      properties:
+        objective_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+          examples:
+            - MATH.G3.NUM.MUL_TABLE
+        description:
+          type: string
+          maxLength: 1000
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        bloom_level:
+          type: string
+          maxLength: 64
+    PageInfo:
+      type: object
+      required:
+        - has_more
+        - limit
+      properties:
+        next_cursor:
+          type:
+            - string
+            - 'null'
+          maxLength: 512
+        has_more:
+          type: boolean
+        limit:
+          type: integer
+    Lesson:
+      type: object
+      required:
+        - lesson_id
+        - version
+        - title
+        - activities
+      description: Lesson đã publish, ghim version theo level session (ADR-0043); không chứa đáp án
+      properties:
+        lesson_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        title:
+          $ref: '#/components/schemas/LearningName'
+        summary:
+          $ref: '#/components/schemas/LearningText'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        objective_ids:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/Uuid'
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        activities:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required:
+              - activity_id
+              - activity_type
+            properties:
+              activity_id:
+                $ref: '#/components/schemas/Uuid'
+              activity_type:
+                type: string
+                maxLength: 64
+              title:
+                $ref: '#/components/schemas/LearningName'
+              required:
+                type: boolean
+              completed:
+                type: boolean
+        completion_rule:
+          type: string
+          enum:
+            - all_required_activities
+            - any_activity
+            - view_only
+        completed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    LearningText:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: 'Văn bản dài nội dung học tập: ngôn ngữ gốc bắt buộc, bản dịch tùy chọn'
+      properties:
+        vi:
+          type: string
+          maxLength: 20000
+        en:
+          type: string
+          maxLength: 20000
+    LessonCompletion:
+      type: object
+      required:
+        - lesson_id
+        - completed_at
+      properties:
+        lesson_id:
+          $ref: '#/components/schemas/Uuid'
+        completed_at:
+          $ref: '#/components/schemas/Timestamp'
+        xp_granted:
+          type: integer
+          minimum: 0
+          description: XP do game-service cấp bất đồng bộ qua event (giá trị dự kiến để hiển thị)
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required:
+                  - field
+                  - code
+                properties:
+                  field:
+                    type: string
+                    maxLength: 64
+                  code:
+                    type: string
+                    maxLength: 64
+                  message:
+                    type: string
+                    maxLength: 1000
+    RecommendationList:
+      type: object
+      required:
+        - items
+        - generated_at
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required:
+              - kind
+              - target_id
+              - reason
+            properties:
+              kind:
+                type: string
+                enum:
+                  - retry_wrong
+                  - lesson
+                  - activity
+                  - objective_review
+              target_id:
+                $ref: '#/components/schemas/Uuid'
+              title:
+                $ref: '#/components/schemas/LearningName'
+              objective_id:
+                $ref: '#/components/schemas/Uuid'
+              reason:
+                type: string
+                enum:
+                  - weak_objective
+                  - due_review
+                  - not_started
+                  - assignment_soon
+        generated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ExamType:
+      type: string
+      enum:
+        - practice_test
+        - mock
+        - chapter
+        - semester
+        - subject
+        - custom
+    ExamSession:
+      type: object
+      required:
+        - exam_session_id
+        - type
+        - is_official
+        - duration_seconds
+      properties:
+        exam_session_id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/ExamType'
+        is_official:
+          type: boolean
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        window_start:
+          $ref: '#/components/schemas/Timestamp'
+        window_end:
+          $ref: '#/components/schemas/Timestamp'
+        duration_seconds:
+          type: integer
+        question_count:
+          type: integer
+        max_attempts:
+          type: integer
+        attempts_used:
+          type: integer
+    Attempt:
+      type: object
+      description: 'Entity Attempt duy nhất cho mọi activity_type và mode (ADR-0048, ADR-0059). Server-authoritative: không chứa đáp án (ADR-0016).'
+      required:
+        - attempt_id
+        - mode
+        - status
+        - started_at
+      properties:
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Vắng mặt với attempt ad-hoc (question_set/selection/retry_wrong)
+        activity_version_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        mode:
+          $ref: '#/components/schemas/AttemptMode'
+        status:
+          $ref: '#/components/schemas/AttemptStatus'
+        context_type:
+          type: string
+          maxLength: 64
+          description: quest_step, assignment, challenge, lesson, free_play, exam_session, match…
+        context_id:
+          $ref: '#/components/schemas/Uuid'
+        started_at:
+          $ref: '#/components/schemas/Timestamp'
+        deadline_at:
+          $ref: '#/components/schemas/Timestamp'
+        submitted_at:
+          $ref: '#/components/schemas/Timestamp'
+        server_time:
+          $ref: '#/components/schemas/Timestamp'
+        feedback_policy:
+          type: string
+          enum:
+            - immediate
+            - on_submit
+            - after_close
+            - never
+        display_language:
+          $ref: '#/components/schemas/Locale'
+          description: Ngôn ngữ hiển thị cố định trong suốt attempt (ADR-0056)
+        items:
+          type: array
+          maxItems: 200
+          description: Câu hỏi (render payload, không đáp án) cho hoạt động dạng câu hỏi
+          items:
+            $ref: '#/components/schemas/QuestionRender'
+        saved_responses:
+          type: array
+          maxItems: 200
+          description: Câu trả lời đã lưu (để resume)
+          items:
+            type: object
+            properties:
+              position:
+                type: integer
+                minimum: 1
+              response:
+                type: object
+                additionalProperties: true
+        resume_position_ms:
+          type: integer
+          minimum: 0
+        progress:
+          $ref: '#/components/schemas/ActivityProgressState'
+        render:
+          $ref: '#/components/schemas/ActivityRender'
+        evaluation:
+          $ref: '#/components/schemas/Evaluation'
+    ActivityType:
+      type: string
+      enum:
+        - quiz
+        - interactive_exercise
+        - written_response
+        - video_lesson
+        - audio_lesson
+        - speaking
+        - simulation
+        - minigame
+        - project
+    AttemptMode:
+      type: string
+      enum:
+        - practice
+        - assignment
+        - quest
+        - minigame
+        - challenge
+        - exam
+        - competition
+        - retry_wrong
+    AttemptStatus:
+      type: string
+      enum:
+        - in_progress
+        - submitted
+        - pending_review
+        - returned
+        - graded
+        - expired
+        - abandoned
+    Locale:
+      type: string
+      enum:
+        - vi-VN
+        - en-US
+      description: Locale đầy đủ dùng ở client/HTTP (ADR-0056)
+    QuestionRender:
+      type: object
+      description: Render payload — KHÔNG chứa đáp án, scoring rule hay giải thích (ADR-0016)
+      required:
+        - position
+        - question_version_id
+        - type
+        - render_payload
+      properties:
+        position:
+          type: integer
+          minimum: 1
+        question_version_id:
+          $ref: '#/components/schemas/Uuid'
+        type:
+          $ref: '#/components/schemas/QuestionType'
+        render_payload:
+          type: object
+          description: Theo specs/schemas/question.schema.json (phần render)
+          additionalProperties: true
+          not:
+            anyOf:
+              - required:
+                  - answer_key
+              - required:
+                  - correct_option_ids
+        media:
+          type: array
+          items:
+            type: object
+            properties:
+              asset_id:
+                $ref: '#/components/schemas/Uuid'
+              url:
+                type: string
+                maxLength: 2048
+                format: uri
+              kind:
+                type: string
+                enum:
+                  - image
+                  - audio
+                  - video
+        max_score:
+          type: number
+    QuestionType:
+      type: string
+      enum:
+        - single_choice
+        - multiple_choice
+        - true_false
+        - fill_in_blank
+        - short_answer
+        - numeric
+        - matching
+        - ordering
+        - drag_drop
+        - image_based
+        - interactive
+    ActivityProgressState:
+      type: object
+      required:
+        - watched_ratio
+        - completed
+      properties:
+        position_ms:
+          type: integer
+          minimum: 0
+        watched_ratio:
+          type: number
+          minimum: 0
+          maximum: 1
+        completed:
+          type: boolean
+        pending_cue_ids:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 64
+    ActivityRender:
+      type: object
+      description: Render payload — KHÔNG chứa đáp án, rubric chấm hay scoring rule (ADR-0016)
+      required:
+        - activity_id
+        - activity_version_id
+        - activity_type
+        - title
+        - render_payload
+      properties:
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        title:
+          type: string
+          maxLength: 255
+        instructions:
+          type: string
+          maxLength: 2000
+        time_limit_seconds:
+          type: integer
+          minimum: 1
+        render_payload:
+          type: object
+          description: Theo specs/schemas/activities/<type>.schema.json (phần hiển thị)
+          additionalProperties: true
+          not:
+            anyOf:
+              - required:
+                  - answer_key
+              - required:
+                  - scoring_rule
+        math_assets:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/MathAssetRef'
+        media:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required:
+              - asset_id
+              - url
+            properties:
+              asset_id:
+                $ref: '#/components/schemas/Uuid'
+              url:
+                type: string
+                maxLength: 2048
+                format: uri
+              kind:
+                type: string
+                enum:
+                  - image
+                  - audio
+                  - video
+                  - subtitle
+        min_client_version:
+          type: string
+          maxLength: 32
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        display_language:
+          $ref: '#/components/schemas/Locale'
+        translation_missing:
+          type: boolean
+          description: true khi học sinh chọn ngôn ngữ chưa có bản dịch — hiển thị ngôn ngữ gốc kèm nhãn "Chưa có bản tiếng Anh"
+    MathAssetRef:
+      type: object
+      description: Công thức đã render sẵn thành SVG (ADR-0055) — game chỉ hiển thị
+      required:
+        - math_id
+        - svg_url
+      properties:
+        math_id:
+          type: string
+          maxLength: 64
+        svg_url:
+          type: string
+          maxLength: 2048
+          format: uri
+        sha256:
+          type: string
+          maxLength: 64
+          pattern: ^[a-f0-9]{64}$
+        speech_text:
+          type: string
+          maxLength: 1000
+        display:
+          type: string
+          enum:
+            - inline
+            - block
+    ContentLanguage:
+      type: string
+      enum:
+        - vi
+        - en
+      description: Khóa ngôn ngữ trong JSON nội dung (ADR-0056)
+    Evaluation:
+      type: object
+      required:
+        - evaluation_id
+        - attempt_id
+        - source
+        - status
+        - effective
+        - created_at
+      properties:
+        evaluation_id:
+          $ref: '#/components/schemas/Uuid'
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        source:
+          type: string
+          enum:
+            - system
+            - teacher
+            - ai_suggestion
+        status:
+          type: string
+          enum:
+            - pending
+            - final
+            - superseded
+        score:
+          type: number
+          minimum: 0
+        max_score:
+          type: number
+          minimum: 0
+        passed:
+          type: boolean
+        criteria_scores:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required:
+              - criterion_id
+              - level_id
+            properties:
+              criterion_id:
+                type: string
+                maxLength: 64
+              level_id:
+                type: string
+                maxLength: 64
+              points:
+                type: number
+                minimum: 0
+              comment:
+                type: string
+                maxLength: 1000
+        feedback:
+          type: string
+          maxLength: 4000
+        feedback_math_assets:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/MathAssetRef'
+        effective:
+          type: boolean
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    ActivityResponseSubmission:
+      type: object
+      description: Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm.
+      required:
+        - response
+      properties:
+        kind:
+          type: string
+          enum:
+            - question
+            - cue_answer
+            - branch_choice
+            - simulation_question
+          default: question
+          description: Vắng mặt = question; exam (PUT /exams/attempts/{attempt_id}/answers/{position}) chỉ dùng question
+        position:
+          type: integer
+          minimum: 1
+          description: Vị trí item (kind=question)
+        question_version_id:
+          $ref: '#/components/schemas/Uuid'
+        cue_id:
+          type: string
+          maxLength: 64
+        branch_point_id:
+          type: string
+          maxLength: 64
+        option_id:
+          type: string
+          maxLength: 64
+        response:
+          type: object
+          additionalProperties: true
+          description: Câu trả lời thô theo question type (specs/schemas/question.schema.json); không có biểu thức toán do học sinh gõ (ADR-0055)
+        client_elapsed_ms:
+          type: integer
+          minimum: 0
+          description: Chỉ tham khảo; server dùng thời gian của server
+    AttemptResult:
+      type: object
+      required:
+        - attempt_id
+        - status
+      properties:
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/AttemptStatus'
+        score:
+          type:
+            - number
+            - 'null'
+        max_score:
+          type:
+            - number
+            - 'null'
+        correct_count:
+          type:
+            - integer
+            - 'null'
+        duration_ms:
+          type: integer
+        result_available_at:
+          $ref: '#/components/schemas/Timestamp'
+        rewards:
+          type: array
+          description: Phần thưởng game đã cấp (không ảnh hưởng điểm)
+          items:
+            $ref: '#/components/schemas/RewardPreview'
+    RewardPreview:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - xp
+            - item
+            - badge
+        amount:
+          type: integer
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+    AttemptReview:
+      type: object
+      required:
+        - attempt_id
+        - items
+      properties:
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        score:
+          type:
+            - number
+            - 'null'
+        max_score:
+          type:
+            - number
+            - 'null'
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              position:
+                type: integer
+              question:
+                $ref: '#/components/schemas/QuestionRender'
+              response:
+                type: object
+                additionalProperties: true
+              is_correct:
+                type:
+                  - boolean
+                  - 'null'
+              score:
+                type:
+                  - number
+                  - 'null'
+              explanation:
+                type:
+                  - object
+                  - 'null'
+                additionalProperties: true
+              objective_ids:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Uuid'
+        weak_objectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+                enum:
+                  - lesson
+                  - question_set
+                  - quest
+              ref_id:
+                $ref: '#/components/schemas/Uuid'
+              title:
+                type: string
+                maxLength: 255
+    ContentStatus:
+      type: string
+      enum:
+        - draft
+        - in_review
+        - approved
+        - published
+        - archived
+        - rejected
+    QuestionAuthoring:
+      allOf:
+        - $ref: '#/components/schemas/ContentVersion'
+        - $ref: '#/components/schemas/QuestionAuthoringInput'
+    ContentVersion:
+      type: object
+      required:
+        - content_type
+        - content_id
+        - version
+        - status
+      properties:
+        content_type:
+          type: string
+          maxLength: 128
+        content_id:
+          $ref: '#/components/schemas/Uuid'
+        content_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+        tenant_id:
+          description: Tenant sở hữu; null với dữ liệu platform (owner_scope = platform). Luôn trả về cho System Admin
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        school_id:
+          $ref: '#/components/schemas/Uuid'
+        assigned:
+          type: boolean
+          description: true nếu là dữ liệu platform được gán cho tenant (chỉ đọc với tenant)
+        cloned_from_id:
+          $ref: '#/components/schemas/Uuid'
+        cloned_from_tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        author_id:
+          $ref: '#/components/schemas/Uuid'
+        reviewer_id:
+          $ref: '#/components/schemas/Uuid'
+        published_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        translation_status:
+          $ref: '#/components/schemas/TranslationStatus'
+          readOnly: true
+    TranslationStatus:
+      type: string
+      enum:
+        - complete
+        - partial
+        - outdated
+    QuestionAuthoringInput:
+      type: object
+      description: Dạng soạn thảo — chỉ dùng trong CMS, có answer_key
+      properties:
+        tenant_id:
+          description: Tenant đích — bắt buộc khi người gọi là System Admin và owner_scope = tenant; người dùng tenant bỏ trống (khác tenant phiên → TENANT_MISMATCH)
+          $ref: '#/components/schemas/Uuid'
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+          default: tenant
+        type:
+          $ref: '#/components/schemas/QuestionType'
+        stem:
+          type: object
+          additionalProperties: true
+        render_payload:
+          type: object
+          additionalProperties: true
+        answer_key:
+          type: object
+          additionalProperties: true
+        scoring_rule:
+          type: object
+          additionalProperties: true
+        explanation:
+          type: object
+          additionalProperties: true
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+        media_refs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+          description: Ngôn ngữ gốc của câu hỏi; stem/explanation dùng khóa vi/en (specs/schemas/question.schema.json)
+    ContentVersionHistory:
+      type: object
+      required:
+        - item_id
+        - data
+        - page
+      properties:
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        current_version:
+          type: integer
+          minimum: 1
+          description: Version học sinh nhận khi bắt đầu lượt mới; vắng = chưa publish/đã gỡ
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentVersionSummary'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    ContentVersionSummary:
+      type: object
+      required:
+        - version
+        - status
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        content_version_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        is_current:
+          type: boolean
+          description: true nếu là con trỏ release hiện hành
+        change_note:
+          type: string
+          maxLength: 500
+        author_id:
+          $ref: '#/components/schemas/Uuid'
+        reviewer_id:
+          $ref: '#/components/schemas/Uuid'
+        published_by:
+          $ref: '#/components/schemas/Uuid'
+        published_at:
+          $ref: '#/components/schemas/Timestamp'
+        publish_at:
+          $ref: '#/components/schemas/Timestamp'
+        active_pinned_sessions:
+          type: integer
+          minimum: 0
+          description: Số lượt chơi/học đang ghim version này (ước lượng)
+    ContentVersionDiff:
+      type: object
+      required:
+        - from_version
+        - to_version
+        - changes
+      properties:
+        from_version:
+          type: integer
+          minimum: 1
+        to_version:
+          type: integer
+          minimum: 1
+        changes:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required:
+              - path
+              - op
+            properties:
+              path:
+                type: string
+                maxLength: 512
+                description: JSON pointer của field/khối
+              op:
+                type: string
+                enum:
+                  - added
+                  - removed
+                  - changed
+              before:
+                description: Giá trị cũ (answer_key chỉ trả khi có quyền review)
+              after:
+                description: Giá trị mới
+    PublishRequest:
+      type: object
+      properties:
+        publish_at:
+          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay
+          $ref: '#/components/schemas/Timestamp'
+        change_note:
+          type: string
+          maxLength: 500
+    ContentRelease:
+      type: object
+      required:
+        - release_id
+        - item_type
+        - item_id
+        - action
+        - released_by
+        - released_at
+      properties:
+        release_id:
+          $ref: '#/components/schemas/Uuid'
+        item_type:
+          type: string
+          maxLength: 64
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        action:
+          type: string
+          enum:
+            - publish
+            - rollback
+            - unpublish
+        from_version:
+          type: integer
+          minimum: 1
+        to_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 500
+        scheduled_for:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum:
+            - scheduled
+            - applied
+            - cancelled
+        released_by:
+          $ref: '#/components/schemas/Uuid'
+        released_at:
+          $ref: '#/components/schemas/Timestamp'
+    RollbackRequest:
+      type: object
+      required:
+        - to_version
+        - reason
+      properties:
+        to_version:
+          type: integer
+          minimum: 1
+          description: Số version đã publish của chính item (ROLLBACK_TARGET_INVALID nếu không hợp lệ)
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ReasonRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    TranslationExportRequest:
+      type: object
+      required:
+        - target_language
+        - format
+      properties:
+        content_types:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 64
+          description: 'CMS: loại nội dung học tập; Game Studio: config_type của game-service'
+        content_ids:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/Uuid'
+        source_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        target_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        format:
+          type: string
+          enum:
+            - xliff
+            - csv
+        only_missing:
+          type: boolean
+          default: true
+    TranslationJob:
+      type: object
+      required:
+        - job_id
+        - kind
+        - status
+      properties:
+        job_id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          enum:
+            - export
+            - import
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - succeeded
+            - failed
+        download_url:
+          type: string
+          maxLength: 2048
+          format: uri
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        report:
+          type: object
+          properties:
+            total:
+              type: integer
+            updated:
+              type: integer
+            skipped:
+              type: integer
+            errors:
+              type: array
+              maxItems: 500
+              items:
+                type: object
+                properties:
+                  ref:
+                    type: string
+                    maxLength: 255
+                  message:
+                    type: string
+                    maxLength: 500
+    TranslationImportRequest:
+      type: object
+      required:
+        - asset_id
+        - format
+        - target_language
+      properties:
+        asset_id:
+          $ref: '#/components/schemas/Uuid'
+          description: File đã upload qua presign media
+        format:
+          type: string
+          enum:
+            - xliff
+            - csv
+        target_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        dry_run:
+          type: boolean
+          default: false
+    MediaPresignRequest:
+      type: object
+      required:
+        - kind
+        - filename
+        - mime_type
+        - size_bytes
+        - sha256
+        - license
+      properties:
+        kind:
+          $ref: '#/components/schemas/MediaKind'
+        filename:
+          type: string
+          maxLength: 255
+        mime_type:
+          type: string
+          maxLength: 127
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 314572800
+          description: 'Giới hạn [Proposed]: ảnh 10 MB, âm thanh 20 MB, video 300 MB, mô hình 3D 50 MB'
+        sha256:
+          type: string
+          maxLength: 64
+          pattern: ^[0-9a-f]{64}$
+        license:
+          type: string
+          maxLength: 64
+        alt_text:
+          type: string
+          maxLength: 500
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+          default: tenant
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+    MediaKind:
+      type: string
+      enum:
+        - image
+        - audio
+        - video
+        - model3d
+        - document
+    MediaPresignResponse:
+      type: object
+      required:
+        - asset_id
+        - status
+        - upload_url
+        - expires_at
+      properties:
+        asset_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/MediaStatus'
+        upload_url:
+          type: string
+          format: uri
+          maxLength: 2048
+        upload_headers:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 512
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        duplicate_of:
+          $ref: '#/components/schemas/Uuid'
+    MediaStatus:
+      type: string
+      enum:
+        - quarantined
+        - processing
+        - ready
+        - rejected
+    MediaAsset:
+      type: object
+      required:
+        - asset_id
+        - kind
+        - status
+        - sha256
+        - original_filename
+      properties:
+        asset_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+        kind:
+          $ref: '#/components/schemas/MediaKind'
+        original_filename:
+          type: string
+          maxLength: 255
+        mime_type:
+          type: string
+          maxLength: 127
+        size_bytes:
+          type: integer
+          format: int64
+        width:
+          type: integer
+        height:
+          type: integer
+        duration_ms:
+          type: integer
+        sha256:
+          type: string
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/MediaStatus'
+        reject_reason:
+          type: string
+          maxLength: 255
+        alt_text:
+          type: string
+          maxLength: 500
+        license:
+          type: string
+          maxLength: 64
+        variants:
+          type: array
+          maxItems: 32
+          items:
+            type: object
+            required:
+              - variant
+              - url
+            properties:
+              variant:
+                type: string
+                maxLength: 64
+              url:
+                type: string
+                format: uri
+                maxLength: 2048
+              size_bytes:
+                type: integer
+                format: int64
+        used_in:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            properties:
+              item_type:
+                type: string
+                maxLength: 64
+              item_id:
+                $ref: '#/components/schemas/Uuid'
+              version:
+                type: integer
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    Assignment:
+      allOf:
+        - $ref: '#/components/schemas/AssignmentCreate'
+        - type: object
+          required:
+            - assignment_id
+            - status
+            - created_by
+          properties:
+            assignment_id:
+              $ref: '#/components/schemas/Uuid'
+            tenant_id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              type: string
+              enum:
+                - scheduled
+                - open
+                - closed
+                - cancelled
+            created_by:
+              $ref: '#/components/schemas/Uuid'
+            completion:
+              type: object
+              properties:
+                assigned:
+                  type: integer
+                submitted:
+                  type: integer
+                average_score:
+                  type:
+                    - number
+                    - 'null'
+    AssignmentCreate:
+      type: object
+      required:
+        - title
+        - content_ref
+        - mode
+        - targets
+        - open_at
+        - due_at
+      properties:
+        tenant_id:
+          description: Tenant đích — bắt buộc khi người gọi là System Admin; người dùng tenant bỏ trống
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+          maxLength: 120
+        content_ref:
+          type: object
+          required:
+            - content_type
+            - content_version_id
+          properties:
+            content_type:
+              type: string
+              description: quest/minigame_config chỉ chọn version đã publish từ /lms/catalog/game-activities (ADR-0027)
+              enum:
+                - question_set
+                - assessment_blueprint
+                - lesson
+                - quest
+                - minigame_config
+            content_version_id:
+              $ref: '#/components/schemas/Uuid'
+        mode:
+          type: string
+          enum:
+            - practice
+            - graded
+        targets:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - target_type
+              - target_id
+            properties:
+              target_type:
+                type: string
+                enum:
+                  - class
+                  - group
+                  - student
+              target_id:
+                $ref: '#/components/schemas/Uuid'
+        open_at:
+          $ref: '#/components/schemas/Timestamp'
+        due_at:
+          $ref: '#/components/schemas/Timestamp'
+        max_attempts:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 1
+        result_visibility:
+          type: string
+          enum:
+            - immediate
+            - after_due
+            - manual
+          default: after_due
+    ClassDashboard:
+      type: object
+      required:
+        - class_id
+        - generated_at
+        - grain
+        - data_as_of
+        - is_partial
+      properties:
+        class_id:
+          $ref: '#/components/schemas/Uuid'
+        generated_at:
+          $ref: '#/components/schemas/Timestamp'
+        active_students_7d:
+          type: integer
+        assignments_open:
+          type: integer
+        objective_distribution:
+          type: array
+          items:
+            type: object
+            properties:
+              objective_id:
+                $ref: '#/components/schemas/Uuid'
+              code:
+                type: string
+                maxLength: 64
+              level_counts:
+                type: object
+                additionalProperties:
+                  type: integer
+        students_needing_attention:
+          type: array
+          items:
+            type: object
+            properties:
+              student_id:
+                $ref: '#/components/schemas/Uuid'
+              display_name:
+                type: string
+                maxLength: 128
+              weak_objective_ids:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Uuid'
+        grain:
+          $ref: '#/components/schemas/DashboardGrain'
+        data_as_of:
+          $ref: '#/components/schemas/Timestamp'
+          description: '`computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8)'
+        is_partial:
+          type: boolean
+          description: true nếu có dòng chưa chốt (hôm nay)
+    DashboardGrain:
+      type: string
+      enum:
+        - day
+        - week
+        - month
+    TeacherDashboard:
+      allOf:
+        - $ref: '#/components/schemas/DashboardMeta'
+        - type: object
+          required:
+            - class_id
+            - widgets
+          description: Gói widget trang chủ giáo viên trong một lần gọi (DASHBOARD_DATA §5)
+          properties:
+            class_id:
+              $ref: '#/components/schemas/Uuid'
+            subject_id:
+              $ref: '#/components/schemas/Uuid'
+            widgets:
+              type: object
+              properties:
+                active_students:
+                  type: integer
+                  minimum: 0
+                assignments_open:
+                  type: integer
+                  minimum: 0
+                assignments_due_soon:
+                  type: integer
+                  minimum: 0
+                reviews_pending:
+                  type: integer
+                  minimum: 0
+                accuracy:
+                  type:
+                    - number
+                    - 'null'
+                  minimum: 0
+                  maximum: 1
+                active_minutes_series:
+                  type: array
+                  maxItems: 120
+                  items:
+                    $ref: '#/components/schemas/AnalyticsPoint'
+                weak_objectives:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: object
+                    required:
+                      - objective_id
+                      - code
+                    properties:
+                      objective_id:
+                        $ref: '#/components/schemas/Uuid'
+                      code:
+                        type: string
+                        maxLength: 64
+                      below_proficient_ratio:
+                        type: number
+                        minimum: 0
+                        maximum: 1
+                students_needing_attention:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    required:
+                      - student_id
+                    properties:
+                      student_id:
+                        $ref: '#/components/schemas/Uuid'
+                      display_name:
+                        type: string
+                        maxLength: 128
+                      reason:
+                        type: string
+                        enum:
+                          - inactive
+                          - low_accuracy
+                          - missed_assignments
+    DashboardMeta:
+      type: object
+      required:
+        - grain
+        - data_as_of
+        - is_partial
+      description: Siêu dữ liệu bắt buộc của mọi phản hồi dashboard (DASHBOARD_DATA §8)
+      properties:
+        grain:
+          $ref: '#/components/schemas/DashboardGrain'
+        data_as_of:
+          $ref: '#/components/schemas/Timestamp'
+          description: '`computed_at` cũ nhất trong kết quả'
+        is_partial:
+          type: boolean
+          description: true nếu có dòng chưa chốt (`is_final = false`, ví dụ hôm nay)
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+    AnalyticsPoint:
+      type: object
+      required:
+        - period_start
+      properties:
+        period_start:
+          type: string
+          format: date
+        value:
+          type:
+            - number
+            - 'null'
+        suppressed:
+          type: boolean
+          description: true khi ô < 5 học sinh bị ẩn
+        is_final:
+          type: boolean
+    AnalyticsSeries:
+      allOf:
+        - $ref: '#/components/schemas/DashboardMeta'
+        - type: object
+          required:
+            - metric
+            - points
+          properties:
+            metric:
+              type: string
+              maxLength: 64
+            unit:
+              type: string
+              maxLength: 32
+            points:
+              type: array
+              maxItems: 120
+              items:
+                $ref: '#/components/schemas/AnalyticsPoint'
+    Challenge:
+      allOf:
+        - $ref: '#/components/schemas/ChallengeCreate'
+        - type: object
+          required:
+            - challenge_id
+            - status
+            - created_by
+          properties:
+            challenge_id:
+              $ref: '#/components/schemas/Uuid'
+            tenant_id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              type: string
+              enum:
+                - scheduled
+                - running
+                - completed
+                - cancelled
+            created_by:
+              $ref: '#/components/schemas/Uuid'
+            tournament_id:
+              description: Có khi template thuộc loại giải đấu
+              oneOf:
+                - $ref: '#/components/schemas/Uuid'
+                - type: 'null'
+    ChallengeCreate:
+      type: object
+      required:
+        - template_id
+        - name
+        - targets
+        - starts_at
+      properties:
+        tenant_id:
+          description: Tenant đích — bắt buộc khi người gọi là System Admin; người dùng tenant bỏ trống
+          $ref: '#/components/schemas/Uuid'
+        template_id:
+          description: Template phải được gán cho tenant (nếu không → RESOURCE_NOT_ASSIGNED)
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 80
+        targets:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - target_type
+              - target_id
+            properties:
+              target_type:
+                type: string
+                enum:
+                  - class
+                  - group
+                  - grade_level
+                  - school
+              target_id:
+                $ref: '#/components/schemas/Uuid'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          $ref: '#/components/schemas/Timestamp'
+        participation:
+          type: string
+          enum:
+            - individual
+            - study_group
+        question_set_version_id:
+          $ref: '#/components/schemas/Uuid'
+        params:
+          type: object
+          description: Chỉ các khóa nằm trong ChallengeTemplate.allowed_params; khóa khác → 422
+          additionalProperties: true
+    ChallengeTemplate:
+      type: object
+      required:
+        - template_id
+        - version
+        - kind
+        - name
+        - allowed_params
+      properties:
+        template_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+        kind:
+          type: string
+          enum:
+            - class_challenge
+            - school_tournament
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        tournament_format:
+          type: string
+          enum:
+            - single_elim
+            - double_elim
+            - round_robin
+            - team
+        grade_levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        allowed_params:
+          type: array
+          description: Tham số tenant được phép điền
+          items:
+            type: string
+            maxLength: 64
+        reward_summary:
+          type: string
+          maxLength: 1000
+          description: Mô tả phần thưởng cố định của template (tenant không sửa)
+    MatchMode:
+      type: string
+      enum:
+        - battle_1v1
+        - team_battle
+        - coop_challenge
+        - timed_quiz
+        - tournament
+    GameActivityCatalogItem:
+      type: object
+      required:
+        - content_type
+        - content_version_id
+        - title
+      properties:
+        content_type:
+          type: string
+          enum:
+            - quest
+            - minigame_config
+        content_id:
+          $ref: '#/components/schemas/Uuid'
+        content_version_id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+          maxLength: 255
+        grade_levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+        estimated_minutes:
+          type: integer
+        preview_media_url:
+          type: string
+          maxLength: 2048
+          format: uri
+    LearningSummary:
+      allOf:
+        - $ref: '#/components/schemas/DashboardMeta'
+        - type: object
+          description: Tổng hợp học tập cấp tenant/platform; ô < 5 học sinh bị ẩn (null)
+          properties:
+            active_students:
+              type:
+                - integer
+                - 'null'
+            active_minutes_avg:
+              type:
+                - number
+                - 'null'
+            attempts_completed:
+              type:
+                - integer
+                - 'null'
+            accuracy:
+              type:
+                - number
+                - 'null'
+              minimum: 0
+              maximum: 1
+            assignment_completion_rate:
+              type:
+                - number
+                - 'null'
+              minimum: 0
+              maximum: 1
+            by_school:
+              type: array
+              maxItems: 200
+              items:
+                type: object
+                properties:
+                  school_id:
+                    $ref: '#/components/schemas/Uuid'
+                  active_students:
+                    type:
+                      - integer
+                      - 'null'
+                  accuracy:
+                    type:
+                      - number
+                      - 'null'
+            by_tenant:
+              type: array
+              maxItems: 500
+              description: Chỉ ở `/admin/analytics/learning/summary`
+              items:
+                type: object
+                properties:
+                  tenant_id:
+                    $ref: '#/components/schemas/Uuid'
+                  active_students:
+                    type:
+                      - integer
+                      - 'null'
+                  accuracy:
+                    type:
+                      - number
+                      - 'null'
+            series:
+              type: array
+              maxItems: 10
+              items:
+                type: object
+                required:
+                  - metric
+                  - points
+                properties:
+                  metric:
+                    type: string
+                    maxLength: 64
+                  points:
+                    type: array
+                    maxItems: 120
+                    items:
+                      $ref: '#/components/schemas/AnalyticsPoint'
+            suppressed_cells:
+              type: integer
+              minimum: 0
+    ReportRequest:
+      type: object
+      required:
+        - report_type
+        - format
+        - from
+        - to
+      additionalProperties: false
+      properties:
+        report_type:
+          type: string
+          enum:
+            - learning_summary
+            - class_progress
+            - assignment_results
+            - game_summary
+        format:
+          type: string
+          enum:
+            - csv
+            - xlsx
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        school_ids:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Uuid'
+        tenant_ids:
+          type: array
+          maxItems: 100
+          description: Chỉ `/admin/reports` (System Admin)
+          items:
+            $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+    ReportJob:
+      type: object
+      required:
+        - report_id
+        - status
+        - report_type
+        - format
+        - created_at
+      properties:
+        report_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - succeeded
+            - failed
+            - expired
+        report_type:
+          type: string
+          maxLength: 64
+        format:
+          type: string
+          enum:
+            - csv
+            - xlsx
+        row_count:
+          type: integer
+          minimum: 0
+        download_url:
+          type:
+            - string
+            - 'null'
+          maxLength: 2048
+          format: uri
+          description: URL ký, hết hạn sau 15 phút
+        download_expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        finished_at:
+          $ref: '#/components/schemas/Timestamp'
+    ActivityAttemptStart:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+            - practice
+            - assignment
+            - quest
+            - minigame
+            - challenge
+            - retry_wrong
+          default: practice
+        context_type:
+          type: string
+          enum:
+            - free_play
+            - quest_step
+            - assignment
+            - challenge
+            - lesson
+        context_id:
+          $ref: '#/components/schemas/Uuid'
+    AttemptSummary:
+      type: object
+      required:
+        - attempt_id
+        - mode
+        - status
+        - started_at
+      properties:
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        title:
+          type: string
+          maxLength: 255
+          description: Tên hoạt động theo display_language
+        mode:
+          $ref: '#/components/schemas/AttemptMode'
+        status:
+          $ref: '#/components/schemas/AttemptStatus'
+        started_at:
+          $ref: '#/components/schemas/Timestamp'
+        submitted_at:
+          $ref: '#/components/schemas/Timestamp'
+        score:
+          type:
+            - number
+            - 'null'
+        max_score:
+          type:
+            - number
+            - 'null'
+    AdHocAttemptStart:
+      type: object
+      required:
+        - mode
+        - source
+      description: Attempt không gắn activity cố định (thay POST /exercises/attempts — ADR-0059)
+      properties:
+        mode:
+          type: string
+          enum:
+            - practice
+            - assignment
+            - retry_wrong
+        source:
+          type: object
+          required:
+            - kind
+          properties:
+            kind:
+              type: string
+              enum:
+                - question_set
+                - selection
+                - retry_wrong
+            question_set_id:
+              $ref: '#/components/schemas/Uuid'
+            subject_id:
+              $ref: '#/components/schemas/Uuid'
+            topic_id:
+              $ref: '#/components/schemas/Uuid'
+            objective_id:
+              $ref: '#/components/schemas/Uuid'
+            difficulty:
+              type: integer
+              minimum: 1
+              maximum: 5
+            question_count:
+              type: integer
+              minimum: 1
+              maximum: 50
+        context_type:
+          type: string
+          enum:
+            - free_play
+            - assignment
+        context_id:
+          $ref: '#/components/schemas/Uuid'
+    ActivityProgressReport:
+      type: object
+      required:
+        - client_seq
+        - position_ms
+      properties:
+        client_seq:
+          type: integer
+          minimum: 0
+          description: Tăng dần; server bỏ qua giá trị cũ (idempotent)
+        position_ms:
+          type: integer
+          minimum: 0
+        watched_ranges:
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            required:
+              - start_ms
+              - end_ms
+            properties:
+              start_ms:
+                type: integer
+                minimum: 0
+              end_ms:
+                type: integer
+                minimum: 0
+        playback_rate:
+          type: number
+          minimum: 0.5
+          maximum: 2
+    ActivityResponseResult:
+      type: object
+      required:
+        - accepted
+      properties:
+        accepted:
+          type: boolean
+        position:
+          type: integer
+          minimum: 1
+        is_correct:
+          type:
+            - boolean
+            - 'null'
+          description: null khi feedback policy chưa cho hiện
+        score:
+          type:
+            - number
+            - 'null'
+        explanation:
+          type: string
+          maxLength: 4000
+        explanation_math_assets:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/MathAssetRef'
+        correct_response:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: Chỉ trả khi chính sách practice cho phép hiện đáp án sau khi trả lời
+        next_segment_id:
+          type: string
+          maxLength: 64
+    WrittenResponseDraft:
+      type: object
+      required:
+        - client_seq
+      properties:
+        client_seq:
+          type: integer
+          minimum: 0
+        response_kind:
+          type: string
+          enum:
+            - short_answer
+            - long_answer
+            - essay
+            - math_solution
+        body:
+          type: string
+          maxLength: 10000
+          description: Văn bản thường (không nhập công thức trong game)
+        numeric_answer:
+          type: number
+        milestone_id:
+          type: string
+          maxLength: 64
+    WrittenResponseState:
+      type: object
+      required:
+        - saved_at
+        - word_count
+      properties:
+        saved_at:
+          $ref: '#/components/schemas/Timestamp'
+        word_count:
+          type: integer
+          minimum: 0
+        char_count:
+          type: integer
+          minimum: 0
+        min_words:
+          type: integer
+          minimum: 0
+        max_words:
+          type: integer
+          minimum: 0
+    UploadPresign:
+      type: object
+      required:
+        - upload_id
+        - upload_url
+        - expires_at
+      properties:
+        upload_id:
+          $ref: '#/components/schemas/Uuid'
+          description: recording_id hoặc submission_id
+        upload_url:
+          type: string
+          maxLength: 2048
+          format: uri
+        method:
+          type: string
+          enum:
+            - PUT
+        required_headers:
+          type: object
+          maxProperties: 10
+          additionalProperties:
+            type: string
+            maxLength: 512
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    AudioRecording:
+      type: object
+      required:
+        - recording_id
+        - attempt_id
+        - status
+      properties:
+        recording_id:
+          $ref: '#/components/schemas/Uuid'
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - uploading
+            - ready
+            - processed
+            - rejected
+            - expired
+        duration_ms:
+          type: integer
+          minimum: 0
+        playback_url:
+          type: string
+          maxLength: 2048
+          format: uri
+          description: Signed URL 15 phút
+        retention_until:
+          $ref: '#/components/schemas/Timestamp'
+    SimulationRunInput:
+      type: object
+      required:
+        - template_code
+        - template_version
+        - seed
+        - parameters
+        - action_log
+      properties:
+        template_code:
+          type: string
+          maxLength: 64
+        template_version:
+          type: integer
+          minimum: 1
+        seed:
+          type: integer
+          minimum: 0
+        parameters:
+          type: object
+          maxProperties: 50
+          additionalProperties: true
+        action_log:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            required:
+              - t_ms
+              - action
+            properties:
+              t_ms:
+                type: integer
+                minimum: 0
+              action:
+                type: string
+                maxLength: 64
+              args:
+                type: object
+                maxProperties: 20
+                additionalProperties: true
+        client_outcome:
+          type: object
+          maxProperties: 50
+          additionalProperties: true
+    SimulationRunResult:
+      type: object
+      required:
+        - run_id
+        - verified
+      properties:
+        run_id:
+          $ref: '#/components/schemas/Uuid'
+        verified:
+          type: boolean
+        goal_met:
+          type: boolean
+        verified_outcome:
+          type: object
+          maxProperties: 50
+          additionalProperties: true
+        feedback:
+          type: string
+          maxLength: 1000
+    WrongQuestion:
+      type: object
+      required:
+        - question_version_id
+        - wrong_count
+        - last_wrong_at
+      properties:
+        question_version_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+        wrong_count:
+          type: integer
+          minimum: 1
+        last_wrong_at:
+          $ref: '#/components/schemas/Timestamp'
+        next_review_at:
+          $ref: '#/components/schemas/Timestamp'
+          description: Lịch ôn 1–3–7 ngày (LEARNING_EXPERIENCE)
+    MyAssignment:
+      type: object
+      required:
+        - assignment_id
+        - title
+        - status
+      properties:
+        assignment_id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+          maxLength: 255
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        content_kind:
+          type: string
+          enum:
+            - activity
+            - question_set
+            - assessment
+            - quest
+            - lesson
+        content_ref:
+          $ref: '#/components/schemas/Uuid'
+        open_at:
+          $ref: '#/components/schemas/Timestamp'
+        due_at:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum:
+            - not_started
+            - in_progress
+            - submitted
+            - pending_review
+            - graded
+            - overdue
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        attempts_left:
+          type:
+            - integer
+            - 'null'
+    ActivityDefinition:
+      type: object
+      required:
+        - activity_id
+        - activity_type
+        - title
+        - status
+        - version
+      properties:
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        title:
+          $ref: '#/components/schemas/LearningName'
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_levels:
+          type: array
+          maxItems: 9
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+        config:
+          type: object
+          additionalProperties: true
+        current_published_version:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+        translation_status:
+          $ref: '#/components/schemas/TranslationStatus'
+          readOnly: true
+    ActivityDefinitionInput:
+      type: object
+      required:
+        - activity_type
+        - title
+        - grade_levels
+        - subject_id
+        - objective_ids
+        - config
+        - content_language
+      properties:
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        title:
+          $ref: '#/components/schemas/LearningName'
+        description:
+          $ref: '#/components/schemas/LearningText'
+        instructions:
+          $ref: '#/components/schemas/LearningText'
+        grade_levels:
+          type: array
+          minItems: 1
+          maxItems: 9
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+        time_limit_seconds:
+          type: integer
+          minimum: 1
+        rubric_id:
+          $ref: '#/components/schemas/Uuid'
+        reward_rule_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Tenant đích khi System Admin tạo (ADR-0027); null = nội dung platform
+        config:
+          type: object
+          description: content/interaction/evaluation/feedback/scoring/completion_rule theo specs/schemas/activities/<type>.schema.json (ACTIVITY_CONFIG_INVALID)
+          additionalProperties: true
+        math_assets:
+          type: array
+          maxItems: 200
+          description: SVG + speech text do portal render bằng MathJax 4 (ADR-0055); server sanitize, thiếu → MATH_RENDER_FAILED
+          items:
+            type: object
+            required:
+              - math_id
+              - latex
+              - svg
+            properties:
+              math_id:
+                type: string
+                maxLength: 64
+              latex:
+                type: string
+                maxLength: 2000
+              svg:
+                type: string
+                maxLength: 262144
+                description: SVG ≤ 256 KB
+              speech_text:
+                type: string
+                maxLength: 1000
+              display:
+                type: string
+                enum:
+                  - inline
+                  - block
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+    ActivityTypeInfo:
+      type: object
+      required:
+        - activity_type
+        - schema_url
+        - evaluation_strategies
+      properties:
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        label:
+          type: string
+          maxLength: 128
+        schema_url:
+          type: string
+          maxLength: 2048
+          description: Đường dẫn JSON Schema cấu hình của loại
+        schema_version:
+          type: integer
+          minimum: 1
+        evaluation_strategies:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/EvaluationStrategy'
+        min_client_version:
+          type: string
+          maxLength: 32
+        status:
+          type: string
+          enum:
+            - enabled
+            - preview
+            - disabled
+    EvaluationStrategy:
+      type: string
+      enum:
+        - auto
+        - exact
+        - accepted_answers
+        - rule
+        - numeric_tolerance
+        - rubric
+        - teacher_review
+        - completion
+        - deterministic_check
+    Rubric:
+      allOf:
+        - $ref: '#/components/schemas/RubricInput'
+        - type: object
+          required:
+            - rubric_id
+            - version
+            - status
+          properties:
+            rubric_id:
+              $ref: '#/components/schemas/Uuid'
+            version:
+              type: integer
+              minimum: 1
+            status:
+              $ref: '#/components/schemas/ContentStatus'
+            max_points:
+              type: number
+              minimum: 0
+            updated_at:
+              $ref: '#/components/schemas/Timestamp'
+    RubricInput:
+      type: object
+      required:
+        - title
+        - criteria
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_levels:
+          type: array
+          maxItems: 9
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        criteria:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/RubricCriterion'
+    RubricCriterion:
+      type: object
+      required:
+        - criterion_id
+        - title
+        - levels
+      properties:
+        criterion_id:
+          type: string
+          maxLength: 64
+        title:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 1000
+        weight:
+          type: number
+          minimum: 0
+        required:
+          type: boolean
+        objective_ids:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/Uuid'
+        levels:
+          type: array
+          minItems: 2
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/RubricLevel'
+    RubricLevel:
+      type: object
+      required:
+        - level_id
+        - label
+        - points
+      properties:
+        level_id:
+          type: string
+          maxLength: 64
+        label:
+          type: string
+          maxLength: 64
+        points:
+          type: number
+          minimum: 0
+        descriptor:
+          type: string
+          maxLength: 1000
+    SimulationTemplate:
+      type: object
+      required:
+        - template_code
+        - template_version
+        - title
+        - parameter_schema
+      properties:
+        template_code:
+          type: string
+          maxLength: 64
+        template_version:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          maxLength: 255
+        kind:
+          type: string
+          enum:
+            - science
+            - physics
+            - geometry_3d
+            - virtual_lab
+            - experiment
+        parameter_schema:
+          type: object
+          description: JSON Schema tham số mà CMS được phép cấu hình (không có script, ADR-0052)
+          additionalProperties: true
+        min_client_version:
+          type: string
+          maxLength: 32
+    ReviewTaskSummary:
+      type: object
+      required:
+        - review_task_id
+        - attempt_id
+        - student_id
+        - activity_type
+        - status
+      properties:
+        review_task_id:
+          $ref: '#/components/schemas/Uuid'
+        attempt_id:
+          $ref: '#/components/schemas/Uuid'
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        student_display:
+          type: string
+          maxLength: 255
+          description: Có thể ẩn khi bật chấm ẩn danh
+        class_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_title:
+          type: string
+          maxLength: 255
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - graded
+            - returned
+        submitted_at:
+          $ref: '#/components/schemas/Timestamp'
+        due_at:
+          $ref: '#/components/schemas/Timestamp'
+    ReviewTaskDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReviewTaskSummary'
+        - type: object
+          properties:
+            rubric:
+              $ref: '#/components/schemas/Rubric'
+            written_response:
+              type: object
+              properties:
+                response_kind:
+                  type: string
+                  enum:
+                    - short_answer
+                    - long_answer
+                    - essay
+                    - math_solution
+                body:
+                  type: string
+                  maxLength: 10000
+                numeric_answer:
+                  type: number
+            recordings:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/AudioRecording'
+            submissions:
+              type: array
+              maxItems: 20
+              items:
+                type: object
+                required:
+                  - submission_id
+                  - kind
+                properties:
+                  submission_id:
+                    $ref: '#/components/schemas/Uuid'
+                  kind:
+                    type: string
+                    enum:
+                      - project_file
+                      - solution_photo
+                      - text
+                  download_url:
+                    type: string
+                    maxLength: 2048
+                    format: uri
+                  text:
+                    type: string
+                    maxLength: 10000
+            ai_suggestion:
+              $ref: '#/components/schemas/Evaluation'
+            evaluations:
+              type: array
+              maxItems: 20
+              items:
+                $ref: '#/components/schemas/Evaluation'
+    ReviewGradeInput:
+      type: object
+      required:
+        - criteria_scores
+      properties:
+        criteria_scores:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: object
+            required:
+              - criterion_id
+              - level_id
+            properties:
+              criterion_id:
+                type: string
+                maxLength: 64
+              level_id:
+                type: string
+                maxLength: 64
+              comment:
+                type: string
+                maxLength: 1000
+        feedback:
+          type: string
+          maxLength: 4000
+        feedback_math_assets:
+          type: array
+          maxItems: 50
+          description: Công thức trong nhận xét (render SVG trên portal, ADR-0055)
+          items:
+            type: object
+            required:
+              - math_id
+              - latex
+              - svg
+            properties:
+              math_id:
+                type: string
+                maxLength: 64
+              latex:
+                type: string
+                maxLength: 2000
+              svg:
+                type: string
+                maxLength: 262144
+              speech_text:
+                type: string
+                maxLength: 1000
+        accepted_ai_suggestion:
+          type: boolean
+          description: Ghi nhận giáo viên dùng gợi ý AI làm điểm khởi đầu (audit)
+    ProjectGroup:
+      type: object
+      required:
+        - group_id
+        - activity_id
+        - class_id
+        - name
+        - member_ids
+      properties:
+        group_id:
+          $ref: '#/components/schemas/Uuid'
+        activity_id:
+          $ref: '#/components/schemas/Uuid'
+        class_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 128
+        member_ids:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/Uuid'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+  responses:
+    Unauthenticated:
+      description: Thiếu/sai/hết hạn token (UNAUTHENTICATED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Không tồn tại hoặc ngoài tenant scope (NOT_FOUND)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: VALIDATION_FAILED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
+    Forbidden:
+      description: PERMISSION_DENIED, GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, PORTAL_ACCESS_STAFF_ONLY
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionFailed:
+      description: VERSION_MISMATCH
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionRequired:
+      description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PayloadTooLarge:
+      description: MEDIA_TOO_LARGE — vượt giới hạn dung lượng của loại media (ADR-0044)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnsupportedMediaType:
+      description: MEDIA_TYPE_NOT_ALLOWED — loại file không được phép hoặc magic bytes không khớp
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    DashboardBusy:
+      description: DASHBOARD_BUSY — người dùng đã có quá số truy vấn dashboard đồng thời, hoặc EXPORT_LIMIT_REACHED với export; thử lại theo Retry-After
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    DashboardTimeout:
+      description: DASHBOARD_QUERY_TIMEOUT — truy vấn bị hủy ở database sau statement_timeout 5 giây (DASHBOARD_DATA §8)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  headers:
+    ContentLanguage:
+      description: Ngôn ngữ của văn bản đã chọn trong response (`vi-VN` | `en-US`)
+      schema:
+        type: string
+        maxLength: 16
+    ETag:
+      description: Phiên bản tài nguyên cho optimistic concurrency
+      schema:
+        type: string
+        maxLength: 512
+    RetryAfter:
+      schema:
+        type: integer
+  securitySchemes:
+    keycloakBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token Keycloak (realm eduworld, aud eduworld-api, TTL 5 phút).
+    keycloakAdminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`) có MFA (`acr` mức MFA, `amr` chứa otp/webauthn; thiếu → 403 MFA_REQUIRED),
+        Principal phải có role platform với permission tương ứng (`game.*`, `competition.config.*`, `platform.*`).
+        Chỉ dùng trên gateway nội bộ (ADR-0027).
+    keycloakOidc:
+      type: openIdConnect
+      description: Host thật theo môi trường (`sso.<env>.<domain>`, OQ-10); URL dưới đây là placeholder hợp lệ.
+      openIdConnectUrl: https://sso.eduworld.example/realms/eduworld/.well-known/openid-configuration

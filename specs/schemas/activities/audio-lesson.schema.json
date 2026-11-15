@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/audio-lesson.schema.json",
+  "title": "AudioLessonActivityVersion",
+  "description": "activity_type = audio_lesson. Xem docs/02-learning/AUDIO_LANGUAGE_LEARNING.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "audio_lesson" },
+    "content": {
+      "type": "object",
+      "required": ["audio_asset_id"],
+      "properties": {
+        "audio_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "transcript_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "segments": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["segment_id", "start_ms", "end_ms"],
+            "properties": {
+              "segment_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "start_ms": { "type": "integer", "minimum": 0 },
+              "end_ms": { "type": "integer", "minimum": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "questions": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["question_version_id"],
+            "properties": {
+              "question_version_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+              "at_ms": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "max_plays": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "allow_speed_change": { "type": "boolean", "default": true },
+        "show_transcript": { "type": "string", "enum": ["never", "after_complete", "always"], "default": "after_complete" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/video-lesson.schema.json",
+  "title": "VideoLessonActivityVersion",
+  "description": "activity_type = video_lesson. Xem docs/02-learning/VIDEO_LEARNING.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "video_lesson" },
+    "content": {
+      "type": "object",
+      "required": ["video_asset_id"],
+      "properties": {
+        "video_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "duration_ms": { "type": "integer", "minimum": 1, "maximum": 7200000 },
+        "transcript_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "chapters": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["chapter_id", "title", "start_ms", "end_ms"],
+            "properties": {
+              "chapter_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "start_ms": { "type": "integer", "minimum": 0 },
+              "end_ms": { "type": "integer", "minimum": 1 },
+              "objective_ids": { "type": "array", "maxItems": 10, "items": { "$ref": "activity-base.schema.json#/$defs/uuid" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "subtitles": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": ["language", "subtitle_asset_id"],
+            "properties": {
+              "language": { "type": "string", "maxLength": 8, "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+              "subtitle_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+              "is_default": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "embedded_questions": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["cue_id", "at_ms", "question_version_id"],
+            "properties": {
+              "cue_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "at_ms": { "type": "integer", "minimum": 0 },
+              "question_version_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+              "pause": { "type": "boolean", "default": true },
+              "required": { "type": "boolean", "default": true },
+              "allow_skip_after_wrong": { "type": "boolean", "default": true }
+            },
+            "additionalProperties": false
+          }
+        },
+        "segments": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": ["segment_id", "video_asset_id"],
+            "properties": {
+              "segment_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "video_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+              "is_ending": { "type": "boolean", "default": false }
+            },
+            "additionalProperties": false
+          }
+        },
+        "branches": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": ["branch_point_id", "at_ms", "prompt", "options"],
+            "properties": {
+              "branch_point_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "at_ms": { "type": "integer", "minimum": 0 },
+              "prompt": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "options": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "required": ["option_id", "label", "target_segment_id"],
+                  "properties": {
+                    "option_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+                    "label": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+                    "target_segment_id": { "$ref": "activity-base.schema.json#/$defs/slug" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "allow_seek": { "type": "string", "enum": ["free", "backward_only", "watched_only"], "default": "watched_only" },
+        "playback_rates": { "type": "array", "maxItems": 5, "items": { "type": "number", "minimum": 0.5, "maximum": 2 } },
+        "allow_subtitles_toggle": { "type": "boolean", "default": true },
+        "autoplay_next_chapter": { "type": "boolean", "default": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false
+}

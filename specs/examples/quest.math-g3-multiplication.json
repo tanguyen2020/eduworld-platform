@@ -1,0 +1,211 @@
+{
+  "schema_version": 2,
+  "quest_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e4f01",
+  "quest_version_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e4f02",
+  "code": "math.g3.market_multiplication",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "curriculum_version_id": "01936b2e-0000-7000-8000-000000002018",
+  "quest_type": "learning",
+  "giver_npc_id": "npc.brown_bear_merchant",
+  "area_id": "learning_zone.math",
+  "repeatability": {
+    "mode": "repeatable",
+    "cooldown_hours": 24,
+    "max_completions": 5,
+    "repeat_reward_policy": "reward_rule_diminishing"
+  },
+  "name": {
+    "vi": "Phiên chợ của bác Gấu Nâu",
+    "en": "Brown Bear's Market Day"
+  },
+  "description": {
+    "vi": "Bác Gấu Nâu cần giúp đỡ xếp hàng hóa cho phiên chợ cuối tuần. Hãy dùng phép nhân để đếm thật nhanh số trái cây trong từng sạp nhé!",
+    "en": "Brown Bear needs help arranging goods for the weekend market. Use multiplication to count the fruit on each stall!"
+  },
+  "grade_levels": [
+    3
+  ],
+  "subject_id": "01936b2e-0000-7000-8000-00000000a001",
+  "topic_ids": [
+    "01936b2e-0000-7000-8000-00000000b301"
+  ],
+  "objective_ids": [
+    "01936b2e-0000-7000-8000-00000000c311",
+    "01936b2e-0000-7000-8000-00000000c312"
+  ],
+  "tags": [
+    "bang_nhan",
+    "toan_co_loi_van",
+    "learning_zone_math"
+  ],
+  "estimated_minutes": 15,
+  "start_trigger": {
+    "kind": "npc",
+    "npc_id": "npc.brown_bear_merchant",
+    "area_id": "learning_zone.math"
+  },
+  "prerequisites": {
+    "min_level": 2,
+    "unlocked_area_ids": [
+      "learning_zone.math"
+    ],
+    "required_subject_enabled": true
+  },
+  "availability": {
+    "recurrence": "none",
+    "time_limit_minutes": null
+  },
+  "party_mode": "party_optional",
+  "party_size": {
+    "min": 1,
+    "max": 4
+  },
+  "shared_progress_policy": "shared_steps",
+  "steps": [
+    {
+      "step_id": "meet_bear",
+      "order": 1,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Nói chuyện với bác Gấu Nâu",
+        "en": "Talk to Uncle Brown Bear"
+      },
+      "hint": {
+        "vi": "Bác Gấu Nâu đứng cạnh cổng chợ trong Vương quốc Số.",
+        "en": "Uncle Brown Bear is standing by the market gate in the Number Kingdom."
+      },
+      "npc_id": "npc.brown_bear_merchant",
+      "dialogue_node_id": "ask_for_help",
+      "area_id": "learning_zone.math"
+    },
+    {
+      "step_id": "go_fruit_stall",
+      "order": 2,
+      "type": "go_to",
+      "title": {
+        "vi": "Đến sạp trái cây",
+        "en": "Go to the fruit stall"
+      },
+      "hint": {
+        "vi": "Đi theo mũi tên màu vàng tới sạp có mái hiên đỏ.",
+        "en": "Follow the yellow arrows to the stall with the red awning."
+      },
+      "depends_on": [
+        "meet_bear"
+      ],
+      "area_id": "learning_zone.math",
+      "interactable_id": "stall.fruit_red_awning"
+    },
+    {
+      "step_id": "match_multiplication",
+      "order": 3,
+      "type": "minigame",
+      "title": {
+        "vi": "Ghép phép nhân với kết quả",
+        "en": "Match multiplications with their answers"
+      },
+      "hint": {
+        "vi": "Lật hai thẻ: một phép nhân và kết quả đúng của nó.",
+        "en": "Flip two cards: a multiplication and its correct answer."
+      },
+      "depends_on": [
+        "go_fruit_stall"
+      ],
+      "minigame_config_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a01",
+      "minigame_config_version": 1,
+      "pass_rule": {
+        "min_correct_ratio": 0.7,
+        "retry_policy": "new_questions",
+        "max_attempts_per_day": 5
+      }
+    },
+    {
+      "step_id": "word_problems",
+      "order": 4,
+      "type": "activity",
+      "title": {
+        "vi": "Giải bài toán của các bạn mua hàng",
+        "en": "Solve the shoppers’ problems"
+      },
+      "hint": {
+        "vi": "Đọc kỹ đề: có bao nhiêu giỏ, mỗi giỏ có bao nhiêu quả?",
+        "en": "Read carefully: how many baskets are there, and how many fruits are in each basket?"
+      },
+      "depends_on": [
+        "match_multiplication"
+      ],
+      "content_ref": {
+        "kind": "question_set",
+        "id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e6b01",
+        "version": 3
+      },
+      "pass_rule": {
+        "min_correct_ratio": 0.75,
+        "min_questions": 8,
+        "retry_policy": "new_questions",
+        "max_attempts_per_day": 5
+      }
+    },
+    {
+      "step_id": "collect_apple_baskets",
+      "order": 5,
+      "type": "collect",
+      "title": {
+        "vi": "Nhặt 3 giỏ táo bị rơi (không bắt buộc)",
+        "en": "Pick up 3 fallen apple baskets (optional)"
+      },
+      "depends_on": [
+        "go_fruit_stall"
+      ],
+      "optional": true,
+      "area_id": "learning_zone.math",
+      "interactable_ids": [
+        "quest_obj.apple_basket_1",
+        "quest_obj.apple_basket_2",
+        "quest_obj.apple_basket_3"
+      ],
+      "count": 3
+    },
+    {
+      "step_id": "report_back",
+      "order": 6,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Báo lại cho bác Gấu Nâu",
+        "en": "Report back to Uncle Brown Bear"
+      },
+      "depends_on": [
+        "word_problems"
+      ],
+      "npc_id": "npc.brown_bear_merchant",
+      "dialogue_node_id": "thank_you",
+      "area_id": "learning_zone.math"
+    }
+  ],
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 120,
+      "reward_rule_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e7c01"
+    },
+    {
+      "type": "item",
+      "item_id": "outfit_market_apron",
+      "first_completion_only": true
+    },
+    {
+      "type": "badge",
+      "badge_id": "badge_multiplication_master_g3",
+      "first_completion_only": true
+    }
+  ],
+  "dialogue_ids": [
+    "01936b2e-7c4a-7d10-9a3e-5b1c2d3e8d01"
+  ]
+}

@@ -1,0 +1,434 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:npc-dialogue-version:1",
+  "title": "NPCDialogueVersion",
+  "description": "Đồ thị hội thoại NPC phiên bản hóa. Điều kiện được client đánh giá chỉ để hiển thị; mọi action có giá trị nghiệp vụ (give_quest, complete_step, open_activity) được server kiểm tra lại. Xem docs/01-game-design/QUEST_SYSTEM.md và 3D_WORLD_DESIGN.md §9.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dialogue_id",
+    "dialogue_version_id",
+    "npc_id",
+    "version",
+    "status",
+    "start_node_id",
+    "nodes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "dialogue_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "dialogue_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "npc_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^npc\\.[a-z0-9_]+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform",
+      "description": "Cấu hình game chỉ thuộc platform, sửa qua /api/v1/game-admin (ADR-0027); tenant dùng khi được gán (ADR-0029)"
+    },
+    "grade_levels": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "start_node_id": {
+      "$ref": "#/$defs/node_id"
+    },
+    "entry_points": {
+      "type": "array",
+      "description": "Chọn node bắt đầu theo điều kiện (vd. quest đang active). Đánh giá theo thứ tự, không khớp → start_node_id.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "condition",
+          "node_id"
+        ],
+        "properties": {
+          "condition": {
+            "$ref": "#/$defs/condition"
+          },
+          "node_id": {
+            "$ref": "#/$defs/node_id"
+          }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "node_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]{1,40}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "description": "Văn bản hiển thị song ngữ bắt buộc đủ vi và en (ADR-0056 mục 2).",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "quest_status": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "quest_id",
+            "in"
+          ],
+          "properties": {
+            "quest_id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "in": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "not_started",
+                  "available",
+                  "active",
+                  "completed",
+                  "expired",
+                  "abandoned"
+                ]
+              }
+            },
+            "step_id": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "step_status_in": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "locked",
+                  "active",
+                  "completed"
+                ]
+              }
+            }
+          }
+        },
+        "min_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "grade_level_in": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "all": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "any": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "give_quest",
+            "complete_step",
+            "open_activity",
+            "open_minigame",
+            "open_ui",
+            "play_emote",
+            "end"
+          ]
+        },
+        "quest_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "step_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "minigame_config_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "ui_screen": {
+          "enum": [
+            "quest_journal",
+            "practice_board",
+            "leaderboard",
+            "wardrobe"
+          ]
+        },
+        "emote_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "give_quest"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "quest_id"
+            ],
+            "properties": {
+              "quest_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "complete_step"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "quest_id",
+              "step_id"
+            ],
+            "properties": {
+              "quest_id": true,
+              "step_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "open_activity"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "quest_id",
+              "step_id"
+            ],
+            "properties": {
+              "quest_id": true,
+              "step_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "open_minigame"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "minigame_config_id"
+            ],
+            "properties": {
+              "minigame_config_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "open_ui"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "ui_screen"
+            ],
+            "properties": {
+              "ui_screen": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "play_emote"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "emote_id"
+            ],
+            "properties": {
+              "emote_id": true
+            }
+          }
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "speaker",
+        "text"
+      ],
+      "properties": {
+        "node_id": {
+          "$ref": "#/$defs/node_id"
+        },
+        "speaker": {
+          "enum": [
+            "npc",
+            "player",
+            "narrator"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/localized_text"
+        },
+        "emotion": {
+          "enum": [
+            "neutral",
+            "happy",
+            "excited",
+            "thinking",
+            "surprised",
+            "sad",
+            "encouraging"
+          ]
+        },
+        "voice_asset_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "next": {
+          "$ref": "#/$defs/node_id"
+        },
+        "choices": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text",
+              "next"
+            ],
+            "properties": {
+              "text": {
+                "$ref": "#/$defs/localized_text"
+              },
+              "next": {
+                "$ref": "#/$defs/node_id"
+              },
+              "condition": {
+                "$ref": "#/$defs/condition"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/action"
+                }
+              }
+            }
+          }
+        }
+      },
+      "not": {
+        "required": [
+          "next",
+          "choices"
+        ],
+        "properties": {
+          "next": true,
+          "choices": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/role.updated.v1.schema.json",
+  "title": "Payload role.updated v1 (identity-service, ADR-0066)",
+  "description": "Tạo/sửa/xóa mềm Role. Consumer: audit, vô hiệu cache Principal của mọi người dùng có UserRole với role này.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role_id", "code", "tenant_id", "role_scope_kind", "op", "permissions_added", "permissions_removed"],
+  "properties": {
+    "role_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null = role dùng chung toàn platform" },
+    "role_scope_kind": { "type": "string", "enum": ["tenant", "platform"] },
+    "op": { "type": "string", "enum": ["created", "updated", "deleted"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "permissions_added": { "type": "array", "maxItems": 500, "items": { "type": "string", "maxLength": 64, "pattern": "^[a-z_]+(\\.[a-z_]+)+$" } },
+    "permissions_removed": { "type": "array", "maxItems": 500, "items": { "type": "string", "maxLength": 64, "pattern": "^[a-z_]+(\\.[a-z_]+)+$" } },
+    "actor_id": { "type": ["string", "null"], "format": "uuid" }
+  }
+}

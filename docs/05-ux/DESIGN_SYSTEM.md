@@ -1,0 +1,270 @@
+# Design System — Game (Godot 3D) và Admin/Ops (CMS/LMS)
+
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
+> Liên quan: [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-teacher-dashboard)
+
+## 1. Tổng quan
+
+EduWorld có **hai hệ thống giao diện tách biệt**, mỗi hệ thống phục vụ đúng người dùng của nó (ADR-0047). CMS/LMS **không** theo phong cách game.
+
+| | Game design system | Admin/Ops design system |
+|---|---|---|
+| Người dùng | Học sinh lớp 1–9 (6–15 tuổi) | Vận hành tenant, giáo viên, tổ chuyên môn, moderator, System Admin, game designer, live-ops |
+| Nền tảng | Godot 4: thế giới 3D + UI `Control` | React SPA: **một Admin Portal** `web/apps/portal` với 5 workspace (ADR-0027 mục 7) |
+| Mục tiêu | Hấp dẫn, dễ hiểu, an toàn, chữ và nút lớn | Thao tác nhanh, xem nhiều dữ liệu, ít lỗi, đọc số liệu chính xác |
+| Phong cách | Stylized low-poly, toon shading, màu tươi, chuyển động | Trung tính, gọn, dày dữ liệu, ít trang trí |
+| Thư viện | Theme Godot sinh từ token + component scene trong `godot/scenes/ui/components/` | Ant Design 5 + Ant Design Pro components (ProLayout, ProTable, ProForm) [Proposed] + `web/packages/ops-ui` |
+| Nguồn token | `design/game-tokens/` | `design/admin-tokens/` |
+
+**Dùng chung giữa hai hệ thống** (không phải phong cách UI): logo, màu thương hiệu chính, và **mã màu nghiệp vụ** trong `design/shared-tokens/` (§6).
+
+## 2. Cấu trúc thư mục `design/`
+
+```text
+design/
+├── shared-tokens/          # dùng chung: brand + mã màu nghiệp vụ
+│   ├── brand.json          # logo color, brand primary/secondary
+│   └── domain.json         # màu môn học/khu vực, độ hiếm, trạng thái nội dung
+├── game-tokens/            # chỉ cho Godot
+│   ├── primitive.json      # palette gốc, thang font, spacing, radius
+│   ├── semantic.json       # surface, text, accent, feedback (đúng/sai)
+│   ├── component.json      # button, panel, quest-card, badge-xp, hud...
+│   ├── density/{g1_3,g4_5,g6_7,g8_9}.json   # cỡ chữ/nút theo grade band
+│   └── art3d.json          # palette vật liệu theo khu vực, toon/outline, environment, VFX, rarity glow
+├── admin-tokens/           # chỉ cho CMS/LMS/Admin
+│   ├── seed.json           # seed token Ant Design (colorPrimary, borderRadius, fontFamily...)
+│   ├── semantic.json       # status, chart palette, banner cảnh báo
+│   └── modes/{light,dark,compact}.json
+├── icons/                  # SVG gốc; game và admin có bộ icon riêng, chỉ logo + icon nghiệp vụ (môn học, độ hiếm) dùng chung
+├── fonts/                  # file font + LICENSE (OFL)
+├── style-dictionary.config.mjs
+└── README.md               # quy trình đổi token
+```
+
+Định dạng token: W3C Design Tokens (`$value`, `$type`, `$description`). Token tham chiếu nhau bằng alias (`{color.brand.primary}`); không lặp giá trị.
+
+## 3. Pipeline sinh token
+
+```mermaid
+flowchart LR
+  S[design/shared-tokens] --> SD[Style Dictionary\nmake design-tokens]
+  G[design/game-tokens] --> SD
+  A[design/admin-tokens] --> SD
+  SD --> GT[godot/resources/ui/theme/eduworld_theme.tres\n+ density variants]
+  SD --> GC[godot/scripts/core/ui_tokens.gd\nclass_name UiTokens]
+  SD --> G3[godot/resources/art/generated/\nmaterial presets, Environment, Gradient]
+  SD --> AT[web/packages/ops-ui/src/theme/\nantd-theme.ts light/dark/compact]
+  SD --> CV[web/packages/ops-ui/src/theme/\ntokens.css: --ew-* variables]
+  SD --> CK[báo cáo tương phản WCAG\n+ kiểm tra alias]
+```
+
+- Lệnh: `make design-tokens` (chạy trong CI ở mọi MR chạm `design/**`). File sinh ra **không sửa tay**; CI chạy lại và báo lỗi nếu khác (`make design-tokens-check`).
+- Godot: Style Dictionary xuất JSON trung gian; script `tools/godot/build_theme.gd` (chạy Godot headless) dựng `Theme`/`ShaderMaterial`/`Environment` `.tres` từ JSON đó [Proposed].
+- Web: xuất object `ThemeConfig` cho `ConfigProvider` của Ant Design và CSS variables `--ew-*` cho component tự viết trong `ops-ui`.
+- Phiên bản token: `design/CHANGELOG.md` + semver (`tokens@1.4.0`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
+
+## 4. Admin/Ops design system (CMS/LMS/Admin)
+
+### 4.1. Theme Ant Design đề xuất [Proposed]
+
+| Token Ant Design | Giá trị đề xuất | Ghi chú |
+|---|---|---|
+| `colorPrimary` | `{brand.primary}` (xanh dương EduWorld, ví dụ `#2F6BFF`) | Lấy từ shared-tokens |
+| `colorSuccess` / `colorWarning` / `colorError` / `colorInfo` | `#1F9D55` / `#D97706` / `#DC2626` / `#2563EB` | Chuẩn trạng thái, đạt AA trên nền sáng và tối |
+| `fontFamily` | `"Be Vietnam Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Hỗ trợ đầy đủ tiếng Việt; tự host trong `design/fonts/` |
+| `fontSize` | 14 (compact 13) | Mật độ vận hành |
+| `borderRadius` | 6 | Gọn, chuyên nghiệp |
+| `controlHeight` | 32 (compact 28) | |
+| Algorithm | `defaultAlgorithm` / `darkAlgorithm` + `compactAlgorithm` | Người dùng chọn sáng/tối, compact là mặc định cho bảng |
+| Locale | `vi_VN` (Ant Design) + `dayjs/locale/vi` | Định dạng ngày `DD/MM/YYYY`, số `1.234,5` |
+
+Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qua token và `components` token của `ConfigProvider`.
+
+### 4.2. Layout chuẩn
+
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│ [Logo] EduWorld Ops   [Tenant ▾ tìm kiếm] (System Admin)  ● Hệ thống OK  🔔 👤 │  ← Header
+├───────────────┬──────────────────────────────────────────────────────────┤
+│ Sidebar menu  │ ⚠ Banner cảnh báo (vd "Đang tắt kiểm duyệt cho tenant X")  │
+│ (theo         │ Breadcrumb / Tiêu đề trang                    [Hành động] │
+│  permission,  │ ┌────────────────────────────────────────────────────────┐ │
+│  ADR-0027)    │ │ Nội dung trang (danh sách / chi tiết / form / dashboard) │ │
+│               │ └────────────────────────────────────────────────────────┘ │
+└───────────────┴──────────────────────────────────────────────────────────┘
+```
+
+- **ProLayout** với menu sinh từ `GET /api/v1/me/permissions` (ẩn menu chỉ là tiện ích, backend vẫn quyết định).
+- **Header:** bộ chọn tenant dạng Select có tìm kiếm (chỉ System Admin, mặc định "Tất cả tenant", chọn nhiều; ADR-0027 §6); chỉ báo trạng thái hệ thống (lấy từ endpoint health tổng hợp); thông báo; menu tài khoản (đổi sáng/tối, ngôn ngữ, đăng xuất).
+- **Banner cảnh báo hệ thống** dùng `Alert` banner cố định đầu vùng nội dung: tắt kiểm duyệt (ADR-0030), bảo trì, sự cố SIS sync, purge tồn đọng.
+- Một Admin Portal duy nhất (`web/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
+
+### 4.3. Mẫu màn hình
+
+| Mẫu | Thành phần | Quy tắc |
+|---|---|---|
+| **Danh sách** | Bộ lọc (QueryFilter, gồm dropdown tenant cho System Admin) + **ProTable** (sort, filter cột, cột cố định, phân trang cursor, chọn hàng) + thao tác hàng loạt (publish, gán tenant, khôi phục…) | Cột Tenant luôn có ở chế độ liên tenant; trạng thái hiển thị bằng `Tag` theo mã màu nghiệp vụ; hành động phá hủy có xác nhận + lý do |
+| **Chi tiết** | Header thông tin + **Tabs** (Thông tin, Phiên bản, Phát hành, Sử dụng, Audit) + **Timeline** audit/version | Tab Phiên bản: danh sách version, xem chỉ đọc, diff, preview (ADR-0043) |
+| **Form** | **ProForm** (StepsForm cho nội dung nhiều bước), autosave Draft | Validation sinh từ OpenAPI: `maxLength`, `required`, `pattern` (ADR-0041); hiển thị bộ đếm ký tự; lỗi `VALIDATION_FAILED` map về từng trường |
+| **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Proposed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
+| **Trình soạn đặc thù** | Trong `web/packages/ops-ui` | Trình soạn 11 dạng câu hỏi, sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D |
+
+**KPI dashboard live-ops (workspace Game Live Operations; phiên bản giới hạn theo tenant trong School & Learning Management):**
+
+| KPI | Nguồn | Cảnh báo |
+|---|---|---|
+| CCU hiện tại / đỉnh hôm nay | realtime-gateway metrics | > 90% năng lực kế hoạch |
+| Trận đang diễn ra, hàng chờ ghép trận theo mode | competition-service | Thời gian chờ p95 > 60 s |
+| Đăng nhập/phút, hàng chờ đăng nhập | Keycloak + identity-service | Waiting room hoạt động |
+| Tin nhắn/phút, tin bị chặn/che, báo cáo chờ xử lý | chat-service | Báo cáo P1 quá SLA |
+| Lỗi 5xx theo service, circuit breaker mở | Prometheus | Theo MONITORING |
+| Publish gần đây, rollback gần đây | learning/game-service | Rollback trong 24 h |
+| Trạng thái SIS sync theo tenant | identity-service | Lần thành công cuối > 26 h |
+
+### 4.4. Quy tắc trực quan hóa dữ liệu
+
+- Một thư viện chart thống nhất; palette categorical lấy từ `admin-tokens/semantic.json` (tối đa 8 màu, đã kiểm tra phân biệt được với người mù màu); màu môn học dùng mã màu nghiệp vụ (§6).
+- Trục bắt đầu từ 0 cho cột/thanh; số liệu định dạng `vi-VN`; luôn có đơn vị và thời điểm dữ liệu.
+- Không dùng màu là kênh thông tin duy nhất (thêm nhãn/biểu tượng); tooltip có giá trị chính xác.
+- Báo cáo nhóm < 5 học sinh ẩn số liệu theo LEARNING_ANALYTICS.
+
+### 4.5. Accessibility
+
+- WCAG 2.1 AA: tương phản chữ ≥ 4.5:1 (≥ 3:1 cho chữ lớn và thành phần đồ họa), kiểm tra tự động khi build token và bằng axe trong E2E.
+- Điều hướng bàn phím đầy đủ, focus rõ ràng, bảng có tiêu đề cột cho trình đọc màn hình; không dùng hover là cách duy nhất để thấy thông tin.
+- Cỡ chữ tối thiểu 13 px ở compact, cho phép phóng to trình duyệt 200% không vỡ layout.
+
+### 4.6. Công thức Toán, Vật lý, Hóa học (ADR-0055)
+
+| Hạng mục | Quy định |
+|---|---|
+| Hiển thị | **MathJax 4**, output SVG (hoặc CHTML cho văn bản dài), extension `ams`, `mhchem` (`\ce{}`, `\pu{}`), font mặc định của MathJax 4. Dùng trong preview, danh sách (cột nội dung rút gọn), Teacher Dashboard, xem bài làm, màn chấm tự luận |
+| Nhập | **MathLive** `<math-field>` trong mọi editor có công thức (Question/Lesson/Activity Builder, đáp án, giải thích, rubric, màn chấm). Bàn phím ảo với tab Toán, Lý, Hóa; xuất LaTeX để lưu. MathLive chỉ dùng trong editor của portal (game không nhập công thức) |
+| Kích thước và màu | Cỡ công thức theo token `math.font-scale` (mặc định 1.0 × cỡ chữ đoạn văn, 1.15 × với công thức block); màu theo `color.text` của theme sáng/tối, không màu hardcode; công thức lỗi hiển thị khung `color.danger` kèm thông báo vị trí lỗi |
+| Trợ năng | Bật speech/braille của MathJax 4 (menu ngữ cảnh, `aria-label` sinh tự động); MathLive hỗ trợ điều hướng bàn phím và đọc công thức |
+| Component | `MathText` (render chuỗi rich text có delimiter `\( \)`/`\[ \]`), `MathInput` (bọc `<math-field>`) trong `web/packages/ops-ui`; có story trong Storybook (Toán/Lý/Hóa, sáng/tối, compact) |
+| Render sẵn cho game | Khi lưu/publish, portal dùng MathJax 4 trên trình duyệt render mỗi công thức thành **SVG đơn sắc (`currentColor`) + speech text**, gửi kèm nội dung; server sanitize và lưu theo hash. Màn Import hàng loạt cũng render trên trình duyệt |
+| Phiên bản | Ghim `mathjax@4.x` và `mathlive` (phiên bản cố định) trong `web/apps/portal/package.json`; nâng cấp phải qua visual regression công thức mẫu. Đổi phiên bản không render lại nội dung đã publish (SVG bất biến theo version) |
+
+## 5. Game design system (Godot 3D)
+
+### 5.1. Token UI
+
+- `semantic.json`: nền panel, chữ, nhấn, phản hồi đúng/sai, cảnh báo nhẹ; `component.json`: nút chính/phụ, panel nhiệm vụ, thẻ câu hỏi, badge XP/cấp độ, thanh tiến độ, toast, HUD.
+- Sinh `Theme` Godot (`godot/resources/ui/theme/eduworld_theme.tres`) và lớp hằng `UiTokens` (`godot/scripts/core/ui_tokens.gd`) để code dùng khi cần giá trị (khoảng cách, thời lượng tween).
+- Mọi `Control` lấy style từ Theme; component tái sử dụng trong `godot/scenes/ui/components/`.
+
+### 5.2. Mật độ theo grade band
+
+| Grade band | Cỡ chữ cơ sở | Chiều cao nút tối thiểu | Ghi chú |
+|---|---|---|---|
+| `g1_3` | 24 px | 64 px | Icon kèm chữ, ít chữ, giọng đọc tùy chọn |
+| `g4_5` | 22 px | 56 px | |
+| `g6_7` | 18 px | 48 px | Mật độ thông tin cao hơn |
+| `g8_9` | 18 px | 44 px | |
+
+Mật độ là tập token ghi đè (`density/*.json`) sinh ra các Theme biến thể; chọn theo `AppState.player.grade_band`. Người chơi chỉnh thêm 3 mức cỡ chữ, chế độ tương phản cao, giảm chuyển động. Cỡ chữ **đề bài** và số lựa chọn theo khối do [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band) quy định (lớn hơn cỡ chữ cơ sở ở đây).
+
+### 5.3. Token 3D/art (`art3d.json`)
+
+| Nhóm | Ví dụ token | Sinh ra |
+|---|---|---|
+| Palette vật liệu theo khu vực | `zone.math.primary`, `zone.vietnamese.accent` | Preset `ShaderMaterial` toon |
+| Toon shading | `toon.steps`, `toon.shadow_tint`, `toon.rim_strength` | Uniform của shader toon chung |
+| Outline | `outline.width`, `outline.color` | Uniform outline (inverted hull / post) |
+| Ánh sáng & môi trường | `env.<zone>.sky_top`, `env.<zone>.fog_color`, `light.sun_color` | `Environment` `.tres` theo zone |
+| VFX | `vfx.correct.gradient`, `vfx.reward.gradient`, `vfx.level_up.gradient` | `Gradient`/`GradientTexture1D` |
+| Độ hiếm | `rarity.common…legendary` (từ shared-tokens) | Màu viền/hào quang item, khung UI |
+
+### 5.4. UI 2D overlay và UI trong không gian 3D
+
+- **Overlay 2D** (`CanvasLayer`): HUD, panel nhiệm vụ, bảng câu hỏi toàn màn, chat, menu. Luôn dùng Theme.
+- **UI trong 3D** (`SubViewport` → `ViewportTexture` trên `MeshInstance3D`/`Sprite3D`): bảng tên NPC, bảng câu hỏi gắn trong màn, biển chỉ dẫn, bảng xếp hạng trong Arena. Cùng Theme, độ phân giải viewport theo preset chất lượng; tắt cập nhật khi không nhìn thấy.
+- **Hiệu năng UI game (máy tầm trung, ADR-0057):** số viewport 3D hoạt động, thời gian CPU cho UI, số Control trên HUD, ảo hóa danh sách, tần suất cập nhật HUD, cache glyph/SVG và rút gọn animation ở preset Thấp theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §9 (nơi sở hữu). Thiết kế màn phải giữ được ở preset Thấp: không phụ thuộc hiệu ứng nền động, blur thời gian thực hay video nền để truyền đạt thông tin.
+- Nickname trên đầu nhân vật dùng `Label3D` với font và màu từ token.
+
+### 5.5. Font
+
+- Một họ font tròn, thân thiện cho tiêu đề (ví dụ "Baloo 2") và một font dễ đọc cho nội dung (ví dụ "Be Vietnam Pro"), đều hỗ trợ đầy đủ tiếng Việt có dấu và license OFL [Proposed, Game Director chọn]. Fallback font khai báo trong Theme. Không dùng font không có license nhúng cho ứng dụng.
+- **Song ngữ (ADR-0056):** font phải phủ đủ tiếng Việt có dấu và Latin mở rộng cho cả hai ngôn ngữ; không có font riêng theo ngôn ngữ. Token `text.expansion_allowance = 1.35`: mọi component (nút, tab, nhãn HUD, thẻ quest) được thiết kế và kiểm tra với chuỗi dài hơn 35% bản ngắn nhất, dùng autowrap/ellipsis + tooltip thay vì cắt chữ. Chế độ "hiện tên song song" dùng kiểu chữ phụ (token `text.secondary_language`: cỡ 0,85×, nghiêng, màu `text.muted`) đặt sau tên chính, ví dụ "Vương quốc Số · *Math Kingdom*" ([WORLD_DESIGN §2.4](../01-game-design/WORLD_DESIGN.md#24-tên-song-ngữ-và-quy-tắc-hiển-thị-confirmed--adr-0056)). Ảnh chụp màn hình kiểm tra trực quan chạy ở `vi`, `en` và pseudo-locale ([GODOT_ARCHITECTURE §10.1](../08-game-client/GODOT_ARCHITECTURE.md#101-quốc-tế-hóa-i18n)).
+
+### 5.6. Công thức trong game (ADR-0055)
+
+- **Chỉ hiển thị, không nhập công thức.** Công thức được **render sẵn thành SVG** bởi Admin Portal (MathJax 4 trên trình duyệt) khi soạn/publish, server sanitize rồi lưu; render payload chứa tham chiếu `math/<sha256>.svg` + speech text. Godot nạp SVG (`Image.load_svg_from_string`, scale theo DPI và cỡ chữ của grade band, §5.2) và chèn inline trong `RichTextLabel`. SVG được render đơn sắc (`currentColor`) rồi **tô màu theo Theme game** (token `color.text` / màu nhấn theo khu vực) khi nạp, để công thức khớp chữ xung quanh ở mọi nền.
+- **Không có bàn phím toán trong game.** Hoạt động có công thức dùng dạng trả lời không cần gõ công thức: chọn đáp án (đáp án có thể là công thức SVG), đúng/sai, nhập số, điền từ/số, ghép cặp, sắp xếp, kéo thả (ADR-0055 mục 6). Ô nhập số dùng bàn phím số chuẩn của Theme game. SVG cache cục bộ theo hash.
+- **Trợ năng:** speech text sinh sẵn dùng cho TTS và mô tả thay thế.
+
+### 5.7. UX màn hình học sinh trong game — danh mục màn
+
+Quy ước chung và chỉ mục đặc tả chi tiết: [STUDENT_GAME_UX](STUDENT_GAME_UX.md).
+
+Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Prompt tái cấu trúc §25). Mọi màn dùng Theme game, mật độ theo grade band (§5.2), không hiển thị thông tin cá nhân nhạy cảm của học sinh cho người khác. Đặc tả chi tiết từng màn (thành phần, trạng thái, lỗi, quyền, responsive) là **[TBD — lượt sau]**; cột "Trạng thái đặc tả" cho biết nghiệp vụ đã đủ để thiết kế màn chưa.
+
+| Màn | Mục đích | Tài liệu nghiệp vụ | Trạng thái đặc tả |
+|---|---|---|---|
+| Đăng nhập | Đăng nhập username/password (ADR-0063), không chọn trường (backend xác định), xác nhận đăng nhập thiết bị khác | [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s01--đăng-nhập) |
+| Tạo avatar lần đầu | Chọn ngoại hình, trang phục, nickname tự sinh | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s02--tạo-avatar-lần-đầu) |
+| Main Hub HUD | Mini-map, nhiệm vụ đang theo dõi, XP/level, thông báo, chat, party | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s03--main-hub-hud) |
+| World map | Khu vực, khu đã mở/khóa, điểm khám phá, dịch chuyển | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s04--world-map) |
+| Quest journal | Quest đang làm/hoàn thành, bước, phần thưởng, bài giáo viên giao | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s05--quest-journal) |
+| Challenge / Boss | Chọn độ khó, thanh tiến độ boss, phase, đóng góp đội | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s06--challenge--boss) |
+| Level-up | Hiệu ứng lên cấp, danh hiệu, phần thưởng | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s07--level-up) |
+| Inventory / Shop | Trang bị, tủ đồ, ví Xu, mua vật phẩm trang trí | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn [TBD] |
+| Achievement / Collection | Thành tựu, bộ sưu tập, tiến độ | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn [TBD] |
+| Party lobby | Thành viên, sẵn sàng, chọn hoạt động, chat party | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
+| Bạn bè | Danh sách, lời mời, chặn, báo cáo | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
+| Chat | Kênh, tin nhắn, menu nhấn giữ, quick message, sticker/GIF | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) | Nghiệp vụ có; UX màn một phần |
+| Learning activity player | Khung chung chạy mọi `activity_type` (renderer registry) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | Nghiệp vụ có; UX màn [TBD] |
+| Video / exercise player | Phát video có câu chèn; bảng câu hỏi 11 dạng; công thức SVG | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md), [QUESTION_BANK](../02-learning/QUESTION_BANK.md) | Nghiệp vụ có; UX màn [TBD] |
+| Kết quả học tập | Tổng kết, LO cần ôn, gợi ý tiếp theo, hiển thị mastery theo khối | [LEARNING_EXPERIENCE §7](../02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh) | Nghiệp vụ có; UX màn [TBD] |
+| Competition Arena | Chọn mode, hàng chờ, ready check, trận, kết quả, tier | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | Nghiệp vụ có; UX màn [TBD] |
+| Event center | Sự kiện đang diễn ra, nhiệm vụ ngày/tuần, mùa | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) | Nghiệp vụ một phần (Event & Season [TBD]); UX màn [TBD] |
+
+## 6. Mã màu nghiệp vụ dùng chung (`shared-tokens/domain.json`)
+
+| Nhóm | Giá trị (đề xuất) | Dùng ở game | Dùng ở CMS |
+|---|---|---|---|
+| Môn học / khu vực | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá [Proposed, khớp [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)] | Palette khu vực, cổng, đảo | Tag môn học, màu series trong chart |
+| Độ hiếm vật phẩm | common xám, uncommon xanh lá, rare xanh dương, epic tím, legendary vàng cam | Viền/hào quang item | Tag độ hiếm trong Game Studio |
+| Trạng thái nội dung | draft xám, in_review vàng, approved xanh dương nhạt, published xanh lá, archived xám đậm, rejected đỏ | (preview) | Tag trạng thái, timeline |
+| Brand | `brand.primary`, `brand.secondary`, logo | Splash, loading | `colorPrimary`, logo |
+
+Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và biến thể đã bão hòa phù hợp ánh sáng 3D của game; tên token giống nhau ở cả hai bên.
+
+## 7. Tài sản 3D hiển thị trong CMS (thumbnail/turntable)
+
+- Job **render headless Godot** (`godot --headless --render-thumbnails`, chạy trong worker của game-service/CI): với mỗi version đã publish của nhân vật, item, NPC, khu vực, quest marker → render ảnh tĩnh 512×512 và turntable 24 khung (WebP động hoặc sprite sheet), dùng đúng model, material và Environment của game.
+- Kết quả lưu object storage (ADR-0044) theo `media/<sha256>/...`, đăng ký `media_assets` với `kind = render_thumbnail|render_turntable` và gắn vào version tương ứng (ADR-0043).
+- CMS hiển thị thumbnail trong danh sách, form chọn item/phần thưởng, thư viện; đây là **dữ liệu nhận diện nội dung**, không phải phong cách UI của CMS.
+- **Preview tương tác**: khung `GamePreviewFrame` (trong `ops-ui`) nhúng Godot Web export (renderer Compatibility/WebGL 2) ở iframe riêng; chỉ bên trong khung mang giao diện game.
+
+## 8. Quản trị thay đổi (governance)
+
+- Owner: Game Director (game-tokens, art3d), UX Lead (admin-tokens), cả hai cùng duyệt shared-tokens.
+- Mọi thay đổi token qua merge request, kèm ảnh chụp trước/sau (Storybook/UI Gallery) và báo cáo tương phản; không đổi giá trị trực tiếp trong code.
+- Nguồn thiết kế (Figma hoặc công cụ team dùng) xuất W3C tokens qua plugin; file trong Git là nguồn sự thật [Proposed].
+- Token bị bỏ đánh dấu `deprecated` ít nhất 1 phiên bản trước khi xóa.
+
+## 9. Đảm bảo chất lượng
+
+| Kiểm tra | Phạm vi | Công cụ |
+|---|---|---|
+| Storybook | `web/packages/ops-ui` + theme Ant Design (sáng/tối/compact) | Storybook 8 |
+| UI Gallery | Component UI game, mọi density | Scene `UiGallery.tscn` trong build debug |
+| Visual regression | Màn CMS chính (danh sách, chi tiết, form, dashboard) | Playwright screenshot |
+| Tương phản | Mọi cặp chữ/nền trong token admin | Script khi build token + axe trong E2E |
+| Lint hardcode | Màu/font/kích thước trong CSS/TSX | stylelint + ESLint rule (`no-hardcoded-colors`) |
+| Lint scene Godot | `.tscn` không override màu/font ngoài Theme (trừ allowlist) | Script `tools/godot/lint_theme_overrides.gd` |
+| Renderer parity | Ảnh chụp các zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | So sánh ảnh (SSIM ≥ ngưỡng) trong CI [Proposed] |
+
+## 10. Yêu cầu và acceptance
+
+| Mã | Yêu cầu | Nhãn |
+|---|---|---|
+| DS-001 | CMS/LMS/Admin dùng Admin/Ops UI (Ant Design theme EduWorld), không dùng component/phong cách game | [Confirmed] ADR-0047 |
+| DS-002 | Game UI chỉ dùng Theme sinh từ game-tokens; không dùng component admin | [Confirmed] |
+| DS-003 | Mã màu nghiệp vụ trùng tên và ý nghĩa ở game và CMS | [Confirmed] |
+| DS-004 | Đổi một token shared → cả hai bên cập nhật sau `make design-tokens`, không sửa tay | [Confirmed] |
+| DS-005 | CMS đạt WCAG 2.1 AA (tương phản, bàn phím) | [Proposed] |
+| DS-006 | Thumbnail render tự động cho mọi version publish của asset 3D | [Proposed] |
+| DS-007 | Không có màu/font hardcode trong CSS/TSX/`.tscn` (CI chặn) | [Proposed] |

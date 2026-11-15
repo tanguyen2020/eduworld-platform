@@ -1,0 +1,35 @@
+# Secrets & local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Go
+backend/bin/
+backend/tmp/
+*.test
+coverage.out
+
+# Godot
+godot/.godot/
+godot/export/
+godot/build/
+*.import.tmp
+export_credentials.cfg
+
+# Web
+web/node_modules/
+web/dist/
+
+# Tooling / OS
+node_modules/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Claude Code local state
+.claude/*.lock

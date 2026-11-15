@@ -1,0 +1,225 @@
+# Performance Budget — Ngân sách hiệu năng client (máy tầm trung)
+
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-15
+> Liên quan: [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)
+
+**Mục lục:** 1. Mục đích và phạm vi · 2. Hạng thiết bị tham chiếu · 3. Mục tiêu khung hình · 4. Renderer theo nền tảng · 5. Preset chất lượng · 6. Tự phát hiện và độ phân giải động · 7. Ngân sách theo cảnh · 8. Ngân sách asset · 9. Ngân sách UI 2D · 10. Ngân sách mạng · 11. Thời gian tải và dung lượng · 12. Pin và nhiệt · 13. Kỹ thuật tối ưu bắt buộc · 14. Web export · 15. Quy trình kiểm soát · 16. Tiêu chí nghiệm thu
+
+## 1. Mục đích và phạm vi
+
+Stakeholder yêu cầu game **đặc biệt phải chạy được trên máy tầm trung** (ADR-0057, [Confirmed]). Tài liệu này là **nguồn duy nhất** cho mọi con số hiệu năng phía client Godot: hạng thiết bị, FPS, renderer, preset, ngân sách cảnh/asset/UI/mạng, thời gian tải, dung lượng và quy trình kiểm soát. Tài liệu khác (WORLD_RENDERING, CHARACTER_SYSTEM, DESIGN_SYSTEM, DEPLOYMENT, PRD) chỉ **link** tới đây, không lặp số.
+
+Ngoài phạm vi: hiệu năng server/API (NFR-PERF trong [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md), [MONITORING](../11-operations/MONITORING.md)) và năng lực realtime ([REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)).
+
+Quy tắc: tính năng nào vượt ngân sách ở hạng **Tầm trung** phải có phương án giảm chất lượng; **không** được loại thiết bị tầm trung để giữ tính năng.
+
+## 2. Hạng thiết bị tham chiếu
+
+Theo ADR-0057 [Proposed, chốt sau khảo sát thiết bị trường — OQ-04]:
+
+| Hạng | PC Windows | Android | iOS | Web | Preset mặc định |
+|---|---|---|---|---|---|
+| **Tối thiểu** | CPU 4 nhân ~2 GHz, RAM 4 GB, GPU tích hợp OpenGL 3.3 | RAM 3 GB, Android 9, GPU OpenGL ES 3.0 | — | WebGL 2 trên PC Tối thiểu | Thấp |
+| **Tầm trung (mục tiêu chính)** | Intel Core i3 thế hệ 10 / Ryzen 3 3200G, RAM 8 GB, iGPU Intel UHD 630 / Radeon Vega 8 | RAM 4 GB, SoC tầm Snapdragon 680 / Helio G85, GPU Mali-G52 / Adreno 610 | iPhone 11 / iPad thế hệ 8, iOS 15 | Chrome/Edge mới trên PC Tầm trung | Trung bình |
+| **Cao** | GPU rời tầm GTX 1650 | RAM ≥ 6 GB, SoC cận cao cấp | iPhone 13 trở lên | — | Cao |
+
+### 2.1. Thiết bị kiểm thử tham chiếu (lab) [Proposed]
+
+| Mã | Thiết bị | Hạng | Renderer kiểm thử |
+|---|---|---|---|
+| DEV-PC-MIN | PC văn phòng i3 thế hệ 6–8, 4 GB RAM, Intel HD 520/620 | Tối thiểu | Compatibility |
+| DEV-PC-MID | Mini PC/laptop i3-10100 (UHD 630), 8 GB RAM | Tầm trung | Mobile |
+| DEV-PC-AMD | Ryzen 3 3200G (Vega 8), 8 GB RAM | Tầm trung | Mobile |
+| DEV-AND-MIN | Android 3 GB RAM, Helio G35/G37 (PowerVR) | Tối thiểu | Compatibility |
+| DEV-AND-MID1 | Android 4 GB RAM, Snapdragon 680 (Adreno 610) | Tầm trung | Mobile (Vulkan) |
+| DEV-AND-MID2 | Android 4 GB RAM, Helio G85 (Mali-G52) | Tầm trung | Mobile (Vulkan) |
+| DEV-TAB-MID | Tablet Android 10" 4 GB RAM phổ biến ở trường | Tầm trung | Mobile |
+| DEV-IOS-MID | iPhone 11 hoặc iPad thế hệ 8 | Tầm trung | Mobile (Metal) |
+| DEV-WEB-MID | DEV-PC-MID + Chrome và Edge bản mới | Tầm trung | Compatibility (WebGL 2) |
+
+Danh sách cập nhật theo kết quả khảo sát thiết bị thực tế tại các trường pilot.
+
+## 3. Mục tiêu khung hình
+
+| Hạng | Mobile / Web | PC | Đo theo |
+|---|---|---|---|
+| Tối thiểu (Thấp) | ≥ 30 FPS (frame time ≤ 33,3 ms) | ≥ 30 FPS | FPS p10 (10% khung chậm nhất; cùng định nghĩa `fps_p10` của GAME_ANALYTICS) |
+| **Tầm trung (Trung bình)** | **ổn định 30 FPS** (khóa 30), p10 ≥ 27 FPS | **60 FPS** (≤ 16,7 ms), cho phép xuống 30 ở cảnh đông nhất | FPS p10, khung giật > 100 ms ≤ 1/phút |
+| Cao | 30 FPS khóa (60 tùy chọn) | 60 FPS | FPS p10 |
+
+- **Ngân sách thời gian một khung** ở hạng Tầm trung mobile (33,3 ms): game logic + script ≤ 6 ms, vật lý ≤ 3 ms, animation ≤ 4 ms, render CPU ≤ 10 ms, GPU ≤ 28 ms, còn lại dự phòng [Proposed].
+- Màn học tập (activity player) không được giật khi học sinh thao tác: phản hồi chạm/nhấn ≤ 100 ms.
+
+## 4. Renderer theo nền tảng
+
+| Nền tảng | Renderer mặc định | Dự phòng tự chuyển | Ghi chú |
+|---|---|---|---|
+| PC Windows | **Mobile** (Vulkan, D3D12 qua cờ khi cần) | **Compatibility** (OpenGL 3.3) nếu không có Vulkan/D3D12 hoặc khởi tạo lỗi | **Forward+ chỉ ở preset Cao** |
+| Android | **Mobile** (Vulkan) | **Compatibility** (OpenGL ES 3.0) với GPU trong danh sách đen Vulkan hoặc khi khởi tạo lỗi | Danh sách GPU cấu hình qua `client-config` |
+| iOS | **Mobile** (Metal qua MoltenVK) | — | |
+| Web | **Compatibility** (WebGL 2) | — | Xem §14 |
+| Thumbnail/turntable (server) | Forward+ preset cố định | — | ADR-0047, không ảnh hưởng client |
+
+- Lựa chọn renderer lưu ở `user://settings.cfg`; lần khởi động lỗi do renderer → tự chuyển sang Compatibility ở lần sau và gửi telemetry.
+- Art direction stylized/toon phải đạt **renderer parity** giữa Mobile và Compatibility (shader toon dùng tính năng chung, không phụ thuộc SSAO/SSR/SDFGI); kiểm tra theo [WORLD_RENDERING](WORLD_RENDERING.md) và [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md).
+
+## 5. Preset chất lượng
+
+| Thiết lập | Thấp | Trung bình (mặc định tầm trung) | Cao |
+|---|---|---|---|
+| Render scale 3D (UI luôn 1,0) | 0,75 (động 0,6–0,75) | 0,9 (động 0,7–1,0) | 1,0 |
+| Giới hạn FPS | 30 | 30 (mobile/web) · 60 (PC) | 60 |
+| Bóng | Blob shadow (decal) cho nhân vật, không bóng realtime | 1 directional, 1 cascade, shadow map 1024, khoảng cách 25 m | 2 cascade, 2048, 40 m |
+| Khoảng cách nhìn (visibility range) | 40 m | 70 m | 120 m |
+| LOD bias (`mesh_lod_threshold`) | 4,0 | 2,0 | 1,0 |
+| Nhân vật render đầy đủ (LOD0/1) | 10 | 20 (mobile/web) · 30 (PC) | 40 |
+| Khử răng cưa | Tắt | FXAA | MSAA 2x (Forward+/Mobile) |
+| Hậu kỳ | Tắt (chỉ tone mapping) | Tắt trên mobile/web; bloom nhẹ trên PC | Bloom + glow nhẹ |
+| Mật độ cỏ / vật trang trí | 25% | 60% | 100% |
+| Hạt (particle) tối đa cùng lúc | 300 | 800 | 2.000 |
+| Độ phân giải video bài học | 480p | 720p | 720p (1080p tùy chọn) |
+| Animation UI / chuyển cảnh | Rút gọn (fade) | Đầy đủ, tắt hiệu ứng nền động | Đầy đủ |
+| Outline toon | Tắt ở vật thể xa | Bật, tắt ở > 30 m | Bật |
+| Âm thanh đồng thời | 16 voice | 24 voice | 32 voice |
+
+Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọn lưu theo thiết bị (`user://settings.cfg`), không đồng bộ lên server.
+
+## 6. Tự phát hiện và độ phân giải động
+
+- **Lần chạy đầu** (sau đăng nhập, trước khi vào Hub, ≤ 5 giây): chạy cảnh benchmark ngắn (camera quay quanh Hub mẫu) đo frame time p50/p10 + đọc RAM, tên GPU, renderer khả dụng → chọn preset. Có thể bỏ qua và chọn tay.
+- Danh sách GPU/SoC đã biết (`client-config.device_profiles`) ép preset hoặc renderer cho thiết bị có lỗi biết trước.
+- **Độ phân giải động**: bộ điều khiển (`QualityManager`) theo dõi frame time trung bình 2 giây; vượt mục tiêu 10% → giảm render scale 0,05; dưới mục tiêu 20% trong 10 giây → tăng 0,05; giới hạn theo preset (§5). UI không bị scale.
+- Nếu ở render scale tối thiểu mà vẫn dưới mục tiêu trong 30 giây → gợi ý hạ preset (không tự đổi giữa trận/bài).
+- Nhiệt độ/hạn chế pin (Android `PowerManager` thermal status qua plugin) ≥ "moderate" → hạ trần FPS/scale một mức.
+
+## 7. Ngân sách theo cảnh
+
+Áp dụng cho hạng **Tầm trung, preset Trung bình**. Cột Mobile/Web áp dụng cả Android, iOS và Web; cột PC cho Windows.
+
+| Cảnh | Tam giác hiển thị (Mobile/Web · PC) | Draw call (Mobile/Web · PC) | Texture (Mobile/Web · PC) | RAM tiến trình (Mobile/Web · PC) | Vật thể động | Hạt |
+|---|---|---|---|---|---|---|
+| **Hub đông** (40 người chơi trong instance) | ≤ 150k · ≤ 300k | ≤ 100 · ≤ 200 | ≤ 256 MB · ≤ 512 MB | ≤ 1 GB · ≤ 1,5 GB | ≤ 60 (người chơi + NPC + vật tương tác) | ≤ 800 |
+| Vùng môn học / khám phá (≤ 40 người) | ≤ 120k · ≤ 250k | ≤ 90 · ≤ 180 | ≤ 256 MB · ≤ 512 MB | ≤ 900 MB · ≤ 1,4 GB | ≤ 50 | ≤ 600 |
+| Private instance (party ≤ 8) | ≤ 100k · ≤ 200k | ≤ 80 · ≤ 150 | ≤ 200 MB · ≤ 400 MB | ≤ 800 MB · ≤ 1,2 GB | ≤ 30 | ≤ 500 |
+| Boss co-op (≤ 8 người + boss) | ≤ 120k · ≤ 220k | ≤ 90 · ≤ 160 | ≤ 220 MB · ≤ 450 MB | ≤ 900 MB · ≤ 1,3 GB | ≤ 25 | ≤ 1.000 (đỉnh 3 s) |
+| Trận 1v1 / đội (≤ 8 người) | ≤ 80k · ≤ 150k | ≤ 70 · ≤ 120 | ≤ 180 MB · ≤ 350 MB | ≤ 750 MB · ≤ 1,1 GB | ≤ 20 | ≤ 400 |
+| **Activity player** (thế giới 3D tạm dừng phía sau) | ≤ 30k (nền mờ/ảnh chụp) · ≤ 60k | ≤ 40 · ≤ 60 | ≤ 128 MB thêm cho media/SVG của bài | ≤ 700 MB · ≤ 1 GB | Chỉ UI | ≤ 100 (hiệu ứng đúng/sai) |
+
+- Khi mở activity player toàn màn, thế giới 3D **tạm dừng render** (thay bằng ảnh chụp mờ) hoặc giảm còn 10 FPS; mạng hub tiếp tục ở tần suất thấp.
+- Ánh sáng động: 1 `DirectionalLight3D` + ≤ 4 `OmniLight3D`/`SpotLight3D` trong tầm nhìn; không GI realtime.
+- Physics: chỉ người chơi cục bộ, NPC di chuyển và vật tương tác là body động; props tĩnh dùng `StaticBody3D` gộp collider.
+
+## 8. Ngân sách asset
+
+| Loại asset | Tam giác (LOD0 / LOD1 / LOD2) | Texture | Khác |
+|---|---|---|---|
+| Nhân vật người chơi (tổng body + trang phục + phụ kiện) | ≤ 8k / 3k / 1k; impostor billboard > 30 m | 1 atlas 512² (Mobile) · 1024² (PC Cao) | ≤ 60 xương, ≤ 4 bone influence, ≤ 3 material |
+| NPC chính | ≤ 10k / 4k / 1,5k | 1024² | ≤ 70 xương |
+| Boss | ≤ 25k / 10k / 4k | 2 × 1024² | ≤ 100 xương, VFX theo ngân sách hạt |
+| Prop nhỏ | ≤ 500 | Palette/atlas chung của zone | `visibility_range_end` theo preset |
+| Prop lớn | ≤ 3k / 1k | Atlas zone | |
+| Tòa nhà | ≤ 10k / 4k / 1k | Atlas zone 1024²–2048² | Occluder bake |
+| Thực vật lặp (cây/cỏ/đá) | Cây ≤ 2k, cỏ ≤ 50/cụm | Atlas | Bắt buộc `MultiMeshInstance3D` |
+| Mặt đất/địa hình mỗi zone | ≤ 40k tổng | ≤ 4 lớp texture | |
+
+- **Nén texture theo nền tảng:** Android ETC2 + ASTC (VRAM compressed), iOS ASTC, PC S3TC/BC (BPTC cho chất lượng cao), Web: S3TC/ETC2 theo hỗ trợ WebGL 2 (xuất cả hai). Mipmap bật cho texture 3D; UI không mipmap.
+- **Âm thanh:** Ogg Vorbis; nhạc nền stream (không nạp toàn bộ vào RAM), 96–128 kbps; hiệu ứng ≤ 1 giây ở dạng nén nạp sẵn; tổng âm thanh nạp sẵn mỗi zone ≤ 16 MB.
+- **Video bài học:** Ogg Theora, 480p/720p theo preset (§5), bitrate ≤ 1,5 Mbps ở 720p.
+- **Atlas và material:** mỗi zone ưu tiên một material toon dùng palette texture chung; số material duy nhất trong cảnh Hub ≤ 40.
+- Asset vượt ngân sách bị **chặn ở bước import CI** (script kiểm tra số tam giác, kích thước texture, số xương) trừ khi có ngoại lệ ghi rõ.
+
+## 9. Ngân sách UI 2D
+
+| Chỉ số | Ngân sách (Tầm trung) |
+|---|---|
+| Thời gian CPU cho UI mỗi khung | ≤ 3 ms (mobile) · ≤ 2 ms (PC) |
+| Số `Control` hiển thị đồng thời trên HUD | ≤ 150 |
+| Danh sách dài (chat, inventory, bạn bè) | Bắt buộc ảo hóa (chỉ tạo item trong tầm nhìn + đệm), tái dùng node |
+| Cập nhật HUD | Theo sự kiện/signal, không cập nhật mỗi frame; số liệu dạng chữ cập nhật ≤ 4 lần/giây |
+| UI trong không gian 3D (`SubViewport`) | ≤ 4 viewport hoạt động cùng lúc, cập nhật `UPDATE_WHEN_VISIBLE`/khi đổi nội dung, độ phân giải ≤ 512² |
+| Font | Dynamic font có cache glyph; tối đa 2 họ font; MSDF cho chữ trong 3D |
+| Công thức (SVG) | Rasterize một lần theo DPI rồi cache texture (ADR-0055); không rasterize lại mỗi frame |
+| Animation UI | Tween ngắn ≤ 300 ms; preset Thấp rút gọn |
+
+## 10. Ngân sách mạng
+
+| Luồng | Ngân sách | Ghi chú |
+|---|---|---|
+| Đồng bộ Hub (40 người) | ≤ 30 KB/s xuống, ≤ 3 KB/s lên | Snapshot 10 Hz theo interest grid ([REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)) |
+| Trận/boss | ≤ 10 KB/s | Sự kiện theo câu hỏi/phase |
+| Chat | ≤ 2 KB/s trung bình | |
+| Mạng tối thiểu chơi được | 4G hoặc Wi-Fi 1 Mbps, RTT ≤ 200 ms | Trên 300 ms: hiển thị chỉ báo mạng yếu |
+| Tải nội dung vùng (PCK) | Tải nền khi đang ở vùng trước; tiếp tục được khi rớt mạng | §11 |
+
+## 11. Thời gian tải và dung lượng
+
+| Chỉ số | Mục tiêu (Tầm trung) |
+|---|---|
+| Khởi động lạnh đến Hub (đã đăng nhập, nội dung đã cache) | ≤ 20 giây |
+| Chuyển vùng (vùng đã tải) | ≤ 5 giây |
+| Mở activity player | ≤ 2 giây (media đã preload) |
+| Bản cài Android (APK/AAB base) | ≤ 300 MB |
+| Bản cài iOS | ≤ 300 MB |
+| Bản cài Windows | ≤ 1 GB (gồm nội dung lõi) |
+| Web tải đầu (wasm + pck lõi, đã nén) | ≤ 40 MB; phần còn lại tải theo vùng |
+| Gói nội dung mỗi vùng (PCK) | ≤ 40 MB nén |
+| Bộ nhớ cache nội dung trên thiết bị | ≤ 1,5 GB, xóa LRU theo vùng ít dùng |
+
+- Nội dung vùng tải **theo nhu cầu** qua CDN với hash bất biến ([WORLD_RENDERING](WORLD_RENDERING.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md)); vùng chưa tải hiển thị trạng thái "Đang chuẩn bị vùng đất" có tiến độ.
+- Shader được biên dịch trước ở màn hình tải (warm-up) để tránh giật lần đầu.
+
+## 12. Pin và nhiệt
+
+- Mobile khóa **30 FPS** mặc định (§3); không cho 60 FPS ở preset Trung bình.
+- Ứng dụng xuống nền: dừng render, giảm mạng về heartbeat; Web tab ẩn: `requestAnimationFrame` tự dừng.
+- Màn đứng yên (đọc bài, chờ trong lobby) > 10 giây: giảm render 3D xuống 15 FPS.
+- Mục tiêu tiêu thụ pin trên DEV-AND-MID: ≤ 15%/giờ chơi ở preset Trung bình [Proposed]; nhiệt độ không kích hoạt throttle mức "severe" trong phiên 30 phút.
+
+## 13. Kỹ thuật tối ưu bắt buộc
+
+| Kỹ thuật | Bắt buộc ở |
+|---|---|
+| Occlusion culling (`OccluderInstance3D` bake) | Mọi zone có tòa nhà/tường |
+| LOD (mesh LOD tự động + `visibility_range`) | Mọi mesh > 1k tam giác |
+| `MultiMeshInstance3D` / instancing | Mọi vật thể lặp ≥ 10 bản |
+| Bake lightmap (`LightmapGI`), không GI realtime (SDFGI/VoxelGI cấm) | Mọi zone tĩnh |
+| Impostor/billboard nhân vật xa | Hub, vùng đông |
+| Object pooling (người chơi từ xa, hạt, UI item, projectile hiệu ứng) | Toàn client |
+| Streaming vùng (scene + PCK theo vùng, giải phóng vùng cũ) | Chuyển vùng |
+| Gộp collider tĩnh, không physics cho props | Mọi zone |
+| Không SSAO/SSR/volumetric fog trên Mobile/Compatibility | Preset Thấp/Trung bình |
+| Precompile shader tại màn tải | Mọi bản build |
+
+## 14. Web export
+
+- Renderer **Compatibility** (WebGL 2), export **single-threaded** (không cần COOP/COEP) [Proposed].
+- Preset tối đa: Trung bình; không Forward+.
+- Giới hạn bộ nhớ heap wasm khởi tạo 512 MB, tối đa 1 GB; không preload toàn bộ vùng.
+- Tải theo gói: lõi ≤ 40 MB (§11), vùng tải sau; dùng cache trình duyệt + Cache Storage theo hash.
+- Âm thanh khởi động sau tương tác đầu của người dùng (chính sách trình duyệt).
+- Kiểm thử trên DEV-WEB-MID với Chrome và Edge bản mới; Safari/Firefox [TBD].
+
+## 15. Quy trình kiểm soát
+
+1. **Ngân sách trong merge request:** asset mới ghi số tam giác/texture/xương; zone mới ghi bảng ngân sách cảnh (§7).
+2. **CI — kiểm tra import:** script Godot headless đọc asset đã import, chặn khi vượt §8.
+3. **CI — cảnh benchmark headless:** mỗi zone có scene benchmark (camera bay theo path, spawn số người chơi giả theo §7). Chạy headless để đo **frame time CPU** (script, physics, animation) và đếm **draw call, tam giác, bộ nhớ** qua `RenderingServer.get_rendering_info()`/`Performance`; so với ngân sách, **chặn merge** khi vượt > 5%. (Frame time GPU chỉ đo được trên thiết bị thật.)
+4. **Thiết bị thật mỗi milestone:** chạy bộ kịch bản hiệu năng (TC-PERF client trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)) trên toàn bộ lab §2.1; ghi FPS p10, frame time GPU, RAM, nhiệt, pin; dùng Godot profiler + công cụ GPU của hãng.
+5. **Telemetry thực tế:** client gửi FPS p10, renderer, preset, model thiết bị (không PII) qua `/game/telemetry`; dashboard theo hạng thiết bị trong [MONITORING](../11-operations/MONITORING.md).
+6. **Báo cáo:** mỗi milestone có báo cáo hiệu năng (bảng thiết bị × cảnh × chỉ số), vượt ngân sách phải có kế hoạch xử lý trước khi qua milestone.
+
+## 16. Tiêu chí nghiệm thu
+
+| ID | Tiêu chí |
+|---|---|
+| AC-PERF-001 | Trên DEV-AND-MID1 và DEV-AND-MID2, preset Trung bình, Hub với 40 người chơi: FPS p10 ≥ 27, không khung > 100 ms quá 1 lần/phút trong 10 phút |
+| AC-PERF-002 | Trên DEV-PC-MID, preset Trung bình: Hub đạt ≥ 50 FPS p10; cảnh boss co-op ≥ 30 FPS p10 |
+| AC-PERF-003 | Trên DEV-WEB-MID (Chrome, Edge): Hub ≥ 27 FPS p10; tải đầu ≤ 40 MB; vào Hub ≤ 30 giây trên mạng 20 Mbps |
+| AC-PERF-004 | Trên DEV-PC-MIN và DEV-AND-MIN, preset Thấp: chơi hết luồng quest mẫu (đăng nhập → quest → activity → nhận thưởng) ≥ 30 FPS p10 ở Private instance và ≥ 24 FPS p10 ở Hub |
+| AC-PERF-005 | Khởi động lạnh đến Hub ≤ 20 giây và chuyển vùng ≤ 5 giây trên DEV-AND-MID1 |
+| AC-PERF-006 | RAM tiến trình không vượt §7 sau 60 phút chơi liên tục (không rò rỉ > 5%) |
+| AC-PERF-007 | Tự phát hiện chọn đúng preset theo hạng cho toàn bộ lab §2.1 |
+| AC-PERF-008 | Renderer Mobile lỗi khởi tạo → lần chạy sau tự dùng Compatibility và vẫn chơi được |
+| AC-PERF-009 | Đồng bộ Hub 40 người ≤ 30 KB/s xuống trong 10 phút đo |
+| AC-PERF-010 | Mọi zone trong bản build qua benchmark CI không vượt ngân sách §7 quá 5% |
+| AC-PERF-011 | DEV-AND-MID1 chơi 30 phút: pin giảm ≤ 8%, không throttle mức severe |

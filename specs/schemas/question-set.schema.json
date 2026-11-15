@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/question-set.schema.json",
+  "title": "EduWorld Question Set Version",
+  "description": "Tập câu hỏi tĩnh (static) hoặc theo quy tắc chọn (rule_based). Dùng bởi exercise, mini-game, quest, LMS assignment, competition. Xem docs/02-learning/QUESTION_BANK.md §6.",
+  "type": "object",
+  "required": ["question_set_id", "version", "title", "kind", "purpose", "meta"],
+  "properties": {
+    "question_set_version_id": { "$ref": "#/$defs/uuid" },
+    "question_set_id": { "$ref": "#/$defs/uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "$ref": "question.schema.json#/$defs/i18nText" },
+    "description": { "$ref": "question.schema.json#/$defs/i18nText" },
+    "kind": { "enum": ["static", "rule_based", "mixed"] },
+    "purpose": { "enum": ["exercise", "minigame", "quest", "competition", "general"] },
+    "items": {
+      "type": "array",
+      "description": "Câu cố định — tham chiếu question_version_id (bất biến).",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "required": ["question_version_id"],
+        "properties": {
+          "question_version_id": { "$ref": "#/$defs/uuid" },
+          "max_score": { "type": "number", "exclusiveMinimum": 0 },
+          "position": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "selection_rules": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "$ref": "#/$defs/selectionRule" }
+    },
+    "shuffle_items": { "type": "boolean", "default": true },
+    "shuffle_options": { "type": "boolean", "default": true },
+    "default_feedback_policy": { "enum": ["immediate", "after_submit", "after_due", "manual_release"], "default": "immediate" },
+    "meta": {
+      "type": "object",
+      "required": ["grade_levels", "subject_id", "status", "author_id", "owner_scope", "curriculum_version_id"],
+      "properties": {
+        "grade_levels": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
+        "subject_id": { "$ref": "#/$defs/uuid" },
+        "topic_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "objective_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "curriculum_version_id": { "$ref": "#/$defs/uuid" },
+        "status": { "enum": ["draft", "in_review", "approved", "published", "archived", "rejected"] },
+        "author_id": { "$ref": "#/$defs/uuid" },
+        "reviewer_id": { "$ref": "#/$defs/uuid" },
+        "published_at": { "type": "string", "format": "date-time" },
+        "owner_scope": { "enum": ["platform", "tenant"], "description": "platform: tenant_id rỗng, tenant thấy khi được gán; tenant: thuộc riêng tenant_id (ADR-0005, ADR-0029)" },
+        "tenant_id": { "$ref": "#/$defs/uuid" },
+        "estimated_duration_sec": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "static" } } }, "then": { "required": ["items"], "properties": { "items": { "type": "array", "minItems": 1 } } } },
+    { "if": { "properties": { "kind": { "const": "rule_based" } } }, "then": { "required": ["selection_rules"], "properties": { "selection_rules": { "type": "array", "minItems": 1 } } } },
+    { "if": { "properties": { "kind": { "const": "mixed" } } }, "then": { "required": ["items", "selection_rules"], "properties": { "items": true, "selection_rules": true } } }
+  ],
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "questionType": { "$ref": "question.schema.json#/$defs/questionType" },
+    "selectionRule": {
+      "type": "object",
+      "required": ["filters", "count"],
+      "properties": {
+        "filters": {
+          "type": "object",
+          "properties": {
+            "subject_id": { "$ref": "#/$defs/uuid" },
+            "grade_levels": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
+            "topic_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+            "objective_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+            "difficulty": {
+              "type": "object",
+              "properties": {
+                "min": { "type": "integer", "minimum": 1, "maximum": 5 },
+                "max": { "type": "integer", "minimum": 1, "maximum": 5 }
+              }
+            },
+            "types": { "type": "array", "items": { "$ref": "#/$defs/questionType" } },
+            "tags_any": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "tags_all": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "exclude_question_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+            "include_exam_only": { "type": "boolean", "default": false }
+          },
+          "additionalProperties": false
+        },
+        "count": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "distribution": {
+          "type": "array",
+          "description": "Phân bổ số câu theo độ khó; tổng count phải bằng rule.count.",
+          "items": {
+            "type": "object",
+            "required": ["difficulty", "count"],
+            "properties": {
+              "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "count": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "per_objective": { "type": "boolean", "default": false, "description": "Chia đều count cho các objective_ids." },
+        "max_score_each": { "type": "number", "exclusiveMinimum": 0, "default": 1 },
+        "avoid_recent": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "window_days": { "type": "integer", "minimum": 1, "maximum": 90, "default": 7 }
+          },
+          "additionalProperties": false
+        },
+        "prefer_weak_objectives": { "type": "boolean", "default": false },
+        "relaxation": {
+          "type": "array",
+          "description": "Thứ tự nới lỏng khi pool thiếu.",
+          "items": { "enum": ["avoid_recent", "difficulty_pm1", "types"] },
+          "default": ["avoid_recent", "difficulty_pm1"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

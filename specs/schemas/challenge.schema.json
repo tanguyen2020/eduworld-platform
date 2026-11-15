@@ -1,0 +1,648 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:challenge:1",
+  "title": "ChallengeVersion",
+  "description": "Cấu hình challenge PvE của Challenge Engine (game-service). Hoạt động học tập tham chiếu qua activity_ref (ADR-0048); chấm điểm luôn ở learning-service. Xem docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "challenge_id",
+    "challenge_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "challenge_type",
+    "name",
+    "grade_levels",
+    "subject_id",
+    "objective_ids",
+    "difficulties",
+    "activity_source",
+    "goal",
+    "rewards"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "challenge_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "challenge_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "challenge_type": {
+      "enum": [
+        "time",
+        "perfect",
+        "survival",
+        "puzzle",
+        "knowledge",
+        "boss",
+        "coop",
+        "party",
+        "weekly",
+        "seasonal",
+        "tournament"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "grade_levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "subject_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "objective_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      }
+    },
+    "mode": {
+      "enum": [
+        "solo",
+        "party_optional",
+        "party_required"
+      ],
+      "default": "solo"
+    },
+    "boss_id": {
+      "$ref": "#/$defs/uuid",
+      "description": "Bắt buộc khi challenge_type = boss"
+    },
+    "difficulties": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/difficulty_profile"
+      }
+    },
+    "activity_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "activity_ref_list",
+            "question_selection"
+          ]
+        },
+        "activity_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/activity_ref"
+          }
+        },
+        "question_set_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "activity_ref_list"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "activity_refs"
+            ],
+            "properties": {
+              "activity_refs": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "question_selection"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_set_id"
+            ],
+            "properties": {
+              "question_set_id": true
+            }
+          }
+        }
+      ]
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "target"
+      ],
+      "properties": {
+        "metric": {
+          "enum": [
+            "correct_answers",
+            "completed_activities",
+            "accuracy_ratio",
+            "rounds_survived",
+            "puzzle_solved",
+            "collective_correct_answers"
+          ]
+        },
+        "target": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "min_contribution": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Bắt buộc với coop/party"
+        }
+      }
+    },
+    "time_limit_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 7200
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts_per_day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cooldown_seconds_after_fail": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        "retry_policy": {
+          "enum": [
+            "new_questions",
+            "same_questions"
+          ],
+          "default": "new_questions"
+        }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recurrence": {
+          "enum": [
+            "none",
+            "daily",
+            "weekly",
+            "seasonal"
+          ],
+          "default": "none"
+        }
+      }
+    },
+    "unlock_rule": {
+      "$ref": "#/$defs/unlock_rule"
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first_clear": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/reward"
+          }
+        },
+        "per_clear_reward_rule_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "challenge_type": {
+            "const": "boss"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "boss_id"
+        ],
+        "properties": {
+          "boss_id": true
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "challenge_type": {
+            "enum": [
+              "coop",
+              "party"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "party_optional",
+              "party_required"
+            ]
+          },
+          "goal": {
+            "type": "object",
+            "required": [
+              "min_contribution"
+            ],
+            "properties": {
+              "min_contribution": true
+            }
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "challenge_type": {
+            "enum": [
+              "time",
+              "survival"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "time_limit_seconds"
+        ],
+        "properties": {
+          "time_limit_seconds": true
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "description": "Văn bản hiển thị song ngữ bắt buộc đủ vi và en (ADR-0056 mục 2).",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "activity_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activity_type",
+        "activity_id"
+      ],
+      "properties": {
+        "activity_type": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Loại hoạt động trong Activity Registry (ADR-0048)"
+        },
+        "activity_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "activity_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Bỏ trống = ghim version hiện hành khi bắt đầu (ADR-0043)"
+        }
+      }
+    },
+    "difficulty_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "question_difficulty_min",
+        "question_difficulty_max",
+        "reward_multiplier"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "easy",
+            "normal",
+            "hard",
+            "expert",
+            "legendary"
+          ]
+        },
+        "question_difficulty_min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "question_difficulty_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "seconds_per_item": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 600
+        },
+        "lives": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "reward_multiplier": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 5
+        },
+        "grade_levels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "description": "Giới hạn khối được chọn mức này (vd lớp 1–3 chỉ easy–hard)"
+        }
+      }
+    },
+    "unlock_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completed_quest_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "unlocked_area_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "xp",
+                  "currency"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code"
+            ],
+            "properties": {
+              "currency_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

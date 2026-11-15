@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "rubric_id": "01936a10-0000-7000-8000-000000000801",
+  "rubric_version_id": "01936a10-0000-7000-8000-000000000802",
+  "version": 1,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "title": {
+    "vi": "Rubric bài văn nghị luận lớp 7"
+  },
+  "subject_id": "01936a10-0000-7000-8000-000000000901",
+  "grade_levels": [
+    7
+  ],
+  "scoring_mode": "levels",
+  "total_points": 10,
+  "criteria": [
+    {
+      "criterion_id": "noi-dung",
+      "title": {
+        "vi": "Nội dung"
+      },
+      "weight": 0.4,
+      "objective_ids": [
+        "01936a10-0000-7000-8000-000000000902"
+      ],
+      "levels": [
+        {
+          "level_id": "chua-dat",
+          "label": {
+            "vi": "Chưa đạt"
+          },
+          "points": 1,
+          "descriptor": {
+            "vi": "Luận điểm chưa rõ, thiếu dẫn chứng."
+          }
+        },
+        {
+          "level_id": "dat",
+          "label": {
+            "vi": "Đạt"
+          },
+          "points": 2.5,
+          "descriptor": {
+            "vi": "Có luận điểm, dẫn chứng phù hợp nhưng chưa sâu."
+          }
+        },
+        {
+          "level_id": "tot",
+          "label": {
+            "vi": "Tốt"
+          },
+          "points": 4,
+          "descriptor": {
+            "vi": "Luận điểm rõ, dẫn chứng thuyết phục."
+          }
+        }
+      ]
+    },
+    {
+      "criterion_id": "bo-cuc",
+      "title": {
+        "vi": "Bố cục"
+      },
+      "weight": 0.2,
+      "levels": [
+        {
+          "level_id": "chua-dat",
+          "label": {
+            "vi": "Chưa đạt"
+          },
+          "points": 0.5,
+          "descriptor": {
+            "vi": "Thiếu mở bài hoặc kết bài."
+          }
+        },
+        {
+          "level_id": "dat",
+          "label": {
+            "vi": "Đạt"
+          },
+          "points": 2,
+          "descriptor": {
+            "vi": "Đủ ba phần, mạch lạc."
+          }
+        }
+      ]
+    },
+    {
+      "criterion_id": "dien-dat",
+      "title": {
+        "vi": "Diễn đạt"
+      },
+      "weight": 0.25,
+      "levels": [
+        {
+          "level_id": "chua-dat",
+          "label": {
+            "vi": "Chưa đạt"
+          },
+          "points": 0.5,
+          "descriptor": {
+            "vi": "Câu văn lủng củng."
+          }
+        },
+        {
+          "level_id": "dat",
+          "label": {
+            "vi": "Đạt"
+          },
+          "points": 2.5,
+          "descriptor": {
+            "vi": "Diễn đạt trôi chảy."
+          }
+        }
+      ]
+    },
+    {
+      "criterion_id": "chinh-ta",
+      "title": {
+        "vi": "Chính tả"
+      },
+      "weight": 0.15,
+      "levels": [
+        {
+          "level_id": "nhieu-loi",
+          "label": {
+            "vi": "Nhiều lỗi"
+          },
+          "points": 0.5,
+          "descriptor": {
+            "vi": "Trên 5 lỗi chính tả."
+          }
+        },
+        {
+          "level_id": "it-loi",
+          "label": {
+            "vi": "Ít lỗi"
+          },
+          "points": 1.5,
+          "descriptor": {
+            "vi": "Không quá 2 lỗi chính tả."
+          }
+        }
+      ]
+    }
+  ],
+  "status": "published"
+}

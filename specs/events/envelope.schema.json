@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/envelope.schema.json",
+  "title": "EduWorld Domain Event Envelope",
+  "description": "Envelope chuẩn của domain event publish qua transactional outbox → NATS JetStream (ADR-0042). Nguồn: docs/07-backend/EVENT_DESIGN.md §2. Learning event dùng thêm specs/schemas/learning-event.schema.json. Payload theo catalog EVENT_DESIGN §4 — chỉ ID và giá trị cần thiết, không PII.",
+  "type": "object",
+  "required": ["event_id", "event_type", "schema_version", "occurred_at", "recorded_at", "producer", "tenant_id", "actor", "subject", "idempotency_key", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid", "description": "UUIDv7 sinh tại producer; dùng làm header Nats-Msg-Id để JetStream khử trùng lặp" },
+    "event_type": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$", "description": "<entity>.<past_tense_verb>, vd. exercise.submitted" },
+    "schema_version": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string", "maxLength": 64, "pattern": "^(identity|learning|game|competition|chat|realtime)-service/[a-z0-9_]+$", "description": "<service>/<module>" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null chỉ cho event phạm vi platform (vd. publish cấu hình Game Studio)" },
+    "actor": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["student", "teacher", "staff", "admin", "system", "service"] },
+        "id": { "type": ["string", "null"], "maxLength": 64, "description": "user_id (UUID) hoặc mã job/service" }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "maxLength": 64 },
+        "id": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "session_id": { "type": ["string", "null"], "format": "uuid" },
+    "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "trace_id": { "type": ["string", "null"], "maxLength": 64 },
+    "payload": { "type": "object", "maxProperties": 200 }
+  }
+}

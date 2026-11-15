@@ -1,0 +1,2677 @@
+asyncapi: 3.0.0
+info:
+  title: EduWorld Realtime API
+  version: 1.0.0-draft
+  description: |
+    Giao thức WebSocket giữa Godot client (và CMS SPA cho notification) với `realtime-gateway` (ADR-0036).
+    Mô tả từ góc nhìn **server**: operation `receive` = lệnh client gửi lên, `send` = sự kiện server đẩy xuống.
+
+    Tài liệu kiến trúc: docs/06-architecture/REALTIME_ARCHITECTURE.md (ADR-0008, ADR-0011, ADR-0012, ADR-0035, ADR-0036).
+
+    Định tuyến phía server (không ảnh hưởng client):
+    - `realtime-gateway` không chứa logic nghiệp vụ. Lệnh client có phản hồi (ack/error) được chuyển tới service sở hữu
+      bằng **NATS request/reply** `ew.cmd.<service>.<domain>.<action>` (header: `tenant_id`, `user_id`, `game_session_id`).
+    - Input chuyển động tần suất cao (`hub.player.move`, input co-op/battle không cần ack) đi qua **NATS core**
+      `ew.in.room.<room_id>` (fire-and-forget, không JetStream) tới node đang giữ room.
+    - Sự kiện xuống client: service publish **Valkey Pub/Sub** `ew:rt:user:<user_id>`, `ew:rt:room:<room_id>`,
+      `ew:chat:fanout:<channel_id>`; gateway subscribe và giao qua WebSocket.
+    - Bảng domain → service: `chat.*`, `notification.*` → chat-service; `party.*`, `matchmaking.*`, `battle.*`,
+      `coop.*` → competition-service; `hub.*`, `session.*`, `boss.*`, `challenge.*`, `progression.*`, `quest.*`, `world.*`, `event.*`, `season.*` → game-service; `system.*`, `presence.*` → realtime-gateway.
+
+    Quy ước:
+    - Envelope JSON `{v, type, id|ref, seq, ts, payload}`, field `snake_case`.
+    - `type` = `<domain>.<entity>.<action>`. Lệnh client dùng động từ hiện tại (`chat.message.send`);
+      sự kiện server dùng quá khứ (`chat.message.created`).
+    - Mỗi lệnh client (trừ `hub.player.move`, `system.heartbeat.ping`) nhận đúng một `system.ack` hoặc `system.error` có `ref` = `id`.
+    - Thao tác quản trị cần idempotency (tạo/giải tán party, gửi/chấp nhận lời mời, kick, tạo matchmaking ticket)
+      đi qua REST (`specs/openapi`); WebSocket chỉ đẩy sự kiện kết quả.
+    - Server không bao giờ gửi answer key (ADR-0016). Không gửi PII: chỉ `nickname`, `avatar_config`, ID.
+    - Trạng thái: Draft. Mọi tham số số học là [Proposed].
+  license:
+    name: Proprietary
+servers:
+  local:
+    host: localhost:9080
+    pathname: /realtime/v1
+    protocol: ws
+    description: APISIX local (Docker Compose)
+  staging:
+    host: staging.eduworld.example
+    pathname: /realtime/v1
+    protocol: wss
+    security:
+      - $ref: '#/components/securitySchemes/realtimeTicket'
+  production:
+    host: play.eduworld.example
+    pathname: /realtime/v1
+    protocol: wss
+    security:
+      - $ref: '#/components/securitySchemes/realtimeTicket'
+defaultContentType: application/json
+
+channels:
+  realtime:
+    address: /realtime/v1
+    title: Kết nối realtime chính
+    description: |
+      Một kết nối WebSocket cho mỗi người dùng (kết nối mới thay thế kết nối cũ, close 4409).
+      Chỉ học sinh (token game `azp = eduworld-game-backend`, ADR-0068) được cấp ticket (ADR-0031); tenant của kết nối cố định theo `X-Tenant-Id` lúc cấp ticket (ADR-0065). Khi tài khoản đăng nhập trên thiết bị khác
+      (takeover), thiết bị cũ nhận `session.session.replaced` rồi bị đóng với close 4409.
+      Subprotocol `eduworld.v1`. Ticket lấy từ `POST /api/v1/game/sessions/{id}/realtime-tickets` (TTL 60s, dùng 1 lần).
+      Close codes: 4400 bad message · 4401 ticket invalid · 4403 access revoked · 4408 heartbeat timeout ·
+      4409 replaced · 4429 rate limited · 4500 server shutdown (reconnect + resume).
+    bindings:
+      ws:
+        query:
+          type: object
+          required: [ticket]
+          properties:
+            ticket:
+              type: string
+              maxLength: 512
+              description: Realtime ticket opaque, dùng một lần.
+        headers:
+          type: object
+          properties:
+            Sec-WebSocket-Protocol:
+              type: string
+              const: eduworld.v1
+        bindingVersion: 0.1.0
+    messages:
+      # ---------- system ----------
+      SystemPing: { $ref: '#/components/messages/SystemPing' }
+      SystemSessionResume: { $ref: '#/components/messages/SystemSessionResume' }
+      SystemSessionWelcome: { $ref: '#/components/messages/SystemSessionWelcome' }
+      SystemPong: { $ref: '#/components/messages/SystemPong' }
+      SystemAck: { $ref: '#/components/messages/SystemAck' }
+      SystemError: { $ref: '#/components/messages/SystemError' }
+      SystemSessionResumed: { $ref: '#/components/messages/SystemSessionResumed' }
+      SystemSessionResumeFailed: { $ref: '#/components/messages/SystemSessionResumeFailed' }
+      SystemDegraded: { $ref: '#/components/messages/SystemDegraded' }
+      SystemNoticeBroadcast: { $ref: '#/components/messages/SystemNoticeBroadcast' }
+      SessionReplaced: { $ref: '#/components/messages/SessionReplaced' }
+      ContentManifestUpdated: { $ref: '#/components/messages/ContentManifestUpdated' }
+      # ---------- presence ----------
+      PresenceStatusSet: { $ref: '#/components/messages/PresenceStatusSet' }
+      PresenceFriendUpdated: { $ref: '#/components/messages/PresenceFriendUpdated' }
+      # ---------- chat ----------
+      ChatChannelJoin: { $ref: '#/components/messages/ChatChannelJoin' }
+      ChatChannelLeave: { $ref: '#/components/messages/ChatChannelLeave' }
+      ChatMessageSend: { $ref: '#/components/messages/ChatMessageSend' }
+      ChatReactionToggle: { $ref: '#/components/messages/ChatReactionToggle' }
+      ChatReceiptRead: { $ref: '#/components/messages/ChatReceiptRead' }
+      ChatHistoryFetch: { $ref: '#/components/messages/ChatHistoryFetch' }
+      ChatMessageCreated: { $ref: '#/components/messages/ChatMessageCreated' }
+      ChatMessageHeld: { $ref: '#/components/messages/ChatMessageHeld' }
+      ChatMessageRemoved: { $ref: '#/components/messages/ChatMessageRemoved' }
+      ChatReactionUpdated: { $ref: '#/components/messages/ChatReactionUpdated' }
+      ChatUnreadUpdated: { $ref: '#/components/messages/ChatUnreadUpdated' }
+      ChatHistoryLoaded: { $ref: '#/components/messages/ChatHistoryLoaded' }
+      ChatSanctionApplied: { $ref: '#/components/messages/ChatSanctionApplied' }
+      ChatMessageEdit: { $ref: '#/components/messages/ChatMessageEdit' }
+      ChatMessageRecall: { $ref: '#/components/messages/ChatMessageRecall' }
+      ChatMessageForward: { $ref: '#/components/messages/ChatMessageForward' }
+      ChatPinAdd: { $ref: '#/components/messages/ChatPinAdd' }
+      ChatPinRemove: { $ref: '#/components/messages/ChatPinRemove' }
+      ChatTypingStart: { $ref: '#/components/messages/ChatTypingStart' }
+      ChatTypingStop: { $ref: '#/components/messages/ChatTypingStop' }
+      ChatReceiptDelivered: { $ref: '#/components/messages/ChatReceiptDelivered' }
+      ChatSync: { $ref: '#/components/messages/ChatSync' }
+      ChatMessageAcked: { $ref: '#/components/messages/ChatMessageAcked' }
+      ChatMessageEdited: { $ref: '#/components/messages/ChatMessageEdited' }
+      ChatMessageRecalled: { $ref: '#/components/messages/ChatMessageRecalled' }
+      ChatPinUpdated: { $ref: '#/components/messages/ChatPinUpdated' }
+      ChatTypingUpdated: { $ref: '#/components/messages/ChatTypingUpdated' }
+      ChatReceiptUpdated: { $ref: '#/components/messages/ChatReceiptUpdated' }
+      ChatMentionCreated: { $ref: '#/components/messages/ChatMentionCreated' }
+      # ---------- notification ----------
+      NotificationItemMarkRead: { $ref: '#/components/messages/NotificationItemMarkRead' }
+      NotificationItemCreated: { $ref: '#/components/messages/NotificationItemCreated' }
+      # ---------- party / lobby ----------
+      PartyMemberReadySet: { $ref: '#/components/messages/PartyMemberReadySet' }
+      PartyActivitySelect: { $ref: '#/components/messages/PartyActivitySelect' }
+      PartySessionStart: { $ref: '#/components/messages/PartySessionStart' }
+      PartyStateSnapshot: { $ref: '#/components/messages/PartyStateSnapshot' }
+      PartyInvitationReceived: { $ref: '#/components/messages/PartyInvitationReceived' }
+      PartyInvitationUpdated: { $ref: '#/components/messages/PartyInvitationUpdated' }
+      PartyMemberJoined: { $ref: '#/components/messages/PartyMemberJoined' }
+      PartyMemberLeft: { $ref: '#/components/messages/PartyMemberLeft' }
+      PartyMemberStatusChanged: { $ref: '#/components/messages/PartyMemberStatusChanged' }
+      PartyMemberReadyChanged: { $ref: '#/components/messages/PartyMemberReadyChanged' }
+      PartyLeaderTransferred: { $ref: '#/components/messages/PartyLeaderTransferred' }
+      PartyActivitySelected: { $ref: '#/components/messages/PartyActivitySelected' }
+      PartySessionStarted: { $ref: '#/components/messages/PartySessionStarted' }
+      PartySessionEnded: { $ref: '#/components/messages/PartySessionEnded' }
+      PartyDisbanded: { $ref: '#/components/messages/PartyDisbanded' }
+      # ---------- matchmaking ----------
+      MatchmakingTicketCancel: { $ref: '#/components/messages/MatchmakingTicketCancel' }
+      MatchmakingProposalAccept: { $ref: '#/components/messages/MatchmakingProposalAccept' }
+      MatchmakingProposalDecline: { $ref: '#/components/messages/MatchmakingProposalDecline' }
+      MatchmakingTicketUpdated: { $ref: '#/components/messages/MatchmakingTicketUpdated' }
+      MatchmakingProposalCreated: { $ref: '#/components/messages/MatchmakingProposalCreated' }
+      MatchmakingProposalUpdated: { $ref: '#/components/messages/MatchmakingProposalUpdated' }
+      MatchmakingProposalCancelled: { $ref: '#/components/messages/MatchmakingProposalCancelled' }
+      MatchmakingMatchAssigned: { $ref: '#/components/messages/MatchmakingMatchAssigned' }
+      # ---------- hub ----------
+      HubInstanceJoin: { $ref: '#/components/messages/HubInstanceJoin' }
+      HubPlayerMove: { $ref: '#/components/messages/HubPlayerMove' }
+      HubPlayerEmote: { $ref: '#/components/messages/HubPlayerEmote' }
+      HubInstanceAssigned: { $ref: '#/components/messages/HubInstanceAssigned' }
+      HubSnapshotUpdated: { $ref: '#/components/messages/HubSnapshotUpdated' }
+      HubPlayerJoined: { $ref: '#/components/messages/HubPlayerJoined' }
+      HubPlayerLeft: { $ref: '#/components/messages/HubPlayerLeft' }
+      HubPlayerEmoted: { $ref: '#/components/messages/HubPlayerEmoted' }
+      HubPlayerAppearanceChanged: { $ref: '#/components/messages/HubPlayerAppearanceChanged' }
+      HubPlayerCorrected: { $ref: '#/components/messages/HubPlayerCorrected' }
+      HubInstanceMigrated: { $ref: '#/components/messages/HubInstanceMigrated' }
+      # ---------- battle ----------
+      BattleAnswerSubmit: { $ref: '#/components/messages/BattleAnswerSubmit' }
+      BattleStateRequest: { $ref: '#/components/messages/BattleStateRequest' }
+      BattleStateSnapshot: { $ref: '#/components/messages/BattleStateSnapshot' }
+      BattleCountdownStarted: { $ref: '#/components/messages/BattleCountdownStarted' }
+      BattleQuestionShown: { $ref: '#/components/messages/BattleQuestionShown' }
+      BattleAnswerRecorded: { $ref: '#/components/messages/BattleAnswerRecorded' }
+      BattleAnswerEvaluated: { $ref: '#/components/messages/BattleAnswerEvaluated' }
+      BattleQuestionRevealed: { $ref: '#/components/messages/BattleQuestionRevealed' }
+      BattleRoundEnded: { $ref: '#/components/messages/BattleRoundEnded' }
+      BattleParticipantStatusChanged: { $ref: '#/components/messages/BattleParticipantStatusChanged' }
+      BattleMatchPaused: { $ref: '#/components/messages/BattleMatchPaused' }
+      BattleMatchResumed: { $ref: '#/components/messages/BattleMatchResumed' }
+      BattleMatchEnded: { $ref: '#/components/messages/BattleMatchEnded' }
+      # ---------- coop ----------
+      CoopActionPerform: { $ref: '#/components/messages/CoopActionPerform' }
+      CoopAnswerSubmit: { $ref: '#/components/messages/CoopAnswerSubmit' }
+      CoopStateSnapshot: { $ref: '#/components/messages/CoopStateSnapshot' }
+      CoopStateUpdated: { $ref: '#/components/messages/CoopStateUpdated' }
+      CoopTaskAssigned: { $ref: '#/components/messages/CoopTaskAssigned' }
+      CoopAnswerEvaluated: { $ref: '#/components/messages/CoopAnswerEvaluated' }
+      CoopProgressUpdated: { $ref: '#/components/messages/CoopProgressUpdated' }
+      CoopSessionEnded: { $ref: '#/components/messages/CoopSessionEnded' }
+      # ---------- boss / challenge / progression (game-service) ----------
+      BossEncounterReady: { $ref: '#/components/messages/BossEncounterReady' }
+      BossAnswerSubmit: { $ref: '#/components/messages/BossAnswerSubmit' }
+      BossEncounterUpdated: { $ref: '#/components/messages/BossEncounterUpdated' }
+      BossPhaseStarted: { $ref: '#/components/messages/BossPhaseStarted' }
+      BossPhaseCompleted: { $ref: '#/components/messages/BossPhaseCompleted' }
+      BossEncounterEnded: { $ref: '#/components/messages/BossEncounterEnded' }
+      ChallengeAttemptUpdated: { $ref: '#/components/messages/ChallengeAttemptUpdated' }
+      ProgressionXpUpdated: { $ref: '#/components/messages/ProgressionXpUpdated' }
+      ProgressionLevelReached: { $ref: '#/components/messages/ProgressionLevelReached' }
+      QuestProgressUpdated: { $ref: '#/components/messages/QuestProgressUpdated' }
+      WorldAreaUnlocked: { $ref: '#/components/messages/WorldAreaUnlocked' }
+      EventProgressUpdated: { $ref: '#/components/messages/EventProgressUpdated' }
+      EventCommunityGoalUpdated: { $ref: '#/components/messages/EventCommunityGoalUpdated' }
+      EventStatusChanged: { $ref: '#/components/messages/EventStatusChanged' }
+      SeasonTrackUpdated: { $ref: '#/components/messages/SeasonTrackUpdated' }
+
+operations:
+  receiveSystemCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Lệnh hệ thống từ client (heartbeat, resume).
+    messages:
+      - $ref: '#/channels/realtime/messages/SystemPing'
+      - $ref: '#/channels/realtime/messages/SystemSessionResume'
+  sendSystemEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: Sự kiện hệ thống tới client.
+    messages:
+      - $ref: '#/channels/realtime/messages/SystemSessionWelcome'
+      - $ref: '#/channels/realtime/messages/SystemPong'
+      - $ref: '#/channels/realtime/messages/SystemAck'
+      - $ref: '#/channels/realtime/messages/SystemError'
+      - $ref: '#/channels/realtime/messages/SystemSessionResumed'
+      - $ref: '#/channels/realtime/messages/SystemSessionResumeFailed'
+      - $ref: '#/channels/realtime/messages/SystemDegraded'
+      - $ref: '#/channels/realtime/messages/SystemNoticeBroadcast'
+      - $ref: '#/channels/realtime/messages/SessionReplaced'
+      - $ref: '#/channels/realtime/messages/ContentManifestUpdated'
+  receivePresenceCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/PresenceStatusSet'
+  sendPresenceEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/PresenceFriendUpdated'
+  receiveChatCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Lệnh chat. Quyền gửi do ChatPolicy quyết định (ADR-0020).
+    messages:
+      - $ref: '#/channels/realtime/messages/ChatChannelJoin'
+      - $ref: '#/channels/realtime/messages/ChatChannelLeave'
+      - $ref: '#/channels/realtime/messages/ChatMessageSend'
+      - $ref: '#/channels/realtime/messages/ChatReactionToggle'
+      - $ref: '#/channels/realtime/messages/ChatReceiptRead'
+      - $ref: '#/channels/realtime/messages/ChatHistoryFetch'
+      - $ref: '#/channels/realtime/messages/ChatMessageEdit'
+      - $ref: '#/channels/realtime/messages/ChatMessageRecall'
+      - $ref: '#/channels/realtime/messages/ChatMessageForward'
+      - $ref: '#/channels/realtime/messages/ChatPinAdd'
+      - $ref: '#/channels/realtime/messages/ChatPinRemove'
+      - $ref: '#/channels/realtime/messages/ChatTypingStart'
+      - $ref: '#/channels/realtime/messages/ChatTypingStop'
+      - $ref: '#/channels/realtime/messages/ChatReceiptDelivered'
+      - $ref: '#/channels/realtime/messages/ChatSync'
+  sendChatEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/ChatMessageCreated'
+      - $ref: '#/channels/realtime/messages/ChatMessageHeld'
+      - $ref: '#/channels/realtime/messages/ChatMessageRemoved'
+      - $ref: '#/channels/realtime/messages/ChatReactionUpdated'
+      - $ref: '#/channels/realtime/messages/ChatUnreadUpdated'
+      - $ref: '#/channels/realtime/messages/ChatHistoryLoaded'
+      - $ref: '#/channels/realtime/messages/ChatSanctionApplied'
+      - $ref: '#/channels/realtime/messages/ChatMessageAcked'
+      - $ref: '#/channels/realtime/messages/ChatMessageEdited'
+      - $ref: '#/channels/realtime/messages/ChatMessageRecalled'
+      - $ref: '#/channels/realtime/messages/ChatPinUpdated'
+      - $ref: '#/channels/realtime/messages/ChatTypingUpdated'
+      - $ref: '#/channels/realtime/messages/ChatReceiptUpdated'
+      - $ref: '#/channels/realtime/messages/ChatMentionCreated'
+  receiveNotificationCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/NotificationItemMarkRead'
+  sendNotificationEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/NotificationItemCreated'
+  receivePartyCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Lệnh Party Lobby realtime. Tạo/mời/chấp nhận/kick/giải tán qua REST /api/v1/multiplayer/parties.
+    messages:
+      - $ref: '#/channels/realtime/messages/PartyMemberReadySet'
+      - $ref: '#/channels/realtime/messages/PartyActivitySelect'
+      - $ref: '#/channels/realtime/messages/PartySessionStart'
+  sendPartyEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/PartyStateSnapshot'
+      - $ref: '#/channels/realtime/messages/PartyInvitationReceived'
+      - $ref: '#/channels/realtime/messages/PartyInvitationUpdated'
+      - $ref: '#/channels/realtime/messages/PartyMemberJoined'
+      - $ref: '#/channels/realtime/messages/PartyMemberLeft'
+      - $ref: '#/channels/realtime/messages/PartyMemberStatusChanged'
+      - $ref: '#/channels/realtime/messages/PartyMemberReadyChanged'
+      - $ref: '#/channels/realtime/messages/PartyLeaderTransferred'
+      - $ref: '#/channels/realtime/messages/PartyActivitySelected'
+      - $ref: '#/channels/realtime/messages/PartySessionStarted'
+      - $ref: '#/channels/realtime/messages/PartySessionEnded'
+      - $ref: '#/channels/realtime/messages/PartyDisbanded'
+  receiveMatchmakingCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Ready check và hủy ticket. Tạo ticket qua REST POST /api/v1/competition/matchmaking/tickets (Idempotency-Key).
+    messages:
+      - $ref: '#/channels/realtime/messages/MatchmakingTicketCancel'
+      - $ref: '#/channels/realtime/messages/MatchmakingProposalAccept'
+      - $ref: '#/channels/realtime/messages/MatchmakingProposalDecline'
+  sendMatchmakingEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/MatchmakingTicketUpdated'
+      - $ref: '#/channels/realtime/messages/MatchmakingProposalCreated'
+      - $ref: '#/channels/realtime/messages/MatchmakingProposalUpdated'
+      - $ref: '#/channels/realtime/messages/MatchmakingProposalCancelled'
+      - $ref: '#/channels/realtime/messages/MatchmakingMatchAssigned'
+  receiveHubCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Đồng bộ thế giới hub (≤10 Hz move, không ack).
+    messages:
+      - $ref: '#/channels/realtime/messages/HubInstanceJoin'
+      - $ref: '#/channels/realtime/messages/HubPlayerMove'
+      - $ref: '#/channels/realtime/messages/HubPlayerEmote'
+  sendHubEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/HubInstanceAssigned'
+      - $ref: '#/channels/realtime/messages/HubSnapshotUpdated'
+      - $ref: '#/channels/realtime/messages/HubPlayerJoined'
+      - $ref: '#/channels/realtime/messages/HubPlayerLeft'
+      - $ref: '#/channels/realtime/messages/HubPlayerEmoted'
+      - $ref: '#/channels/realtime/messages/HubPlayerAppearanceChanged'
+      - $ref: '#/channels/realtime/messages/HubPlayerCorrected'
+      - $ref: '#/channels/realtime/messages/HubInstanceMigrated'
+  receiveBattleCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Knowledge Battle / Team Battle / Timed Quiz — server-authoritative.
+    messages:
+      - $ref: '#/channels/realtime/messages/BattleAnswerSubmit'
+      - $ref: '#/channels/realtime/messages/BattleStateRequest'
+  sendBattleEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/BattleStateSnapshot'
+      - $ref: '#/channels/realtime/messages/BattleCountdownStarted'
+      - $ref: '#/channels/realtime/messages/BattleQuestionShown'
+      - $ref: '#/channels/realtime/messages/BattleAnswerRecorded'
+      - $ref: '#/channels/realtime/messages/BattleAnswerEvaluated'
+      - $ref: '#/channels/realtime/messages/BattleQuestionRevealed'
+      - $ref: '#/channels/realtime/messages/BattleRoundEnded'
+      - $ref: '#/channels/realtime/messages/BattleParticipantStatusChanged'
+      - $ref: '#/channels/realtime/messages/BattleMatchPaused'
+      - $ref: '#/channels/realtime/messages/BattleMatchResumed'
+      - $ref: '#/channels/realtime/messages/BattleMatchEnded'
+  receiveCoopCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Cooperative Quest / Educational Puzzle trong private instance của Party.
+    messages:
+      - $ref: '#/channels/realtime/messages/CoopActionPerform'
+      - $ref: '#/channels/realtime/messages/CoopAnswerSubmit'
+  sendCoopEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/CoopStateSnapshot'
+      - $ref: '#/channels/realtime/messages/CoopStateUpdated'
+      - $ref: '#/channels/realtime/messages/CoopTaskAssigned'
+      - $ref: '#/channels/realtime/messages/CoopAnswerEvaluated'
+      - $ref: '#/channels/realtime/messages/CoopProgressUpdated'
+      - $ref: '#/channels/realtime/messages/CoopSessionEnded'
+
+  receiveBossCommands:
+    action: receive
+    channel: { $ref: '#/channels/realtime' }
+    summary: Boss encounter (game-service, ew.cmd.game.boss.*) — server-authoritative.
+    messages:
+      - $ref: '#/channels/realtime/messages/BossEncounterReady'
+      - $ref: '#/channels/realtime/messages/BossAnswerSubmit'
+  sendBossEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    messages:
+      - $ref: '#/channels/realtime/messages/BossEncounterUpdated'
+      - $ref: '#/channels/realtime/messages/BossPhaseStarted'
+      - $ref: '#/channels/realtime/messages/BossPhaseCompleted'
+      - $ref: '#/channels/realtime/messages/BossEncounterEnded'
+  sendProgressionEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: Challenge và tiến trình người chơi (game-service, Valkey ew:rt:user:<user_id>).
+    messages:
+      - $ref: '#/channels/realtime/messages/ChallengeAttemptUpdated'
+      - $ref: '#/channels/realtime/messages/ProgressionXpUpdated'
+      - $ref: '#/channels/realtime/messages/ProgressionLevelReached'
+      - $ref: '#/channels/realtime/messages/QuestProgressUpdated'
+      - $ref: '#/channels/realtime/messages/WorldAreaUnlocked'
+  sendEventSeasonEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: Sự kiện game và season track (game-service, Valkey ew:rt:user:<user_id>; community goal gộp tối đa 1 lần/10 giây mỗi phạm vi rồi đẩy tới các room hub đang mở thuộc phạm vi qua ew:rt:room:<room_id> [Proposed]).
+    messages:
+      - $ref: '#/channels/realtime/messages/EventProgressUpdated'
+      - $ref: '#/channels/realtime/messages/EventCommunityGoalUpdated'
+      - $ref: '#/channels/realtime/messages/EventStatusChanged'
+      - $ref: '#/channels/realtime/messages/SeasonTrackUpdated'
+
+components:
+  securitySchemes:
+    realtimeTicket:
+      type: httpApiKey
+      name: ticket
+      in: query
+      description: Ticket opaque 60s, dùng một lần (ADR-0008). Không bao giờ đặt JWT vào query string.
+
+  schemas:
+    # ================= Envelope =================
+    ClientEnvelope:
+      type: object
+      required: [v, type, id, payload]
+      additionalProperties: false
+      properties:
+        v: { type: integer, const: 1 }
+        type: { type: string, maxLength: 64, pattern: '^[a-z_]+\.[a-z_]+\.[a-z_]+$' }
+        id:
+          type: string
+          minLength: 10
+          maxLength: 40
+          description: ID lệnh do client sinh (ULID/UUIDv7); dùng ghép ack/error và chống lặp trong cửa sổ resume.
+        ts: { type: integer, description: Epoch ms phía client (tham khảo). }
+        payload: { type: object }
+    ServerEnvelope:
+      type: object
+      required: [v, type, seq, ts, payload]
+      additionalProperties: false
+      properties:
+        v: { type: integer, const: 1 }
+        type: { type: string, maxLength: 64, pattern: '^[a-z_]+\.[a-z_]+\.[a-z_]+$' }
+        seq:
+          type: integer
+          minimum: 1
+          description: Số thứ tự tăng dần theo kết nối logic (giữ qua resume).
+        ref: { type: string, maxLength: 255, description: '`id` của lệnh client mà message này phản hồi.' }
+        ts: { type: integer, description: Epoch ms phía server (thẩm quyền). }
+        payload: { type: object }
+
+    # ================= Common =================
+    RewardList:
+      type: array
+      maxItems: 20
+      items:
+        type: object
+        required: [kind]
+        properties:
+          kind: { type: string, enum: [xp, currency, item, badge, title] }
+          amount: { type: integer, minimum: 0 }
+          currency_code: { type: string, maxLength: 64 }
+          item_id: { $ref: '#/components/schemas/Uuid' }
+          label: { $ref: '#/components/schemas/LocalizedName' }
+    Uuid: { type: string, format: uuid }
+    EpochMs: { type: integer, minimum: 0 }
+    GradeLevel: { type: integer, minimum: 1, maximum: 9 }
+    LocalizedName:
+      type: object
+      description: Tên/nhãn song ngữ bắt buộc vi + en (ADR-0056)
+      required: [vi, en]
+      additionalProperties: false
+      properties:
+        vi: { type: string, minLength: 1, maxLength: 255 }
+        en: { type: string, minLength: 1, maxLength: 255 }
+    LocalizedText:
+      type: object
+      description: Văn bản song ngữ bắt buộc vi + en (ADR-0056)
+      required: [vi, en]
+      additionalProperties: false
+      properties:
+        vi: { type: string, minLength: 1, maxLength: 4000 }
+        en: { type: string, minLength: 1, maxLength: 4000 }
+    TenantLocalizedName:
+      type: object
+      description: 'Tên do tenant nhập (sự kiện trường): vi bắt buộc, en tùy chọn'
+      required: [vi]
+      additionalProperties: false
+      properties:
+        vi: { type: string, minLength: 1, maxLength: 255 }
+        en: { type: string, minLength: 1, maxLength: 255 }
+    Vec3:
+      type: array
+      items: { type: number }
+      minItems: 3
+      maxItems: 3
+      description: Vị trí mét [x, y, z], lượng tử hóa 1 cm.
+    PublicPlayer:
+      type: object
+      description: Thông tin người chơi được phép hiển thị cho người khác (không PII).
+      required: [user_id, nickname]
+      properties:
+        user_id: { $ref: '#/components/schemas/Uuid' }
+        nickname: { type: string, maxLength: 32 }
+        avatar_config: { type: object, description: 'Tham chiếu item_id cho body/hair/outfit/accessories.' }
+        level: { type: integer, minimum: 1 }
+        tier: { type: string, maxLength: 64, description: 'Hạng thi đấu dạng thân thiện (không lộ rating số).' }
+        is_teacher: { type: boolean, default: false }
+    ErrorCode:
+      type: string
+      enum:
+        - BAD_REQUEST
+        - UNKNOWN_TYPE
+        - VALIDATION_FAILED
+        - UNAUTHENTICATED
+        - PERMISSION_DENIED
+        - GAME_ACCESS_STUDENT_ONLY
+        - NOT_FOUND
+        - CONFLICT
+        - RATE_LIMITED
+        - POLICY_DENIED
+        - CHAT_CONTENT_BLOCKED
+        - CHAT_NOT_ALLOWED
+        - CHAT_KIND_NOT_ALLOWED
+        - CHAT_RATE_LIMITED
+        - CHAT_MUTED
+        - CHAT_CHANNEL_CLOSED
+        - BOSS_ENCOUNTER_FULL
+        - BOSS_PHASE_CLOSED
+        - CHALLENGE_NOT_ELIGIBLE
+        - CHAT_EDIT_WINDOW_EXPIRED
+        - CHAT_RECALL_WINDOW_EXPIRED
+        - CHAT_FORWARD_NOT_ALLOWED
+        - CHAT_PIN_LIMIT_REACHED
+        - CHAT_MENTION_LIMIT
+        - CHAT_TEMPORARILY_UNAVAILABLE
+        - CHAT_FEATURE_DISABLED
+        - CHAT_ASSET_NOT_AVAILABLE
+        - PARTY_NOT_LEADER
+        - PARTY_NOT_READY
+        - PARTY_ACTIVITY_NOT_ELIGIBLE
+        - ROOM_FULL
+        - ROOM_NOT_MEMBER
+        - ANSWER_LATE
+        - ANSWER_ALREADY_SUBMITTED
+        - MATCH_NOT_ACTIVE
+        - PROPOSAL_EXPIRED
+        - INTERNAL
+        - UNAVAILABLE
+    ChatChannelType:
+      type: string
+      enum: [world, area, match, party, team, class, study_group, direct]
+    ChatMessageKind:
+      type: string
+      enum: [text, quick, emoji, sticker, gif, system]
+    ChatMessage:
+      type: object
+      required: [message_id, channel_id, seq, sender, kind, created_at]
+      properties:
+        message_id: { $ref: '#/components/schemas/Uuid' }
+        channel_id: { $ref: '#/components/schemas/Uuid' }
+        seq: { type: integer, description: Thứ tự tin trong channel. }
+        sender: { $ref: '#/components/schemas/PublicPlayer' }
+        kind: { $ref: '#/components/schemas/ChatMessageKind' }
+        body: { type: string, maxLength: 500, description: 'Nội dung đã chuẩn hóa/che (masked) sau moderation.' }
+        quick_message_id:
+          type: string
+          maxLength: 64
+          description: 'kind=quick: client hiển thị văn bản theo locale của người nhận (GET /chat/quick-messages)'
+        system_code:
+          type: string
+          maxLength: 128
+          description: 'kind=system: mã thông điệp (ui.chat.system.<code>), client dựng câu theo locale'
+        params:
+          type: object
+          maxProperties: 20
+          additionalProperties: { type: string, maxLength: 255 }
+          description: Tham số chèn vào chuỗi theo mã (client dựng câu theo locale)
+        emoji: { type: string, maxLength: 64 }
+        sticker_id: { $ref: '#/components/schemas/Uuid' }
+        gif_id: { $ref: '#/components/schemas/Uuid' }
+        reply_to_message_id: { $ref: '#/components/schemas/Uuid' }
+        quote:
+          type: object
+          properties:
+            message_id: { $ref: '#/components/schemas/Uuid' }
+            excerpt: { type: string, maxLength: 200, description: Cắt từ nội dung đã che }
+        forwarded_from:
+          type: object
+          properties:
+            message_id: { $ref: '#/components/schemas/Uuid' }
+            channel_type: { $ref: '#/components/schemas/ChatChannelType' }
+            sender_nickname: { type: string, maxLength: 128 }
+        mentions: { type: array, items: { $ref: '#/components/schemas/PublicPlayer' } }
+        reactions:
+          type: object
+          additionalProperties: { type: integer }
+        revision: { type: integer, minimum: 1 }
+        edited_at: { $ref: '#/components/schemas/EpochMs' }
+        recalled: { type: boolean }
+        pinned: { type: boolean }
+        moderation_state: { type: string, enum: [allowed, masked, unchecked] }
+        created_at: { $ref: '#/components/schemas/EpochMs' }
+    PartyMemberState:
+      type: object
+      required: [player, role, status, ready]
+      properties:
+        player: { $ref: '#/components/schemas/PublicPlayer' }
+        role: { type: string, enum: [leader, member] }
+        status: { type: string, enum: [online, away, in_activity, disconnected] }
+        ready: { type: boolean }
+        joined_at: { $ref: '#/components/schemas/EpochMs' }
+    ActivityRef:
+      type: object
+      required: [kind, id]
+      properties:
+        kind: { type: string, enum: [quest, minigame, learning_challenge, team_competition, free_explore] }
+        id: { type: string, maxLength: 64, description: 'quest_version_id / minigame_version_id / ...' }
+        title: { type: string, maxLength: 255 }
+    QuestionRender:
+      type: object
+      description: Render payload câu hỏi — KHÔNG chứa answer key / scoring rule (ADR-0016).
+      required: [question_instance_id, question_type, stem]
+      properties:
+        question_instance_id: { type: string, maxLength: 64, description: 'ID duy nhất cho câu hỏi trong trận/phiên (không lộ question_version_id).' }
+        question_type:
+          type: string
+          enum: [single_choice, multiple_choice, true_false, fill_in_blank, short_answer, numeric, matching, ordering, drag_and_drop, image_based, interactive]
+        stem: { type: object, description: 'Rich content (text/latex/media refs).' }
+        options:
+          type: array
+          items:
+            type: object
+            required: [option_id]
+            properties:
+              option_id: { type: string, maxLength: 64 }
+              content: { type: object }
+        media: { type: array, items: { type: object } }
+        time_limit_ms: { type: integer }
+    AnswerResponse:
+      type: object
+      description: 'Câu trả lời thô theo loại câu hỏi, vd. {"selected":["b"]}, {"value":"42"}, {"pairs":[["a","2"]]}, {"order":["c","a","b"]}.'
+    HubEntity:
+      type: object
+      required: [eid]
+      properties:
+        eid: { type: integer, description: Entity id ngắn trong instance. }
+        p: { $ref: '#/components/schemas/Vec3' }
+        r: { type: number, description: Yaw (radian). }
+        a: { type: string, maxLength: 255, description: 'Animation state: idle, walk, run, jump, emote:<id>, sit.' }
+
+  messages:
+    # ======================= SYSTEM =======================
+    SystemPing:
+      name: system.heartbeat.ping
+      title: Heartbeat (mỗi 15s)
+      summary: Không cần ack; server trả system.heartbeat.pong. Không nhận frame nào 45s → close 4408.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: system.heartbeat.ping }
+              payload:
+                type: object
+                properties:
+                  client_time: { $ref: '#/components/schemas/EpochMs' }
+    SystemSessionResume:
+      name: system.session.resume
+      title: Khôi phục phiên sau reconnect
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: system.session.resume }
+              payload:
+                type: object
+                required: [resume_token, last_seq]
+                properties:
+                  resume_token: { type: string, maxLength: 512 }
+                  last_seq: { type: integer, minimum: 0 }
+    SystemSessionWelcome:
+      name: system.session.welcome
+      title: Kết nối được chấp nhận
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.session.welcome }
+              payload:
+                type: object
+                required: [conn_id, server_time, heartbeat_s, timeout_s, resume_token, protocol_version]
+                properties:
+                  conn_id: { type: string, maxLength: 64 }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  game_session_id: { $ref: '#/components/schemas/Uuid' }
+                  server_time: { $ref: '#/components/schemas/EpochMs' }
+                  heartbeat_s: { type: integer, default: 15 }
+                  timeout_s: { type: integer, default: 45 }
+                  resume_token: { type: string, maxLength: 512 }
+                  resume_window_s: { type: integer, default: 120 }
+                  protocol_version: { type: integer, const: 1 }
+                  limits:
+                    type: object
+                    properties:
+                      max_frame_bytes: { type: integer, default: 16384 }
+                      max_move_hz: { type: integer, default: 10 }
+    SystemPong:
+      name: system.heartbeat.pong
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.heartbeat.pong }
+              payload:
+                type: object
+                properties:
+                  client_time: { $ref: '#/components/schemas/EpochMs' }
+                  server_time: { $ref: '#/components/schemas/EpochMs' }
+    SystemAck:
+      name: system.command.acked
+      title: Xác nhận lệnh thành công
+      summary: Type thực tế là `system.command.acked`; tài liệu gọi tắt là system.ack.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            required: [ref]
+            properties:
+              type: { const: system.command.acked }
+              payload:
+                type: object
+                properties:
+                  result: { type: object, description: Dữ liệu kết quả tùy lệnh (vd. message_id). }
+    SystemError:
+      name: system.command.failed
+      title: Lệnh thất bại / lỗi giao thức
+      summary: Type thực tế là `system.command.failed`; tài liệu gọi tắt là system.error. `ref` có thể vắng nếu lỗi không gắn lệnh.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.command.failed }
+              payload:
+                type: object
+                required: [code, message]
+                properties:
+                  code: { $ref: '#/components/schemas/ErrorCode' }
+                  message: { type: string, maxLength: 1000, description: Thông điệp thân thiện (vi-VN) có thể hiển thị. }
+                  retry_after_ms: { type: integer }
+                  details: { type: object }
+    SystemSessionResumed:
+      name: system.session.resumed
+      summary: Gửi sau khi replay xong các message seq > last_seq.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.session.resumed }
+              payload:
+                type: object
+                properties:
+                  replayed: { type: integer }
+                  rejoined_rooms: { type: array, items: { type: string, maxLength: 64 } }
+    SystemSessionResumeFailed:
+      name: system.session.resume_failed
+      summary: Buffer đã hết hạn — client resync qua REST (party, chat unread, quest, match).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.session.resume_failed }
+              payload:
+                type: object
+                properties:
+                  reason: { type: string, enum: [expired, unknown_token, seq_gap] }
+    SystemDegraded:
+      name: system.service.degraded
+      summary: Hạ tầng realtime suy giảm (vd. Valkey) — client chuyển sang poll REST.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.service.degraded }
+              payload:
+                type: object
+                properties:
+                  features: { type: array, items: { type: string, enum: [chat, presence, party, matchmaking, notification] } }
+                  poll_interval_s: { type: integer, default: 10 }
+    SystemNoticeBroadcast:
+      name: system.notice.broadcasted
+      summary: Thông báo hệ thống (bảo trì, sự kiện).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.notice.broadcasted }
+              payload:
+                type: object
+                required: [level, message]
+                properties:
+                  level: { type: string, enum: [info, warning, maintenance] }
+                  message_code: { type: string, maxLength: 128 }
+                  message: { $ref: '#/components/schemas/LocalizedText' }
+                  starts_at: { $ref: '#/components/schemas/EpochMs' }
+
+    SessionReplaced:
+      name: session.session.replaced
+      summary: Tài khoản vừa đăng nhập trên thiết bị khác — phiên này bị kết thúc (ADR-0031).
+      description: |
+        Gửi ngay trước khi server đóng kết nối với close code 4409. Client hiển thị thông báo thân thiện
+        ("Bạn đã được đăng xuất vì tài khoản vừa đăng nhập trên thiết bị khác"), xóa token cục bộ và
+        quay về màn hình đăng nhập. Không tự reconnect.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: session.session.replaced }
+              payload:
+                type: object
+                required: [game_session_id, replaced_at]
+                properties:
+                  game_session_id: { type: string, format: uuid }
+                  replaced_at: { $ref: '#/components/schemas/EpochMs' }
+                  new_device_platform: { type: string, enum: [windows, android, ios, web, macos, linux] }
+
+    ContentManifestUpdated:
+      name: content.manifest.updated
+      summary: Có content manifest mới cho tenant (ADR-0043) — chỉ báo, áp dụng ở màn kế tiếp.
+      description: |
+        Phát bởi game-service (qua realtime-gateway) sau khi publish/rollback/unpublish nội dung làm đổi manifest
+        của tenant. Client chỉ đặt cờ "có bản mới"; KHÔNG đổi nội dung của màn đang chơi (version pinning).
+        Khi vào màn mới, client gọi GET /api/v1/game/content-manifest (If-None-Match) rồi POST /game/levels/{id}:start.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: content.manifest.updated }
+              payload:
+                type: object
+                required: [tenant_id, manifest_version, etag]
+                properties:
+                  tenant_id: { type: string, format: uuid }
+                  manifest_version: { type: integer }
+                  etag: { type: string, maxLength: 128 }
+                  changed_items_count: { type: integer, minimum: 0 }
+
+    # ======================= PRESENCE =======================
+    PresenceStatusSet:
+      name: presence.status.set
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: presence.status.set }
+              payload:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [online, away, busy, invisible] }
+                  activity: { type: string, enum: [idle, learning, quest, battle, party_lobby, exam] }
+    PresenceFriendUpdated:
+      name: presence.friend.updated
+      summary: Chỉ gửi cho bạn bè/party/lớp theo policy; trong exam không lộ chi tiết hoạt động.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: presence.friend.updated }
+              payload:
+                type: object
+                required: [user_id, status]
+                properties:
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [online, away, busy, offline] }
+                  activity: { type: string, maxLength: 64 }
+                  area_id: { type: string, maxLength: 64 }
+
+    # ======================= CHAT =======================
+    ChatChannelJoin:
+      name: chat.channel.join
+      summary: Subscribe nhận tin nhắn realtime của channel (server kiểm tra membership + tenant).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.channel.join }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  since_seq: { type: integer, description: Nhận bù tin nhắn sau seq này (tối đa 50). }
+    ChatChannelLeave:
+      name: chat.channel.leave
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.channel.leave }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+    ChatMessageSend:
+      name: chat.message.send
+      summary: |
+        Gửi tin. `kind` được phép theo ChatPolicy của channel — một bộ quy tắc cho mọi lớp (ADR-0020); mọi kind qua kiểm tra hợp lệ.
+        Pipeline lọc đồng bộ: allow → created; mask → created với body đã che; block → system.command.failed CHAT_CONTENT_BLOCKED;
+        hold_for_review → chat.message.held (chỉ người gửi). Người gửi nhận chat.message.acked (Sent) chỉ sau khi NATS JetStream ack;
+        NATS lỗi → system.command.failed CHAT_TEMPORARILY_UNAVAILABLE (ADR-0035).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.send }
+              payload:
+                type: object
+                required: [channel_id, kind]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  client_msg_id: { $ref: '#/components/schemas/Uuid' }
+                  kind: { type: string, enum: [text, quick, emoji, sticker, gif] }
+                  body: { type: string, maxLength: 300 }
+                  quick_message_id: { type: string, maxLength: 64 }
+                  emoji: { type: string, maxLength: 64 }
+                  sticker_id: { $ref: '#/components/schemas/Uuid' }
+                  gif_id: { $ref: '#/components/schemas/Uuid' }
+                  reply_to_message_id: { $ref: '#/components/schemas/Uuid' }
+                  quote:
+                    type: object
+                    required: [message_id]
+                    properties:
+                      message_id: { $ref: '#/components/schemas/Uuid' }
+                      excerpt_start: { type: integer, minimum: 0 }
+                      excerpt_end: { type: integer, minimum: 0 }
+                  mentions: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/Uuid' } }
+    ChatReactionToggle:
+      name: chat.reaction.toggle
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.reaction.toggle }
+              payload:
+                type: object
+                required: [message_id, reaction]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  reaction: { type: string, maxLength: 64, description: Mã reaction trong danh sách cho phép. }
+    ChatHistoryFetch:
+      name: chat.history.fetch
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.history.fetch }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  before_seq: { type: integer }
+                  limit: { type: integer, minimum: 1, maximum: 50, default: 30 }
+    ChatMessageCreated:
+      name: chat.message.created
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.created }
+              payload: { $ref: '#/components/schemas/ChatMessage' }
+    ChatMessageHeld:
+      name: chat.message.held
+      summary: Chỉ gửi cho người gửi — tin đang chờ kiểm duyệt, chưa phát tới người khác.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.held }
+              payload:
+                type: object
+                required: [message_id, channel_id]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  notice: { type: string, maxLength: 1000, description: 'Thông điệp thân thiện, vd. "Tin nhắn đang được thầy cô kiểm tra".' }
+    ChatMessageRemoved:
+      name: chat.message.removed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.removed }
+              payload:
+                type: object
+                required: [message_id, channel_id]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [moderation, sender_deleted, retention] }
+    ChatReactionUpdated:
+      name: chat.reaction.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.reaction.updated }
+              payload:
+                type: object
+                required: [message_id, channel_id, reactions]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  reactions:
+                    type: object
+                    additionalProperties: { type: integer }
+    ChatUnreadUpdated:
+      name: chat.unread.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.unread.updated }
+              payload:
+                type: object
+                required: [counts]
+                properties:
+                  counts:
+                    type: object
+                    description: channel_id → số tin chưa đọc
+                    additionalProperties: { type: integer }
+                  mentions:
+                    type: object
+                    description: channel_id → số mention chưa đọc
+                    additionalProperties: { type: integer }
+    ChatHistoryLoaded:
+      name: chat.history.loaded
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            required: [ref]
+            properties:
+              type: { const: chat.history.loaded }
+              payload:
+                type: object
+                required: [channel_id, messages, has_more]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  messages: { type: array, items: { $ref: '#/components/schemas/ChatMessage' } }
+                  has_more: { type: boolean }
+    ChatMessageEdit:
+      name: chat.message.edit
+      summary: Sửa tin của chính mình trong 15 phút (ADR-0034). Nội dung mới chạy lại pipeline kiểm duyệt.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.edit }
+              payload:
+                type: object
+                required: [message_id, body, revision_expected]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  body: { type: string, minLength: 1, maxLength: 300 }
+                  revision_expected: { type: integer, minimum: 1 }
+                  mentions: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/Uuid' } }
+    ChatMessageRecall:
+      name: chat.message.recall
+      summary: Thu hồi tin của chính mình trong 24 giờ; nội dung gốc giữ làm bằng chứng (ADR-0034).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.recall }
+              payload:
+                type: object
+                required: [message_id]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+    ChatMessageForward:
+      name: chat.message.forward
+      summary: Chuyển tiếp tới tối đa 5 channel cùng tenant; mỗi tin mới chạy lại kiểm duyệt của channel đích.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.forward }
+              payload:
+                type: object
+                required: [message_id, target_channel_ids]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  target_channel_ids: { type: array, minItems: 1, maxItems: 5, uniqueItems: true, items: { $ref: '#/components/schemas/Uuid' } }
+    ChatPinAdd:
+      name: chat.pin.add
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.pin.add }
+              payload:
+                type: object
+                required: [channel_id, message_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+    ChatPinRemove:
+      name: chat.pin.remove
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.pin.remove }
+              payload:
+                type: object
+                required: [channel_id, message_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+    ChatTypingStart:
+      name: chat.typing.start
+      summary: Throttle 1 lần/3 s; tự hết sau 5 s. Chỉ qua Valkey Pub/Sub, không lưu.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.typing.start }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+    ChatTypingStop:
+      name: chat.typing.stop
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.typing.stop }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+    ChatReceiptDelivered:
+      name: chat.receipt.delivered
+      summary: Thiết bị đã nhận tới seq (con trỏ, gộp ≤ 1 lần/2 s).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.receipt.delivered }
+              payload:
+                type: object
+                required: [channel_id, seq]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer, minimum: 0 }
+    ChatReceiptRead:
+      name: chat.receipt.read
+      summary: Đã đọc tới seq (thay chat.read.mark); cập nhật unread + mention count.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.receipt.read }
+              payload:
+                type: object
+                required: [channel_id, seq]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer, minimum: 0 }
+    ChatSync:
+      name: chat.sync
+      summary: Bù tin khi reconnect hoặc phát hiện seq gap; server trả tối đa 200 tin qua chat.history.loaded, nhiều hơn → REST.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.sync }
+              payload:
+                type: object
+                required: [channels]
+                properties:
+                  channels:
+                    type: object
+                    description: channel_id → last_seen_seq
+                    additionalProperties: { type: integer, minimum: 0 }
+    ChatMessageAcked:
+      name: chat.message.acked
+      summary: Trạng thái "Sent" — chỉ gửi người gửi, sau khi NATS JetStream đã ack (ADR-0035).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.acked }
+              payload:
+                type: object
+                required: [client_msg_id, message_id, channel_id, seq]
+                properties:
+                  client_msg_id: { $ref: '#/components/schemas/Uuid' }
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer }
+                  moderation_state: { type: string, enum: [allowed, masked, unchecked, held] }
+    ChatMessageEdited:
+      name: chat.message.edited
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.edited }
+              payload:
+                type: object
+                required: [message_id, channel_id, seq, body, revision, edited_at]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer }
+                  body: { type: string, maxLength: 500 }
+                  mentions: { type: array, items: { $ref: '#/components/schemas/PublicPlayer' } }
+                  revision: { type: integer, minimum: 2 }
+                  edited_at: { $ref: '#/components/schemas/EpochMs' }
+    ChatMessageRecalled:
+      name: chat.message.recalled
+      summary: Mọi thành viên hiển thị placeholder "Tin nhắn đã được thu hồi"; không có nội dung.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.message.recalled }
+              payload:
+                type: object
+                required: [message_id, channel_id, seq]
+                properties:
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer }
+                  recalled_at: { $ref: '#/components/schemas/EpochMs' }
+    ChatPinUpdated:
+      name: chat.pin.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.pin.updated }
+              payload:
+                type: object
+                required: [channel_id, pinned_message_ids]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  pinned_message_ids: { type: array, maxItems: 3, items: { $ref: '#/components/schemas/Uuid' } }
+                  actor: { $ref: '#/components/schemas/PublicPlayer' }
+    ChatTypingUpdated:
+      name: chat.typing.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.typing.updated }
+              payload:
+                type: object
+                required: [channel_id, typing]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  typing: { type: array, maxItems: 10, items: { $ref: '#/components/schemas/PublicPlayer' } }
+    ChatReceiptUpdated:
+      name: chat.receipt.updated
+      summary: Con trỏ delivered/read của một thành viên (chỉ channel có receipts; không gửi giữa người đã block nhau).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.receipt.updated }
+              payload:
+                type: object
+                required: [channel_id]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  member: { $ref: '#/components/schemas/PublicPlayer' }
+                  delivered_seq: { type: integer }
+                  read_seq: { type: integer }
+                  read_count_by_seq:
+                    type: object
+                    description: Chỉ cho channel kiểu đếm (class/study_group) — seq → số người đã xem
+                    additionalProperties: { type: integer }
+    ChatMentionCreated:
+      name: chat.mention.created
+      summary: Gửi riêng người được mention (badge @, thông báo).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.mention.created }
+              payload:
+                type: object
+                required: [channel_id, message_id, by]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  message_id: { $ref: '#/components/schemas/Uuid' }
+                  seq: { type: integer }
+                  by: { $ref: '#/components/schemas/PublicPlayer' }
+                  preview: { type: string, maxLength: 80, description: Trích ngắn từ nội dung đã che }
+    ChatSanctionApplied:
+      name: chat.sanction.applied
+      summary: Gửi cho người bị áp dụng biện pháp (mute/hạn chế) để UI khóa ô nhập.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.sanction.applied }
+              payload:
+                type: object
+                required: [sanction_type]
+                properties:
+                  sanction_type: { type: string, enum: [warning, mute, restrict_quick_only, chat_disabled] }
+                  until: { $ref: '#/components/schemas/EpochMs' }
+                  notice: { type: string, maxLength: 1000 }
+
+    # ======================= NOTIFICATION =======================
+    NotificationItemMarkRead:
+      name: notification.item.mark_read
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: notification.item.mark_read }
+              payload:
+                type: object
+                required: [notification_ids]
+                properties:
+                  notification_ids: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/Uuid' } }
+    NotificationItemCreated:
+      name: notification.item.created
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: notification.item.created }
+              payload:
+                type: object
+                required: [notification_id, category, title]
+                properties:
+                  notification_id: { $ref: '#/components/schemas/Uuid' }
+                  category:
+                    type: string
+                    enum: [assignment, quest, reward, achievement, friend, party, competition, tournament, moderation, event, system]
+                  title: { $ref: '#/components/schemas/LocalizedName' }
+                  body: { $ref: '#/components/schemas/LocalizedText' }
+                  message_code:
+                    type: string
+                    maxLength: 128
+                    description: Mã thông điệp (ui.notification.<code>) — client có thể tự dựng câu theo locale
+                  params:
+                    type: object
+                    maxProperties: 20
+                    additionalProperties: { type: string, maxLength: 255 }
+                    description: Tham số chèn vào chuỗi theo mã (client dựng câu theo locale)
+                  action: { type: object, description: 'Deep link trong game, vd. {"kind":"open_assignment","id":"..."}' }
+                  created_at: { $ref: '#/components/schemas/EpochMs' }
+
+    # ======================= PARTY / LOBBY =======================
+    PartyMemberReadySet:
+      name: party.member.ready_set
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: party.member.ready_set }
+              payload:
+                type: object
+                required: [party_id, ready]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  ready: { type: boolean }
+    PartyActivitySelect:
+      name: party.activity.select
+      summary: Chỉ leader. Server kiểm tra mọi thành viên đủ điều kiện (grade/class/school) với activity.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: party.activity.select }
+              payload:
+                type: object
+                required: [party_id, activity]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  activity: { $ref: '#/components/schemas/ActivityRef' }
+                  game_mode: { type: string, maxLength: 64 }
+    PartySessionStart:
+      name: party.session.start
+      summary: Chỉ leader; mọi thành viên online phải ready. Server tạo Game Session/room và gửi party.session.started.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: party.session.start }
+              payload:
+                type: object
+                required: [party_id]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+    PartyStateSnapshot:
+      name: party.state.snapshot
+      summary: Gửi khi kết nối/resume hoặc khi client lệch state_version.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.state.snapshot }
+              payload:
+                type: object
+                required: [party_id, state_version, party_type, leader_id, max_members, members, status]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  state_version: { type: integer }
+                  name: { type: string, maxLength: 255 }
+                  party_type: { type: string, enum: [friend, study_group, quest, competition_team, class_group, custom] }
+                  visibility: { type: string, enum: [private, friends, class] }
+                  leader_id: { $ref: '#/components/schemas/Uuid' }
+                  max_members: { type: integer, minimum: 2, maximum: 8 }
+                  status: { type: string, enum: [open, in_activity, disbanded] }
+                  members: { type: array, items: { $ref: '#/components/schemas/PartyMemberState' } }
+                  current_activity: { $ref: '#/components/schemas/ActivityRef' }
+                  chat_channel_id: { $ref: '#/components/schemas/Uuid' }
+    PartyInvitationReceived:
+      name: party.invitation.received
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.invitation.received }
+              payload:
+                type: object
+                required: [invitation_id, party_id, inviter, expires_at]
+                properties:
+                  invitation_id: { $ref: '#/components/schemas/Uuid' }
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  party_type: { type: string, maxLength: 64 }
+                  inviter: { $ref: '#/components/schemas/PublicPlayer' }
+                  member_count: { type: integer }
+                  expires_at: { $ref: '#/components/schemas/EpochMs' }
+    PartyInvitationUpdated:
+      name: party.invitation.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.invitation.updated }
+              payload:
+                type: object
+                required: [invitation_id, status]
+                properties:
+                  invitation_id: { $ref: '#/components/schemas/Uuid' }
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [accepted, rejected, expired, cancelled] }
+    PartyMemberJoined:
+      name: party.member.joined
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.member.joined }
+              payload:
+                type: object
+                required: [party_id, state_version, member]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  state_version: { type: integer }
+                  member: { $ref: '#/components/schemas/PartyMemberState' }
+    PartyMemberLeft:
+      name: party.member.left
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.member.left }
+              payload:
+                type: object
+                required: [party_id, state_version, user_id, reason]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  state_version: { type: integer }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [left, kicked, transferred_school, account_disabled, timeout] }
+    PartyMemberStatusChanged:
+      name: party.member.status_changed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.member.status_changed }
+              payload:
+                type: object
+                required: [party_id, user_id, status]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [online, away, in_activity, disconnected] }
+    PartyMemberReadyChanged:
+      name: party.member.ready_changed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.member.ready_changed }
+              payload:
+                type: object
+                required: [party_id, user_id, ready]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  ready: { type: boolean }
+                  all_ready: { type: boolean }
+    PartyLeaderTransferred:
+      name: party.leader.transferred
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.leader.transferred }
+              payload:
+                type: object
+                required: [party_id, from_user_id, to_user_id, reason]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  from_user_id: { $ref: '#/components/schemas/Uuid' }
+                  to_user_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [manual, leader_left, leader_disconnected] }
+    PartyActivitySelected:
+      name: party.activity.selected
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.activity.selected }
+              payload:
+                type: object
+                required: [party_id, activity]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  activity: { $ref: '#/components/schemas/ActivityRef' }
+                  ineligible_members:
+                    type: array
+                    description: Thành viên không đủ điều kiện (vd. sai khối lớp) — leader phải đổi hoạt động hoặc thành viên rời.
+                    items:
+                      type: object
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        reason: { type: string, maxLength: 1000 }
+    PartySessionStarted:
+      name: party.session.started
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.session.started }
+              payload:
+                type: object
+                required: [party_id, room_id, activity]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  room_id: { type: string, maxLength: 64 }
+                  room_type: { type: string, enum: [private_instance, coop, battle] }
+                  activity: { $ref: '#/components/schemas/ActivityRef' }
+                  scene_ref: { type: string, maxLength: 255, description: 'Scene/area Godot cần tải.' }
+                  member_ids: { type: array, items: { $ref: '#/components/schemas/Uuid' } }
+    PartySessionEnded:
+      name: party.session.ended
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.session.ended }
+              payload:
+                type: object
+                required: [party_id, outcome]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  outcome: { type: string, enum: [completed, abandoned, failed, aborted] }
+                  summary: { type: object, description: 'Tóm tắt tiến độ chung; kết quả học tập cá nhân lấy qua REST.' }
+    PartyDisbanded:
+      name: party.party.disbanded
+      summary: Type theo mẫu 3 phần `party.party.disbanded`.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: party.party.disbanded }
+              payload:
+                type: object
+                required: [party_id, reason]
+                properties:
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [leader_disbanded, all_left, inactivity, moderation] }
+
+    # ======================= MATCHMAKING =======================
+    MatchmakingTicketCancel:
+      name: matchmaking.ticket.cancel
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.ticket.cancel }
+              payload:
+                type: object
+                required: [ticket_id]
+                properties:
+                  ticket_id: { $ref: '#/components/schemas/Uuid' }
+    MatchmakingProposalAccept:
+      name: matchmaking.proposal.accept
+      summary: Ready check — chấp nhận trận được đề xuất.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.proposal.accept }
+              payload:
+                type: object
+                required: [proposal_id]
+                properties:
+                  proposal_id: { $ref: '#/components/schemas/Uuid' }
+    MatchmakingProposalDecline:
+      name: matchmaking.proposal.decline
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.proposal.decline }
+              payload:
+                type: object
+                required: [proposal_id]
+                properties:
+                  proposal_id: { $ref: '#/components/schemas/Uuid' }
+    MatchmakingTicketUpdated:
+      name: matchmaking.ticket.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.ticket.updated }
+              payload:
+                type: object
+                required: [ticket_id, status]
+                properties:
+                  ticket_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [queued, searching, proposed, matched, cancelled, expired] }
+                  mode: { type: string, enum: [battle_1v1, team_battle, coop_challenge, timed_quiz, tournament] }
+                  subject_id: { $ref: '#/components/schemas/Uuid' }
+                  wait_ms: { type: integer }
+                  estimated_wait_ms: { type: integer }
+                  search_widened: { type: boolean, description: 'Đã nới rating window (không bao giờ nới ràng buộc khối lớp).' }
+                  cancel_reason: { type: string, enum: [user, party_changed, timeout, system, declined_proposal] }
+    MatchmakingProposalCreated:
+      name: matchmaking.proposal.created
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.proposal.created }
+              payload:
+                type: object
+                required: [proposal_id, ticket_id, deadline_at, participants]
+                properties:
+                  proposal_id: { $ref: '#/components/schemas/Uuid' }
+                  ticket_id: { $ref: '#/components/schemas/Uuid' }
+                  deadline_at: { $ref: '#/components/schemas/EpochMs' }
+                  mode: { type: string, maxLength: 64 }
+                  teams:
+                    type: array
+                    items:
+                      type: array
+                      items: { $ref: '#/components/schemas/Uuid' }
+                  participants: { type: array, items: { $ref: '#/components/schemas/PublicPlayer' } }
+    MatchmakingProposalUpdated:
+      name: matchmaking.proposal.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.proposal.updated }
+              payload:
+                type: object
+                required: [proposal_id, accepted_count, total]
+                properties:
+                  proposal_id: { $ref: '#/components/schemas/Uuid' }
+                  accepted_count: { type: integer }
+                  total: { type: integer }
+    MatchmakingProposalCancelled:
+      name: matchmaking.proposal.cancelled
+      summary: Ai đó từ chối/hết giờ. Người đã accept được trả về hàng đợi với ưu tiên giữ nguyên thời gian chờ.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.proposal.cancelled }
+              payload:
+                type: object
+                required: [proposal_id, reason, requeued]
+                properties:
+                  proposal_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [declined, timeout, participant_unavailable] }
+                  requeued: { type: boolean }
+    MatchmakingMatchAssigned:
+      name: matchmaking.match.assigned
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: matchmaking.match.assigned }
+              payload:
+                type: object
+                required: [match_id, room_id, mode]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  room_id: { type: string, maxLength: 64 }
+                  mode: { type: string, maxLength: 64 }
+                  scene_ref: { type: string, maxLength: 255 }
+
+    # ======================= HUB =======================
+    HubInstanceJoin:
+      name: hub.instance.join
+      summary: Yêu cầu vào một khu vực (area transition). Server chọn instance (ưu tiên bạn bè/party).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.instance.join }
+              payload:
+                type: object
+                required: [area_id]
+                properties:
+                  area_id: { type: string, maxLength: 64, description: 'Danh sách chuẩn ở docs/01-game-design/WORLD_DESIGN.md §3: main_hub, practice_zone, social_zone, learning_zone.math|vietnamese|english|science|history, quest_zone.discovery_ocean, exam_zone, challenge_mountain, arena' }
+                  spawn_point: { type: string, maxLength: 64 }
+    HubPlayerMove:
+      name: hub.player.move
+      summary: ≤10 Hz, chỉ khi thay đổi (+1 Hz khi đứng yên). Không ack. Server validate tốc độ/biên.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.move }
+              payload:
+                type: object
+                required: [room_id, client_seq, p, r]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  client_seq: { type: integer }
+                  p: { $ref: '#/components/schemas/Vec3' }
+                  r: { type: number }
+                  v: { $ref: '#/components/schemas/Vec3' }
+                  a: { type: string, maxLength: 255 }
+    HubPlayerEmote:
+      name: hub.player.emote
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.emote }
+              payload:
+                type: object
+                required: [room_id, emote_id]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  emote_id: { type: string, maxLength: 64, description: Emote phải có trong inventory. }
+    HubInstanceAssigned:
+      name: hub.instance.assigned
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.instance.assigned }
+              payload:
+                type: object
+                required: [room_id, area_id, self_eid, spawn, tick_rate_hz]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  area_id: { type: string, maxLength: 64 }
+                  scene_ref: { type: string, maxLength: 255 }
+                  self_eid: { type: integer }
+                  spawn: { $ref: '#/components/schemas/Vec3' }
+                  tick_rate_hz: { type: integer, default: 10 }
+                  max_speed_mps: { type: number }
+                  players:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eid: { type: integer }
+                        player: { $ref: '#/components/schemas/PublicPlayer' }
+                        state: { $ref: '#/components/schemas/HubEntity' }
+    HubSnapshotUpdated:
+      name: hub.snapshot.updated
+      summary: Delta snapshot 10 Hz, đã lọc theo interest grid. Droppable (chỉ giữ bản mới nhất khi queue đầy).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.snapshot.updated }
+              payload:
+                type: object
+                required: [room_id, tick, entities]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  tick: { type: integer }
+                  ack_client_seq: { type: integer, description: client_seq cuối cùng server đã xử lý của chính người nhận. }
+                  entities: { type: array, items: { $ref: '#/components/schemas/HubEntity' } }
+                  removed: { type: array, items: { type: integer } }
+    HubPlayerJoined:
+      name: hub.player.joined
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.joined }
+              payload:
+                type: object
+                required: [room_id, eid, player]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  eid: { type: integer }
+                  player: { $ref: '#/components/schemas/PublicPlayer' }
+                  state: { $ref: '#/components/schemas/HubEntity' }
+    HubPlayerLeft:
+      name: hub.player.left
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.left }
+              payload:
+                type: object
+                required: [room_id, eid]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  eid: { type: integer }
+    HubPlayerEmoted:
+      name: hub.player.emoted
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.emoted }
+              payload:
+                type: object
+                required: [room_id, eid, emote_id]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  eid: { type: integer }
+                  emote_id: { type: string, maxLength: 64 }
+    HubPlayerAppearanceChanged:
+      name: hub.player.appearance_changed
+      summary: Người chơi trong cùng instance đổi trang phục/avatar (sau updateAvatar) — client tải lại appearance theo item_id.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.appearance_changed }
+              payload:
+                type: object
+                required: [room_id, eid, appearance]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  eid: { type: integer }
+                  appearance:
+                    type: object
+                    description: Bản tóm tắt avatar_config (slot → item_id), không chứa thông tin cá nhân
+                    maxProperties: 16
+                    additionalProperties: { type: string, maxLength: 64 }
+    HubPlayerCorrected:
+      name: hub.player.corrected
+      summary: Server từ chối/clamp vị trí của chính người nhận — client snap/blend về vị trí này.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.player.corrected }
+              payload:
+                type: object
+                required: [room_id, client_seq, p]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  client_seq: { type: integer }
+                  p: { $ref: '#/components/schemas/Vec3' }
+                  reason: { type: string, enum: [speed, out_of_bounds, teleport_denied] }
+    HubInstanceMigrated:
+      name: hub.instance.migrated
+      summary: Room chuyển owner node (failover) hoặc party được dời sang instance khác.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: hub.instance.migrated }
+              payload:
+                type: object
+                required: [old_room_id, room_id]
+                properties:
+                  old_room_id: { type: string, maxLength: 64 }
+                  room_id: { type: string, maxLength: 64 }
+                  reason: { type: string, enum: [failover, party_regroup, rebalance] }
+
+    # ======================= BATTLE =======================
+    BattleAnswerSubmit:
+      name: battle.answer.submit
+      summary: Server gắn received_at (server time). Trễ hơn deadline + 300ms grace → ANSWER_LATE. Mỗi câu chỉ một lần.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.answer.submit }
+              payload:
+                type: object
+                required: [match_id, question_instance_id, response]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  response: { $ref: '#/components/schemas/AnswerResponse' }
+                  client_elapsed_ms: { type: integer, description: Chỉ tham khảo cho anti-cheat, không dùng chấm điểm. }
+    BattleStateRequest:
+      name: battle.state.request
+      summary: Yêu cầu snapshot đầy đủ (sau reconnect hoặc lệch state_version).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.state.request }
+              payload:
+                type: object
+                required: [match_id]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+    BattleStateSnapshot:
+      name: battle.state.snapshot
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.state.snapshot }
+              payload:
+                type: object
+                required: [match_id, state, state_version, participants]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  mode: { type: string, enum: [battle_1v1, team_battle, timed_quiz, tournament] }
+                  state: { type: string, enum: [lobby, ready_check, countdown, question_shown, reveal, round_end, paused, finalizing, ended, cancelled] }
+                  state_version: { type: integer }
+                  round: { type: integer }
+                  question_index: { type: integer }
+                  question_count: { type: integer }
+                  current_question: { $ref: '#/components/schemas/QuestionRender' }
+                  deadline_at: { $ref: '#/components/schemas/EpochMs' }
+                  my_answer_locked: { type: boolean }
+                  participants:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        player: { $ref: '#/components/schemas/PublicPlayer' }
+                        team: { type: integer }
+                        score: { type: integer }
+                        connected: { type: boolean }
+    BattleCountdownStarted:
+      name: battle.countdown.started
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.countdown.started }
+              payload:
+                type: object
+                required: [match_id, starts_at]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  starts_at: { $ref: '#/components/schemas/EpochMs' }
+                  question_count: { type: integer }
+                  rounds: { type: integer }
+    BattleQuestionShown:
+      name: battle.question.shown
+      summary: Render payload không có đáp án (ADR-0016). Server time của message này là mốc tính bonus thời gian.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.question.shown }
+              payload:
+                type: object
+                required: [match_id, round, question_index, question, deadline_at]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  round: { type: integer }
+                  question_index: { type: integer }
+                  question: { $ref: '#/components/schemas/QuestionRender' }
+                  shown_at: { $ref: '#/components/schemas/EpochMs' }
+                  deadline_at: { $ref: '#/components/schemas/EpochMs' }
+    BattleAnswerRecorded:
+      name: battle.answer.recorded
+      summary: Gửi cho người trả lời (đã khóa đáp án) và thông báo cho người khác rằng người này đã trả lời (không lộ nội dung).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.answer.recorded }
+              payload:
+                type: object
+                required: [match_id, question_instance_id, user_id]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  answered_count: { type: integer }
+    BattleAnswerEvaluated:
+      name: battle.answer.evaluated
+      summary: Kết quả riêng của người nhận cho câu vừa reveal.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.answer.evaluated }
+              payload:
+                type: object
+                required: [match_id, question_instance_id, is_correct, points]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  answered: { type: boolean }
+                  is_correct: { type: boolean }
+                  points: { type: integer }
+                  time_bonus: { type: integer }
+                  correct_response: { $ref: '#/components/schemas/AnswerResponse' }
+                  explanation: { type: object, description: Giải thích ngắn (nếu chế độ cho phép). }
+    BattleQuestionRevealed:
+      name: battle.question.revealed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.question.revealed }
+              payload:
+                type: object
+                required: [match_id, question_instance_id, scoreboard]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  correct_rate: { type: number, minimum: 0, maximum: 1 }
+                  scoreboard:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        team: { type: integer }
+                        is_correct: { type: boolean }
+                        score: { type: integer }
+                  next_at: { $ref: '#/components/schemas/EpochMs' }
+    BattleRoundEnded:
+      name: battle.round.ended
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.round.ended }
+              payload:
+                type: object
+                required: [match_id, round, standings]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  round: { type: integer }
+                  standings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        team: { type: integer }
+                        score: { type: integer }
+                  next_round_at: { $ref: '#/components/schemas/EpochMs' }
+    BattleParticipantStatusChanged:
+      name: battle.participant.status_changed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.participant.status_changed }
+              payload:
+                type: object
+                required: [match_id, user_id, connected]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  user_id: { $ref: '#/components/schemas/Uuid' }
+                  connected: { type: boolean }
+                  grace_until: { $ref: '#/components/schemas/EpochMs' }
+    BattleMatchPaused:
+      name: battle.match.paused
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.match.paused }
+              payload:
+                type: object
+                required: [match_id, reason, resume_deadline_at]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  reason: { type: string, enum: [participant_disconnected, server_failover] }
+                  resume_deadline_at: { $ref: '#/components/schemas/EpochMs' }
+    BattleMatchResumed:
+      name: battle.match.resumed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.match.resumed }
+              payload:
+                type: object
+                required: [match_id]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  replay_current_question: { type: boolean, description: 'true khi failover — câu dở được làm lại.' }
+    BattleMatchEnded:
+      name: battle.match.ended
+      summary: Kết quả đã được ghi bền vững (MatchResult unique theo match_id). Rating/XP cập nhật bất đồng bộ qua event.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: battle.match.ended }
+              payload:
+                type: object
+                required: [match_id, status, results]
+                properties:
+                  match_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [completed, aborted, cancelled] }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        team: { type: integer }
+                        outcome: { type: string, enum: [win, loss, draw, no_contest] }
+                        score: { type: integer }
+                        correct_count: { type: integer }
+                        competition_points: { type: integer }
+                  rated: { type: boolean, description: 'false khi aborted / chế độ không tính rating.' }
+                  review_available: { type: boolean, description: 'Có thể xem lại câu sai qua REST.' }
+
+    # ======================= COOP =======================
+    # ---------- boss / challenge / progression (CHALLENGE_BOSS_SYSTEM, PROGRESSION_SYSTEM) — game-service qua ew.cmd.game.*
+    BossEncounterReady:
+      name: boss.encounter.ready
+      summary: Báo sẵn sàng trong lobby encounter (gateway → NATS ew.cmd.game.boss.ready). Tạo encounter đi qua REST.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.encounter.ready }
+              payload:
+                type: object
+                required: [encounter_id, ready]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  ready: { type: boolean }
+    BossAnswerSubmit:
+      name: boss.answer.submit
+      summary: Nộp câu trả lời cho yêu cầu của phase hiện tại (ew.cmd.game.boss.answer); game-service gọi learning-service chấm. Phase đã đóng → BOSS_PHASE_CLOSED.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.answer.submit }
+              payload:
+                type: object
+                required: [encounter_id, phase_id, requirement_id, question_instance_id, response]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  phase_id: { type: string, maxLength: 64 }
+                  requirement_id: { type: string, maxLength: 64 }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  response: { $ref: '#/components/schemas/AnswerResponse' }
+                  client_elapsed_ms: { type: integer, minimum: 0, description: Chỉ tham khảo cho anti-cheat. }
+    BossEncounterUpdated:
+      name: boss.encounter.updated
+      summary: Trạng thái encounter thay đổi (thành viên, sẵn sàng, năng lượng boss). Không công bố xếp hạng đóng góp trong nhóm.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.encounter.updated }
+              payload:
+                type: object
+                required: [encounter_id, status, state_version]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  state_version: { type: integer, minimum: 0 }
+                  status: { type: string, enum: [lobby, phase_active, phase_transition, phase_retry, defeated, ended] }
+                  current_phase: { type: integer, minimum: 0 }
+                  energy_remaining_pct: { type: number, minimum: 0, maximum: 100 }
+                  phase_deadline_at: { type: string, format: date-time }
+                  members:
+                    type: array
+                    maxItems: 8
+                    items:
+                      type: object
+                      required: [student_id, nickname]
+                      properties:
+                        student_id: { $ref: '#/components/schemas/Uuid' }
+                        nickname: { type: string, maxLength: 128 }
+                        ready: { type: boolean }
+                        connected: { type: boolean }
+                        contribution_met: { type: boolean }
+    BossPhaseStarted:
+      name: boss.phase.started
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.phase.started }
+              payload:
+                type: object
+                required: [encounter_id, phase_id, phase_index, deadline_at]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  phase_id: { type: string, maxLength: 64 }
+                  phase_index: { type: integer, minimum: 0 }
+                  deadline_at: { type: string, format: date-time }
+                  retry: { type: boolean, description: true khi bắt đầu lại phase với câu hỏi mới (on_fail retry_phase) }
+                  presentation_ref: { type: string, maxLength: 128, description: Khóa hoạt ảnh/câu thoại boss trong gói nội dung đã ghim }
+    BossPhaseCompleted:
+      name: boss.phase.completed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.phase.completed }
+              payload:
+                type: object
+                required: [encounter_id, phase_id, phase_index, energy_remaining_pct]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  phase_id: { type: string, maxLength: 64 }
+                  phase_index: { type: integer, minimum: 0 }
+                  energy_remaining_pct: { type: number, minimum: 0, maximum: 100 }
+                  next_phase_index: { type: [integer, 'null'], minimum: 0 }
+    BossEncounterEnded:
+      name: boss.encounter.ended
+      summary: Kết thúc encounter. Phần thưởng chỉ cho người đạt min_contribution; kết quả học tập ghi riêng từng học sinh.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.encounter.ended }
+              payload:
+                type: object
+                required: [encounter_id, outcome]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  outcome: { type: string, enum: [defeated, time_up, abandoned] }
+                  rewards: { $ref: '#/components/schemas/RewardList' }
+    ChallengeAttemptUpdated:
+      name: challenge.attempt.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: challenge.attempt.updated }
+              payload:
+                type: object
+                required: [challenge_attempt_id, status]
+                properties:
+                  challenge_attempt_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [in_progress, succeeded, failed, abandoned] }
+                  score: { type: number, minimum: 0 }
+                  lives_left: { type: integer, minimum: 0 }
+                  activities_completed: { type: integer, minimum: 0 }
+                  deadline_at: { type: string, format: date-time }
+                  rewards: { $ref: '#/components/schemas/RewardList' }
+    ProgressionXpUpdated:
+      name: progression.xp.updated
+      summary: XP vừa được cộng (server-authoritative, sau khi ghi xp_ledger).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: progression.xp.updated }
+              payload:
+                type: object
+                required: [delta, xp_total, xp_in_level]
+                properties:
+                  delta: { type: integer }
+                  xp_total: { type: integer, minimum: 0 }
+                  xp_in_level: { type: integer, minimum: 0 }
+                  xp_to_next: { type: [integer, 'null'], minimum: 0 }
+                  daily_xp_remaining: { type: integer, minimum: 0 }
+                  capped: { type: boolean }
+                  source_label: { $ref: '#/components/schemas/LocalizedName' }
+    QuestProgressUpdated:
+      name: quest.progress.updated
+      summary: Tiến độ quest thay đổi sau khi server xử lý event (vd. exercise.submitted, world.discovery_found) — client cập nhật Quest Journal/HUD.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: quest.progress.updated }
+              payload:
+                type: object
+                required: [quest_id, status]
+                properties:
+                  quest_id: { type: string, format: uuid }
+                  quest_version_id: { type: string, format: uuid }
+                  status: { type: string, enum: [active, completed, failed, abandoned] }
+                  step_id: { type: string, maxLength: 64 }
+                  step_status: { type: string, enum: [locked, active, completed, failed] }
+                  progress_label: { $ref: '#/components/schemas/LocalizedName' }
+                  completed_at: { type: string, format: date-time }
+    WorldAreaUnlocked:
+      name: world.area.unlocked
+      summary: Một khu vực vừa được mở khóa cho người chơi (WORLD_DESIGN §7) — client hiển thị hiệu ứng và cập nhật bản đồ.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: world.area.unlocked }
+              payload:
+                type: object
+                required: [area_id]
+                properties:
+                  area_id: { type: string, maxLength: 64 }
+                  name: { $ref: '#/components/schemas/LocalizedName' }
+                  unlocked_by: { type: string, enum: [level, quest, learning_objective, achievement, event, chapters_completed] }
+    ProgressionLevelReached:
+      name: progression.level.reached
+      summary: Lên cấp — client hiển thị hiệu ứng, phần thưởng đã được cấp phía server.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: progression.level.reached }
+              payload:
+                type: object
+                required: [from_level, to_level]
+                properties:
+                  from_level: { type: integer, minimum: 1 }
+                  to_level: { type: integer, minimum: 1 }
+                  title_code: { type: string, maxLength: 64 }
+                  title: { $ref: '#/components/schemas/LocalizedName' }
+                  rewards: { $ref: '#/components/schemas/RewardList' }
+    EventProgressUpdated:
+      name: event.progress.updated
+      summary: Điểm sự kiện của người chơi thay đổi / đạt mốc (EVENT_SEASON_SYSTEM §15) — client cập nhật HUD sự kiện.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: event.progress.updated }
+              payload:
+                type: object
+                required: [event_id, event_run_id, event_points]
+                properties:
+                  event_id: { $ref: '#/components/schemas/Uuid' }
+                  event_run_id: { $ref: '#/components/schemas/Uuid' }
+                  delta: { type: integer, minimum: 0 }
+                  event_points: { type: integer, minimum: 0 }
+                  daily_points_remaining: { type: integer, minimum: 0 }
+                  milestones_reached:
+                    type: array
+                    maxItems: 20
+                    items: { type: string, maxLength: 64 }
+                    description: milestone_id vừa đạt (chưa nhận thưởng)
+    EventCommunityGoalUpdated:
+      name: event.community_goal.updated
+      summary: Tiến độ community goal (gộp tối đa 1 lần/10 giây mỗi phạm vi [Proposed]) — không có xếp hạng cá nhân.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: event.community_goal.updated }
+              payload:
+                type: object
+                required: [goal_id, target, progress]
+                properties:
+                  goal_id: { $ref: '#/components/schemas/Uuid' }
+                  event_run_id: { $ref: '#/components/schemas/Uuid' }
+                  scope: { type: string, enum: [school, tenant, platform] }
+                  target: { type: integer, minimum: 1 }
+                  progress: { type: integer, minimum: 0 }
+                  milestone_reached: { type: integer, minimum: 0, maximum: 100, description: Mốc % vừa đạt (25/50/75/100) nếu có }
+    EventStatusChanged:
+      name: event.status.changed
+      summary: Sự kiện bắt đầu/kết thúc/bị tạm dừng/hủy — client làm mới danh sách sự kiện (GET /game/events).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: event.status.changed }
+              payload:
+                type: object
+                required: [event_id, event_run_id, status]
+                properties:
+                  event_id: { $ref: '#/components/schemas/Uuid' }
+                  event_run_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [live, suspended, ended, cancelled] }
+                  name: { $ref: '#/components/schemas/TenantLocalizedName' }
+    SeasonTrackUpdated:
+      name: season.track.updated
+      summary: Điểm/cấp season track thay đổi (EVENT_SEASON_SYSTEM §7).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: season.track.updated }
+              payload:
+                type: object
+                required: [season_id, points, tier]
+                properties:
+                  season_id: { $ref: '#/components/schemas/Uuid' }
+                  delta: { type: integer, minimum: 0 }
+                  points: { type: integer, minimum: 0 }
+                  tier: { type: integer, minimum: 0 }
+                  tier_reached: { type: boolean, description: true khi vừa lên cấp mới }
+                  daily_points_remaining: { type: integer, minimum: 0 }
+    CoopActionPerform:
+      name: coop.action.perform
+      summary: Hành động gameplay trong puzzle co-op (đặt mảnh, kéo vật thể, kích hoạt công tắc...). Server validate theo MiniGameConfig.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.action.perform }
+              payload:
+                type: object
+                required: [room_id, state_version, action_type]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  state_version: { type: integer, description: Phiên bản state client đang thấy (optimistic concurrency). }
+                  action_type: { type: string, maxLength: 64 }
+                  data: { type: object }
+    CoopAnswerSubmit:
+      name: coop.answer.submit
+      summary: Câu trả lời học tập của cá nhân trong co-op — ghi attempt riêng từng học sinh.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ClientEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.answer.submit }
+              payload:
+                type: object
+                required: [room_id, task_id, question_instance_id, response]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  task_id: { type: string, maxLength: 64 }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  response: { $ref: '#/components/schemas/AnswerResponse' }
+    CoopStateSnapshot:
+      name: coop.state.snapshot
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.state.snapshot }
+              payload:
+                type: object
+                required: [room_id, state_version, puzzle_state, members]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  party_id: { $ref: '#/components/schemas/Uuid' }
+                  quest_version_id: { $ref: '#/components/schemas/Uuid' }
+                  state_version: { type: integer }
+                  puzzle_state: { type: object }
+                  members: { type: array, items: { $ref: '#/components/schemas/PartyMemberState' } }
+                  shared_progress: { type: number, minimum: 0, maximum: 1 }
+    CoopStateUpdated:
+      name: coop.state.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.state.updated }
+              payload:
+                type: object
+                required: [room_id, state_version, patch]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  state_version: { type: integer }
+                  actor_id: { $ref: '#/components/schemas/Uuid' }
+                  patch: { type: array, description: 'JSON Patch (RFC 6902) trên puzzle_state.', items: { type: object } }
+    CoopTaskAssigned:
+      name: coop.task.assigned
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.task.assigned }
+              payload:
+                type: object
+                required: [room_id, task_id, assignee_id]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  task_id: { type: string, maxLength: 64 }
+                  assignee_id: { $ref: '#/components/schemas/Uuid' }
+                  question: { $ref: '#/components/schemas/QuestionRender' }
+                  reassigned_from: { $ref: '#/components/schemas/Uuid' }
+    CoopAnswerEvaluated:
+      name: coop.answer.evaluated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.answer.evaluated }
+              payload:
+                type: object
+                required: [room_id, task_id, is_correct]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  task_id: { type: string, maxLength: 64 }
+                  is_correct: { type: boolean }
+                  explanation: { type: object }
+                  attempts_left: { type: integer }
+    CoopProgressUpdated:
+      name: coop.progress.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.progress.updated }
+              payload:
+                type: object
+                required: [room_id, shared_progress]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  shared_progress: { type: number, minimum: 0, maximum: 1 }
+                  step_id: { type: string, maxLength: 64 }
+                  contributions:
+                    type: object
+                    description: user_id → số task hoàn thành (hiển thị khích lệ, không phải điểm học tập).
+                    additionalProperties: { type: integer }
+    CoopSessionEnded:
+      name: coop.session.ended
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: coop.session.ended }
+              payload:
+                type: object
+                required: [room_id, outcome]
+                properties:
+                  room_id: { type: string, maxLength: 64 }
+                  outcome: { type: string, enum: [completed, failed, abandoned, aborted] }
+                  quest_step_completed: { type: boolean }
+                  rewards_pending: { type: boolean, description: 'Reward trao bất đồng bộ qua event; client nhận reward.granted qua notification.' }

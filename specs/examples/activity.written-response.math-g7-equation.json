@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "activity_id": "01936a10-0000-7000-8000-000000000501",
+  "activity_version_id": "01936a10-0000-7000-8000-000000000502",
+  "version": 2,
+  "activity_type": "written_response",
+  "owner_scope": "tenant",
+  "tenant_id": "01936a10-0000-7000-8000-000000000999",
+  "title": {
+    "vi": "Giải phương trình bậc nhất"
+  },
+  "grade_levels": [
+    7
+  ],
+  "subject_id": "01936a10-0000-7000-8000-000000000601",
+  "objective_ids": [
+    "01936a10-0000-7000-8000-000000000602"
+  ],
+  "difficulty": 3,
+  "instructions": {
+    "vi": "Trình bày các bước giải bằng lời, rồi nhập đáp số x dạng số (ví dụ 5,5)."
+  },
+  "evaluation": {
+    "strategies": [
+      "numeric_tolerance",
+      "rubric",
+      "teacher_review"
+    ],
+    "max_score": 10,
+    "pass_threshold": 0.5,
+    "rubric_ref": {
+      "rubric_id": "01936a10-0000-7000-8000-000000000701",
+      "version": 1
+    },
+    "requires_teacher_review": true,
+    "ai_suggestion_enabled": false
+  },
+  "feedback": {
+    "timing": "after_review",
+    "show_explanation": true,
+    "show_correct_answer": true
+  },
+  "completion_rule": {
+    "mode": "graded"
+  },
+  "math_assets": [
+    {
+      "latex": "3x - 5 = 2x + \\frac{1}{2}",
+      "svg_asset": "math/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.svg",
+      "speech_text": "3 x trừ 5 bằng 2 x cộng một phần hai"
+    }
+  ],
+  "status": "published",
+  "content": {
+    "response_kind": "math_solution",
+    "prompt": {
+      "vi": "Giải phương trình \\(3x - 5 = 2x + \\frac{1}{2}\\)."
+    },
+    "max_chars": 4000,
+    "numeric_answer": {
+      "value": 5.5,
+      "tolerance": 0.000001,
+      "tolerance_type": "absolute",
+      "require_unit": false
+    },
+    "allow_photo_submission": false
+  },
+  "interaction": {
+    "autosave_seconds": 15,
+    "allow_resubmit_after_return": true
+  },
+  "content_language": "vi"
+}
