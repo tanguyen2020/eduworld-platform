@@ -149,7 +149,7 @@ func appliedVersion(ctx context.Context, dsn string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 	var v string
 	err = conn.QueryRow(ctx,
 		`SELECT version FROM atlas_schema_revisions.atlas_schema_revisions

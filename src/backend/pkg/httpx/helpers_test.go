@@ -297,5 +297,3 @@ func (e *env) do(t *testing.T, method, path, token string, hdr map[string]string
 	}
 	return out
 }
-
-func uptr(u uuid.UUID) *uuid.UUID { return &u }

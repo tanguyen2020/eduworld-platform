@@ -155,7 +155,7 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 	if op.Public && effectiveGuard(op) != GuardNone {
 		return fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
 	}
-	var chain http.Handler = h
+	chain := h
 	if s.d.Spec != nil {
 		route, err := specRoute(s.d.Spec, op)
 		if err != nil {
@@ -214,7 +214,7 @@ func (s *Server) recoverer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
-				if v == http.ErrAbortHandler {
+				if e, ok := v.(error); ok && errors.Is(e, http.ErrAbortHandler) {
 					panic(v)
 				}
 				s.log.ErrorContext(r.Context(), "panic", "panic", fmt.Sprint(v), "stack", string(debug.Stack()))

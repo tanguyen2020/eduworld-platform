@@ -82,7 +82,7 @@ func TestAuthRejects(t *testing.T) {
 func hsToken(t *testing.T, e *env) string {
 	t.Helper()
 	k := e.idp.key("k1")
-	secret := k.PublicKey.N.Bytes()
+	secret := k.N.Bytes()
 	s, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: secret}, (&jose.SignerOptions{}).WithHeader("kid", "k1"))
 	if err != nil {
 		t.Fatal(err)

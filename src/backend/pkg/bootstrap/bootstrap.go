@@ -89,7 +89,8 @@ func Run(ctx context.Context, o Options) error {
 		}
 	}
 
-	adminLn, err := net.Listen("tcp", envOr(o.Getenv, "EW_ADMIN_ADDR", o.DefaultAdminAddr))
+	var lc net.ListenConfig
+	adminLn, err := lc.Listen(ctx, "tcp", envOr(o.Getenv, "EW_ADMIN_ADDR", o.DefaultAdminAddr))
 	if err != nil {
 		return fmt.Errorf("admin listener: %w", err)
 	}
@@ -98,7 +99,7 @@ func Run(ctx context.Context, o Options) error {
 	var public *http.Server
 	var publicLn net.Listener
 	if o.DefaultHTTPAddr != "" {
-		publicLn, err = net.Listen("tcp", envOr(o.Getenv, "EW_HTTP_ADDR", o.DefaultHTTPAddr))
+		publicLn, err = lc.Listen(ctx, "tcp", envOr(o.Getenv, "EW_HTTP_ADDR", o.DefaultHTTPAddr))
 		if err != nil {
 			_ = adminLn.Close()
 			return fmt.Errorf("public listener: %w", err)

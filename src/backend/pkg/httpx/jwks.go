@@ -229,7 +229,7 @@ func (j *JWKS) getJSON(ctx context.Context, url string, v any) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("status %d", res.StatusCode)
 	}

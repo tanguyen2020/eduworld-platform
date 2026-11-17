@@ -93,7 +93,7 @@ func collect(err error, prefix []string, pe *problem.Error, badBody *bool) {
 	add := func(path []string, sub, msg string) {
 		pe.AddField(orDefault(strings.Join(path, "."), "body"), sub, msg)
 	}
-	switch e := err.(type) {
+	switch e := err.(type) { //nolint:errorlint // deliberate: see the comment above
 	case openapi3.MultiError:
 		for _, x := range e {
 			collect(x, prefix, pe, badBody)
@@ -103,7 +103,7 @@ func collect(err error, prefix []string, pe *problem.Error, badBody *bool) {
 		if e.Parameter != nil {
 			p = []string{e.Parameter.Name}
 		}
-		switch e.Err.(type) {
+		switch e.Err.(type) { //nolint:errorlint // only direct kin-openapi results are walked
 		case openapi3.MultiError, *openapi3.SchemaError:
 			collect(e.Err, p, pe, badBody)
 		default:
@@ -115,7 +115,7 @@ func collect(err error, prefix []string, pe *problem.Error, badBody *bool) {
 		}
 	case *openapi3.SchemaError:
 		path := append(slices.Clone(prefix), e.JSONPointer()...)
-		switch e.Origin.(type) {
+		switch e.Origin.(type) { //nolint:errorlint // only direct kin-openapi results are walked
 		case openapi3.MultiError, *openapi3.SchemaError:
 			collect(e.Origin, path, pe, badBody)
 			return

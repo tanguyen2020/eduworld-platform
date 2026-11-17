@@ -307,7 +307,7 @@ func goList(root string) ([]Package, error) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("go list: %v: %s", err, stderr.String())
+		return nil, fmt.Errorf("go list: %w: %s", err, stderr.String())
 	}
 	var pkgs []Package
 	dec := json.NewDecoder(&stdout)

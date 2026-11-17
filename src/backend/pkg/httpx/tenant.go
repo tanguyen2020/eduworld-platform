@@ -151,9 +151,12 @@ func (s *Server) scopeFor(r *http.Request, p authz.Principal) (tenancy.Scope, er
 		}
 		return sc, nil
 	}
+	if !p.IsPlatform() {
+		return nil, nil
+	}
 	sc, err := authz.PlatformScope(p)
 	if err != nil {
-		return nil, nil
+		return nil, problem.New(problem.Internal, "").Wrap(err)
 	}
 	return sc, nil
 }
