@@ -121,11 +121,12 @@ db-restore: ## Restore one module database locally: MOD=<module> FILE=<dump>
 
 # ---------- code generation / checks ----------
 .PHONY: gen gen-check arch-check lint test test-integration test-contract
-gen: ## Generate code: architecture rules from x-allowed-callers (later: ent, oapi-codegen)
+gen: ## Generate code: architecture rules from x-allowed-callers, problem codes from ProblemCode (later: ent, oapi-codegen)
 	$(GO) run ./tools/archgen
+	$(GO) generate ./pkg/problem
 
 gen-check: gen ## Fail if generated files differ from the committed ones
-	git diff --exit-code -- $(BACKEND)/.golangci.arch.yml
+	git diff --exit-code -- $(BACKEND)/.golangci.arch.yml $(BACKEND)/pkg/problem/codes_gen.go
 
 arch-check: ## Module boundaries: Go internal/, x-allowed-callers, pkg/ and cmd/ rules, layers (ADR-0074)
 	$(GO) build ./...

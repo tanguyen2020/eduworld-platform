@@ -2,7 +2,7 @@
 // (F002 T042, F002-AC-20). Codes and their HTTP status are generated into codes_gen.go from the single
 // catalog (`go run ./pkg/problem/gen`). Unknown errors become 500 INTERNAL and never leak details.
 //
-//go:generate go run ./gen
+//go:generate go run ./gen -spec ../../../../specs/openapi/eduworld-api.v1.yaml -doc ../../../../docs/07-backend/API_DESIGN.md -out codes_gen.go
 package problem
 
 import (

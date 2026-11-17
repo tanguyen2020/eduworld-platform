@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/bootstrap"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 )
@@ -26,6 +27,7 @@ var profiles = map[string]bool{"events": true, "chat": true, "jobs": true, "all"
 
 func main() {
 	bootstrap.MaybeHealthcheck(":9200")
+	authz.MustValidateAtStartup() // F002-AC-14: exit 1 if a role breaks the permission catalog
 	fs := flag.NewFlagSet("worker", flag.ExitOnError)
 	profileFlag := fs.String("profile", "", "events | chat | jobs | all (default: $EW_WORKER_PROFILE)")
 	_ = fs.Parse(os.Args[1:])

@@ -11,12 +11,14 @@ import (
 	"syscall"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/bootstrap"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 )
 
 func main() {
 	bootstrap.MaybeHealthcheck(":9106")
+	authz.MustValidateAtStartup() // F002-AC-14: exit 1 if a role breaks the permission catalog
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, os.Getenv, nil); err != nil {
