@@ -28,6 +28,16 @@ var profiles = map[string]bool{"events": true, "chat": true, "jobs": true, "all"
 func main() {
 	bootstrap.MaybeHealthcheck(":9200")
 	authz.MustValidateAtStartup() // F002-AC-14: exit 1 if a role breaks the permission catalog
+	if len(os.Args) > 1 && os.Args[1] == "projection" {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		if err := runProjection(ctx, os.Args[2:], &projections, os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, "worker projection:", err)
+			stop()
+			os.Exit(1)
+		}
+		return
+	}
 	fs := flag.NewFlagSet("worker", flag.ExitOnError)
 	profileFlag := fs.String("profile", "", "events | chat | jobs | all (default: $EW_WORKER_PROFILE)")
 	_ = fs.Parse(os.Args[1:])

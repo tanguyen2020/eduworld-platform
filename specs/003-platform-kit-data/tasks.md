@@ -107,7 +107,7 @@
 - [x] T037 [P] [US4] Integration test F003-AC-23: publish từng event invalidate → cache Principal bị xóa — file: `src/backend/pkg/natsx/principal_invalidator_integration_test.go`
 - [x] T068 [P] [US4] Integration test F003-AC-35: `infra.*` không bật RLS; Writer bằng `_app` chỉ INSERT; Relay bằng `_relay` chỉ `SELECT, UPDATE (published_at, attempts)`; dead letters `_app` chỉ INSERT, `_platform` chỉ cập nhật cột xử lý; `DELETE`/`TRUNCATE` trên `infra.*` bằng mọi role ứng dụng → lỗi quyền — file: `src/backend/pkg/outbox/grants_integration_test.go`
 - [x] T069 [P] [US4] Integration test F003-AC-36: job tạo partition trước 7 ngày cho bốn bảng; gỡ partition quá `outbox_retention`/`idempotency_record_ttl`/retention dead letter; partition còn outbox chưa publish hoặc dead letter chưa xử lý → không gỡ + cảnh báo; thiếu partition → cảnh báo; không chạm bảng nghiệp vụ — file: `src/backend/pkg/entx/partitionmaint/job_integration_test.go`
-- [ ] T075 [P] [US4] Integration test F003-AC-39: module mẫu có projection `ref.*` lệch nguồn → `worker projection rebuild --module=<m> --source=<n>` khớp lại; chạy lại không đổi; bản `source_version` mới hơn không bị ghi đè; facade lỗi → exit ≠ 0, projection giữ nguyên (TC-SVC-014) — file: `src/backend/pkg/projection/rebuild_integration_test.go` — phải FAIL trước khi code
+- [x] T075 [P] [US4] Integration test F003-AC-39: module mẫu có projection `ref.*` lệch nguồn → `worker projection rebuild --module=<m> --source=<n>` khớp lại; chạy lại không đổi; bản `source_version` mới hơn không bị ghi đè; facade lỗi → exit ≠ 0, projection giữ nguyên (TC-SVC-014) — file: `src/backend/pkg/projection/rebuild_integration_test.go` — phải FAIL trước khi code
 
 ### Implementation cho User Story 4
 
@@ -118,7 +118,7 @@
 - [x] T041 [US4] `outbox.Consumer` (durable, BackOff, processed_events, scope từ envelope, DLQ) — file: `src/backend/pkg/outbox/consumer.go`
 - [x] T042 [US4] `outbox.AuditRecorder` hiện thực `audit.Recorder` — file: `src/backend/pkg/outbox/auditrecorder.go`
 - [x] T043 [US4] `natsx.PrincipalInvalidator` gọi `authz.Cache.Invalidate` — file: `src/backend/pkg/natsx/principal_invalidator.go`
-- [ ] T076 [US4] Khung `src/backend/pkg/projection` (đăng ký bộ rebuild theo bảng `ref.*`, đọc trang facade qua `src/backend/pkg/modcall`, upsert theo `source_version`) + lệnh con `projection rebuild` của `src/backend/cmd/worker` (BACKEND_DESIGN §3, BACKUP_RECOVERY §3.5) — file: `src/backend/pkg/projection/rebuild.go`, `src/backend/cmd/worker/projection.go`
+- [x] T076 [US4] Khung `src/backend/pkg/projection` (đăng ký bộ rebuild theo bảng `ref.*`, đọc trang facade qua `src/backend/pkg/modcall`, upsert theo `source_version`) + lệnh con `projection rebuild` của `src/backend/cmd/worker` (BACKEND_DESIGN §3, BACKUP_RECOVERY §3.5) — file: `src/backend/pkg/projection/rebuild.go`, `src/backend/cmd/worker/projection.go`
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.
 

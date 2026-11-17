@@ -38,3 +38,9 @@ CREATE TABLE sample.units (
 );
 
 GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA sample TO learning_app, learning_platform;
+
+-- Projection of widgets of another module (F003-AC-39): rebuilt by pkg/projection, upsert by source_version.
+CREATE TABLE sample.ref_widgets (
+  id uuid PRIMARY KEY, tenant_id uuid NOT NULL, name varchar(128) NOT NULL, source_version bigint NOT NULL
+);
+GRANT SELECT, INSERT, UPDATE ON sample.ref_widgets TO learning_app, learning_platform;
