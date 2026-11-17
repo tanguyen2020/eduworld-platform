@@ -26,21 +26,28 @@ type AuthConfig struct {
 	PortalClientID      string
 	GameClientID        string
 	PlatformRequiredACR []string
+	// PlatformRequiredAMR: amr values that prove MFA. Keycloak direct grant (ADR-0091) sets amr ["pwd","otp"]
+	// but keeps acr at 1 (LoA is a browser-flow concept) — F004 spike R5.
+	PlatformRequiredAMR []string
 	PlatformMaxAuthAge  time.Duration
 }
 
 // AuthConfigFrom reads the configuration; missing variables are reported by name only.
 func AuthConfigFrom(c *config.Config) (AuthConfig, error) {
 	if err := c.Require("EW_OIDC_ISSUERS", "EW_OIDC_AUDIENCE", "EW_OIDC_ALLOWED_AZP", "EW_KC_PORTAL_CLIENT_ID",
-		"EW_KC_GAME_CLIENT_ID", "EW_OIDC_PLATFORM_REQUIRED_ACR"); err != nil {
+		"EW_KC_GAME_CLIENT_ID"); err != nil {
 		return AuthConfig{}, err
 	}
 	skew := c.Duration("EW_OIDC_ALLOWED_CLOCK_SKEW", 30*time.Second)
 	age := c.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", 8*time.Hour)
+	amr := c.List("EW_OIDC_PLATFORM_REQUIRED_AMR")
+	if len(amr) == 0 {
+		amr = []string{"otp"}
+	}
 	return AuthConfig{
 		Issuers: c.List("EW_OIDC_ISSUERS"), Audience: c.String("EW_OIDC_AUDIENCE"), AllowedAZP: c.List("EW_OIDC_ALLOWED_AZP"),
 		ClockSkew: skew, PortalClientID: c.String("EW_KC_PORTAL_CLIENT_ID"), GameClientID: c.String("EW_KC_GAME_CLIENT_ID"),
-		PlatformRequiredACR: c.List("EW_OIDC_PLATFORM_REQUIRED_ACR"), PlatformMaxAuthAge: age,
+		PlatformRequiredACR: c.List("EW_OIDC_PLATFORM_REQUIRED_ACR"), PlatformRequiredAMR: amr, PlatformMaxAuthAge: age,
 	}, nil
 }
 
@@ -130,8 +137,13 @@ func (v *Verifier) Verify(ctx context.Context, raw string) (authz.Claims, error)
 	}
 	out := authz.Claims{Issuer: c.Issuer, Subject: c.Subject, AZP: c.AZP, SessionID: c.SID, ACR: c.ACR, AMR: c.AMR,
 		Expiry: c.Expiry.Time()}
-	if c.AuthTime > 0 {
+	switch {
+	case c.AuthTime > 0:
 		out.AuthTime = time.Unix(c.AuthTime, 0).UTC()
+	case c.IssuedAt != nil:
+		// Keycloak direct grant (ADR-0091) emits no auth_time (F004 spike R5): fall back to iat; module identity
+		// refuses portal refreshes of platform staff older than EW_OIDC_PLATFORM_MAX_AUTH_AGE (F012).
+		out.AuthTime = c.IssuedAt.Time().UTC()
 	}
 	return out, nil
 }
@@ -149,9 +161,14 @@ func (v *Verifier) channel(azp string) authz.Channel {
 	return authz.ChannelUnknown
 }
 
-// mfa reports a platform-grade authentication: acr in PlatformRequiredACR and auth_time recent enough.
+// mfa reports a platform-grade authentication: acr in PlatformRequiredACR or an amr value in
+// PlatformRequiredAMR, and auth_time recent enough.
 func (v *Verifier) mfa(c authz.Claims) bool {
-	if !slices.Contains(v.cfg.PlatformRequiredACR, c.ACR) || c.AuthTime.IsZero() {
+	strong := slices.Contains(v.cfg.PlatformRequiredACR, c.ACR)
+	for _, m := range c.AMR {
+		strong = strong || slices.Contains(v.cfg.PlatformRequiredAMR, m)
+	}
+	if !strong || c.AuthTime.IsZero() {
 		return false
 	}
 	return v.clock.Now().Sub(c.AuthTime) <= v.cfg.PlatformMaxAuthAge

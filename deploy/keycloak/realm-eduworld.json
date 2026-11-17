@@ -1,0 +1,557 @@
+{
+  "realm": "eduworld",
+  "displayName": "EduWorld",
+  "enabled": true,
+  "organizationsEnabled": true,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "duplicateEmailsAllowed": false,
+  "loginWithEmailAllowed": true,
+  "editUsernameAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "quickLoginCheckMilliSeconds": 1000,
+  "minimumQuickLoginWaitSeconds": 60,
+  "maxDeltaTimeSeconds": 43200,
+  "passwordPolicy": "length(6) and notUsername(undefined) and passwordHistory(3)",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 604800,
+  "ssoSessionMaxLifespan": 2592000,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "offlineSessionIdleTimeout": 0,
+  "loginTheme": "eduworld-ops",
+  "emailTheme": "eduworld-ops",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "vi",
+    "en"
+  ],
+  "defaultLocale": "vi",
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyCodeReusable": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "student",
+        "description": "Học sinh: chỉ đăng nhập game qua eduworld-game-backend (ADR-0031, ADR-0068)"
+      },
+      {
+        "name": "tenant_staff",
+        "description": "Vận hành tenant: Admin Portal (eduworld-portal), không vào game"
+      },
+      {
+        "name": "platform_staff",
+        "description": "Đội EduWorld: Admin Portal với OTP bắt buộc (ADR-0091)"
+      },
+      {
+        "name": "default-roles-eduworld",
+        "description": "Default roles: no offline_access, no uma_authorization (KEYCLOAK_SSO §4.3); scripts/post-apply.mjs enforces the composites",
+        "composite": true,
+        "composites": {
+          "client": {
+            "account": [
+              "view-profile",
+              "manage-account"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "eduworld-api-audience",
+      "description": "aud = eduworld-api",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience eduworld-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "eduworld-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eduworld-roles",
+      "description": "Realm roles → claim roles (mảng phẳng)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eduworld-username",
+      "description": "preferred_username and auth_time only (data minimization: no name, email, birth date)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "auth_time",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usersessionmodel-note-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.session.note": "AUTH_TIME",
+            "claim.name": "auth_time",
+            "jsonType.label": "long",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eduworld-amr-loa",
+      "description": "amr from authenticator reference values (pwd, otp) and acr from the level of authentication (ADR-0091)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "acr loa level",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-acr-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "eduworld-game-backend",
+      "name": "EduWorld game (via module identity)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:KC_GAME_BACKEND_SECRET)",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": true,
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "false",
+        "client.session.idle.timeout": "604800",
+        "client.session.max.lifespan": "2592000",
+        "use.refresh.tokens": "true"
+      },
+      "authenticationFlowBindingOverrides": {
+        "direct_grant": "eduworld-game-direct-grant"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "eduworld-api-audience",
+        "eduworld-roles",
+        "eduworld-username"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "eduworld-portal",
+      "name": "EduWorld Admin Portal (via module identity, ADR-0091)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:KC_PORTAL_CLIENT_SECRET)",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": true,
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "false",
+        "client.session.idle.timeout": "1800",
+        "client.session.max.lifespan": "36000",
+        "use.refresh.tokens": "true"
+      },
+      "authenticationFlowBindingOverrides": {
+        "direct_grant": "eduworld-portal-direct-grant"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "eduworld-api-audience",
+        "eduworld-roles",
+        "eduworld-username",
+        "eduworld-amr-loa"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "eduworld-api",
+      "name": "EduWorld API (audience only)",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "eduworld-sis-sync",
+      "name": "SIS sync worker (Keycloak Admin API)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:KC_SIS_SYNC_SECRET)",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "basic"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "svc-identity",
+      "name": "Module identity → Keycloak Admin API (ADR-0074 §5)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:KC_SVC_IDENTITY_SECRET)",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "basic"
+      ],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-svc-identity",
+      "enabled": true,
+      "serviceAccountClientId": "svc-identity",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "manage-realm"
+        ]
+      }
+    },
+    {
+      "username": "service-account-eduworld-sis-sync",
+      "enabled": true,
+      "serviceAccountClientId": "eduworld-sis-sync",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "ew-game-not-student",
+      "config": {
+        "condUserRole": "student",
+        "negate": "true"
+      }
+    },
+    {
+      "alias": "ew-game-deny",
+      "config": {
+        "denyErrorMessage": "gameStaffDenied"
+      }
+    },
+    {
+      "alias": "ew-portal-not-tenant-staff",
+      "config": {
+        "condUserRole": "tenant_staff",
+        "negate": "true"
+      }
+    },
+    {
+      "alias": "ew-portal-not-platform-staff",
+      "config": {
+        "condUserRole": "platform_staff",
+        "negate": "true"
+      }
+    },
+    {
+      "alias": "ew-portal-deny",
+      "config": {
+        "denyErrorMessage": "portalStudentDenied"
+      }
+    },
+    {
+      "alias": "ew-game-ref-pwd",
+      "config": {
+        "default.reference.value": "pwd"
+      }
+    },
+    {
+      "alias": "ew-portal-ref-pwd",
+      "config": {
+        "default.reference.value": "pwd"
+      }
+    },
+    {
+      "alias": "ew-portal-ref-otp",
+      "config": {
+        "default.reference.value": "otp"
+      }
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "eduworld-game-direct-grant",
+      "description": "Game login through module identity: only realm role student (ADR-0031, ADR-0068)",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "direct-grant-validate-username",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "direct-grant-validate-password",
+          "authenticatorConfig": "ew-game-ref-pwd",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "eduworld-game-deny-non-student",
+          "requirement": "CONDITIONAL",
+          "priority": 30,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "eduworld-game-deny-non-student",
+      "description": "Deny users without realm role student",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-role",
+          "authenticatorConfig": "ew-game-not-student",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "deny-access-authenticator",
+          "authenticatorConfig": "ew-game-deny",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "eduworld-portal-direct-grant",
+      "description": "Admin Portal login through module identity: staff only, OTP for platform_staff (ADR-0091)",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "direct-grant-validate-username",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "direct-grant-validate-password",
+          "authenticatorConfig": "ew-portal-ref-pwd",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "eduworld-portal-deny-non-staff",
+          "requirement": "CONDITIONAL",
+          "priority": 30,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "eduworld-portal-otp-configured",
+          "requirement": "CONDITIONAL",
+          "priority": 50,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "eduworld-portal-deny-non-staff",
+      "description": "Deny users with neither tenant_staff nor platform_staff (students)",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-role",
+          "authenticatorConfig": "ew-portal-not-tenant-staff",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "conditional-user-role",
+          "authenticatorConfig": "ew-portal-not-platform-staff",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "deny-access-authenticator",
+          "authenticatorConfig": "ew-portal-deny",
+          "requirement": "REQUIRED",
+          "priority": 30,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "eduworld-portal-otp-configured",
+      "description": "OTP for every staff who configured it; platform_staff without OTP carry CONFIGURE_TOTP (provisioning) and never pass the MFA guard (spike R5)",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "direct-grant-validate-otp",
+          "authenticatorConfig": "ew-portal-ref-otp",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}],\"unmanagedAttributePolicy\":\"ADMIN_EDIT\"}"
+          ]
+        }
+      }
+    ]
+  }
+}

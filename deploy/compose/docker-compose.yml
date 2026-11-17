@@ -53,12 +53,35 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me-local}
     ports: ["8180:8180"]
+    volumes:
+      - ../keycloak/themes/eduworld-ops:/opt/keycloak/themes/eduworld-ops:ro
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
       <<: *hc
       start_period: 60s
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+
+  # Applies deploy/keycloak/realm-eduworld.json (idempotent) — `make keycloak-import` (F004).
+  keycloak-config:
+    image: adorsys/keycloak-config-cli:6.4.0-26.1.0
+    profiles: ["tools"]
+    environment:
+      KEYCLOAK_URL: http://keycloak:8180
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me-local}
+      KEYCLOAK_AVAILABILITYCHECK_ENABLED: "true"
+      KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: 120s
+      IMPORT_VARSUBSTITUTION_ENABLED: "true"
+      IMPORT_FILES_LOCATIONS: ${KC_IMPORT_FILES:-/config/realm-eduworld.json}
+      KC_GAME_BACKEND_SECRET: ${KC_GAME_BACKEND_SECRET:-change-me-local}
+      KC_PORTAL_CLIENT_SECRET: ${KC_PORTAL_CLIENT_SECRET:-change-me-local}
+      KC_SIS_SYNC_SECRET: ${KC_SIS_SYNC_SECRET:-change-me-local}
+      KC_SVC_IDENTITY_SECRET: ${KC_SVC_IDENTITY_SECRET:-change-me-local}
+    volumes:
+      - ../keycloak:/config:ro
+    depends_on:
+      keycloak: { condition: service_healthy }
 
   apisix:
     image: apache/apisix:3.13.0-debian

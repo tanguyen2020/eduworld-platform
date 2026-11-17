@@ -164,6 +164,18 @@ test-contract: ## Contract tests: public/facade/event helpers, caller-side facad
 	$(GO) test -count=1 ./pkg/testkit/contract/... ./cmd/internal/wiring/...
 	$(GO) test -count=1 -run Facade ./modules/...
 
+# ---------- identity provider (F004) ----------
+.PHONY: keycloak-import keycloak-check keycloak-test
+keycloak-import: ## Apply realm eduworld (keycloak-config-cli + post-apply; local also dev users/organizations)
+	bash deploy/keycloak/scripts/apply.sh
+
+keycloak-check: ## Static checks of the realm as code (clients, flows, secrets, settings)
+	node deploy/keycloak/scripts/check-realm.mjs
+	node --test deploy/keycloak/scripts/check-realm.test.mjs
+
+keycloak-test: ## Realm behaviour against the running Keycloak (direct grants, amr, idempotent apply)
+	KC_INTEGRATION=1 node --test deploy/keycloak/tests/realm.integration.test.mjs
+
 # ---------- specs / docs ----------
 .PHONY: specs-lint specs-breaking docs-check
 specs-lint: ## Contract checks (Spectral/AsyncAPI added with the spec toolchain)

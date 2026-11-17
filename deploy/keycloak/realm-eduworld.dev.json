@@ -1,0 +1,672 @@
+{
+  "realm": "eduworld",
+  "users": [
+    {
+      "username": "hs.an.3a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.binh.3a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.chi.3b",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.trung.a1",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.trung.a2",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.locked",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.lau.khongvao",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.sapbidon",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.dung.7a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.giang.6a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.hoa.6a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.khanh.8a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.lan.9a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.em.4a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.tudo",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.qa.probe",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.nosis",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "ad.truong.a",
+      "email": "ad.truong.a@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "ad.truong.b",
+      "email": "ad.truong.b@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "qlcm.truong.a",
+      "email": "qlcm.truong.a@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "ad.donvi",
+      "email": "ad.donvi@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bt.noidung.dv",
+      "email": "bt.noidung.dv@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bt.duyet.dv",
+      "email": "bt.duyet.dv@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "tenant_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "cm.noidung",
+      "email": "cm.noidung@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "cm.duyet",
+      "email": "cm.duyet@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "gd.thietke",
+      "email": "gd.thietke@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "lo.vanhanh",
+      "email": "lo.vanhanh@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "tc.thidau",
+      "email": "tc.thidau@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "sa.admin",
+      "email": "sa.admin@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "local-demo",
+          "secretData": "{\"value\":\"ew-local-totp-sa-admin-0001\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA1\"}"
+        }
+      ]
+    },
+    {
+      "username": "sa.admin2",
+      "email": "sa.admin2@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "sm.antoan",
+      "email": "sm.antoan@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "sm.truongca",
+      "email": "sm.truongca@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "sa.moi",
+      "email": "sa.moi@example.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "platform_staff"
+      ],
+      "requiredActions": [
+        "UPDATE_PASSWORD",
+        "CONFIGURE_TOTP"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": true
+        }
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "alias": "th-demo-a",
+      "name": "TH Demo A",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "th-demo-a.example.invalid",
+          "verified": false
+        }
+      ],
+      "members": [
+        {
+          "username": "hs.an.3a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.binh.3a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.chi.3b",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.trung.a1",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.trung.a2",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.locked",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.lau.khongvao",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.sapbidon",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "ad.truong.a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "qlcm.truong.a",
+          "membershipType": "MANAGED"
+        }
+      ]
+    },
+    {
+      "alias": "pgd-demo",
+      "name": "PGD Demo",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "pgd-demo.example.invalid",
+          "verified": false
+        }
+      ],
+      "members": [
+        {
+          "username": "hs.dung.7a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.giang.6a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.hoa.6a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.khanh.8a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.lan.9a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.em.4a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "ad.truong.b",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "qlcm.truong.a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "ad.donvi",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "bt.noidung.dv",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "bt.duyet.dv",
+          "membershipType": "MANAGED"
+        }
+      ]
+    },
+    {
+      "alias": "common",
+      "name": "EduWorld chung",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "common.example.invalid",
+          "verified": false
+        }
+      ],
+      "members": [
+        {
+          "username": "hs.tudo",
+          "membershipType": "MANAGED"
+        }
+      ]
+    },
+    {
+      "alias": "qa-probe",
+      "name": "QA probe",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "qa-probe.example.invalid",
+          "verified": false
+        }
+      ],
+      "members": [
+        {
+          "username": "hs.qa.probe",
+          "membershipType": "MANAGED"
+        }
+      ]
+    }
+  ]
+}

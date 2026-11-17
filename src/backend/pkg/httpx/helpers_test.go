@@ -143,7 +143,7 @@ func authCfg(p *idp) httpx.AuthConfig {
 	return httpx.AuthConfig{
 		Issuers: []string{p.issuer()}, Audience: testAudience, AllowedAZP: []string{gameClient, portalClient},
 		ClockSkew: 30 * time.Second, PortalClientID: portalClient, GameClientID: gameClient,
-		PlatformRequiredACR: []string{"mfa"}, PlatformMaxAuthAge: 8 * time.Hour,
+		PlatformRequiredACR: []string{"mfa"}, PlatformRequiredAMR: []string{"otp"}, PlatformMaxAuthAge: 8 * time.Hour,
 	}
 }
 

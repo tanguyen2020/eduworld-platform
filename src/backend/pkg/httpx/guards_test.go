@@ -82,6 +82,13 @@ func TestPlatformMFAGuard(t *testing.T) {
 		e.res.set(c["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Grants: grants, TenantID: tenant})
 		return e.idp.sign(tok{claims: c})
 	}
+	mkAMR := func(acr string, amr []string, authAge time.Duration, grants []authz.Grant) string {
+		c := e.idp.baseClaims(portalClient)
+		c["acr"], c["amr"] = acr, amr
+		c["auth_time"] = now.Add(-authAge).Unix()
+		e.res.set(c["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Grants: grants})
+		return e.idp.sign(tok{claims: c})
+	}
 	cases := []struct {
 		name   string
 		token  string
@@ -90,6 +97,8 @@ func TestPlatformMFAGuard(t *testing.T) {
 	}{
 		{"mfa + platform role", mk("mfa", time.Hour, platform, nil), 200, ""},
 		{"no mfa", mk("1", time.Hour, platform, nil), 403, "MFA_REQUIRED"},
+		{"keycloak direct grant: acr 1 + amr otp", mkAMR("1", []string{"pwd", "otp"}, time.Hour, platform), 200, ""},
+		{"amr pwd only", mkAMR("1", []string{"pwd"}, time.Hour, platform), 403, "MFA_REQUIRED"},
 		{"auth too old", mk("mfa", 9*time.Hour, platform, nil), 403, "MFA_REQUIRED"},
 		{"tenant role only", mk("mfa", time.Hour, []authz.Grant{{Role: "tenant_admin", ScopeKind: authz.RoleScopeTenant,
 			Permissions: []authz.Permission{authz.PermTenantUserRead}}}, nil), 403, "PERMISSION_DENIED"},
