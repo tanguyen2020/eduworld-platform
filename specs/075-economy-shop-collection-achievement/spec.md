@@ -130,7 +130,7 @@ System Admin sửa số dư/vật phẩm/XP sai do lỗi hoặc gian lận bằn
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F075-AC-25 | KHI người có `game.economy.adjust` gọi `createEconomyAdjustment` với `X-Tenant-Id` = tenant đích, lý do 10–1000 ký tự và `Idempotency-Key`, module game PHẢI tạo điều chỉnh `pending_approval`, chưa ghi sổ, và ghi audit | FR-ECO-002 · ADR-0049 | — |
-| F075-AC-26 | KHI người thứ hai có `game.economy.adjust` gọi `approveEconomyAdjustment`, module game PHẢI ghi bút toán bù (`reason_code = adjustment`) vào sổ Xu/vật phẩm/XP trong một transaction, phát `economy.adjusted`, ghi audit; NẾU người duyệt là người tạo THÌ PHẢI trả `403 PERMISSION_DENIED`; làm số dư âm PHẢI trả `409 INSUFFICIENT_BALANCE`; đã xử lý PHẢI trả `409 INVALID_STATE_TRANSITION` | FR-ECO-002 · [ANTI_CHEAT §7](../../docs/10-security/ANTI_CHEAT.md) | — |
+| F075-AC-26 | KHI người thứ hai có `game.economy.adjust` gọi `approveEconomyAdjustment`, module game PHẢI ghi bút toán bù (`reason_code = adjustment`) vào sổ Xu/vật phẩm/XP trong một transaction, phát `economy.adjusted`, ghi audit; NẾU người duyệt là người tạo THÌ PHẢI trả `403 PERMISSION_DENIED`; làm số dư âm PHẢI trả `409 INSUFFICIENT_BALANCE`; đã xử lý PHẢI trả `422 INVALID_STATE_TRANSITION` | FR-ECO-002 · [ANTI_CHEAT §7](../../docs/10-security/ANTI_CHEAT.md) | — |
 | F075-AC-27 | NẾU người gọi không có `game.economy.adjust`, thiếu MFA hoặc token không phải `eduworld-portal`, THÌ module game PHẢI trả `403 PERMISSION_DENIED`/`403 MFA_REQUIRED` và ghi `authz.denied`; `reason` vượt 1000 ký tự PHẢI trả `422 VALIDATION_FAILED` | AGENTS R20 · ADR-0027 · ADR-0041 | TC-TEN-004 |
 
 ### Edge Cases

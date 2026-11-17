@@ -29,6 +29,7 @@
 | 14 | Cấu hình hệ thống → Dọn học sinh: đặt số ngày thấp, lưu không lý do | Cảnh báo ngưỡng thấp; thiếu lý do bị chặn | F057-AC-14 |
 | 15 | Giả lập lần dọn > ngưỡng → Lần dọn chờ xác nhận → Xác nhận | Trạng thái `approved` | F057-AC-15 |
 | 16 | Thời hạn chat gameplay = dưới tối thiểu | Ô chặn; API trả `RETENTION_BELOW_MINIMUM` hiển thị theo `code` | F057-AC-16 |
+| 16b | Cấu hình hệ thống → Giờ giới nghiêm platform: xem giá trị mặc định; nhập `25:00`; đổi 21:00–06:30 không lý do; rồi có lý do và xác nhận | Nhãn "mặc định"; lỗi tại ô; bị chặn; lưu thành công, audit + `platform_settings.changed`; `getSchoolSettings` của TH Demo A trả `platform_curfew` mới | F057-AC-23 |
 | 17 | Tenant: tạo tenant mã trùng (sau delta T004) | `409` hiển thị; tạo mã mới thành công | F057-AC-17 |
 | 18 | `ad.truong.a`, `cm.noidung`, `sm.antoan` mở `/portal/platform-admin/trash` | Trang 403; không tải chunk D | F057-AC-18 |
 | 19 | Bật OTP cho `sa.admin`, dùng token không MFA; tắt gateway nội bộ | Step-up MFA rồi quay lại URL; "Cần kết nối mạng quản trị (VPN)" | F057-AC-19 |

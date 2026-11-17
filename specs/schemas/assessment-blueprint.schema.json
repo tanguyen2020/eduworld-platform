@@ -22,6 +22,7 @@
       "items": { "$ref": "#/$defs/section" }
     },
     "total_points": { "type": "number", "exclusiveMinimum": 0 },
+    "efficacy_instrument": { "type": "boolean", "default": false, "description": "Đề đo hiệu quả (F035, LEARNING_EFFICACY_PLAN §3.2): chỉ nội dung platform, variants.strategy = fixed và mọi rule dùng fixed_question_version_ids trỏ câu efficacy_instrument; không dùng cho createExamSession của tenant, không gán cho tenant." },
     "grading_scale": {
       "type": "object",
       "description": "Quy đổi và xếp loại hiển thị.",

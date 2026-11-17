@@ -20,7 +20,7 @@
 | 5 | `nextChallengeActivity` | Attempt học tập mode `challenge` của `hs.an.3a`, câu khối 3 độ khó trong dải `hard`, không có đáp án | F076-AC-08, F076-AC-09 |
 | 6 | Trả lời trong Godot (hoặc phát `activity.graded`) sai hết ở `survival` | `lives_left` giảm từng câu; về 0 → `failed`, một `challenge.completed`, client nhận `challenge.attempt.updated` | F076-AC-10, F076-AC-11 |
 | 7 | Dừng module learning rồi gọi `nextChallengeActivity` | `503 UNAVAILABLE`, challenge không đổi | F076-AC-12 |
-| 8 | Bắt đầu challenge `time`, đổi đồng hồ máy client, chờ quá `deadline_at` | Server tự `failed`; gọi tiếp `409 INVALID_STATE_TRANSITION` | F076-AC-13 |
+| 8 | Bắt đầu challenge `time`, đổi đồng hồ máy client, chờ quá `deadline_at` | Server tự `failed`; gọi tiếp `422 INVALID_STATE_TRANSITION` | F076-AC-13 |
 | 9 | Đổi thiết bị (takeover), gọi `getGameChallengeAttempt` | Đúng điểm/sức bền/hạn chót | F076-AC-15 |
 | 10 | Thử lại tới khi quá `challenge_attempts_per_day` | `409 CHALLENGE_ATTEMPT_LIMIT` kèm thời điểm thử lại | F076-AC-06 |
 | 11 | Tắt worker đang giữ lease của một room | Worker còn lại chiếm lease, timer tiếp tục | F076-AC-17 |

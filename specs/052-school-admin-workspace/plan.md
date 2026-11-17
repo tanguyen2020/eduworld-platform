@@ -107,7 +107,7 @@ Không có — ADR và tài liệu sở hữu đủ; delta contract đã xác đ
 | UserRole | `listTenantUserRoles`, `listSchoolUserRoles` | `grantTenantUserRole`, `grantSchoolUserRole`, `revokeTenantUserRole` | `tenant.user.read` / `tenant.user_role.write` |
 | Nhật ký, nhật ký phân quyền | `listTenantAuditLogs` | — | `tenant.audit.read` |
 | Cài đặt tenant | `getTenantSettings` | `updateTenantSettings` | `tenant.settings.read` / `tenant.settings.write` (+ `tenant.student_cleanup.configure`, `tenant.chat_retention.configure` cho trường tương ứng) |
-| Cài đặt trường | `getSchoolSettings` (Cần thêm) | `updateSchoolSettings` (Cần thêm) | `school.settings.read` / `school.settings.write` |
+| Cài đặt trường (gồm khung giới nghiêm trường, ADR-0078) | `getSchoolSettings` | `updateSchoolSettings` | `school.settings.read` / `school.settings.write` |
 | Học sinh sắp bị dọn | `previewTenantStudentCleanup` | `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions` | `tenant.student_cleanup.read` / `tenant.student_cleanup.exclude` |
 
 ### Tích hợp và phụ thuộc
@@ -140,7 +140,7 @@ Menu và nút của feature lấy từ [`specs/portal/menu-catalog.yaml`](../por
 Khoảng trống catalog/contract (không sửa trong feature này; báo owner `specs/portal/menu-catalog.yaml` + OpenAPI):
 
 - `listTenantClassStudents`, `listSchoolReconciliationIssues` (Cần thêm) → gắn `action.school_lms.classes.view` / `action.school_lms.sis_sync.view`
-- `getSchoolSettings`, `updateSchoolSettings` (Cần thêm, F015) → gắn `action.school_lms.settings.view` / `action.school_lms.settings.edit`
+- `getSchoolSettings`, `updateSchoolSettings` (F015, đã có trong spec gộp) → gắn `action.school_lms.settings.view` / `action.school_lms.settings.edit_school`
 
 ## Complexity Tracking
 

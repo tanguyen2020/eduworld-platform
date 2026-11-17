@@ -1157,7 +1157,7 @@ paths:
       x-service: game
       tags: [game]
       operationId: postTelemetry
-      summary: Gửi telemetry crash/hiệu năng (batch, không PII, 30 req/phút)
+      summary: Gửi telemetry crash/hiệu năng/màn hình/nhắc nghỉ (batch, không PII, 30 req/phút)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
       requestBody:
@@ -1534,7 +1534,7 @@ paths:
       x-service: learning
       tags: [learning]
       operationId: getLesson
-      summary: Lesson đã publish + danh sách activity (không đáp án; version ghim theo level session — ADR-0043)
+      summary: Lesson đã publish + danh sách activity (không đáp án; version ghim theo lesson session của học sinh, `activities[].completed` theo session — ADR-0043, F031)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/LessonIdPath'
@@ -1555,6 +1555,8 @@ paths:
       tags: [learning]
       operationId: completeLesson
       summary: Đánh dấu hoàn thành bài học (server kiểm tra điều kiện xem/activity theo completion_rule)
+      description: |
+        Server kiểm `completion_rule` của version bài đã ghim trong lesson session (tạo khi học sinh bắt đầu attempt đầu tiên với `context_type = lesson`, R31). Đã hoàn thành hoặc nay thỏa → `200` với `completed_at` của lần hoàn thành đầu; hoàn thành phát `lesson.completed` (learning event + domain event) đúng một lần cho mỗi học sinh × version bài (F031). `409 CONFLICT`: chưa có lesson session của bài, hoặc chưa thỏa `completion_rule` (`errors[]` liệt kê activity bắt buộc chưa hoàn thành). Không nhận kết quả/thời lượng từ client (ADR-0016).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/LessonIdPath'
@@ -1595,6 +1597,7 @@ paths:
       operationId: listExamSessions
       x-portal-action: action.school_lms.assignments.view
       summary: Exam session khả dụng
+      description: Nhân sự thấy cả ExamSession đo hiệu quả (F035) với is_efficacy = true, chỉ đọc; học sinh không nhận is_efficacy, study, arm hay efficacy_wave_id.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1626,6 +1629,7 @@ paths:
       operationId: createExamSession
       x-portal-action: action.school_lms.assignments.edit
       summary: Tạo exam session từ assessment blueprint đã publish cho lớp/nhóm/danh sách học sinh (school_admin, academic_manager — thường qua LMS Assignment mode=graded)
+      description: Blueprint efficacy_instrument → 422 VALIDATION_FAILED (ExamSession đo hiệu quả chỉ do F035 tạo qua scheduleEfficacyWave).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1654,6 +1658,7 @@ paths:
       operationId: getExamSession
       x-portal-action: action.school_lms.assignments.view
       summary: Chi tiết exam session (thời gian, cấu trúc, is_official, chính sách công bố) — học sinh thuộc đối tượng, school_admin, academic_manager
+      description: is_efficacy chỉ trả cho nhân sự (F035); response cho học sinh không chứa is_efficacy, study, arm hay efficacy_wave_id.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1676,6 +1681,7 @@ paths:
       operationId: releaseExamResults
       x-portal-action: action.school_lms.assignments.release_results
       summary: Công bố kết quả khi result_release = manual (school_admin, academic_manager · lms.result.release)
+      description: ExamSession đo hiệu quả (is_efficacy) không bao giờ công bố kết quả → 422 INVALID_STATE_TRANSITION (F035-AC-16).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/ExamSessionId'
@@ -1689,6 +1695,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
   /exams/sessions/{exam_session_id}/attempts:
     post:
@@ -1764,6 +1771,7 @@ paths:
       tags: [exams]
       operationId: getExamResult
       summary: Kết quả bài thi và phân tích câu sai
+      description: Attempt của ExamSession đo hiệu quả (F035) luôn trả 403 EXAM_RESULTS_NOT_RELEASED cho học sinh.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -3754,6 +3762,60 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Class' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /schools/{school_id}/settings:
+    get:
+      x-service: identity
+      tags: [schools]
+      operationId: getSchoolSettings
+      x-portal-action: action.school_lms.settings.view
+      summary: Cài đặt trường (chính sách trường, khung giới nghiêm trường kèm giới nghiêm platform và giới nghiêm hiệu lực)
+      description: |
+        Quyền `school.settings.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường ngoài tenant/scope → `404`. Trả `platform_curfew`, `effective_curfew` chỉ đọc để portal hiển thị giới hạn "chỉ siết thêm" (CHILD_SAFETY §4.1, ADR-0078).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolSettings' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-service: identity
+      tags: [schools]
+      operationId: updateSchoolSettings
+      x-portal-action: action.school_lms.settings.edit_school
+      summary: Cập nhật cài đặt trường (JSON Merge Patch, If-Match, reason)
+      description: |
+        Quyền `school.settings.write` trong scope trường. `curfew_window` chỉ được **mở rộng** giới nghiêm: khung trường phải chứa trọn `platform_curfew` (cho phép qua nửa đêm, giờ ICT), ngược lại `422 VALIDATION_FAILED` với `errors[]` trỏ `curfew_window.start`/`curfew_window.end` (F015-AC-22); `null` = chỉ áp `platform_curfew`. Trường thuộc tenant `common` không có khung trường (`422 VALIDATION_FAILED`). Đổi `curfew_window` bắt buộc `reason`; lưu ghi audit before/after và phát `school.updated` (`settings_subset`).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/SchoolId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema: { $ref: '#/components/schemas/SchoolSettings' }
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolSettings' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /schools/{school_id}/sis-imports:
     post:
       x-service: identity
@@ -3888,6 +3950,10 @@ paths:
           in: query
           description: own = dữ liệu của tenant; assigned = dữ liệu platform được gán cho tenant (chỉ đọc); platform = dữ liệu platform (chỉ role platform)
           schema: { type: string, enum: [own, assigned, platform] }
+        - name: efficacy_instrument
+          in: query
+          description: Lọc câu đo hiệu quả (F035; chỉ có ở dữ liệu platform)
+          schema: { type: boolean }
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -7898,6 +7964,55 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+  /admin/settings/curfew:
+    get:
+      x-service: identity
+      tags: [admin]
+      operationId: getPlatformCurfewSettings
+      x-portal-action: action.platform_admin.system_settings.view
+      summary: Giờ giới nghiêm platform platform_curfew (ADR-0078)
+      description: Chưa cấu hình → trả giá trị mặc định `platform_curfew` của CONFIG_DEFAULTS với `is_default = true` (F015-AC-21).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlatformCurfewSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      x-service: identity
+      tags: [admin]
+      operationId: putPlatformCurfewSettings
+      x-portal-action: action.platform_admin.system_settings.edit
+      summary: Cập nhật giờ giới nghiêm platform (bắt buộc reason, audit, phát platform_settings.changed)
+      description: Chỉ `platform.settings.write` (System Admin, MFA, gateway nội bộ); role tenant → `403 PERMISSION_DENIED` (F015-AC-21). Khung trường đã lưu không bị sửa; giới nghiêm hiệu lực của học sinh luôn là hợp `platform_curfew` và khung trường (F015-AC-22).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlatformCurfewSettings' }
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlatformCurfewSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /admin/student-cleanup/runs:
     get:
       x-service: identity
@@ -11893,7 +12008,7 @@ paths:
       security:
         - { keycloakAdminBearer: [] }
       x-internal: true
-      summary: Export liên tenant bất đồng bộ (System Admin, report.export) — 202
+      summary: Export liên tenant bất đồng bộ (System Admin, report.export; report_type = efficacy_dataset cần thêm platform.efficacy_study.export) — 202
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -11931,6 +12046,662 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReportJob' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ================================================================ learning: nghiên cứu hiệu quả học tập (F035, LEARNING_EFFICACY_PLAN, ADR-0080)
+  # Gateway nội bộ, azp eduworld-portal + MFA, chỉ role platform có permission platform.efficacy_study.* / platform.learning_experiment.manage (R20).
+  # Mọi thao tác ghi có audit; study/đợt/báo cáo/thử nghiệm là dữ liệu platform (không X-Tenant-Id), thỏa thuận/lớp/rút dùng X-Tenant-Id = tenant đích.
+  /admin/learning/research-agreements:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: listResearchAgreements
+      x-portal-action: action.platform_admin.efficacy_studies.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Thỏa thuận nghiên cứu của các tenant (platform.efficacy_study.manage; liên tenant theo tenant_ids, audit cross_tenant.accessed)
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ResearchAgreementStatus' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResearchAgreementPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: createResearchAgreement
+      x-portal-action: action.platform_admin.efficacy_studies.manage_agreements
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Ghi nhận thỏa thuận nghiên cứu của tenant đích (audit research_agreement.created) — F035-AC-06
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResearchAgreementCreate' }
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResearchAgreement' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/research-agreements/{agreement_id}:revoke:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: revokeResearchAgreement
+      x-portal-action: action.platform_admin.efficacy_studies.manage_agreements
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Thu hồi thỏa thuận — rút mọi participant của tenant khỏi study đang chạy và đưa học sinh về nhánh control của mọi thử nghiệm (F035-AC-20)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/ResearchAgreementIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResearchAgreementRevoke' }
+      responses:
+        '200':
+          description: Đã thu hồi (gọi lại cùng key trả cùng kết quả)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResearchAgreement' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: listEfficacyStudies
+      x-portal-action: action.platform_admin.efficacy_studies.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Danh sách nghiên cứu hiệu quả (lọc trạng thái; tenant_ids lọc study có lớp của tenant — audit cross_tenant.accessed)
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/EfficacyStudyStatus' }
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudyPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: createEfficacyStudy
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Tạo nghiên cứu draft với hai dạng đề đo hiệu quả đã publish (F035-AC-07; audit efficacy_study.created)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyStudyCreate' }
+      responses:
+        '201':
+          description: Đã tạo (draft)
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: getEfficacyStudy
+      x-portal-action: action.platform_admin.efficacy_studies.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Chi tiết nghiên cứu (số lớp/cặp, trạng thái)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-service: learning
+      tags: [admin]
+      operationId: updateEfficacyStudy
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Sửa nghiên cứu (JSON Merge Patch, chỉ khi draft — khác → 422 INVALID_STATE_TRANSITION)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyStudyUpdate' }
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}/classes:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: listEfficacyStudyClasses
+      x-portal-action: action.platform_admin.efficacy_studies.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Lớp tham gia/so sánh/kiểm định của nghiên cứu (cặp, arm, thứ tự dạng đề; liên tenant theo tenant_ids)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudyClassPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: addEfficacyStudyClass
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Thêm lớp của tenant đích vào nghiên cứu draft (F035-AC-08)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyStudyClassCreate' }
+      responses:
+        '201':
+          description: Đã thêm
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudyClass' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}/classes/{class_id}:
+    delete:
+      x-service: learning
+      tags: [admin]
+      operationId: removeEfficacyStudyClass
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Gỡ lớp khỏi nghiên cứu draft (soft-delete, ADR-0028; study không còn draft → 422 INVALID_STATE_TRANSITION)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '204':
+          description: Đã gỡ
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /admin/learning/efficacy-studies/{study_id}:activate:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: activateEfficacyStudy
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Kích hoạt nghiên cứu — kiểm cặp, gán arm còn trống bằng hash ổn định, đặt thứ tự dạng đề (F035-AC-09)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã kích hoạt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}/waves:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: listEfficacyWaves
+      x-portal-action: action.platform_admin.efficacy_studies.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo lớp, không có điểm
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyWaveList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: scheduleEfficacyWave
+      x-portal-action: action.platform_admin.efficacy_studies.schedule_waves
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Lập đợt validation/pre/post — tạo một ExamSession đo hiệu quả cho mỗi lớp đích trong tenant của lớp (F035-AC-12, F035-AC-13)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyWaveCreate' }
+      responses:
+        '201':
+          description: Đã lập đợt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyWave' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}:withdraw:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: withdrawEfficacyParticipants
+      x-portal-action: action.platform_admin.efficacy_studies.withdraw
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Rút participant khỏi nghiên cứu theo yêu cầu trường (tenant đích; audit efficacy.participants_withdrawn) — F035-AC-18
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyWithdrawalCreate' }
+      responses:
+        '200':
+          description: Đã rút (gọi lại cùng key trả kết quả cũ)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyWithdrawal' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}:complete:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: completeEfficacyStudy
+      x-portal-action: action.platform_admin.efficacy_studies.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Kết thúc nghiên cứu sau khi đợt post đóng (active → completed; khác → 422 INVALID_STATE_TRANSITION)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã kết thúc
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyStudy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}/reports:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: createEfficacyStudyReport
+      x-portal-action: action.platform_admin.efficacy_studies.report
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Yêu cầu báo cáo hiệu quả và độ tin cậy dự báo của mastery (chạy nền, tất định theo đầu vào) — 202 (F035-AC-29…31)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EfficacyReportCreate' }
+      responses:
+        '202':
+          description: Đã nhận
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyReport' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/efficacy-studies/{study_id}/reports/{report_id}:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: getEfficacyStudyReport
+      x-portal-action: action.platform_admin.efficacy_studies.report
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Trạng thái và kết quả báo cáo hiệu quả (chỉ số liệu gộp, ô nhỏ bị ẩn)
+      parameters:
+        - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/ReportIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EfficacyReport' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /admin/learning/experiments:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: listLearningExperiments
+      x-portal-action: action.platform_admin.learning_experiments.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Danh sách thử nghiệm A/B cấu hình mastery và luật gợi ý (platform.learning_experiment.manage)
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/LearningExperimentStatus' }
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/LearningExperimentKind' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperimentPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: createLearningExperiment
+      x-portal-action: action.platform_admin.learning_experiments.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Tạo thử nghiệm draft (2–5 arm, đúng một control, tổng allocation_pct = 100) — F035-AC-21
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LearningExperimentCreate' }
+      responses:
+        '201':
+          description: Đã tạo (draft)
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperiment' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/experiments/{experiment_id}:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: getLearningExperiment
+      x-portal-action: action.platform_admin.learning_experiments.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Chi tiết thử nghiệm
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperiment' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-service: learning
+      tags: [admin]
+      operationId: updateLearningExperiment
+      x-portal-action: action.platform_admin.learning_experiments.edit
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Sửa thử nghiệm (JSON Merge Patch, chỉ draft, tăng revision; khác → 422 INVALID_STATE_TRANSITION)
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LearningExperimentUpdate' }
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperiment' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/experiments/{experiment_id}:start:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: startLearningExperiment
+      x-portal-action: action.platform_admin.learning_experiments.operate
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Bắt đầu thử nghiệm ở chế độ shadow (từ draft) hoặc live (từ draft/shadow) — F035-AC-23, F035-AC-24
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LearningExperimentStart' }
+      responses:
+        '200':
+          description: Đã chuyển trạng thái
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperiment' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/experiments/{experiment_id}:stop:
+    post:
+      x-service: learning
+      tags: [admin]
+      operationId: stopLearningExperiment
+      x-portal-action: action.platform_admin.learning_experiments.operate
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Dừng thử nghiệm (stop_reason = manual), trả học sinh về control, không phát lại learning_objective.mastered — F035-AC-26
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LearningExperimentStop' }
+      responses:
+        '200':
+          description: Đã dừng
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningExperiment' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /admin/learning/experiments/{experiment_id}/results:
+    get:
+      x-service: learning
+      tags: [admin]
+      operationId: getLearningExperimentResults
+      x-portal-action: action.platform_admin.learning_experiments.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Kết quả theo arm (ô < analytics_min_cell_size bị ẩn) — F035-AC-27
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExperimentResults' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ================================================================ learning: Activity Engine (ACTIVITY_ENGINE, ADR-0048)
@@ -13025,6 +13796,26 @@ components:
       in: path
       required: true
       schema: { $ref: '#/components/schemas/Uuid' }
+    ResearchAgreementIdPath:
+      name: agreement_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+    EfficacyStudyIdPath:
+      name: study_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+    ExperimentIdPath:
+      name: experiment_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+    ClassIdPath:
+      name: class_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
     ReasonQuery:
       name: reason
       in: query
@@ -13902,6 +14693,63 @@ components:
         default_locale:
           $ref: '#/components/schemas/Locale'
           description: Ngôn ngữ mặc định của tenant cho học sinh mới (ADR-0056)
+    CurfewWindow:
+      type: object
+      required: [start, end]
+      additionalProperties: false
+      description: Khung giới nghiêm hằng ngày theo giờ ICT (HH:MM); end nhỏ hơn start nghĩa là qua nửa đêm (vd. 21:30–06:30). Không theo khối lớp (R15).
+      properties:
+        start: { type: string, maxLength: 5, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '21:30' }
+        end: { type: string, maxLength: 5, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:30' }
+    PlatformCurfewSettings:
+      type: object
+      required: [start, end, reason]
+      additionalProperties: false
+      description: platform_curfew (CHILD_SAFETY §4.1, CONFIG_DEFAULTS); áp cho game và chat mọi học sinh, tenant common bắt buộc áp.
+      properties:
+        start: { type: string, maxLength: 5, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '21:30' }
+        end: { type: string, maxLength: 5, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:30' }
+        timezone: { type: string, maxLength: 64, readOnly: true, example: Asia/Ho_Chi_Minh }
+        warning_minutes: { type: integer, minimum: 0, readOnly: true, description: curfew_warning_minutes (chỉ đọc) }
+        is_default: { type: boolean, readOnly: true, description: true khi chưa cấu hình (giá trị CONFIG_DEFAULTS) }
+        updated_at:
+          readOnly: true
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        reason: { type: string, minLength: 3, maxLength: 500, writeOnly: true }
+    SchoolSettings:
+      type: object
+      additionalProperties: false
+      description: Cài đặt cấp trường (FR-ORG-007; ADMIN_PORTAL §3.9). Mọi khóa chỉ được siết chặt hơn cấp platform/tenant (ADR-0020, ADR-0078). Chat policy trường do F122 bổ sung.
+      properties:
+        school_id:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+        allowed_hours: { type: object, additionalProperties: true, description: Khung giờ truy cập của trường (schema chi tiết dùng chung với TenantSettings — delta F015) }
+        class_leaderboard_enabled: { type: boolean }
+        school_leaderboard_enabled: { type: boolean }
+        student_club_creation: { type: boolean, default: false }
+        curfew_window:
+          description: Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew
+          oneOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+            - type: 'null'
+        platform_curfew:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+        effective_curfew:
+          readOnly: true
+          description: Giới nghiêm hiệu lực của học sinh trường = hợp platform_curfew và curfew_window
+          allOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+        updated_at:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+        reason: { type: string, minLength: 3, maxLength: 500, writeOnly: true, description: Bắt buộc khi đổi curfew_window (audit) }
     ChatRetentionSettings:
       type: object
       required: [gameplay_chat_retention_days, ephemeral_retention_hours, allow_tenant_override, reason]
@@ -14249,7 +15097,7 @@ components:
     TelemetryBatch:
       type: object
       required: [platform, client_version, events]
-      description: Lô telemetry không PII (ADR-0058). Tenant tắt telemetry sản phẩm thì client không gửi screen_view/tutorial_step; perf/crash vẫn gửi.
+      description: Lô telemetry không PII (ADR-0058). Tenant tắt telemetry sản phẩm thì client không gửi screen_view/tutorial_step; perf/crash và break_reminder_shown (chỉ số chơi lành mạnh) vẫn gửi.
       properties:
         platform: { type: string, maxLength: 32 }
         client_version: { type: string, maxLength: 64 }
@@ -14837,6 +15685,9 @@ components:
         feedback_timing: { $ref: '#/components/schemas/FeedbackTiming' }
         result_release: { $ref: '#/components/schemas/ResultRelease' }
         results_released_at: { $ref: '#/components/schemas/Timestamp' }
+        is_efficacy:
+          type: boolean
+          description: Chỉ trả cho nhân sự — true với ExamSession đo hiệu quả do F035 tạo (chỉ đọc, không công bố kết quả, không xuất đề/báo cáo). Không bao giờ có trong response cho học sinh; response không chứa study, arm, efficacy_wave_id
 
     # ---------- multiplayer
     PartyType:
@@ -15355,6 +16206,11 @@ components:
         content_language:
           $ref: '#/components/schemas/ContentLanguage'
           description: Ngôn ngữ gốc của câu hỏi; stem/explanation dùng khóa vi/en (specs/schemas/question.schema.json)
+        exam_only: { type: boolean, default: false, description: Chỉ dùng trong đề kiểm tra (QUESTION_BANK) }
+        efficacy_instrument:
+          type: boolean
+          default: false
+          description: Câu đo hiệu quả (F035) — chỉ owner_scope = platform, exam_only = true, không tham số hóa (ngược lại 422 VALIDATION_FAILED); bị loại khỏi mọi lần chọn câu; chỉ đổi bằng version mới
     QuestionAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'
@@ -16738,6 +17594,10 @@ components:
           description: sections, total_points, attempt_policy, variants.balance (specs/schemas/assessment-blueprint.schema.json)
           additionalProperties: true
         content_language: { $ref: '#/components/schemas/ContentLanguage' }
+        efficacy_instrument:
+          type: boolean
+          default: false
+          description: Đề đo hiệu quả (F035) — chỉ owner_scope = platform, variants.strategy = fixed, mọi rule dùng fixed_question_version_ids trỏ câu efficacy_instrument (ngược lại 422 VALIDATION_FAILED); không dùng được ở createExamSession, không gán cho tenant
     AssessmentBlueprintAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'
@@ -17918,7 +18778,7 @@ components:
       properties:
         type:
           type: string
-          enum: [screen_view, tutorial_step, perf_sample, load_time, client_error, crash, network_sample]
+          enum: [screen_view, tutorial_step, perf_sample, load_time, client_error, crash, network_sample, break_reminder_shown]
         client_event_id: { $ref: '#/components/schemas/Uuid', description: Khử trùng phía server }
         occurred_at: { $ref: '#/components/schemas/Timestamp' }
         screen_code: { type: string, maxLength: 64 }
@@ -17939,6 +18799,8 @@ components:
         rtt_p50_ms: { type: integer, minimum: 0 }
         rtt_p95_ms: { type: integer, minimum: 0 }
         reconnects: { type: integer, minimum: 0 }
+        reminder_no: { type: integer, minimum: 1, maximum: 20, description: "break_reminder_shown: lần nhắc nghỉ thứ mấy trong phiên (GAME_ANALYTICS §3.2)" }
+        minutes_played: { type: integer, minimum: 0, maximum: 1440, description: "break_reminder_shown: số phút chơi liên tục client đếm lúc nhắc; chỉ dùng cho thống kê chơi lành mạnh" }
     NicknameSuggestion:
       type: object
       required: [nickname_option_id, nickname]
@@ -18766,7 +19628,10 @@ components:
       required: [report_type, format, from, to]
       additionalProperties: false
       properties:
-        report_type: { type: string, enum: [learning_summary, class_progress, assignment_results, game_summary] }
+        report_type:
+          type: string
+          enum: [learning_summary, class_progress, assignment_results, game_summary, efficacy_dataset]
+          description: efficacy_dataset chỉ ở /admin/reports, cần thêm permission platform.efficacy_study.export và params.study_id; chỉ format csv, dữ liệu định danh giả (F035, LEARNING_EFFICACY_PLAN §7)
         format: { type: string, enum: [csv, xlsx] }
         from: { type: string, format: date }
         to: { type: string, format: date }
@@ -18780,6 +19645,12 @@ components:
           description: Chỉ `/admin/reports` (System Admin)
           items: { $ref: '#/components/schemas/Uuid' }
         grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        params:
+          type: object
+          additionalProperties: false
+          description: Tham số riêng theo report_type
+          properties:
+            study_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc khi report_type = efficacy_dataset }
     ReportJob:
       type: object
       required: [report_id, status, report_type, format, created_at]
@@ -18793,6 +19664,408 @@ components:
         download_expires_at: { $ref: '#/components/schemas/Timestamp' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         finished_at: { $ref: '#/components/schemas/Timestamp' }
+    # ---------- nghiên cứu hiệu quả học tập (F035, LEARNING_EFFICACY_PLAN) — chỉ API /admin/learning/* của role platform
+    ResearchAgreementStatus: { type: string, enum: [active, revoked] }
+    ResearchAgreementCreate:
+      type: object
+      required: [agreement_ref, covers, agreed_on]
+      additionalProperties: false
+      properties:
+        agreement_ref: { type: string, minLength: 1, maxLength: 128, description: Mã văn bản thỏa thuận pilot (duy nhất trong tenant) }
+        covers:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          items: { type: string, enum: [efficacy_study, experiment] }
+        agreed_on: { type: string, format: date }
+    ResearchAgreementRevoke:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 1000 }
+    ResearchAgreement:
+      type: object
+      required: [agreement_id, tenant_id, agreement_ref, covers, agreed_on, status, created_at]
+      properties:
+        agreement_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_id: { $ref: '#/components/schemas/Uuid' }
+        agreement_ref: { type: string, maxLength: 128 }
+        covers:
+          type: array
+          maxItems: 2
+          items: { type: string, enum: [efficacy_study, experiment] }
+        agreed_on: { type: string, format: date }
+        status: { $ref: '#/components/schemas/ResearchAgreementStatus' }
+        recorded_by: { $ref: '#/components/schemas/Uuid' }
+        revoked_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        revoked_by: { oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }] }
+        revoke_reason: { type: [string, 'null'], maxLength: 1000 }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+    ResearchAgreementPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ResearchAgreement' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    EfficacyStudyStatus: { type: string, enum: [draft, active, completed, cancelled] }
+    EfficacyArm: { type: string, enum: [intervention, comparison, validation] }
+    EfficacyFormOrder: { type: string, enum: [a_then_b, b_then_a] }
+    EfficacyStudyCreate:
+      type: object
+      required: [code, title, subject_id, grade_level, objective_ids, form_a_blueprint_version_id, form_b_blueprint_version_id, min_intervention_weeks]
+      additionalProperties: false
+      properties:
+        code: { type: string, maxLength: 64, pattern: '^[a-z0-9_-]{1,64}$' }
+        title: { type: string, minLength: 1, maxLength: 255 }
+        subject_id: { $ref: '#/components/schemas/Uuid' }
+        grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        objective_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/Uuid' }
+        form_a_blueprint_version_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Version blueprint efficacy_instrument đã publish (dạng A); khác dạng B, cùng môn/khối, phủ đúng objective_ids (LEARNING_EFFICACY_PLAN §3.2)
+        form_b_blueprint_version_id: { $ref: '#/components/schemas/Uuid' }
+        min_intervention_weeks: { type: integer, minimum: 1, maximum: 52 }
+    EfficacyStudyUpdate:
+      type: object
+      description: JSON Merge Patch — chỉ khi study ở draft
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 255 }
+        objective_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/Uuid' }
+        form_a_blueprint_version_id: { $ref: '#/components/schemas/Uuid' }
+        form_b_blueprint_version_id: { $ref: '#/components/schemas/Uuid' }
+        min_intervention_weeks: { type: integer, minimum: 1, maximum: 52 }
+    EfficacyStudy:
+      type: object
+      required: [study_id, code, title, subject_id, grade_level, objective_ids, form_a_blueprint_version_id, form_b_blueprint_version_id, min_intervention_weeks, status, version, created_at]
+      properties:
+        study_id: { $ref: '#/components/schemas/Uuid' }
+        code: { type: string, maxLength: 64 }
+        title: { type: string, maxLength: 255 }
+        subject_id: { $ref: '#/components/schemas/Uuid' }
+        grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        objective_ids:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/Uuid' }
+        form_a_blueprint_version_id: { $ref: '#/components/schemas/Uuid' }
+        form_b_blueprint_version_id: { $ref: '#/components/schemas/Uuid' }
+        min_intervention_weeks: { type: integer, minimum: 1 }
+        status: { $ref: '#/components/schemas/EfficacyStudyStatus' }
+        class_count: { type: integer, minimum: 0 }
+        pair_count: { type: integer, minimum: 0 }
+        tenant_ids:
+          type: array
+          maxItems: 200
+          description: Tenant có lớp trong study
+          items: { $ref: '#/components/schemas/Uuid' }
+        created_by: { $ref: '#/components/schemas/Uuid' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        activated_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        completed_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        version: { type: integer, minimum: 1, description: Dùng cho ETag/If-Match }
+    EfficacyStudyPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/EfficacyStudy' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    EfficacyStudyClassCreate:
+      type: object
+      required: [class_id]
+      additionalProperties: false
+      properties:
+        class_id: { $ref: '#/components/schemas/Uuid' }
+        pair_no: { type: integer, minimum: 1, maximum: 200, description: Bỏ trống với lớp validation }
+        arm:
+          $ref: '#/components/schemas/EfficacyArm'
+          description: Tùy chọn; bỏ trống thì gán ngẫu nhiên theo cặp khi kích hoạt (assignment_method = random)
+        form_order: { $ref: '#/components/schemas/EfficacyFormOrder' }
+    EfficacyStudyClass:
+      type: object
+      required: [study_id, class_id, tenant_id, school_id, status]
+      properties:
+        study_id: { $ref: '#/components/schemas/Uuid' }
+        class_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_id: { $ref: '#/components/schemas/Uuid' }
+        school_id: { $ref: '#/components/schemas/Uuid' }
+        class_name: { type: string, maxLength: 255, description: Tên lớp từ projection ref.classes (chỉ hiển thị cho nhân sự platform; không xuất trong báo cáo/bộ dữ liệu) }
+        grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        pair_no: { type: [integer, 'null'], minimum: 1, maximum: 200 }
+        arm: { oneOf: [{ $ref: '#/components/schemas/EfficacyArm' }, { type: 'null' }] }
+        assignment_method: { type: string, enum: [manual, random] }
+        form_order: { oneOf: [{ $ref: '#/components/schemas/EfficacyFormOrder' }, { type: 'null' }] }
+        status: { type: string, enum: [enrolled, withdrawn] }
+        participant_count: { type: integer, minimum: 0 }
+        withdrawn_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+    EfficacyStudyClassPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/EfficacyStudyClass' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    EfficacyWaveKind: { type: string, enum: [validation, pre, post] }
+    EfficacyWaveCreate:
+      type: object
+      required: [kind, window_start, window_end]
+      additionalProperties: false
+      properties:
+        kind: { $ref: '#/components/schemas/EfficacyWaveKind' }
+        form: { type: string, enum: [a, b], description: Bắt buộc khi kind = validation; bỏ qua với pre/post (dạng đề theo form_order của lớp) }
+        window_start: { $ref: '#/components/schemas/Timestamp' }
+        window_end: { $ref: '#/components/schemas/Timestamp' }
+        duration_seconds: { type: integer, minimum: 60, maximum: 14400, description: Mặc định theo blueprint }
+    EfficacyWave:
+      type: object
+      required: [wave_id, study_id, kind, window_start, window_end, duration_seconds, status]
+      properties:
+        wave_id: { $ref: '#/components/schemas/Uuid' }
+        study_id: { $ref: '#/components/schemas/Uuid' }
+        kind: { $ref: '#/components/schemas/EfficacyWaveKind' }
+        form: { type: [string, 'null'], enum: [a, b, null] }
+        window_start: { $ref: '#/components/schemas/Timestamp' }
+        window_end: { $ref: '#/components/schemas/Timestamp' }
+        duration_seconds: { type: integer, minimum: 1 }
+        status: { type: string, enum: [scheduled, open, closed, cancelled] }
+        opened_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        closed_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        classes:
+          type: array
+          maxItems: 400
+          description: Tiến độ theo lớp — chỉ số mời/đã làm/vắng, không có điểm
+          items:
+            type: object
+            required: [class_id, tenant_id, exam_session_id, form, invited_count, completed_count, absent_count]
+            properties:
+              class_id: { $ref: '#/components/schemas/Uuid' }
+              tenant_id: { $ref: '#/components/schemas/Uuid' }
+              exam_session_id: { $ref: '#/components/schemas/Uuid' }
+              form: { type: string, enum: [a, b] }
+              session_status: { type: string, enum: [active, cancelled] }
+              invited_count: { type: integer, minimum: 0 }
+              completed_count: { type: integer, minimum: 0 }
+              absent_count: { type: integer, minimum: 0 }
+    EfficacyWaveList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/EfficacyWave' }
+    EfficacyWithdrawalCreate:
+      type: object
+      required: [scope, reason]
+      additionalProperties: false
+      description: scope = school cần school_id; class cần class_id; students cần student_ids (≤ 500)
+      properties:
+        scope: { type: string, enum: [tenant, school, class, students] }
+        school_id: { $ref: '#/components/schemas/Uuid' }
+        class_id: { $ref: '#/components/schemas/Uuid' }
+        student_ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/Uuid' }
+        reason: { type: string, minLength: 10, maxLength: 1000 }
+        school_request_ref: { type: string, maxLength: 128, description: Mã văn bản yêu cầu của trường }
+    EfficacyWithdrawal:
+      type: object
+      required: [withdrawal_id, tenant_id, scope, affected_count, created_at]
+      properties:
+        withdrawal_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_id: { $ref: '#/components/schemas/Uuid' }
+        study_id: { oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }], description: null = mọi study (do thu hồi thỏa thuận) }
+        scope: { type: string, enum: [tenant, school, class, students] }
+        affected_count: { type: integer, minimum: 0, description: Số participant chuyển withdrawn }
+        cancelled_exam_session_count: { type: integer, minimum: 0, description: Số ExamSession chưa mở bị hủy do lớp bị rút toàn bộ }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+    EfficacyReportCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        excluded_question_version_ids:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          description: Câu loại khỏi phân tích (vd. câu lỗi phát hiện sau đợt), ghi trong báo cáo
+          items: { $ref: '#/components/schemas/Uuid' }
+    EfficacyReport:
+      type: object
+      required: [report_id, study_id, status, created_at]
+      properties:
+        report_id: { $ref: '#/components/schemas/Uuid' }
+        study_id: { $ref: '#/components/schemas/Uuid' }
+        status: { type: string, enum: [queued, running, succeeded, failed] }
+        descriptive_only: { type: boolean, description: true khi số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu (LEARNING_EFFICACY_PLAN §4) }
+        excluded_question_version_ids:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/Uuid' }
+        results:
+          type: [object, 'null']
+          additionalProperties: true
+          maxProperties: 50
+          description: |
+            Chỉ số liệu gộp (≤ 256 KB), ô < analytics_min_cell_size bị ẩn: theo arm (participant, tỉ lệ rời, gain, normalized gain,
+            Hedges' g + CI 95% hiệu chỉnh design effect, gain theo LO, KR-20 theo dạng × đợt, mức sử dụng) và predictive validity
+            (Spearman ρ theo LO, hiệu chuẩn, AUC, gợi ý) — LEARNING_EFFICACY_PLAN §4, §5. Không có tên/lớp thật, không xếp hạng.
+        error: { type: [string, 'null'], maxLength: 1000 }
+        requested_by: { $ref: '#/components/schemas/Uuid' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        started_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+        finished_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+    LearningExperimentKind: { type: string, enum: [mastery_model, recommendation_rule] }
+    LearningExperimentStatus: { type: string, enum: [draft, shadow, live, stopped, completed] }
+    ExperimentArm:
+      type: object
+      required: [code, allocation_pct, is_control]
+      additionalProperties: false
+      properties:
+        code: { type: string, maxLength: 32, pattern: '^[a-z0-9_]{1,32}$' }
+        allocation_pct: { type: integer, minimum: 1, maximum: 99 }
+        is_control: { type: boolean }
+        model_version: { type: string, maxLength: 64, description: 'kind = mastery_model: model_version trong mastery_model_configs (control = active)' }
+        rule_params:
+          type: object
+          additionalProperties: true
+          maxProperties: 50
+          description: 'kind = recommendation_rule: chỉ tham số trong danh mục cho phép của recommendation.Engine (F032)'
+    LearningExperimentCreate:
+      type: object
+      required: [code, kind, arms, tenant_ids, start_at, end_at]
+      additionalProperties: false
+      properties:
+        code: { type: string, maxLength: 64, pattern: '^[a-z0-9_-]{1,64}$' }
+        kind: { $ref: '#/components/schemas/LearningExperimentKind' }
+        unit: { type: string, enum: [class, student], default: class }
+        arms:
+          type: array
+          minItems: 2
+          maxItems: 5
+          items: { $ref: '#/components/schemas/ExperimentArm' }
+        tenant_ids:
+          type: array
+          minItems: 1
+          maxItems: 200
+          uniqueItems: true
+          description: Mọi tenant phải có thỏa thuận active phủ experiment
+          items: { $ref: '#/components/schemas/Uuid' }
+        study_id: { $ref: '#/components/schemas/Uuid', description: Giới hạn đơn vị vào lớp intervention của study }
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+    LearningExperimentUpdate:
+      type: object
+      description: JSON Merge Patch — chỉ khi draft; mỗi lần sửa tăng revision
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        unit: { type: string, enum: [class, student] }
+        arms:
+          type: array
+          minItems: 2
+          maxItems: 5
+          items: { $ref: '#/components/schemas/ExperimentArm' }
+        tenant_ids:
+          type: array
+          minItems: 1
+          maxItems: 200
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/Uuid' }
+        study_id: { oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }] }
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+    LearningExperiment:
+      type: object
+      required: [experiment_id, code, kind, unit, arms, tenant_ids, status, start_at, end_at, revision, created_at]
+      properties:
+        experiment_id: { $ref: '#/components/schemas/Uuid' }
+        code: { type: string, maxLength: 64 }
+        kind: { $ref: '#/components/schemas/LearningExperimentKind' }
+        unit: { type: string, enum: [class, student] }
+        arms:
+          type: array
+          maxItems: 5
+          items: { $ref: '#/components/schemas/ExperimentArm' }
+        tenant_ids:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/Uuid' }
+        study_id: { oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }] }
+        status: { $ref: '#/components/schemas/LearningExperimentStatus' }
+        stop_reason: { type: [string, 'null'], enum: [manual, guardrail_breach, agreement_revoked, ended, null] }
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+        revision: { type: integer, minimum: 1, description: Dùng cho ETag/If-Match }
+        owner_id: { $ref: '#/components/schemas/Uuid' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+    LearningExperimentPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/LearningExperiment' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    LearningExperimentStart:
+      type: object
+      required: [exposure]
+      additionalProperties: false
+      properties:
+        exposure: { type: string, enum: [shadow, live], description: shadow chỉ từ draft; live từ draft hoặc shadow }
+    LearningExperimentStop:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 1000 }
+    ExperimentResults:
+      type: object
+      required: [experiment_id, computed_at, guardrail_breached, arms]
+      properties:
+        experiment_id: { $ref: '#/components/schemas/Uuid' }
+        computed_at: { $ref: '#/components/schemas/Timestamp' }
+        guardrail_breached: { type: boolean }
+        arms:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [arm_code, is_control, suppressed]
+            properties:
+              arm_code: { type: string, maxLength: 32 }
+              is_control: { type: boolean }
+              suppressed: { type: boolean, description: true khi ô < analytics_min_cell_size — mọi chỉ số của arm là null }
+              unit_count: { type: [integer, 'null'], minimum: 0 }
+              student_count: { type: [integer, 'null'], minimum: 0 }
+              primary_metric: { type: [number, 'null'], description: Độ chính xác lần đầu trên câu mới cùng LO sau độ trễ đánh giá (LEARNING_EFFICACY_PLAN §6) }
+              next_item_log_loss: { type: [number, 'null'], minimum: 0 }
+              active_minutes_avg: { type: [number, 'null'], minimum: 0 }
     # ---------- learning (học sinh)
     Subject:
       type: object
@@ -18819,7 +20092,7 @@ components:
     Lesson:
       type: object
       required: [lesson_id, version, title, activities]
-      description: Lesson đã publish, ghim version theo level session (ADR-0043); không chứa đáp án
+      description: Lesson đã publish, ghim version theo lesson session (ADR-0043, F031); không chứa đáp án
       properties:
         lesson_id: { $ref: '#/components/schemas/Uuid' }
         version: { type: integer, minimum: 1 }

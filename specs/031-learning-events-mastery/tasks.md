@@ -5,7 +5,7 @@
 ## Phase 1: Setup
 
 - [ ] T001 Tạo package `domain/learningrecord`, `domain/mastery`, `domain/evaluation`; wiring — file: `modules/learning/cmd/api/main.go`
-- [ ] T002 [P] Đăng ký durable consumer `learning.mastery_on_graded` (`activity.graded`, `attempt.re_evaluated`) và `learning.progress_daily` (`activity.submitted`, `activity.graded`); job `learning-events-partitions`, `regrade-runner` — file: `modules/learning/cmd/worker/main.go`
+- [ ] T002 [P] Đăng ký durable consumer `learning.mastery_on_graded` (`activity.graded`, `attempt.re_evaluated`) và `learning.progress_daily` (`activity.submitted`, `activity.graded`, `lesson.completed`); job `learning-events-partitions`, `regrade-runner` — file: `modules/learning/cmd/worker/main.go`
 - [ ] T003 [P] Seed `mastery_model_configs` `we-1.0` `active` từ LEARNING_ANALYTICS §3.1 — file: `modules/learning/seed/mastery_model_configs.json`
 
 ## Phase 2: Foundational (chặn mọi user story)
@@ -13,6 +13,8 @@
 - [ ] T004 Delta contract: payload `attempt.re_evaluated`, `learning_objective.progressed`, `learning_objective.mastered` v1; `getRegradeRequest`; mô tả quyền `getStudentProgress` — file: `specs/events/payloads/learning/`, `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=learning`
 - [ ] T005 ent schema `MasteryModelConfig`, `ObjectiveMastery` (cột mới), `MasteryHistory` (partition), `ProgressDaily`, `RegradeRequest` (H), `Evaluation` (cột mới), `MasteryRecomputeRun`, `ObjectiveMasteryShadow` — file: `modules/learning/ent/schema/` — kiểm: `make migrate-diff MOD=learning name=f031_mastery`, `make migrate-lint MOD=learning`
 - [ ] T006 Cập nhật DATABASE_DESIGN §2.6a, §2.7, §2.16 (bảng mới, cột mới, `re_evaluation`, `regrade_requests` H) — file: `docs/07-backend/DATABASE_DESIGN.md`
+- [x] T045 Delta contract US6: payload `lesson.completed.v1` (owner F031), mô tả `completeLesson` (`409 CONFLICT`, idempotent) và `getLesson` (version ghim theo lesson session); EVENT_DESIGN §3.2, §4.4 — file: `specs/events/payloads/learning/lesson.completed.v1.schema.json`, `specs/openapi/eduworld-api.v1.yaml`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `node scripts/specs/validate-schemas.mjs`, `node scripts/specs/check-cross-features.mjs`
+- [ ] T046 ent schema `LessonSession` (cột mới `lesson_id`, `context_mode`, `assignment_id`, `learning_path_id`, `recommendation_id`, `completed_activity_ids`, `active_ms`; hai partial unique theo data-model); cập nhật DATABASE_DESIGN §2.5 — file: `modules/learning/ent/schema/lesson_session.go`, `docs/07-backend/DATABASE_DESIGN.md` — kiểm: `make migrate-diff MOD=learning name=f031_lesson_sessions`, `make migrate-lint MOD=learning`
 - [ ] T007 Migration: GRANT `INSERT, SELECT` trên `learning.learning_events`, `learning.mastery_history` cho role app — file: `modules/learning/migrations/`
 
 **Checkpoint**: nền tảng sẵn sàng.
@@ -91,16 +93,41 @@
 
 - [ ] T041 [US5] Command `RecomputeMastery`, `ActivateMasteryModel` + CLI `worker learning mastery-recompute|mastery-model activate` (`cmd/worker`) — file: `modules/learning/internal/presentation/job/mastery_recompute.go`
 
-## Phase 8: Polish & Cross-Cutting
+## Phase 8: User Story 6 — Hoàn thành bài học (Priority: P2)
 
-- [ ] T042 [P] Metric `eduworld_mastery_updates_total`, `eduworld_mastery_update_lag_seconds`, `eduworld_regrade_attempts_total` — file: `modules/learning/internal/infrastructure/observability/mastery_metrics.go`
+**Goal**: Ghim version bài khi bắt đầu, xác định hoàn thành theo `completion_rule` ở server, phát `lesson.completed` đúng một lần.
+
+**Independent Test**: Như spec.md US6.
+
+### Tests cho User Story 6
+
+- [ ] T047 [P] [US6] Unit test `lesson.CompletionRule` (`all_required_activities`, `any_activity`, activity tùy chọn không chặn, hoàn thành ≠ đạt) (F031-AC-26) — file: `modules/learning/internal/domain/lesson/completion_rule_test.go` — phải FAIL trước khi code
+- [ ] T048 [P] [US6] Integration test ghim version: attempt `context_type = lesson` tạo session; publish version mới giữa chừng không đổi session; activity ngoài version ghim → `422 VALIDATION_FAILED`; `getLesson` trả version ghim + `completed` (F031-AC-25) — file: `modules/learning/tests/integration/lesson/session_pin_test.go`
+- [ ] T049 [P] [US6] Integration test hoàn thành: activity bắt buộc cuối được chấm → session `completed`, learning event + outbox `lesson.completed` cùng transaction, payload hợp lệ `lesson.completed.v1`; giao lại `activity.graded`, attempt thêm, `completeLesson` lặp → không phát lần hai; version mới → session mới (F031-AC-26, F031-AC-27) — file: `modules/learning/tests/integration/lesson/completion_test.go`
+- [ ] T050 [P] [US6] Integration test `completeLesson`: đã hoàn thành → cùng `completed_at`; chưa thỏa → `409 CONFLICT` + `errors[]`; chưa có session → `409 CONFLICT`; trường client `duration_ms`/`score` bị bỏ qua (F031-AC-28) — file: `modules/learning/tests/integration/lesson/complete_lesson_api_test.go`
+- [ ] T051 [P] [US6] Test authorization + tenant `getLesson`/`completeLesson` (nhân sự 403, `TENANT_MISMATCH`, bài chưa gán 404) và quét payload không PII (F031-AC-29) — file: `modules/learning/tests/integration/lesson/lesson_authz_tenant_test.go`
+- [ ] T052 [P] [US6] Integration test `progress_daily.lessons_completed` +1 idempotent khi nhận `lesson.completed` (F031-AC-30) — file: `modules/learning/tests/integration/progress/lessons_completed_test.go`
+
+### Implementation cho User Story 6
+
+- [ ] T053 [P] [US6] Domain `lesson` (`Session`, `CompletionRule`, `IdempotencyKey`) thuần — file: `modules/learning/internal/domain/lesson/session.go`
+- [ ] T054 [US6] `LessonSessionPinner` gọi trong transaction start attempt của F030 khi `context_type = lesson` (port `port/write`), kiểm activity thuộc version ghim — file: `modules/learning/internal/application/command/pin_lesson_session.go`
+- [ ] T055 [US6] Command `CompleteLesson` (dùng chung cho consumer nội bộ `activity.graded` và `completeLesson`): `UnitOfWork` cập nhật session, `LearningEventRecorder` ghi `lesson.completed`, outbox `lesson.completed`; consumer `learning.lesson_completion` (`activity.graded` có `context_type = lesson`) — file: `modules/learning/internal/application/command/complete_lesson.go`, `modules/learning/internal/presentation/consumer/lesson_completion.go`
+- [ ] T056 [US6] Handler `getLesson` (query version ghim + `completed`), `completeLesson` (Idempotency-Key, Problem `409`) — file: `modules/learning/internal/presentation/http/public/lesson_handler.go`
+
+**Checkpoint**: US6 chạy và kiểm độc lập được; module game (F074) tiêu thụ `lesson.completed`.
+
+## Phase 9: Polish & Cross-Cutting
+
+- [ ] T042 [P] Metric `eduworld_mastery_updates_total`, `eduworld_mastery_update_lag_seconds`, `eduworld_regrade_attempts_total`, `eduworld_lesson_completions_total` — file: `modules/learning/internal/infrastructure/observability/mastery_metrics.go`
 - [ ] T043 [P] Ghi CHANGELOG; đồng bộ LEARNING_ANALYTICS §8 (`/learning/mastery/me` dùng `getMyProgress`) — file: `docs/02-learning/LEARNING_ANALYTICS.md`
 - [ ] T044 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/031-learning-events-mastery/quickstart.md`
 
 ## Dependencies & Execution Order
 
-- Setup → Foundational → US1 → US2 → (US3, US4 song song) → US5 → Polish.
+- Setup → Foundational → US1 → US2 → (US3, US4 song song) → US5 → US6 (sau US1, song song US2–US5) → Polish.
 - T015 thay `LearningEventWriter` của F030 (cùng interface port). T034 cần T024.
+- US6 sau US1 (T015) và T046; T054 sửa transaction start attempt của F030 (cùng module). T052 cần T028.
 
 ## Definition of Done
 

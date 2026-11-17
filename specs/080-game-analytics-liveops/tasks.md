@@ -35,11 +35,12 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 - [ ] T013 [P] [US1] Test F080-AC-01: schema đóng → 422, khử trùng `client_event_id`, 202 (TC-ANL-003) — file: `tests/integration/analytics/telemetry_ingest_test.go` — phải FAIL trước khi code
 - [ ] T014 [P] [US1] Test F080-AC-02: rate limit 429 + `Retry-After`; token không phải học sinh → 403 — file: `tests/integration/analytics/telemetry_authz_test.go`
 - [ ] T015 [P] [US1] Test F080-AC-03: tenant tắt → bỏ `screen_view`/`tutorial_step`, giữ perf/crash; client-config trả cờ (TC-ANL-007) — file: `tests/integration/analytics/telemetry_tenant_toggle_test.go`
+- [ ] T064 [P] [US1] Test F080-AC-34: `break_reminder_shown` hợp lệ → raw `source = client` với `session_key` của token; khóa lạ/`reminder_no` 0 hoặc 21 → 422; trùng `client_event_id` → 1 dòng; tenant tắt telemetry sản phẩm vẫn ghi (TC-ANL-003) — file: `tests/integration/analytics/telemetry_break_reminder_test.go`
 - [ ] T016 [P] [US1] Test F080-AC-04: crash → error tracking, log không PII (TC-ANL-003) — file: `tests/unit/analytics/telemetry_logging_test.go`
 
 ### Implementation cho User Story 1
 
-- [ ] T017 [US1] Command `IngestTelemetry`; handler `postTelemetry` mở rộng; consumer `tenant.updated` → `ref.tenants` — file: `internal/application/command/analytics/ingest_telemetry.go`, `internal/presentation/http/public/telemetry.go`
+- [ ] T017 [US1] Command `IngestTelemetry` (gồm `break_reminder_shown`, không lọc bởi cờ telemetry sản phẩm, `session_key` từ game session); handler `postTelemetry` mở rộng; consumer `tenant.updated` → `ref.tenants` — file: `internal/application/command/analytics/ingest_telemetry.go`, `internal/presentation/http/public/telemetry.go`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -61,6 +62,7 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 
 - [ ] T022 [P] [US3] Test F080-AC-08: golden dataset → rollup/cohort/funnel/content/perf khớp, `is_final` (TC-ANL-001, TC-DASH-004) — file: `tests/integration/analytics/rollup_golden_test.go` — phải FAIL trước khi code
 - [ ] T023 [P] [US3] Test F080-AC-09: trễ 30 h tính lại + tăng phiên bản cache; 50 h chỉ metric (TC-DASH-005) — file: `tests/integration/analytics/late_events_test.go`
+- [ ] T065 [P] [US3] Test F080-AC-35: golden dataset `break_reminder_shown` (phiên 0/1/2 lần nhắc, sự kiện trùng) → `player_days.reminders_shown`, `sessions_over_reminder`, `sessions_over_second_reminder` khớp tính tay (TC-ANL-001) — file: `tests/integration/analytics/wellbeing_rollup_test.go`
 - [ ] T024 [P] [US3] Test F080-AC-10: chỉ số chơi lành mạnh; catalog không có chỉ số tổng thời gian chơi làm mục tiêu (TC-ANL-001) — file: `internal/domain/analytics/metric_catalog_test.go`
 
 ### Implementation cho User Story 3

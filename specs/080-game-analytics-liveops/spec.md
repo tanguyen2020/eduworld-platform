@@ -11,6 +11,7 @@
 - Q: Bảng rollup theo DATABASE_DESIGN (`dims_hash` + `dims` jsonb) hay GAME_ANALYTICS §6 (cột chiều tường minh + `grouping_set`)? → A: Theo DATABASE_DESIGN §2.8b (nguồn sự thật bảng); thêm `rollup_monthly` (Mới). Mâu thuẫn báo cáo.
 - Q: Live dashboard lấy số liệu từ đâu? → A: Prometheus (DASHBOARD_DATA §2: không qua database). Portal không gọi Prometheus trực tiếp; module game cung cấp `getLiveOpsOverview` (delta) đọc Prometheus HTTP API qua adapter, URL từ cấu hình.
 - Q: Tenant tắt telemetry sản phẩm lưu ở đâu? → A: Cài đặt tenant (identity, F015) — delta `TenantSettings.product_telemetry_enabled`; module game giữ projection từ event tenant và trả cờ cho client qua `getClientConfig` (F014).
+- Q: Chỉ số chơi lành mạnh lấy lời nhắc nghỉ từ đâu (server không biết lúc nhắc)? → A: Không phải domain event (Technical Architect 2026-11-17). Game client (F062-AC-24) gửi telemetry `break_reminder_shown` (`reminder_no`, `minutes_played`) qua `postTelemetry`; F080 nhận, ghi `events_raw` (`source = client`), cộng `player_days.reminders_shown` và tính `sessions_over_reminder`, `sessions_over_second_reminder` theo `session_key` ([GAME_ANALYTICS §3.2, §4.6](../../docs/11-operations/GAME_ANALYTICS.md)).
 - Q: operationId Game Analytics? → A: Theo API_DESIGN §9: `getGameMetrics`, `getGameRetention`, `getGameFunnel`, `getGameContentStats`, `getGamePerformance`, `createGameAnalyticsExport`, `getTenantGameSummary`; thêm `getGameAnalyticsExport` (trạng thái job). Chưa có trong OpenAPI → delta.
 
 ### Session 2026-11-17
@@ -38,6 +39,7 @@ Game client gửi lô `perf_sample`, `load_time`, `screen_view`, `crash`; trư�
 | F080-AC-02 | NẾU vượt rate limit của endpoint (30 req/phút/người theo spec), THÌ module game PHẢI trả `429 RATE_LIMITED` kèm `Retry-After`; token không phải học sinh PHẢI nhận `403 GAME_ACCESS_STUDENT_ONLY` | FR-GAME-011 · AGENTS R23 | TC-ANL-003 |
 | F080-AC-03 | TRONG KHI tenant có `analytics_product_telemetry_enabled = false`, module game PHẢI bỏ `screen_view`/`tutorial_step` và vẫn nhận `perf_sample`, `load_time`, `client_error`, `crash`; `getClientConfig` PHẢI trả cờ để client không gửi | FR-ANL-011 · AC-ANL-107 | TC-ANL-007 |
 | F080-AC-04 | HỆ THỐNG PHẢI tách `client_error`/`crash` sang error tracking (log có `crash_signature`, không PII) và chỉ ghi vào analytics các trường danh mục; log INFO PHẢI không chứa token, `student_id`, tên | NFR-OBS-003 · AGENTS R14 · [MONITORING](../../docs/11-operations/MONITORING.md) | TC-ANL-003 |
+| F080-AC-34 | KHI `postTelemetry` chứa sự kiện `break_reminder_shown`, module game PHẢI kiểm `reminder_no` (1–20), `minutes_played` (0–1.440) và chỉ hai thuộc tính này (khác → `422 VALIDATION_FAILED`), gắn `session_key` từ game session của token (không nhận từ client), khử trùng `client_event_id`, ghi `events_raw` (`event_name = break_reminder_shown`, `source = client`) kể cả khi tenant tắt telemetry sản phẩm; giá trị PHẢI không dùng để chặn chơi hay tính thưởng | FR-ANL-007 · FR-ANL-010 · [GAME_ANALYTICS §3.2](../../docs/11-operations/GAME_ANALYTICS.md) · ADR-0016 | TC-ANL-003 |
 
 ---
 
@@ -74,6 +76,7 @@ Job hằng giờ và job chốt ngày tính DAU/WAU/MAU, retention, funnel, nộ
 | F080-AC-08 | KHI job rollup hằng giờ và job chốt ngày (`dashboard_day_close_time`) chạy, module game PHẢI cập nhật `player_days`, `rollup_daily/weekly/monthly`, `cohort_retention`, `funnel_daily`, `content_stats_weekly`, `perf_daily` theo đúng công thức §4 (phiên < `analytics_active_session_min_seconds` không tính hoạt động), đánh `is_final` sau chốt | FR-ANL-006 · AC-ANL-101 · AC-ANL-102 · [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) | TC-ANL-001 |
 | F080-AC-09 | KHI event đến trễ ≤ `analytics_late_event_window`, job PHẢI tính lại bucket ngày cũ và tăng phiên bản cache tenant; trễ hơn PHẢI chỉ đếm metric, không sửa số đã chốt | FR-ANL-006 · AC-ANL-106 | TC-DASH-005 |
 | F080-AC-10 | HỆ THỐNG PHẢI tính chỉ số chơi lành mạnh (`sessions_over_reminder`, `sessions_over_second_reminder`, `late_night_play_rate` theo `analytics_late_night_window`, `daily_playtime_p90`) và PHẢI không có chỉ số "tổng thời gian chơi" làm mục tiêu tăng | FR-ANL-010 · AC-ANL-109 · AGENTS R19 | TC-ANL-001 |
+| F080-AC-35 | KHI job rollup xử lý `break_reminder_shown`, module game PHẢI cộng `player_days.reminders_shown`, tính `sessions_over_reminder` = số `session_key` có ≥ 1 sự kiện / số phiên và `sessions_over_second_reminder` = số `session_key` có sự kiện `reminder_no` ≥ 2 / số phiên trong ngày, theo tập chiều chuẩn; sự kiện trùng `client_event_id` PHẢI chỉ tính một lần | FR-ANL-010 · AC-ANL-109 · [GAME_ANALYTICS §4.6](../../docs/11-operations/GAME_ANALYTICS.md) | TC-ANL-001 |
 
 ---
 

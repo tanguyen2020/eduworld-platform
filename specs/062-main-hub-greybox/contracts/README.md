@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | `listMyAssignments` | `GET /api/v1/learning/my-assignments` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` (học sinh, chỉ bài của mình) | Cần sửa (§6) |
 | `getClientConfig` | `GET /api/v1/game/client-config` | `specs/openapi/eduworld-api.v1.yaml` | public (không `X-Tenant-Id`) | Có sẵn (`device_profiles`) |
-| `postTelemetry` | `POST /api/v1/game/telemetry` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` | Có sẵn |
+| `postTelemetry` | `POST /api/v1/game/telemetry` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` | Có sẵn (gồm `TelemetryEvent.type = break_reminder_shown`, `reminder_no`, `minutes_played` — F062-AC-24) |
 | `heartbeatGameSession` | `POST /api/v1/game/sessions/{game_session_id}:heartbeat` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` | Có sẵn (gọi bởi F061) |
 
 Dữ liệu bootstrap dùng: `PlayerBootstrap.grade_band`, `PlayerBootstrap.policies.play_time.{break_reminder_minutes, access_window}` (Có sẵn, trả bởi `/auth/game/login` — F013/F061).

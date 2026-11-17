@@ -4,7 +4,7 @@
 
 ## Summary
 
-Module `learning_record` trong module `learning`: `LearningEventRecorder` chuẩn hóa envelope + kiểm schema cho mọi event (F030 dùng lại), job partition. Domain `mastery` hiện thực `MasteryModel` Weighted Evidence (ADR-0017) với golden test; consumer `learning.mastery_on_graded` (nhận `activity.graded`, `attempt.re_evaluated`) áp evidence, ghi `objective_masteries`, `mastery_history`, phát `learning_objective.progressed/mastered`. Consumer `learning.progress_daily` cập nhật bộ đếm. Command `CreateRegradeRequest` + job `regrade-runner` tạo evaluation mới. Job `mastery-recompute` (shadow → kích hoạt).
+Module `learning_record` trong module `learning`: `LearningEventRecorder` chuẩn hóa envelope + kiểm schema cho mọi event (F030 dùng lại), job partition. Domain `mastery` hiện thực `MasteryModel` Weighted Evidence (ADR-0017) với golden test; consumer `learning.mastery_on_graded` (nhận `activity.graded`, `attempt.re_evaluated`) áp evidence, ghi `objective_masteries`, `mastery_history`, phát `learning_objective.progressed/mastered`. Consumer `learning.progress_daily` cập nhật bộ đếm. Command `CreateRegradeRequest` + job `regrade-runner` tạo evaluation mới. Job `mastery-recompute` (shadow → kích hoạt). Hoàn thành bài học (US6): ghim version bài trong `learning.lesson_sessions` khi bắt đầu attempt đầu tiên ngữ cảnh `lesson`, command `CompleteLesson` (consumer nội bộ `activity.graded` + `completeLesson`) phát `lesson.completed` (learning event + outbox, payload `lesson.completed.v1`) đúng một lần mỗi học sinh × version bài.
 
 ## Technical Context
 
@@ -26,10 +26,10 @@ Module `learning_record` trong module `learning`: `LearningEventRecorder` chuẩ
 
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
-| I Spec trước, code sau | ✅ | Delta payload `attempt.re_evaluated`, `learning_objective.*` và cột `regrade_requests` ở Phase 2 |
+| I Spec trước, code sau | ✅ | Delta payload `attempt.re_evaluated`, `learning_objective.*`, `lesson.completed` (đã có, T045) và cột `regrade_requests`, `lesson_sessions` ở Phase 2 |
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Consumer nội bộ module learning; event ra ngoài qua outbox; domain mastery thuần |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | RLS, append-only, Bypass có audit chỉ cho job re-evaluate platform; không hard-delete |
-| IV Server-authoritative | ✅ | Mastery/evaluation do server; regrade có Idempotency-Key + audit |
+| IV Server-authoritative | ✅ | Mastery/evaluation/hoàn thành bài do server; bài ghim version khi bắt đầu (R31); regrade, `completeLesson` có Idempotency-Key |
 | V Xác thực, phân quyền | ✅ | `learning_content.re_evaluate` (content_admin, academic_manager scope); progress: owner hoặc `analytics.class.read` trong scope |
 | VI An toàn trẻ em | ✅ | Purpose limitation, không PII trong event, không so sánh học sinh |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số lấy từ `mastery_model_configs` theo tên CONFIG_DEFAULTS |
@@ -52,16 +52,17 @@ specs/031-learning-events-mastery/
 
 ```text
 modules/learning/
-├── ent/schema/{mastery_model_config.go,objective_mastery.go,mastery_history.go,progress_daily.go,regrade_request.go,objective_mastery_shadow.go,mastery_recompute_run.go}
+├── ent/schema/{mastery_model_config.go,objective_mastery.go,mastery_history.go,progress_daily.go,regrade_request.go,objective_mastery_shadow.go,mastery_recompute_run.go,lesson_session.go}
 ├── internal/domain/learningrecord/      # Envelope, Validate, IdempotencyKey builders
 ├── internal/domain/mastery/             # MasteryModel, WeightedEvidence, Evidence, State, Level, Effective
 ├── internal/domain/evaluation/          # Evaluation, Supersede, RegradeAction (accept_all, use_new_key, drop_item)
-├── internal/application/command/{apply_mastery_evidence.go,create_regrade_request.go,run_regrade_request.go,recompute_mastery.go,activate_mastery_model.go,upsert_progress_daily.go}
+├── internal/domain/lesson/              # Session, CompletionRule, IdempotencyKey (US6)
+├── internal/application/command/{apply_mastery_evidence.go,create_regrade_request.go,run_regrade_request.go,recompute_mastery.go,activate_mastery_model.go,upsert_progress_daily.go,pin_lesson_session.go,complete_lesson.go}
 ├── internal/application/query/{get_my_progress.go,get_student_progress.go}
 ├── internal/application/port/{learning_event_reader.go,mastery_repo.go,schema_validator.go}
 ├── internal/infrastructure/persistence/{mastery_repo.go,regrade_repo.go,learning_event_reader.go}
-├── internal/presentation/http/public/{progress_handler.go,cms_regrade_handler.go}
-├── internal/presentation/consumer/{mastery_on_graded.go,progress_daily.go}
+├── internal/presentation/http/public/{progress_handler.go,cms_regrade_handler.go,lesson_handler.go}
+├── internal/presentation/consumer/{mastery_on_graded.go,progress_daily.go,lesson_completion.go}
 └── internal/presentation/job/{learning_events_partitions.go,regrade_runner.go,mastery_recompute.go}
 ```
 
@@ -82,18 +83,18 @@ Không có — công thức, tham số và ví dụ tính ở LEARNING_ANALYTICS
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `mastery.WeightedEvidence.Apply/Effective` (§3.2: `w = w_ctx·w_diff·w_rep·w_hint·w_guess`, `α = max(min(α_max, α_base·w), 1/(n+3))`, decay khi đọc), `Level` (§3.2 bảng), `evaluation.Regrade(action)` | Tham số truyền vào, không đọc config trong domain |
-| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.class.read` + scope trường/môn [Proposed] |
+| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `PinLessonSession`, `CompleteLesson`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.class.read` + scope trường/môn [Proposed] |
 | infrastructure | ent repo (UPDATE `WHERE version=$v`), `LearningEventReader` (SQL tường minh có `tenant_id`), `SchemaValidator`, outbox | |
-| presentation | `getMyProgress`, `getStudentProgress`, `createRegradeRequest`; consumer `learning.mastery_on_graded`, `learning.progress_daily`; job `learning-events-partitions` (hằng ngày), `regrade-runner`, `mastery-recompute` (CLI) | |
+| presentation | `getMyProgress`, `getStudentProgress`, `createRegradeRequest`, `getLesson`, `completeLesson`; consumer `learning.mastery_on_graded`, `learning.progress_daily`, `learning.lesson_completion`; job `learning-events-partitions` (hằng ngày), `regrade-runner`, `mastery-recompute` (CLI) | |
 
 ### Tích hợp và phụ thuộc
 
-- Phụ thuộc: F030 (attempt, evaluation, learning event attempt), F021 (LO, tiên quyết), F020 (`ref.enrollments` cho `class_id`).
-- Event tiêu thụ (nội bộ): `activity.submitted`, `activity.graded`, `attempt.re_evaluated`. Event phát: `learning_objective.progressed`, `learning_objective.mastered`, `attempt.re_evaluated`, `audit.recorded`. Consumer bên ngoài: module game (XP `learning_objective.mastered`), F043 rollup.
+- Phụ thuộc: F030 (attempt, evaluation, learning event attempt; transaction start attempt gọi `PinLessonSession`), F024 (`content.lesson_versions`, `completion_rule`), F021 (LO, tiên quyết), F020 (`ref.enrollments` cho `class_id`).
+- Event tiêu thụ (nội bộ): `activity.submitted`, `activity.graded`, `attempt.re_evaluated`. Event phát: `learning_objective.progressed`, `learning_objective.mastered`, `attempt.re_evaluated`, `lesson.completed`, `audit.recorded`. Consumer bên ngoài: module game (XP `learning_objective.mastered`, `lesson.completed` — F074), F043 rollup.
 
 ### Bảo mật, tenant, idempotency, audit
 
-- `game_player` cho `getMyProgress`; `portal_staff` cho `getStudentProgress`, `createRegradeRequest`.
+- `game_player` cho `getMyProgress`; học sinh (self, nhân sự `403 PERMISSION_DENIED` như F032-AC-09) cho `getLesson`, `completeLesson`; `portal_staff` cho `getStudentProgress`, `createRegradeRequest`.
 - Job re-evaluate nội dung platform: `tenancy.Bypass(ctx, "re_evaluation")` (reason trong danh sách đóng ADR-0089 §3, client `learning_platform`), metric `eduworld_tenant_filter_bypass_total{module,reason}`, audit `cross_tenant.accessed` theo tenant (`mode = write`).
 - Idempotency: learning event `idempotency_key`; consumer `processed_events`; `createRegradeRequest` Idempotency-Key.
 - Audit: `content.re_evaluated`, `learning.profile_viewed`, `mastery_model.activated` [Proposed].

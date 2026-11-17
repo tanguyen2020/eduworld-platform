@@ -17,7 +17,7 @@
 | 3 | `qlcm.truong.a`, `ad.donvi` tạo; `ad.truong.a` chọn lớp trường khác; `sa.admin` không gửi tenant | `403`; `403`; `404`; `422` | F107-AC-03 |
 | 4 | `name` 200 ký tự; `ends_at < starts_at` | `422 VALIDATION_FAILED` | F107-AC-05 |
 | 5 | `listChallenges`, `getChallenge`, `cancelChallenge` thử thách chưa chạy | Đúng phạm vi; `cancelled`; không xuất hiện trong báo cáo học tập | F107-AC-06 |
-| 6 | `publishTournament`; đồng hồ giả qua `registration_open_at` | `published → registration_open`; gọi `generate-bracket` lúc này → `409 INVALID_STATE_TRANSITION` | F107-AC-07 |
+| 6 | `publishTournament`; đồng hồ giả qua `registration_open_at` | `published → registration_open`; gọi `generate-bracket` lúc này → `422 INVALID_STATE_TRANSITION` | F107-AC-07 |
 | 7 | `hs.an.3a` đăng ký (2 lần cùng key); `hs.dung.7a` đăng ký; học sinh bị hạn chế; đủ `max_entries` | `registered` (1 entry); `404`; `403 POLICY_DENIED`; `409 CONFLICT` | F107-AC-08 |
 | 8 | `ad.truong.a` đăng ký hộ 3A rồi `confirmTournamentEntries`; `hs.binh.3a` rút | Mọi học sinh active `confirmed`; `withdrawn` | F107-AC-09 |
 | 9 | Mở check-in, chỉ 4/5 check-in; giải chỉ 2 entry | Entry còn lại `withdrawn`, bye điều chỉnh; giải 2 entry → `cancelled` | F107-AC-10 |

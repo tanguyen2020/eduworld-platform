@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.17.1"
+catalog_version: "2026.11.17.3"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -459,15 +459,21 @@ workspaces:
         actions:
           - key: action.school_lms.settings.view
             label_key: portal.action.school_lms.settings.view
-            title: Xem cài đặt
+            title: Xem cài đặt tenant/trường (gồm giờ giới nghiêm platform và giới nghiêm hiệu lực)
             required_permissions: [tenant.settings.read, school.settings.read]
-            operation_ids: [getTenantSettings]
+            operation_ids: [getTenantSettings, getSchoolSettings]
             can_disable: true
           - key: action.school_lms.settings.edit
             label_key: portal.action.school_lms.settings.edit
             title: Sửa cài đặt tenant
             required_permissions: [tenant.settings.write]
             operation_ids: [updateTenantSettings]
+            can_disable: true
+          - key: action.school_lms.settings.edit_school
+            label_key: portal.action.school_lms.settings.edit_school
+            title: Sửa cài đặt trường — giờ truy cập, bảng xếp hạng, club, khung giới nghiêm trường (chỉ siết thêm)
+            required_permissions: [school.settings.write]
+            operation_ids: [updateSchoolSettings]
             can_disable: true
           - key: action.school_lms.settings.cleanup_view
             label_key: portal.action.school_lms.settings.cleanup_view
@@ -2160,7 +2166,7 @@ workspaces:
             can_disable: true
       - key: menu.platform_admin.system_settings
         label_key: portal.menu.platform_admin.system_settings
-        title: Cấu hình hệ thống — dọn học sinh · thời hạn chat gameplay · retention
+        title: Cấu hình hệ thống — dọn học sinh · thời hạn chat gameplay · giờ giới nghiêm · retention
         path: /platform-admin/system-settings
         order: 90
         required_permissions: [platform.settings.write]
@@ -2170,13 +2176,13 @@ workspaces:
             label_key: portal.action.platform_admin.system_settings.view
             title: Xem cấu hình và lịch sử dọn học sinh
             required_permissions: [platform.settings.write]
-            operation_ids: [getStudentCleanupSettings, getChatRetentionSettings, listStudentCleanupRuns]
+            operation_ids: [getStudentCleanupSettings, getChatRetentionSettings, getPlatformCurfewSettings, listStudentCleanupRuns]
             can_disable: true
           - key: action.platform_admin.system_settings.edit
             label_key: portal.action.platform_admin.system_settings.edit
             title: Sửa cấu hình
             required_permissions: [platform.settings.write]
-            operation_ids: [putStudentCleanupSettings, putChatRetentionSettings]
+            operation_ids: [putStudentCleanupSettings, putChatRetentionSettings, putPlatformCurfewSettings]
             can_disable: true
           - key: action.platform_admin.system_settings.approve_cleanup
             label_key: portal.action.platform_admin.system_settings.approve_cleanup
@@ -2237,6 +2243,76 @@ workspaces:
             title: Xuất báo cáo
             required_permissions: [report.export]
             operation_ids: [createPlatformReport, getPlatformReport]
+            can_disable: true
+      - key: menu.platform_admin.efficacy_studies
+        label_key: portal.menu.platform_admin.efficacy_studies
+        title: Nghiên cứu hiệu quả học tập (F035)
+        path: /platform-admin/efficacy-studies
+        order: 124
+        required_permissions: [platform.efficacy_study.manage]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.efficacy_studies.view
+            label_key: portal.action.platform_admin.efficacy_studies.view
+            title: Xem thỏa thuận, nghiên cứu, lớp, đợt
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [listResearchAgreements, listEfficacyStudies, getEfficacyStudy, listEfficacyStudyClasses, listEfficacyWaves]
+            can_disable: true
+          - key: action.platform_admin.efficacy_studies.manage_agreements
+            label_key: portal.action.platform_admin.efficacy_studies.manage_agreements
+            title: Ghi nhận/thu hồi thỏa thuận nghiên cứu
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [createResearchAgreement, revokeResearchAgreement]
+            can_disable: true
+          - key: action.platform_admin.efficacy_studies.edit
+            label_key: portal.action.platform_admin.efficacy_studies.edit
+            title: Tạo/sửa nghiên cứu, lớp và cặp, kích hoạt, kết thúc
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [createEfficacyStudy, updateEfficacyStudy, addEfficacyStudyClass, removeEfficacyStudyClass, activateEfficacyStudy, completeEfficacyStudy]
+            can_disable: true
+          - key: action.platform_admin.efficacy_studies.schedule_waves
+            label_key: portal.action.platform_admin.efficacy_studies.schedule_waves
+            title: Lập đợt kiểm tra trước/sau
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [scheduleEfficacyWave]
+            can_disable: true
+          - key: action.platform_admin.efficacy_studies.withdraw
+            label_key: portal.action.platform_admin.efficacy_studies.withdraw
+            title: Rút học sinh/lớp khỏi nghiên cứu
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [withdrawEfficacyParticipants]
+            can_disable: true
+          - key: action.platform_admin.efficacy_studies.report
+            label_key: portal.action.platform_admin.efficacy_studies.report
+            title: Báo cáo hiệu quả
+            required_permissions: [platform.efficacy_study.manage]
+            operation_ids: [createEfficacyStudyReport, getEfficacyStudyReport]
+            can_disable: true
+      - key: menu.platform_admin.learning_experiments
+        label_key: portal.menu.platform_admin.learning_experiments
+        title: Thử nghiệm A/B mastery và gợi ý (F035)
+        path: /platform-admin/learning-experiments
+        order: 126
+        required_permissions: [platform.learning_experiment.manage]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.learning_experiments.view
+            label_key: portal.action.platform_admin.learning_experiments.view
+            title: Xem thử nghiệm và kết quả theo arm
+            required_permissions: [platform.learning_experiment.manage]
+            operation_ids: [listLearningExperiments, getLearningExperiment, getLearningExperimentResults]
+            can_disable: true
+          - key: action.platform_admin.learning_experiments.edit
+            label_key: portal.action.platform_admin.learning_experiments.edit
+            title: Tạo/sửa thử nghiệm draft
+            required_permissions: [platform.learning_experiment.manage]
+            operation_ids: [createLearningExperiment, updateLearningExperiment]
+            can_disable: true
+          - key: action.platform_admin.learning_experiments.operate
+            label_key: portal.action.platform_admin.learning_experiments.operate
+            title: Bắt đầu shadow/live, dừng thử nghiệm
+            required_permissions: [platform.learning_experiment.manage]
+            operation_ids: [startLearningExperiment, stopLearningExperiment]
             can_disable: true
       - key: menu.platform_admin.data_requests
         label_key: portal.menu.platform_admin.data_requests

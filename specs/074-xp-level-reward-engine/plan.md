@@ -90,8 +90,8 @@ Không có — PROGRESSION_SYSTEM, ADR-0049 và DATABASE_DESIGN §2.8a/§2.13 đ
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F072 (quest event, `QuestProgress.ExpireForGradeChange`), F071 (world event, kernel config), F070 (`game_profiles`), F030/F031 (event `activity.graded`, `learning_objective.mastered`), F010/F011 (`student.synced`, `enrollment.changed`).
-- Event tiêu thụ: `activity.graded`, `quest.completed`, `minigame.completed`, `learning_objective.mastered`, `world.discovery_found`, `world.area_completed`, `student.synced`, `enrollment.changed`, `content.published` (item_type `progression_curve`).
+- Feature phụ thuộc: F072 (quest event, `QuestProgress.ExpireForGradeChange`), F071 (world event, kernel config), F070 (`game_profiles`), F030/F031 (event `activity.graded`, `learning_objective.mastered`, `lesson.completed`), F010/F011 (`student.synced`, `enrollment.changed`).
+- Event tiêu thụ: `activity.graded`, `lesson.completed`, `quest.completed`, `minigame.completed`, `learning_objective.mastered`, `world.discovery_found`, `world.area_completed`, `student.synced`, `enrollment.changed`, `content.published` (item_type `progression_curve`).
 - Event phát: `xp.awarded`, `level.reached`, `reward.granted`. Realtime: `progression.xp.updated`, `progression.level.reached`.
 - Không facade mới (R29: phản ứng phụ qua event).
 

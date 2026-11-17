@@ -83,8 +83,8 @@ Mỗi lượt trong challenge là bài học tập thật của chính học sin
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F076-AC-13 | HỆ THỐNG PHẢI kết thúc challenge khi tới `deadline_at` theo giờ server (timer của room host, dự phòng job `challenge-deadline`) bất kể đồng hồ client; `nextChallengeActivity` sau hạn PHẢI trả `409 INVALID_STATE_TRANSITION` | FR-CHL-001 · AC-CHL-001 | TC-CHL-001 |
-| F076-AC-14 | KHI học sinh gọi `abandonGameChallengeAttempt`, module game PHẢI chuyển `abandoned`, giữ nguyên attempt học tập đã ghi, phát `challenge.completed` (`abandoned`); attempt đã kết thúc PHẢI trả `409 INVALID_STATE_TRANSITION` | FR-CHL-001 | — |
+| F076-AC-13 | HỆ THỐNG PHẢI kết thúc challenge khi tới `deadline_at` theo giờ server (timer của room host, dự phòng job `challenge-deadline`) bất kể đồng hồ client; `nextChallengeActivity` sau hạn PHẢI trả `422 INVALID_STATE_TRANSITION` | FR-CHL-001 · AC-CHL-001 | TC-CHL-001 |
+| F076-AC-14 | KHI học sinh gọi `abandonGameChallengeAttempt`, module game PHẢI chuyển `abandoned`, giữ nguyên attempt học tập đã ghi, phát `challenge.completed` (`abandoned`); attempt đã kết thúc PHẢI trả `422 INVALID_STATE_TRANSITION` | FR-CHL-001 | — |
 | F076-AC-15 | KHI học sinh mất kết nối hoặc chuyển thiết bị (takeover), `getGameChallengeAttempt` PHẢI trả trạng thái từ checkpoint (`score`, `lives_left`, `activities_completed`, `deadline_at`) và học sinh PHẢI tiếp tục được tới `deadline_at` (challenge không giới hạn giờ: trong `attempt_resume_window`), sau đó attempt chuyển `abandoned` | FR-CHL-001 · ADR-0031 | — |
 | F076-AC-16 | HỆ THỐNG PHẢI không có route nào nhận `score`, `lives_left`, kết quả hay "hoàn thành" từ client cho challenge | ADR-0016 · AGENTS R5 | TC-CHL-006 |
 

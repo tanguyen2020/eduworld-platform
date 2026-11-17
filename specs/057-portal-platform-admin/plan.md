@@ -68,7 +68,7 @@ web/apps/portal/src/workspaces/platform-admin/
 ├── clones/{CloneWizard,CloneJobPage}.tsx
 ├── trash/TrashPage.tsx
 ├── catalog/{CountriesPage,ProvincesPage,ProvinceSuccessionDialog,SchoolCatalogPage,SchoolImportWizard}.tsx
-├── settings/{StudentCleanupSettingsPage,CleanupRunsPage,ChatRetentionPage}.tsx
+├── settings/{StudentCleanupSettingsPage,CleanupRunsPage,ChatRetentionPage,PlatformCurfewSettingsCard}.tsx
 ├── errors/{VpnRequiredBanner,MfaStepUp}.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/
@@ -94,7 +94,7 @@ Không có. Quy ước liên tenant ở [ADMIN_PORTAL §2.5](../../docs/04-admin
 | domain | — | Không có |
 | application | Hook `api/*.ts`, `useCrossTenantScope` | Mutation sinh `Idempotency-Key` một lần/thao tác; job polling (clone, import) dừng khi trạng thái kết thúc |
 | infrastructure | `apiClient` (F050) với base URL gateway nội bộ từ env `VITE_EW_INTERNAL_API_BASE_URL` | Không hardcode URL (R3); lỗi mạng → `VpnRequiredBanner` |
-| presentation | Page/dialog gọi `listTenants`, `assignToTenants`, `listTenantAssignments`, `unassignFromTenants`, `createTenantClone`, `getTenantClone`, `listTrash`, `restoreTrashItem`, `listCountries`, `createCountry`, `updateCountry`, `listProvinces`, `createProvince`, `updateProvince`, `createProvinceSuccession`, `listCatalogSchools`, `importSchools`, `getSchoolImport`, `getStudentCleanupSettings`, `putStudentCleanupSettings`, `listStudentCleanupRuns`, `approveStudentCleanupRun`, `getChatRetentionSettings`, `putChatRetentionSettings`; sau delta: `createTenant`, `updateTenant`, `previewTenantClone`, `cancelStudentCleanupRun` | |
+| presentation | Page/dialog gọi `listTenants`, `assignToTenants`, `listTenantAssignments`, `unassignFromTenants`, `createTenantClone`, `getTenantClone`, `listTrash`, `restoreTrashItem`, `listCountries`, `createCountry`, `updateCountry`, `listProvinces`, `createProvince`, `updateProvince`, `createProvinceSuccession`, `listCatalogSchools`, `importSchools`, `getSchoolImport`, `getStudentCleanupSettings`, `putStudentCleanupSettings`, `listStudentCleanupRuns`, `approveStudentCleanupRun`, `getChatRetentionSettings`, `putChatRetentionSettings`, `getPlatformCurfewSettings`, `putPlatformCurfewSettings`; sau delta: `createTenant`, `updateTenant`, `previewTenantClone`, `cancelStudentCleanupRun` | |
 
 ### Quy ước liên tenant (`useCrossTenantScope`)
 

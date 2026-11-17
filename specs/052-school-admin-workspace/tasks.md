@@ -14,7 +14,7 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 - [ ] T004 Contract: thêm `listTenantClassStudents` + schema item (maxLength mọi string) — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T005 Contract: thêm `listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue`, schema `ReconciliationIssue` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
-- [ ] T006 Contract: thêm `getSchoolSettings`, `updateSchoolSettings`, schema `SchoolSettings` (`ETag`/`If-Match`) — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [x] T006 Contract: thêm `getSchoolSettings`, `updateSchoolSettings`, schema `SchoolSettings` (`ETag`/`If-Match`, `curfew_window`, `platform_curfew`, `effective_curfew`), `CurfewWindow`; action `action.school_lms.settings.edit_school` trong `specs/portal/menu-catalog.yaml` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/portal/menu-catalog.yaml` — kiểm: `node scripts/specs/check-maxlength.mjs`, `node scripts/specs/check-portal-catalog.mjs`
 - [ ] T007 Contract: bỏ `class` khỏi `UserRoleScopeType` và `TenantUserCreateRequest.initial_user_roles[].scope_type` (ADR-0072) — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-breaking` (ghi chú breaking có chủ đích)
 - [ ] T008 Sinh lại kiểu client — file: `web/apps/portal/src/api/schema.d.ts` — kiểm: `pnpm gen:api`
 
@@ -100,13 +100,16 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 - [ ] T037 [P] [US4] Unit test `TenantSettingsPage`: Merge Patch + `If-Match`, hiện `effective_cleanup_days`, cảnh báo ngưỡng, map `PERMISSION_DENIED`/`RETENTION_BELOW_MINIMUM` tại trường (F052-AC-19, F052-AC-20) — file: `web/apps/portal/tests/unit/school-lms/settings/TenantSettingsPage.test.tsx` — phải FAIL trước khi code
 - [ ] T038 [P] [US4] Unit test `ExcludeDialog`: tối đa `maxItems`, lý do bắt buộc, Idempotency-Key (F052-AC-21) — file: `web/apps/portal/tests/unit/school-lms/student-cleanup/ExcludeDialog.test.tsx`
+- [ ] T055 [P] [US4] Unit test `CurfewSettingsCard`: hiển thị `platform_curfew` chỉ đọc, `curfew_window`, `effective_curfew`, khung qua nửa đêm; ẩn ô sửa khi thiếu `action.school_lms.settings.edit_school` hoặc tenant `common`; không có lựa chọn theo khối (F052-AC-29) — file: `web/apps/portal/tests/unit/school-lms/settings/CurfewSettingsCard.test.tsx` — phải FAIL trước khi code
+- [ ] T056 [P] [US4] Unit test lưu khung giới nghiêm: khung không chứa trọn `platform_curfew` (vd. 22:00–06:30, 21:00–06:00) → lỗi tại ô, khóa Lưu; khung 21:00–07:00 → Merge Patch `curfew_window` + `If-Match` + `reason`; "Bỏ khung trường" → `null`; mock `422 VALIDATION_FAILED` `errors[curfew_window.start]` và `412` → lỗi tại ô, giữ giá trị (F052-AC-30) — file: `web/apps/portal/tests/unit/school-lms/settings/CurfewSettingsForm.test.tsx`
 - [ ] T039 [P] [US4] Unit test `SchoolSettingsPage` (`updateSchoolSettings` + `If-Match`) (F052-AC-22) — file: `web/apps/portal/tests/unit/school-lms/settings/SchoolSettingsPage.test.tsx`
-- [ ] T040 [US4] E2E cài đặt + dọn học sinh; authorization: `qlcm.truong.a` không có màn cài đặt; tenant isolation: `ad.truong.b` gọi `getSchoolSettings`/`updateSchoolSettings` (mới) của TH Demo A → 404 (F052-AC-19, F052-AC-20, F052-AC-21, F052-AC-22) — file: `web/apps/portal/tests/e2e/school-lms/settings.spec.ts`
+- [ ] T040 [US4] E2E cài đặt + dọn học sinh + khung giới nghiêm trường (`ad.truong.a` mở rộng 21:00–07:00 thành công, thu hẹp bị `422` tại ô — F052-AC-29, F052-AC-30); authorization: `qlcm.truong.a` không có màn cài đặt; tenant isolation: `ad.truong.b` gọi `getSchoolSettings`/`updateSchoolSettings` (mới) của TH Demo A → 404 (F052-AC-19, F052-AC-20, F052-AC-21, F052-AC-22) — file: `web/apps/portal/tests/e2e/school-lms/settings.spec.ts`
 
 ### Implementation cho User Story 4
 
 - [ ] T041 [US4] `TenantSettingsPage`, `useTenantSettings` — file: `web/apps/portal/src/workspaces/school-lms/settings/TenantSettingsPage.tsx`
 - [ ] T042 [P] [US4] `SchoolSettingsPage`, `useSchoolSettings` — file: `web/apps/portal/src/workspaces/school-lms/settings/SchoolSettingsPage.tsx`
+- [ ] T057 [US4] `CurfewSettingsCard`, `CurfewSettingsForm` (kiểm chứa trọn khung platform qua nửa đêm bằng hàm thuần `curfewCovers`, không tự tính giờ hiệu lực — lấy `effective_curfew` từ server; nhãn qua file dịch, style theo token) — file: `web/apps/portal/src/workspaces/school-lms/settings/CurfewSettingsCard.tsx`, `web/apps/portal/src/workspaces/school-lms/settings/curfewCovers.ts`
 - [ ] T043 [US4] `CleanupPreviewPage`, `ExcludeDialog`, `useCleanup` (`previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`) — file: `web/apps/portal/src/workspaces/school-lms/student-cleanup/CleanupPreviewPage.tsx`
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.

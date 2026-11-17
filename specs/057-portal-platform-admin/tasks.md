@@ -95,11 +95,13 @@
 
 - [ ] T034 [P] [US6] Test F057-AC-14: form dọn học sinh theo schema, lý do bắt buộc, cảnh báo ngưỡng thấp (TC-AUTH-020) — file: `…/platform/__tests__/StudentCleanupSettingsPage.test.tsx` — phải FAIL trước khi code
 - [ ] T035 [P] [US6] Test F057-AC-15: danh sách lần dọn, Xác nhận `approveStudentCleanupRun` + `Idempotency-Key`, Hủy sau T006 (TC-AUTH-021) — file: `…/platform/__tests__/CleanupRunsPage.test.tsx`
+- [ ] T051 [P] [US6] Test F057-AC-23: khối giờ giới nghiêm platform hiển thị `is_default`, khung qua nửa đêm; HH:MM sai → lỗi tại ô; thiếu lý do bị chặn; hộp xác nhận; `putPlatformCurfewSettings` + `If-Match`; mock `412`/`422` hiển thị theo `code` (TC-AUTH-092) — file: `…/platform/__tests__/PlatformCurfewSettingsCard.test.tsx` — phải FAIL trước khi code
 - [ ] T036 [P] [US6] Test F057-AC-16: chat retention chặn dưới `minimum_days`, hiển thị `RETENTION_BELOW_MINIMUM` — file: `…/platform/__tests__/ChatRetentionPage.test.tsx`
 
 ### Implementation cho User Story 6
 
 - [ ] T037 [US6] Hook + trang cấu hình — file: `…/platform/api/cleanup.ts`, `chatRetention.ts`, `…/platform/settings/StudentCleanupSettingsPage.tsx`, `CleanupRunsPage.tsx`, `ChatRetentionPage.tsx`
+- [ ] T052 [US6] Hook `usePlatformCurfew` (`getPlatformCurfewSettings`, `putPlatformCurfewSettings`) + `PlatformCurfewSettingsCard` trong màn Cấu hình hệ thống (action `action.platform_admin.system_settings.view`/`.edit`) — file: `…/platform/api/curfew.ts`, `…/platform/settings/PlatformCurfewSettingsCard.tsx`
 
 ## Phase 9: User Story 7 — Quản lý tenant (Priority: P3)
 

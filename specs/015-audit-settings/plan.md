@@ -26,7 +26,7 @@ Dùng `pkg/audit` (interface `audit.Recorder` của F002) và hiện thực outb
 
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
-| I Spec trước, code sau | ✅ | Delta `getSchool`, `updateSchoolSettings`, feature flag API, sửa `AuditLogEntry`, payload `audit.recorded`, `platform_settings.changed` ở Phase 2 |
+| I Spec trước, code sau | ✅ | Delta `getSchoolSettings`, `updateSchoolSettings`, `getPlatformCurfewSettings`/`putPlatformCurfewSettings` (đã có trong spec gộp), feature flag API, sửa `AuditLogEntry`, payload `audit.recorded`, `platform_settings.changed` ở Phase 2 |
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Module khác chỉ phát event; không ghi DB identity |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Audit có `tenant_id` + RLS (TA); truy vấn qua TenantScope; System Admin CrossTenantScope + audit; append-only |
 | IV Server-authoritative | ✅ | Ghi cài đặt có `If-Match` + `reason` + audit; không có điểm/thưởng |
@@ -58,7 +58,7 @@ modules/identity/
 ├── internal/domain/audit/              # AuditEntry (sanitize)
 ├── internal/application/command/       # PutStudentCleanupSettings, PutChatRetentionSettings, UpdateTenantSettings,
 │                                       # UpdateSchoolSettings, PutFeatureFlag, RecordAuditEntry (sink)
-├── internal/application/query/         # ListTenantAuditLogs, ListPlatformAuditLogs, GetTenantSettings, GetSchool,
+├── internal/application/query/         # ListTenantAuditLogs, ListPlatformAuditLogs, GetTenantSettings, GetSchoolSettings, GetPlatformCurfewSettings,
 │                                       # GetStudentCleanupSettings, GetChatRetentionSettings, ListFeatureFlags, EffectiveSettings
 ├── internal/infrastructure/featuregate/source.go   # hiện thực featuregate.Source (F012), cache ew:fg:{tenant_id|platform}
 ├── internal/presentation/http/public/{audit.go, settings.go, school_settings.go, feature_flags.go, portal_menu_catalog.go}
@@ -86,7 +86,7 @@ Không có — DATABASE_DESIGN §1.3, §3.11 và EVENT_DESIGN §3.2 đã chốt 
 | domain | `AuditEntry.Sanitize` (khóa cấm, giới hạn kích thước), `EffectiveValue(platform, tenant, allowOverride)`, `AllowedHours.Contains(t, tz)`, `FeatureFlag.ValueFor(tenant)`, `PortalToggles.Effective(catalog, flags, tenant)` (action AND menu cha, không dòng = bật), `CatalogItem.CanDisable` | Thuần |
 | application | Command/Query ở cây trên | Permission: [contracts](contracts/README.md) §1 |
 | infrastructure | ent repo, read model audit (SQL tường minh có `tenant_id` + khoảng thời gian), cache settings | |
-| presentation | `listTenantAuditLogs`, `listPlatformAuditLogs`, `getStudentCleanupSettings`, `putStudentCleanupSettings`, `getChatRetentionSettings`, `putChatRetentionSettings`, `getTenantSettings`, `updateTenantSettings`, `getSchool`*, `updateSchoolSettings`*, `listFeatureFlags`*, `putFeatureFlag`*, `listPortalMenuCatalog`* · consumer `audit-sink` · job `partition-maintainer`, `audit-retention` | * = Cần thêm |
+| presentation | `listTenantAuditLogs`, `listPlatformAuditLogs`, `getStudentCleanupSettings`, `putStudentCleanupSettings`, `getChatRetentionSettings`, `putChatRetentionSettings`, `getTenantSettings`, `updateTenantSettings`, `getSchoolSettings`, `updateSchoolSettings`, `getPlatformCurfewSettings`, `putPlatformCurfewSettings`, `listFeatureFlags`*, `putFeatureFlag`*, `listPortalMenuCatalog`* · consumer `audit-sink` · job `partition-maintainer`, `audit-retention` | * = Cần thêm |
 
 ### Tích hợp và phụ thuộc
 

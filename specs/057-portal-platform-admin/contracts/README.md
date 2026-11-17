@@ -24,6 +24,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/admin/*` chỉ gateway nội
 | `listStudentCleanupRuns` · `approveStudentCleanupRun` | `GET /api/v1/admin/student-cleanup/runs` · `POST …/{run_id}:approve` | eduworld-api | `platform.student_cleanup.approve` | Có sẵn |
 | `cancelStudentCleanupRun` | `POST /api/v1/admin/student-cleanup/runs/{run_id}:cancel` | eduworld-api | `platform.student_cleanup.approve` | Cần thêm |
 | `getChatRetentionSettings` · `putChatRetentionSettings` | `GET`/`PUT /api/v1/admin/settings/chat-retention` | eduworld-api | `platform.settings.write` | Có sẵn |
+| `getPlatformCurfewSettings` · `putPlatformCurfewSettings` | `GET`/`PUT /api/v1/admin/settings/curfew` (`If-Match`, `reason`) | eduworld-api | `platform.settings.write` (action `action.platform_admin.system_settings.view`/`.edit`) | Có sẵn (`PlatformCurfewSettings`, backend F015-AC-21) |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api | đã đăng nhập | Có sẵn |
 
 ## 2. Internal API

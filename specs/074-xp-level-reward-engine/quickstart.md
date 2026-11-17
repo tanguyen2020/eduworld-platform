@@ -4,7 +4,7 @@
 
 ## 1. Chuẩn bị
 
-- Phụ thuộc đã Done: F070, F071, F072 (và F030/F031 phát `activity.graded`, `learning_objective.mastered`).
+- Phụ thuộc đã Done: F070, F071, F072 (và F030/F031 phát `activity.graded`, `learning_objective.mastered`, `lesson.completed`).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events`, `make seed-check` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Seed config platform (curve mặc định theo `xp_curve`, reward rule cho mỗi `source_code`) nạp bằng `go run ./cmd/worker seed-config --module=game --dir deploy/seed/game-config` (đã publish).
 - Tài khoản demo: `hs.an.3a` (khối 3), `hs.dung.7a` (tenant `pgd-demo`), `ad.truong.a` (nhân sự, để thử bị chặn).
@@ -21,6 +21,7 @@
 | 5 | `activity.graded` có `first_try_correct_count = 0` | 0 XP | F074-AC-06 |
 | 6 | `hs.dung.7a` làm nội dung khối 3 không có `recommendation_id` rồi có `recommendation_id` | Lần 1 × `xp_below_grade_multiplier`; lần 2 đầy đủ | F074-AC-07 |
 | 7 | Phát `learning_objective.mastered` cùng LO 2 lần | XP nguồn `mastery.objective_mastered` một lần | F074-AC-08 |
+| 7b | Phát `lesson.completed` (fixture hợp lệ `lesson.completed.v1`) hai lần cùng `lesson_version_id` | Một bút toán nguồn `lesson.completed` (`source_type = lesson`) | F074-AC-27 |
 | 8 | Phát event có `tenant_id` khác tenant học sinh | Không bút toán; event vào DLQ `ew.dlq.game.reward_engine` | F074-AC-11 |
 | 9 | Đẩy XP vượt 2 ngưỡng level | 2 `level.reached`, 2 dòng `level_history`, RewardGrant mỗi level có thưởng | F074-AC-13, F074-AC-14 |
 | 10 | `getProgression`, `listXpHistory`, `listProgressionLevels` bằng token `hs.an.3a` | Dữ liệu của mình; lịch sử không có `source_id`/`rule_id` | F074-AC-17, F074-AC-18 |

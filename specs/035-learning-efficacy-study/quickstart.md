@@ -20,7 +20,7 @@
 | 5 | `sa.admin` gọi `createResearchAgreement` cho `th-demo-a` không header, rồi có header | `400 TENANT_HEADER_REQUIRED`, rồi `201` + audit | F035-AC-06 |
 | 6 | `createEfficacyStudy` `math-g3-2026` với dạng A/B; thêm 3A (`pair_no=1`) và 3B (`pair_no=1`), không đặt arm; `ad.truong.a`, `sm.antoan`, `cm.noidung` gọi cùng API | Study `draft`; role khác → `403 PERMISSION_DENIED` | F035-AC-07, F035-AC-08, F035-AC-10 |
 | 7 | Thêm 3A với `X-Tenant-Id` = `pgd-demo` | `404 NOT_FOUND` | F035-AC-08 |
-| 8 | `activateEfficacyStudy`; gọi lại; sửa arm 3A | Arm gán theo hash, `form_order` cặp 1 `a_then_b`; gọi lại trả cùng kết quả; sửa → `409 INVALID_STATE_TRANSITION` | F035-AC-09 |
+| 8 | `activateEfficacyStudy`; gọi lại; sửa arm 3A | Arm gán theo hash, `form_order` cặp 1 `a_then_b`; gọi lại trả cùng kết quả; sửa → `422 INVALID_STATE_TRANSITION` | F035-AC-09 |
 | 9 | `listEfficacyStudies?tenant_ids=th-demo-a` | Có `tenant_id`, audit `cross_tenant.accessed` | F035-AC-11 |
 | 10 | `scheduleEfficacyWave` `pre` (cửa sổ bắt đầu sau 1 phút); `post` sớm hơn `min_intervention_weeks` | 2 ExamSession `never`/`manual`, dạng A; `post` sớm → `422` | F035-AC-12, F035-AC-13 |
 | 11 | Đợi đợt mở; xem `efficacy_participants` | `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` `active` với arm của lớp | F035-AC-14 |
@@ -35,7 +35,7 @@
 | 20 | `createPlatformReport` `efficacy_dataset`; tải CSV; xuất cho study thứ hai; bỏ secret rồi xuất | Chỉ mã giả danh, không `hs.binh.3a`; mã khác giữa study; thiếu khóa → `failed` | F035-AC-32, F035-AC-33, F035-AC-34 |
 | 21 | `revokeResearchAgreement` của `th-demo-a` | Participant `withdrawn`, đợt chưa mở bị hủy, học sinh rời thử nghiệm | F035-AC-20 |
 | 22 | Portal: `sa.admin` đi hết luồng trên workspace D; `ad.truong.a` mở portal; `cm.noidung` mở editor câu ở phạm vi platform, `bt.noidung.dv` ở tenant | Menu chỉ với `sa.admin`; ô cờ chỉ ở platform | F035-AC-35, F035-AC-36 |
-| 23 | Sau khi catalog có `menu.platform_admin.research`: `sa.admin` tắt mặc định platform menu này, tải lại portal | Menu "Nghiên cứu" biến mất; API nghiên cứu → `403 FEATURE_DISABLED`; ô `efficacy_instrument` trong editor câu/blueprint vẫn theo `action.content_studio.question_bank.edit`/`assessments.edit` | F035-AC-37 |
+| 23 | `sa.admin` tắt mặc định platform `menu.platform_admin.efficacy_studies` và `menu.platform_admin.learning_experiments`, tải lại portal | Hai menu "Nghiên cứu hiệu quả", "Thử nghiệm A/B" biến mất; API nghiên cứu → `403 FEATURE_DISABLED`; ô `efficacy_instrument` trong editor câu/blueprint vẫn theo `action.content_studio.question_bank.edit`/`assessments.edit` | F035-AC-37 |
 
 ## 3. Lệnh test tự động
 

@@ -9,7 +9,7 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Thêm `getSchool`, `updateSchoolSettings`, `listFeatureFlags`, `putFeatureFlag`, schema `SchoolSettings`, `AllowedHours`, `FeatureFlag`; sửa `AuditLogEntry`, `TenantSettings.allowed_hours` — file: `specs/openapi/modules/identity.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=identity`
+- [ ] T003 Thêm `listFeatureFlags`, `putFeatureFlag`, schema `AllowedHours`, `FeatureFlag` (`getSchoolSettings`, `updateSchoolSettings`, `SchoolSettings`, `CurfewWindow`, `getPlatformCurfewSettings`/`putPlatformCurfewSettings` đã có trong spec gộp — chỉ kiểm khớp); sửa `AuditLogEntry`, `TenantSettings.allowed_hours` — file: `specs/openapi/modules/identity.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=identity`
 - [ ] T004 [P] Thêm payload schema `platform_settings.changed` (scope `school`) — `audit.recorded` dùng schema chung `specs/events/payloads/common/audit.recorded.v1.schema.json` của F003 T004 (không tạo) — file: `specs/events/payloads/identity/` — kiểm: `make specs-lint`
 - [ ] T005 ent schema `AuditLog` (AppendOnly), `PlatformSetting`, `FeatureFlag`; cột `settings_version` cho `platform.tenants`, `org.schools` — file: `modules/identity/ent/schema/` — kiểm: `make migrate-diff MOD=identity name=f015_audit_settings`, `make migrate-lint MOD=identity`
 - [ ] T006 Migration partition tháng `audit.audit_logs`, RLS TA, `REVOKE UPDATE, DELETE, TRUNCATE`, role `identity_retention` (UPDATE cột ẩn danh), seed `platform_settings` mặc định — file: `modules/identity/migrations/`
@@ -58,7 +58,7 @@
 
 - [ ] T019 [P] [US3] Domain `PlatformSettings`, `TenantSettings`, `EffectiveValue` — file: `modules/identity/internal/domain/settings/`
 - [ ] T020 [US3] Command `PutStudentCleanupSettings`, `PutChatRetentionSettings`, `UpdateTenantSettings`; query tương ứng; handler — file: `modules/identity/internal/application/command/settings.go`, `modules/identity/internal/presentation/http/public/settings.go`
-- [ ] T032 [US3] Khóa cài đặt `platform_curfew` (schema JSON settings, giá trị mặc định, validate khung qua nửa đêm) + payload `platform_settings.changed` có khung giới nghiêm — file: `modules/identity/internal/domain/settings/curfew.go`, `specs/events/payloads/identity/platform_settings.changed.v1.schema.json`
+- [ ] T032 [US3] Khóa cài đặt `platform_curfew` + handler `getPlatformCurfewSettings`/`putPlatformCurfewSettings` (schema JSON settings, giá trị mặc định, validate khung qua nửa đêm) + payload `platform_settings.changed` có khung giới nghiêm — file: `modules/identity/internal/domain/settings/curfew.go`, `specs/events/payloads/identity/platform_settings.changed.v1.schema.json`
 
 ## Phase 6: User Story 4 — Cài đặt trường (Priority: P2)
 
@@ -71,7 +71,7 @@
 ### Implementation cho User Story 4
 
 - [ ] T023 [P] [US4] Domain `SchoolSettings`, `AllowedHours.Contains` — file: `modules/identity/internal/domain/settings/school.go`
-- [ ] T024 [US4] Command `UpdateSchoolSettings`; query `GetSchool`; handler `getSchool`, `updateSchoolSettings` — file: `modules/identity/internal/presentation/http/public/school_settings.go`
+- [ ] T024 [US4] Command `UpdateSchoolSettings`; query `GetSchoolSettings`; handler `getSchoolSettings`, `updateSchoolSettings` — file: `modules/identity/internal/presentation/http/public/school_settings.go`
 - [ ] T025 [US4] Hook kiểm khung giờ trong `GameLogin` (F013) — file: `modules/identity/internal/application/command/game_login.go`
 - [ ] T034 [US4] `EffectiveCurfew` (domain thuần, hợp khung platform + trường, múi giờ tenant) dùng chung cho login (F013) và bootstrap; khóa cài đặt trường `curfew_window` — file: `modules/identity/internal/domain/settings/effective_curfew.go`, `modules/identity/internal/application/command/update_school_settings.go`
 

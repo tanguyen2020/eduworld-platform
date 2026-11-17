@@ -17,7 +17,7 @@ Payload đã có schema:
 | Service | File (`payloads/<service>/<event_type>.v<schema_version>.schema.json`) |
 |---|---|
 | identity | `user_role.changed.v1`, `role.updated.v1`, `province.updated.v1`, `class.synced.v1` |
-| learning | `content.published.v1`, `activity.submitted.v1`, `activity.graded.v1`, `assignment.created.v1` (dùng chung cho `assignment.published`), `study_group.created.v1`, `study_group.updated.v1`, `study_group.member_changed.v1`, `study_group.deleted.v1` (ADR-0084) |
+| learning | `content.published.v1`, `activity.submitted.v1`, `activity.graded.v1`, `assignment.created.v1` (dùng chung cho `assignment.published`), `study_group.created.v1`, `study_group.updated.v1`, `study_group.member_changed.v1`, `study_group.deleted.v1` (ADR-0084), `lesson.completed.v1` (F031) |
 
 **Feature sở hữu:** mỗi file `payloads/<module>/<event_type>.v<N>.schema.json` do đúng một feature tạo — feature hiện thực use case phát event trong module producer (quy tắc ở [EVENT_DESIGN §4](../../docs/07-backend/EVENT_DESIGN.md#4-catalog-domain-events)); feature khác cùng phát hoặc tiêu thụ chỉ tham chiếu ("owner F<NNN>"), không tạo file và đề xuất delta tương thích qua owner. Tên file phải là một `event_type` có trong catalog. Bảng module:event → feature: `node scripts/specs/check-cross-features.mjs --list`.
 

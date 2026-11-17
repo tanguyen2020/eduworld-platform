@@ -509,7 +509,7 @@ paths:
       tags:
         - game
       operationId: postTelemetry
-      summary: Gửi telemetry crash/hiệu năng (batch, không PII, 30 req/phút)
+      summary: Gửi telemetry crash/hiệu năng/màn hình/nhắc nghỉ (batch, không PII, 30 req/phút)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
       requestBody:
@@ -5117,7 +5117,7 @@ components:
         - platform
         - client_version
         - events
-      description: Lô telemetry không PII (ADR-0058). Tenant tắt telemetry sản phẩm thì client không gửi screen_view/tutorial_step; perf/crash vẫn gửi.
+      description: Lô telemetry không PII (ADR-0058). Tenant tắt telemetry sản phẩm thì client không gửi screen_view/tutorial_step; perf/crash và break_reminder_shown (chỉ số chơi lành mạnh) vẫn gửi.
       properties:
         platform:
           type: string
@@ -5163,6 +5163,7 @@ components:
             - client_error
             - crash
             - network_sample
+            - break_reminder_shown
         client_event_id:
           $ref: '#/components/schemas/Uuid'
           description: Khử trùng phía server
@@ -5224,6 +5225,16 @@ components:
         reconnects:
           type: integer
           minimum: 0
+        reminder_no:
+          type: integer
+          minimum: 1
+          maximum: 20
+          description: 'break_reminder_shown: lần nhắc nghỉ thứ mấy trong phiên (GAME_ANALYTICS §3.2)'
+        minutes_played:
+          type: integer
+          minimum: 0
+          maximum: 1440
+          description: 'break_reminder_shown: số phút chơi liên tục client đếm lúc nhắc; chỉ dùng cho thống kê chơi lành mạnh'
     QuestType:
       type: string
       enum:

@@ -31,6 +31,9 @@
 | 16 | `ad.donvi` đặt số ngày dọn thấp; đặt thời hạn chat gameplay dưới tối thiểu | Cảnh báo; `422 RETENTION_BELOW_MINIMUM` tại trường | F052-AC-19, F052-AC-20 |
 | 17 | Mở "Học sinh sắp bị dọn", loại trừ `hs.sapbidon` có lý do | Học sinh có nhãn loại trừ | F052-AC-21 |
 | 18 | `ad.truong.a` tắt bảng xếp hạng lớp ở Cài đặt trường | Lưu thành công kèm `If-Match` | F052-AC-22 |
+| 18b | `ad.truong.a` mở Cài đặt trường → khối "Giờ giới nghiêm" | Thấy giờ platform (chỉ đọc), khung trường trống, giờ hiệu lực = giờ platform; không có lựa chọn theo khối | F052-AC-29 |
+| 18c | `ad.truong.a` nhập khung 22:00–06:30 (hẹp hơn platform); sau đó 21:00–07:00 có lý do; gửi thẳng API khung hẹp bằng curl | Lỗi tại ô, nút Lưu khóa; lưu thành công, giờ hiệu lực 21:00–07:00; API trả `422 VALIDATION_FAILED` trỏ `curfew_window.start` | F052-AC-30 |
+| 18d | `qlcm.truong.a` mở Cài đặt; `ad.truong.b` gọi `getSchoolSettings` của TH Demo A | Không có menu/ô sửa; `404` | F052-AC-29 |
 | 19 | `ad.donvi` lọc Nhật ký theo action, 7 ngày | Danh sách có `trace_id`, không có mục moderation | F052-AC-23 |
 | 20 | `sa.admin` mở workspace C chưa chọn tenant | Yêu cầu chọn đúng một tenant | F052-AC-24 |
 | 21 | `qlcm.truong.a` mở Người dùng/Role | Không có nút ghi; gọi thẳng API ghi → thông điệp không có quyền | F052-AC-25 |

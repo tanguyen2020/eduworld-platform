@@ -10,9 +10,9 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Delta OpenAPI: 24 operationId `/admin/learning/*`, `ReportRequest.report_type = efficacy_dataset`, `efficacy_instrument` trong input câu/blueprint, `ExamSession.is_efficacy`, mô tả chặn (contracts §6) — file: `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=learning`
-- [ ] T005 [P] Delta JSON Schema: `learning-event.schema.json` `$defs/context` (`efficacy_wave_id`, `experiment_arms`), `question.schema.json`, `assessment-blueprint.schema.json` (`efficacy_instrument`) — file: `specs/schemas/` — kiểm: `make specs-lint`
-- [ ] T006 [P] Permission `platform.efficacy_study.manage`, `platform.efficacy_study.export`, `platform.learning_experiment.manage` (scope platform, seed role `system_admin`) + ADMIN_PORTAL §2.2 — file: `pkg/authz/catalog.go`, `deploy/seed/identity/roles.json`, `docs/04-admin-portal/ADMIN_PORTAL.md`
+- [x] T004 Delta OpenAPI: 24 operationId `/admin/learning/*` (có `x-portal-action`), `ReportRequest.report_type = efficacy_dataset`, `efficacy_instrument` trong input câu/blueprint, `ExamSession.is_efficacy`, mô tả chặn (contracts §6); menu `menu.platform_admin.efficacy_studies`, `menu.platform_admin.learning_experiments` trong `specs/portal/menu-catalog.yaml`; API_DESIGN §2.1, §9.16, §10 — file: `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=learning`
+- [x] T005 [P] Delta JSON Schema: `learning-event.schema.json` `$defs/context` (`efficacy_wave_id`, `experiment_arms`), `question.schema.json`, `assessment-blueprint.schema.json` (`efficacy_instrument`) — file: `specs/schemas/` — kiểm: `make specs-lint`
+- [ ] T006 [P] Permission `platform.efficacy_study.manage`, `platform.efficacy_study.export`, `platform.learning_experiment.manage` (scope platform, seed role `system_admin`; ADMIN_PORTAL §2.2 đã có) — file: `pkg/authz/catalog.go`, `deploy/seed/identity/roles.json`
 - [ ] T007 [P] Đăng ký tham số mới (số câu/LO/dạng, ngưỡng rời, số lớp khuyến nghị, ngưỡng ρ/hiệu chuẩn/AUC, ngưỡng dừng sớm, độ trễ đánh giá) — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/02-learning/LEARNING_EFFICACY_PLAN.md`
 - [ ] T008 Bổ sung ADR-0080 (chuyển Accepted, mục hạ tầng A/B theo LEARNING_EFFICACY_PLAN §6) và chỉ mục ADR — file: `docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md`, `docs/adr/README.md`
 - [ ] T009 Cập nhật DATABASE_DESIGN (§2.5, §2.6, §2.7 bảng/cột mới) và EVENT_DESIGN (không phát `exam.*` cho session đo hiệu quả; context mới) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/07-backend/EVENT_DESIGN.md`
@@ -146,7 +146,7 @@
 - [ ] T068 [P] Metric, span, alert `ExperimentGuardrailBreached` — file: `deploy/observability/alerts/learning.yaml`
 - [ ] T069 [P] Cập nhật LEARNING_EFFICACY_PLAN (hiện thực §6, §10), LEARNING_ANALYTICS §3.4, CHANGELOG; trạng thái F035 trong CODE_PLAN — file: `docs/02-learning/LEARNING_EFFICACY_PLAN.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T070 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/035-learning-efficacy-study/quickstart.md`
-- [ ] T071 [P] Test F035-AC-37: tắt menu của feature (sau khi có khóa catalog) → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `web/apps/portal/e2e/platform/research-feature-toggle.spec.ts`
+- [ ] T071 [P] Test F035-AC-37: tắt `menu.platform_admin.efficacy_studies`/`menu.platform_admin.learning_experiments` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `web/apps/portal/e2e/platform/research-feature-toggle.spec.ts`
 - [ ] T072 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F035-AC-37) — file: `web/apps/portal/src/workspaces/platform-admin/research/routes.tsx`
 
 ## Dependencies & Execution Order

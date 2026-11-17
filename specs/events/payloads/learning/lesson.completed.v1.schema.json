@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/lesson.completed.v1.schema.json",
+  "title": "Payload lesson.completed v1 (module learning, owner F031)",
+  "description": "Học sinh hoàn thành một bài học theo completion_rule của version bài đã ghim khi bắt đầu (R31, ADR-0043): mọi activity required có attempt đã chấm trong lesson session (all_required_activities) hoặc ít nhất một activity (any_activity). Phát đúng một lần cho mỗi (student_id, lesson_version_id); envelope subject = {type: lesson, id: lesson_id}, idempotency_key = lesson:<student_id>:<lesson_version_id>:completed. Chỉ chứa ID, số đếm, thời lượng — không PII (R14). Consumer: GAM (XP nguồn lesson.completed, F074), LA (progress_daily.lessons_completed, nội bộ F031).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lesson_session_id", "lesson_id", "lesson_version_id", "lesson_version", "student_id", "completion_rule", "mode", "required_activity_count", "completed_activity_count", "attempt_ids", "objective_ids", "grade_levels", "started_at", "completed_at", "duration_ms"],
+  "properties": {
+    "lesson_session_id": { "type": "string", "format": "uuid" },
+    "lesson_id": { "type": "string", "format": "uuid" },
+    "lesson_version_id": { "type": "string", "format": "uuid", "description": "Version bài đã ghim khi mở lesson session" },
+    "lesson_version": { "type": "integer", "minimum": 1 },
+    "student_id": { "type": "string", "format": "uuid" },
+    "subject_id": { "type": ["string", "null"], "format": "uuid" },
+    "grade_levels": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1, "maximum": 9 },
+      "description": "Khối lớp của version bài (Reward Engine áp xp_below_grade_multiplier)"
+    },
+    "completion_rule": { "type": "string", "enum": ["all_required_activities", "any_activity"] },
+    "mode": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode",
+      "description": "practice khi tự học, assignment khi bài do nhà trường giao (EVENT_DESIGN §5.2)"
+    },
+    "assignment_id": { "type": ["string", "null"], "format": "uuid" },
+    "learning_path_id": { "type": ["string", "null"], "format": "uuid" },
+    "recommendation_id": { "type": ["string", "null"], "format": "uuid", "description": "Khi bài được mở từ gợi ý tự động (LEARNING_ANALYTICS §6)" },
+    "required_activity_count": { "type": "integer", "minimum": 0, "maximum": 50 },
+    "completed_activity_count": { "type": "integer", "minimum": 1, "maximum": 50 },
+    "attempt_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": { "type": "string", "format": "uuid" },
+      "description": "Attempt đã chấm được tính cho hoàn thành (mỗi activity một attempt)"
+    },
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time", "description": "Giờ server" },
+    "duration_ms": { "type": "integer", "minimum": 0, "description": "Thời gian active trong session (trừ pause), giờ server" }
+  }
+}

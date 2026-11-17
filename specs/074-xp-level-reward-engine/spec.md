@@ -14,6 +14,7 @@
 
 ### Session 2026-11-17
 
+- Q: Nguồn XP `lesson.completed` (PROGRESSION_SYSTEM §3.1) lấy từ event nào? → A: Domain event `lesson.completed` do module learning phát (owner F031, payload `lesson.completed.v1`) khi học sinh hoàn thành mọi activity bắt buộc của bài, version bài ghim, một lần mỗi học sinh × version bài (Technical Architect 2026-11-17); F074 tiêu thụ trong `game.reward_engine` (F074-AC-27).
 - Q: Tên config type bảng level, tên cột ngưỡng và permission? → A: Config type `levels` đổi thành `progression-levels` (kebab, bảng level sinh khi publish curve, chỉ đọc/ghi đè theo level — API_DESIGN, RB-308); cột `game.progression_levels.xp_required` (PROGRESSION_SYSTEM §6, DATABASE_DESIGN §2.8a); permission `game.progression.write` cho `progression-curves` và `progression-levels` (thay `game.level.write`, RB-309). Field API `Progression.xp_to_next` (XP còn thiếu tới level kế) giữ nguyên.
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -30,7 +31,7 @@ Học sinh hoàn thành quest, bài tập, bài học, đạt mastery một LO h
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F074-AC-01 | KHI module game nhận `activity.graded`, `quest.completed`, `minigame.completed`, `learning_objective.mastered`, `world.discovery_found` hoặc `world.area_completed`, Reward Engine PHẢI áp mọi reward rule đã publish có `trigger.event_type` khớp và điều kiện thỏa, ghi bút toán XP kèm `source_code`, `rule_id`, `rule_version` | FR-GAM-002 · FR-GAM-007 · [PROGRESSION_SYSTEM §3.1](../../docs/01-game-design/PROGRESSION_SYSTEM.md) | TC-GAM-004 |
+| F074-AC-01 | KHI module game nhận `activity.graded`, `lesson.completed`, `quest.completed`, `minigame.completed`, `learning_objective.mastered`, `world.discovery_found` hoặc `world.area_completed`, Reward Engine PHẢI áp mọi reward rule đã publish có `trigger.event_type` khớp và điều kiện thỏa, ghi bút toán XP kèm `source_code`, `rule_id`, `rule_version` | FR-GAM-002 · FR-GAM-007 · [PROGRESSION_SYSTEM §3.1](../../docs/01-game-design/PROGRESSION_SYSTEM.md) | TC-GAM-004 |
 | F074-AC-02 | KHI cùng event được giao lại hoặc phát lại với cùng `(student_id, source_type, source_id, rule_id)`, module game PHẢI không cộng XP lần hai | FR-GAM-004 · AC-GAM-003 | TC-GAM-004 |
 | F074-AC-03 | HỆ THỐNG PHẢI ghi bút toán XP, cập nhật `xp_total`/`level` cache và outbox `xp.awarded` trong một transaction; job đối soát PHẢI phát cảnh báo khi `xp_total` khác tổng ledger và không tự sửa | FR-GAM-004 · ADR-0049 | TC-ECO-002 |
 | F074-AC-04 | KHI cùng content version được hoàn thành lặp trong cửa sổ của `xp_repeat_multipliers`, Reward Engine PHẢI áp hệ số theo thứ tự lần hoàn thành (lần cuối của danh sách áp cho mọi lần sau) | FR-GAM-003 · AC-GAM-001 | TC-GAM-002 |
@@ -42,6 +43,7 @@ Học sinh hoàn thành quest, bài tập, bài học, đạt mastery một LO h
 | F074-AC-10 | module game PHẢI không gọi module learning và không phát event nào làm thay đổi điểm/mastery; module learning PHẢI không có consumer `xp.awarded`/`level.reached` | FR-GAM-005 · FR-GAM-006 | TC-GAM-003 |
 | F074-AC-11 | NẾU `tenant_id` của envelope khác tenant của học sinh trong projection `ref.students` hoặc học sinh không tồn tại, THÌ consumer PHẢI không ghi bút toán, chuyển event vào retry rồi DLQ và ghi metric | FR-GAM-004 · NFR-SEC-006 | TC-TEN-005 |
 | F074-AC-12 | HỆ THỐNG PHẢI giữ `xp_ledger`, `level_history` append-only: role `game_app` thực thi `UPDATE`/`DELETE` PHẢI bị từ chối | FR-GAM-004 · AGENTS R21 | TC-ECO-008 |
+| F074-AC-27 | KHI nhận `lesson.completed` (owner F031), Reward Engine PHẢI cộng XP theo rule `source_code = lesson.completed` với `source_type = lesson`, `source_id = lesson_version_id` (một bút toán cho mỗi học sinh × version bài, kể cả event giao lại), áp `xp_below_grade_multiplier` theo `grade_levels` (đầy đủ khi `mode = assignment` hoặc có `recommendation_id`), giảm dần khi lặp và cap ngày | FR-GAM-002 · FR-GAM-003 · [PROGRESSION_SYSTEM §3.1](../../docs/01-game-design/PROGRESSION_SYSTEM.md) | TC-GAM-004 |
 
 ---
 
@@ -188,7 +190,6 @@ NFR: NFR-SAFE-003 (không streak, không thưởng đăng nhập) — F074-AC-09
 ## Ngoài phạm vi
 
 - Applier Xu, vật phẩm, huy hiệu, collection; ví, shop, achievement; bút toán bù (`createEconomyAdjustment`) → F075.
-- Nguồn XP `lesson.completed` (PROGRESSION_SYSTEM §3.1): chưa có feature phát domain event `lesson.completed` (hiện chỉ là learning event, EVENT_DESIGN §5.2) — Câu hỏi mở, rule có trigger này không khớp event nào cho tới khi có producer.
 - XP từ challenge → F076; boss/co-op → F103; thi đấu (`xp_competition_matches_per_day`) → F105; điểm sự kiện/mùa → F077.
 - Mở khóa vùng, khám phá, chương truyện → F071; quest engine và "Hành trình khối mới" → F072.
 - HTTP workflow `/game-admin/*` (soạn, duyệt, publish) → F078; màn Level & XP Configuration → F079.

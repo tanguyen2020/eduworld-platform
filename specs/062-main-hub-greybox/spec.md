@@ -10,6 +10,7 @@
 - Q: Ở M-C2 chưa có realtime, quest, XP, ví Xu (F070–F075, F092). HUD hiển thị gì? → A: HUD chỉ gồm thành phần có dữ liệu thật: `PlayerBadge` (nickname, grade band từ bootstrap), chip "Nhà trường giao (n)", nút Cài đặt, nút Về Quảng trường, banner hệ thống. Slot `XpBar`, `CurrencyChip`, `QuestTracker`, `Minimap`, `ChatDock`, `PartyChip` có sẵn trong layout nhưng ẩn tới feature sở hữu ([STUDENT_GAME_UX_CORE S03](../../docs/05-ux/STUDENT_GAME_UX_CORE.md)).
 - Q: Danh sách bài giao làm mới khi nào khi chưa có realtime? → A: Khi vào/quay lại Hub, khi mở Nhật ký nhiệm vụ; không polling định kỳ (không có tham số đăng ký). Thông báo bài mới thuộc F064.
 - Q: Nhắc nghỉ do ai đếm giờ? → A: Ngưỡng lấy từ `PlayerBootstrap.policies.play_time.break_reminder_minutes` (server); client chỉ đếm thời gian phiên liên tục để hiển thị lời nhắc, không chặn chơi. Chặn ngoài giờ truy cập do server (`403 ACCESS_OUTSIDE_ALLOWED_HOURS`).
+- Q: Đo lời nhắc nghỉ thế nào khi server không biết lúc nhắc? → A: Không có domain event (Technical Architect 2026-11-17). Mỗi lần hiện hộp nhắc, client gửi telemetry `break_reminder_shown` (`reminder_no`, `minutes_played`) trong lô `postTelemetry` kế tiếp ([GAME_ANALYTICS §3.2](../../docs/11-operations/GAME_ANALYTICS.md)); F080 tổng hợp chỉ số chơi lành mạnh.
 - Q: Tab "Nhà trường giao" mở bài thế nào khi activity player (F063) và Exam (F064) chưa xong? → A: F062 phát intent `EventBus.ui_requested("activity_host" | "exam_lobby", args)`; khi chưa có màn đăng ký, hiển thị `ui.activity_player.update_required` (không crash).
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -94,6 +95,7 @@ Sau khoảng thời gian chơi liên tục do trường/platform cấu hình, M�
 | F062-AC-21 | KHI thời gian phiên liên tục đạt `policies.play_time.break_reminder_minutes`, `PlayTimeService` PHẢI hiện hộp nhắc nghỉ `ui.common.break_reminder` (không chặn, đóng được) và lặp lại theo `break_reminder` | FR-GAME-012 · [CHILD_SAFETY](../../docs/10-security/CHILD_SAFETY.md) | — |
 | F062-AC-22 | TRONG KHI đang làm bài kiểm tra có giờ hoặc có hộp thoại bắt buộc, `PlayTimeService` PHẢI hoãn lời nhắc tới khi rời màn | FR-GAME-012 · AGENTS R19 | — |
 | F062-AC-23 | NẾU API trả `403 ACCESS_OUTSIDE_ALLOWED_HOURS`, THÌ game client PHẢI hiện `ui.common.outside_access_window` kèm `access_window` của bootstrap và về Login | FR-GAME-012 · [GODOT_ARCHITECTURE §9](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | — |
+| F062-AC-24 | KHI hộp nhắc nghỉ thật sự hiện (không tính lời nhắc đang hoãn theo F062-AC-22), game client PHẢI xếp một telemetry `break_reminder_shown` (`client_event_id` mới, `occurred_at`, `reminder_no` tăng từ 1 trong phiên, `minutes_played`) vào lô `postTelemetry` kế tiếp, giữ trong hàng đợi khi mất mạng và gửi lại cùng `client_event_id`; PHẢI vẫn gửi khi `product_telemetry_enabled = false` và không kèm tên, username, `student_id` hay vị trí | FR-GAME-012 · FR-ANL-010 · [GAME_ANALYTICS §3.2](../../docs/11-operations/GAME_ANALYTICS.md) · AGENTS R14 | — |
 
 ### Edge Cases
 
@@ -113,7 +115,7 @@ Sau khoảng thời gian chơi liên tục do trường/platform cấu hình, M�
 | FR-GAME-003 | Character controller, camera rig, animation state machine, `Interactable` + nút hành động (NPC hội thoại đầy đủ: F071) | [GODOT_ARCHITECTURE §3, §6](../../docs/08-game-client/GODOT_ARCHITECTURE.md), [WORLD_RENDERING §2–§5](../../docs/08-game-client/WORLD_RENDERING.md) |
 | FR-GAME-009 | `QualityManager`: benchmark, preset, device profile, độ phân giải động, renderer fallback, suspend world | [PERFORMANCE_BUDGET §4–§6, §12](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | FR-GAME-010 | Theme density + bố cục HUD theo grade band | [STUDENT_GAME_UX_CORE S03](../../docs/05-ux/STUDENT_GAME_UX_CORE.md), [DESIGN_SYSTEM §5](../../docs/05-ux/DESIGN_SYSTEM.md) |
-| FR-GAME-012 | Nhắc nghỉ theo policy bootstrap; hiển thị lỗi ngoài giờ truy cập | [CHILD_SAFETY](../../docs/10-security/CHILD_SAFETY.md) |
+| FR-GAME-012 | Nhắc nghỉ theo policy bootstrap, gửi telemetry `break_reminder_shown` (GAME_ANALYTICS §3.2); hiển thị lỗi ngoài giờ truy cập | [CHILD_SAFETY](../../docs/10-security/CHILD_SAFETY.md) |
 | FR-LMS-006 | Chip HUD + tab "Nhà trường giao" + bảng trong Hub, mở bài qua intent | [SCHOOL_LMS](../../docs/04-admin-portal/SCHOOL_LMS.md), [STUDENT_GAME_UX_CORE S05](../../docs/05-ux/STUDENT_GAME_UX_CORE.md) |
 
 ### Key Entities

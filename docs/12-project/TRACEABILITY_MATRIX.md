@@ -14,7 +14,7 @@
 | Domain | Module sở hữu | FR | FR có tài liệu tường minh | FR có operation tường minh | Operation suy luận | FR có TC tường minh | TC suy luận | US | AC | FR / AC mở rộng ở tài liệu sở hữu |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `AUTH` Identity & Authentication | module identity | 32 | 32 | 10 | 16 | 1 | AUTH (79) | 3 | 36 | 0 / 56 |
-| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 36 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
+| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 38 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
 | `SIS` SIS Integration | module identity | 9 | 9 | 0 | 5 | 0 | SIS (7) | 2 | 0 | 0 / 0 |
 | `CUR` Curriculum | module learning | 12 | 12 | 0 | 6 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
 | `CNT` Learning Content | module learning | 21 | 21 | 0 | 13 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
@@ -22,7 +22,7 @@
 | `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 29 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
 | `EXM` Exam & Practice | module learning | 10 | 10 | 0 | 8 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
-| `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 20 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
+| `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 22 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
 | `GAME` Game World & Character | module game | 18 | 18 | 2 | 21 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
 | `QST` Quest | module game | 9 | 9 | 0 | 30 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
@@ -45,8 +45,8 @@
 | `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 79 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 43 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
-| `OPS` Vận hành | pkg/ (platform kit) · mọi service | 5 | 5 | 0 | 12 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 18 | 441 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| `OPS` Vận hành | pkg/ (platform kit) · mọi service | 5 | 5 | 0 | 16 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
+| **Tổng** | | **346** | 345 | 18 | 469 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -103,24 +103,24 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 21 AC, 0 US — [MULTITENANCY](../
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 36 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
 
 ### 3.3. `SIS` SIS Integration
 
@@ -284,29 +284,29 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 21 AC, 0 US — [DASHBOARD_DATA](.
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-ANL-001 | Ghi learning events (activity/question/exercise/exam/lesson/quest/learning_objective.*) với event_id, stude… | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-002 | Lưu bền vững trong learning.learning_events (LRS nội bộ), tương thích tư duy xAPI | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-003 | Analytics theo học sinh, lớp, trường, môn, chủ đề, LO (bỏ chiều giáo viên theo ADR-0072) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-004 | Không dùng dữ liệu hành vi ngoài mục đích đã công bố | P1+ | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-005 | Aggregation chạy trong worker, dashboard đọc từ read model | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-006 | Game Analytics tách khỏi Learning Analytics và Monitoring: chỉ số engagement, retention, funnel, tiến trình… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-007 | Nguồn: domain event NATS + telemetry client tối thiểu không PII; lưu schema analytics của module game (ADR-… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-008 | Định danh giả danh player_key; không lưu tên, nickname, student_id, nội dung chat trong analytics | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-009 | Dashboard Game Analytics trong workspace Game Live Operations (platform); báo cáo tổng hợp cho Tenant/Schoo… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-010 | Không dùng thời gian chơi làm thước đo thành công; có chỉ số chơi lành mạnh (vượt mốc nhắc nghỉ, chơi khuya) | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-011 | Tenant tắt được telemetry sản phẩm; telemetry ổn định (hiệu năng, crash) vẫn thu (cơ chế kỹ thuật; cơ sở ph… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-012 | Có trang dashboard cho trường → lớp → học sinh (School Learning Dashboard), tenant, platform và Game Analyt… | P3–P4 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-013 | Dashboard chỉ đọc bảng tổng hợp dựng gia tăng; khoảng thời gian tối đa 2 năm, độ hạt tự chọn theo khoảng; h… | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-014 | Xuất báo cáo dashboard chạy bất đồng bộ, link tải có hạn, có audit | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-015 | Báo cáo tham khảo theo mức đánh giá TT27/2020 (tiểu học) và TT22/2021 (THCS) từ mastery/kết quả; ghi rõ "ch… | P3 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-016 | Báo cáo learning analytics cấp tổ chức/tenant/platform chỉ dùng dữ liệu gộp, ẩn ô có < 5 học sinh (k-anonym… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-017 | Ngân hàng câu hỏi/đề đo hiệu quả (efficacy_instrument) tách khỏi mọi luyện tập, không xuất hiện trong pract… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-018 | Bài kiểm tra độc lập trước/sau cho lớp tham gia và lớp so sánh; không tạo evidence mastery, không cộng XP,… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-019 | Ghi thỏa thuận tham gia nghiên cứu của tenant (pilot), có thu hồi và audit (LEARNING_EFFICACY_PLAN, ADR-0080) | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-020 | Thử nghiệm A/B cấu hình mastery và luật gợi ý theo nhánh gán ổn định, ghi experiment_arms vào learning even… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-021 | Báo cáo hiệu quả: effect size, tỉ lệ học sinh tiến bộ, tỉ lệ rời nghiên cứu, độ tin cậy dự báo của mastery… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-022 | Xuất dữ liệu nghiên cứu định danh giả, chỉ cho nhân sự platform có quyền, áp k-anonymity như FR-ANL-016 (LE… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-023 | Nhà trường rút lớp/học sinh khỏi phần phân tích nghiên cứu; dữ liệu đã rút bị loại khỏi báo cáo và bản xuất… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-001 | Ghi learning events (activity/question/exercise/exam/lesson/quest/learning_objective.*) với event_id, stude… | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-002 | Lưu bền vững trong learning.learning_events (LRS nội bộ), tương thích tư duy xAPI | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-003 | Analytics theo học sinh, lớp, trường, môn, chủ đề, LO (bỏ chiều giáo viên theo ADR-0072) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-004 | Không dùng dữ liệu hành vi ngoài mục đích đã công bố | P1+ | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-005 | Aggregation chạy trong worker, dashboard đọc từ read model | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-006 | Game Analytics tách khỏi Learning Analytics và Monitoring: chỉ số engagement, retention, funnel, tiến trình… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-007 | Nguồn: domain event NATS + telemetry client tối thiểu không PII; lưu schema analytics của module game (ADR-… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-008 | Định danh giả danh player_key; không lưu tên, nickname, student_id, nội dung chat trong analytics | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-009 | Dashboard Game Analytics trong workspace Game Live Operations (platform); báo cáo tổng hợp cho Tenant/Schoo… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-010 | Không dùng thời gian chơi làm thước đo thành công; có chỉ số chơi lành mạnh (vượt mốc nhắc nghỉ, chơi khuya) | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-011 | Tenant tắt được telemetry sản phẩm; telemetry ổn định (hiệu năng, crash) vẫn thu (cơ chế kỹ thuật; cơ sở ph… | P4 | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-012 | Có trang dashboard cho trường → lớp → học sinh (School Learning Dashboard), tenant, platform và Game Analyt… | P3–P4 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-013 | Dashboard chỉ đọc bảng tổng hợp dựng gia tăng; khoảng thời gian tối đa 2 năm, độ hạt tự chọn theo khoảng; h… | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-014 | Xuất báo cáo dashboard chạy bất đồng bộ, link tải có hạn, có audit | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-015 | Báo cáo tham khảo theo mức đánh giá TT27/2020 (tiểu học) và TT22/2021 (THCS) từ mastery/kết quả; ghi rõ "ch… | P3 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-016 | Báo cáo learning analytics cấp tổ chức/tenant/platform chỉ dùng dữ liệu gộp, ẩn ô có < 5 học sinh (k-anonym… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-017 | Ngân hàng câu hỏi/đề đo hiệu quả (efficacy_instrument) tách khỏi mọi luyện tập, không xuất hiện trong pract… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-018 | Bài kiểm tra độc lập trước/sau cho lớp tham gia và lớp so sánh; không tạo evidence mastery, không cộng XP,… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-019 | Ghi thỏa thuận tham gia nghiên cứu của tenant (pilot), có thu hồi và audit (LEARNING_EFFICACY_PLAN, ADR-0080) | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-020 | Thử nghiệm A/B cấu hình mastery và luật gợi ý theo nhánh gán ổn định, ghi experiment_arms vào learning even… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-021 | Báo cáo hiệu quả: effect size, tỉ lệ học sinh tiến bộ, tỉ lệ rời nghiên cứu, độ tin cậy dự báo của mastery… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-022 | Xuất dữ liệu nghiên cứu định danh giả, chỉ cho nhân sự platform có quyền, áp k-anonymity như FR-ANL-016 (LE… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-023 | Nhà trường rút lớp/học sinh khỏi phần phân tích nghiên cứu; dữ liệu đã rút bị loại khỏi báo cáo và bản xuất… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 22 op | _suy luận:_ TC-ANL, TC-DASH |
 
 ### 3.11. `GAME` Game World & Character
 
@@ -707,11 +707,11 @@ Service: pkg/ (platform kit) · mọi service · Tài liệu sở hữu: [DEPLOY
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-OPS-001 | Health, readiness, liveness endpoint cho mọi binary | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-002 | Docker + Docker Compose local; environment example; migration; backup script; deployment docs | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-003 | Metrics: online players, active sessions, matchmaking queue, match duration, API latency, error rate, chat… | P1–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-004 | Không commit secrets; secret qua secret manager/Docker secrets | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-005 | CI: lint, test, spec lint/breaking check, build Go/Godot/Web theo path | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-001 | Health, readiness, liveness endpoint cho mọi binary | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-002 | Docker + Docker Compose local; environment example; migration; backup script; deployment docs | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-003 | Metrics: online players, active sessions, matchmaking queue, match duration, API latency, error rate, chat… | P1–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-004 | Không commit secrets; secret qua secret manager/Docker secrets | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-005 | CI: lint, test, spec lint/breaking check, build Go/Godot/Web theo path | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
 
 ## 4. Acceptance criteria → TC
 

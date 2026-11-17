@@ -86,11 +86,13 @@
 ### Tests cho User Story 4
 
 - [ ] T028 [P] [US4] Unit test F062-AC-21, F062-AC-22 với đồng hồ giả (đến ngưỡng → signal; đang exam → hoãn) — file: `godot/tests/unit/test_play_time_service.gd` — phải FAIL trước khi code
+- [ ] T034 [P] [US4] Unit test F062-AC-24 với đồng hồ giả và `TelemetryQueue` giả: hộp nhắc hiện → một sự kiện `break_reminder_shown` (`reminder_no` 1, 2…, `minutes_played`), nhắc bị hoãn chưa gửi, mất mạng giữ `client_event_id`, vẫn gửi khi `product_telemetry_enabled = false`, không có trường định danh — file: `godot/tests/unit/test_break_reminder_telemetry.gd` — phải FAIL trước khi code
 - [ ] T029 [P] [US4] Unit test F062-AC-23 (`403 ACCESS_OUTSIDE_ALLOWED_HOURS` → thông điệp + Login) — file: `godot/tests/unit/test_assignment_service.gd`
 
 ### Implementation cho User Story 4
 
 - [ ] T030 [US4] `PlayTimeService` + `BreakReminderDialog` (Mây, không chặn) — file: `godot/scripts/core/play_time_service.gd`, `godot/scenes/ui/hud/BreakReminderDialog.tscn`
+- [ ] T035 [US4] `PlayTimeService` phát signal `break_reminder_shown` khi hộp nhắc hiện; `TelemetryService` xếp sự kiện `break_reminder_shown` vào lô `postTelemetry` (hàng đợi bền khi offline, không lọc bởi cờ telemetry sản phẩm) — file: `godot/scripts/core/play_time_service.gd`, `godot/scripts/networking/telemetry_service.gd`
 
 ## Phase 7: Polish & Cross-Cutting
 

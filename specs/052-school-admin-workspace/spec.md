@@ -9,7 +9,8 @@
 
 - Q: Màn "Xung đột đồng bộ" gọi API nào khi `/api/v1/sis/*` chỉ có ở gateway nội bộ ([SIS_INTEGRATION §9–§10](../../docs/09-identity/SIS_INTEGRATION.md)) mà School Admin chỉ dùng gateway public? → A: Dùng route public theo trường giống `createSisImport`; contract "Cần thêm" `listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue` ([contracts](contracts/README.md) §6). `missing_class` đã có qua `listUnassignedStudents`.
 - Q: Danh sách học sinh của lớp? → A: Contract chưa có; "Cần thêm" `listTenantClassStudents` (chỉ đọc, kèm `last_login_at`).
-- Q: Cài đặt trường (`FR-ORG-007`)? → A: Contract chưa có `schools/{id}/settings`; "Cần thêm" `getSchoolSettings`/`updateSchoolSettings`. Chat policy trường thuộc F122.
+- Q: Cài đặt trường (`FR-ORG-007`)? → A: `getSchoolSettings`/`updateSchoolSettings` (`GET`/`PATCH /schools/{school_id}/settings`, backend F015) đã có trong spec gộp (2026-11-17). Chat policy trường thuộc F122.
+- Q: Màn cài đặt giờ giới nghiêm cho nhà trường (ADR-0078, RB-803) thuộc feature nào? → A: Khung giới nghiêm **cấp trường** (School Admin, chỉ mở rộng) thuộc F052 trong màn Cài đặt trường (`menu.school_lms.settings`, action `action.school_lms.settings.edit_school`); không có khung giới nghiêm cấp tenant ([CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); `platform_curfew` do System Admin đặt ở F057. Kiểm "chỉ siết thêm" ở server (F015-AC-22, `422 VALIDATION_FAILED`); portal chỉ kiểm trước để báo sớm.
 - Q: UserRole có scope `class`? → A: Không (ADR-0072); portal chỉ cho Đơn vị/Trường/Môn dù enum contract còn `class` (mâu thuẫn D18, ghi ở contracts §6).
 
 ### Session 2026-11-17
@@ -83,7 +84,7 @@ Tenant Admin quản lý nhân sự (tạo thủ công), role tùy biến [Propos
 
 ### User Story 4 — Cài đặt tenant/trường và dọn học sinh không đăng nhập (Priority: P2)
 
-Tenant Admin đặt khung giờ truy cập, ngôn ngữ mặc định, số ngày dọn (khi platform cho phép), thời hạn chat gameplay (khi được phép); xem danh sách học sinh sắp bị dọn, loại trừ/gia hạn. School Admin đặt chính sách trường.
+Tenant Admin đặt khung giờ truy cập, ngôn ngữ mặc định, số ngày dọn (khi platform cho phép), thời hạn chat gameplay (khi được phép); xem danh sách học sinh sắp bị dọn, loại trừ/gia hạn. School Admin đặt chính sách trường, kể cả mở rộng khung giờ giới nghiêm của trường (không nới quá giờ giới nghiêm platform).
 
 **Why this priority**: Cấu hình vận hành; có giá trị mặc định platform nên không chặn US1–US2.
 
@@ -97,6 +98,8 @@ Tenant Admin đặt khung giờ truy cập, ngôn ngữ mặc định, số ngà
 | F052-AC-20 | NẾU server từ chối ghi đè số ngày dọn (`403 PERMISSION_DENIED`) hoặc trả `422 RETENTION_BELOW_MINIMUM` cho `gameplay_chat_retention_days`, THÌ Portal PHẢI hiển thị lỗi tại đúng trường và giữ giá trị cũ. | FR-AUTH-024 · ADR-0033 | — |
 | F052-AC-21 | KHI người có `tenant.student_cleanup.read` mở "Học sinh sắp bị dọn", Portal PHẢI liệt kê `previewTenantStudentCleanup` (ngày dự kiến, lần đăng nhập cuối) và cho người có `tenant.student_cleanup.exclude` chọn nhiều (≤ `maxItems` của `CleanupExclusionRequest`) để Loại trừ hoặc Gia hạn đến ngày, lý do bắt buộc, gọi `createStudentCleanupExclusions` (Idempotency-Key). | FR-AUTH-024, AC-AUTH-018 | — |
 | F052-AC-22 | KHI người có `school.settings.write` lưu chính sách trường (khung giờ truy cập, bật/tắt bảng xếp hạng lớp/trường, `student_club_creation`), Portal PHẢI gọi `updateSchoolSettings` kèm `If-Match` và hiển thị lỗi theo trường. | FR-ORG-007 | — |
+| F052-AC-29 | KHI người có `school.settings.read` mở Cài đặt trường, Portal PHẢI gọi `getSchoolSettings` và hiển thị khối "Giờ giới nghiêm" gồm `platform_curfew` (chỉ đọc, ghi chú "do EduWorld đặt, áp cho game và chat"), khung trường `curfew_window` (trống = chỉ áp giờ platform) và `effective_curfew` (giờ ICT, khung qua nửa đêm hiển thị "đến … hôm sau"); ô sửa PHẢI chỉ hiện với action `action.school_lms.settings.edit_school`; trường thuộc tenant `common` PHẢI chỉ hiển thị giờ platform; màn PHẢI không có lựa chọn nào theo khối/lớp | FR-ORG-007 · NFR-SAFE-005 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 · AGENTS R15 | TC-AUTH-092 |
+| F052-AC-30 | KHI người có `school.settings.write` lưu khung giới nghiêm trường, Portal PHẢI kiểm trước khi gửi rằng khung chứa trọn `platform_curfew` (không thì báo lỗi tại ô và khóa nút Lưu), bắt buộc `reason`, gửi `updateSchoolSettings` (JSON Merge Patch `curfew_window`, `If-Match`) và cho "Bỏ khung trường" gửi `curfew_window: null`; NẾU server trả `422 VALIDATION_FAILED` (`errors[]` trỏ `curfew_window.*`) hoặc `412 VERSION_MISMATCH`, THÌ Portal PHẢI hiển thị lỗi tại đúng ô (412: tải lại giá trị mới) và giữ giá trị đã lưu | FR-ORG-007 · AC-AUTH-032 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 | TC-AUTH-092 |
 
 ---
 

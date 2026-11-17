@@ -17,10 +17,11 @@
 | 2 | Gửi 31 lô/phút; dùng token portal | `429` + `Retry-After`; `403 GAME_ACCESS_STUDENT_ONLY` | F080-AC-02 |
 | 3 | Tắt telemetry sản phẩm cho TH Demo A; gửi `screen_view` + `perf_sample` | Chỉ `perf_sample` vào raw; client-config trả cờ tắt | F080-AC-03 |
 | 4 | Gửi `crash`; xem log | Log có `crash_signature`, không PII | F080-AC-04 |
+| 4b | Tắt telemetry sản phẩm cho TH Demo A; `hs.an.3a` gửi `break_reminder_shown` (`reminder_no` 1 rồi 2) và gửi lại cùng `client_event_id`; gửi `reminder_no = 0` | 2 dòng raw `source = client` có `session_key`; lần gửi lại không thêm dòng; `422` | F080-AC-34 |
 | 5 | Phát `game_session.started`, `quest.completed` 2 lần cùng `event_id` | 1 dòng raw/event, `player_key` không phải `student_id` | F080-AC-05 |
 | 6 | Chạy quét schema analytics | Không cột định danh | F080-AC-06 |
 | 7 | Yêu cầu ẩn danh `hs.an.3a` | Raw/`player_days` `player_key = NULL`; rollup không đổi | F080-AC-07 |
-| 8 | Nạp golden dataset → chạy rollup giờ + chốt ngày | Số khớp tính tay, `is_final = true` | F080-AC-08, F080-AC-10 |
+| 8 | Nạp golden dataset (gồm `break_reminder_shown`) → chạy rollup giờ + chốt ngày | Số khớp tính tay (kể cả `sessions_over_reminder`, `sessions_over_second_reminder`), `is_final = true` | F080-AC-08, F080-AC-10, F080-AC-35 |
 | 9 | Phát event trễ 30 h và 50 h | 30 h tính lại; 50 h chỉ tăng metric | F080-AC-09 |
 | 10 | `lo.vanhanh` gọi `getGameMetrics` 7/90/730 ngày | `grain` day/week/month, có `data_as_of` | F080-AC-11 |
 | 11 | Gọi 731 ngày; 5 truy vấn đồng thời | `422`; `429 DASHBOARD_BUSY` | F080-AC-12 |

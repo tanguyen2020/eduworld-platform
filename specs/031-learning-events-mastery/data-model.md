@@ -45,6 +45,24 @@ DDL §3.6; F031 thêm: GRANT chỉ `INSERT, SELECT` cho role app; job tạo part
 
 PK `(tenant_id, student_id, date, subject_id)`; `items_answered`, `items_correct` (lần đầu), `active_seconds`, `lessons_completed`, `activities_completed`, `class_id` snapshot. Cột rollup khác (rapid_guess, hint) thêm ở F032/F043.
 
+### LessonSession — `learning.lesson_sessions` (Có sẵn §2.5 — Thêm cột; F031 sở hữu)
+
+| Trường | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| `lesson_session_id` | UUIDv7 | PK | |
+| `tenant_id`, `student_id` | uuid | NOT NULL | RLS + `TenantScope` |
+| `lesson_id` | uuid | NOT NULL | Mới (tra cứu session mở theo bài) |
+| `lesson_version_id` | uuid | NOT NULL | Ghim khi tạo (R31) |
+| `status` | `varchar(64)` | CHECK IN (`in_progress`,`completed`) | |
+| `context_mode` | `varchar(64)` | `AttemptMode` của attempt mở session (`practice`/`assignment`) | Mới |
+| `assignment_id`, `learning_path_id`, `recommendation_id` | uuid NULL | | Mới — chép vào payload `lesson.completed` |
+| `completed_activity_ids` | uuid[] | ≤ 50 phần tử | Mới — activity đã có attempt `graded` trong session |
+| `active_ms` | bigint | ≥ 0 | Mới — cộng dồn thời gian active của attempt trong session |
+| `started_at`, `ended_at` | timestamptz | `ended_at` = `completed_at` | |
+| `created_at`, `updated_at`, `deleted_at`, `deleted_by` | | | soft-delete (R21) |
+
+**Index**: partial UNIQUE `(tenant_id, student_id, lesson_id) WHERE status = in_progress AND deleted_at IS NULL` (một session mở mỗi bài); UNIQUE `(tenant_id, student_id, lesson_version_id) WHERE status = completed AND deleted_at IS NULL` (hoàn thành một lần mỗi version, F031-AC-27). Cột `assessment.attempts` không đổi: attempt trong ngữ cảnh bài có `context_type = lesson`, `context_id = lesson_id`.
+
 ### Evaluation — `assessment.evaluations` (Có sẵn §2.6a — Thêm cột)
 
 Thêm `regrade_request_id uuid NULL`, `supersedes_evaluation_id uuid NULL`, `details jsonb` (điểm từng item sau chấm lại, ≤ 64 KB); `source` dùng `system`/`re_evaluation` (sửa giá trị `system_reevaluation` ở §2.6a).
@@ -76,12 +94,14 @@ Thêm `regrade_request_id uuid NULL`, `supersedes_evaluation_id uuid NULL`, `det
 - `MasteryModelConfig`: `draft → shadow → active → retired`.
 - `RegradeRequest`: `queued → running → completed | failed`.
 - `Evaluation`: `final (effective) → superseded`.
+- `LessonSession`: `in_progress → completed` (một chiều; version mới của bài mở session mới).
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
 - Công thức, tham số, level, decay: [LEARNING_ANALYTICS §3](../../docs/02-learning/LEARNING_ANALYTICS.md).
 - Evidence hợp lệ: `question.answered` có `is_scored = true` và `rapid_guess = false`.
 - Một evaluation hiệu lực mỗi attempt (§2.6a); attempt gốc không đổi khi chấm lại.
+- Hoàn thành bài: `completion_rule` của version đã ghim (`content.lesson_versions`, F024) — `all_required_activities`/`any_activity`; activity "hoàn thành" = có attempt `graded` trong session (hoàn thành ≠ đạt, ACTIVITY_ENGINE §7). `view_only` chưa hỗ trợ (spec Ngoài phạm vi).
 
 ## 4. Event / outbox
 
@@ -89,5 +109,6 @@ Thêm `regrade_request_id uuid NULL`, `supersedes_evaluation_id uuid NULL`, `det
 |---|---|---|
 | `learning_objective.progressed` | mastery đổi | `learning-event.schema.json#/$defs/payload_objective_progressed`; domain: Cần thêm `specs/events/payloads/learning/learning_objective.progressed.v1.schema.json` |
 | `learning_objective.mastered` | lần đầu `mastered` | `#/$defs/payload_objective_mastered`; domain: Cần thêm `learning_objective.mastered.v1.schema.json` |
+| `lesson.completed` | lesson session chuyển `completed` (F031-AC-26) — phát learning event và domain event | learning event: `learning-event.schema.json#/$defs/payload_lesson_completed`; domain: `specs/events/payloads/learning/lesson.completed.v1.schema.json` |
 | `attempt.re_evaluated` | mỗi attempt chấm lại | `#/$defs/payload_attempt_re_evaluated`; domain: Cần thêm `attempt.re_evaluated.v1.schema.json` |
 | `audit.recorded` | regrade, xem hồ sơ, kích hoạt mô hình | envelope |

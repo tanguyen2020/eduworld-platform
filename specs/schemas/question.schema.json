@@ -87,6 +87,11 @@
       "type": "boolean",
       "default": false
     },
+    "efficacy_instrument": {
+      "type": "boolean",
+      "default": false,
+      "description": "Câu thuộc công cụ đo hiệu quả độc lập (F035, LEARNING_EFFICACY_PLAN §3.2): chỉ khi owner_scope = platform, exam_only = true và không tham số hóa; bị loại khỏi mọi lần chọn câu luyện tập/đề thường; chỉ đổi bằng version mới."
+    },
     "meta": {
       "$ref": "#/$defs/contentMeta"
     },

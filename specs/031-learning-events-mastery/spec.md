@@ -15,6 +15,7 @@
 ### Session 2026-11-17
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
+- Q: Feature nào xác định "hoàn thành bài học" và phát domain event `lesson.completed` (nguồn XP `lesson.completed` của PROGRESSION_SYSTEM §3.1)? → A: F031 (Technical Architect 2026-11-17). F031 sở hữu FR-ANL-001 (learning event `lesson.*`) và bộ đếm `progress_daily.lessons_completed`/`getMyProgress`; chưa feature nào sở hữu `completeLesson` và `learning.lesson_sessions`. F040 chỉ đọc trạng thái hoàn thành khi tính node lộ trình; F032 chỉ phủ attempt `practice`/`retry_wrong`/`diagnostic`. F031 phát `lesson.completed` (learning event + outbox) khi học sinh hoàn thành mọi activity bắt buộc của bài, ghim version bài học (R31), idempotent theo học sinh × version bài học; payload [`lesson.completed.v1`](../../specs/events/payloads/learning/lesson.completed.v1.schema.json) (User Story 6).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -115,8 +116,31 @@ Khi đổi tham số/mô hình mastery, vận hành chạy tính lại ở chế
 | F031-AC-23 | KHI chạy job recompute shadow cho một `model_version`, module learning PHẢI tính lại mọi `(student, LO)` từ `learning_events` vào vùng shadow, xuất báo cáo chênh lệch (phân bố level, số LO đổi level) và không thay đổi mastery đang dùng. | FR-PRG-009 · FR-PRG-003 | — |
 | F031-AC-24 | KHI kích hoạt `model_version` đã chạy shadow (System Admin, có audit), module learning PHẢI chuyển cấu hình `active`, áp kết quả shadow theo lô, và không phát lại `learning_objective.mastered` cho LO đã từng đạt. | FR-PRG-009 · ADR-0017 | — |
 
+---
+
+### User Story 6 — Hoàn thành bài học (Priority: P2)
+
+Học sinh mở một bài học trong Learning Zone, làm lần lượt các activity bắt buộc; khi activity bắt buộc cuối cùng được chấm, hệ thống ghi nhận hoàn thành bài theo đúng version bài đã mở và báo cho module game cộng XP nguồn `lesson.completed`.
+
+**Why this priority**: Nguồn dữ liệu `lessons_completed` (F031-AC-15) và XP hoàn thành bài học (FR-GAM-002, F074); không chặn MVP mastery.
+
+**Independent Test**: Bài Toán lớp 3 có 2 activity `required` + 1 tùy chọn, `completion_rule = all_required_activities`. `hs.an.3a` bắt đầu activity 1 trong ngữ cảnh `lesson` → có `lesson_sessions` ghim version; publish version bài mới; nộp activity 1, 2 → đúng một learning event và một outbox `lesson.completed` mang `lesson_version_id` cũ; `completeLesson` gọi lại trả cùng `completed_at`.
+
+**Acceptance Criteria (EARS)**:
+
+| Mã | Tiêu chí | Nguồn | TC |
+|---|---|---|---|
+| F031-AC-25 | KHI học sinh bắt đầu attempt với `context_type = lesson` (`context_id` = `lesson_id`) mà chưa có lesson session `in_progress` của bài đó, module learning PHẢI tạo `learning.lesson_sessions` ghim `lesson_version_id` hiện hành trong cùng transaction tạo attempt; attempt sau của cùng bài PHẢI dùng session đó, và `getLesson` PHẢI trả version đã ghim kèm `completed` của từng activity theo session; NẾU activity không thuộc version đã ghim, THÌ PHẢI trả `422 VALIDATION_FAILED` và không tạo attempt | FR-ANL-001 · R31 · ADR-0043 · [CONTENT_MODEL](../../docs/02-learning/CONTENT_MODEL.md) | — |
+| F031-AC-26 | KHI một attempt thuộc lesson session `in_progress` được chấm (`activity.graded`) làm thỏa `completion_rule` của version đã ghim (`all_required_activities`: mọi activity `required` có attempt `graded` trong session; `any_activity`: ít nhất một activity), module learning PHẢI chuyển session `completed`, ghi learning event `lesson.completed` và outbox domain event `lesson.completed` hợp lệ [`lesson.completed.v1`](../../specs/events/payloads/learning/lesson.completed.v1.schema.json) trong cùng transaction | FR-ANL-001 · FR-GAM-002 · [SCHOOL_LMS §5](../../docs/04-admin-portal/SCHOOL_LMS.md#5-lesson-delivery) | — |
+| F031-AC-27 | HỆ THỐNG PHẢI phát `lesson.completed` đúng một lần cho mỗi `(student_id, lesson_version_id)` (khóa idempotency `lesson:<student_id>:<lesson_version_id>:completed`): nộp thêm attempt, giao lại `activity.graded`, gọi lại `completeLesson` hoặc mở lại bài cùng version PHẢI không phát lần hai; bài đã publish version mới PHẢI mở session mới ghim version mới | R10 · R31 · [EVENT_DESIGN §5.4](../../docs/07-backend/EVENT_DESIGN.md) | TC-SVC-003 |
+| F031-AC-28 | KHI học sinh gọi `completeLesson`, module learning PHẢI trả `200 LessonCompletion` (`completed_at` của lần hoàn thành đầu) nếu session đã `completed` hoặc nay thỏa `completion_rule` (khi đó hoàn thành như F031-AC-26); NẾU chưa thỏa, THÌ PHẢI trả `409 CONFLICT` với `errors[]` liệt kê activity bắt buộc chưa hoàn thành; NẾU chưa có lesson session của bài, THÌ PHẢI trả `409 CONFLICT`; mọi trường kết quả/thời lượng do client gửi PHẢI bị bỏ qua | ADR-0016 · R5 · [API_DESIGN §6](../../docs/07-backend/API_DESIGN.md#6-idempotency) | — |
+| F031-AC-29 | HỆ THỐNG PHẢI chỉ cho principal `user_type = student` gọi `getLesson`, `completeLesson` trên dữ liệu của chính mình trong tenant của phiên: nhân sự PHẢI nhận `403 PERMISSION_DENIED`, `X-Tenant-Id` khác tenant phiên PHẢI nhận `403 TENANT_MISMATCH`, bài chưa publish/chưa gán tenant PHẢI nhận `404 NOT_FOUND`; payload `lesson.completed` PHẢI chỉ chứa ID, số đếm và thời lượng (không PII) | R7 · R8 · R14 · AC-AUTH-024 · AC-ORG-001 | TC-TEN-001 |
+| F031-AC-30 | KHI nhận `lesson.completed` (nội bộ), consumer `learning.progress_daily` PHẢI tăng `lessons_completed` của `(student, ngày, môn)` đúng một lần (`processed_events`) | FR-PRG-001 · [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md) | TC-SVC-003 |
+
 ### Edge Cases
 
+- Bài publish version mới khi học sinh đang học: session cũ giữ version đã ghim tới khi hoàn thành; attempt mới trong ngữ cảnh bài vẫn dùng session cũ (F031-AC-25, F031-AC-27).
+- Activity bắt buộc bị chấm lại (`attempt.re_evaluated`): hoàn thành bài không bị thu hồi ("hoàn thành" khác "đạt"; ACTIVITY_ENGINE §7).
 - Item gắn nhiều LO: mỗi LO nhận một evidence (F031-AC-08).
 - Event đến lệch thứ tự giữa hai attempt của cùng học sinh: cập nhật theo `occurred_at` của evidence; evidence cũ hơn `last_evidence_at` được áp lại bằng tính lại LO đó.
 - Học sinh chuyển lớp: event giữ `class_id` lúc xảy ra (F031-AC-01).
@@ -129,10 +153,10 @@ Khi đổi tham số/mô hình mastery, vận hành chạy tính lại ở chế
 
 | FR (PRD) | Phần feature này làm | Tài liệu sở hữu quy tắc |
 |---|---|---|
-| FR-ANL-001 | Envelope, idempotency, kiểm schema mọi learning event; F030 ghi event attempt | [EVENT_DESIGN §5](../../docs/07-backend/EVENT_DESIGN.md) |
+| FR-ANL-001 | Envelope, idempotency, kiểm schema mọi learning event; F030 ghi event attempt; F031 ghi `lesson.completed` (lesson session ghim version, domain event cho module game) | [EVENT_DESIGN §5](../../docs/07-backend/EVENT_DESIGN.md) |
 | FR-ANL-002 | LRS `learning.learning_events` append-only, partition, job partition | [LEARNING_ANALYTICS §2](../../docs/02-learning/LEARNING_ANALYTICS.md) |
 | FR-ANL-004 | Purpose limitation ở tầng ghi event | [LEARNING_ANALYTICS §9](../../docs/02-learning/LEARNING_ANALYTICS.md) |
-| FR-PRG-001 | Tiến độ cá nhân (`getMyProgress`, `getStudentProgress`, `progress_daily`); rollup lớp/trường ở F043 | [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md) |
+| FR-PRG-001 | Tiến độ cá nhân (`getMyProgress`, `getStudentProgress`, `progress_daily` gồm `lessons_completed`); rollup lớp/trường ở F043 | [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md) |
 | FR-PRG-002 | Mastery `(student, LO)` từ evidence | [LEARNING_ANALYTICS §3.1](../../docs/02-learning/LEARNING_ANALYTICS.md) |
 | FR-PRG-003 | `MasteryModel` cắm được, tham số có version, `model_version` | [LEARNING_ANALYTICS §3.1, §3.4](../../docs/02-learning/LEARNING_ANALYTICS.md) · ADR-0017 |
 | FR-PRG-009 | Tính lại khi re-evaluate và khi đổi `model_version` (shadow) | [LEARNING_ANALYTICS §3.4](../../docs/02-learning/LEARNING_ANALYTICS.md) |
@@ -145,6 +169,7 @@ Khi đổi tham số/mô hình mastery, vận hành chạy tính lại ở chế
 - **MasteryModelConfig**: tham số mô hình có version và trạng thái (draft/shadow/active/retired).
 - **ObjectiveMastery**: trạng thái mastery hiện tại của `(student, LO)`; **MasteryHistory**: lịch sử thay đổi.
 - **ProgressDaily**: bộ đếm tiến độ theo học sinh × ngày × môn.
+- **LessonSession**: lượt học một bài, ghim `lesson_version_id` khi bắt đầu, trạng thái `in_progress`/`completed`.
 - **RegradeRequest**: lệnh chấm lại do hệ thống chạy; **Evaluation**: kết quả chấm (system / re_evaluation, final / superseded).
 
 ### Tham số
@@ -180,6 +205,8 @@ Khi đổi tham số/mô hình mastery, vận hành chạy tính lại ở chế
 - Rollup lớp/trường/tenant, School Learning Dashboard → F043; báo cáo, item analysis → F044.
 - Evidence từ `exam.graded`, `exam.regraded` (scope `exam_session`) → F042; từ trận đấu → F105; từ `quest.completed` → F072.
 - Export xAPI ra ngoài (chức năng tương lai, EVENT_DESIGN §5.3).
+- Cộng XP khi nhận `lesson.completed` → F074; trạng thái node lộ trình đọc hoàn thành bài → F040; màn bài học trong Godot gọi `getLesson`/`completeLesson` → client Godot (F063).
+- Hoàn thành bài `view_only` (không có activity): cần heartbeat xem do server kiểm chứng ([SCHOOL_LMS §5](../../docs/04-admin-portal/SCHOOL_LMS.md#5-lesson-delivery), `lesson_completion_heartbeat`) qua endpoint client event whitelist chưa có operation — Câu hỏi mở; F031 không phát `lesson.completed` cho bài `view_only` cho tới khi có feature bổ sung.
 
 ## Assumptions
 

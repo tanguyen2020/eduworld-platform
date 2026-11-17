@@ -45,8 +45,8 @@ Mọi route REST đi tới binary `core-api` (nạp cả năm module domain); We
 
 | Prefix public `/api/v1/...` | Module | Spec sinh ra |
 |---|---|---|
-| `auth/*`, `me/*`, `catalog/*`, `students/me`, `students/{id}`, `schools/*`, `tenant/*` (trừ `tenant/chat/*`, `tenant/safety/*`, `tenant/students/*/login-events`, `tenant/analytics/*`, `tenant/reports*`), `admin/*` (trừ `admin/chat/*`, `admin/moderation/*`, `admin/safety/*`, `admin/login-events`, `admin/economy/*`, `admin/analytics/*`, `admin/reports*`), `sis/*` | module `identity` | `identity.v1.yaml` |
-| `learning/*`, `exams/*`, `students/{id}/progress`, `tenant/analytics/learning/*`, `tenant/reports*`, `admin/analytics/learning/*`, `admin/reports*`, `cms/learning/*` (gồm `cms/learning/translations*`), `cms/media*`, `lms/*` (trừ `lms/event-templates`, `lms/school-events*`, `lms/challenges*`) | module `learning` | `learning.v1.yaml` |
+| `auth/*`, `me/*`, `catalog/*`, `students/me`, `students/{id}`, `schools/*`, `tenant/*` (trừ `tenant/chat/*`, `tenant/safety/*`, `tenant/students/*/login-events`, `tenant/analytics/*`, `tenant/reports*`), `admin/*` (trừ `admin/chat/*`, `admin/moderation/*`, `admin/safety/*`, `admin/login-events`, `admin/economy/*`, `admin/analytics/*`, `admin/reports*`, `admin/learning/*`), `sis/*` | module `identity` | `identity.v1.yaml` |
+| `learning/*`, `exams/*`, `students/{id}/progress`, `tenant/analytics/learning/*`, `tenant/reports*`, `admin/analytics/learning/*`, `admin/reports*`, `admin/learning/*` (nghiên cứu hiệu quả, F035), `cms/learning/*` (gồm `cms/learning/translations*`), `cms/media*`, `lms/*` (trừ `lms/event-templates`, `lms/school-events*`, `lms/challenges*`) | module `learning` | `learning.v1.yaml` |
 | `game/*`, `game-media*`, `game-admin/preview/*`, `game-admin/translations*`, `game-admin/events/*`, `tenant/students/{id}/login-events`, `admin/login-events`, `admin/economy/*`, `admin/analytics/game/*`, `tenant/analytics/game/*`, **route ngoại lệ trong `/lms/*`:** `lms/event-templates`, `lms/school-events*` (sự kiện trường — [EVENT_SEASON_SYSTEM §10](../01-game-design/EVENT_SEASON_SYSTEM.md#10-sự-kiện-của-trường-tenant)), `game-admin/{config_type}` với `quests`, `minigame-configs`, `npc-dialogues`, `world-areas`, `story-chapters`, `events`, `event-templates`, `season-tracks`, `items`, `reward-rules`, `progression-levels`, `progression-curves`, `challenges`, `bosses`, `achievements`, `collections`, `shop-items`, `currencies` | module `game` | `game.v1.yaml` |
 | `multiplayer/*`, `competition/*`, `leaderboards/*`, **route ngoại lệ trong `/lms/*`:** `lms/challenges*` (thử thách lớp/giải trường — [COMPETITION_SYSTEM §10](../01-game-design/COMPETITION_SYSTEM.md)), `game-admin/{config_type}` với `matchmaking-configs`, `ranking-rules`, `seasons`, `tournament-templates`, `challenge-templates`, `leaderboard-definitions`, `competition-rewards` | module `competition` | `competition.v1.yaml` |
 | `chat/*`, `social/*`, `notifications/*`, `admin/chat/*`, `admin/moderation/*`, `admin/safety/*`, `tenant/chat/*`, `tenant/safety/*`, `game-admin/{config_type}` với `sticker-packs`, `gifs` | module `chat` | `chat.v1.yaml` |
@@ -489,7 +489,7 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | GET | `/learning/subjects` | Môn học theo khối — `listSubjects` | Mọi role | T | P2 |
 | GET | `/learning/topics` | Cây chủ đề (`?subject_id&grade_level`) | Mọi role | T | P2 |
 | GET | `/learning/objectives` | Learning objectives | Mọi role | T | P2 |
-| GET | `/learning/lessons/{lesson_id}` | Lesson published + activities (version ghim theo level session) — `getLesson` | STU | T | P2 |
+| GET | `/learning/lessons/{lesson_id}` | Lesson published + activities (version ghim theo lesson session) — `getLesson` | STU | T | P2 |
 | POST | `/learning/lessons/{lesson_id}:complete` | Đánh dấu hoàn thành bài học (server kiểm tra điều kiện xem/activity) — `completeLesson` | STU | B | P2 |
 | GET | `/learning/progress/me` | Tiến độ & mastery của mình (dạng thân thiện) — `getMyProgress` | STU (self) | T | P2 |
 | GET | `/learning/recommendations/me` | Gợi ý ôn tập theo LO yếu, câu sai đến hạn, bài sắp hết hạn — `getMyRecommendations` | STU (self) | T | P3 |
@@ -735,7 +735,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 |---|---|---|---|---|---|
 | GET | `/schools` | Trường trong scope | SA, SYS | T | P1 |
 | GET | `/schools/{school_id}` | Chi tiết + settings | SA (school), SYS | T | P1 |
-| PATCH | `/schools/{school_id}/settings` | Cài đặt trường (giờ truy cập, tính năng; không có JIT — ADR-0063) — `If-Match` | SA (school) | T | P3 |
+| GET/PATCH | `/schools/{school_id}/settings` | Cài đặt trường (giờ truy cập, bảng xếp hạng, club, khung giới nghiêm trường chỉ mở rộng — phải chứa trọn `platform_curfew`, ngược lại `422 VALIDATION_FAILED`, ADR-0078; không có JIT — ADR-0063) — `getSchoolSettings`/`updateSchoolSettings`, `If-Match`, `reason` khi đổi giới nghiêm | SA (school) · `school.settings.read`/`school.settings.write` | T | P3 |
 | GET | `/schools/{school_id}/classes` | Lớp theo năm học | SA, AM | T | P1 |
 | GET | `/schools/{school_id}/classes/{class_id}/students` | Danh sách học sinh lớp | SA, AM (scope) | T | P3 |
 | GET / POST | `/schools/{school_id}/user-roles` | Xem / gán UserRole thủ công (`source = manual`) trong phạm vi trường (`scope_type` = `school`/`subject` thuộc trường; không có scope lớp — ADR-0072) — chỉ role tenant mà người gán được phép cấp (ADR-0066); thay `PUT /schools/{id}/role-assignments/{id}` cũ — `listSchoolUserRoles`, `grantSchoolUserRole` | SA · `tenant.user_role.write` (scope trường) | T / B | P3 |
@@ -917,6 +917,7 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | GET | `/admin/audit-logs?tenant_ids=&actor_id=&action=&resource_type=&from=&to=` | Truy vấn audit liên tenant (gồm `role.*`, `user_role.*`, `cross_tenant.accessed`, `moderation.*`) — `listPlatformAuditLogs` | SYS · `platform.audit.read` | T | P1 |
 | GET | `/admin/login-events?tenant_ids=&student_id=&from=&to=` | **→ module `game`.** Lịch sử đăng nhập game liên tenant (ADR-0031), dropdown tenant | SYS · `platform.cross_tenant.read` | T | P1 |
 | GET/PUT | `/admin/settings/student-cleanup` | Cấu hình platform `inactive_student_cleanup_days` (mặc định 180 [Proposed]), `notice_days`, `allow_tenant_override`, ngưỡng cảnh báo % (ADR-0032) — `If-Match`, bắt buộc `reason` | SYS · `platform.settings.write` | T | P2 |
+| GET/PUT | `/admin/settings/curfew` | Giờ giới nghiêm platform `platform_curfew` (giá trị mặc định ở CONFIG_DEFAULTS, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) — `getPlatformCurfewSettings`/`putPlatformCurfewSettings`, `If-Match`, bắt buộc `reason`, audit, phát `platform_settings.changed` (ADR-0078) | SYS · `platform.settings.write` | T | P1 |
 | GET | `/admin/student-cleanup/runs?tenant_ids=` | Lịch sử các lần chạy worker dọn (số dọn, bị loại trừ, bị chặn do vượt ngưỡng) | SYS | T | P2 |
 | GET/PUT | `/admin/settings/chat-retention` | Thời hạn lưu chat gameplay `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3 → `422 RETENTION_BELOW_MINIMUM`), `ephemeral_retention_hours` (24), `allow_tenant_override` — bắt buộc `reason`, audit (ADR-0033) | SYS · `platform.settings.write` | T | P4 |
 | POST | `/admin/student-cleanup/runs/{run_id}:approve` | Xác nhận thủ công lần dọn vượt ngưỡng > 10% học sinh tenant [Proposed] | SYS | B | P2 |
@@ -978,7 +979,20 @@ Dashboard học tập & báo cáo (module learning, ADR-0062, [DASHBOARD_DATA §
 | POST | `/tenant/reports` | **→ module `learning`.** Export báo cáo tenant bất đồng bộ (`202`, URL ký 15 phút, audit `report.exported`; vượt giới hạn → `429 EXPORT_LIMIT_REACHED`) — `createTenantReport` | TA, SA · `report.export` | B | P3 |
 | GET | `/tenant/reports/{report_id}` | **→ module `learning`.** Trạng thái + link ký (chỉ người tạo) — `getTenantReport` | Người tạo | T | P3 |
 | GET | `/admin/analytics/learning/summary?tenant_ids=&from=&to=&grain=` | **→ module `learning`.** Tổng hợp liên tenant (không gửi `X-Tenant-Id`) — `getPlatformLearningSummary` | SYS · `platform.cross_tenant.read` | T | P4 |
-| POST | `/admin/reports` · GET `/admin/reports/{report_id}` | **→ module `learning`.** Export liên tenant — `createPlatformReport`, `getPlatformReport` | SYS · `report.export` | B / T | P4 |
+| POST | `/admin/reports` · GET `/admin/reports/{report_id}` | **→ module `learning`.** Export liên tenant — `createPlatformReport`, `getPlatformReport`; `report_type = efficacy_dataset` (bộ dữ liệu định danh giả của nghiên cứu hiệu quả, `params.study_id`) cần thêm `platform.efficacy_study.export` | SYS · `report.export` | B / T | P4 |
+
+Nghiên cứu hiệu quả học tập (module `learning`, F035 — [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md); `X-Tenant-Id` = tenant đích ở thao tác trên thỏa thuận, lớp, rút; study/đợt/báo cáo/thử nghiệm là dữ liệu platform):
+
+| Method | Path | Mô tả | Role | Idem | Phase |
+|---|---|---|---|---|---|
+| GET / POST | `/admin/learning/research-agreements` · POST `…/{agreement_id}:revoke` | **→ module `learning`.** Thỏa thuận nghiên cứu của tenant — `listResearchAgreements`, `createResearchAgreement`, `revokeResearchAgreement` | SYS · `platform.efficacy_study.manage` | T / B / B | P4 |
+| GET / POST / GET / PATCH | `/admin/learning/efficacy-studies` · `…/{study_id}` | **→ module `learning`.** Nghiên cứu (PATCH chỉ `draft`, `If-Match`) — `listEfficacyStudies`, `createEfficacyStudy`, `getEfficacyStudy`, `updateEfficacyStudy` | SYS · `platform.efficacy_study.manage` | T / B / T / T | P4 |
+| GET / POST / DELETE | `/admin/learning/efficacy-studies/{study_id}/classes` · `…/classes/{class_id}` | **→ module `learning`.** Lớp tham gia/so sánh/kiểm định (DELETE = soft-delete, chỉ `draft`) — `listEfficacyStudyClasses`, `addEfficacyStudyClass`, `removeEfficacyStudyClass` | SYS · `platform.efficacy_study.manage` | T / B / T | P4 |
+| POST | `/admin/learning/efficacy-studies/{study_id}:activate` · `:complete` · `:withdraw` | **→ module `learning`.** Kích hoạt, kết thúc, rút participant — `activateEfficacyStudy`, `completeEfficacyStudy`, `withdrawEfficacyParticipants` | SYS · `platform.efficacy_study.manage` | B | P4 |
+| GET / POST | `/admin/learning/efficacy-studies/{study_id}/waves` | **→ module `learning`.** Đợt kiểm tra `validation`/`pre`/`post` (tạo ExamSession đo hiệu quả) — `listEfficacyWaves`, `scheduleEfficacyWave` | SYS · `platform.efficacy_study.manage` | T / B | P4 |
+| POST / GET | `/admin/learning/efficacy-studies/{study_id}/reports` · `…/reports/{report_id}` | **→ module `learning`.** Báo cáo hiệu quả (`202`, chạy nền) — `createEfficacyStudyReport`, `getEfficacyStudyReport` | SYS · `platform.efficacy_study.manage` | B / T | P4 |
+| GET / POST / GET / PATCH | `/admin/learning/experiments` · `…/{experiment_id}` | **→ module `learning`.** Thử nghiệm A/B mastery/luật gợi ý (PATCH chỉ `draft`, `If-Match`) — `listLearningExperiments`, `createLearningExperiment`, `getLearningExperiment`, `updateLearningExperiment` | SYS · `platform.learning_experiment.manage` | T / B / T / T | P4 |
+| POST / GET | `/admin/learning/experiments/{experiment_id}:start` · `:stop` · `/results` | **→ module `learning`.** Bắt đầu shadow/live, dừng, kết quả theo arm — `startLearningExperiment`, `stopLearningExperiment`, `getLearningExperimentResults` | SYS · `platform.learning_experiment.manage` | B / B / T | P4 |
 
 Kinh tế game (module game, ADR-0049):
 
@@ -1049,6 +1063,7 @@ APISIX chỉ có **hai upstream** (ADR-0074 mục 5): `core-api` cho mọi route
 | `/api/v1/admin/economy/*` | **internal** | như trên | module `game` | Bút toán bù kinh tế game (ADR-0049) |
 | `/api/v1/admin/analytics/game/*` | **internal** | như trên | module `game` | Game Analytics (ADR-0058) |
 | `/api/v1/admin/analytics/learning/*`, `/api/v1/admin/reports*` | **internal** | như trên | module `learning` | Dashboard học tập liên tenant, export (ADR-0062) |
+| `/api/v1/admin/learning/*` | **internal** | như trên | module `learning` | Nghiên cứu hiệu quả học tập, thử nghiệm A/B (F035) |
 | `/api/v1/{admin,sis}/*` (còn lại) | **internal** | như trên | module `identity` | Không tồn tại trên public gateway |
 | `/realtime/v1` | public | `enable_websocket: true`, `limit-conn` (per IP); **không** `openid-connect` (ticket kiểm trong binary `realtime`) | — (upstream `realtime`) | Idle timeout 75 s, ping 25 s; drain khi deploy |
 | `/internal/sis/webhooks/*` | internal/partner | `hmac-auth` hoặc mTLS, `ip-restriction` (IP SIS), `limit-count` | module `identity` | Machine-to-machine |

@@ -1,6 +1,6 @@
 # Game Analytics
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-17 (loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-17 (telemetry `break_reminder_shown` thay domain event `wellbeing.break_reminder_shown` [TBD]; loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
 > Liên quan: [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [MONITORING](MONITORING.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Nguyên tắc · 3. Danh mục sự kiện tracking · 4. Định nghĩa chỉ số · 5. Pipeline · 6. Mô hình dữ liệu · 7. Dashboard và báo cáo · 8. Quyền truy cập · 9. Retention và quyền riêng tư · 10. Ngưỡng chuyển kho phân tích riêng · 11. API · 12. Tiêu chí nghiệm thu
@@ -58,7 +58,6 @@ Mọi sự kiện mang **chiều chuẩn**: `occurred_at`, `tenant_id`, `school_
 | `event_join` / `event_goal_complete` | Sự kiện tham gia/hoàn thành mục tiêu của hệ thống Event & Season | `event_id`, `goal_code` | Tên domain event chốt trong tài liệu Event & Season |
 | `learning_activity_done` | `activity.submitted` (`context` quest/challenge/minigame) | `activity_type`, `context` | Chỉ đếm; không lấy điểm |
 | `chat_daily_volume` | `chat.daily_stats` (mới, module chat, tổng hợp theo ngày) | số tin theo `channel_type`, số tin bị chặn/che | **Không có nội dung, không theo người** |
-| `break_reminder_shown` | `wellbeing.break_reminder_shown` — [TBD] chưa có producer: nhắc nghỉ chỉ đếm/hiển thị ở client (F062-AC-21), không có trong catalog EVENT_DESIGN §4.5; nếu cần đo thì đi qua telemetry client §3.2 | `minutes_played`, `reminder_no` | Ngưỡng nhắc do [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) sở hữu |
 
 ### 3.2. Nguồn client (telemetry `POST /api/v1/game/telemetry`)
 
@@ -71,8 +70,9 @@ Gửi theo lô, nén, tần suất và kích thước theo [MONITORING §10](MON
 | `perf_sample` | `preset` (`low`/`medium`/`high`), `renderer` (`mobile`/`compatibility`/`forward_plus`), `scene_code`, `fps_p50`, `fps_p10`, `frame_ms_p95`, `render_scale`, `mem_mb` | 1 mẫu/60 giây/phiên (đã tính percentile trên client) | Hiệu năng thực tế theo hạng thiết bị |
 | `load_time` | `kind` (`cold_start`/`area_transition`/`activity_open`), `ms` | Mỗi lần | So với ngân sách ADR-0057 |
 | `client_error` / `crash` | `error_code`, `scene_code`, `fatal` | Khi xảy ra | Crash-free sessions; chi tiết stack trace đi error tracking |
+| `break_reminder_shown` | `reminder_no` (1–20, lần nhắc thứ mấy trong phiên), `minutes_played` (0–1.440, số phút chơi liên tục client đếm lúc nhắc) | Mỗi lần game client hiện hộp nhắc nghỉ (F062-AC-21; lời nhắc bị hoãn chỉ gửi khi thật sự hiện), gửi trong lô kế tiếp | Chỉ số chơi lành mạnh §4.6 (F080). Không PII; server gắn `session_key` từ game session của token (không nhận từ client), khử trùng `client_event_id`; giá trị client chỉ dùng cho thống kê, không dùng để chặn chơi hay tính thưởng (ADR-0016). Ngưỡng nhắc do [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) sở hữu (`break_reminder`) |
 
-Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) thì client không gửi `screen_view`/`tutorial_step`; `perf_sample`, `load_time`, `crash` vẫn gửi vì phục vụ ổn định [Proposed].
+Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) thì client không gửi `screen_view`/`tutorial_step`; `perf_sample`, `load_time`, `crash` vẫn gửi vì phục vụ ổn định, `break_reminder_shown` vẫn gửi vì phục vụ giám sát chơi lành mạnh (FR-ANL-010) [Proposed].
 
 ## 4. Định nghĩa chỉ số
 
@@ -139,8 +139,8 @@ Ngưỡng cân bằng độ khó tham khảo cho game designer [Proposed]: `chal
 
 | Chỉ số | Công thức |
 |---|---|
-| `sessions_over_reminder` | % phiên có ≥ 1 `break_reminder_shown` (ngưỡng nhắc theo [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)) |
-| `sessions_over_second_reminder` | % phiên nhận nhắc lần 2 — KPI PRODUCT_VISION "% phiên > 90 phút < 5%" dùng chỉ số này |
+| `sessions_over_reminder` | % phiên (`session_key`) có ≥ 1 telemetry `break_reminder_shown` (§3.2; ngưỡng nhắc theo [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)) |
+| `sessions_over_second_reminder` | % phiên có `break_reminder_shown` với `reminder_no` ≥ 2 — KPI PRODUCT_VISION "% phiên > 90 phút < 5%" dùng chỉ số này |
 | `late_night_play_rate` | % người chơi hoạt động có phiên **giao với khung 22:00–06:00 ICT** (`late_night_window`, chỉ dùng cho chỉ số, không phải khung giờ truy cập của trường) |
 | `daily_playtime_p90` | Phân vị 90 tổng `active_seconds`/người chơi/ngày, theo khối — dùng phát hiện chơi quá mức, **không** làm mục tiêu tăng |
 

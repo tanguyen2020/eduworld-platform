@@ -112,7 +112,7 @@ Không có — quyết định đã có trong PERFORMANCE_BUDGET, GODOT_ARCHITEC
 
 ### Quan sát
 
-- Telemetry `/game/telemetry` (≤ 1 lần/5 phút): `fps_p10`, renderer, preset, render scale, model thiết bị (không PII); sự kiện `client_unsupported_assignment_kind`, `renderer_fallback`.
+- Telemetry `/game/telemetry` (≤ 1 lần/5 phút): `fps_p10`, renderer, preset, render scale, model thiết bị (không PII); sự kiện `client_unsupported_assignment_kind`, `renderer_fallback`; `break_reminder_shown` mỗi lần hộp nhắc nghỉ hiện (GAME_ANALYTICS §3.2, không phụ thuộc cờ telemetry sản phẩm).
 - `Log` không ghi tên bài/nickname ở mức INFO (R14).
 
 ## Complexity Tracking

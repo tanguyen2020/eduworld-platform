@@ -52,7 +52,7 @@ Học sinh nói chuyện NPC, đến sạp trái cây, nhặt vật thể; clien
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F072-AC-09 | KHI học sinh gọi `reportQuestStep` (`Idempotency-Key`) cho bước `talk_npc`/`go_to`/`collect` đang `active`, module game PHẢI kiểm `game_session_id` active, presence ở instance của `area_id` của bước, `npc_id`/`interactable_id` thuộc bước, rồi ghi nhận; hoàn thành bước PHẢI mở bước kế theo `depends_on`, phát `quest.step_completed` và đẩy `quest.progress.updated` | FR-QST-004 · FR-QST-005 · ADR-0016 | TC-WLD-006 |
-| F072-AC-10 | NẾU không ở đúng area/instance hoặc ID không thuộc bước, THÌ module game PHẢI trả `422 STEP_PRECONDITION_FAILED` và không đổi tiến độ; NẾU bước đang `locked` hoặc đã `completed`, THÌ PHẢI trả `409 INVALID_STATE_TRANSITION` | FR-QST-004 · AC-QST-002 | TC-GAM-010 |
+| F072-AC-10 | NẾU không ở đúng area/instance hoặc ID không thuộc bước, THÌ module game PHẢI trả `422 STEP_PRECONDITION_FAILED` và không đổi tiến độ; NẾU bước đang `locked` hoặc đã `completed`, THÌ PHẢI trả `422 INVALID_STATE_TRANSITION` | FR-QST-004 · AC-QST-002 | TC-GAM-010 |
 | F072-AC-11 | KHI báo lặp cùng `Idempotency-Key` hoặc cùng `interactable_id` của bước `collect`, module game PHẢI tính đúng một lần | FR-QST-005 · AC-QST-003 | — |
 | F072-AC-12 | KHI nhận `world.discovery_found` khớp bước `discover` đang active, module game PHẢI tăng tiến độ bước đó; bước `discover` PHẢI không hoàn thành qua `reportQuestStep` | FR-QST-005 · [QUEST_SYSTEM §3](../../docs/01-game-design/QUEST_SYSTEM.md#3-step-types) | TC-WLD-006 |
 | F072-AC-13 | HỆ THỐNG PHẢI không phát learning evidence, điểm hay mastery từ bước `talk_npc`/`go_to`/`collect`/`discover` | FR-QST-003 · [QUEST_SYSTEM §3](../../docs/01-game-design/QUEST_SYSTEM.md#3-step-types) | — |

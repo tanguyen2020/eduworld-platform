@@ -33,6 +33,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → sinh `specs/openapi/modul
 |---|---|---|---|
 | `activity.graded` | learning → game (`game.reward_engine`) | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Cần sửa (thêm trường, §6) |
 | `learning_objective.mastered` | learning → game | `specs/events/payloads/learning/learning_objective.mastered.v1.schema.json` | Cần thêm (owner F031) |
+| `lesson.completed` | learning (F031) → game (`game.reward_engine`) | `specs/events/payloads/learning/lesson.completed.v1.schema.json` | Có sẵn (owner F031) |
 | `quest.completed`, `minigame.completed` | game (F072/F073) → `game.reward_engine` | `specs/events/payloads/game/` | Cần thêm (owner F072, F073) |
 | `world.discovery_found`, `world.area_completed` | game (F071) → `game.reward_engine` | `specs/events/payloads/game/` | Cần thêm (owner F071) |
 | `student.synced`, `enrollment.changed` | identity → game (`game.grade_transition`) | `specs/events/payloads/identity/` | Cần thêm (owner F010/F011) |

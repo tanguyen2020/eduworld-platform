@@ -110,7 +110,7 @@ Không có. Chỉ số ở [GAME_ANALYTICS](../../docs/11-operations/GAME_ANALYT
 ### Tích hợp và phụ thuộc
 
 - Feature phụ thuộc: F014 (telemetry, client-config), F015 (cờ telemetry tenant), F077 (event run API), F078/F079 (link sang workspace A), F071–F075, F105, F117 (nguồn event), F051 (shell), F052 (chunk `school-lms` cho màn "Hoạt động game"), F056 (component dashboard `ops-ui`).
-- Event tiêu thụ: theo GAME_ANALYTICS §3.1 (`game_session.*`, `world.*`, `story.chapter_completed`, `avatar.created`, `quest.*`, `challenge.*`, `boss.*`, `xp.awarded`, `level.reached`, `currency.*`, `shop.item_purchased`, `achievement.unlocked`, `collection.completed`, `party.*`, `match.completed`, `duel.*`, `event.*`, `activity.submitted` (owner F030), `chat.daily_stats`; `wellbeing.break_reminder_shown` chưa có producer — EVENT_DESIGN §4.5) + `tenant.updated` (cờ telemetry).
+- Event tiêu thụ: theo GAME_ANALYTICS §3.1 (`game_session.*`, `world.*`, `story.chapter_completed`, `avatar.created`, `quest.*`, `challenge.*`, `boss.*`, `xp.awarded`, `level.reached`, `currency.*`, `shop.item_purchased`, `achievement.unlocked`, `collection.completed`, `party.*`, `match.completed`, `duel.*`, `event.*`, `activity.submitted` (owner F030), `chat.daily_stats`) + telemetry client `break_reminder_shown` qua `postTelemetry` (GAME_ANALYTICS §3.2, F062 gửi; không phải domain event) + `tenant.updated` (cờ telemetry).
 
 ### Bảo mật, tenant, idempotency, audit
 

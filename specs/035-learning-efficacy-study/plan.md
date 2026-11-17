@@ -132,12 +132,12 @@ Menu và nút của feature lấy từ [`specs/portal/menu-catalog.yaml`](../por
 
 | Loại | Khóa |
 |---|---|
-| Menu feature hiện thực | — (chưa có trong catalog, xem dưới) |
+| Menu feature hiện thực | `menu.platform_admin.efficacy_studies` (action `view`, `manage_agreements`, `edit`, `schedule_waves`, `withdraw`, `report`), `menu.platform_admin.learning_experiments` (action `view`, `edit`, `operate`) |
 | Action dùng | `action.content_studio.question_bank.view`, `action.content_studio.question_bank.edit`, `action.content_studio.assessments.view`, `action.content_studio.assessments.edit`, `action.platform_admin.reports.export`, `action.school_lms.assignments.view`, `action.school_lms.assignments.edit`, `action.school_lms.assignments.release_results` |
 
-Khoảng trống catalog/contract (không sửa trong feature này; báo owner `specs/portal/menu-catalog.yaml` + OpenAPI):
+Khoảng trống catalog/contract — đã đóng:
 
-- Catalog **chưa có menu** cho màn quản trị nghiên cứu ở workspace D (`research/*`): cần thêm (vd. `menu.platform_admin.research` với action `view`, `edit`, `report`) trước khi gắn `x-portal-action` cho `createResearchAgreement`, `listResearchAgreements`, `revokeResearchAgreement`, `createEfficacyStudy`, `listEfficacyStudies`, `getEfficacyStudy`, `updateEfficacyStudy`, `listEfficacyStudyClasses`, `listEfficacyWaves`, `completeEfficacyStudy`, `createEfficacyStudyReport`, `getEfficacyStudyReport`, `createLearningExperiment`, `listLearningExperiments`, `getLearningExperiment`, `updateLearningExperiment`, `getLearningExperimentResults` (Cần thêm)
+- ~~Catalog chưa có menu cho màn quản trị nghiên cứu ở workspace D~~ — đã thêm `menu.platform_admin.efficacy_studies` (`/platform-admin/efficacy-studies`, permission `platform.efficacy_study.manage`) và `menu.platform_admin.learning_experiments` (`/platform-admin/learning-experiments`, permission `platform.learning_experiment.manage`), `can_disable: true`; 24 operation `/admin/learning/*` có `x-portal-action` (`createPlatformReport` `efficacy_dataset` vẫn thuộc `action.platform_admin.reports.export`)
 - ~~Operation `/exams/*` thiếu `x-portal-action`~~ — đã đóng: `listExamSessions`, `getExamSession` → `action.school_lms.assignments.view`; `createExamSession` → `action.school_lms.assignments.edit`; `releaseExamResults` → `action.school_lms.assignments.release_results`
 
 ## Complexity Tracking

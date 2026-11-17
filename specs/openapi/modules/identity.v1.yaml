@@ -886,6 +886,76 @@ paths:
                       $ref: '#/components/schemas/Class'
         '404':
           $ref: '#/components/responses/NotFound'
+  /schools/{school_id}/settings:
+    get:
+      x-service: identity
+      tags:
+        - schools
+      operationId: getSchoolSettings
+      x-portal-action: action.school_lms.settings.view
+      summary: Cài đặt trường (chính sách trường, khung giới nghiêm trường kèm giới nghiêm platform và giới nghiêm hiệu lực)
+      description: |
+        Quyền `school.settings.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường ngoài tenant/scope → `404`. Trả `platform_curfew`, `effective_curfew` chỉ đọc để portal hiển thị giới hạn "chỉ siết thêm" (CHILD_SAFETY §4.1, ADR-0078).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: identity
+      tags:
+        - schools
+      operationId: updateSchoolSettings
+      x-portal-action: action.school_lms.settings.edit_school
+      summary: Cập nhật cài đặt trường (JSON Merge Patch, If-Match, reason)
+      description: |
+        Quyền `school.settings.write` trong scope trường. `curfew_window` chỉ được **mở rộng** giới nghiêm: khung trường phải chứa trọn `platform_curfew` (cho phép qua nửa đêm, giờ ICT), ngược lại `422 VALIDATION_FAILED` với `errors[]` trỏ `curfew_window.start`/`curfew_window.end` (F015-AC-22); `null` = chỉ áp `platform_curfew`. Trường thuộc tenant `common` không có khung trường (`422 VALIDATION_FAILED`). Đổi `curfew_window` bắt buộc `reason`; lưu ghi audit before/after và phát `school.updated` (`settings_subset`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/SchoolSettings'
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /schools/{school_id}/sis-imports:
     post:
       x-service: identity
@@ -2837,6 +2907,67 @@ paths:
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+  /admin/settings/curfew:
+    get:
+      x-service: identity
+      tags:
+        - admin
+      operationId: getPlatformCurfewSettings
+      x-portal-action: action.platform_admin.system_settings.view
+      summary: Giờ giới nghiêm platform platform_curfew (ADR-0078)
+      description: Chưa cấu hình → trả giá trị mặc định `platform_curfew` của CONFIG_DEFAULTS với `is_default = true` (F015-AC-21).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformCurfewSettings'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      x-service: identity
+      tags:
+        - admin
+      operationId: putPlatformCurfewSettings
+      x-portal-action: action.platform_admin.system_settings.edit
+      summary: Cập nhật giờ giới nghiêm platform (bắt buộc reason, audit, phát platform_settings.changed)
+      description: Chỉ `platform.settings.write` (System Admin, MFA, gateway nội bộ); role tenant → `403 PERMISSION_DENIED` (F015-AC-21). Khung trường đã lưu không bị sửa; giới nghiêm hiệu lực của học sinh luôn là hợp `platform_curfew` và khung trường (F015-AC-22).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformCurfewSettings'
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformCurfewSettings'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /admin/student-cleanup/runs:
     get:
       x-service: identity
@@ -3390,6 +3521,13 @@ components:
       in: query
       schema:
         $ref: '#/components/schemas/GradeLevel'
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 512
     ResourceTypePath:
       name: resource_type
       in: path
@@ -3408,13 +3546,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    IfMatch:
-      name: If-Match
-      in: header
-      required: true
-      schema:
-        type: string
-        maxLength: 512
     ReasonQuery:
       name: reason
       in: query
@@ -4697,6 +4828,68 @@ components:
           maxLength: 255
         student_count:
           type: integer
+    SchoolSettings:
+      type: object
+      additionalProperties: false
+      description: Cài đặt cấp trường (FR-ORG-007; ADMIN_PORTAL §3.9). Mọi khóa chỉ được siết chặt hơn cấp platform/tenant (ADR-0020, ADR-0078). Chat policy trường do F122 bổ sung.
+      properties:
+        school_id:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+        allowed_hours:
+          type: object
+          additionalProperties: true
+          description: Khung giờ truy cập của trường (schema chi tiết dùng chung với TenantSettings — delta F015)
+        class_leaderboard_enabled:
+          type: boolean
+        school_leaderboard_enabled:
+          type: boolean
+        student_club_creation:
+          type: boolean
+          default: false
+        curfew_window:
+          description: Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew
+          oneOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+            - type: 'null'
+        platform_curfew:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+        effective_curfew:
+          readOnly: true
+          description: Giới nghiêm hiệu lực của học sinh trường = hợp platform_curfew và curfew_window
+          allOf:
+            - $ref: '#/components/schemas/CurfewWindow'
+        updated_at:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+          writeOnly: true
+          description: Bắt buộc khi đổi curfew_window (audit)
+    CurfewWindow:
+      type: object
+      required:
+        - start
+        - end
+      additionalProperties: false
+      description: Khung giới nghiêm hằng ngày theo giờ ICT (HH:MM); end nhỏ hơn start nghĩa là qua nửa đêm (vd. 21:30–06:30). Không theo khối lớp (R15).
+      properties:
+        start:
+          type: string
+          maxLength: 5
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          example: '21:30'
+        end:
+          type: string
+          maxLength: 5
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          example: '06:30'
     SisImportCreate:
       type: object
       required:
@@ -5948,6 +6141,49 @@ components:
           minLength: 3
           maxLength: 500
           writeOnly: true
+    PlatformCurfewSettings:
+      type: object
+      required:
+        - start
+        - end
+        - reason
+      additionalProperties: false
+      description: platform_curfew (CHILD_SAFETY §4.1, CONFIG_DEFAULTS); áp cho game và chat mọi học sinh, tenant common bắt buộc áp.
+      properties:
+        start:
+          type: string
+          maxLength: 5
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          example: '21:30'
+        end:
+          type: string
+          maxLength: 5
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          example: '06:30'
+        timezone:
+          type: string
+          maxLength: 64
+          readOnly: true
+          example: Asia/Ho_Chi_Minh
+        warning_minutes:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: curfew_warning_minutes (chỉ đọc)
+        is_default:
+          type: boolean
+          readOnly: true
+          description: true khi chưa cấu hình (giá trị CONFIG_DEFAULTS)
+        updated_at:
+          readOnly: true
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+          writeOnly: true
     StudentCleanupRunPage:
       type: object
       required:
@@ -6251,12 +6487,6 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
-    Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
     PreconditionFailed:
       description: VERSION_MISMATCH
       content:
@@ -6265,6 +6495,12 @@ components:
             $ref: '#/components/schemas/Problem'
     PreconditionRequired:
       description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
       content:
         application/problem+json:
           schema:

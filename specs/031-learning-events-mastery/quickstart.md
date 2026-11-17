@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F020, F021, F030 (và F026 để publish version sửa lỗi).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: học sinh `hs.an.3a`, `hs.binh.3a` (`th-demo-a`); `ad.truong.a` (school_admin `th-demo-a`), `ad.truong.b` (school_admin `pgd-demo`), `qlcm.truong.a` (academic_manager, scope môn Toán `th-demo-a`), `cm.noidung` (content_admin), `sa.admin`.
-- Dữ liệu: activity `quiz` Toán lớp 3 (LO `MATH.G3.NUM.MUL_TABLE.2`) đã publish, gán `th-demo-a`; `mastery_model_configs` có `we-1.0` `active` (seed).
+- Dữ liệu: activity `quiz` Toán lớp 3 (LO `MATH.G3.NUM.MUL_TABLE.2`) đã publish, gán `th-demo-a`; `mastery_model_configs` có `we-1.0` `active` (seed); lesson Toán lớp 3 `completion_rule = all_required_activities` gồm 2 activity `required` + 1 tùy chọn, đã publish, gán `th-demo-a` (US6).
 
 ## 2. Kịch bản kiểm tra
 
@@ -34,6 +34,12 @@
 | 19 | Gửi lại cùng key; gửi yêu cầu khác khi đang `running` | Yêu cầu cũ; `409 CONFLICT` | F031-AC-22 |
 | 20 | `worker learning mastery-recompute --model-version=we-1.1` (lệnh vận hành của `cmd/worker`) | Báo cáo chênh lệch; `objective_masteries` không đổi | F031-AC-23 |
 | 21 | `sa.admin` kích hoạt `we-1.1` | Bản ghi mang `we-1.1`; không có `mastered` lặp | F031-AC-24 |
+| 22 | `hs.an.3a` bắt đầu activity 1 của lesson (`context_type = lesson`); `cm.noidung` publish version bài mới; `hs.an.3a` gọi `getLesson` | Có `lesson_sessions` `in_progress` ghim version cũ; `getLesson` trả version cũ, activity 1 chưa `completed`; start activity không thuộc version ghim → `422 VALIDATION_FAILED` | F031-AC-25 |
+| 23 | `hs.an.3a` gọi `completeLesson` khi mới nộp activity 1 | `409 CONFLICT`, `errors[]` chỉ activity 2 | F031-AC-28 |
+| 24 | Nộp activity 2 (bắt buộc cuối) | Session `completed`; một learning event và một outbox `lesson.completed` (`lesson_version_id` cũ, hợp lệ `lesson.completed.v1`, không PII); `progress_daily.lessons_completed` +1 | F031-AC-26, F031-AC-29, F031-AC-30 |
+| 25 | Nộp activity tùy chọn; phát lại `activity.graded`; gọi `completeLesson` hai lần (key khác nhau) | Không event mới; `completeLesson` trả cùng `completed_at` | F031-AC-27, F031-AC-28 |
+| 26 | Mở lại bài (version mới) và hoàn thành | Session mới ghim version mới; thêm đúng một `lesson.completed` cho version mới | F031-AC-27 |
+| 27 | `ad.truong.a` gọi `getLesson`/`completeLesson`; `hs.an.3a` với `X-Tenant-Id` của `pgd-demo` | `403 PERMISSION_DENIED`; `403 TENANT_MISMATCH` | F031-AC-29 |
 
 ## 3. Lệnh test tự động
 

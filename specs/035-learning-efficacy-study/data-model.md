@@ -146,5 +146,5 @@ PK `(experiment_id, arm_code, tenant_id, student_id, objective_id)`; cột trạ
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | `audit.recorded` | Mọi thao tác ghi, xem liên tenant, xuất dữ liệu | envelope có sẵn |
-| learning event (mọi `event_type`) | Attempt đo hiệu quả, học sinh trong thử nghiệm | `specs/schemas/learning-event.schema.json` — Cần sửa `$defs/context`: `efficacy_wave_id`, `experiment_arms` |
+| learning event (mọi `event_type`) | Attempt đo hiệu quả, học sinh trong thử nghiệm | `specs/schemas/learning-event.schema.json` `$defs/context`: `efficacy_wave_id`, `experiment_arms` (có sẵn) |
 | `exam.*` | **Không phát** cho ExamSession có `efficacy_wave_id` | — |

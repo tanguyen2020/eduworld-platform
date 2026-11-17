@@ -107,9 +107,9 @@ System Admin nhập `official_code` cho tỉnh sau khi đối chiếu văn bản
 
 ---
 
-### User Story 6 — Cấu hình hệ thống: dọn học sinh, thời hạn chat gameplay (Priority: P2)
+### User Story 6 — Cấu hình hệ thống: dọn học sinh, thời hạn chat gameplay, giờ giới nghiêm platform (Priority: P2)
 
-System Admin đặt số ngày dọn học sinh không đăng nhập, duyệt lần dọn vượt ngưỡng, đặt thời hạn lưu chat gameplay (FR-AUTH-024).
+System Admin đặt số ngày dọn học sinh không đăng nhập, duyệt lần dọn vượt ngưỡng, đặt thời hạn lưu chat gameplay (FR-AUTH-024) và giờ giới nghiêm platform `platform_curfew` (ADR-0078).
 
 **Why this priority**: Worker dọn (F016) cần cấu hình và người duyệt; nếu không lần chạy vượt ngưỡng bị treo.
 
@@ -122,6 +122,7 @@ System Admin đặt số ngày dọn học sinh không đăng nhập, duyệt l�
 | F057-AC-14 | KHI System Admin có `platform.settings.write` lưu cài đặt dọn học sinh, Portal PHẢI gửi `putStudentCleanupSettings` gồm `default_days` (cho phép tắt), `notice_days`, `allow_tenant_override`, `approval_threshold_percent` và `reason` bắt buộc trong giới hạn schema, hiển thị cảnh báo khi số ngày thấp hơn ngưỡng cảnh báo của [ADMIN_PORTAL §3.10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | FR-AUTH-024 · ADR-0032 | TC-AUTH-020 |
 | F057-AC-15 | KHI System Admin có `platform.student_cleanup.approve` mở "Lần dọn chờ xác nhận", Portal PHẢI liệt kê `listStudentCleanupRuns` theo tenant với số ứng viên/đã dọn/loại trừ/bỏ qua, và nút Xác nhận gọi `approveStudentCleanupRun` (`Idempotency-Key`); nút Hủy dùng `cancelStudentCleanupRun` sau delta | FR-AUTH-024 · ADR-0032 | TC-AUTH-021 |
 | F057-AC-16 | KHI System Admin lưu thời hạn chat gameplay, Portal PHẢI gửi `putChatRetentionSettings` với `reason`, chặn giá trị dưới `minimum_days` do server trả và hiển thị `422 RETENTION_BELOW_MINIMUM` theo `code` | ADR-0033 · [ADMIN_PORTAL §3.10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
+| F057-AC-23 | KHI System Admin có `platform.settings.write` mở Cấu hình hệ thống, Portal PHẢI hiển thị khối "Giờ giới nghiêm platform" từ `getPlatformCurfewSettings` (giờ ICT, nhãn "mặc định" khi `is_default`, `warning_minutes` chỉ đọc); khi lưu PHẢI kiểm `start`/`end` dạng HH:MM (khung qua nửa đêm hiển thị "đến … hôm sau"), bắt buộc `reason`, hiện hộp xác nhận nêu tác động (chặn đăng nhập game, game session và chat của mọi học sinh mọi tenant trong khung) rồi gửi `putPlatformCurfewSettings` với `If-Match`; `412`/`422` PHẢI hiển thị theo `code` tại đúng ô | NFR-SAFE-005 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 | TC-AUTH-092 |
 
 ---
 

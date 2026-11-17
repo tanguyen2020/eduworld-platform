@@ -23,6 +23,7 @@
 | 8 | Đổi ngôn ngữ vi ↔ en trong Cài đặt | HUD/tab đổi ngay | F062-AC-06 |
 | 9 | Đăng nhập tài khoản có `grade_band = g1_3` | Theme density lớn, bấm-để-đi bật, ẩn minimap | F062-AC-05, F062-AC-02 |
 | 10 | Bootstrap mock `break_reminder_minutes = 1` | Hộp nhắc nghỉ sau 1 phút, đóng được | F062-AC-21 |
+| 10b | Tiếp bước 10 với backend thật, tắt telemetry sản phẩm của trường; chờ lần nhắc thứ 2 | `postTelemetry` chứa 2 sự kiện `break_reminder_shown` (`reminder_no` 1, 2), không trường định danh; `analytics.events_raw` có 2 dòng `break_reminder_shown` | F062-AC-24 |
 | 11 | Chạy profile `mock` | Nhãn "MOCK" hiện trên HUD | F062-AC-13 |
 | 12 | Trên DEV-AND-MID1 đo khởi động lạnh → Hub và FPS | ≤ `load_time`; FPS p10 ≥ 27 | F062-AC-20, F062-AC-16 |
 
