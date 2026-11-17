@@ -84,7 +84,8 @@ func TestAPIShutdown(t *testing.T) {
 	if !nc.drained.Load() || !closed.Load() || !workerStopped.Load() {
 		t.Fatalf("drained=%v closed=%v worker=%v", nc.drained.Load(), closed.Load(), workerStopped.Load())
 	}
-	if _, err := http.Get("http://" + ln.Addr().String() + "/slow"); err == nil {
+	if resp, err := http.Get("http://" + ln.Addr().String() + "/slow"); err == nil {
+		_ = resp.Body.Close()
 		t.Fatal("server still accepts requests after shutdown")
 	}
 	_ = admin.Close()
