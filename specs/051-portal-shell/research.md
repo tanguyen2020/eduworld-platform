@@ -29,7 +29,7 @@
 
 ## R6. Sinh menu từ catalog (ADR-0090)
 
-- **Decision**: `web/apps/portal/scripts/gen-menu-catalog.mjs` đọc `specs/portal/menu-catalog.yaml` (đã kiểm bằng `scripts/specs/check-portal-catalog.mjs`) và sinh `src/generated/menu-catalog.ts`: mảng workspace/menu/action (`key`, `path`, `labelKey`, `requiredPermissions`, `order`), union type `MenuKey`, `ActionKey`. `make portal-catalog` chạy script; CI chạy lại và `git diff --exit-code`. Test kiểm mỗi `MenuKey` có component trong `routeComponents`.
+- **Decision**: `src/cms/frontend/apps/portal/scripts/gen-menu-catalog.mjs` đọc `specs/portal/menu-catalog.yaml` (đã kiểm bằng `scripts/specs/check-portal-catalog.mjs`) và sinh `src/generated/menu-catalog.ts`: mảng workspace/menu/action (`key`, `path`, `labelKey`, `requiredPermissions`, `order`), union type `MenuKey`, `ActionKey`. `make portal-catalog` chạy script; CI chạy lại và `git diff --exit-code`. Test kiểm mỗi `MenuKey` có component trong `routeComponents`.
 - **Rationale**: Một nguồn sự thật (R33), khóa action có kiểu nên `ActionGate` không nhận khóa sai; trùng khớp với `platform.portal_menu_catalog` và `x-portal-action` mà backend dùng.
 - **Alternatives**: Đọc catalog lúc chạy từ API (thêm round-trip, menu không có code tương ứng vô nghĩa — ADR-0090 phương án đã loại); khai báo tay (lệch catalog).
 

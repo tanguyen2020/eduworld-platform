@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F072, F074 (và F030 với delta `createAttempt` mode `challenge`).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events` (chạy 2 instance worker cho kịch bản failover), `make seed-check` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Seed config: `go run ./modules/game/cmd/worker seed-config --dir deploy/seed/game-config` (challenge `time` khối 3, `survival` khối 3–7, `weekly` khối 7; question set Toán khối 3 và 7 đã publish ở module learning).
+- Seed config: `go -C src/backend run ./modules/game/cmd/worker seed-config --dir deploy/seed/game-config` (challenge `time` khối 3, `survival` khối 3–7, `weekly` khối 7; question set Toán khối 3 và 7 đã publish ở module learning).
 - Tài khoản demo: `hs.an.3a` (khối 3), `hs.dung.7a` (khối 7), `ad.truong.a`.
 
 ## 2. Kịch bản kiểm tra
@@ -29,7 +29,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-go test ./pkg/roomhost/...
+go -C src/backend test ./pkg/roomhost/...
 make test MOD=game
 make test-integration MOD=game
 make test-contract

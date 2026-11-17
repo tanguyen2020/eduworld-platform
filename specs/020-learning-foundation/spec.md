@@ -169,7 +169,7 @@ Saga clone của module identity gọi module learning để sao sâu nội dung
 | Clean Architecture + CQRS tách write/read context (ADR-0087), outbox cùng transaction | NFR-MAINT-001 · NFR-MAINT-004 · ADR-0038 · ADR-0042 · ADR-0087 |
 | Chỉ soft-delete, global filter ent | ADR-0028 · ADR-0039 · AGENTS R21, R27 |
 | Mọi chuỗi có giới hạn | NFR-MAINT-005 · ADR-0041 |
-| Gọi chéo module chỉ qua facade sinh từ spec internal (`pkg/modcall`) | NFR-MAINT-006 · ADR-0074 · ADR-0040 |
+| Gọi chéo module chỉ qua facade sinh từ spec internal (`src/backend/pkg/modcall`) | NFR-MAINT-006 · ADR-0074 · ADR-0040 |
 | Không lưu dữ liệu học sinh ngoài mức cần | NFR-PRIV-002 |
 
 ## Success Criteria *(bắt buộc)*
@@ -190,8 +190,8 @@ Saga clone của module identity gọi module learning để sao sâu nội dung
 
 ## Assumptions
 
-- `pkg/entx` (`Base`, `TenantAppendOnly`, `TenantOptional`, `TenantOptionalAppendOnly`, `HybridContent`, `GlobalBase`, `AppendOnly`, interceptor theo mixin, hook — ADR-0089), `pkg/tenancy` (`TenantScope`, `CrossTenantScope`, `PlatformScope` qua `authz.PlatformScope(p)`/`authz.SystemPlatformScope(job)`, `Bypass` danh sách đóng), `pkg/outbox`, `pkg/modcall` có từ F002/F003.
+- `src/backend/pkg/entx` (`Base`, `TenantAppendOnly`, `TenantOptional`, `TenantOptionalAppendOnly`, `HybridContent`, `GlobalBase`, `AppendOnly`, interceptor theo mixin, hook — ADR-0089), `src/backend/pkg/tenancy` (`TenantScope`, `CrossTenantScope`, `PlatformScope` qua `authz.PlatformScope(p)`/`authz.SystemPlatformScope(job)`, `Bypass` danh sách đóng), `src/backend/pkg/outbox`, `src/backend/pkg/modcall` có từ F002/F003.
 - ADR-0089 (làm rõ 2026-11-17): `content.content_releases` và `content.content_transitions` là bảng TA\*, mixin `TenantOptionalAppendOnly`; dòng `tenant_id` NULL (nội dung platform, release platform) chỉ ghi bằng `learning_platform` dưới `PlatformScope`.
 - Payload schema của event identity (`tenant.*`, `school.synced`, `student.*`, `enrollment.changed`) do F010/F011 bổ sung; F020 tiêu thụ theo schema đó [Proposed].
-- Thư mục module `modules/learning/` theo ADR-0074.
+- Thư mục module `src/backend/modules/learning/` theo ADR-0074.
 - Tenant Admin dùng Thùng rác khi tenant được cấp `tenant.trash.*` [Proposed] — identity kiểm quyền (F045).

@@ -10,7 +10,7 @@ Thêm domain party vào game client theo GODOT_ARCHITECTURE §4, §6: `PartyServ
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim trong `godot/.godot-version`), static typing bắt buộc (ADR-0014) |
+| Language/Version | GDScript (Godot 4.x ghim trong `src/game/.godot-version`), static typing bắt buộc (ADR-0014) |
 | Primary Dependencies | GdUnit4; autoload `Config`, `Log`, `EventBus`, `AppState`, `ApiClient`, `RealtimeClient`, `SceneRouter`, `Settings`, `QualityManager` (F060–F062, F092) |
 | Storage | Không có dữ liệu bền; không ghi party xuống `user://` |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`) + scene runner headless; integration headless với backend docker compose |
@@ -50,7 +50,7 @@ specs/102-godot-party-ui/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/
 │   ├── social/PartyLobby.tscn             # + party_lobby.gd (bố cục PC/mobile theo kích thước màn)
 │   ├── social/PartyMemberCard.tscn        # + party_member_card.gd

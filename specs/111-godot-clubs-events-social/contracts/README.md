@@ -70,5 +70,5 @@ F111 không sở hữu contract. Delta do owner backend thực hiện (task theo
 - **F091/F071** — AsyncAPI `HubInstanceJoin.follow_user_id` (uuid, tùy chọn); quyết định bỏ hoặc đổi nghĩa `joinFriendInWorld` (F111 không gọi).
 - **F123/F120** — `Notification.kind` thêm `club_invitation`, `club_join_request`, `club_approved`; enum `kind` chung REST/WS (RB-513) nên WS dùng cùng giá trị; `action` deep link `{"kind":"open_club","id":"<club_id>"}`, `{"kind":"open_event","id":"<event_id>"}`.
 - **F077** — `event.community_goal.updated` theo `community_goal_progress_flush_seconds`; `joinGameEvent` khai báo `428`.
-- Fixture `godot/tests/fixtures/{club,liveops,social_suggestions}/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example ([GODOT_ARCHITECTURE §12](../../../docs/08-game-client/GODOT_ARCHITECTURE.md)).
+- Fixture `src/game/tests/fixtures/{club,liveops,social_suggestions}/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example ([GODOT_ARCHITECTURE §12](../../../docs/08-game-client/GODOT_ARCHITECTURE.md)).
 - Kiểm (owner backend): `make specs-lint`, `make specs-breaking`, `make gen MOD=chat`, `make gen MOD=game`, `make gen MOD=identity`, `make test-contract`.

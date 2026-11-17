@@ -4,14 +4,14 @@
 
 ## Summary
 
-Hai phần, backend trước. (1) **module competition**: phía ghi của bảng cấu hình `game_configs`/`game_config_versions`/`content_releases` (F104 đã tạo, chỉ đọc): command tạo/sửa nháp, transition workflow, publish có `effective_from`, rollback/unpublish; validator theo JSON Schema (7 schema mới) + invariant domain; outbox `competition_config.published`; consumer áp runtime (mùa, leaderboard definition — dùng command của F106). Router `/game-admin/*` gắn middleware `platform_admin` (azp `eduworld-portal`, MFA `acr`, role platform) chỉ ở listener gateway nội bộ. (2) **web/apps/portal**: module `competition` trong chunk `game-ops` (workspace A) và module `challenges` trong chunk `school-lms` (workspace C), gọi API qua `apiClient` (F050) với hook TanStack Query; không business logic.
+Hai phần, backend trước. (1) **module competition**: phía ghi của bảng cấu hình `game_configs`/`game_config_versions`/`content_releases` (F104 đã tạo, chỉ đọc): command tạo/sửa nháp, transition workflow, publish có `effective_from`, rollback/unpublish; validator theo JSON Schema (7 schema mới) + invariant domain; outbox `competition_config.published`; consumer áp runtime (mùa, leaderboard definition — dùng command của F106). Router `/game-admin/*` gắn middleware `platform_admin` (azp `eduworld-portal`, MFA `acr`, role platform) chỉ ở listener gateway nội bộ. (2) **src/cms/frontend/apps/portal**: module `competition` trong chunk `game-ops` (workspace A) và module `challenges` trong chunk `school-lms` (workspace C), gọi API qua `apiClient` (F050) với hook TanStack Query; không business logic.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 / TypeScript (React, Vite) |
-| Primary Dependencies | chi, ent, oapi-codegen, `santhosh-tekuri/jsonschema` (validate payload), `pkg/entx` (`UnitOfWork`), `pkg/authz`, `pkg/outbox` / Ant Design 5 + Pro, `ops-ui` (`ContentEditorShell`), TanStack Query, React Router, React Hook Form + Zod/JSON Schema form, openapi-typescript, i18next |
+| Primary Dependencies | chi, ent, oapi-codegen, `santhosh-tekuri/jsonschema` (validate payload), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/outbox` / Ant Design 5 + Pro, `ops-ui` (`ContentEditorShell`), TanStack Query, React Router, React Hook Form + Zod/JSON Schema form, openapi-typescript, i18next |
 | Storage | PostgreSQL `eduworld_competition` (`competition.game_configs`, `game_config_versions`, `content_releases`) |
 | Testing | go test + testcontainers; Vitest + Testing Library + MSW (handler sinh từ OpenAPI, nhãn `MOCK` chỉ trong test); Playwright E2E với backend compose; axe |
 | Target Platform | Linux container; trình duyệt desktop (editor), tablet/điện thoại xem |
@@ -54,7 +54,7 @@ specs/108-competition-config-portal/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── internal/domain/config/
 │   ├── workflow.go           # draft → in_review → approved → published → archived; rejected
 │   ├── invariants.go         # ràng buộc khối, bonus tốc độ, tier tăng dần, xp ở scope lớp, allowed_params, phần thưởng
@@ -66,7 +66,7 @@ modules/competition/
 ├── internal/presentation/consumer/config_published_consumer.go
 └── tests/{unit,integration,contract}/config/
 
-web/apps/portal/src/workspaces/game-ops/competition/
+src/cms/frontend/apps/portal/src/workspaces/game-ops/competition/
 ├── routes.tsx                 # /game-ops/competition/{matchmaking,ranking,seasons,templates,leaderboards}
 ├── api/configs.ts             # useConfigs, useConfigVersion, useSaveDraft, useTransition, usePublish, useRollback, useVersions, useDiff, useReleases
 ├── model/problemMessages.ts   # ProblemCode → khóa i18n
@@ -75,7 +75,7 @@ web/apps/portal/src/workspaces/game-ops/competition/
 ├── dialogs/{PublishDialog,RollbackDialog,ReviewDialog}.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/*.test.tsx
-web/apps/portal/src/workspaces/school-lms/challenges/
+src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/
 ├── routes.tsx                 # /school-lms/challenges, /school-lms/challenges/:id
 ├── api/challenges.ts          # useChallengeTemplates, useCreateChallenge, useChallenges, useChallenge, useCancelChallenge, useTournament*, useBracket, useOverrideNode
 ├── pages/{ChallengeListPage,ChallengeDetailPage}.tsx
@@ -83,7 +83,7 @@ web/apps/portal/src/workspaces/school-lms/challenges/
 ├── bracket/BracketView.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/*.test.tsx
-web/apps/portal/e2e/{game-ops-competition,school-lms-challenges}.spec.ts
+src/cms/frontend/apps/portal/e2e/{game-ops-competition,school-lms-challenges}.spec.ts
 ```
 
 **Structure Decision**: Workspace A/C là chunk lazy-load riêng (ADR-0027 mục 7, route theo F051); form cấu hình sinh từ JSON Schema để không lặp quy tắc ở client.

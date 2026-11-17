@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F001
 - Lệnh: `make up`, `make up-obs`, `make test MOD=pkg`, `make test-integration MOD=pkg` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md))
-- Service mẫu kiểm end-to-end: `modules/learning` gắn `httpx` với route thử `GET /api/v1/_kit/echo` (chỉ build tag `kitdemo`, không vào image phát hành) và `PrincipalResolver` giả (fixture tenant A = `th-demo-a`, B = `pgd-demo`).
+- Service mẫu kiểm end-to-end: `src/backend/modules/learning` gắn `httpx` với route thử `GET /api/v1/_kit/echo` (chỉ build tag `kitdemo`, không vào image phát hành) và `PrincipalResolver` giả (fixture tenant A = `th-demo-a`, B = `pgd-demo`).
 - Tài khoản demo (token phát bởi JWKS giả trong test; với Keycloak thật cần F004): `ad.truong.a` (tenant A), `ad.truong.b` (tenant B), `qlcm.truong.a` (2 tenant), `sa.admin` (platform), `hs.an.3a` (học sinh).
 
 ## 2. Kịch bản kiểm tra
@@ -46,7 +46,7 @@
 make test MOD=pkg
 make test-integration MOD=pkg          # RLS (postgres:17), cache (valkey:8)
 make lint MOD=learning
-go run ./tools/routematrix check --spec specs/openapi --module learning
+go -C src/backend run ./tools/routematrix check --spec specs/openapi --module learning
 ```
 
 ## 4. Bằng chứng cần nộp

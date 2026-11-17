@@ -43,7 +43,7 @@ flowchart LR
 | Thành phần | Giá trị | Nhãn |
 |---|---|---|
 | Phiên bản | Keycloak ≥ 26 (Organizations GA) | [Proposed] |
-| Module sở hữu tích hợp | module `identity` là module duy nhất gọi Keycloak Admin API (provisioning, membership, revoke session); module khác chỉ dùng Principal do middleware `pkg/httpx` dựng từ token đã kiểm tra bằng JWKS | [Confirmed] ADR-0074 (thay ADR-0036) |
+| Module sở hữu tích hợp | module `identity` là module duy nhất gọi Keycloak Admin API (provisioning, membership, revoke session); module khác chỉ dùng Principal do middleware `src/backend/pkg/httpx` dựng từ token đã kiểm tra bằng JWKS | [Confirmed] ADR-0074 (thay ADR-0036) |
 | Realm | `eduworld` — một realm cho mỗi môi trường (dev/staging/prod là deployment riêng) | [Proposed] ADR-0006 |
 | Hostname | `auth.<domain>` (public), admin console chỉ qua `auth-admin.<internal>` | [Proposed] |
 | DB | PostgreSQL riêng (instance/database tách khỏi DB nghiệp vụ) | [Proposed] |
@@ -100,7 +100,7 @@ Các attribute này **không** đưa vào access token của client game/CMS (gi
 | Client ID | Loại | Flow | Người dùng | Ghi chú |
 |---|---|---|---|---|
 | `eduworld-game-backend` | **Confidential** | **Chỉ Direct Access Grants** (password grant) + refresh; tắt Standard Flow, Implicit, Service Account, Device Grant (ADR-0068) | **Chỉ học sinh** (ADR-0031) — nhân sự nhà trường/vận hành/System Admin không vào game | Chỉ **module identity** giữ secret (secret manager, xoay 90 ngày); game không biết secret. Điều kiện realm role `student` trong direct grant flow (§3.1b). Thay client public `eduworld-game` (PKCE) — client này **bỏ** khỏi realm |
-| `eduworld-portal` | **Confidential** (ADR-0091; giữ nguyên client id) | **Chỉ Direct Access Grants** (password grant + `totp`) + refresh; tắt Standard Flow, Implicit, Service Account, Device Grant; không redirect URI/web origin/PKCE. Direct grant flow `eduworld-portal-direct-grant` (§3.3): chỉ `tenant_staff`/`platform_staff`, **OTP bắt buộc có điều kiện** với `platform_staff` (chỉ TOTP, không WebAuthn); đăng nhập bằng username **hoặc email** (ADR-0066, ADR-0067). Secret chỉ module identity giữ | Mọi người dùng Admin Portal (học sinh bị chặn): vận hành tenant (Tenant/School Admin, Academic Manager, Tenant Content Editor/Reviewer) và đội platform (System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator) — không có role giáo viên (ADR-0072) | Admin Portal `web/apps/portal`, 5 workspace (ADR-0027 mục 7). Route `/api/v1/game-admin/*`, `/api/v1/admin/*`: chỉ gateway nội bộ, backend yêu cầu `acr` mức MFA + role platform; token của vận hành tenant không bao giờ được chấp nhận ở đó |
+| `eduworld-portal` | **Confidential** (ADR-0091; giữ nguyên client id) | **Chỉ Direct Access Grants** (password grant + `totp`) + refresh; tắt Standard Flow, Implicit, Service Account, Device Grant; không redirect URI/web origin/PKCE. Direct grant flow `eduworld-portal-direct-grant` (§3.3): chỉ `tenant_staff`/`platform_staff`, **OTP bắt buộc có điều kiện** với `platform_staff` (chỉ TOTP, không WebAuthn); đăng nhập bằng username **hoặc email** (ADR-0066, ADR-0067). Secret chỉ module identity giữ | Mọi người dùng Admin Portal (học sinh bị chặn): vận hành tenant (Tenant/School Admin, Academic Manager, Tenant Content Editor/Reviewer) và đội platform (System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator) — không có role giáo viên (ADR-0072) | Admin Portal `src/cms/frontend/apps/portal`, 5 workspace (ADR-0027 mục 7). Route `/api/v1/game-admin/*`, `/api/v1/admin/*`: chỉ gateway nội bộ, backend yêu cầu `acr` mức MFA + role platform; token của vận hành tenant không bao giờ được chấp nhận ở đó |
 | `eduworld-api` | Bearer-only / resource server | — | — | Đích của audience; không đăng nhập trực tiếp |
 | `eduworld-sis-sync` | Confidential | Client Credentials | Service account của worker | [Proposed] Quyền admin tối thiểu: `manage-users`, `view-users` trong realm, giới hạn bằng fine-grained admin permissions |
 | `eduworld-apisix` | Confidential (tùy chọn) | — | APISIX nếu dùng introspection | Mặc định APISIX kiểm tra JWT bằng JWKS, không cần secret [Proposed] |
@@ -129,7 +129,7 @@ Client public `eduworld-game` (Authorization Code + PKCE, redirect loopback/cust
 
 ### 3.2. Client `svc-identity` cho Keycloak Admin API (ADR-0074 mục 5)
 
-Backend là modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md)): module gọi nhau trong tiến trình qua facade, ngữ cảnh (tenant, Principal gốc, trace) truyền bằng `context.Context` qua `pkg/modcall`, nên **không có token service-to-service**. Các client `svc-learning`, `svc-game`, `svc-competition`, `svc-chat`, `svc-realtime`, audience `svc-<module>-api` và client scope `internal-<module>` của thiết kế cũ (ADR-0040) đã bị bỏ khỏi realm.
+Backend là modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md)): module gọi nhau trong tiến trình qua facade, ngữ cảnh (tenant, Principal gốc, trace) truyền bằng `context.Context` qua `src/backend/pkg/modcall`, nên **không có token service-to-service**. Các client `svc-learning`, `svc-game`, `svc-competition`, `svc-chat`, `svc-realtime`, audience `svc-<module>-api` và client scope `internal-<module>` của thiết kế cũ (ADR-0040) đã bị bỏ khỏi realm.
 
 | Thuộc tính | Giá trị |
 |---|---|

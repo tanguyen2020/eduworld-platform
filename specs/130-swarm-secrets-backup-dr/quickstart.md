@@ -39,7 +39,7 @@
 ```bash
 make swarm-validate ENV=staging && make swarm-validate ENV=production
 bats tests/ops
-go test ./tools/ops-scheduler/...
+go -C src/backend test ./tools/ops-scheduler/...
 ```
 
 ## 4. Bằng chứng cần nộp

@@ -1,13 +1,13 @@
 # Feature Specification: F050 — Khung web: pnpm workspace, `ops-ui`, theme từ token, `apiClient`, Storybook
 
-**Feature Branch**: `050-web-foundation-ops-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/` (`apps/portal`, `packages/ops-ui`) · **Mốc**: M-C0 · **Phụ thuộc**: F005
+**Feature Branch**: `050-web-foundation-ops-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/` (`apps/portal`, `packages/ops-ui`) · **Mốc**: M-C0 · **Phụ thuộc**: F005
 **Input**: Khung một Admin Portal React + TypeScript với 5 workspace lazy-load (chưa có nội dung nghiệp vụ), thư viện `ops-ui` theo Admin/Ops design system (Ant Design 5 + Pro, theme sinh từ `design/admin-tokens/`), lớp gọi API sinh từ OpenAPI, i18n vi/en, lint chặn hardcode giao diện và Storybook có kiểm trợ năng — FR-CMS-009, NFR-MAINT-007, NFR-A11Y-003 (ADR-0022, ADR-0027, ADR-0047).
 
 ## Clarifications
 
 ### Session 2026-11-16
 
-- Q: `apiClient` đặt ở package riêng hay trong portal? → A: Trong portal `web/apps/portal/src/shared/api/` (chỉ portal gọi API; `ops-ui` không gọi API, ADMIN_PORTAL §1.1) [Proposed].
+- Q: `apiClient` đặt ở package riêng hay trong portal? → A: Trong portal `src/cms/frontend/apps/portal/src/shared/api/` (chỉ portal gọi API; `ops-ui` không gọi API, ADMIN_PORTAL §1.1) [Proposed].
 - Q: Gọi API platform qua gateway nào? → A: Theo prefix của API_DESIGN §10: `/admin/*`, `/sis/*`, `/game-admin/*`, `/game-media*` đi base URL gateway nội bộ; còn lại gateway public (không dựa vào cờ `x-internal` vì spec còn thiếu ở 20 operation — F004 sửa).
 - Q: Đăng nhập OIDC và chọn tenant có trong F050? → A: Không; F050 định nghĩa interface `TokenProvider` và `TenantContext`, F051 hiện thực bằng form `/login` của portal gọi `/api/v1/auth/portal/*` (client confidential `eduworld-portal`, ADR-0091 — thay PKCE) và màn chọn tenant.
 - Q: Stack phụ trợ? → A: Vite, React Router, TanStack Query, `openapi-typescript` + `openapi-fetch`, react-i18next, Vitest + Testing Library, Playwright, Storybook 8 + test-runner axe [Proposed — ADR-0022 chi tiết stack Proposed].
@@ -30,7 +30,7 @@ Web dev chạy `pnpm install && pnpm dev` có portal rỗng với 5 workspace t�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F050-AC-01 | `web/` PHẢI là pnpm workspace gồm `apps/portal` (React, TypeScript `strict`, Vite) và `packages/ops-ui`; KHI chạy `pnpm install && pnpm dev`, portal PHẢI chạy ở cổng của [LOCAL_DEVELOPMENT §3.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md) | FR-CMS-009 · ADR-0022 | — |
+| F050-AC-01 | `src/cms/frontend/` PHẢI là pnpm workspace gồm `apps/portal` (React, TypeScript `strict`, Vite) và `packages/ops-ui`; KHI chạy `pnpm install && pnpm dev`, portal PHẢI chạy ở cổng của [LOCAL_DEVELOPMENT §3.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md) | FR-CMS-009 · ADR-0022 | — |
 | F050-AC-02 | Portal PHẢI có 5 workspace `src/workspaces/{game-ops,content-studio,school-lms,platform-admin,live-ops}` mỗi workspace một chunk lazy-load; KHI chưa điều hướng vào workspace, chunk của nó PHẢI KHÔNG được tải | FR-CMS-009 · ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
 | F050-AC-03 | URL gateway public, gateway nội bộ, issuer OIDC, client id PHẢI đến từ cấu hình runtime (`/config.json` sinh lúc deploy, fallback biến `VITE_*` khi dev); NẾU mã nguồn chứa URL môi trường literal, THÌ lint PHẢI fail | FR-CMS-009 · AGENTS R3 | — |
 | F050-AC-04 | Chuỗi UI PHẢI qua file dịch `vi` (mặc định) và `en`; NẾU JSX chứa chuỗi hiển thị literal ngoài allowlist hoặc khóa có ở `vi` mà thiếu ở `en`, THÌ lint/test PHẢI fail | FR-CMS-009 · AGENTS §7 | — |
@@ -43,15 +43,15 @@ Web dev dùng `OpsThemeProvider` và component `ops-ui`; theme lấy từ token;
 
 **Why this priority**: R32, NFR-MAINT-007, ADR-0047.
 
-**Independent Test**: Render Storybook ở light/dark/compact; thêm `color: #fff` vào một file `.tsx` → lint đỏ; import file từ `godot/` → build đỏ.
+**Independent Test**: Render Storybook ở light/dark/compact; thêm `color: #fff` vào một file `.tsx` → lint đỏ; import file từ `src/game/` → build đỏ.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F050-AC-05 | `ops-ui` PHẢI cung cấp `OpsThemeProvider` bọc `ConfigProvider` của Ant Design với theme sinh từ token (light, dark, compact), locale Ant Design `vi_VN`/`en_US` và locale dayjs tương ứng, PHẢI KHÔNG override CSS nội bộ của component Ant Design | NFR-MAINT-007 · [DESIGN_SYSTEM §4.1](../../docs/05-ux/DESIGN_SYSTEM.md) | TC-UI-005 |
-| F050-AC-06 | NẾU CSS/TSX trong `web/` (trừ file sinh từ token) chứa màu, font, cỡ chữ hoặc khoảng cách literal ngoài allowlist, THÌ `make web-lint` PHẢI fail | NFR-MAINT-007 · AGENTS R32 | TC-UI-003 |
-| F050-AC-07 | NẾU `web/` import từ `godot/`, `design/game-tokens/` hoặc thư viện/Theme game, THÌ build PHẢI fail | AGENTS R32 · ADR-0047 | TC-UI-010 |
+| F050-AC-06 | NẾU CSS/TSX trong `src/cms/frontend/` (trừ file sinh từ token) chứa màu, font, cỡ chữ hoặc khoảng cách literal ngoài allowlist, THÌ `make web-lint` PHẢI fail | NFR-MAINT-007 · AGENTS R32 | TC-UI-003 |
+| F050-AC-07 | NẾU `src/cms/frontend/` import từ `src/game/`, `design/game-tokens/` hoặc thư viện/Theme game, THÌ build PHẢI fail | AGENTS R32 · ADR-0047 | TC-UI-010 |
 | F050-AC-08 | `ops-ui` PHẢI có `DomainTag` hiển thị môn học, độ hiếm, trạng thái nội dung bằng màu nghiệp vụ từ shared-tokens kèm nhãn chữ (màu không là kênh duy nhất) | DESIGN_SYSTEM §4.4, §6 | TC-UI-008 |
 | F050-AC-09 | `ops-ui` PHẢI có helper sinh rule form từ schema OpenAPI (`required`, `maxLength`, `pattern`) kèm bộ đếm ký tự; KHI người dùng nhập vượt `maxLength`, form PHẢI chặn và báo lỗi tại trường | ADR-0041 · DESIGN_SYSTEM §4.3 | TC-TEN-024 |
 
@@ -95,7 +95,7 @@ UX và QA xem mọi component `ops-ui` ở sáng/tối/compact, có kiểm axe t
 | F050-AC-18 | Storybook 8 của `ops-ui` PHẢI build thành công và mọi component PHẢI có story ở light, dark và compact | NFR-A11Y-003 · DESIGN_SYSTEM §9 | TC-UI-005 |
 | F050-AC-19 | KHI chạy test-runner, axe PHẢI kiểm mọi story; NẾU có vi phạm mức serious/critical, THÌ CI PHẢI fail | NFR-A11Y-003 · ADR-0047 | TC-UI-006 |
 | F050-AC-20 | Playwright PHẢI chụp snapshot các story ở light/dark/compact và zoom 200%; sai khác vượt ngưỡng PHẢI yêu cầu duyệt baseline | NFR-A11Y-003 · DESIGN_SYSTEM §4.5 | TC-UI-004 |
-| F050-AC-21 | KHI PR thay đổi `web/**`, `specs/openapi/**`, `design/admin-tokens/**` hoặc `design/shared-tokens/**`, GitHub Actions PHẢI chạy workflow `.github/workflows/web.yml` theo path filter (lint, test, build portal, build Storybook, axe, visual) | [DEPLOYMENT §10.2](../../docs/11-operations/DEPLOYMENT.md) · ADR-0088 | — |
+| F050-AC-21 | KHI PR thay đổi `src/cms/frontend/**`, `specs/openapi/**`, `design/admin-tokens/**` hoặc `design/shared-tokens/**`, GitHub Actions PHẢI chạy workflow `.github/workflows/web.yml` theo path filter (lint, test, build portal, build Storybook, axe, visual) | [DEPLOYMENT §10.2](../../docs/11-operations/DEPLOYMENT.md) · ADR-0088 | — |
 
 ### Edge Cases
 
@@ -143,7 +143,7 @@ UX và QA xem mọi component `ops-ui` ở sáng/tối/compact, có kiểm axe t
 ### Measurable Outcomes
 
 - **SC-001**: Web dev mới chạy được portal khung trong ≤ 10 phút sau khi có stack F001.
-- **SC-002**: 0 vi phạm hardcode màu/font/khoảng cách và 0 import game trong `web/` (CI).
+- **SC-002**: 0 vi phạm hardcode màu/font/khoảng cách và 0 import game trong `src/cms/frontend/` (CI).
 - **SC-003**: 0 lỗi axe mức serious/critical trên mọi story `ops-ui`.
 - **SC-004**: 100% operation spec có metadata đúng; 100% mã `ProblemCode` hiển thị được thông điệp (riêng hoặc chung).
 

@@ -4,7 +4,7 @@
 
 ## 1. Entity
 
-Không áp dụng — F052 là client (`web/apps/portal`), không tạo/sửa bảng hay migration. Bảng `identity.*`, `sis.*`, `audit.*` thuộc module identity (F010, F011, F012, F015, F016); endpoint "Cần thêm" ở [contracts](contracts/README.md) §6 đọc các bảng đã có trong DATABASE_DESIGN (`reconciliation_issues`, enrollment, school settings). Dưới đây là **model phía client**.
+Không áp dụng — F052 là client (`src/cms/frontend/apps/portal`), không tạo/sửa bảng hay migration. Bảng `identity.*`, `sis.*`, `audit.*` thuộc module identity (F010, F011, F012, F015, F016); endpoint "Cần thêm" ở [contracts](contracts/README.md) §6 đọc các bảng đã có trong DATABASE_DESIGN (`reconciliation_issues`, enrollment, school settings). Dưới đây là **model phía client**.
 
 ### Cache truy vấn TanStack Query (mọi key có `scopeKey` = tenant phiên, F051)
 

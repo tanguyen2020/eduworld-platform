@@ -11,7 +11,7 @@ Backend: thêm plugin `video_lesson` vào Activity Registry của module learnin
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 (module learning) / GDScript (Godot 4.x ghim, static typing) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx`, `pkg/outbox`, `pkg/tenancy`, `pkg/problem` / GdUnit4, `VideoStreamPlayer` (Theora) |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, `src/backend/pkg/problem` / GdUnit4, `VideoStreamPlayer` (Theora) |
 | Storage | PostgreSQL `eduworld_learning` (schema `assessment`); floci S3 cho media (F027) |
 | Testing | go test (unit domain/application), testcontainers (integration, global filter), contract test plugin chung (TC-ACT-001) / GdUnit4 unit + scene + integration headless |
 | Target Platform | Linux container / Windows, Android (Web 480p) |
@@ -55,8 +55,8 @@ specs/065-video-lesson/
 ### Source Code (repository)
 
 ```text
-modules/learning/
-├── ent/schema/{video_progress.go,video_branch_choice.go}           # MaxLen, mixin Base/Tenant/SoftDelete (pkg/entx)
+src/backend/modules/learning/
+├── ent/schema/{video_progress.go,video_branch_choice.go}           # MaxLen, mixin Base/Tenant/SoftDelete (src/backend/pkg/entx)
 ├── migrations/<ts>_video_lesson.sql                                 # Atlas diff + RLS viết tay
 ├── internal/domain/activity/videolesson/
 │   ├── config.go            # VideoLessonConfig + Validate (thuần)
@@ -67,9 +67,9 @@ modules/learning/
 ├── internal/application/activityplugin/videolesson/plugin.go       # hiện thực activity.Plugin (F030), đăng ký Registry
 ├── internal/application/port/{video_progress_repository.go,media_variant_resolver.go,integrity_signal_writer.go}
 ├── internal/infrastructure/persistence/{video_progress_repo.go,video_branch_choice_repo.go,integrity_signal_repo.go}
-├── cmd/api/main.go                                                  # Registry.Register(videolesson.New(...))
+├── cmd/api/main.go                                                              # Registry.Register(videolesson.New(...))
 └── tests/{unit/videolesson,integration/videolesson,contract/plugins}/
-godot/
+src/game/
 ├── scenes/learning/activity_renderers/video_lesson/VideoLessonRenderer.tscn (+ video_lesson_renderer.gd)
 ├── scenes/learning/video/VideoLessonPlayer.tscn                     # VideoStreamPlayer + SubtitleLayer + CueOverlay + ChapterList + SeekBar
 ├── scripts/learning/{vtt_parser.gd,video_progress_reporter.gd,watched_ranges.gd}
@@ -77,7 +77,7 @@ godot/
 └── tests/{unit,scene,integration}/video/
 ```
 
-**Structure Decision**: Backend theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md) với thư mục `modules/learning/` (Bước 0 D1); plugin nằm ở application vì cần port (repository, media), quy tắc thuần ở domain. Godot theo [GODOT_ARCHITECTURE §3, §6.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md).
+**Structure Decision**: Backend theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md) với thư mục `src/backend/modules/learning/` (Bước 0 D1); plugin nằm ở application vì cần port (repository, media), quy tắc thuần ở domain. Godot theo [GODOT_ARCHITECTURE §3, §6.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md).
 
 ## Phase 0: Research
 

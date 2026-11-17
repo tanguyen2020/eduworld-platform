@@ -17,7 +17,7 @@ Theo Master Prompt §23 Step 6:
 
 ## 2. Branching
 
-- Nhánh chính: `main` (luôn deploy được lên dev). Được bảo vệ, chỉ merge qua Pull Request trên GitHub khi mọi required status check của **GitHub Actions** xanh (workflow theo path filter cho `modules/`, `cmd/`, `pkg/`, `web/`, `godot/`, `specs/`, `docs/` — [DEPLOYMENT §10](docs/11-operations/DEPLOYMENT.md#10-cicd-github-actions)).
+- Nhánh chính: `main` (luôn deploy được lên dev). Được bảo vệ, chỉ merge qua Pull Request trên GitHub khi mọi required status check của **GitHub Actions** xanh (workflow theo path filter cho `src/backend/modules/`, `src/backend/cmd/`, `src/backend/pkg/`, `src/cms/frontend/`, `src/game/`, `specs/`, `docs/` — [DEPLOYMENT §10](docs/11-operations/DEPLOYMENT.md#10-cicd-github-actions)).
 - Nhánh làm việc (ngắn hạn, ≤ 3 ngày nếu có thể):
   - `feat/<domain>-<mô-tả-ngắn>` — vd. `feat/party-invitation`
   - `fix/<domain>-<mô-tả>`
@@ -48,13 +48,13 @@ Refs: FR-PTY-003, ADR-0011
 
 ### 4.1. Go
 - `gofmt`/`goimports`; `golangci-lint` cấu hình trong repo phải pass (gồm `govet`, `staticcheck`, `errcheck`, `gosec`, `depguard`).
-- **Cấu trúc module (ADR-0074, ADR-0038):** một `go.mod` ở gốc; `modules/<module>/{module.go, api, internal/{domain, application/{command,query,port}, infrastructure, presentation/{http,facade,consumer,job}}, ent/schema, migrations}`; binary ở `cmd/{core-api,realtime,worker}`. Phụ thuộc chỉ hướng vào trong; module khác chỉ được import `modules/<module>/api` khi có trong `x-allowed-callers`, không import `internal/` của module khác; chỉ dùng chung `pkg/`. Linter `go-arch-lint` kiểm tra.
-- **CQRS tách read/write context, không mediator (ADR-0087, AGENTS R26):** command handler trong `internal/application/command/` nạp aggregate qua port `port/write`, gọi phương thức domain, lưu bằng ent trong `UnitOfWork` và ghi outbox cùng transaction; query handler trong `internal/application/query/` chỉ đọc read model/projection qua port `port/read`, không ghi, không phát event. Không dùng mediator/bus chung: presentation gọi handler qua interface có kiểu; authorization gọi tường minh `authz.Require` đầu mỗi use case; cross-cutting (xác thực, tenant, idempotency, log, tracing) ở middleware `pkg/httpx`.
+- **Cấu trúc module (ADR-0074, ADR-0038, ADR-0092):** một Go module duy nhất `src/backend/go.mod` (lệnh Go chạy bằng `go -C src/backend …` hoặc `make`); `src/backend/modules/<module>/{module.go, api, internal/{domain, application/{command,query,port}, infrastructure, presentation/{http,facade,consumer,job}}, ent/schema, migrations}`; binary ở `src/backend/cmd/{core-api,realtime,worker}`. Phụ thuộc chỉ hướng vào trong; module khác chỉ được import `src/backend/modules/<module>/api` khi có trong `x-allowed-callers`, không import `internal/` của module khác; chỉ dùng chung `src/backend/pkg/`. Linter `go-arch-lint` kiểm tra.
+- **CQRS tách read/write context, không mediator (ADR-0087, AGENTS R26):** command handler trong `internal/application/command/` nạp aggregate qua port `port/write`, gọi phương thức domain, lưu bằng ent trong `UnitOfWork` và ghi outbox cùng transaction; query handler trong `internal/application/query/` chỉ đọc read model/projection qua port `port/read`, không ghi, không phát event. Không dùng mediator/bus chung: presentation gọi handler qua interface có kiểu; authorization gọi tường minh `authz.Require` đầu mỗi use case; cross-cutting (xác thực, tenant, idempotency, log, tracing) ở middleware `src/backend/pkg/httpx`.
 - `context.Context` là tham số đầu tiên của mọi hàm I/O; không lưu context trong struct.
 - Lỗi: wrap bằng `fmt.Errorf("...: %w", err)`; lỗi domain là kiểu/sentinel có `code` ổn định để ánh xạ Problem Details.
 - Log bằng `log/slog`, có `trace_id`; không log PII/token ([MONITORING §8](docs/11-operations/MONITORING.md#8-logging)).
-- Truy cập DB bằng **ent** (ADR-0039): schema dùng mixin chung (`id`, `tenant_id`, audit, `deleted_at`, `version`); mọi field string có `MaxLen(n)` (ADR-0041); global filter tenant + soft-delete luôn bật (bỏ chỉ qua `pkg/tenancy.Bypass` có audit). SQL tường minh cho Query side đặt trong `infrastructure`, có tham số và điều kiện tenant + soft-delete. Migration chỉ sinh bằng `make migrate-diff` (Atlas), review SQL trong PR.
-- Gọi module khác **chỉ** qua facade sinh từ spec internal bằng `make gen` (`modules/<callee>/api`), qua adapter `infrastructure/modules/` sau một port, bằng `pkg/modcall` (span, deadline, `TenantScope`, Principal gốc, `Idempotency-Key`; không retry/circuit breaker, không token) (ADR-0074, ADR-0040). Timeout, retry idempotent, circuit breaker chỉ cho adapter tích hợp ngoài (Keycloak, SIS, object storage).
+- Truy cập DB bằng **ent** (ADR-0039): schema dùng mixin chung (`id`, `tenant_id`, audit, `deleted_at`, `version`); mọi field string có `MaxLen(n)` (ADR-0041); global filter tenant + soft-delete luôn bật (bỏ chỉ qua `src/backend/pkg/tenancy.Bypass` có audit). SQL tường minh cho Query side đặt trong `infrastructure`, có tham số và điều kiện tenant + soft-delete. Migration chỉ sinh bằng `make migrate-diff` (Atlas), review SQL trong PR.
+- Gọi module khác **chỉ** qua facade sinh từ spec internal bằng `make gen` (`src/backend/modules/<callee>/api`), qua adapter `infrastructure/modules/` sau một port, bằng `src/backend/pkg/modcall` (span, deadline, `TenantScope`, Principal gốc, `Idempotency-Key`; không retry/circuit breaker, không token) (ADR-0074, ADR-0040). Timeout, retry idempotent, circuit breaker chỉ cho adapter tích hợp ngoài (Keycloak, SIS, object storage).
 - Không `panic` trong luồng request; recover middleware chỉ là lưới an toàn.
 - Test: table-driven, tên `Test<Unit>_<Scenario>`; integration test dùng build tag `integration`.
 
@@ -65,13 +65,13 @@ Refs: FR-PTY-003, ADR-0011
 - Giao tiếp giữa scene bằng signal/event bus; không `get_node("../../..")` xuyên scene.
 - Không hardcode nội dung học tập, URL môi trường, client secret.
 - Lint bằng `gdlint`/`gdformat` (gdtoolkit).
-- UI dùng Theme sinh từ `design/game-tokens/`; không override màu/font/cỡ chữ trong scene (lint `tools/godot/lint_theme_overrides.gd`). Không sửa tay `eduworld_theme.tres`, `ui_tokens.gd`, `resources/art/generated/`.
+- UI dùng Theme sinh từ `design/game-tokens/`; không override màu/font/cỡ chữ trong scene (lint `src/game/tools/lint_theme_overrides.gd`). Không sửa tay `eduworld_theme.tres`, `ui_tokens.gd`, `resources/art/generated/`.
 
 ### 4.3. TypeScript (web)
 - `strict: true`; ESLint + Prettier; không `any` trừ khi có comment lý do.
 - API client sinh từ OpenAPI — không viết tay type trùng lặp.
 - Ẩn/hiện UI theo quyền chỉ là trải nghiệm; quyền thật do backend quyết định.
-- Giao diện theo Admin/Ops UI (ADR-0047): dùng component Ant Design / Ant Design Pro và `web/packages/ops-ui`; tùy biến chỉ qua theme token; không màu/font hardcode (stylelint + ESLint chặn); component mới có story trong Storybook.
+- Giao diện theo Admin/Ops UI (ADR-0047): dùng component Ant Design / Ant Design Pro và `src/cms/frontend/packages/ops-ui`; tùy biến chỉ qua theme token; không màu/font hardcode (stylelint + ESLint chặn); component mới có story trong Storybook.
 
 ### 4.3b. Thay đổi design token (`design/`)
 1. Sửa JSON token trong `design/game-tokens/`, `design/admin-tokens/` hoặc `design/shared-tokens/` (không sửa file sinh ra).
@@ -118,7 +118,7 @@ Refs: FR-PTY-003, ADR-0011
 - [ ] Ảnh/video demo cho thay đổi UI (Godot/web)
 ```
 
-Số approval: 1 cho thay đổi thường; **2** cho module `identity`, `pkg/` (ảnh hưởng mọi module), `cmd/`, `pkg/authz`, chat moderation, `migrations/`, spec internal, `deploy/`, ADR.
+Số approval: 1 cho thay đổi thường; **2** cho module `identity`, `src/backend/pkg/` (ảnh hưởng mọi module), `src/backend/cmd/`, `src/backend/pkg/authz`, chat moderation, `migrations/`, spec internal, `deploy/`, ADR.
 
 ## 6. Review checklist bảo mật & tenant (bắt buộc với reviewer)
 

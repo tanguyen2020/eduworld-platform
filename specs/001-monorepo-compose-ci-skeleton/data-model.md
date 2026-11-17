@@ -41,7 +41,7 @@ Ghi chú: `catalog` (DATABASE_DESIGN §2.2a) và `analytics` (§2.8b) có trong 
 
 ## 2. Vòng đời / trạng thái
 
-Migration baseline `modules/<module>/migrations/00000000000001_baseline.sql`: tạo schema → tạo hàm `infra.current_tenant_id()` → `REVOKE DELETE, TRUNCATE ON ALL TABLES IN SCHEMA <schemas> FROM <module>_app, <module>_platform` → `ALTER DEFAULT PRIVILEGES FOR ROLE <module>_migrator IN SCHEMA <schemas> GRANT SELECT, INSERT, UPDATE ON TABLES TO <module>_app, <module>_platform` (không `DELETE`). Áp bằng job `migrate --module=<module>` (image `eduworld/migrate`); Atlas lưu revision trong `atlas_schema_revisions` (schema `public` của database module).
+Migration baseline `src/backend/modules/<module>/migrations/00000000000001_baseline.sql`: tạo schema → tạo hàm `infra.current_tenant_id()` → `REVOKE DELETE, TRUNCATE ON ALL TABLES IN SCHEMA <schemas> FROM <module>_app, <module>_platform` → `ALTER DEFAULT PRIVILEGES FOR ROLE <module>_migrator IN SCHEMA <schemas> GRANT SELECT, INSERT, UPDATE ON TABLES TO <module>_app, <module>_platform` (không `DELETE`). Áp bằng job `migrate --module=<module>` (image `eduworld/migrate`); Atlas lưu revision trong `atlas_schema_revisions` (schema `public` của database module).
 
 ## 3. Quy tắc kiểm tra dữ liệu
 

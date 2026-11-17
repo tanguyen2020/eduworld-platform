@@ -41,7 +41,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml`.
 | `student.sis_link_created`, `student.sis_link_superseded` | identity → AUD, learning | `student.sis_link_created.v1.schema.json`, `student.sis_link_superseded.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `user.status_changed`, `user.access_revoked` | identity → mọi module, realtime | `user.status_changed.v1.schema.json`, `user.access_revoked.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `sis.sync_completed`, `sis.reconciliation_issue_raised` | identity → AUD, NTF | `sis.sync_completed.v1.schema.json`, `sis.reconciliation_issue_raised.v1.schema.json` | Có sẵn (áp 2026-11-17) |
-| Job `ew.job.identity.sis.<kind>` | identity (`core-api`/job lịch) → `cmd/worker` profile `worker-jobs` (work-queue `IDENTITY_SIS_JOBS`) | nội bộ module (struct Go) | — |
+| Job `ew.job.identity.sis.<kind>` | identity (`core-api`/job lịch) → `src/backend/cmd/worker` profile `worker-jobs` (work-queue `IDENTITY_SIS_JOBS`) | nội bộ module (struct Go) | — |
 
 ## 5. JSON Schema nội dung
 

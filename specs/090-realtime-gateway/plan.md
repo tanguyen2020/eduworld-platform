@@ -4,14 +4,14 @@
 
 ## Summary
 
-Dựng module `realtime` và binary `cmd/realtime` (Go mỏng, không database, ADR-0074) theo [REALTIME_ARCHITECTURE §2–§11](../../docs/06-architecture/REALTIME_ARCHITECTURE.md): `ConnManager` nhận WS qua APISIX, `GETDEL` ticket ở Valkey, đăng ký `ew:rt:conn:<user_id>` (thay kết nối cũ `4409`, xuyên node qua `ew:rt:node:<node>:in`), `Session` per connection (hàng đợi gửi có giới hạn, `seq`, buffer resume Valkey, rate limiter), `Router` sinh từ AsyncAPI (`type` → `ew.cmd.<module>.<type>`, handler trong `core-api`), `Subscriptions` đếm tham chiếu topic Valkey, `Revocation` xử lý message điều khiển. module game bổ sung `createRealtimeTicket` và NATS handler `ew.cmd.game.session.heartbeat`. Thêm `pkg/realtime` (envelope Pub/Sub + publisher) để mọi module (trong `core-api`/`worker`) đẩy sự kiện/điều khiển theo một schema.
+Dựng module `realtime` và binary `src/backend/cmd/realtime` (Go mỏng, không database, ADR-0074) theo [REALTIME_ARCHITECTURE §2–§11](../../docs/06-architecture/REALTIME_ARCHITECTURE.md): `ConnManager` nhận WS qua APISIX, `GETDEL` ticket ở Valkey, đăng ký `ew:rt:conn:<user_id>` (thay kết nối cũ `4409`, xuyên node qua `ew:rt:node:<node>:in`), `Session` per connection (hàng đợi gửi có giới hạn, `seq`, buffer resume Valkey, rate limiter), `Router` sinh từ AsyncAPI (`type` → `ew.cmd.<module>.<type>`, handler trong `core-api`), `Subscriptions` đếm tham chiếu topic Valkey, `Revocation` xử lý message điều khiển. module game bổ sung `createRealtimeTicket` và NATS handler `ew.cmd.game.session.heartbeat`. Thêm `src/backend/pkg/realtime` (envelope Pub/Sub + publisher) để mọi module (trong `core-api`/`worker`) đẩy sự kiện/điều khiển theo một schema.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | `coder/websocket` (hoặc `gorilla/websocket`) [Proposed, research R2], `valkey-io/valkey-go`, `nats.go`, `pkg/natsx`, `pkg/config`, `pkg/observability`, `pkg/health`; module game: chi, ent, oapi-codegen, `pkg/httpx` (`game_player`, `tenant`) |
+| Primary Dependencies | `coder/websocket` (hoặc `gorilla/websocket`) [Proposed, research R2], `valkey-io/valkey-go`, `nats.go`, `src/backend/pkg/natsx`, `src/backend/pkg/config`, `src/backend/pkg/observability`, `src/backend/pkg/health`; module game: chi, ent, oapi-codegen, `src/backend/pkg/httpx` (`game_player`, `tenant`) |
 | Storage | Không có PostgreSQL ở gateway; Valkey: `ew:game:rt:ticket:*` (game ghi), `ew:gateway:rt:*` (conn, node, resume); module game đọc/ghi `game.game_sessions` (F014) |
 | Testing | go test; testcontainers Valkey + NATS; client WS headless; toxiproxy cho reconnect |
 | Target Platform | Linux container (binary `realtime`; cổng public và cổng quản trị theo LOCAL_DEVELOPMENT §3.2) |
@@ -50,8 +50,8 @@ specs/090-realtime-gateway/
 ### Source Code (repository)
 
 ```text
-modules/realtime/
-├── module.go                           # Register(...) cho composition root `cmd/realtime/main.go` (HTTP /realtime/v1, cổng quản trị)
+src/backend/modules/realtime/
+├── module.go                           # Register(...) cho composition root `src/backend/cmd/realtime/main.go` (HTTP /realtime/v1, cổng quản trị)
 ├── internal/config/config.go           # EW_WS_*, EW_CMD_TIMEOUT, allowlist Origin
 ├── internal/protocol/                  # envelope, validator sinh từ AsyncAPI (maxLength, frame size)
 ├── internal/router/routes_gen.go       # bảng type → subject (sinh bởi scripts/realtime/gen-routes.mjs)
@@ -65,19 +65,19 @@ modules/realtime/
 ├── internal/audit/publisher.go         # audit.recorded → JetStream EVT_REALTIME
 ├── internal/observability/metrics.go   # eduworld_rt_*
 └── tests/{unit,integration,e2e}/
-modules/game/
+src/backend/modules/game/
 ├── internal/application/command/issue_realtime_ticket.go
 ├── internal/application/port/ticket_store.go
 ├── internal/infrastructure/realtime/ticket_store.go
 ├── internal/presentation/http/public/realtime_tickets.go
 ├── internal/presentation/natscmd/session_heartbeat.go
 └── tests/integration/realtime_ticket_test.go
-cmd/realtime/main.go                    # composition root binary realtime (F001)
-pkg/realtime/                           # Envelope Pub/Sub (message | control), Publisher, topic builder
+src/backend/cmd/realtime/main.go                    # composition root binary realtime (F001)
+src/backend/pkg/realtime/                           # Envelope Pub/Sub (message | control), Publisher, topic builder
 scripts/realtime/gen-routes.mjs         # sinh routes_gen.go từ AsyncAPI
 ```
 
-**Structure Decision**: Gateway theo bảng cổng [LOCAL_DEVELOPMENT §3](../../docs/11-operations/LOCAL_DEVELOPMENT.md) (`modules/realtime/`, binary `cmd/realtime`, ADR-0074); không có tầng domain/application vì không có nghiệp vụ; không nạp module domain nào. Ticket nằm ở module game vì gắn game session (ADR-0008, ADR-0031).
+**Structure Decision**: Gateway theo bảng cổng [LOCAL_DEVELOPMENT §3](../../docs/11-operations/LOCAL_DEVELOPMENT.md) (`src/backend/modules/realtime/`, binary `src/backend/cmd/realtime`, ADR-0074); không có tầng domain/application vì không có nghiệp vụ; không nạp module domain nào. Ticket nằm ở module game vì gắn game session (ADR-0008, ADR-0031).
 
 ## Phase 0: Research
 
@@ -100,8 +100,8 @@ scripts/realtime/gen-routes.mjs         # sinh routes_gen.go từ AsyncAPI
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F003 (`pkg/natsx`, key builder), F013 (token game), F014 (game session, `session.session.replaced`), F004 (route APISIX `/realtime/v1`, idle timeout 120 s).
-- Không facade, không HTTP nội bộ: gateway chỉ dùng NATS + Valkey. Module khác đẩy sự kiện bằng `pkg/realtime.Publisher`.
+- Feature phụ thuộc: F003 (`src/backend/pkg/natsx`, key builder), F013 (token game), F014 (game session, `session.session.replaced`), F004 (route APISIX `/realtime/v1`, idle timeout 120 s).
+- Không facade, không HTTP nội bộ: gateway chỉ dùng NATS + Valkey. Module khác đẩy sự kiện bằng `src/backend/pkg/realtime.Publisher`.
 - Message điều khiển `access_revoked` do module identity publish (F016); `session.session.replaced` do module game (F014).
 
 ### Bảo mật, tenant, idempotency, audit

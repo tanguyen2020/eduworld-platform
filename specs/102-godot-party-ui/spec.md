@@ -1,6 +1,6 @@
 # Feature Specification: F102 — Giao diện party trong Godot: panel, lời mời, lobby, ready
 
-**Feature Branch**: `102-godot-party-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M4a · **Phụ thuộc**: F092, F101 (và F100; danh sách bạn bè từ F095)
+**Feature Branch**: `102-godot-party-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F092, F101 (và F100; danh sách bạn bè từ F095)
 **Input**: Học sinh tạo party, mời bạn bằng chạm avatar, nhận lời mời dạng popup, vào Party Lobby (thành viên, online, Ready, chọn hoạt động, Bắt đầu), thấy trạng thái leader/thành viên mất kết nối, chuyển vào phiên chơi chung và quay lại lobby. FR nguồn: FR-PTY-001, FR-PTY-006, FR-PTY-008, FR-PTY-012.
 
 ## Clarifications

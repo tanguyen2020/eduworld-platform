@@ -164,7 +164,7 @@ Hết thời gian lưu giữ hoặc có yêu cầu qua nhà trường, dữ li�
 |---|---|
 | Chỉ soft-delete/ẩn danh hóa; không `DELETE` | AGENTS R21, R24 · ADR-0028 · ADR-0070 |
 | Số ngày dọn từ cài đặt platform/tenant, không hardcode/env | AGENTS R24, R33 |
-| Gọi module khác chỉ qua facade (`pkg/modcall`), idempotent | AGENTS R29 · ADR-0074 |
+| Gọi module khác chỉ qua facade (`src/backend/pkg/modcall`), idempotent | AGENTS R29 · ADR-0074 |
 | Không log PII; event tối thiểu | AGENTS R14 · NFR-PRIV-002 |
 
 ## Success Criteria *(bắt buộc)*

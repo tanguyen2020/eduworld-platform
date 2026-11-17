@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `modules/game.v1.yaml`). Mọi route `game_player`, header `X-Tenant-Id`.
+Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/game.v1.yaml`). Mọi route `game_player`, header `X-Tenant-Id`.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

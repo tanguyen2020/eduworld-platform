@@ -226,5 +226,5 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 
 - Mã curriculum duy nhất trong phạm vi sở hữu (platform; từng tenant) để không lộ sự tồn tại curriculum của tenant khác qua `409` [Proposed].
 - Tên topic và mô tả LO lưu theo ngôn ngữ của curriculum (một bản), khớp `TopicInput.name`/`LearningObjectiveInput.description` của OpenAPI; tên curriculum/môn là `LearningName` [Proposed].
-- Seed dùng mã `GDPT2018_SAMPLE`; file seed ở `modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (thay đường dẫn cũ `backend/migrations/...` trong CURRICULUM_MODEL §7) [Proposed].
+- Seed dùng mã `GDPT2018_SAMPLE`; file seed ở `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (thay đường dẫn cũ `backend/migrations/...` trong CURRICULUM_MODEL §7) [Proposed].
 - Cấu hình version mặc định của trường đến module learning qua projection `ref.schools` (cột mới + event của F015) [Proposed].

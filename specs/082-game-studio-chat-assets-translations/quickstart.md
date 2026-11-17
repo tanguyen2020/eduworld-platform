@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F078, F079, F118 (và F053 `BilingualField`, F051); delta T004–T007 đã có backend.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make migrate`, `make seed`, `make up-app` (gồm `core-api` nạp module `game`, `chat` và `worker-jobs`); `cd web && pnpm install && pnpm gen:api && pnpm dev`.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make migrate`, `make seed`, `make up-app` (gồm `core-api` nạp module `game`, `chat` và `worker-jobs`); `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev`.
 - Tài khoản: `sa.admin` (system_admin, MFA tắt ở local; bật OTP seed để thử step-up); tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Proposed theo F079: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `sm.antoan` cho kiểm chặn; học sinh `hs.an.3a` để xem sticker trong game.
 - Dữ liệu: seed quest/NPC dialogue có đủ `vi`/`en`, một quest thiếu `en`; 2 tệp webp mẫu, 1 tệp vượt giới hạn, 1 GIF mẫu; reward rule đã publish để làm `unlock_rule`.
 

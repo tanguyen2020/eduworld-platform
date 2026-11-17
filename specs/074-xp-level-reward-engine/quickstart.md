@@ -6,9 +6,9 @@
 
 - Phụ thuộc đã Done: F070, F071, F072 (và F030/F031 phát `activity.graded`, `learning_objective.mastered`, `lesson.completed`).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events`, `make seed-check` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Seed config platform (curve mặc định theo `xp_curve`, reward rule cho mỗi `source_code`) nạp bằng `go run ./cmd/worker seed-config --module=game --dir deploy/seed/game-config` (đã publish).
+- Seed config platform (curve mặc định theo `xp_curve`, reward rule cho mỗi `source_code`) nạp bằng `go -C src/backend run ./cmd/worker seed-config --module=game --dir deploy/seed/game-config` (đã publish).
 - Tài khoản demo: `hs.an.3a` (khối 3), `hs.dung.7a` (tenant `pgd-demo`), `ad.truong.a` (nhân sự, để thử bị chặn).
-- Công cụ phát event thử: `nats pub ew.evt.learning.activity.graded --header Nats-Msg-Id:<uuid> '<envelope>'` (fixture ở `modules/game/tests/fixtures/events/`).
+- Công cụ phát event thử: `nats pub ew.evt.learning.activity.graded --header Nats-Msg-Id:<uuid> '<envelope>'` (fixture ở `src/backend/modules/game/tests/fixtures/events/`).
 
 ## 2. Kịch bản kiểm tra
 

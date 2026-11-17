@@ -4,7 +4,7 @@
 
 ## Summary
 
-Tạo `web/` pnpm workspace với `apps/portal` (Vite + React + TS strict, React Router, TanStack Query, react-i18next) có 5 route workspace lazy-load rỗng, và `packages/ops-ui` (Ant Design 5 + Pro, `OpsThemeProvider` dùng theme sinh bởi F005, `DomainTag`, helper rule form từ OpenAPI). `apiClient` dựa trên `openapi-fetch` với type từ `openapi-typescript` và bảng metadata sinh từ spec gộp; middleware gắn header, ánh xạ Problem, refresh, retry. Lint ESLint + stylelint chặn hardcode và import game; Storybook 8 + test-runner axe + Playwright visual.
+Tạo `src/cms/frontend/` pnpm workspace với `apps/portal` (Vite + React + TS strict, React Router, TanStack Query, react-i18next) có 5 route workspace lazy-load rỗng, và `packages/ops-ui` (Ant Design 5 + Pro, `OpsThemeProvider` dùng theme sinh bởi F005, `DomainTag`, helper rule form từ OpenAPI). `apiClient` dựa trên `openapi-fetch` với type từ `openapi-typescript` và bảng metadata sinh từ spec gộp; middleware gắn header, ánh xạ Problem, refresh, retry. Lint ESLint + stylelint chặn hardcode và import game; Storybook 8 + test-runner axe + Playwright visual.
 
 ## Technical Context
 
@@ -54,7 +54,7 @@ specs/050-web-foundation-ops-ui/
 ### Source Code (repository)
 
 ```text
-web/
+src/cms/frontend/
 ├── package.json  pnpm-workspace.yaml  tsconfig.base.json  .eslintrc.cjs  .stylelintrc.cjs
 ├── eslint-rules/{no-hardcoded-style.js,no-game-imports.js}
 ├── apps/portal/
@@ -71,11 +71,11 @@ web/
     └── src/{index.ts,theme/{OpsThemeProvider.tsx,antd-theme.ts(sinh F005),tokens.css(sinh F005)},
              components/DomainTag/{DomainTag.tsx,DomainTag.stories.tsx},
              forms/{openapiRules.ts,CharCounter.tsx}}
-web/tests/visual/storybook.spec.ts  playwright.config.ts
+src/cms/frontend/tests/visual/storybook.spec.ts  playwright.config.ts
 .github/workflows/web.yml
 ```
 
-**Structure Decision**: Theo SYSTEM_ARCHITECTURE §8 và ADMIN_PORTAL §1.2 (`web/apps/portal/src/workspaces/<workspace>`); `apiClient` trong portal vì chỉ portal gọi API.
+**Structure Decision**: Theo SYSTEM_ARCHITECTURE §8 và ADMIN_PORTAL §1.2 (`src/cms/frontend/apps/portal/src/workspaces/<workspace>`); `apiClient` trong portal vì chỉ portal gọi API.
 
 ## Phase 0: Research
 

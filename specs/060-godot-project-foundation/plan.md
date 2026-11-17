@@ -4,14 +4,14 @@
 
 ## Summary
 
-Tạo `godot/` theo GODOT_ARCHITECTURE §3 với `project.godot` ghim phiên bản, typed GDScript bắt buộc, autoload nền (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector`, `Settings`) theo thứ tự §4, `ThemeService` áp Theme/density sinh bởi F005, i18n gettext vi/en + `L10n` + `LocaleFormat` + pseudo-locale, `UiGallery` debug, các lint (theme override, lớp, signal, khóa dịch), GdUnit4 và pipeline CI headless (export Windows/Android, smoke boot). Thêm Prism mock profile `mock` và cơ chế nhãn MOCK, chặn mock trong bản phát hành. Thêm lớp `SecureStorage` (interface, factory, adapter Windows DPAPI, Android Keystore, `MemoryOnly`) trong plugin `addons/eduworld_platform` để F061 giữ phiên game theo ADR-0086.
+Tạo `src/game/` theo GODOT_ARCHITECTURE §3 với `project.godot` ghim phiên bản, typed GDScript bắt buộc, autoload nền (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector`, `Settings`) theo thứ tự §4, `ThemeService` áp Theme/density sinh bởi F005, i18n gettext vi/en + `L10n` + `LocaleFormat` + pseudo-locale, `UiGallery` debug, các lint (theme override, lớp, signal, khóa dịch), GdUnit4 và pipeline CI headless (export Windows/Android, smoke boot). Thêm Prism mock profile `mock` và cơ chế nhãn MOCK, chặn mock trong bản phát hành. Thêm lớp `SecureStorage` (interface, factory, adapter Windows DPAPI, Android Keystore, `MemoryOnly`) trong plugin `addons/eduworld_platform` để F061 giữ phiên game theo ADR-0086.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x, ghim minor trong `godot/.godot-version`) |
-| Primary Dependencies | GdUnit4, gdtoolkit (`gdlint`, `gdformat`), Prism (`stoplight/prism`) cho mock; GDExtension C++ (Windows DPAPI `Crypt32`) và Android plugin Kotlin (`KeyStore` + `Cipher` AES/GCM) cho `SecureStorage` |
+| Language/Version | GDScript (Godot 4.x, ghim minor trong `src/game/.godot-version`) |
+| Primary Dependencies | GdUnit4, gdtoolkit (`gdlint`, `gdformat`), Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) cho mock; GDExtension C++ (Windows DPAPI `Crypt32`) và Android plugin Kotlin (`KeyStore` + `Cipher` AES/GCM) cho `SecureStorage` |
 | Storage | `user://settings.cfg`, `user://device.cfg`, `user://device_id` (UUID thiết bị — tạo ở F061); không token trong các file này; bí mật phiên chỉ qua `SecureStorage` (DPAPI → `user://secure/session.bin` ciphertext; Android Keystore → file ciphertext riêng của app; `MemoryOnly`) — ADR-0086 |
 | Testing | GdUnit4 headless (unit + scene runner), chụp ảnh `UiGallery` so baseline, script quét artifact |
 | Target Platform | Windows 10+ x86_64, Android 9+ arm64 (export từ F060); iOS/Web ở F133 |
@@ -55,7 +55,7 @@ specs/060-godot-project-foundation/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── project.godot  .godot-version  export_presets.cfg (không mật khẩu)  .gdlintrc
 ├── config/env/{local,dev,staging,production,mock}.json
 ├── scenes/bootstrap/{Boot.tscn,Splash.tscn,ConfigError.tscn}
@@ -69,7 +69,7 @@ godot/
 ├── resources/ui/theme/eduworld_theme*.tres (sinh F005)   resources/audio/bus_layout.tres
 ├── locale/{messages.pot,vi.po,en.po,xx_PS.po(sinh)}
 └── tests/{unit/core/,unit/theme/,scene/,contract/,fixtures/}
-tools/godot/{lint_theme_overrides.gd,lint_layers.gd,lint_signals.gd,extract_pot.gd,pseudo_locale.gd,scan_artifact.sh,screenshot_gallery.gd}
+src/game/tools/{lint_theme_overrides.gd,lint_layers.gd,lint_signals.gd,extract_pot.gd,pseudo_locale.gd,scan_artifact.sh,screenshot_gallery.gd}
 deploy/compose/docker-compose.yml  # profile mock: service api-mock (Prism) cổng 4011
 .github/workflows/godot.yml
 ```

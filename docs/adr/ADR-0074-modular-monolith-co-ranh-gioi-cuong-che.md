@@ -1,6 +1,9 @@
 # ADR-0074 — Modular monolith có ranh giới cưỡng chế thay cho 6 microservice
 
-> **Trạng thái:** Accepted · supersedes ADR-0036 · một phần supersedes ADR-0037, ADR-0040 · **Ngày:** 2026-11-15 · **OQ:** OQ-10 · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · supersedes ADR-0036 · một phần superseded by [ADR-0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) (đường dẫn mã) · một phần supersedes ADR-0037, ADR-0040 · **Ngày:** 2026-11-15 · **OQ:** OQ-10 · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+
+> [!NOTE]
+> **Đường dẫn mã đổi theo ADR-0092:** Go module ở `src/backend/` (`src/backend/cmd/`, `src/backend/modules/<module>/`, `src/backend/pkg/`); Admin Portal ở `src/cms/frontend/`; game ở `src/game/`. Mọi quyết định khác của ADR này giữ nguyên.
 
 ## Bối cảnh
 
@@ -95,3 +98,4 @@ Chỉ tách khi có số đo: tải khác biệt rõ mà tăng replica profile k
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted (phương án 1 của đánh giá topology); chốt cấu trúc `modules/`, 3 binary + profile worker, database theo module trên một cụm, facade sinh từ spec internal | Technical Architect |
 | 2026-11-17 | Làm rõ: room host thuộc `competition` trong `core-api` (không ở binary `realtime`); `producer` của envelope event đổi thành `<module>/<thành phần>` | Technical Architect |
+| 2026-11-17 | Đường dẫn mã chuyển vào `src/` theo ADR-0092 | Technical Architect |

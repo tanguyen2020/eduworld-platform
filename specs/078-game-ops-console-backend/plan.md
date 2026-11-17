@@ -11,7 +11,7 @@ Mở HTTP `/api/v1/game-admin/*` và `/api/v1/game-media*` trên module game (ga
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24; GDScript (Godot 4.x headless) cho script render |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + internal), `pkg/httpx` (`platform_staff`), `pkg/authz`, `pkg/entx` (`UnitOfWork`), `pkg/idempotency`, `pkg/outbox`, `pkg/natsx`, AWS SDK v2 S3 (floci), jsonschema validator, diff JSON |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + internal), `src/backend/pkg/httpx` (`platform_staff`), `src/backend/pkg/authz`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/idempotency`, `src/backend/pkg/outbox`, `src/backend/pkg/natsx`, AWS SDK v2 S3 (floci), jsonschema validator, diff JSON |
 | Storage | PostgreSQL `eduworld_game`: bảng item/version của từng loại (F071–F077), `game.content_releases`, `game.content_manifests`, `game.client_manifests`, `game.media_assets`, `game.media_usages`, **Mới** `game.preview_sessions`, `game.render_jobs`; `infra.tenant_resource_assignments`; Valkey `ew:game:cv:*`, `ew:game:current:*`, `ew:game:manifest:*`; object storage `ew-media-public` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, floci); facade test với identity, learning; test sinh từ OpenAPI cho 403; GdUnit4 headless cho script render |
 | Target Platform | Linux container (`core-api` + `worker`, module `game`; container `game-renderer`) |
@@ -50,7 +50,7 @@ specs/078-game-ops-console-backend/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/                     # previewsession.go, renderjob.go (+ mixin release cho bảng item/version nếu thiếu)
 ├── internal/domain/gameconfig/     # Workflow (state machine, reviewer ≠ author), PublishPolicy (hẹn giờ), RollbackPolicy, RefCheck
 ├── internal/application/command/   # create_game_config.go, create_game_config_version.go, update_game_config_draft.go,
@@ -67,7 +67,7 @@ modules/game/
 ├── internal/presentation/job/           # scheduled_publish.go
 └── tests/{unit,integration,contract}/
 deploy/compose/game-renderer.yml        # container Godot headless
-godot/tools/thumbnail_renderer/render_thumbnails.gd
+src/game/tools/thumbnail_renderer/render_thumbnails.gd
 deploy/apisix/                           # route nội bộ /game-admin/*, /game-media* (không có trên gateway public)
 ```
 
@@ -88,7 +88,7 @@ deploy/apisix/                           # route nội bộ /game-admin/*, /game
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `gameconfig.Workflow` (`draft → in_review → approved/rejected → published → archived`), `PublishPolicy`, `RollbackPolicy`, `RefCheck` (client manifest, tham chiếu đã publish, song ngữ) | Thuần |
-| application | Command/Query như cây trên; permission theo bảng dưới | authz `authz.Require` tường minh đầu handler; idempotency middleware `pkg/httpx`; validation trong DTO/handler |
+| application | Command/Query như cây trên; permission theo bảng dưới | authz `authz.Require` tường minh đầu handler; idempotency middleware `src/backend/pkg/httpx`; validation trong DTO/handler |
 | infrastructure | Repo generic theo `ConfigTypeRegistry`; snapshot Valkey; manifest rebuilder; S3 presign; NATS render job | |
 | presentation | 15 operation `/game-admin/*` + `/game-media*` của game.v1; internal `applyTenantAssignment`, `listAssignedGameActivities`; consumer render; job hẹn giờ | |
 

@@ -43,6 +43,6 @@
 
 ## 6. Delta cần thực hiện
 
-- AsyncAPI: thêm `examples` cho `system.session.welcome`, `system.session.resumed`, `system.session.resume_failed`, `session.session.replaced`, `hub.instance.assigned`, `hub.snapshot.updated`, `hub.player.joined`, `hub.player.corrected`, `hub.instance.migrated` để sinh fixture `godot/tests/fixtures/realtime/` (CI kiểm fixture khớp schema).
+- AsyncAPI: thêm `examples` cho `system.session.welcome`, `system.session.resumed`, `system.session.resume_failed`, `session.session.replaced`, `hub.instance.assigned`, `hub.snapshot.updated`, `hub.player.joined`, `hub.player.corrected`, `hub.instance.migrated` để sinh fixture `src/game/tests/fixtures/realtime/` (CI kiểm fixture khớp schema).
 - Phụ thuộc delta của F090 (lỗi `createRealtimeTicket`, message `system.server.draining` + close `1012` thay `4500`) và F091 (`follow_user_id`, enum presence theo MULTIPLAYER_GAMEPLAY §5, cờ `hidden`).
 - Kiểm: `make specs-lint`, `make godot-test`.

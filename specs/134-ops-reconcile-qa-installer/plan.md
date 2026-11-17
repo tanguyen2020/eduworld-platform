@@ -4,14 +4,14 @@
 
 ## Summary
 
-(1) **Đối soát**: package `pkg/reconcile` (so khớp, phân loại, báo cáo) + `pkg/messaging` công bố registry consumer → nguồn/event type; binary `cmd/worker` thêm lệnh con `reconcile --module=<module>` (job Swarm một lần `reconcile-<module>`, ADR-0074); mỗi module có DB hiện thực hai operation facade chỉ đọc `listOutboxEventIds`, `listProcessedEventIds` (spec internal → `modules/<module>/api`) qua `pkg/outbox` store (không qua ent nghiệp vụ). (2) **Tenant QA**: cột `platform.tenants.is_qa` → `tenant.updated` → `ref.tenants.is_qa` ở game/learning; analytics consumer/telemetry bỏ sự kiện tenant QA; query catalog Game Analytics và tổng hợp học tập platform anti-join tenant QA; portal workspace D có công tắc. (3) **Bộ cài**: CI `build-kit.sh` phát chỉ mục `school-kit/<channel>.json` có chữ ký; module game `listSchoolClientInstallers` tải + kiểm chữ ký + cache, lọc theo khối của trường; portal workspace C trang "Tải bộ cài".
+(1) **Đối soát**: package `src/backend/pkg/reconcile` (so khớp, phân loại, báo cáo) + `src/backend/pkg/messaging` công bố registry consumer → nguồn/event type; binary `src/backend/cmd/worker` thêm lệnh con `reconcile --module=<module>` (job Swarm một lần `reconcile-<module>`, ADR-0074); mỗi module có DB hiện thực hai operation facade chỉ đọc `listOutboxEventIds`, `listProcessedEventIds` (spec internal → `src/backend/modules/<module>/api`) qua `src/backend/pkg/outbox` store (không qua ent nghiệp vụ). (2) **Tenant QA**: cột `platform.tenants.is_qa` → `tenant.updated` → `ref.tenants.is_qa` ở game/learning; analytics consumer/telemetry bỏ sự kiện tenant QA; query catalog Game Analytics và tổng hợp học tập platform anti-join tenant QA; portal workspace D có công tắc. (3) **Bộ cài**: CI `build-kit.sh` phát chỉ mục `school-kit/<channel>.json` có chữ ký; module game `listSchoolClientInstallers` tải + kiểm chữ ký + cache, lọc theo khối của trường; portal workspace C trang "Tải bộ cài".
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 / TypeScript (React, Vite) / Bash (CI) |
-| Primary Dependencies | `pkg/outbox`, `pkg/messaging`, `pkg/modcall`, `pkg/entx` (`UnitOfWork`), `pkg/authz`, oapi-codegen, ent + Atlas; Ant Design Pro, TanStack Query (`apiClient`, `withTenantScope` của F050/F051); `openssl` (ký chỉ mục) |
+| Primary Dependencies | `src/backend/pkg/outbox`, `src/backend/pkg/messaging`, `src/backend/pkg/modcall`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, oapi-codegen, ent + Atlas; Ant Design Pro, TanStack Query (`apiClient`, `withTenantScope` của F050/F051); `openssl` (ký chỉ mục) |
 | Storage | PostgreSQL mọi database module (`infra.*` chỉ đọc); `eduworld_identity` (`platform.tenants.is_qa`), `eduworld_game`/`eduworld_learning` (`ref.tenants.is_qa`); Valkey `ew:game:school_kit_index:<channel>` (cache 5 phút) |
 | Testing | go test + testcontainers (PG, NATS); test khôi phục DB về T (TC-SVC-014); Vitest + Playwright cho portal |
 | Target Platform | Linux container (job Swarm một lần dùng image `worker`), trình duyệt |
@@ -27,7 +27,7 @@
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | 2 operation facade × 5 module, `listSchoolClientInstallers`, 2 JSON Schema, payload `tenant.updated` ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Đối soát chỉ qua facade trong tiến trình (`pkg/modcall`); operation đối soát là query handler chỉ đọc; chỉ import `modules/<khác>/api` theo `x-allowed-callers` (`pkg/reconcile` dùng chung) |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Đối soát chỉ qua facade trong tiến trình (`src/backend/pkg/modcall`); operation đối soát là query handler chỉ đọc; chỉ import `src/backend/modules/<khác>/api` theo `x-allowed-callers` (`src/backend/pkg/reconcile` dùng chung) |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `infra.*` là hạ tầng không thuộc tenant (đọc như outbox relay, chỉ trả ID, không payload); `listSchoolClientInstallers` kiểm scope trường; dashboard platform vẫn qua `CrossTenantScope` hiện có; không ghi/xóa |
 | IV Server-authoritative | ✅ | Lọc QA, lọc khối, kiểm chữ ký ở server |
 | V Xác thực, phân quyền | ✅ | Internal: `x-allowed-callers`; `platform.tenant.manage` cho cờ QA; `school.installer.read` [Proposed] |
@@ -54,18 +54,18 @@ specs/134-ops-reconcile-qa-installer/
 ### Source Code (repository)
 
 ```text
-pkg/reconcile/{window.go,classify.go,report.go,runner.go}       # thuần + port PeerClient, OutboxReader, ProcessedReader
-pkg/messaging/registry.go                                      # Consumer{Name, SourceService, EventTypes}
-pkg/outbox/reader.go                                           # ListByWindow (chỉ đọc infra.*)
-cmd/worker/reconcile.go                                        # `worker reconcile --module=<module> --restore-point --from --to --settle --out`
-modules/<module>/                                              # module ∈ identity, learning, game, competition, chat
+src/backend/pkg/reconcile/{window.go,classify.go,report.go,runner.go}       # thuần + port PeerClient, OutboxReader, ProcessedReader
+src/backend/pkg/messaging/registry.go                                      # Consumer{Name, SourceService, EventTypes}
+src/backend/pkg/outbox/reader.go                                           # ListByWindow (chỉ đọc infra.*)
+src/backend/cmd/worker/reconcile.go                                        # `worker reconcile --module=<module> --restore-point --from --to --settle --out`
+src/backend/modules/<module>/                                              # module ∈ identity, learning, game, competition, chat
 ├── api/                                                       # facade sinh từ spec internal (listOutboxEventIds, listProcessedEventIds)
 ├── internal/application/query/ops/{list_outbox_event_ids.go,list_processed_event_ids.go}
-├── internal/infrastructure/modules/reconcile_peers.go          # adapter facade 4 module còn lại (pkg/modcall)
+├── internal/infrastructure/modules/reconcile_peers.go          # adapter facade 4 module còn lại (src/backend/pkg/modcall)
 └── internal/presentation/facade/ops_reconcile.go              # hiện thực interface facade
 scripts/ops/reconcile.sh                                       # `docker service create --mode replicated-job --restart-condition none … ghcr.io/<org>/eduworld/worker:<tag> reconcile --module=<module>`
-modules/identity/ent/schema/tenant.go                 # is_qa + use case UpdateTenant (F010)
-modules/game/
+src/backend/modules/identity/ent/schema/tenant.go                 # is_qa + use case UpdateTenant (F010)
+src/backend/modules/game/
 ├── ent/schema/ref/tenant.go                                   # is_qa
 ├── internal/application/command/analytics/{ingest_domain_event.go,ingest_telemetry.go}   # bỏ tenant QA
 ├── internal/application/query/analytics/query_catalog.go      # anti-join ref.tenants.is_qa
@@ -73,14 +73,14 @@ modules/game/
 ├── internal/application/port/school_kit_index.go
 ├── internal/infrastructure/release/{school_kit_index_http.go,signature.go}
 └── internal/presentation/http/public/client_installers.go
-modules/learning/{ent/schema/ref/tenant.go,internal/application/query/analytics/platform_summary.go}
+src/backend/modules/learning/{ent/schema/ref/tenant.go,internal/application/query/analytics/platform_summary.go}
 deploy/installer/school-kit/{build-kit.sh,publish-index.sh}
-web/apps/portal/src/workspaces/school-lms/installers/{InstallerListPage.tsx,DeviceConfigGuide.tsx,useSchoolInstallers.ts}
-web/apps/portal/src/workspaces/platform-admin/tenants/TenantForm.tsx  # công tắc is_qa
-web/packages/ops-ui/src/tenant/TenantFilter.tsx                 # nhãn QA
+src/cms/frontend/apps/portal/src/workspaces/school-lms/installers/{InstallerListPage.tsx,DeviceConfigGuide.tsx,useSchoolInstallers.ts}
+src/cms/frontend/apps/portal/src/workspaces/platform-admin/tenants/TenantForm.tsx  # công tắc is_qa
+src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.tsx                 # nhãn QA
 ```
 
-**Structure Decision**: Logic đối soát chung ở `pkg/reconcile` để 5 module không lặp code và không import `internal/` của nhau (R13); lệnh con nằm ở composition root `cmd/worker`, mỗi module chỉ thêm query + hiện thực facade. Trang bộ cài là module mới của workspace C theo sitemap [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md); công tắc QA nằm trong form tenant hiện có của F057.
+**Structure Decision**: Logic đối soát chung ở `src/backend/pkg/reconcile` để 5 module không lặp code và không import `internal/` của nhau (R13); lệnh con nằm ở composition root `src/backend/cmd/worker`, mỗi module chỉ thêm query + hiện thực facade. Trang bộ cài là module mới của workspace C theo sitemap [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md); công tắc QA nằm trong form tenant hiện có của F057.
 
 ## Phase 0: Research
 
@@ -96,14 +96,14 @@ Không có. Cơ chế đối soát theo [BACKUP_RECOVERY §3.5](../../docs/11-op
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `pkg/reconcile.Classify(event, peerState, restorePoint, settle, now)`; game `installer.FilterByGradeBands`, `GradeLevel→GradeBand` (GLOSSARY); identity `Tenant.SetQA()` (cấm `common`) | Hàm thuần, unit test bảng |
-| application | Query `ListOutboxEventIds`, `ListProcessedEventIds` (mọi module) · Command `UpdateTenant` (+`is_qa`, F010) · Command `IngestDomainEvent`/`IngestTelemetry` (bỏ QA) · Query `ListSchoolInstallers`, query catalog analytics, `PlatformLearningSummary` (anti-join QA) | authz `authz.Require` tường minh đầu handler; tracing `pkg/observability` |
-| infrastructure | `pkg/outbox.Reader`; adapter facade `<peer>` qua `pkg/modcall` (span, deadline, không retry); `SchoolKitIndexHttp` (`EW_CLIENT_RELEASES_BASE_URL`, `EW_CLIENT_RELEASE_PUBKEY_FILE`) + cache Valkey; projection consumer `tenant.updated` | |
+| domain | `src/backend/pkg/reconcile.Classify(event, peerState, restorePoint, settle, now)`; game `installer.FilterByGradeBands`, `GradeLevel→GradeBand` (GLOSSARY); identity `Tenant.SetQA()` (cấm `common`) | Hàm thuần, unit test bảng |
+| application | Query `ListOutboxEventIds`, `ListProcessedEventIds` (mọi module) · Command `UpdateTenant` (+`is_qa`, F010) · Command `IngestDomainEvent`/`IngestTelemetry` (bỏ QA) · Query `ListSchoolInstallers`, query catalog analytics, `PlatformLearningSummary` (anti-join QA) | authz `authz.Require` tường minh đầu handler; tracing `src/backend/pkg/observability` |
+| infrastructure | `src/backend/pkg/outbox.Reader`; adapter facade `<peer>` qua `src/backend/pkg/modcall` (span, deadline, không retry); `SchoolKitIndexHttp` (`EW_CLIENT_RELEASES_BASE_URL`, `EW_CLIENT_RELEASE_PUBKEY_FILE`) + cache Valkey; projection consumer `tenant.updated` | |
 | presentation | Hiện thực facade `listOutboxEventIds`, `listProcessedEventIds`; public `listSchoolClientInstallers`; `worker reconcile`; portal `InstallerListPage`, `TenantForm` | |
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F003 (`pkg/outbox`, `pkg/modcall`, `pkg/messaging`), F010 (`updateTenant`), F080 (analytics consumer, query catalog), F043/F044 (tổng hợp học tập platform), F057 (form tenant, `TenantFilter`), F131 (tenant QA, probe), F133 (khóa ký, bộ cài trường), F130 (Swarm, runbook RB-01).
+- Feature phụ thuộc: F003 (`src/backend/pkg/outbox`, `src/backend/pkg/modcall`, `src/backend/pkg/messaging`), F010 (`updateTenant`), F080 (analytics consumer, query catalog), F043/F044 (tổng hợp học tập platform), F057 (form tenant, `TenantFilter`), F131 (tenant QA, probe), F133 (khóa ký, bộ cài trường), F130 (Swarm, runbook RB-01).
 - Facade: module được đối soát → 4 module còn lại (`listOutboxEventIds`, `listProcessedEventIds`), trong tiến trình `worker`. Event: `tenant.updated` (identity → game, learning).
 
 ### Bảo mật, tenant, idempotency, audit

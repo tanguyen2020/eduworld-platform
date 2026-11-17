@@ -111,7 +111,7 @@ Chuột: mọi chức năng đều bấm được bằng chuột (học sinh nh�
 | Quy ước | Chi tiết |
 |---|---|
 | Khóa dịch UI | `ui.<screen>.<element>[.<state>]`, chữ thường, gạch dưới. Ví dụ `ui.login.button_sign_in`, `ui.hub.quest_tracker.empty`. Thông điệp lỗi dùng `ui.error.<ProblemCode>` (ví dụ `ui.error.TENANT_MISMATCH`) |
-| File dịch | `godot/locale/vi.po` (gốc), `godot/locale/en.po`; mọi `Label`/`Button` gán khóa, không gán chuỗi |
+| File dịch | `src/game/locale/vi.po` (gốc), `src/game/locale/en.po`; mọi `Label`/`Button` gán khóa, không gán chuỗi |
 | Dữ liệu từ backend | Trường `i18nText` (`{vi, en}`); client chọn theo ngôn ngữ hiện tại, thiếu `en` thì dùng `vi` kèm nhãn nhỏ "VI" |
 | Đổi ngôn ngữ | Trong Cài đặt (S15) và ở màn đăng nhập (S01); áp dụng ngay, không tải lại scene |
 | Hiển thị song song | Tùy chọn hiển thị tên riêng/từ khóa ở cả hai ngôn ngữ (ví dụ "Vương quốc Số · Math Kingdom") [Proposed] |

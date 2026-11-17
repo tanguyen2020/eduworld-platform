@@ -7,7 +7,7 @@
 
 ### Session 2026-11-16
 
-- Q: Khung `pkg/authz` (Principal, `ValidateCatalog`) thuộc F002 hay F012? → A: F002 tạo khung; F012 điền nội dung catalog nhóm identity (`tenant.*`, `school.*`, `platform.*` liên quan), seed role hệ thống, đồng bộ bản sao `identity.permissions`.
+- Q: Khung `src/backend/pkg/authz` (Principal, `ValidateCatalog`) thuộc F002 hay F012? → A: F002 tạo khung; F012 điền nội dung catalog nhóm identity (`tenant.*`, `school.*`, `platform.*` liên quan), seed role hệ thống, đồng bộ bản sao `identity.permissions`.
 - Q: `principals:resolve` nhận `user_id` nhưng module khác chỉ có `sub` trong token? → A: Delta contract: `PrincipalResolveRequest` nhận `issuer` + `subject` (thay thế `user_id`), `Principal.tenant_id` nullable cho phạm vi platform ([IDENTITY_MAPPING §0](../../docs/09-identity/IDENTITY_MAPPING.md)); xem [contracts](contracts/README.md) §6.
 - Q: Key cache Principal? → A: `ew:identity:principal:<user_id>:<tenant_id|_platform>` (CODE_PLAN Bước 0 D7).
 
@@ -18,7 +18,7 @@
 - Q: Portal đăng nhập thế nào sau [ADR-0091](../../docs/adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md)? → A: Form riêng của portal gọi `portalLogin` (`POST /api/v1/auth/portal/login`, mật khẩu + OTP trong một request); module identity gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant). Access token trả trong body (SPA chỉ giữ trong bộ nhớ); refresh token trong cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`); `refreshPortalToken`/`portalLogout` bắt buộc header `X-EW-CSRF` khớp cookie `__Host-ew_portal_csrf` (double-submit). Mọi lỗi xác thực là `401 INVALID_CREDENTIALS` một thông điệp chung (US7).
 - Q: Tài khoản còn mật khẩu tạm/chưa có OTP? → A: `403 ACCOUNT_SETUP_REQUIRED` + `setup_ticket` (một lần, `portal_setup_ticket_ttl`) + `required_steps[]`; đổi mật khẩu bằng `setupPortalPassword`; đăng ký OTP qua email `execute-actions-email` `CONFIGURE_TOTP` (trang action-token Keycloak — ngoại lệ duy nhất); quên mật khẩu bằng `forgotPortalPassword` (luôn `202`) + `resetPortalPassword` (token hash, một lần, `portal_password_reset_ttl`) (US8).
 - Q: Đổi tenant còn xin token mới với scope `organization:{alias}`? → A: Không; tenant của request do `X-Tenant-Id` + kiểm tra membership quyết định (ADR-0065, ADR-0091 mục 4), cùng access token (F012-AC-07).
-- Q: Middleware `featuregate` (ADR-0090) thuộc feature nào? → A: F012 sở hữu middleware trong `pkg/httpx` và port `featuregate.Source` (thứ tự: xác thực → `tenant` → `portal_staff` → `featuregate` → handler → `authz.Require`) và trường `disabled_menus`/`disabled_actions` của `getMyPermissions`; F015 sở hữu dữ liệu (`platform.feature_flags`, `platform.portal_menu_catalog`), API System Admin và hiện thực `featuregate.Source` trong module identity (US9).
+- Q: Middleware `featuregate` (ADR-0090) thuộc feature nào? → A: F012 sở hữu middleware trong `src/backend/pkg/httpx` và port `featuregate.Source` (thứ tự: xác thực → `tenant` → `portal_staff` → `featuregate` → handler → `authz.Require`) và trường `disabled_menus`/`disabled_actions` của `getMyPermissions`; F015 sở hữu dữ liệu (`platform.feature_flags`, `platform.portal_menu_catalog`), API System Admin và hiện thực `featuregate.Source` trong module identity (US9).
 - Q: Phần đăng nhập portal có phụ thuộc kết quả spike Keycloak không? → A: Có — F004 T039 (claim `amr`/`acr`, lỗi khi còn required action) phải xong trước T041–T050 của feature này [Proposed].
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -78,7 +78,7 @@ Module khác (learning, game, competition, chat; realtime qua NATS request/reply
 |---|---|---|---|
 | F012-AC-11 | KHI module có trong `x-allowed-callers` gọi `resolvePrincipal` qua facade `identity` với tenant thuộc membership của user, module identity PHẢI trả Principal gồm `user_type`, `status`, `roles`, `permissions` (hợp UserRole hiệu lực `valid_from ≤ now < valid_to`, chưa xóa), `scopes` (`tenant`/`school`/`subject`), `version` | FR-AUTH-016 · FR-LMS-005 | TC-TEN-002 |
 | F012-AC-12 | NẾU tenant yêu cầu không thuộc membership của user, THÌ module identity PHẢI trả `TENANT_MISMATCH` và ghi security event | FR-AUTH-019 · ADR-0065 | TC-TEN-011 |
-| F012-AC-13 | NẾU một module không có trong `x-allowed-callers` của `resolvePrincipal` import `modules/identity/api`, THÌ `make arch-check` PHẢI fail; `resolvePrincipal` PHẢI KHÔNG được mở thành route HTTP (public hay nội bộ) | FR-AUTH-016 · ADR-0074 | TC-SVC-006 |
+| F012-AC-13 | NẾU một module không có trong `x-allowed-callers` của `resolvePrincipal` import `src/backend/modules/identity/api`, THÌ `make arch-check` PHẢI fail; `resolvePrincipal` PHẢI KHÔNG được mở thành route HTTP (public hay nội bộ) | FR-AUTH-016 · ADR-0074 | TC-SVC-006 |
 | F012-AC-14 | KHI có `user_role.changed`, `role.updated`, `tenant_membership.changed`, `user.status_changed`, `user.access_revoked` hoặc `tenant.updated`, HỆ THỐNG PHẢI xóa cache Principal liên quan để quyền mới có hiệu lực trong ≤ `principal_cache_ttl` | FR-AUTH-016 · ADR-0066 | TC-AUTH-078 |
 | F012-AC-15 | NẾU module identity không trả lời và bên gọi không còn cache hợp lệ, THÌ bên gọi PHẢI trả `503 UNAVAILABLE` (không fail-open) | FR-AUTH-016 · NFR-AVAIL-005 | TC-SVC-011 |
 
@@ -194,7 +194,7 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F012-AC-40 | KHI request có token `azp = eduworld-portal` khớp operation có `x-portal-action` (bảng route → action sinh từ OpenAPI bằng `make gen`), middleware `featuregate` của `core-api` PHẢI chạy sau xác thực, `tenant`, `portal_staff` và trước handler (`authz.Require`), tra trạng thái hiệu lực của action và menu cha theo tenant của phiên (System Admin không `X-Tenant-Id` = mặc định platform), và NẾU action hoặc menu cha tắt THÌ PHẢI trả `403 FEATURE_DISABLED` với extension `feature_key`; `featuregate` PHẢI KHÔNG áp cho token khác `eduworld-portal`, operation `x-portal-shell` hay action `can_disable = false`, và PHẢI KHÔNG thay authorization | FR-CMS-018 · ADR-0090 mục 3 | TC-CMS-MENU-04 |
-| F012-AC-41 | `featuregate` PHẢI đọc trạng thái qua port `featuregate.Source` (`pkg/httpx`, hiện thực ở module identity — F015), cache theo `feature_toggle_cache_ttl` (không vượt `principal_cache_ttl`) và làm mới khi nhận `platform_settings.changed` scope `feature_flag`; NẾU không đọc được trạng thái (cache trống và database identity không sẵn sàng), THÌ PHẢI trả `503 UNAVAILABLE` cho operation có thể tắt (không fail-open) | FR-CMS-018 · ADR-0090 mục 3 · NFR-AVAIL-005 | TC-CMS-MENU-02 |
+| F012-AC-41 | `featuregate` PHẢI đọc trạng thái qua port `featuregate.Source` (`src/backend/pkg/httpx`, hiện thực ở module identity — F015), cache theo `feature_toggle_cache_ttl` (không vượt `principal_cache_ttl`) và làm mới khi nhận `platform_settings.changed` scope `feature_flag`; NẾU không đọc được trạng thái (cache trống và database identity không sẵn sàng), THÌ PHẢI trả `503 UNAVAILABLE` cho operation có thể tắt (không fail-open) | FR-CMS-018 · ADR-0090 mục 3 · NFR-AVAIL-005 | TC-CMS-MENU-02 |
 
 ### Edge Cases
 
@@ -287,7 +287,7 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 ## Assumptions
 
 - Role tùy biến của tenant [Proposed] (ADR-0066); triển khai nhưng có thể tắt bằng feature flag nếu chưa duyệt.
-- F002 cung cấp middleware `auth`, `principal`, `tenant`, `portal_staff`, `game_player` trong `pkg/httpx`; F012 cung cấp dữ liệu (Principal) và test.
+- F002 cung cấp middleware `auth`, `principal`, `tenant`, `portal_staff`, `game_player` trong `src/backend/pkg/httpx`; F012 cung cấp dữ liệu (Principal) và test.
 - `auth_time` tối đa 8 giờ cho route platform [Proposed] theo KEYCLOAK_SSO §3.3.
 - Claim `amr`/`acr` của direct grant và lỗi Keycloak khi còn required action theo giả định của ADR-0091; xác nhận bằng spike F004 T039 [Proposed].
 - APISIX phục vụ `/api/v1/*` dưới origin của portal để cookie là first-party [Proposed] (F004-AC-28).

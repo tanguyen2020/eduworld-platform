@@ -4,14 +4,14 @@
 
 ## Summary
 
-Dựng khung ứng dụng `web/apps/portal`: trang `/login` tự vẽ + màn thiết lập tài khoản, quên/đặt lại mật khẩu gọi `/api/v1/auth/portal/*` (ADR-0091; access token trong bộ nhớ, refresh token trong cookie HttpOnly do backend đặt, CSRF double-submit `X-EW-CSRF`, làm mới single-flight), máy trạng thái phiên (`restoring → unauthenticated → resolving_scope → selecting_tenant → ready | no_access`), định tuyến sau đăng nhập theo `listMyTenants`, `ProLayout` dựng workspace switcher/sidebar từ danh mục sinh từ `specs/portal/menu-catalog.yaml` lọc theo `getMyPermissions` (`permissions`, `workspaces`, `disabled_menus`, `disabled_actions` — ADR-0090), `ActionGate`, route workspace lazy (`React.lazy` + `import()` theo `workspaces[]`), trang 403/"Tính năng đang tắt"/VPN/hết phiên, đổi đơn vị bằng `X-Tenant-Id` (không token mới), bộ lọc tenant System Admin (`listTenants`, lưu `sessionStorage`). Shell không chứa business logic: mọi quyết định quyền do backend; shell chỉ ẩn/hiện (R1, R20).
+Dựng khung ứng dụng `src/cms/frontend/apps/portal`: trang `/login` tự vẽ + màn thiết lập tài khoản, quên/đặt lại mật khẩu gọi `/api/v1/auth/portal/*` (ADR-0091; access token trong bộ nhớ, refresh token trong cookie HttpOnly do backend đặt, CSRF double-submit `X-EW-CSRF`, làm mới single-flight), máy trạng thái phiên (`restoring → unauthenticated → resolving_scope → selecting_tenant → ready | no_access`), định tuyến sau đăng nhập theo `listMyTenants`, `ProLayout` dựng workspace switcher/sidebar từ danh mục sinh từ `specs/portal/menu-catalog.yaml` lọc theo `getMyPermissions` (`permissions`, `workspaces`, `disabled_menus`, `disabled_actions` — ADR-0090), `ActionGate`, route workspace lazy (`React.lazy` + `import()` theo `workspaces[]`), trang 403/"Tính năng đang tắt"/VPN/hết phiên, đổi đơn vị bằng `X-Tenant-Id` (không token mới), bộ lọc tenant System Admin (`listTenants`, lưu `sessionStorage`). Shell không chứa business logic: mọi quyết định quyền do backend; shell chỉ ẩn/hiện (R1, R20).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript (strict) · React 18 · Vite |
-| Primary Dependencies | React Router (không dùng `oidc-client-ts` — ADR-0091), TanStack Query, Ant Design 5 + `@ant-design/pro-components` (ProLayout), `react-i18next`, `openapi-typescript` (kiểu từ F050), `web/packages/ops-ui` |
+| Primary Dependencies | React Router (không dùng `oidc-client-ts` — ADR-0091), TanStack Query, Ant Design 5 + `@ant-design/pro-components` (ProLayout), `react-i18next`, `openapi-typescript` (kiểu từ F050), `src/cms/frontend/packages/ops-ui` |
 | Storage | Không có dữ liệu bền vững; access token trong RAM; refresh token trong cookie HttpOnly (backend đặt); `localStorage`/`sessionStorage` chỉ cho tùy chọn hiển thị, `device_id`, tenant phiên ([data-model.md](data-model.md)) |
 | Testing | Vitest + Testing Library + MSW (mock **chỉ trong test**, gắn nhãn `// MOCK (test-only)`); Playwright E2E với backend local thật; axe-core; Playwright screenshot |
 | Target Platform | Trình duyệt desktop/tablet/mobile (Chromium, Firefox, Safari mới) |
@@ -55,7 +55,7 @@ specs/051-portal-shell/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/
+src/cms/frontend/apps/portal/
 ├── .env.example                     # VITE_API_PUBLIC_BASE_URL (cùng origin portal), VITE_API_INTERNAL_BASE_URL, VITE_PORTAL_BASE_PATH (không còn VITE_OIDC_*)
 ├── scripts/gen-menu-catalog.mjs     # specs/portal/menu-catalog.yaml → src/generated/menu-catalog.ts (make portal-catalog)
 ├── src/

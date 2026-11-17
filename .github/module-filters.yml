@@ -1,0 +1,31 @@
+# dorny/paths-filter filters for the go.yml matrix (F001 T036, F001-AC-12).
+# A change under `shared` runs the matrix for every module. Go code lives in src/backend (ADR-0092).
+shared:
+  - "src/backend/pkg/**"
+  - "src/backend/cmd/**"
+  - "src/backend/tools/**"
+  - "src/backend/test/**"
+  - "src/backend/go.mod"
+  - "src/backend/go.sum"
+  - "tools/**"
+  - "Makefile"
+  - "deploy/postgres/**"
+  - "specs/events/**"
+  - "specs/asyncapi/**"
+  - ".github/workflows/go.yml"
+  - ".github/module-filters.yml"
+identity:
+  - "src/backend/modules/identity/**"
+  - "specs/openapi/modules/identity.*"
+learning:
+  - "src/backend/modules/learning/**"
+  - "specs/openapi/modules/learning.*"
+game:
+  - "src/backend/modules/game/**"
+  - "specs/openapi/modules/game.*"
+competition:
+  - "src/backend/modules/competition/**"
+  - "specs/openapi/modules/competition.*"
+chat:
+  - "src/backend/modules/chat/**"
+  - "specs/openapi/modules/chat.*"

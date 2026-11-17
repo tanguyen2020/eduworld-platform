@@ -1,6 +1,6 @@
 # Feature Specification: F122 — Portal an toàn chat: kiểm duyệt (E), danh mục và công tắc (D), chính sách chat trường (C)
 
-**Feature Branch**: `122-portal-chat-safety` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace E, D, C) · **Mốc**: M5 · **Phụ thuộc**: F051, F120, F121 (và F116 cho API danh mục/công tắc)
+**Feature Branch**: `122-portal-chat-safety` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace E, D, C) · **Mốc**: M5 · **Phụ thuộc**: F051, F120, F121 (và F116 cho API danh mục/công tắc)
 **Input**: Giao diện Admin/Ops cho an toàn chat: hàng đợi case liên tenant của Platform Safety Team, thông báo nhà trường, từ bổ sung/nhóm từ của tenant (E); danh mục từ nhạy cảm platform và công tắc kiểm duyệt (D); thông báo vụ việc, chính sách chat trường, nhóm từ chỉ xem, duyệt club (C); banner "Đang tắt kiểm duyệt" mọi workspace. FR nguồn: FR-MOD-003, FR-MOD-004, FR-MOD-009, FR-MOD-011, FR-MOD-017.
 
 ## Clarifications
@@ -263,6 +263,6 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 
 ## Assumptions
 
-- [Proposed] Thư mục: `web/apps/portal/src/workspaces/live-ops/moderation/`, `…/platform-admin/chat-safety/`, `…/school-lms/safety/`; banner `web/apps/portal/src/shell/banners/ModerationDisabledBanner.tsx` (F051 cung cấp slot). Tên thư mục workspace D là `platform-admin` (RB-603/RB-619 đã chốt).
+- [Proposed] Thư mục: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/`, `…/platform-admin/chat-safety/`, `…/school-lms/safety/`; banner `src/cms/frontend/apps/portal/src/shell/banners/ModerationDisabledBanner.tsx` (F051 cung cấp slot). Tên thư mục workspace D là `platform-admin` (RB-603/RB-619 đã chốt).
 - [Proposed] Danh sách học sinh để chọn trong form thông báo lấy từ `subject_user_ids` của `ModerationCaseDetail` kèm `school_id` (delta F121 `school_ids`); nếu thiếu tên, hiển thị mã học sinh.
 - [Proposed] Four-eyes khi publish danh mục platform do server thực thi; UI chỉ hiển thị trạng thái chờ duyệt nếu server trả.

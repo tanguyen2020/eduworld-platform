@@ -4,14 +4,14 @@
 
 ## Summary
 
-Module `quest` của module game: quest là item nội dung có version trên lõi phát hành F071 (`item_type = quest`, payload `quest.schema.json` v2, cột tách để lọc). `QuestAvailability` (domain thuần) lọc theo khối, gán tenant, availability, prerequisites, learning requirements (`ref.mastery_summary`), môn bật. Aggregate `QuestProgress` giữ `step_states`; `StepHandler` registry (F072: `talk_npc`, `go_to`, `collect`, `discover`, `activity`). Bước học tập gọi `createAttempt` của module learning qua facade `learning` (`pkg/modcall`); consumer `game.quest_on_activity_graded` đánh giá `pass_rule`; consumer `game.quest_on_discovery_found`; consumer `game.periodic_quests_on_session_started` cấp daily/weekly; job `quest-period-expiry`, `quest-failure-timer`. Mọi đổi trạng thái ghi outbox (`quest.*`) và publish Valkey `ew:rt:user:<id>` (`quest.progress.updated`). module learning thêm consumer ghi learning event `quest.completed`. Godot: `QuestService`, Quest Journal (S05), Quest Tracker, `QuestMarker3D`.
+Module `quest` của module game: quest là item nội dung có version trên lõi phát hành F071 (`item_type = quest`, payload `quest.schema.json` v2, cột tách để lọc). `QuestAvailability` (domain thuần) lọc theo khối, gán tenant, availability, prerequisites, learning requirements (`ref.mastery_summary`), môn bật. Aggregate `QuestProgress` giữ `step_states`; `StepHandler` registry (F072: `talk_npc`, `go_to`, `collect`, `discover`, `activity`). Bước học tập gọi `createAttempt` của module learning qua facade `learning` (`src/backend/pkg/modcall`); consumer `game.quest_on_activity_graded` đánh giá `pass_rule`; consumer `game.quest_on_discovery_found`; consumer `game.periodic_quests_on_session_started` cấp daily/weekly; job `quest-period-expiry`, `quest-failure-timer`. Mọi đổi trạng thái ghi outbox (`quest.*`) và publish Valkey `ew:rt:user:<id>` (`quest.progress.updated`). module learning thêm consumer ghi learning event `quest.completed`. Godot: `QuestService`, Quest Journal (S05), Quest Tracker, `QuestMarker3D`.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · GDScript (Godot 4.x) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server + client `learning.internal`), `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/modcall`, nats.go, Valkey client, JSON Schema validator · GdUnit4 |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server + client `learning.internal`), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, nats.go, Valkey client, JSON Schema validator · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (`game.quest_definitions`, `game.quest_versions`, `game.quest_progress`, `game.quest_step_attempts`, `game.periodic_quest_grants`, `infra.tenant_resource_assignments`); `eduworld_learning` (learning events — F031) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với module learning (`createAttempt`); GdUnit4 |
 | Target Platform | Linux container (`core-api` + `worker`) · Windows, Android, iOS, Web |
@@ -50,7 +50,7 @@ specs/072-quest-engine/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/                         # questdefinition.go, questversion.go, questprogress.go, queststepattempt.go, periodicquestgrant.go
 ├── internal/domain/quest/              # QuestVersion (parse v2), QuestAvailability, QuestProgress, StepHandler + registry,
 │                                       # handlers/{talk_npc,go_to,collect,discover,activity}.go, PassRule, CompletionRule,
@@ -65,8 +65,8 @@ modules/game/
 ├── internal/presentation/consumer/     # quest_on_activity_graded.go, quest_on_discovery_found.go, periodic_quests_on_session_started.go
 ├── internal/presentation/job/          # quest_period_expiry.go, quest_failure_timer.go
 └── seed/quests/                        # 3 quest v1 + gán tenant demo
-modules/learning/internal/presentation/consumer/learning_event_on_quest_completed.go
-godot/
+src/backend/modules/learning/internal/presentation/consumer/learning_event_on_quest_completed.go
+src/game/
 ├── scenes/quest/{QuestJournal.tscn, QuestTracker.tscn, QuestMarker3D.tscn}
 ├── scripts/quest/{quest_service.gd, quest_journal.gd, quest_tracker.gd}
 └── tests/unit/quest/
@@ -90,7 +90,7 @@ Không có — mô hình và luồng ở QUEST_SYSTEM §2–§8, ACTIVITY_ENGINE
 |---|---|---|
 | domain | `QuestAvailability.Check(student, version, facts) (ok, reasons[])`; `QuestProgress.Accept/ReportStep/ApplyActivityResult/Complete/Abandon/Expire/Fail`; `StepHandler{Validate, OnReport, OnEvent}`; `PassRule.Evaluate(result)`; `PeriodKey(now, quest_reset_time)`; `QuestPublishValidator` | Thuần; Clock inject |
 | application | Command `AcceptQuest`, `AbandonQuest`, `ReportQuestStep`, `StartQuestActivity`, `ApplyActivityResult`, `ApplyDiscovery`, `GrantPeriodicQuests`, `ExpirePeriodQuests`, `ApplyQuestFailure` · Query `ListQuests`, `GetQuest` | Command/query tách (ADR-0087); `SELECT … FOR UPDATE` trên progress |
-| infrastructure | ent repo; adapter facade `learning` (`pkg/modcall`: deadline từ context, không retry/circuit breaker — ADR-0074); `PresenceReader` (Valkey F071); `MasteryReader` (`ref.mastery_summary`); `AssignmentReader` (`infra.tenant_resource_assignments`) | |
+| infrastructure | ent repo; adapter facade `learning` (`src/backend/pkg/modcall`: deadline từ context, không retry/circuit breaker — ADR-0074); `PresenceReader` (Valkey F071); `MasteryReader` (`ref.mastery_summary`); `AssignmentReader` (`infra.tenant_resource_assignments`) | |
 | presentation | `listQuests`, `getQuest`, `acceptQuest`, `abandonQuest`, `reportQuestStep`, `startQuestActivity` · 3 consumer · 2 job; learning consumer `learning.learning_event_on_quest_completed` | |
 
 ### Tích hợp và phụ thuộc

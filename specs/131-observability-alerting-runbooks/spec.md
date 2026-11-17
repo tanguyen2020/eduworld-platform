@@ -9,14 +9,14 @@
 
 - Q: Ai đánh giá rule và định tuyến alert — Grafana Alerting hay Prometheus + Alertmanager? → A: Prometheus đánh giá rule trong `deploy/observability/prometheus/rules/*.yaml` ([MONITORING §5](../../docs/11-operations/MONITORING.md)), Alertmanager định tuyến/khử trùng/im lặng; Grafana chỉ hiển thị. Chi tiết ở [research.md](research.md) [Proposed].
 - Q: Runbook theo alert đặt ở đâu (MONITORING chỉ nói "mục runbook trong repo")? → A: `docs/11-operations/runbooks/<AlertName>.md`, mỗi file một alert, khung mục cố định; RB-01…05 vẫn do [BACKUP_RECOVERY §9](../../docs/11-operations/BACKUP_RECOVERY.md) sở hữu, runbook alert chỉ link [Proposed].
-- Q: Ai phát metric nghiệp vụ (CCU, matchmaking, chat…)? → A: Module sở hữu (feature nền của module) phát qua `pkg/otel` (F002) với nhãn `service` (= binary `core-api`, `realtime`, `worker`), `module` và `profile` (worker) theo [MONITORING §2](../../docs/11-operations/MONITORING.md) (ADR-0074); F131 kiểm **có mặt** đúng tên/label theo [MONITORING §3](../../docs/11-operations/MONITORING.md), dựng dashboard/alert. Metric client từ telemetry do F080 chuyển đổi.
+- Q: Ai phát metric nghiệp vụ (CCU, matchmaking, chat…)? → A: Module sở hữu (feature nền của module) phát qua `src/backend/pkg/otel` (F002) với nhãn `service` (= binary `core-api`, `realtime`, `worker`), `module` và `profile` (worker) theo [MONITORING §2](../../docs/11-operations/MONITORING.md) (ADR-0074); F131 kiểm **có mặt** đúng tên/label theo [MONITORING §3](../../docs/11-operations/MONITORING.md), dựng dashboard/alert. Metric client từ telemetry do F080 chuyển đổi.
 - Q: Synthetic monitoring dùng tài khoản nào? → A: Tenant QA riêng (seed như tenant demo, không học sinh thật) theo [TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md); chỉ luồng đọc + đăng nhập học sinh QA [Proposed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Thu thập metric, log, trace xuyên binary và module trên Swarm (Priority: P1)
 
-Người trực vận hành mở Grafana thấy mọi Swarm service (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`), module, node, datastore; từ một lỗi 5xx tra được trace xuyên APISIX → `core-api` (span facade sang module khác qua `pkg/modcall`) → NATS → `worker` → PostgreSQL và log cùng `trace_id`, không có PII.
+Người trực vận hành mở Grafana thấy mọi Swarm service (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`), module, node, datastore; từ một lỗi 5xx tra được trace xuyên APISIX → `core-api` (span facade sang module khác qua `src/backend/pkg/modcall`) → NATS → `worker` → PostgreSQL và log cùng `trace_id`, không có PII.
 
 **Why this priority**: NFR-OBS-002 là điều kiện để mọi alert/SLO có dữ liệu; thiếu thì load/chaos test (F132) không có số đo.
 
@@ -28,7 +28,7 @@ Người trực vận hành mở Grafana thấy mọi Swarm service (`core-api`,
 |---|---|---|---|
 | F131-AC-01 | HỆ THỐNG PHẢI chạy trên node `ops`: OTel Collector, Prometheus, Alertmanager, Loki, Tempo (bật service graph), Grafana; và dạng `mode: global`: node_exporter, cAdvisor; cùng postgres_exporter, redis_exporter (Valkey), prometheus-nats-exporter, metric Keycloak, plugin `prometheus` + `opentelemetry` của APISIX, exporter Swarm (chỉ đọc); KHI target có label `prometheus.scrape=true`, Prometheus PHẢI phát hiện qua `dockerswarm_sd_configs` và `up == 1` | NFR-OBS-002 · [MONITORING §1](../../docs/11-operations/MONITORING.md) · ADR-0023 · ADR-0024 | — |
 | F131-AC-02 | Job `obs-metric-catalog` (chạy sau deploy staging trong workflow `release.yml`) PHẢI scrape `/metrics` từng binary (`core-api`, `realtime`, `worker` theo từng profile) trên staging và đối chiếu bảng [MONITORING §3](../../docs/11-operations/MONITORING.md); NẾU thiếu metric bắt buộc của binary/module, sai đơn vị/hậu tố hoặc thiếu label `service`/`module`, THÌ job PHẢI fail và liệt kê metric thiếu | FR-OPS-003 · NFR-OBS-002 | — |
-| F131-AC-03 | KHI một request đi qua APISIX tới `core-api`, gọi facade của module khác qua `pkg/modcall` và phát event NATS được `worker` tiêu thụ, HỆ THỐNG PHẢI lưu một trace có cùng `trace_id` gồm span gateway, server, facade (`<caller>→<callee>`), producer/consumer và truy vấn DB; log JSON của các binary liên quan PHẢI có cùng `trace_id` | NFR-OBS-001 · NFR-OBS-002 · [MONITORING §7](../../docs/11-operations/MONITORING.md) | — |
+| F131-AC-03 | KHI một request đi qua APISIX tới `core-api`, gọi facade của module khác qua `src/backend/pkg/modcall` và phát event NATS được `worker` tiêu thụ, HỆ THỐNG PHẢI lưu một trace có cùng `trace_id` gồm span gateway, server, facade (`<caller>→<callee>`), producer/consumer và truy vấn DB; log JSON của các binary liên quan PHẢI có cùng `trace_id` | NFR-OBS-001 · NFR-OBS-002 · [MONITORING §7](../../docs/11-operations/MONITORING.md) | — |
 | F131-AC-04 | Ở NƠI môi trường là staging/production, Collector PHẢI head sampling 10% và tail sampling giữ 100% trace lỗi và trace > 1 s; local/dev PHẢI giữ 100% | [MONITORING §7](../../docs/11-operations/MONITORING.md) | — |
 | F131-AC-05 | Loki PHẢI giữ log theo `app_log_retention`; Collector PHẢI có processor `redaction` che token/JWT/email/SĐT; NẾU log hoặc thuộc tính span chứa mẫu cấm ([MONITORING §8](../../docs/11-operations/MONITORING.md)), THÌ giá trị PHẢI bị che trước khi lưu | NFR-OBS-002 · AGENTS R14 · [MONITORING §8](../../docs/11-operations/MONITORING.md) | TC-AUTH-060 |
 | F131-AC-06 | NẾU rule Prometheus, dashboard hoặc metric scrape được có label thuộc danh sách cấm (`user_id`, `student_id`, `school_id`, `ip`, `email`, `username`, `message`, nội dung) hoặc label `route` không phải template, THÌ job `obs-label-policy` PHẢI fail | [MONITORING §2](../../docs/11-operations/MONITORING.md) · AGENTS R14 | — |
@@ -151,7 +151,7 @@ Trực vận hành, đội backend, Safety Team có dashboard đúng [MONITORING
 
 ## Ngoài phạm vi
 
-- Instrument trong code (`pkg/otel`, `pkg/health`, middleware log) → F001, F002; metric nghiệp vụ từng module → feature của module đó.
+- Instrument trong code (`src/backend/pkg/otel`, `src/backend/pkg/health`, middleware log) → F001, F002; metric nghiệp vụ từng module → feature của module đó.
 - Telemetry client và dashboard Game Analytics/hiệu năng theo hạng thiết bị → F080 ([GAME_ANALYTICS](../../docs/11-operations/GAME_ANALYTICS.md)).
 - Metric backup/scale (phát) và stack Swarm → F130; load/chaos test → F132.
 - Lịch trực, hợp đồng SMS/email: quy trình tổ chức, không phải code.

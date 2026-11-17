@@ -1,0 +1,57 @@
+# Observability stack (F001 T023, LOCAL_DEVELOPMENT §3.3, ADR-0023). Run via `make up-obs`.
+name: eduworld
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    profiles: [obs]
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ../observability/otel-collector.yaml:/etc/otel/config.yaml:ro
+    ports: ["4317:4317", "4318:4318"]
+    depends_on: [tempo, loki]
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    profiles: [obs]
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--web.listen-address=:9095"]
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9095:9095"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9095/-/ready | grep -qi ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  loki:
+    image: grafana/loki:3.4.2
+    profiles: [obs]
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ../observability/loki.yaml:/etc/loki/config.yaml:ro
+    ports: ["3100:3100"]
+
+  tempo:
+    image: grafana/tempo:2.7.1
+    profiles: [obs]
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ../observability/tempo.yaml:/etc/tempo/config.yaml:ro
+    ports: ["3200:3200"]
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    profiles: [obs]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus, loki, tempo]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30

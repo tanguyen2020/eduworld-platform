@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F051, F050, F116, F120, F121.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản: `sm.antoan`, `sa.admin` (bật OTP seed để thử step-up), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `qlcm.truong.a`, `cm.noidung`; học sinh `hs.an.3a`, `hs.binh.3a`, `hs.em.4a` để sinh case/club.
 - Dữ liệu: 2 case (p1 TH Demo A, p2 `pgd-demo`) tạo bằng kịch bản F121; danh mục placeholder seed module chat.
 
@@ -46,7 +46,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter ops-ui test -- src/chat-safety
 pnpm --filter portal test -- src/workspaces/live-ops/moderation src/workspaces/platform-admin/chat-safety src/workspaces/school-lms/safety src/shell/banners
 pnpm --filter portal exec playwright test tests/e2e/chat-safety

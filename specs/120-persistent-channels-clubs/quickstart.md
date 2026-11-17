@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F115, F116, F117, F118, F095, F040, F010, F011, F015.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); seed module chat có chat policy mặc định platform.
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` (TH Demo A), `hs.dung.7a`, `hs.em.4a` (`pgd-demo`), `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`, `sa.admin`.
-- Công cụ: `nats` CLI để phát event mẫu trong `modules/chat/tests/fixtures/events/` (dữ liệu giả, không từ nhạy cảm thật — R15).
+- Công cụ: `nats` CLI để phát event mẫu trong `src/backend/modules/chat/tests/fixtures/events/` (dữ liệu giả, không từ nhạy cảm thật — R15).
 
 ## 2. Kịch bản kiểm tra
 

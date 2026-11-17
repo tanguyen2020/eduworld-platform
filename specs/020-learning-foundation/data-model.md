@@ -15,7 +15,7 @@
 | `latest_version_no` | int | NOT NULL DEFAULT 0 | |
 | `cloned_from_id`, `cloned_from_tenant_id`, `cloned_by` | uuid NULL | | ADR-0029 |
 | `cloned_at` | timestamptz NULL | | |
-| `created_at`, `updated_at`, `created_by`, `updated_by`, `version` | | `version` optimistic concurrency | `pkg/entx.HybridContent` (tên cũ `PlatformBase`, ADR-0089) |
+| `created_at`, `updated_at`, `created_by`, `updated_by`, `version` | | `version` optimistic concurrency | `src/backend/pkg/entx.HybridContent` (tên cũ `PlatformBase`, ADR-0089) |
 | `deleted_at`, `deleted_by`, `delete_reason` | timestamptz / uuid / `varchar(64)` | partial unique `WHERE deleted_at IS NULL` | R21 |
 
 ### Mixin `ContentVersionMixin` (Có sẵn — cột theo DATABASE_DESIGN §3.3, §3.13)

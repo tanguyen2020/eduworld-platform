@@ -54,7 +54,7 @@ specs/054-content-studio-publishing/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/workspaces/content-studio/
+src/cms/frontend/apps/portal/src/workspaces/content-studio/
 ├── release/{VersionHistoryTab.tsx,ReleaseTimeline.tsx,VersionDiffView.tsx,PublishDialog.tsx,RollbackDialog.tsx,
 │            UnpublishDialog.tsx,ArchiveDialog.tsx,useVersions.ts,useRelease.ts}
 ├── preview/{PreviewPanel.tsx,TryOutRunner.tsx,usePreview.ts}
@@ -67,7 +67,7 @@ web/apps/portal/src/workspaces/content-studio/
 ├── list/{ContentListPage.tsx,ContentFilters.tsx,DeleteContentDialog.tsx,useContentList.ts}
 ├── import/{ImportWizardPage.tsx,parseImportFile.ts,renderImportMath.ts,useContentImport.ts}
 └── trash/{TenantTrashPage.tsx,useTenantTrash.ts}
-web/apps/portal/tests/{unit/content-studio,e2e/content-studio}/
+src/cms/frontend/apps/portal/tests/{unit/content-studio,e2e/content-studio}/
 ```
 
 **Structure Decision**: Cùng chunk `content-studio` với F053 (một workspace B); thư mục theo nhóm màn của [ADMIN_PORTAL §3.11, §4, §5](../../docs/04-admin-portal/ADMIN_PORTAL.md).

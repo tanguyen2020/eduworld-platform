@@ -15,7 +15,7 @@ Thêm vào workspace B (chunk `content-studio`) trang Learning Activity Builder:
 | Storage | Không (state client, TanStack Query cache) |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose |
 | Target Platform | Trình duyệt desktop ≥ 1024 px; màn hẹp chỉ xem |
-| Project Type | web app (workspace B) + component `web/packages/ops-ui` |
+| Project Type | web app (workspace B) + component `src/cms/frontend/packages/ops-ui` |
 | Performance Goals | Form sinh từ schema ≤ 300 ms với schema ≤ 600 dòng; autosave không chặn nhập |
 | Constraints | AGENTS R1, R3, R5, R6, R10, R28, R32; ADR-0015, ADR-0016, ADR-0043, ADR-0044, ADR-0047, ADR-0048, ADR-0055, ADR-0056, ADR-0072 |
 | Scale/Scope | ≤ 100 câu/quiz, ≤ 50 chương, ≤ 30 cue, ≤ 20 nhánh/segment (theo `maxItems` schema) |
@@ -54,14 +54,14 @@ specs/058-portal-activity-builder/
 ### Source Code (repository)
 
 ```text
-web/packages/ops-ui/src/activity-editor/
+src/cms/frontend/packages/ops-ui/src/activity-editor/
 ├── SchemaForm.tsx                # form từ JSON Schema (ajv), map lỗi JSON Pointer → field
 ├── QuestionPicker.tsx            # searchQuestions status=published, lọc theo allowed_question_types
 ├── widgets/{QuestionSourceField,EvaluationField,FeedbackTimingField,CompletionRuleField,TimedQuizField}.tsx
 ├── video/{VideoTimeline,ChapterEditor,CueEditor,BranchEditor,SubtitleList,HlsPreviewPlayer}.tsx
 ├── regrade/RegradeDialog.tsx     # dùng chung, nhận scope + version
 └── *.stories.tsx
-web/apps/portal/src/workspaces/content-studio/activities/
+src/cms/frontend/apps/portal/src/workspaces/content-studio/activities/
 ├── routes.tsx                    # /portal/content-studio/activities{,/new,/:activityId}
 ├── ActivityListPage.tsx          # listCmsActivities lọc loại/môn/khối/trạng thái
 ├── ActivityTypeStep.tsx          # bước 1 chọn loại (editorRegistry ∩ listActivityTypes)
@@ -72,9 +72,9 @@ web/apps/portal/src/workspaces/content-studio/activities/
 ├── validators/{videoRules,questionSourceRules}.ts   # kiểm tra sớm phía client (mốc, chồng lấn, loại câu)
 ├── api/{activities,activityTypes,preview,regrade}.ts
 └── i18n/{vi,en}.json
-web/apps/portal/src/workspaces/content-studio/regrade/{RegradeEntryButton,RegradeStatusPage,RegradeHistoryTab}.tsx
-web/apps/portal/src/api/schemas/activities/*.schema.json   # sinh từ specs/schemas (pnpm gen:schemas), không sửa tay
-web/apps/portal/tests/{unit/content-studio/activities,unit/content-studio/regrade,e2e/content-studio}/
+src/cms/frontend/apps/portal/src/workspaces/content-studio/regrade/{RegradeEntryButton,RegradeStatusPage,RegradeHistoryTab}.tsx
+src/cms/frontend/apps/portal/src/api/schemas/activities/*.schema.json   # sinh từ specs/schemas (pnpm gen:schemas), không sửa tay
+src/cms/frontend/apps/portal/tests/{unit/content-studio/activities,unit/content-studio/regrade,e2e/content-studio}/
 ```
 
 **Structure Decision**: Component tái sử dụng (form từ schema, timeline video, `RegradeDialog`) ở `ops-ui` để F066 (audio/simulation) và F055 (chấm lại đề) dùng lại; page nối API trong workspace `content-studio` cùng chunk với F053/F054 (một workspace B).

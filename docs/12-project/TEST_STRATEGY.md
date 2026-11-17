@@ -36,12 +36,12 @@ flowchart TB
 
 | Phạm vi | Công cụ | Ghi chú |
 |---|---|---|
-| Go unit | `testing`, `testify`, table-driven, `-race` | Theo tầng Clean Architecture (ADR-0038): **domain** (entity, aggregate, quy tắc) không phụ thuộc gì; **application**: command handler (`internal/application/command/`, fake port `port/write`, `UnitOfWork` giả) và query handler (`internal/application/query/`, fake port `port/read`) test riêng; mỗi handler có test gọi `authz.Require` tường minh (thiếu quyền → `PERMISSION_DENIED`) và validation; middleware `pkg/httpx` (xác thực, tenant, idempotency, Problem Details) test riêng trong `pkg/httpx` (ADR-0087) |
+| Go unit | `testing`, `testify`, table-driven, `-race` | Theo tầng Clean Architecture (ADR-0038): **domain** (entity, aggregate, quy tắc) không phụ thuộc gì; **application**: command handler (`internal/application/command/`, fake port `port/write`, `UnitOfWork` giả) và query handler (`internal/application/query/`, fake port `port/read`) test riêng; mỗi handler có test gọi `authz.Require` tường minh (thiếu quyền → `PERMISSION_DENIED`) và validation; middleware `src/backend/pkg/httpx` (xác thực, tenant, idempotency, Problem Details) test riêng trong `src/backend/pkg/httpx` (ADR-0087) |
 | Go integration | `testcontainers-go` (postgres:17, valkey:8, nats:2.10 JetStream, keycloak:26) | Mỗi module test với **database riêng** của nó; chạy Atlas migration thật; kiểm tra RLS với role `<module>_app`, **global filter ent** (tenant + soft-delete), outbox → NATS, consumer idempotent, projection `ref_*` |
-| Facade test (thay contract test HTTP giữa service, ADR-0074) | `make test-contract`: bên nhận chạy ví dụ trong spec internal qua facade thật (interface sinh vào `modules/<module>/api/`), kiểm ánh xạ lỗi sang `problem`, `maxLength`, ngữ cảnh `pkg/modcall` (tenant, Principal gốc, `Idempotency-Key`); bên gọi test adapter với fake facade sinh từ cùng interface; chạy trong tiến trình, không HTTP, không Pact. Event: schema trong `specs/events/` verify ở producer và consumer | Chạy khi đổi spec internal/event hoặc module trong `x-allowed-callers`; compiler bắt lệch chữ ký |
+| Facade test (thay contract test HTTP giữa service, ADR-0074) | `make test-contract`: bên nhận chạy ví dụ trong spec internal qua facade thật (interface sinh vào `src/backend/modules/<module>/api/`), kiểm ánh xạ lỗi sang `problem`, `maxLength`, ngữ cảnh `src/backend/pkg/modcall` (tenant, Principal gốc, `Idempotency-Key`); bên gọi test adapter với fake facade sinh từ cùng interface; chạy trong tiến trình, không HTTP, không Pact. Event: schema trong `specs/events/` verify ở producer và consumer | Chạy khi đổi spec internal/event hoặc module trong `x-allowed-callers`; compiler bắt lệch chữ ký |
 | Kiểm tra độ dài chuỗi | Spectral rule `string-maxlength-required`, ajv check JSON Schema, `atlas migrate lint` + test schema DB (không có cột `text` không giới hạn) | ADR-0041 |
 | Go fuzz | `go test -fuzz` | Parser câu trả lời, normalizer chat, WS envelope decoder |
-| Kiến trúc | `golangci-lint` + `depguard`/`go-arch-lint` + analyzer `x-allowed-callers` (`make arch-check`) | Chặn import vi phạm tầng Clean Architecture (domain không import infrastructure…), package `query` import `port/write`/`UnitOfWork`/publisher (ADR-0087), import `internal/` của module khác và import/gọi `modules/<khác>/api` ngoài `x-allowed-callers` (ADR-0074 mục 1, ADR-0038); chỉ `pkg/` và facade `api/` được dùng chung |
+| Kiến trúc | `golangci-lint` + `depguard`/`go-arch-lint` + analyzer `x-allowed-callers` (`make arch-check`) | Chặn import vi phạm tầng Clean Architecture (domain không import infrastructure…), package `query` import `port/write`/`UnitOfWork`/publisher (ADR-0087), import `internal/` của module khác và import/gọi `src/backend/modules/<khác>/api` ngoài `x-allowed-callers` (ADR-0074 mục 1, ADR-0038); chỉ `src/backend/pkg/` và facade `api/` được dùng chung |
 | Contract | Spectral (lint), oasdiff (breaking change), AsyncAPI CLI validate, ajv (JSON Schema) | Chặn PR khi breaking không có `/v2` |
 | API test | **Postman CLI** (`postman collection run`) với collection `specs/postman/` + environment theo môi trường | Kiểm tra authN/authZ, tenant, idempotency, Problem Details; chạy trong CI |
 | Godot unit/scene | GdUnit4 headless | Logic thuần (`RefCounted`), API client với HTTP giả, state machine UI |
@@ -80,7 +80,7 @@ Mỗi release candidate chạy smoke E2E trên **toàn bộ thiết bị hạng 
 
 ## 5. Dữ liệu kiểm thử
 
-- **Generator** (`tools/datagen`, sinh dữ liệu và đẩy qua API/CSV của module identity để các module khác nhận qua event): sinh N tổ chức × M trường × lớp 1–9 × học sinh và nhân sự nhà trường với tên giả tiếng Việt, enrollment, chuyển lớp/trường, trạng thái khóa; xuất CSV cho `csv_import` và JSON theo DTO của EduWorld SIS Contract (dùng cho `sis-mock`).
+- **Generator** (`src/backend/tools/datagen`, sinh dữ liệu và đẩy qua API/CSV của module identity để các module khác nhận qua event): sinh N tổ chức × M trường × lớp 1–9 × học sinh và nhân sự nhà trường với tên giả tiếng Việt, enrollment, chuyển lớp/trường, trạng thái khóa; xuất CSV cho `csv_import` và JSON theo DTO của EduWorld SIS Contract (dùng cho `sis-mock`).
 - Bộ nội dung chuẩn: câu hỏi đủ 11 loại, mỗi loại có trường hợp biên (đáp án số thập phân dấu phẩy/chấm, khoảng trắng, chữ hoa/thường, có/không dấu tiếng Việt).
 - Bộ tài khoản persona: học sinh lớp 1, 3, 5, 7, 9; `school_admin` hai trường (`ad.truong.a`, `ad.truong.b`); `academic_manager` theo môn (`qlcm.truong.a`); tenant content editor/reviewer; content admin/reviewer; `safety_moderator`; system admin.
 - Không bao giờ sao chép dữ liệu production xuống môi trường thấp hơn. Nếu cần tái hiện lỗi, dùng dữ liệu đã ẩn danh có phê duyệt.
@@ -382,7 +382,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-CMS-WS-01 | Đăng nhập portal bằng Academic Manager: network log chỉ tải chunk workspace B, C; không có menu A/D/E; mở URL trực tiếp workspace A → trang 403 của portal | E2E (Playwright) | Đúng như mô tả |
 | TC-CMS-WS-02 | Gọi `/api/v1/game-admin/*`, `/api/v1/admin/*` bằng token `eduworld-portal` thiếu MFA / thiếu role platform / client khác | API | `403 MFA_REQUIRED` / `403 PERMISSION_DENIED` + audit `authz.denied` |
 | TC-CMS-WS-03 | Gọi route platform qua gateway public | API | 404 tại APISIX, không tới backend |
-| TC-CMS-MENU-01…06 | Danh mục menu/action và bật/tắt (ADR-0090): đồng bộ `platform.portal_menu_catalog` bằng `cmd/migrate` (role ứng dụng không ghi được); System Admin tắt menu cho một tenant → ẩn + `403 FEATURE_DISABLED` trong `feature_toggle_cache_ttl`, tenant khác không ảnh hưởng; mục bảo vệ `422 FEATURE_NOT_DISABLEABLE`, role khác `403`, thiếu lý do/`If-Match`; `featuregate` chỉ áp token portal, chạy trước `authz.Require`, không chặn operation `x-portal-shell`; CI `check-portal-catalog` hai chiều; action hiệu lực = action và menu cha — chi tiết [ADMIN_PORTAL §12](../04-admin-portal/ADMIN_PORTAL.md#12-kiểm-thử-phân-quyền-bắt-buộc) | A, I, E2E, CI | Theo ADMIN_PORTAL §12 |
+| TC-CMS-MENU-01…06 | Danh mục menu/action và bật/tắt (ADR-0090): đồng bộ `platform.portal_menu_catalog` bằng `src/backend/cmd/migrate` (role ứng dụng không ghi được); System Admin tắt menu cho một tenant → ẩn + `403 FEATURE_DISABLED` trong `feature_toggle_cache_ttl`, tenant khác không ảnh hưởng; mục bảo vệ `422 FEATURE_NOT_DISABLEABLE`, role khác `403`, thiếu lý do/`If-Match`; `featuregate` chỉ áp token portal, chạy trước `authz.Require`, không chặn operation `x-portal-shell`; CI `check-portal-catalog` hai chiều; action hiệu lực = action và menu cha — chi tiết [ADMIN_PORTAL §12](../04-admin-portal/ADMIN_PORTAL.md#12-kiểm-thử-phân-quyền-bắt-buộc) | A, I, E2E, CI | Theo ADMIN_PORTAL §12 |
 
 ### 6.5. Giao diện — [05-ux](../05-ux/DESIGN_SYSTEM.md) (Phase 1 trở đi)
 
@@ -390,7 +390,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 |---|---|---|---|
 | TC-UI-001 | `make design-tokens-check`: Theme Godot, `UiTokens.gd`, resource 3D, theme Ant Design, CSS variables khớp nguồn `design/` | CI | Fail nếu file sinh bị sửa tay hoặc lệch |
 | TC-UI-002 | Báo cáo tương phản WCAG 2.1 AA cho mọi cặp chữ/nền trong `admin-tokens` (sáng, tối) | CI | 0 cặp dưới ngưỡng |
-| TC-UI-003 | Lint hardcode: stylelint + ESLint chặn màu/font/kích thước trong CSS/TSX của `web/`; `lint_theme_overrides.gd` chặn override trong `.tscn` | CI | 0 vi phạm ngoài allowlist |
+| TC-UI-003 | Lint hardcode: stylelint + ESLint chặn màu/font/kích thước trong CSS/TSX của `src/cms/frontend/`; `lint_theme_overrides.gd` chặn override trong `.tscn` | CI | 0 vi phạm ngoài allowlist |
 | TC-UI-004 | Visual regression Playwright cho màn CMS chính (danh sách, chi tiết, form, dashboard live-ops) ở sáng/tối/compact | E2E | Sai khác ảnh vượt ngưỡng → cần duyệt baseline |
 | TC-UI-005 | Storybook `ops-ui` build thành công; mọi component có story sáng/tối | CI | |
 | TC-UI-006 | axe accessibility trên màn CMS chính (bàn phím, nhãn, landmark) | E2E | 0 lỗi mức serious/critical |
@@ -572,7 +572,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-SVC-003 | Consumer idempotent: cùng event giao 2 lần | I | Xử lý đúng 1 lần (`processed_events`) |
 | TC-SVC-004 | Adapter tích hợp ngoài + resilience: Keycloak Admin/SIS/object storage trả 5xx/timeout | I | Retry chỉ với thao tác idempotent; circuit breaker mở sau ngưỡng; metric `eduworld_external_client_circuit_state`; không có retry/circuit breaker cho gọi facade giữa module (ADR-0074 mục 3, 5) |
 | TC-SVC-005 | Kiểm tra kiến trúc: module import `internal/` của module khác, hoặc import/gọi facade không có tên mình trong `x-allowed-callers` | Lint | Build/`make arch-check` thất bại, PR bị chặn |
-| TC-SVC-006 | `pkg/modcall` lúc chạy: module chat gọi operation facade chỉ cho module game | U, I | `403 CALLER_NOT_ALLOWED`; audit `module_call_denied` |
+| TC-SVC-006 | `src/backend/pkg/modcall` lúc chạy: module chat gọi operation facade chỉ cho module game | U, I | `403 CALLER_NOT_ALLOWED`; audit `module_call_denied` |
 | TC-SVC-007 | Pool của một module dùng role của mình kết nối database module khác trên cùng cụm | I (staging) | Bị từ chối (`pg_hba`, không có `CONNECT`) |
 | TC-SVC-008 | Projection `ref_students` ở module game sau khi module identity sync SIS | I, E | Bắt kịp ≤ 5 s p95; dữ liệu chỉ gồm trường cần thiết |
 | TC-SVC-009 | Saga cleanup học sinh khi database `eduworld_chat` tạm không sẵn sàng (facade chat trả lỗi) | E | Saga thử lại, hội tụ khi database lên lại; không bước nào chạy 2 lần |
@@ -587,7 +587,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 
 ### 6.8. Hiệu năng (mọi phase có client)
 
-Hiệu năng server và tải: §8. Hiệu năng client trên máy tầm trung: TC-PERF-009, 018–024 (§8.2) theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); benchmark CI (TC-PERF-018) chạy mỗi merge request có thay đổi `godot/**` hoặc asset; thiết bị lab chạy mỗi milestone.
+Hiệu năng server và tải: §8. Hiệu năng client trên máy tầm trung: TC-PERF-009, 018–024 (§8.2) theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); benchmark CI (TC-PERF-018) chạy mỗi merge request có thay đổi `src/game/**` hoặc asset; thiết bị lab chạy mỗi milestone.
 
 ### 6.9. Game Analytics — [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) (Phase 4)
 

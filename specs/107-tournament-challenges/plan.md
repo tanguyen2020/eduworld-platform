@@ -11,7 +11,7 @@ Module `tournament` và `challenge` trong module `competition`. `CreateChallenge
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, go-redis (lock singleton job), `pkg/entx` (`UnitOfWork`), `pkg/authz`, `pkg/tenancy`, `pkg/outbox`, `pkg/idempotency`, `pkg/clock` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, go-redis (lock singleton job), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/clock` |
 | Storage | PostgreSQL `eduworld_competition` (`competition`, `infra`, `ref`) |
 | Testing | go test (property test bracket N = 2..64), testcontainers (PostgreSQL, NATS, Valkey), đồng hồ giả cho lịch/check-in/no-show |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`, `worker-jobs`) |
@@ -54,7 +54,7 @@ specs/107-tournament-challenges/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── ent/schema/challenge.go, tournament.go, tournament_entry.go, tournament_group.go,
 │   bracket_node.go, tournament_result.go, tournament_reward.go
 ├── internal/domain/

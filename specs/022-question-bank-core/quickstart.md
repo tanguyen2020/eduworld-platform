@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F020, F021 (seed `GDPT2018_SAMPLE` đã publish và gán cho `th-demo-a`).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events`.
 - Tài khoản demo: `cm.noidung` (content_admin, câu platform), `ad.truong.a` (school_admin `th-demo-a`, có `learning_content.write`), `ad.truong.b` (`pgd-demo`), `qlcm.truong.a` (academic_manager), `sa.admin`.
-- Fixture: `modules/learning/tests/integration/question/fixtures/qb_examples/*.json` (8 ví dụ QUESTION_BANK §3).
+- Fixture: `src/backend/modules/learning/tests/integration/question/fixtures/qb_examples/*.json` (8 ví dụ QUESTION_BANK §3).
 
 ## 2. Kịch bản kiểm tra
 

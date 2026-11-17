@@ -11,7 +11,7 @@ Thêm bounded context `liveops` (event, run, participation, community goal) và 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server game + client `chat.internal`), `pkg/modcall`, `pkg/entx` (`UnitOfWork`), `pkg/idempotency`, `pkg/outbox`, `pkg/clock`, Valkey client |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server game + client `chat.internal`), `src/backend/pkg/modcall`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/idempotency`, `src/backend/pkg/outbox`, `src/backend/pkg/clock`, Valkey client |
 | Storage | PostgreSQL `eduworld_game`: `game.events`/`event_versions` G/T, `event_templates`/`event_template_versions` G, `event_runs` G/T, `event_participation` T, `event_point_ledger` TA P, `community_goals` G/T, `community_goal_contributions` TA P ngày, `community_goal_progress` T, `season_tracks`/`season_track_versions` G, `season_point_ledger` TA P, `season_track_progress` T, `ref.seasons`; Valkey `ew:game:cgoal:<goal_id>:<scope_id>`, `ew:lock:job:event-scheduler` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); fake clock; facade test game ↔ chat |
 | Target Platform | Linux container (`core-api` + `worker`, module `game`) |
@@ -50,7 +50,7 @@ specs/077-event-season-liveops/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/        # event.go, eventversion.go, eventtemplate*.go, eventrun.go, eventparticipation.go, eventpointledger.go,
 │                      # communitygoal.go, communitygoalcontribution.go, communitygoalprogress.go,
 │                      # seasontrack.go, seasontrackversion.go, seasonpointledger.go, seasontrackprogress.go, refseason.go
@@ -89,7 +89,7 @@ Không có — EVENT_SEASON_SYSTEM, DATABASE_DESIGN §2.8c, ADR-0043/0049 đủ.
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `EventRun.Transition(now)`, `Suspend/Resume/Cancel(reason)`, `Audience.Includes(student)`, `PointsPolicy` (nguồn, trần ngày), `RuleChangePolicy` (hiệu lực `event_rule_change_effective`, không giảm), `CommunityGoal.Contribute`, `TemplateParams.Validate`, `HealthRules.Validate`, `SeasonTrack.TierFor(points)` | Thuần, Clock inject |
-| application | Command như cây trên (permission: học sinh self; `game.event.operate`; `lms.school_event.write`) · Query như cây trên (`game.liveops.read` cho stats) | authz `authz.Require` tường minh đầu handler; idempotency middleware `pkg/httpx` |
+| application | Command như cây trên (permission: học sinh self; `game.event.operate`; `lms.school_event.write`) · Query như cây trên (`game.liveops.read` cho stats) | authz `authz.Require` tường minh đầu handler; idempotency middleware `src/backend/pkg/httpx` |
 | infrastructure | ent repo; adapter facade `chat` (deadline 800 ms từ context, không fail-open); goal counter Valkey; manifest rebuilder (kernel F071/F078); module config | |
 | presentation | `listGameEvents`, `getGameEvent`, `joinGameEvent`, `claimEventMilestone`, `getCommunityGoal`, `getSeasonTrack`, `claimSeasonTier`, `listSeasonTrackHistory`, `suspendEventRun`, `resumeEventRun`, `cancelEventRun`, `getEventRunStats`, `listEventTemplates`, `listSchoolEvents`, `createSchoolEvent`, `getSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent` · consumer · job | |
 

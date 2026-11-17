@@ -35,7 +35,7 @@
 
 - [ ] T013 [US1] `infra.stack.yml` staging/production: APISIX + etcd, Keycloak (Infinispan JDBC_PING), NATS 3 node + exporter, Valkey `cache`/`realtime`/`ratelimit` + Sentinel — file: `deploy/swarm/production/infra.stack.yml`
 - [ ] T014 [US1] `data.stack.yml`: Patroni một cụm (5 database module + `keycloak`, ADR-0074 mục 4) + etcd Patroni + PgBouncer, `pgbackrest server` cạnh Patroni, object storage theo ADR-0075 (khi chọn tự host: Garage/SeaweedFS 3 node `storage`, RF3, chỉ network `data`, image ghim digest; khi chọn S3 managed: chỉ secret `s3_<binary>` + `EW_S3_ENDPOINT`) — file: `deploy/swarm/production/data.stack.yml`
-- [ ] T015 [P] [US1] `app.stack.yml` với 5 Swarm service `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs` (`cmd/worker --profile=events|chat|jobs`), image `ghcr.io/<org>/eduworld/<image>:${BACKEND_VERSION}`, `EW_ADMIN_ADDR=:9090`, `stop_grace_period` 40 s/150 s, healthcheck `/livez`; template job `migrate --module=<module>`; `<swarm-service>.env` không secret — file: `deploy/swarm/production/app.stack.yml`
+- [ ] T015 [P] [US1] `app.stack.yml` với 5 Swarm service `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs` (`src/backend/cmd/worker --profile=events|chat|jobs`), image `ghcr.io/<org>/eduworld/<image>:${BACKEND_VERSION}`, `EW_ADMIN_ADDR=:9090`, `stop_grace_period` 40 s/150 s, healthcheck `/livez`; template job `migrate --module=<module>`; `<swarm-service>.env` không secret — file: `deploy/swarm/production/app.stack.yml`
 - [ ] T016 [P] [US1] Bản staging (topology pilot) dùng cùng cấu trúc, khác replica/sizing — file: `deploy/swarm/staging/app.stack.yml`
 - [ ] T017 [US1] `run-migrate-job.sh` (`docker service create --mode replicated-job --restart-condition none --network data --secret <module>_migrator_dsn ghcr.io/<org>/eduworld/migrate:<tag> --module=<module>`, lần lượt 5 module, chờ mọi task Complete, timeout theo DEPLOYMENT §12) — file: `scripts/deploy/run-migrate-job.sh`
 - [ ] T018 [US1] `deploy-service.sh` (kiểm quorum manager, so digest staging, `docker stack deploy --with-registry-auth`) và `rollback.sh` (`docker service rollback`) — file: `scripts/deploy/deploy-service.sh`
@@ -54,7 +54,7 @@
 
 - [ ] T021 [P] [US2] Bats test F130-AC-08, F130-AC-09: stack/env chứa giá trị giống secret hoặc mount secret sai owner (`kc_game_backend` vào `worker-events`, `chat_purger_dsn` vào `core-api`, DB credential vào `realtime`) → fail — file: `tests/ops/secret_refs.bats` — phải FAIL trước khi code
 - [ ] T022 [P] [US2] Bats test F130-AC-10: `secrets-sync.sh` tạo `_v<N+1>` khi hash đổi, không tạo khi không đổi, không xóa `_v<N>` khi còn tham chiếu — file: `tests/ops/secrets_sync.bats`
-- [ ] T023 [P] [US2] Go test F130-AC-11 (TC-AUTH-060): loader `*_FILE` của `pkg/config` thoát lỗi khi file thiếu/rỗng, log không chứa giá trị — file: `pkg/config/secretfile_test.go`
+- [ ] T023 [P] [US2] Go test F130-AC-11 (TC-AUTH-060): loader `*_FILE` của `src/backend/pkg/config` thoát lỗi khi file thiếu/rỗng, log không chứa giá trị — file: `src/backend/pkg/config/secretfile_test.go`
 
 ### Implementation cho User Story 2
 
@@ -115,15 +115,15 @@
 
 ### Tests cho User Story 5
 
-- [ ] T042 [P] [US5] Go test F130-AC-22: `Planner.Next` scale lên `peak` trước khung `lead_minutes`, về `baseline` sau khung; metric tăng — file: `tools/ops-scheduler/internal/schedule/planner_test.go` — phải FAIL trước khi code
-- [ ] T043 [P] [US5] Go test F130-AC-23: vượt năng lực → `rejected`; lỗi Docker API → `error`; proxy chặn `POST /services/create` — file: `tools/ops-scheduler/internal/capacity/check_test.go`
-- [ ] T044 [P] [US5] Go test F130-AC-24: `validate` từ chối `peak < baseline`, service lạ, chuỗi quá dài — file: `tools/ops-scheduler/cmd/ops-scheduler/validate_test.go`
+- [ ] T042 [P] [US5] Go test F130-AC-22: `Planner.Next` scale lên `peak` trước khung `lead_minutes`, về `baseline` sau khung; metric tăng — file: `src/backend/tools/ops-scheduler/internal/schedule/planner_test.go` — phải FAIL trước khi code
+- [ ] T043 [P] [US5] Go test F130-AC-23: vượt năng lực → `rejected`; lỗi Docker API → `error`; proxy chặn `POST /services/create` — file: `src/backend/tools/ops-scheduler/internal/capacity/check_test.go`
+- [ ] T044 [P] [US5] Go test F130-AC-24: `validate` từ chối `peak < baseline`, service lạ, chuỗi quá dài — file: `src/backend/tools/ops-scheduler/cmd/ops-scheduler/validate_test.go`
 - [ ] T045 [P] [US5] Kịch bản staging TC-PERF-017 cho F130-AC-22 — file: `tests/ops/staging/warmup.sh`
 
 ### Implementation cho User Story 5
 
-- [ ] T046 [US5] Domain `schedule` + `capacity` + client `dockerapi` + metric `eduworld_ops_scale_actions_total` — file: `tools/ops-scheduler/internal/schedule/planner.go`
-- [ ] T047 [US5] `cmd/ops-scheduler` (vòng lặp 30 s, lệnh `validate`, `/metrics` `:9090`) + Dockerfile non-root — file: `tools/ops-scheduler/cmd/ops-scheduler/main.go`
+- [ ] T046 [US5] Domain `schedule` + `capacity` + client `dockerapi` + metric `eduworld_ops_scale_actions_total` — file: `src/backend/tools/ops-scheduler/internal/schedule/planner.go`
+- [ ] T047 [US5] `src/backend/tools/ops-scheduler/cmd/ops-scheduler` (vòng lặp 30 s, lệnh `validate`, `/metrics` `:9090`) + Dockerfile non-root — file: `src/backend/tools/ops-scheduler/cmd/ops-scheduler/main.go`
 - [ ] T048 [US5] HAProxy socket proxy allowlist + `scale-schedule.yaml` staging/production — file: `deploy/ops-scheduler/socket-proxy.cfg`
 
 **Checkpoint**: User Story 5 chạy và kiểm độc lập được.

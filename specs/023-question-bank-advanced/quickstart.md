@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F022 (F027 để ảnh `image_based` qua pipeline media; trước đó dùng `asset_id` fixture trong integration test).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make run-core-api`.
 - Tài khoản demo: `cm.noidung` (content_admin), `ad.truong.a` (school_admin `th-demo-a`), `ad.truong.b` (`pgd-demo`).
-- Fixture: `modules/learning/tests/integration/question/advanced/fixtures/` (ví dụ QUESTION_BANK §3.5, §3.10, §3.11, §5).
+- Fixture: `src/backend/modules/learning/tests/integration/question/advanced/fixtures/` (ví dụ QUESTION_BANK §3.5, §3.10, §3.11, §5).
 
 ## 2. Kịch bản kiểm tra
 
@@ -30,7 +30,7 @@
 
 ```bash
 make test MOD=learning
-go test -fuzz=FuzzEval -fuzztime=60s ./modules/learning/internal/domain/question/expr/
+go -C src/backend test -fuzz=FuzzEval -fuzztime=60s ./modules/learning/internal/domain/question/expr/
 make test-integration MOD=learning
 make test-contract
 ```

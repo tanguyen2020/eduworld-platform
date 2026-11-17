@@ -11,7 +11,7 @@ Hai module mới trong module `learning`: `efficacy` (thỏa thuận, study, l�
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 / TypeScript (React, Vite) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `pkg/{authz,tenancy,entx,outbox,idempotency,problem,clock,ids,config}`; Ant Design Pro, TanStack Query, `ops-ui` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `src/backend/pkg/{authz,tenancy,entx,outbox,idempotency,problem,clock,ids,config}`; Ant Design Pro, TanStack Query, `ops-ui` |
 | Storage | PostgreSQL `eduworld_learning` (`learning.*`, `content.*`, `assessment.exam_sessions`); object storage `ew-exports` (F044) |
 | Testing | go test (golden stats), testcontainers (PostgreSQL, NATS); Vitest + Playwright |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-jobs`); trình duyệt |
@@ -51,7 +51,7 @@ specs/035-learning-efficacy-study/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{research_agreement,efficacy_study,efficacy_study_class,efficacy_participant,efficacy_wave,efficacy_wave_session,efficacy_withdrawal,efficacy_mastery_snapshot,efficacy_report,learning_experiment,experiment_assignment,experiment_mastery_state,experiment_result}.go
 ├── ent/schema/{question_version,assessment_blueprint_version,exam_session}.go      # thêm cột efficacy_instrument / efficacy_wave_id
 ├── internal/domain/question/efficacy_guard.go       # chặn tham chiếu/chọn câu efficacy_instrument
@@ -70,13 +70,13 @@ modules/learning/
 ├── internal/presentation/http/public/admin/         # efficacy_handler.go, experiment_handler.go (/admin/learning/*)
 ├── internal/presentation/job/                       # efficacy_wave_monitor.go, experiment_guardrail.go, experiment_lifecycle.go
 └── tests/{unit,integration,contract}/efficacy|experiment/
-web/apps/portal/src/workspaces/platform-admin/research/
+src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/
 ├── routes.tsx                                       # /portal/platform-admin/research/{agreements,studies,studies/:id,experiments,experiments/:id}
 ├── api/{agreements,studies,waves,reports,experiments}.ts
 ├── agreements/AgreementListPage.tsx · studies/{StudyListPage,StudyForm,StudyDetailPage,ClassPairTable,WaveScheduler,WithdrawDialog,ReportView}.tsx
 ├── experiments/{ExperimentListPage,ExperimentForm,ExperimentDetailPage}.tsx
 └── i18n/{vi,en}.json · __tests__/
-web/apps/portal/src/workspaces/content-studio/…/EfficacyInstrumentField.tsx      # ô cờ trong editor câu/blueprint (F053/F054)
+src/cms/frontend/apps/portal/src/workspaces/content-studio/…/EfficacyInstrumentField.tsx      # ô cờ trong editor câu/blueprint (F053/F054)
 ```
 
 **Structure Decision**: Cùng module với exam, mastery, gợi ý và report job nên không cần facade (ADR-0074); `efficacy/stats` thuần để golden test không cần DB; arm resolution là port đọc để F031/F032 dùng mà không phụ thuộc module `experiment`.

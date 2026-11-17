@@ -4,7 +4,7 @@
 
 ## R1. `sis-mock`: Prism hay server mock tự viết
 
-- **Decision**: Giữ Prism (`stoplight/prism`) mock `specs/sis/eduworld-sis-contract.v1.yaml` ở chế độ static (trả `examples`), thêm `examples` dữ liệu demo TH Demo A vào contract; giả lập lỗi bằng header `Prefer: code=401|404|429|503`. Test tích hợp của worker (phân trang nhiều trang, 410, timeout, webhook) dùng fake SIS `httptest` trong `tests/fakesis/` (nhãn `MOCK`, chỉ test).
+- **Decision**: Giữ Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) mock `specs/sis/eduworld-sis-contract.v1.yaml` ở chế độ static (trả `examples`), thêm `examples` dữ liệu demo TH Demo A vào contract; giả lập lỗi bằng header `Prefer: code=401|404|429|503`. Test tích hợp của worker (phân trang nhiều trang, 410, timeout, webhook) dùng fake SIS `httptest` trong `tests/fakesis/` (nhãn `MOCK`, chỉ test).
 - **Rationale**: LOCAL_DEVELOPMENT §2 đã chốt image Prism, cổng 4010; SIS_INTEGRATION §11 tách "mock sinh từ spec" (môi trường dev + conformance) và "fake SIS httptest" (kịch bản lỗi). Prism luôn khớp contract nên conformance kit chạy vào nó phát hiện test sai.
 - **Alternatives**: Server Go có trạng thái (phân trang thật, delta) — loại vì trùng fake httptest và phải bảo trì song song contract; Prism dynamic (`-d`) — loại vì dữ liệu ngẫu nhiên không khớp seed, không kiểm được kịch bản demo.
 

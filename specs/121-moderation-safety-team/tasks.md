@@ -2,13 +2,13 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Đường dẫn gốc `modules/chat/` trừ khi ghi rõ. Test dùng tin giả placeholder (R15).
+Đường dẫn gốc `src/backend/modules/chat/` trừ khi ghi rõ. Test dùng tin giả placeholder (R15).
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký permission `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`, `moderation.case.lead` [Proposed] (platform-only, kiểm khởi động) — file: `pkg/authz/catalog.go`, `modules/chat/internal/bootstrap/authz.go`
-- [ ] T002 [P] Linter allowlist: `tenancy.Bypass` chỉ trong `internal/presentation/http/admin/` và `internal/application/query/moderation/` — file: `.go-arch-lint.yml`, `modules/chat/.golangci.yml`
-- [ ] T003 [P] Lịch job `moderation-sla-escalator`, `school-notification-reminder`, `case-hold-release`, `sanction-expirer` — file: `modules/chat/config/worker.yaml`
+- [ ] T001 Đăng ký permission `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`, `moderation.case.lead` [Proposed] (platform-only, kiểm khởi động) — file: `src/backend/pkg/authz/catalog.go`, `src/backend/modules/chat/internal/bootstrap/authz.go`
+- [ ] T002 [P] Linter allowlist: `tenancy.Bypass` chỉ trong `internal/presentation/http/admin/` và `internal/application/query/moderation/` — file: `.go-arch-lint.yml`, `src/backend/modules/chat/.golangci.yml`
+- [ ] T003 [P] Lịch job `moderation-sla-escalator`, `school-notification-reminder`, `case-hold-release`, `sanction-expirer` — file: `src/backend/modules/chat/config/worker.yaml`
 
 ## Phase 2: Foundational (chặn mọi user story)
 

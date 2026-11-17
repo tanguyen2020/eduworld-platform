@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F005 (F001 cho CI; F004 để thử gateway nội bộ thật)
-- Lệnh: `cd web && pnpm install`, `pnpm gen:api`, `pnpm dev`, `pnpm storybook` ([LOCAL_DEVELOPMENT §6.4](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); `make web-lint`, `make web-test`, `make storybook`.
+- Lệnh: `cd src/cms/frontend && pnpm install`, `pnpm gen:api`, `pnpm dev`, `pnpm storybook` ([LOCAL_DEVELOPMENT §6.4](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); `make web-lint`, `make web-test`, `make storybook`.
 - Tài khoản demo: không cần ở F050 (token giả qua `TokenProvider` thử trong test). Khi F051 xong, dùng `ad.truong.a`, `qlcm.truong.a`, `sa.admin` để thử end-to-end.
 
 ## 2. Kịch bản kiểm tra
@@ -18,7 +18,7 @@
 | 4 | Thêm `<p>Xin chào</p>`; xóa một khóa ở `en.json` | Lint/test fail | F050-AC-04 |
 | 5 | Mở Storybook, đổi light/dark/compact | Theme theo token, locale vi | F050-AC-05 |
 | 6 | Thêm `color: #fff` vào `.tsx` và `font-size: 14px` vào CSS | `make web-lint` fail | F050-AC-06 |
-| 7 | Import file từ `../../godot/` | Build fail | F050-AC-07 |
+| 7 | Import file từ `src/game/` (vd. `../../../../game/` từ `src/cms/frontend/apps/portal`) | Build fail | F050-AC-07 |
 | 8 | Story `DomainTag` (môn, độ hiếm, trạng thái) | Màu từ shared-tokens + nhãn chữ | F050-AC-08 |
 | 9 | Form thử với schema có `maxLength` | Bộ đếm, chặn vượt, lỗi tại trường | F050-AC-09 |
 | 10 | Sửa spec (thêm operation) không chạy `gen:api`; CI | job `gen-check` của `web.yml` fail | F050-AC-10 |
@@ -37,7 +37,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm lint && pnpm test            # Vitest (apiClient, i18n, openapiRules)
 pnpm --filter ops-ui storybook:build && pnpm --filter ops-ui test-storybook
 pnpm test:visual                  # Playwright trên Storybook tĩnh

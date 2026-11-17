@@ -4,14 +4,14 @@
 
 ## Summary
 
-Feature đầu tiên của module chat: dựng skeleton theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md), projection `ref.*` cần cho phạm vi và hiển thị, module `social` với aggregate `FriendRequest`, `Friendship`, `FriendCode`, `Block`, `Mute`. Command handler (write context, `UnitOfWork`) ghi `eduworld_chat` + outbox (`friend_request.sent`, `friend.added`, `friend.removed`, `user.blocked`, `user.unblocked`, `user.muted`, `user.unmuted`, `audit.recorded`) trong một transaction. `ScopePolicy` kiểm cùng trường/liên trường theo `ref.tenants.settings_subset`, block hai chiều. Worker: job hết hạn lời mời, consumer projection, subscriber NATS core `ew.rt.presence.*` gửi `presence.friend.updated` cho bạn bè qua `pkg/realtime`.
+Feature đầu tiên của module chat: dựng skeleton theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md), projection `ref.*` cần cho phạm vi và hiển thị, module `social` với aggregate `FriendRequest`, `Friendship`, `FriendCode`, `Block`, `Mute`. Command handler (write context, `UnitOfWork`) ghi `eduworld_chat` + outbox (`friend_request.sent`, `friend.added`, `friend.removed`, `user.blocked`, `user.unblocked`, `user.muted`, `user.unmuted`, `audit.recorded`) trong một transaction. `ScopePolicy` kiểm cùng trường/liên trường theo `ref.tenants.settings_subset`, block hai chiều. Worker: job hết hạn lời mời, consumer projection, subscriber NATS core `ew.rt.presence.*` gửi `presence.friend.updated` cho bạn bè qua `src/backend/pkg/realtime`.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/httpx` (`game_player`, `tenant`, `idempotency`), `pkg/outbox`, `pkg/natsx`, `pkg/realtime`, `valkey-go` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/httpx` (`game_player`, `tenant`, `idempotency`), `src/backend/pkg/outbox`, `src/backend/pkg/natsx`, `src/backend/pkg/realtime`, `valkey-go` |
 | Storage | PostgreSQL `eduworld_chat` (`social.friend_requests`, `social.friendships`, `social.friend_codes`, `social.blocks`, `social.mutes`, `ref.*`, `infra.*`); Valkey cache bạn bè + presence (tạm) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); contract test event với competition |
 | Target Platform | Linux container (module `chat` nạp trong `core-api` + `worker-chat`) |
@@ -50,7 +50,7 @@ specs/095-friends-block-mute/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── cmd/{api,worker,migrate}/main.go
 ├── ent/schema/                         # friendrequest.go, friendship.go, friendcode.go, block.go, mute.go, reftenant.go, refstudent.go, refplayerprofile.go
 ├── migrations/
@@ -68,7 +68,7 @@ modules/chat/
 └── tests/{unit,integration,contract}/
 ```
 
-**Structure Decision**: Module social thuộc module chat (DOMAIN_MODEL, SOCIAL_SYSTEM §1, AGENTS §6); thư mục `modules/chat` theo LOCAL_DEVELOPMENT §3.
+**Structure Decision**: Module social thuộc module chat (DOMAIN_MODEL, SOCIAL_SYSTEM §1, AGENTS §6); thư mục `src/backend/modules/chat` theo LOCAL_DEVELOPMENT §3.
 
 ## Phase 0: Research
 
@@ -91,7 +91,7 @@ Không có — SOCIAL_SYSTEM §4–§5, ADR-0054, DATABASE_DESIGN §2.11 đủ; 
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F090 (gateway, `pkg/realtime`), F091 (tín hiệu presence), F070 (`game_profile.updated`), F010/F011 (`tenant.*`, `student.synced`), F016 (`student.cleaned_up`, `user.access_revoked`).
+- Feature phụ thuộc: F090 (gateway, `src/backend/pkg/realtime`), F091 (tín hiệu presence), F070 (`game_profile.updated`), F010/F011 (`tenant.*`, `student.synced`), F016 (`student.cleaned_up`, `user.access_revoked`).
 - Event phát: `friend_request.sent`, `friend.added`, `friend.removed`, `user.blocked`, `user.unblocked`, `user.muted`, `user.unmuted`, `audit.recorded`. Consumer: competition (F091, F100, F104), chat nội bộ (F115), notification (F123).
 
 ### Bảo mật, tenant, idempotency, audit

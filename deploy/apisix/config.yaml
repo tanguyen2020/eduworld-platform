@@ -1,0 +1,14 @@
+# APISIX standalone (local). Routes live in apisix.yaml; F004 adds /api/v1/* → core-api and
+# /realtime/v1 → realtime. Admin ports of the binaries (9090 in containers) are never routed (F001-AC-06).
+deployment:
+  role: data_plane
+  role_data_plane:
+    config_provider: yaml
+
+apisix:
+  node_listen: 9080
+  ssl:
+    enable: true
+    listen:
+      - port: 9443
+  enable_admin: false

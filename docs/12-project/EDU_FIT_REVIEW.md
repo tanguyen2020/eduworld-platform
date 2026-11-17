@@ -234,7 +234,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | SPC-10, SPC-11 | Còn mở | Theo dữ liệu thật / bổ sung dần |
 | Công nghệ — AGENTS R23 | Đã sửa | `azp = eduworld-game-backend` |
 | Công nghệ — microservice, floci, Godot Web | floci: **Đã xử lý** (ADR-0075 Accepted); Godot Web: giữ Web từ pilot ([ADR-0079](../adr/ADR-0079-nen-tang-ban-dau-windows-va-android.md) Rejected, ADR-0013); microservice: **Đã xử lý** (ADR-0074 Accepted) | RISK-52, RISK-54, RISK-55 |
-| Công nghệ — mediator CQRS (§4.5) | Đã xử lý — [ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md) | Bỏ `pkg/mediator`; CQRS tách write/read context, cross-cutting qua middleware `pkg/httpx` + gọi tường minh; đã sửa AGENTS R26, constitution II, BACKEND_DESIGN, F003 |
+| Công nghệ — mediator CQRS (§4.5) | Đã xử lý — [ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md) | Bỏ `src/backend/pkg/mediator`; CQRS tách write/read context, cross-cutting qua middleware `src/backend/pkg/httpx` + gọi tường minh; đã sửa AGENTS R26, constitution II, BACKEND_DESIGN, F003 |
 | Công nghệ — các mục còn lại (§4.5) | Còn mở | Atlas license, NATS/Valkey, APISIX, observability, import .docx, SIS Excel |
 
 **Đề xuất ADR ở §5**

@@ -102,8 +102,8 @@ UNIQUE `(curriculum_version_id, from_lo_id, coalesce(to_lo_id,'0…0')) WHERE de
 | `import_id` | UUIDv7 | PK |
 | `tenant_id`, `owner_scope` | | quy ước H |
 | `kind` | `varchar(64)` | CHECK IN (`curriculum_yaml`,`curriculum_csv`) — F024 mở rộng |
-| `asset_id` | uuid NULL | file qua media (F027); NULL khi chạy từ `cmd/seed` |
-| `source_ref` | `varchar(512)` NULL | đường dẫn seed cục bộ (chỉ `cmd/seed`) |
+| `asset_id` | uuid NULL | file qua media (F027); NULL khi chạy từ `src/backend/cmd/seed` |
+| `source_ref` | `varchar(512)` NULL | đường dẫn seed cục bộ (chỉ `src/backend/cmd/seed`) |
 | `dry_run` | bool | |
 | `status` | `varchar(64)` | CHECK IN (`queued`,`running`,`succeeded`,`failed`) |
 | `created_count`, `rejected_count` | int | ≥ 0 |

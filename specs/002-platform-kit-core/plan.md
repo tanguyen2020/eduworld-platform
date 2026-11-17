@@ -4,7 +4,7 @@
 
 ## Summary
 
-Bổ sung vào module `pkg` (tạo ở F001) các gói `config`, `observability`, `problem`, `httpx`, `authz`, `tenancy`, `audit` (interface), `clock`, `ids` và công cụ `tools/routematrix`, cấu hình lint kiến trúc. `httpx` cung cấp server chi với chuỗi middleware chuẩn; `authz` sở hữu catalog permission, Principal, guard và tạo `TenantScope`; `tenancy` giữ scope trong context, `Bypass` có audit + metric và helper sinh SQL RLS. Không có ent/pgx trong các gói này (ent ở F003).
+Bổ sung vào module `pkg` (tạo ở F001) các gói `config`, `observability`, `problem`, `httpx`, `authz`, `tenancy`, `audit` (interface), `clock`, `ids` và công cụ `src/backend/tools/routematrix`, cấu hình lint kiến trúc. `httpx` cung cấp server chi với chuỗi middleware chuẩn; `authz` sở hữu catalog permission, Principal, guard và tạo `TenantScope`; `tenancy` giữ scope trong context, `Bypass` có audit + metric và helper sinh SQL RLS. Không có ent/pgx trong các gói này (ent ở F003).
 
 ## Technical Context
 
@@ -27,7 +27,7 @@ Bổ sung vào module `pkg` (tạo ở F001) các gói `config`, `observability`
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Delta contract `resolvePrincipal` ghi ở contracts §6, task Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | `pkg/` không import `modules/`; `authz`/`problem`/`tenancy` không biết ent/pgx; lint tầng do feature này cung cấp |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | `src/backend/pkg/` không import `src/backend/modules/`; `authz`/`problem`/`tenancy` không biết ent/pgx; lint tầng do feature này cung cấp |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | `TenantScope` chỉ từ `authz`; `Bypass` có audit; helper RLS; test TC-TEN-005 |
 | IV Server-authoritative | ✅ | Không áp dụng |
 | V Xác thực, phân quyền | ✅ | Verify JWT độc lập gateway; guard `portal_staff`, `game_player`, platform MFA; catalog chặn quyền platform cho role tenant |
@@ -54,7 +54,7 @@ specs/002-platform-kit-core/
 ### Source Code (repository)
 
 ```text
-pkg/
+src/backend/pkg/
 ├── config/          load.go (koanf env + *_FILE), required.go
 ├── observability/   logger.go (slog JSON, redaction), otel.go, metrics.go, redact.go
 ├── problem/         problem.go (RFC 9457, Kind→HTTP), codes_gen.go (sinh từ ProblemCode), map.go
@@ -65,12 +65,12 @@ pkg/
 ├── tenancy/         scope.go (TenantScope, context) bypass.go rls.go (sinh SQL policy)
 └── httpx/           server.go chain.go auth.go tenant.go principal.go guards.go
                      validate.go (kin-openapi) problem.go recover.go requestid.go log.go otel.go
-tools/routematrix/   main.go (đọc specs/openapi → testdata matrix + kiểm thiếu test)
-tools/lint/          golangci.base.yml  go-arch-lint.base.yml  (module include)
-modules/<module>/.golangci.yml  .go-arch-lint.yml  (kế thừa base)
+src/backend/tools/routematrix/   main.go (đọc specs/openapi → testdata matrix + kiểm thiếu test)
+src/backend/tools/lint/          golangci.base.yml  go-arch-lint.base.yml  (module include)
+src/backend/modules/<module>/.golangci.yml  .go-arch-lint.yml  (kế thừa base)
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §2 và D4/D5: catalog ở `pkg/authz`, scope/bypass ở `pkg/tenancy`. `audit.Recorder` là interface để `httpx`/`authz` ghi audit mà không phụ thuộc outbox (hiện thực ở F003).
+**Structure Decision**: Theo BACKEND_DESIGN §2 và D4/D5: catalog ở `src/backend/pkg/authz`, scope/bypass ở `src/backend/pkg/tenancy`. `audit.Recorder` là interface để `httpx`/`authz` ghi audit mà không phụ thuộc outbox (hiện thực ở F003).
 
 ## Phase 0: Research
 
@@ -86,19 +86,19 @@ Không có. Thư viện đã chốt ở ADR-0025; chuỗi middleware ở BACKEND
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | — | `pkg/clock`, `pkg/ids` là gói thuần được domain phép dùng |
+| domain | — | `src/backend/pkg/clock`, `src/backend/pkg/ids` là gói thuần được domain phép dùng |
 | application | `authz.Require`, `authz.Permission*` hằng, `problem.*` | Gói application được phép import (BACKEND_DESIGN §3) |
 | infrastructure | `authz.ValkeyPrincipalCache`, JWKS cache | Không ent |
-| presentation | `httpx.NewServer(cfg, opts...)`, middleware | Dùng ở `cmd/core-api` |
+| presentation | `httpx.NewServer(cfg, opts...)`, middleware | Dùng ở `src/backend/cmd/core-api` |
 
-**Chuỗi middleware public** (thứ tự): `requestid` → `recover` → `otel` → `log` → `problem` → `auth` → `tenant` (parse header, miễn trừ) → `principal` (resolve, mismatch → `TENANT_MISMATCH`) → guard route (`portal_staff` | `game_player` | `platform_mfa`) → `validate` (kin-openapi, maxLength) → handler. Không có chuỗi middleware internal: lời gọi giữa module đi qua facade trong tiến trình (`pkg/modcall`, F003), không qua HTTP (ADR-0074 mục 3). Route gateway nội bộ (`/admin/*`, `/sis/*`, `/game-admin/*`) dùng chung chuỗi trên với guard `portal_staff`/`platform_mfa`.
+**Chuỗi middleware public** (thứ tự): `requestid` → `recover` → `otel` → `log` → `problem` → `auth` → `tenant` (parse header, miễn trừ) → `principal` (resolve, mismatch → `TENANT_MISMATCH`) → guard route (`portal_staff` | `game_player` | `platform_mfa`) → `validate` (kin-openapi, maxLength) → handler. Không có chuỗi middleware internal: lời gọi giữa module đi qua facade trong tiến trình (`src/backend/pkg/modcall`, F003), không qua HTTP (ADR-0074 mục 3). Route gateway nội bộ (`/admin/*`, `/sis/*`, `/game-admin/*`) dùng chung chuỗi trên với guard `portal_staff`/`platform_mfa`.
 
 **API chính**:
 
 - `authz.Principal` theo BACKEND_DESIGN §6 (thêm `ACR`, `AuthTime`); `authz.PrincipalResolver` interface `Resolve(ctx, ref authz.SubjectRef, tenantID *uuid.UUID, clientID string) (Principal, error)` với `SubjectRef{Issuer, Subject}` (khớp `PrincipalResolveRequest` do F012 sở hữu: `issuer` + `subject`, `tenant_id` nullable, `client_id`); `authz.ErrNotMember` → `TENANT_MISMATCH`.
 - `authz.Catalog` (permission constants sinh từ bảng ADMIN_PORTAL §2.2, `PlatformOnlyPrefixes = {"game.","competition.config.","platform."}` + danh sách platform-only tường minh), `RoleDefs` (§2.3), `ValidateCatalog(RoleDefs) error`.
-- `authz.ScopeFor(p) (tenancy.TenantScope, error)`, `authz.CrossTenantScope(p, ids, reason)`, `authz.PlatformScope(p)` và `authz.SystemPlatformScope(job)` (chỉ dòng `tenant_id IS NULL`); `tenancy.newScope` không export, `authz` gọi qua `tenancy/internal/scopector` (depguard chỉ cho `pkg/authz`). API công khai `TenantScope`, `CrossTenantScope`, `PlatformScope`, `SystemPlatformScope`, `Bypass`, `BypassReason`, `Principal` khóa từ F002 (test API surface), đổi chữ ký cần ADR (ADR-0089 §3).
-- `tenancy.Bypass(ctx, reason BypassReason) (context.Context, error)` với `BypassReason` là danh sách đóng `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job` (mỗi hằng số khai báo kèm quyền DB theo bảng MULTITENANCY §4.4; ghi `audit.Recorder` action `cross_tenant.accessed` với `reason`, `tenant_ids`, `mode` + metric `eduworld_tenant_filter_bypass_total{module,reason}`; analyzer trong `tools/lint` cấm giá trị ngoài danh sách); `tenancy.Bypassed(ctx) bool`; `tenancy.RLSPolicies(table string, kind TableKind) string` sinh SQL theo DATABASE_DESIGN §4 (`TableKind` = T, TA, T\*, H; policy chỉ điều kiện tenant, không `deleted_at`); `tenancy.LiveView(table string) string` sinh view `<table>_live` + `GRANT SELECT` cho `<module>_readonly` (ADR-0089 §1).
+- `authz.ScopeFor(p) (tenancy.TenantScope, error)`, `authz.CrossTenantScope(p, ids, reason)`, `authz.PlatformScope(p)` và `authz.SystemPlatformScope(job)` (chỉ dòng `tenant_id IS NULL`); `tenancy.newScope` không export, `authz` gọi qua `tenancy/internal/scopector` (depguard chỉ cho `src/backend/pkg/authz`). API công khai `TenantScope`, `CrossTenantScope`, `PlatformScope`, `SystemPlatformScope`, `Bypass`, `BypassReason`, `Principal` khóa từ F002 (test API surface), đổi chữ ký cần ADR (ADR-0089 §3).
+- `tenancy.Bypass(ctx, reason BypassReason) (context.Context, error)` với `BypassReason` là danh sách đóng `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job` (mỗi hằng số khai báo kèm quyền DB theo bảng MULTITENANCY §4.4; ghi `audit.Recorder` action `cross_tenant.accessed` với `reason`, `tenant_ids`, `mode` + metric `eduworld_tenant_filter_bypass_total{module,reason}`; analyzer trong `src/backend/tools/lint` cấm giá trị ngoài danh sách); `tenancy.Bypassed(ctx) bool`; `tenancy.RLSPolicies(table string, kind TableKind) string` sinh SQL theo DATABASE_DESIGN §4 (`TableKind` = T, TA, T\*, H; policy chỉ điều kiện tenant, không `deleted_at`); `tenancy.LiveView(table string) string` sinh view `<table>_live` + `GRANT SELECT` cho `<module>_readonly` (ADR-0089 §1).
 
 ### Tích hợp và phụ thuộc
 

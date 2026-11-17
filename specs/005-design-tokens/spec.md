@@ -8,7 +8,7 @@
 ### Session 2026-11-16
 
 - Q: Giá trị màu/font cụ thể (`#2F6BFF`, "Be Vietnam Pro", "Baloo 2")? → A: Dùng giá trị đề xuất trong [DESIGN_SYSTEM §4.1, §5.5, §6](../../docs/05-ux/DESIGN_SYSTEM.md) làm giá trị khởi tạo [Proposed]; đổi sau qua PR token, không chặn feature.
-- Q: Godot Theme `.tres` sinh bằng gì? → A: Style Dictionary xuất JSON trung gian, script Godot headless `tools/godot/build_theme.gd` dựng `Theme`/`ShaderMaterial`/`Environment`/`Gradient` (DESIGN_SYSTEM §3) [Proposed].
+- Q: Godot Theme `.tres` sinh bằng gì? → A: Style Dictionary xuất JSON trung gian, script Godot headless `src/game/tools/build_theme.gd` dựng `Theme`/`ShaderMaterial`/`Environment`/`Gradient` (DESIGN_SYSTEM §3) [Proposed].
 - Q: Cặp chữ/nền nào phải kiểm tương phản? → A: Mọi cặp khai báo tường minh trong `contrast-pairs` của `admin-tokens/semantic.json` (sáng, tối, compact) và `game-tokens/semantic.json` (mọi density, chế độ tương phản cao); thiếu cặp cho token chữ mới → build fail.
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -26,7 +26,7 @@ UX/Game designer sửa token trong `design/`, chạy một lệnh, Theme Godot v
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F005-AC-01 | `design/` PHẢI có cấu trúc `shared-tokens/`, `game-tokens/` (gồm `density/{g1_3,g4_5,g6_7,g8_9}.json`, `art3d.json`), `admin-tokens/` (gồm `modes/{light,dark,compact}.json`), `icons/`, `fonts/`, `style-dictionary.config.mjs`, `README.md` theo [DESIGN_SYSTEM §2](../../docs/05-ux/DESIGN_SYSTEM.md); token PHẢI theo định dạng W3C Design Tokens (`$value`, `$type`, `$description`) | NFR-MAINT-007 · ADR-0047 | — |
-| F005-AC-02 | KHI chạy `make design-tokens`, pipeline PHẢI sinh `godot/resources/ui/theme/eduworld_theme.tres` + biến thể density, `godot/scripts/core/ui_tokens.gd` (`class_name UiTokens`), `godot/resources/art/generated/*`, `web/packages/ops-ui/src/theme/antd-theme.ts` (light, dark, compact) và `web/packages/ops-ui/src/theme/tokens.css` (`--ew-*`), mỗi file có dòng đầu đánh dấu file sinh | NFR-MAINT-007 · DESIGN_SYSTEM §3 | TC-UI-001 |
+| F005-AC-02 | KHI chạy `make design-tokens`, pipeline PHẢI sinh `src/game/resources/ui/theme/eduworld_theme.tres` + biến thể density, `src/game/scripts/core/ui_tokens.gd` (`class_name UiTokens`), `src/game/resources/art/generated/*`, `src/cms/frontend/packages/ops-ui/src/theme/antd-theme.ts` (light, dark, compact) và `src/cms/frontend/packages/ops-ui/src/theme/tokens.css` (`--ew-*`), mỗi file có dòng đầu đánh dấu file sinh | NFR-MAINT-007 · DESIGN_SYSTEM §3 | TC-UI-001 |
 | F005-AC-03 | NẾU file sinh khác kết quả chạy lại pipeline hoặc bị sửa tay, THÌ `make design-tokens-check` PHẢI fail và liệt kê file lệch | NFR-MAINT-007 · AGENTS R32 | TC-UI-001 |
 | F005-AC-04 | NẾU alias trỏ tới token không tồn tại, tạo vòng lặp, hoặc token semantic/component dùng giá trị literal thay vì alias tới primitive, THÌ pipeline PHẢI fail kèm đường dẫn token | NFR-MAINT-007 · DESIGN_SYSTEM §2 | — |
 | F005-AC-05 | Mã màu nghiệp vụ (môn học/khu vực, độ hiếm, trạng thái nội dung, brand) PHẢI chỉ được khai báo trong `design/shared-tokens/`; theme Godot và theme web sinh ra PHẢI có cùng tên token và cùng giá trị cho biến thể tương ứng | AGENTS R32 · DESIGN_SYSTEM §6 | TC-UI-008 |
@@ -121,10 +121,10 @@ Owner token duyệt thay đổi có semver, token bị bỏ được đánh dấ
 
 ## Ngoài phạm vi
 
-- Component `ops-ui`, Storybook, lint hardcode trong `web/` → F050; áp Theme trong Godot, `lint_theme_overrides.gd`, UI Gallery → F060.
+- Component `ops-ui`, Storybook, lint hardcode trong `src/cms/frontend/` → F050; áp Theme trong Godot, `lint_theme_overrides.gd`, UI Gallery → F060.
 - Thumbnail/turntable render tài sản 3D → F078; nội dung art 3D theo zone → F071.
 
 ## Assumptions
 
-- Style Dictionary v4 (ESM) chạy bằng Node.js LTS; Godot headless đúng phiên bản ghim (`godot/.godot-version`, F060 tạo — F005 tạo file nếu chưa có).
+- Style Dictionary v4 (ESM) chạy bằng Node.js LTS; Godot headless đúng phiên bản ghim (`src/game/.godot-version`, F060 tạo — F005 tạo file nếu chưa có).
 - Giá trị màu/font khởi tạo [Proposed] theo DESIGN_SYSTEM; Game Director/UX Lead duyệt qua PR token.

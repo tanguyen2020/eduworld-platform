@@ -4,14 +4,14 @@
 
 ## Summary
 
-Ba phần trong module chat. (1) **Vòng đời channel gameplay**: consumer JetStream `EVT_COMPETITION` (`party.*`, `match.started/completed/aborted`) gọi command `OpenGameplayChannel`, `SyncGameplayMembers`, `CloseGameplayChannel` (id UUIDv5 từ `pkg/chatid`), cập nhật projection `ref.parties`, phát `chat.channel_opened`/`chat.channel_closed` qua outbox; worker `chat-channel-closer` đặt `purge_after` theo retention tenant. (2) **Always-on**: `policy.ApplyAlwaysOn(effective)` sau `Intersect` (F115) và `policy.ValidateAlwaysOn(rule, level)` dùng cho mọi đường ghi rule; ẩn tin theo block/mute khi fan-out (`exclude_user_ids`) và trong lịch sử; unread qua `chat.receipt.read` → `ew:chat:cursor_buf` → JetStream `cursor` → persister. (3) **Purge**: job `gameplay-chat-purge` (worker, kết nối DB role `chat_purger`, lock Valkey), rollup → bằng chứng → xóa lô → drop partition → `gameplay_purge_runs` + audit + `chat.gameplay_purged`; fail-closed khi module moderation chưa có. Job `partition-maintainer` tạo trước partition ngày.
+Ba phần trong module chat. (1) **Vòng đời channel gameplay**: consumer JetStream `EVT_COMPETITION` (`party.*`, `match.started/completed/aborted`) gọi command `OpenGameplayChannel`, `SyncGameplayMembers`, `CloseGameplayChannel` (id UUIDv5 từ `src/backend/pkg/chatid`), cập nhật projection `ref.parties`, phát `chat.channel_opened`/`chat.channel_closed` qua outbox; worker `chat-channel-closer` đặt `purge_after` theo retention tenant. (2) **Always-on**: `policy.ApplyAlwaysOn(effective)` sau `Intersect` (F115) và `policy.ValidateAlwaysOn(rule, level)` dùng cho mọi đường ghi rule; ẩn tin theo block/mute khi fan-out (`exclude_user_ids`) và trong lịch sử; unread qua `chat.receipt.read` → `ew:chat:cursor_buf` → JetStream `cursor` → persister. (3) **Purge**: job `gameplay-chat-purge` (worker, kết nối DB role `chat_purger`, lock Valkey), rollup → bằng chứng → xóa lô → drop partition → `gameplay_purge_runs` + audit + `chat.gameplay_purged`; fail-closed khi module moderation chưa có. Job `partition-maintainer` tạo trước partition ngày.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, `nats.go`, `valkey-go`, `pgx` (SQL tường minh của purge ở infrastructure), `github.com/google/uuid` (UUIDv5), `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/modcall` (identity `getTenant` dự phòng) |
+| Primary Dependencies | ent, Atlas, `nats.go`, `valkey-go`, `pgx` (SQL tường minh của purge ở infrastructure), `github.com/google/uuid` (UUIDv5), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/modcall` (identity `getTenant` dự phòng) |
 | Storage | PostgreSQL `eduworld_chat` (`chat.channels`, `chat.channel_members`, `chat.gameplay_messages`, `chat.gameplay_partition_channels`, `chat.gameplay_chat_daily_stats`, `chat.gameplay_purge_runs`, `chat.moderation_evidence`, `chat.ephemeral_messages`, `ref.parties`); Valkey `ew:chat:cursor_buf`, `ew:chat:unread`, `ew:lock:job:gameplay-chat-purge` |
 | Testing | go test + testcontainers (PG với role `chat_purger` thật, NATS, Valkey), đồng hồ giả lập cho purge |
 | Target Platform | Linux container: module `chat` nạp trong `core-api` + profile `worker-chat` (job `gameplay-chat-purge` dùng role `chat_purger`) |
@@ -27,7 +27,7 @@ Ba phần trong module chat. (1) **Vòng đời channel gameplay**: consumer Jet
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Delta payload competition, event chat, fan-out `exclude_user_ids` ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ tiêu thụ event competition; `pkg/chatid` thuần dùng chung; không đọc DB competition |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ tiêu thụ event competition; `src/backend/pkg/chatid` thuần dùng chung; không đọc DB competition |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Hard-delete **chỉ** trong `internal/infrastructure/purge` với role `chat_purger` — ngoại lệ ADR-0033 cho phép (R21); mọi bảng khác soft-delete; RLS purger chỉ channel gameplay đã đóng |
 | IV Server-authoritative | ✅ | Membership từ event server; client không tạo channel |
 | V Xác thực, phân quyền | ✅ | Không endpoint mới; route chat giữ `game_player` + membership |
@@ -50,8 +50,8 @@ specs/117-gameplay-chat-purge/
 ### Source Code (repository)
 
 ```text
-pkg/chatid/chatid.go                         # ChannelID(kind, scopeID, teamID?) UUIDv5 — thuần, dùng chung chat + competition
-modules/chat/
+src/backend/pkg/chatid/chatid.go                         # ChannelID(kind, scopeID, teamID?) UUIDv5 — thuần, dùng chung chat + competition
+src/backend/modules/chat/
 ├── ent/schema/                              # refparty.go, gameplaychatdailystat.go, gameplaypurgerun.go, moderationevidence.go, ephemeralmessage.go
 ├── migrations/                              # role chat_purger + GRANT/RLS, partition ephemeral, policy purger_gameplay_only
 ├── internal/domain/channel/gameplay.go      # vòng đời Open → Closed, PurgeAfter(closedAt, retention)
@@ -89,7 +89,7 @@ modules/chat/
 
 ### Tích hợp và phụ thuộc
 
-- F101/F105: phát event party/trận (payload delta), dùng `pkg/chatid` để trả `chat_channel_id`. F115: `OpenChannel`, persister (ghi `gameplay_partition_channels`), fan-out. F116: sanction `mute`. F095: `social.blocks`, `social.mutes`. F121: nguồn report/case cho `EvidenceHolds`. F090: lọc `exclude_user_ids`, auto-subscribe khi nhận `chat.channel_opened`.
+- F101/F105: phát event party/trận (payload delta), dùng `src/backend/pkg/chatid` để trả `chat_channel_id`. F115: `OpenChannel`, persister (ghi `gameplay_partition_channels`), fan-out. F116: sanction `mute`. F095: `social.blocks`, `social.mutes`. F121: nguồn report/case cho `EvidenceHolds`. F090: lọc `exclude_user_ids`, auto-subscribe khi nhận `chat.channel_opened`.
 - Event phát: `chat.channel_opened`, `chat.channel_closed`, `chat.gameplay_purged`, `chat.daily_stats`, `audit.recorded`.
 
 ### Bảo mật, tenant, idempotency, audit

@@ -12,7 +12,7 @@
 
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|
-| — | Không có lời gọi facade giữa module trong F001. `tools/archgen` chỉ **đọc** `x-allowed-callers` của mọi operation trong `specs/openapi/modules/*.internal.v1.yaml` để sinh rule `make arch-check` (F001-AC-22) | `specs/openapi/modules/*.internal.v1.yaml` | Đọc, không sửa | Có sẵn |
+| — | Không có lời gọi facade giữa module trong F001. `src/backend/tools/archgen` chỉ **đọc** `x-allowed-callers` của mọi operation trong `specs/openapi/modules/*.internal.v1.yaml` để sinh rule `make arch-check` (F001-AC-22) | `specs/openapi/modules/*.internal.v1.yaml` | Đọc, không sửa | Có sẵn |
 
 ## 3. Realtime (AsyncAPI)
 

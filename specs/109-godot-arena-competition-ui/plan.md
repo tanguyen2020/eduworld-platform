@@ -54,7 +54,7 @@ specs/109-godot-arena-competition-ui/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/competition/
 │   ├── ArenaScreen.tscn (+ arena_screen.gd)            # ModeCard, SubjectTopicPicker, TierBadge, nút Bảng xếp hạng/Lịch sử/Giải đấu
 │   ├── components/{ModeCard,TierBadge,SubjectTopicPicker,QueueStatusBar,MatchHeader,AnswerRevealOverlay,ReconnectOverlay}.tscn

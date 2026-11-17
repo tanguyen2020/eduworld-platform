@@ -50,10 +50,10 @@ flowchart TB
 
 Luồng dữ liệu một chiều: **UI/Gameplay phát intent → Service gọi backend → Service cập nhật `AppState` → phát signal → UI/Gameplay render lại.** Không có đường tắt UI → HTTP.
 
-## 3. Cấu trúc thư mục `godot/`
+## 3. Cấu trúc thư mục `src/game/`
 
 ```text
-godot/
+src/game/
 ├── project.godot
 ├── export_presets.cfg              # không chứa keystore password (inject từ CI)
 ├── addons/
@@ -425,7 +425,7 @@ Thông điệp lỗi cho lớp 1–5 dùng ngôn ngữ đơn giản + biểu tư
 
 - Game **song ngữ** `vi-VN` (mặc định) + `en-US` [Confirmed — ADR-0056]; chi tiết §10.1.
 - Nội dung học tập và nội dung game (câu hỏi, hội thoại NPC, quest) đã được bản địa hóa phía backend; client chỉ chọn bản theo ngôn ngữ, không dịch.
-- **Theme và token (ADR-0047, [DESIGN_SYSTEM §5](../05-ux/DESIGN_SYSTEM.md#5-game-design-system-godot-3d)):** game dùng **game design system** riêng, không dùng UI admin. `Theme` (`resources/ui/theme/eduworld_theme.tres`), lớp hằng `UiTokens` và resource 3D (`resources/art/generated/`) được **sinh** từ `design/game-tokens/` bằng `make design-tokens`; không sửa tay. Mọi `Control` lấy style từ Theme; không override màu/font/cỡ chữ trong scene (lint `tools/godot/lint_theme_overrides.gd` chặn trong CI, trừ allowlist). Kiểm tra trực quan bằng scene `UiGallery.tscn` (build debug).
+- **Theme và token (ADR-0047, [DESIGN_SYSTEM §5](../05-ux/DESIGN_SYSTEM.md#5-game-design-system-godot-3d)):** game dùng **game design system** riêng, không dùng UI admin. `Theme` (`resources/ui/theme/eduworld_theme.tres`), lớp hằng `UiTokens` và resource 3D (`resources/art/generated/`) được **sinh** từ `design/game-tokens/` bằng `make design-tokens`; không sửa tay. Mọi `Control` lấy style từ Theme; không override màu/font/cỡ chữ trong scene (lint `src/game/tools/lint_theme_overrides.gd` chặn trong CI, trừ allowlist). Kiểm tra trực quan bằng scene `UiGallery.tscn` (build debug).
 - UI có hai lớp dùng chung Theme: **overlay 2D** (`CanvasLayer`: HUD, panel nhiệm vụ, câu hỏi, chat) và **UI trong không gian 3D** (`SubViewport` → `ViewportTexture` trên mesh/`Sprite3D`; `Label3D` cho nickname) cho bảng tên NPC, bảng câu hỏi gắn trong màn, biển chỉ dẫn.
 - Font: font tiêu đề tròn thân thiện + font nội dung dễ đọc, hỗ trợ đầy đủ tiếng Việt có dấu, license OFL (vd. Baloo 2 + Be Vietnam Pro) [Proposed, Game Director chọn], fallback font trong `Theme`.
 - Theme theo grade band (density token): `g1_3` chữ cơ sở 24px, nút ≥ 64px; `g4_5` 22px/56px; `g6_7` 18px/48px; `g8_9` 18px/44px; icon kèm chữ ở lớp nhỏ. Biến thể chọn từ `AppState.player.grade_band`.
@@ -440,7 +440,7 @@ Theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md). Quy tắc ngôn ng�
 
 | Nguồn | Ví dụ | Cơ chế |
 |---|---|---|
-| **Chuỗi UI tĩnh** (đóng gói trong build) | Nút, menu, HUD, thông điệp lỗi, tutorial cố định, tên màn hình | Gettext: `godot/locale/messages.pot` (sinh tự động) → `vi.po`, `en.po`; nạp bằng `TranslationServer`; trong code dùng `tr("ui.hud.quest_tracker.title")`, trong scene đặt `text` = khóa dịch (auto-translate của `Control` bật) |
+| **Chuỗi UI tĩnh** (đóng gói trong build) | Nút, menu, HUD, thông điệp lỗi, tutorial cố định, tên màn hình | Gettext: `src/game/locale/messages.pot` (sinh tự động) → `vi.po`, `en.po`; nạp bằng `TranslationServer`; trong code dùng `tr("ui.hud.quest_tracker.title")`, trong scene đặt `text` = khóa dịch (auto-translate của `Control` bật) |
 | **Chuỗi dữ liệu** (từ backend, `localized_text`/`i18nText`) | Tên vùng, NPC, quest, item, đề bài | `ContentCache` giữ cả `vi` và `en` của snapshot game; helper `L10n.pick(text_dict)` chọn theo locale hiện tại, fallback theo CONTENT_MODEL §8 |
 
 **Quy ước khóa dịch:** `ui.<screen>.<element>[.<state>]` (ví dụ `ui.login.school_code.placeholder`, `ui.quest_journal.empty`, `ui.error.ACCOUNT_LOCKED`). Mã lỗi API ánh xạ khóa `ui.error.<CODE>`; thiếu khóa thì dùng `ui.error.generic`. Khóa bất biến; sửa câu = sửa bản dịch, không đổi khóa.
@@ -462,7 +462,7 @@ Theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md). Quy tắc ngôn ng�
 **Font và bố cục:** Theme có font chính hỗ trợ đầy đủ tiếng Việt có dấu và Latin mở rộng, fallback font cho ký hiệu; không dùng font chỉ có Latin. Mọi `Label`/`Button` thiết kế cho chuỗi dài hơn **35%** so với bản ngắn nhất (autowrap, `text_overrun_behavior = ellipsis` kèm tooltip, không cố định chiều rộng theo chữ). Chữ trong texture 3D (biển hiệu) dùng `Label3D`/`SubViewport` để dịch được, không vẽ chữ vào ảnh.
 
 **Kiểm tra trong CI:**
-- `tools/godot/extract_pot.gd` sinh `.pot`; thiếu khóa trong `vi.po` hoặc `en.po` → lỗi build.
+- `src/game/tools/extract_pot.gd` sinh `.pot`; thiếu khóa trong `vi.po` hoặc `en.po` → lỗi build.
 - **Pseudo-localization**: build debug có locale `xx-PS` (chuỗi kéo dài 40% và có dấu `[!! Ẩnh Ẹxẗ !!]`) để phát hiện chuỗi hardcode và tràn chữ; chạy chụp ảnh các màn chính ở `vi`, `en`, `xx-PS` (visual regression).
 - Lint scene: `Label.text` không phải khóa dịch (trừ allowlist số/ký hiệu) → cảnh báo.
 - Telemetry `i18n.missing_key` ở runtime (không hiển thị khóa thô cho học sinh).
@@ -476,7 +476,7 @@ Theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md). Quy tắc ngôn ng�
 | Web | Pilot trở đi (ADR-0013, ADR-0079 Rejected); build CI từ Phase 2, phát hành cùng pilot | Compatibility renderer, single-threaded export, preset tối đa Trung bình | Kích thước tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §11, §14; zone tải lười; đăng nhập bằng form trong game qua `fetch` (không redirect OIDC, ADR-0068); refresh token chỉ trong RAM (`MemoryOnly`, ADR-0086) — tải lại tab phải đăng nhập lại; hosting qua CDN |
 | iOS 15+ arm64 | Pilot trở đi (ADR-0013, ADR-0079 Rejected); pipeline ký + TestFlight trước pilot | Mobile renderer, ASTC | Đăng nhập bằng form trong game (ADR-0068, không `ASWebAuthenticationSession`); refresh token trong Keychain `AfterFirstUnlockThisDeviceOnly`, không iCloud Keychain sharing, không cần entitlement thêm (ADR-0086); ký + TestFlight từ CI (runner macOS); phát hành App Store |
 
-Pipeline CI (GitHub Actions, workflow `godot.yml` lọc path `godot/**`, `design/**` — [DEPLOYMENT §10](../11-operations/DEPLOYMENT.md)):
+Pipeline CI (GitHub Actions, workflow `godot.yml` lọc path `src/game/**`, `design/**` — [DEPLOYMENT §10](../11-operations/DEPLOYMENT.md)):
 
 ```mermaid
 flowchart LR

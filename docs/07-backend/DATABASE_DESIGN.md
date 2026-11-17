@@ -90,7 +90,7 @@ Thay đổi `n` là migration expand/contract; tăng `n` an toàn, giảm `n` c�
 
 Ký hiệu: **T** = tenant-scoped (có `tenant_id NOT NULL` + `deleted_at`/`deleted_by` + RLS), **TA** = tenant-scoped append-only (có `tenant_id`, không có `deleted_at`, không xóa), **T\*** = tenant nullable (`tenant_id NULL` cho dòng platform, vd. `user_roles`, `account_locks`), **TA\*** = append-only, tenant nullable (`identity.login_events`, `content.content_releases`, `content.content_transitions`), **H** = nội dung lai (`tenant_id NULL` = platform), **G** = global/platform (có `deleted_at`), **GA** = global append-only (không `tenant_id`, không `deleted_at`), **P** = partitioned theo tháng.
 
-**Loại bảng → mixin `pkg/entx` (ADR-0089 §2).** Mỗi entity ent khai báo đúng một mixin; CI có test liệt kê mọi schema ent và từ chối schema không có mixin. Điều kiện interceptor của từng mixin: [MULTITENANCY §4.4](../06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089). Dòng `tenant_id IS NULL` của bảng T\*/TA\*/H chỉ được ghi bằng role `<module>_platform` dưới `PlatformScope`; policy RLS áp cho `<module>_app` giữ điều kiện tenant thuần (ADR-0089 §2).
+**Loại bảng → mixin `src/backend/pkg/entx` (ADR-0089 §2).** Mỗi entity ent khai báo đúng một mixin; CI có test liệt kê mọi schema ent và từ chối schema không có mixin. Điều kiện interceptor của từng mixin: [MULTITENANCY §4.4](../06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089). Dòng `tenant_id IS NULL` của bảng T\*/TA\*/H chỉ được ghi bằng role `<module>_platform` dưới `PlatformScope`; policy RLS áp cho `<module>_app` giữ điều kiện tenant thuần (ADR-0089 §2).
 
 | Loại | Mixin | RLS (§4) |
 |---|---|---|
@@ -126,136 +126,8 @@ Cột `school_id` vẫn có ở các bảng gắn với trường (lớp, học 
 | `saga_runs` | G | `saga_id`, `saga_type` (`tenant_clone`/`trash_restore`/`student_cleanup`/`student_restore`/`user_merge`/`user_anonymize`), `subject jsonb`, `status` (`running`/`compensating`/`succeeded`/`failed`), `requested_by`, `idempotency_key varchar(64)`, `started_at`, `finished_at` | UNIQUE `(saga_type, idempotency_key)`; điều phối thao tác liên module (ADR-0074) |
 | `saga_steps` | G | `saga_id`, `step_no`, `service varchar(64)`, `action varchar(64)`, `status`, `attempts`, `request jsonb`, `response jsonb` (id_map…), `error varchar(1000)`, `updated_at` | PK `(saga_id, step_no)`; mỗi bước gọi facade platform của module đích (trong tiến trình, ADR-0074), idempotent theo `saga_id`; cột `service` lưu tên module đích |
 | `platform_settings` | G | `key` (`student_cleanup`, `chat_retention`, …), `value jsonb`, `version`, `updated_by`, `updated_at` | PK `key`; ghi chỉ System Admin, bắt buộc `reason` trong audit. `student_cleanup` = `{default_days: 180, notice_days: 14, allow_tenant_override: true, approval_threshold_percent: 10}`; `chat_retention` = `{gameplay_chat_retention_days: 7, minimum_days: 3, ephemeral_retention_hours: 24, allow_tenant_override: true}` [Proposed] |
-| `feature_flags` | G | `flag_key varchar(128)` (PK, CHECK `^[a-z0-9_.]{3,128}# Database Design — PostgreSQL (database riêng mỗi module)
-
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Backend Architect · Cập nhật: 2026-11-17 (Áp ADR-0074: database theo module trên một cụm PostgreSQL, role `<module>_*`, rebuild projection qua facade; áp ADR-0089: RLS chỉ lọc tenant, view `_live`, bộ mixin theo loại bảng, role `_relay`/`_partition_admin`, retention bảng `infra` bằng gỡ partition, migration viết tay; làm rõ: mixin `TenantOptionalAppendOnly`, dòng tenant NULL ghi bằng `_platform`, khóa partition ổn định, mẫu ghi idempotency, dead letters, hàm `identity.memberships_for_user`) · 2026-11-16 (study group sang `eduworld_learning` `lms.*` — ADR-0084; phiên game giữ bằng refresh token — ADR-0086; khóa tài khoản nhiều nguồn)
-> Liên quan: [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [ADR-0089](../adr/ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) · [ADR-0039](../adr/ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md) · [ADR-0041](../adr/ADR-0041-moi-cot-truong-kieu-chuoi-phai-co-gioi-han-do-dai.md) · [ADR-0042](../adr/ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · [ADR-0003](../adr/ADR-0003-postgresql-la-nguon-du-lieu-ben-vung-duy-nhat-schema-theo-mo.md) · [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [ADR-0015](../adr/ADR-0015-content-versioning-bat-bien-sau-publish.md) · [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [EVENT_DESIGN](EVENT_DESIGN.md) · [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md)
-
-**Mục đích & phạm vi.** Nguồn chuẩn duy nhất cho mô hình vật lý: database theo module, bảng, cột, kiểu, độ dài chuỗi, khóa, index, DDL, RLS SQL, partition, migration. Mô hình khái niệm ở DOMAIN_MODEL.
-
-> **Thay đổi v0.6 (ADR-0074, thay ADR-0036):** backend là modular monolith; giữ nguyên 5 database, nay là database của 5 module domain, mặc định chung **một cụm** PostgreSQL (qua PgBouncer) ở mọi môi trường. `core-api` và `worker` mở một pool cho mỗi database của module mình nạp, bằng role của module đó; ranh giới không truy cập chéo database giữ nguyên.
->
-> **Thay đổi v0.3:** tách theo 5 database của 5 service (ADR-0036/0037, nay đọc là 5 module theo ADR-0074); schema PostgreSQL giữ làm namespace trong database của module sở hữu; mọi cột chuỗi `varchar(n)` (ADR-0041); ent + Atlas thay sqlc + goose (ADR-0039); outbox/processed/idempotency chuyển sang schema `infra` của mỗi database và publish lên NATS JetStream (ADR-0042); thêm projection `ref` (§2.17).
-
-## 1. Nguyên tắc
-
-| # | Nguyên tắc | Nhãn |
-|---|---|---|
-| 1 | PostgreSQL ≥ 16 (khuyến nghị 17) là system of record | [Proposed] |
-| 2 | **Mỗi module domain một database** (`eduworld_identity`, `eduworld_learning`, `eduworld_game`, `eduworld_competition`, `eduworld_chat`) trên **một cụm** PostgreSQL chung (ADR-0074 mục 4); không module nào kết nối database của module khác (role chỉ có `CONNECT` trên database của module mình); không có FK/join/transaction chéo database (ADR-0037). Schema PostgreSQL bên trong mỗi database giữ vai trò namespace theo bounded context (§2.0a) | [Confirmed — ADR-0037/0074] |
-| 3 | Dữ liệu tham chiếu của module khác cần đọc thường xuyên được lưu dạng **projection** trong schema `ref` của database dùng nó, cập nhật idempotent từ event NATS (§2.17) | [Confirmed — ADR-0037] |
-| 4 | PK là `uuid` UUIDv7 sinh ở ứng dụng; bảng liên kết dùng PK ghép | [Proposed] |
-| 5 | `timestamptz` UTC cho mọi thời điểm; `created_at`, `updated_at` mặc định | [Proposed] |
-| 6 | Bảng tenant-scoped có `tenant_id uuid NOT NULL` + RLS theo `app.tenant_id` trong **mọi** database. Ở `eduworld_identity`, FK tới `platform.tenants`; ở database khác, FK tới projection `ref.tenants`. `school_id` là chiều bên trong tenant | [Confirmed — ADR-0005] |
-| 7 | **Chỉ soft-delete**: bảng không append-only có `deleted_at timestamptz`, `deleted_by uuid`, `delete_reason varchar(64)`; role ứng dụng không có `DELETE`/`TRUNCATE`; query đọc lọc `deleted_at IS NULL` bằng ent interceptor (RLS chỉ lọc tenant; lớp thứ hai cho bản ghi đã xóa là view `<table>_live` của `<module>_readonly`, ADR-0089 §1); unique dùng partial index `WHERE deleted_at IS NULL`. Ngoại lệ duy nhất: purge chat gameplay trong `eduworld_chat` (ADR-0033) | [Confirmed — ADR-0028/0033] |
-| 8 | Dữ liệu platform dùng chung có `tenant_id NULL` + `owner_scope = 'platform'`; tenant thấy khi có dòng active trong `infra.tenant_resource_assignments` **của database sở hữu tài nguyên đó**. Bảng có thể clone mang `cloned_from_id`, `cloned_from_tenant_id`, `cloned_at`, `cloned_by` | [Confirmed — ADR-0029] |
-| 9 | **Mọi cột chuỗi là `varchar(n)` có `n` tường minh** theo bảng §1.4; không dùng `text` không giới hạn; nội dung dài có cấu trúc dùng `jsonb` + CHECK `octet_length(col::text) <= N` | [Confirmed — ADR-0041] |
-| 10 | Enum lưu `varchar(64)` + `CHECK` (dễ migrate hơn `CREATE TYPE`) | [Proposed] |
-| 11 | JSONB chỉ cho dữ liệu có schema phiên bản hóa (render payload, rule, settings); field cần query/index đưa ra cột riêng | [Proposed] |
-| 12 | ORM **ent** (code-first, mixin chung, interceptor tenant + soft-delete, `version` cho optimistic concurrency); migration **Atlas** versioned; SQL tường minh chỉ ở tầng infrastructure cho query đọc phức tạp (ADR-0039) | [Confirmed — ADR-0039] |
-| 13 | Mỗi database có schema `infra` chứa `outbox_events`, `processed_events`, `idempotency_records`, `dead_letters`, `tenant_resource_assignments` (nếu module có tài nguyên gán được) và hàm `infra.current_tenant_id()` (ADR-0042) | [Confirmed — ADR-0042] |
-| 14 | Dữ liệu cá nhân nhạy cảm (ngày sinh) mã hóa cột bằng `pgcrypto` hoặc mã hóa ứng dụng (key trong secret manager) | [Proposed] |
-
-### 1.1. DB roles (mỗi database một bộ)
-
-Mỗi database có bộ role riêng, đặt tên theo module (`identity_*`, `learning_*`, `game_*`, `competition_*`, `chat_*`; ADR-0074 mục 4). Trong DDL mẫu dưới đây, `<module>_` đại diện cho bộ role của database chứa bảng đó; ví dụ gắn với một database cụ thể dùng tên thật (`identity_app`, `learning_platform`…).
-
-| Role | Dùng bởi | Quyền |
-|---|---|---|
-| `<module>_migrator` | job `migrate --module=<module>` (Atlas) | DDL; sở hữu schema trong database của module |
-| `<module>_app` | pool của module trong `core-api`, consumer thường trong `worker` | `SELECT`, `INSERT`, `UPDATE` trên schema của module; **không `DELETE`/`TRUNCATE`**; **chịu RLS** |
-| `<module>_platform` | job platform của worker, phiên System Admin liên tenant, bước saga platform, ghi dòng `tenant_id IS NULL` của bảng T\*/TA\*/H dưới `PlatformScope` | `SELECT`, `INSERT`, `UPDATE` + `BYPASSRLS`; `SELECT`, `UPDATE` cột xử lý của `infra.dead_letters`; **không `DELETE`/`TRUNCATE`**; query vẫn có `tenant_id` tường minh; mọi phiên ghi audit |
-| `chat_purger` | **chỉ** job `gameplay-chat-purge` của module chat | Ngoại lệ duy nhất của ADR-0028 (ADR-0033): `SELECT`, `UPDATE`, `DELETE` chỉ trên bảng chat gameplay (§3.0) trong `eduworld_chat`; không có quyền ở database khác |
-| `<module>_relay` | relay outbox của module (profile `worker-events`) | `SELECT`, `UPDATE (published_at, attempts)` trên `infra.outbox_events`; không quyền trên schema nghiệp vụ (ADR-0089 §4) |
-| `<module>_partition_admin` | **chỉ** job `infra-partition-maintenance` | `CREATE`/`DETACH`/`DROP` partition trên schema `infra`; không quyền trên schema nghiệp vụ; không `DELETE`/`TRUNCATE` (ADR-0089 §5, §3.9) |
-| `<module>_readonly` | BI, read model báo cáo trên replica | `SELECT` **chỉ** trên view `<schema>.<table>_live` (`WHERE deleted_at IS NULL`) và view reporting; không quyền trên bảng gốc; chịu RLS (ADR-0089 §1) |
-| `<module>_dashboard` (`learning_dashboard`, `game_dashboard`) | API dashboard, export worker — **chỉ trên read replica** | `SELECT` chỉ trên bảng rollup, read model và view dashboard; không quyền trên bảng nghiệp vụ/thô; chịu RLS; `statement_timeout = 5s`, `idle_in_transaction_session_timeout = 10s`, `work_mem = 32MB` (ADR-0062, [DASHBOARD_DATA §7](DASHBOARD_DATA.md#7-bảo-vệ-database-khi-truy-vấn)) |
-| `<module>_backup` | pgBackRest/WAL-G | replication |
-
-Không user database nào có quyền trên database của module khác, dù cùng cụm. CI (`db-privileges`) kiểm tra: không role ứng dụng nào có `DELETE`/`TRUNCATE` (trừ `chat_purger` trên danh sách bảng cho phép) và không có `CONNECT` chéo database. Ánh xạ DSN: [DEPLOYMENT](../11-operations/DEPLOYMENT.md).
-
-### 1.2. Database theo module
-
-| Database | Module sở hữu | Schema (namespace) bên trong |
-|---|---|---|
-| `eduworld_identity` | module identity | `platform` (tenant, settings, cleanup, clone/trash job), `identity`, `org`, `catalog` (danh mục platform, §2.2a), `sis`, `audit`, `infra` |
-| `eduworld_learning` | module learning | `curriculum`, `content`, `assessment`, `learning`, `lms`, `ref`, `infra` |
-| `eduworld_game` | module game | `game`, `gamification`, `analytics` (Game Analytics, §2.8b), `ref`, `infra` |
-| `eduworld_competition` | module competition | `multiplayer`, `competition`, `ref`, `infra` |
-| `eduworld_chat` | module chat | `social`, `chat`, `ref`, `infra` |
-| — | realtime | Không có database (chỉ Valkey) |
-
-Cả 5 database nằm trên một cụm PostgreSQL (primary + replica, Patroni, PgBouncer); sizing và việc chuyển một database sang cụm riêng khi có số đo: [DEPLOYMENT §7](../11-operations/DEPLOYMENT.md#7-postgresql-adr-0037).
-
-Các cột tham chiếu thực thể của module khác (ví dụ `student_id` trong `assessment.attempts`, `quest_version_id` trong `quest_progress` của party) là `uuid` **không có FK chéo database**; tính hợp lệ kiểm tra ở use case (qua projection `ref` hoặc facade của module sở hữu, gọi trong tiến trình) tại thời điểm ghi.
-
-### 1.3. Audit tập trung
-
-Mỗi module ghi sự kiện audit vào outbox (`audit.recorded`, payload không chứa PII/nội dung chat); worker của module identity tiêu thụ stream `EVT_*` subject `ew.evt.*.audit.recorded` và ghi `audit.audit_logs` trong `eduworld_identity` (§3.11) [Proposed]. Như vậy audit được truy vấn tập trung mà không cần join chéo database.
-
-### 1.4. Bảng độ dài chuỗi chuẩn (ADR-0041)
-
-| Loại cột | Kiểu | Ví dụ cột |
-|---|---|---|
-| Mã, enum, trạng thái, loại, vai trò, locale, slug | `varchar(64)` | `code`, `status`, `kind`, `type`, `role`, `mode`, `event_type`, `emoji_code`, `delete_reason`, `idp_alias`, `keycloak_org_alias` |
-| Mã ngắn có định dạng | `varchar(16)` | `login_code`, `method` HTTP |
-| External ID, khóa idempotency, client id | `varchar(64)` | `student_external_id`, `idempotency_key`, `client_message_id` (khi là chuỗi), `keycloak_sid` |
-| Biệt danh người chơi | `varchar(32)` | `nickname` (mọi bảng, projection và contract dùng cùng độ dài) |
-| Tên ngắn | `varchar(128)` | `display_name`, `device_model`, tên lớp, tên party, `name_vi` của sticker pack |
-| Tên / tiêu đề | `varchar(255)` | tên tenant/trường, tiêu đề bài học, `subject` OIDC, `term`, `phrase`, `route_template` |
-| Email | `varchar(320)` | `work_email` |
-| Khóa lưu trữ / issuer | `varchar(512)` | `storage_key`, `asset_key`, `preview_key`, `issuer` |
-| URL | `varchar(2048)` | `media_url` |
-| Mô tả ngắn, lý do, ghi chú, lỗi | `varchar(1000)` | `description`, `reason`, `note`, `error`, `alt_text_vi`, `change_summary` |
-| Tin nhắn chat | `varchar(1000)` (policy hiển thị mặc định 300) | `body`, `body_display` |
-| Nội dung dài | `varchar(20000)` hoặc `jsonb` + CHECK `octet_length(col::text) <= 65536` | nội dung bài học, giải thích, render payload |
-| Hash dạng hex | `varchar(128)` | `content_sha256` (khi lưu hex); hash nhị phân dùng `bytea` có CHECK độ dài |
-| Mảng chuỗi | `varchar(64)[]` + CHECK `cardinality(col) <= N` | `permissions`, `category_codes`, `variants` (`varchar(255)[]`) |
-
-Thay đổi `n` là migration expand/contract; tăng `n` an toàn, giảm `n` cần kiểm tra dữ liệu và ADR. Lint `entlint` chặn `field.String` không có `MaxLen` ([BACKEND_DESIGN §5.3](BACKEND_DESIGN.md)).
-
-## 2. Danh sách bảng theo database / schema
-
-Ký hiệu: **T** = tenant-scoped (có `tenant_id NOT NULL` + `deleted_at`/`deleted_by` + RLS), **TA** = tenant-scoped append-only (có `tenant_id`, không có `deleted_at`, không xóa), **T\*** = tenant nullable (`tenant_id NULL` cho dòng platform, vd. `user_roles`, `account_locks`), **TA\*** = append-only, tenant nullable (`identity.login_events`, `content.content_releases`, `content.content_transitions`), **H** = nội dung lai (`tenant_id NULL` = platform), **G** = global/platform (có `deleted_at`), **GA** = global append-only (không `tenant_id`, không `deleted_at`), **P** = partitioned theo tháng.
-
-**Loại bảng → mixin `pkg/entx` (ADR-0089 §2).** Mỗi entity ent khai báo đúng một mixin; CI có test liệt kê mọi schema ent và từ chối schema không có mixin. Điều kiện interceptor của từng mixin: [MULTITENANCY §4.4](../06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089). Dòng `tenant_id IS NULL` của bảng T\*/TA\*/H chỉ được ghi bằng role `<module>_platform` dưới `PlatformScope`; policy RLS áp cho `<module>_app` giữ điều kiện tenant thuần (ADR-0089 §2).
-
-| Loại | Mixin | RLS (§4) |
-|---|---|---|
-| T | `Base` | chỉ điều kiện tenant |
-| TA | `TenantAppendOnly` | chỉ điều kiện tenant |
-| T\* | `TenantOptional` | chỉ điều kiện tenant; dòng `tenant_id IS NULL` chỉ đọc/ghi qua `PlatformScope` (`<module>_platform`) |
-| TA\* | `TenantOptionalAppendOnly` | chỉ điều kiện tenant; dòng `tenant_id IS NULL` chỉ đọc/ghi qua `PlatformScope` (`<module>_platform`) |
-| H | `HybridContent` (tên cũ `PlatformBase`) | tenant + gán qua `infra.tenant_resource_assignments` |
-| G | `GlobalBase` | không bật |
-| GA | `AppendOnly` | không bật |
-
-**Quy ước cột chung (không liệt kê lặp lại ở từng bảng dưới đây):**
-
-| Loại bảng | Cột bắt buộc | Ghi chú |
-|---|---|---|
-| T | `tenant_id uuid NOT NULL REFERENCES platform.tenants` (DB identity) hoặc `REFERENCES ref.tenants` (DB khác), `deleted_at timestamptz`, `deleted_by uuid`, `delete_reason varchar(64)`, `created_at`, `updated_at` | `tenant_id` là cột đầu tiên của mọi index phức hợp; mọi UNIQUE ghi trong tài liệu này là partial `WHERE deleted_at IS NULL` |
-| TA | `tenant_id uuid NOT NULL` | Không cập nhật/xóa; sửa sai bằng bản ghi bù |
-| H | `tenant_id uuid NULL`, `owner_scope varchar(64) CHECK (owner_scope IN ('platform','tenant'))`, `deleted_at`, `deleted_by`, `cloned_from_id`, `cloned_from_tenant_id`, `cloned_at`, `cloned_by` | CHECK `(owner_scope = 'platform') = (tenant_id IS NULL)` |
-| G | `deleted_at`, `deleted_by` | Ghi chỉ qua `/api/v1/game-admin/*`, `/api/v1/admin/*` |
-
-Cột `school_id` vẫn có ở các bảng gắn với trường (lớp, học sinh, enrollment, attempt, UserRole scope trường, báo cáo) để lọc/báo cáo theo trường bên trong tenant.
-
-### 2.0. `platform` — Tenancy (ADR-0005, ADR-0026, ADR-0029) · DB `eduworld_identity`
-
-| Bảng | Loại | Cột chính | Ràng buộc / index |
-|---|---|---|---|
-| `tenants` | G | `tenant_id`, `code`, `name`, `tenant_type` (`school`/`unit`/`common`), `status` (`active`/`disabled`), `keycloak_org_id uuid`, `keycloak_org_alias varchar(64)`, `login_code varchar(16)`, `settings jsonb`, `is_qa boolean NOT NULL DEFAULT false` (tenant kiểm thử, bị loại khỏi analytics và dashboard liên tenant; CHECK `NOT (is_qa AND tenant_type = 'common')`; chỉ System Admin đổi), `deleted_at`, `deleted_by` | UNIQUE `code`, `keycloak_org_id`, `keycloak_org_alias` (CHECK `^[a-z0-9-]{3,63}$`), `login_code` (CHECK 6 ký tự chữ hoa/số, không có 0/O/1/I) — đều partial `WHERE deleted_at IS NULL`; **UNIQUE `(tenant_type) WHERE tenant_type = 'common'`** (duy nhất một tenant chung). Tra cứu khi login: `keycloak_org_alias` → `tenant_id` (cache `ew:tenant:alias:<alias>` 5 phút) |
-| _(ghi chú)_ | — | Bảng gán thực tế `infra.tenant_resource_assignments` nằm ở **database sở hữu tài nguyên** (§2.17); module identity điều phối qua saga. Dòng dưới mô tả cấu trúc chung | — |
-| `infra.tenant_resource_assignments` (mỗi DB sở hữu tài nguyên) | G | `assignment_id`, `resource_type` (`curriculum`/`lesson`/`question`/`question_set`/`assessment_blueprint`/`challenge_template`/`tournament_template`/`quest`/`minigame_config`/`item`…), `resource_id`, `tenant_id`, `assigned_by`, `assigned_at`, `deleted_at`, `deleted_by` | UNIQUE `(resource_type, resource_id, tenant_id) WHERE deleted_at IS NULL`; idx `(tenant_id, resource_type, resource_id) WHERE deleted_at IS NULL`. Chỉ ghi được với resource có `tenant_id IS NULL` (kiểm tra ở use case) |
-| `tenant_default_assignments` | G | `resource_type`, `resource_id`, `created_by`, `created_at`, `deleted_at` | "Gán cho mọi tenant mới": job tạo assignment khi tạo tenant [Proposed] |
-| `tenant_clone_jobs` | G | `job_id`, `source_tenant_id`, `target_tenant_id`, `resource_type`, `resource_ids uuid[]`, `options jsonb`, `status` (`queued`/`running`/`succeeded`/`partially_failed`/`failed`), `id_map jsonb` (nguồn → bản sao), `stats jsonb`, `requested_by`, `idempotency_key`, `created_at`, `finished_at` | UNIQUE `(requested_by, idempotency_key)`; CHECK `source_tenant_id <> target_tenant_id`; danh sách `resource_type` được phép clone nằm trong code (không gồm bảng dữ liệu học sinh) |
-
-| `saga_runs` | G | `saga_id`, `saga_type` (`tenant_clone`/`trash_restore`/`student_cleanup`/`student_restore`/`user_merge`/`user_anonymize`), `subject jsonb`, `status` (`running`/`compensating`/`succeeded`/`failed`), `requested_by`, `idempotency_key varchar(64)`, `started_at`, `finished_at` | UNIQUE `(saga_type, idempotency_key)`; điều phối thao tác liên module (ADR-0074) |
-| `saga_steps` | G | `saga_id`, `step_no`, `service varchar(64)`, `action varchar(64)`, `status`, `attempts`, `request jsonb`, `response jsonb` (id_map…), `error varchar(1000)`, `updated_at` | PK `(saga_id, step_no)`; mỗi bước gọi facade platform của module đích (trong tiến trình, ADR-0074), idempotent theo `saga_id`; cột `service` lưu tên module đích |
-| `platform_settings` | G | `key` (`student_cleanup`, `chat_retention`, …), `value jsonb`, `version`, `updated_by`, `updated_at` | PK `key`; ghi chỉ System Admin, bắt buộc `reason` trong audit. `student_cleanup` = `{default_days: 180, notice_days: 14, allow_tenant_override: true, approval_threshold_percent: 10}`; `chat_retention` = `{gameplay_chat_retention_days: 7, minimum_days: 3, ephemeral_retention_hours: 24, allow_tenant_override: true}` [Proposed] |
-), `flag_kind varchar(16)` (`feature`/`menu`/`action`, mặc định `feature`), `parent_key varchar(128)` (action → menu cha), `description varchar(1000)`, `default_enabled boolean`, `tenant_overrides jsonb` (`{tenant_id: bool}`, ≤ 64 KB), `catalog_key` (cột sinh = `flag_key` khi `flag_kind <> 'feature'`), `version`, `updated_by`, `updated_at`, `deleted_at`, `deleted_by`, `delete_reason` | FK `catalog_key` và `parent_key` → `portal_menu_catalog.item_key` (flag `feature` không bị kiểm); CHECK `(flag_kind = 'action') = (parent_key IS NOT NULL)`. Không có dòng = bật; ghi chỉ System Admin (`platform.feature_flag.write`, `If-Match`, `reason`, audit, `platform_settings.changed`) — ADR-0090, DDL §3.15 |
-| `portal_menu_catalog` | G (đọc-chỉ) | `item_key varchar(128)` (PK: workspace, `menu.<workspace>.<menu>`, `action.<workspace>.<menu>.<action>`), `item_kind` (`workspace`/`menu`/`action`), `workspace_key`, `parent_key`, `path varchar(256)`, `label_key varchar(128)`, `title varchar(200)`, `required_permissions varchar(64)[]` (any-of), `operation_ids varchar(128)[]`, `sort_order`, `can_disable boolean`, `catalog_version varchar(64)`, `synced_at`, `deleted_at`, `deleted_by` | **Bản sao đọc-chỉ** của `specs/portal/menu-catalog.yaml`, ghi bởi `cmd/migrate` lúc deploy (cùng mẫu `identity.permissions`); `identity_app`/`identity_platform` chỉ `SELECT`; key bị gỡ khỏi catalog → soft-delete — ADR-0090, DDL §3.15 |
+| `feature_flags` | G | `flag_key varchar(128)` (PK, CHECK `^[a-z0-9_.]{3,128}$`), `flag_kind varchar(16)` (`feature`/`menu`/`action`, mặc định `feature`), `parent_key varchar(128)` (action → menu cha), `description varchar(1000)`, `default_enabled boolean`, `tenant_overrides jsonb` (`{tenant_id: bool}`, ≤ 64 KB), `catalog_key` (cột sinh = `flag_key` khi `flag_kind <> 'feature'`), `version`, `updated_by`, `updated_at`, `deleted_at`, `deleted_by`, `delete_reason` | FK `catalog_key` và `parent_key` → `portal_menu_catalog.item_key` (flag `feature` không bị kiểm); CHECK `(flag_kind = 'action') = (parent_key IS NOT NULL)`. Không có dòng = bật; ghi chỉ System Admin (`platform.feature_flag.write`, `If-Match`, `reason`, audit, `platform_settings.changed`) — ADR-0090, DDL §3.15 |
+| `portal_menu_catalog` | G (đọc-chỉ) | `item_key varchar(128)` (PK: workspace, `menu.<workspace>.<menu>`, `action.<workspace>.<menu>.<action>`), `item_kind` (`workspace`/`menu`/`action`), `workspace_key`, `parent_key`, `path varchar(256)`, `label_key varchar(128)`, `title varchar(200)`, `required_permissions varchar(64)[]` (any-of), `operation_ids varchar(128)[]`, `sort_order`, `can_disable boolean`, `catalog_version varchar(64)`, `synced_at`, `deleted_at`, `deleted_by` | **Bản sao đọc-chỉ** của `specs/portal/menu-catalog.yaml`, ghi bởi `src/backend/cmd/migrate` lúc deploy (cùng mẫu `identity.permissions`); `identity_app`/`identity_platform` chỉ `SELECT`; key bị gỡ khỏi catalog → soft-delete — ADR-0090, DDL §3.15 |
 | `cleanup_exclusions` | T | `exclusion_id`, `tenant_id`, `student_id`, `until` (NULL = vô thời hạn), `reason`, `created_by`, `created_at`, `deleted_at`, `deleted_by` | UNIQUE `(tenant_id, student_id) WHERE deleted_at IS NULL` (ADR-0032) |
 | `student_cleanup_runs` | G (append-only) | `run_id`, `tenant_id`, `mode` (`dry_run`/`apply`), `status` (`running`/`completed`/`awaiting_approval`/`approved`/`failed`), `cutoff_days`, `candidates`, `cleaned`, `excluded`, `skipped_active`, `approved_by`, `started_at`, `finished_at` | idx `(tenant_id, started_at DESC)` |
 
@@ -269,7 +141,7 @@ Tenant `common` có một School ảo (`org.schools.is_virtual = true`) và lớ
 |---|---|---|---|
 | `users` | G | `user_id`, `user_type`, `status` (`pending`/`active`/`locked`/`deactivated`/`anonymized`; `locked` ⇔ còn ít nhất một dòng `account_locks` chưa giải phóng), `username` (đã chuẩn hóa trim/NFC/chữ thường, bản sao từ Keycloak, ADR-0067), `email` (NULL được với học sinh, bắt buộc với nhân sự), `display_name` (NULL sau anonymize), `locale`, `primary_tenant_id`, `primary_school_id`, `created_at`, `updated_at`, `deactivated_at`, `anonymized_at`, `provisioned_at`, `last_login_at` (lần tạo game session gần nhất — ADR-0031), `deleted_at`, `deleted_by`, `delete_reason` (`inactive_cleanup`/…) | User là định danh toàn cục (một nhân sự có thể thuộc nhiều tenant); `user_type` ∈ `student`/`staff` (ADR-0081): nhân sự platform = `staff` có `primary_tenant_id IS NULL`, nhân sự trường = `staff` có `primary_tenant_id`; học sinh luôn có `primary_tenant_id` (CHECK); idx `(primary_tenant_id, user_type) WHERE deleted_at IS NULL`; `status` CHECK. **UNIQUE `lower(username)`** (mọi dòng, kể cả đã soft-delete — chỉ giải phóng khi ẩn danh hóa đổi username thành `anon.<user_id>`); **UNIQUE `lower(email)` WHERE `email IS NOT NULL AND deleted_at IS NULL`** [Proposed: email của tài khoản đã soft-delete vẫn giữ chỗ đến khi ẩn danh hóa, kiểm tra trong use case]; CHECK nhân sự (`user_type = 'staff'`) có email (ADR-0067). Duy nhất toàn cục khớp Keycloak (một người một tài khoản SSO) nên trong cùng tenant không bao giờ trùng; bảng theo tenant có `tenant_id NOT NULL` (ADR-0069). Vi phạm → `409 USERNAME_TAKEN`/`EMAIL_TAKEN`; SIS/import → `reconciliation_issue` `duplicate_identifier`. Tenant membership suy ra từ `org.students`/`org.enrollments`/`identity.user_roles` (view `identity.tenant_memberships_v`, đúng một dòng mỗi `(tenant_id, user_id)`) |
 | `external_identities` | G | `external_identity_id`, `issuer`, `subject`, `user_id`, `idp_alias`, `status` (`active`/`superseded`), `superseded_at`, `superseded_by`, `last_login_at` | **UNIQUE `(issuer, subject) WHERE deleted_at IS NULL`** (`issuer = platform_common`: `external_ref` học sinh tenant chung, không dùng đăng nhập — ACCOUNT_PROVISIONING §3.4); idx `user_id`; UNIQUE `(user_id, issuer) WHERE status='active'`. Dòng `superseded` do job `identity-relink` để lại phục vụ truy vết ([IDENTITY_MAPPING §7.1](../09-identity/IDENTITY_MAPPING.md)); resolve `(iss, sub)` chỉ chấp nhận dòng `active` |
-| `permissions` | G | `permission_code` (PK, vd. `lms.assignment.write`), `scope_kind` (`tenant`/`platform`), `group_code`, `name_vi`, `name_en`, `catalog_version`, `synced_at` | **Bản sao đọc-chỉ** của catalog permission trong code (`pkg/authz/catalog.go`), ghi bởi `cmd/migrate` lúc deploy; app role chỉ SELECT. Permission tiền tố `game.`, `competition.config.`, `platform.` luôn có `scope_kind = platform` (CHECK) |
+| `permissions` | G | `permission_code` (PK, vd. `lms.assignment.write`), `scope_kind` (`tenant`/`platform`), `group_code`, `name_vi`, `name_en`, `catalog_version`, `synced_at` | **Bản sao đọc-chỉ** của catalog permission trong code (`src/backend/pkg/authz/catalog.go`), ghi bởi `src/backend/cmd/migrate` lúc deploy; app role chỉ SELECT. Permission tiền tố `game.`, `competition.config.`, `platform.` luôn có `scope_kind = platform` (CHECK) |
 | `roles` | G/T | `role_id`, `code` (vd. `school_admin`, `academic_manager`, `safety_moderator`), `name_vi`, `name_en`, `description`, `role_scope_kind` (`tenant`/`platform`), `is_system`, `tenant_id` (NULL = role dùng chung toàn platform; có giá trị = role tùy biến của tenant [Proposed]), `version`, cột audit chuẩn, `deleted_at` | UNIQUE `(code) WHERE tenant_id IS NULL AND deleted_at IS NULL`; UNIQUE `(tenant_id, code) WHERE tenant_id IS NOT NULL AND deleted_at IS NULL`; CHECK `role_scope_kind = 'tenant' OR tenant_id IS NULL` (role tùy biến chỉ là role tenant); role `is_system` do migrate seed, trigger chặn UPDATE/DELETE bởi `<module>_app` (ADR-0066). RLS: dòng `tenant_id` không null chỉ thấy trong tenant đó |
 | `role_permissions` | G/T | `role_id`, `permission_code` (FK `permissions`), `tenant_id` (bằng `roles.tenant_id`) | PK `(role_id, permission_code)`; trigger `role_permissions_scope_chk`: role `tenant` không được nhận permission `scope_kind = platform` (ADR-0027, ADR-0066) — lớp 2 sau use case `CreateRole`/`UpdateRole` |
 | `user_roles` | T* | `user_role_id`, `user_id`, `role_id`, `tenant_id` (NULL nếu `scope_type = platform`), `scope_type` (`platform`/`tenant`/`school`/`subject`; không có `class` — ADR-0072), `scope_id`, `school_id` (null nếu scope platform/tenant), `valid_from`, `valid_to`, `granted_by`, `source` (chỉ `manual`: SIS không cấp role — ADR-0072), `training_completed_at` (bắt buộc với role `safety_moderator`, [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)), cột audit chuẩn, `deleted_at`, `deleted_by` | Thay `role_assignments` (ADR-0066). UNIQUE `(user_id, role_id, scope_type, scope_id) WHERE deleted_at IS NULL AND valid_to IS NULL`; idx `(user_id, tenant_id) WHERE deleted_at IS NULL`; idx `(tenant_id, role_id)`; trigger `user_roles_scope_chk` (§3.1): role `platform` chỉ `scope_type = platform`, role `tenant` không ở scope platform, role tùy biến chỉ gán trong tenant sở hữu, học sinh (`users.user_type = 'student'`) không nhận role có permission portal; **bất biến ADR-0081**: user có `primary_tenant_id IS NULL` chỉ nhận role `role_scope_kind = platform`, user có `primary_tenant_id` chỉ nhận role `tenant` (một người làm cả hai việc dùng hai tài khoản) |
@@ -807,7 +679,7 @@ CREATE INDEX external_identities_user_idx ON identity.external_identities (user_
 CREATE UNIQUE INDEX external_identities_active_uq
   ON identity.external_identities (user_id, issuer) WHERE status = 'active' AND deleted_at IS NULL;
 
--- Permission model (ADR-0027, ADR-0066): permission trong code, bản sao đọc-chỉ ghi bởi cmd/migrate khi deploy.
+-- Permission model (ADR-0027, ADR-0066): permission trong code, bản sao đọc-chỉ ghi bởi src/backend/cmd/migrate khi deploy.
 CREATE TABLE identity.permissions (
   permission_code  varchar(64) PRIMARY KEY,
   scope_kind       varchar(64) NOT NULL CHECK (scope_kind IN ('tenant','platform')),
@@ -1591,7 +1463,7 @@ CREATE UNIQUE INDEX sis_identity_links_source_active
 ### 3.15. Feature flag, danh mục menu portal, token đặt lại mật khẩu (ADR-0090, ADR-0091) · DB `eduworld_identity`
 
 ```sql
--- Bản sao đọc-chỉ của specs/portal/menu-catalog.yaml (ADR-0090). Chỉ cmd/migrate ghi lúc deploy (role `identity_migrator`);
+-- Bản sao đọc-chỉ của specs/portal/menu-catalog.yaml (ADR-0090). Chỉ src/backend/cmd/migrate ghi lúc deploy (role `identity_migrator`);
 -- key bị gỡ khỏi catalog → soft-delete (deleted_at), không xóa vật lý để giữ FK của feature_flags và lịch sử audit.
 CREATE TABLE platform.portal_menu_catalog (
   item_key             varchar(128) PRIMARY KEY
@@ -1604,7 +1476,7 @@ CREATE TABLE platform.portal_menu_catalog (
   path                 varchar(256),                       -- chỉ menu
   label_key            varchar(128) NOT NULL,
   title                varchar(200),
-  required_permissions varchar(64)[] NOT NULL DEFAULT '{}',   -- any-of; mỗi phần tử có trong identity.permissions (kiểm ở cmd/migrate)
+  required_permissions varchar(64)[] NOT NULL DEFAULT '{}',   -- any-of; mỗi phần tử có trong identity.permissions (kiểm ở src/backend/cmd/migrate)
   operation_ids        varchar(128)[] NOT NULL DEFAULT '{}',  -- chỉ action; dạng operationId hoặc operationId[param=value]
   sort_order           integer NOT NULL DEFAULT 0,
   can_disable          boolean NOT NULL DEFAULT true,
@@ -1670,7 +1542,7 @@ CREATE UNIQUE INDEX portal_password_reset_tokens_active_uq
 --  RETURNING user_id;     -- 0 dòng → 401 PASSWORD_RESET_TOKEN_INVALID
 ```
 
-- `portal_menu_catalog` cùng mẫu với `identity.permissions` (§2.1): nguồn là contract, `cmd/migrate` upsert theo `item_key`, đặt `catalog_version`, soft-delete key không còn trong file; nếu còn flag trỏ tới key bị gỡ, migrate cảnh báo và giữ dòng catalog (đã soft-delete) để FK hợp lệ. `identity_app` chỉ `SELECT`.
+- `portal_menu_catalog` cùng mẫu với `identity.permissions` (§2.1): nguồn là contract, `src/backend/cmd/migrate` upsert theo `item_key`, đặt `catalog_version`, soft-delete key không còn trong file; nếu còn flag trỏ tới key bị gỡ, migrate cảnh báo và giữ dòng catalog (đã soft-delete) để FK hợp lệ. `identity_app` chỉ `SELECT`.
 - `feature_flags`: use case `PutFeatureFlag` suy `flag_kind`/`parent_key` từ catalog (key menu/action không có trong catalog → `404`; `can_disable = false` → `422 FEATURE_NOT_DISABLEABLE`), bắt buộc `If-Match` + `reason`, ghi audit trước/sau và outbox `platform_settings.changed` (scope `feature_flag`) trong cùng transaction. Giá trị hiệu lực của action = flag action AND flag menu cha; mỗi flag = `tenant_overrides[tenant]` nếu có, ngược lại `default_enabled`.
 - `portal_password_reset_tokens`: loại G (`GlobalBase`, không RLS) vì nhân sự platform không có tenant; chỉ module identity đọc/ghi. Token hết hạn/đã dùng giữ nguyên dòng (soft-delete theo ADR-0028, không xóa vật lý); retention theo `login_events_retention` [Proposed] bằng ẩn danh hóa `token_hash`.
 
@@ -1885,7 +1757,7 @@ REVOKE DELETE, TRUNCATE ON ALL TABLES IN SCHEMA assessment FROM learning_app, le
 
 | Quy tắc | Chi tiết |
 |---|---|
-| Công cụ | **Atlas** versioned migrations (thư mục `modules/<module>/migrations/`, `atlas.sum`, `atlas migrate lint` trong CI — ADR-0039); ent sinh phần bảng/cột/index (`atlas migrate diff`); phần ent không biểu diễn được viết tay trong cùng thư mục (§7.1) |
+| Công cụ | **Atlas** versioned migrations (thư mục `src/backend/modules/<module>/migrations/`, `atlas.sum`, `atlas migrate lint` trong CI — ADR-0039); ent sinh phần bảng/cột/index (`atlas migrate diff`); phần ent không biểu diễn được viết tay trong cùng thư mục (§7.1) |
 | Chạy | Image `migrate` chạy job `migrate --module=<module>` (Atlas apply) cho từng database trước rollout `core-api`/`worker`, bằng role `<module>_migrator` ([DEPLOYMENT §12](../11-operations/DEPLOYMENT.md#12-migration-trong-deploy-adr-0039)); binary kiểm tra revision tối thiểu của từng module trong `/readyz`. Không auto-migrate khi khởi động |
 | Expand / contract | Thay đổi breaking chia ≥ 2 release: (1) expand — thêm cột/bảng mới, ghi kép; (2) backfill bằng job; (3) contract — bỏ đọc cột cũ; (4) xóa cột cũ ở release sau khi xác nhận |
 | Không mất dữ liệu | Migration không chứa `DELETE`/`TRUNCATE` dữ liệu nghiệp vụ (ADR-0028). Cấm `DROP TABLE`/`DROP COLUMN` trên dữ liệu học tập, kết quả, audit trong migration thường; cần ADR hoặc phê duyệt Data Owner + backup xác nhận [Confirmed — Master Prompt §21.19] |

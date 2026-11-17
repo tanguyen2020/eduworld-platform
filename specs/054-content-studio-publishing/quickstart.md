@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F024, F025, F026, F053 (và F027); delta contract T005–T012 có backend.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd web && pnpm gen:api && pnpm dev`.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm gen:api && pnpm dev`.
 - Tài khoản demo: `cm.noidung` (content_admin), `cm.duyet` (content_reviewer), `qlcm.truong.a` (academic_manager), `ad.donvi` (tenant_admin `pgd-demo`, giả định được cấp `tenant.trash.*`), `ad.truong.b`, `sa.admin`; học sinh `hs.an.3a` (kiểm ghim version trong game).
 - File: CSV 20 câu (2 dòng lỗi, 1 công thức `\href`), ảnh PNG hợp lệ, file `.exe` đổi đuôi `.png`.
 
@@ -50,7 +50,7 @@
 ```bash
 make web-lint
 make web-test
-cd web && pnpm --filter portal test:e2e -- --grep @F054
+cd src/cms/frontend && pnpm --filter portal test:e2e -- --grep @F054
 ```
 
 ## 4. Bằng chứng cần nộp

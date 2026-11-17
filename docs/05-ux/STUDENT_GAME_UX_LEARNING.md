@@ -459,7 +459,7 @@ Hiệu năng: hiệu ứng chúc mừng ≤ 1,5 s, tắt được; thế giới 
 
 ## 11. Khóa dịch đề xuất
 
-Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `godot/locale/vi.po` và `en.po` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md)). Danh sách khởi đầu:
+Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `src/game/locale/vi.po` và `en.po` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md)). Danh sách khởi đầu:
 
 | Khóa | vi | en |
 |---|---|---|

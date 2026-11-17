@@ -11,7 +11,7 @@ Hai module, giao tiếp chỉ bằng event (R29). **module identity**: (1) consu
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/messaging`, `pkg/tenancy`, `pkg/authz`, `pkg/idempotency`, `pkg/audit`, `pkg/modcall`, `pkg/clock`; `net/smtp` (STARTTLS) + `text/template`/`html/template` |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/messaging`, `src/backend/pkg/tenancy`, `src/backend/pkg/authz`, `src/backend/pkg/idempotency`, `src/backend/pkg/audit`, `src/backend/pkg/modcall`, `src/backend/pkg/clock`; `net/smtp` (STARTTLS) + `text/template`/`html/template` |
 | Storage | PostgreSQL `eduworld_identity` (`identity.account_locks`, `identity.email_deliveries`), `eduworld_chat` (`chat.moderation_oncall_shifts`, `chat.break_glass_grants`, cột mới `chat.moderation_cases`) |
 | Testing | go test + testcontainers (PG, NATS, Keycloak, mailpit); Clock giả; contract test payload event chat ↔ identity |
 | Target Platform | Linux container: module `identity`, `chat` nạp trong `core-api`; profile `worker-events` (identity) và `worker-chat` (chat) |
@@ -54,7 +54,7 @@ specs/124-safety-enforcement-oncall/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/{account_lock.go,email_delivery.go}
 ├── internal/domain/account/{lock.go,lock_source.go}              # User.AddLock/ReleaseLock, IsLocked()
 ├── internal/domain/staffmail/{template.go,recipient_rule.go}
@@ -67,7 +67,7 @@ modules/identity/
 ├── internal/presentation/consumer/{sanction_enforcer.go,school_notification_mailer.go,oncall_page_mailer.go,break_glass_mailer.go}
 ├── internal/presentation/job/email_sender.go
 └── tests/{unit,integration,contract}/{account_lock,staffmail}/
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/{moderation_oncall_shift.go,break_glass_grant.go}  (+ moderation_case.go: cột mới)
 ├── internal/domain/moderation/{oncall.go,escalation_ladder.go}
 ├── internal/domain/breakglass/{grant.go,scope.go}
@@ -75,7 +75,7 @@ modules/chat/
 ├── internal/application/command/breakglass/{request.go,decide.go,revoke.go,expire.go}
 ├── internal/application/query/{moderation/list_oncall_shifts.go,breakglass/{list_grants.go,list_messages.go}}
 ├── internal/application/port/principal_directory.go
-├── internal/infrastructure/client/identity_principal.go          # resolvePrincipal qua pkg/modcall
+├── internal/infrastructure/client/identity_principal.go          # resolvePrincipal qua src/backend/pkg/modcall
 ├── internal/presentation/http/admin/{oncall.go,break_glass.go}   # Bypass chỉ ở đây + query breakglass
 ├── internal/presentation/job/{oncall_escalator.go,break_glass_expirer.go}
 └── tests/{unit,integration,contract}/{oncall,breakglass}/
@@ -103,7 +103,7 @@ Không có. Quy tắc ở [MODERATION §6–§7, §9](../../docs/03-social-multi
 | application (identity) | Command `ApplySanctionLock`, `ReleaseSanctionLock`, `EnqueueSchoolSafetyEmail`, `EnqueueOncallPage`, `EnqueueBreakGlassRequestEmail`, `SendDueEmails`; sửa `UnlockUser`/`UnlockTenantUser` (F016) chỉ giải phóng nguồn của mình | Idempotency theo `event_id` ở consumer; audit qua outbox trong `UnitOfWork` |
 | domain (chat) | `OncallShift` (không chồng lấn), `EscalationLadder(now, created_at, levels)`, `BreakGlassGrant` (two-person, `IsActive(now)`, `InScope(msg)`) | |
 | application (chat) | Command `CreateOncallShift`, `DeleteOncallShift`, `AssignByRotation` (gọi trong `OpenCase` của F121 khi p1), `EscalateUnclaimedP1`, `RequestBreakGlass`, `DecideBreakGlass`, `RevokeBreakGlass`, `ExpireBreakGlass` · Query `ListOncallShifts`, `ListBreakGlassGrants`, `ListBreakGlassMessages` | Permission theo contracts §1 |
-| infrastructure | Repo ent; `SmtpSender` (env `EW_SMTP_HOST`, `EW_SMTP_PORT`, `EW_SMTP_FROM`, secret `EW_SMTP_PASSWORD_FILE`); `RecipientDirectory` (UserRole + users); `IdentityPrincipalClient` (`resolvePrincipal`, `pkg/modcall`); outbox publisher | |
+| infrastructure | Repo ent; `SmtpSender` (env `EW_SMTP_HOST`, `EW_SMTP_PORT`, `EW_SMTP_FROM`, secret `EW_SMTP_PASSWORD_FILE`); `RecipientDirectory` (UserRole + users); `IdentityPrincipalClient` (`resolvePrincipal`, `src/backend/pkg/modcall`); outbox publisher | |
 | presentation | Consumer identity: `sanction.applied`, `sanction.lifted`, `moderation.school_notified`, `moderation.school_notification_reminded`, `moderation.oncall_paged`, `break_glass.requested` · Job `email-sender` (30 s), `oncall-escalator` (1 phút), `break-glass-expirer` (1 phút) · Handler 8 operationId | |
 
 ### Tích hợp và phụ thuộc

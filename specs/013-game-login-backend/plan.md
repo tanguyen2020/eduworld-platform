@@ -4,14 +4,14 @@
 
 ## Summary
 
-module identity thêm command `GameLogin`, `SelectGameLoginTenant`, `RefreshGameToken` (`renew`/`resume`), `GameLogout`, `RevokeGameAuthSessions` (consumer sự kiện). `GameLogin`: validate body (không log) → kiểm `client_version` → rate limit (Valkey) → hàng chờ toàn cục → password grant Keycloak (`eduworld-game-backend`, pool HTTP, timeout, circuit breaker) → xóa mật khẩu → resolve `(iss, sub)` → kiểm `user_type`, trạng thái → membership → `LoginSync` (F011) → quyết định tenant → bootstrap. Nhiều tenant: lưu token set đã mã hóa trong Valkey dưới `login_ticket`. Khi phát token (login/select), ghi aggregate `GameAuthSession` (`sid`, `device_id`, hash refresh token) trong transaction; `RefreshGameToken` tìm phiên theo hash → kiểm thu hồi/dùng lại/thiết bị → refresh Keycloak → cập nhật hash (rotation); `mode = resume` kiểm lại tài khoản/tenant và trả bootstrap (ADR-0086). Middleware `tenant` (khung `pkg/httpx` của F002) được hoàn thiện với kiểm tra membership và dùng chung cho mọi service.
+module identity thêm command `GameLogin`, `SelectGameLoginTenant`, `RefreshGameToken` (`renew`/`resume`), `GameLogout`, `RevokeGameAuthSessions` (consumer sự kiện). `GameLogin`: validate body (không log) → kiểm `client_version` → rate limit (Valkey) → hàng chờ toàn cục → password grant Keycloak (`eduworld-game-backend`, pool HTTP, timeout, circuit breaker) → xóa mật khẩu → resolve `(iss, sub)` → kiểm `user_type`, trạng thái → membership → `LoginSync` (F011) → quyết định tenant → bootstrap. Nhiều tenant: lưu token set đã mã hóa trong Valkey dưới `login_ticket`. Khi phát token (login/select), ghi aggregate `GameAuthSession` (`sid`, `device_id`, hash refresh token) trong transaction; `RefreshGameToken` tìm phiên theo hash → kiểm thu hồi/dùng lại/thiết bị → refresh Keycloak → cập nhật hash (rotation); `mode = resume` kiểm lại tài khoản/tenant và trả bootstrap (ADR-0086). Middleware `tenant` (khung `src/backend/pkg/httpx` của F002) được hoàn thiện với kiểm tra membership và dùng chung cho mọi service.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, oapi-codegen, `golang.org/x/text/unicode/norm` (NFC), `pkg/httpx`, `pkg/modcall` (failsafe-go cho Keycloak), Valkey client, `pkg/observability` (redaction) |
+| Primary Dependencies | chi, oapi-codegen, `golang.org/x/text/unicode/norm` (NFC), `src/backend/pkg/httpx`, `src/backend/pkg/modcall` (failsafe-go cho Keycloak), Valkey client, `src/backend/pkg/observability` (redaction) |
 | Storage | PostgreSQL `eduworld_identity` (`identity.login_events` TA, P tháng; `identity.game_auth_sessions` T, soft-delete — ADR-0086; `users`, `external_identities`); Valkey: `ew:identity:login_ticket:<sha256>` (TTL `game_login_ticket_ttl`), `ew:identity:rl:login:device:<device_id>`, `ew:identity:rl:login:user:<sha256(username)>`, `ew:identity:rl:login:global` |
 | Testing | go test + testcontainers (PostgreSQL, Valkey, Keycloak test realm); k6 cho hàng chờ (TC-PERF-016) |
 | Target Platform | Linux container |
@@ -50,9 +50,9 @@ specs/013-game-login-backend/
 ### Source Code (repository)
 
 ```text
-pkg/httpx/tenant.go                    # middleware tenant: header bắt buộc, khớp membership (khung F002, hoàn thiện ở đây)
-pkg/observability/redact.go            # che field password/refresh_token/login_ticket ở mọi logger/tracer
-modules/identity/
+src/backend/pkg/httpx/tenant.go                    # middleware tenant: header bắt buộc, khớp membership (khung F002, hoàn thiện ở đây)
+src/backend/pkg/observability/redact.go            # che field password/refresh_token/login_ticket ở mọi logger/tracer
+src/backend/modules/identity/
 ├── ent/schema/loginevent.go           # identity.login_events (TenantOptionalAppendOnly, ADR-0089)
 ├── ent/schema/gameauthsession.go      # identity.game_auth_sessions (ADR-0086)
 ├── internal/domain/gamelogin/         # TenantDecision (1/nhiều/0), LoginTicket, ClientVersion, GameAuthSession (rotate, detect reuse, bind device, revoke)
@@ -67,7 +67,7 @@ modules/identity/
 └── tests/{unit,integration,security}/
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §3, §6.1; middleware dùng chung ở `pkg/httpx` để mọi module trong `core-api` áp cùng quy tắc ADR-0065.
+**Structure Decision**: Theo BACKEND_DESIGN §3, §6.1; middleware dùng chung ở `src/backend/pkg/httpx` để mọi module trong `core-api` áp cùng quy tắc ADR-0065.
 
 ## Phase 0: Research
 
@@ -86,7 +86,7 @@ modules/identity/
 | domain | `TenantDecision.From(memberships)`, `LoginTicket` (một lần, `device_id`), `ClientVersion.AtLeast`, `GameAuthSession` (`Rotate(newHash)`, `Classify(hash, deviceID)` → ok/reused/device_mismatch/revoked, `Revoke(reason)`) | Thứ tự lỗi theo IDENTITY_MAPPING §4.1 |
 | application | Command: `GameLogin`, `SelectGameLoginTenant`, `RefreshGameToken` (`renew`/`resume`), `GameLogout`, `RevokeGameAuthSessions`; query: `BootstrapQuery` | Public (login, select, refresh — refresh token trong body là credential), học sinh (logout); handler gọi trực tiếp từ presentation, không mediator (ADR-0087) |
 | infrastructure | Keycloak token client, ticket store (AES-GCM, khóa từ secret), rate limiter, bootstrap reader (users/students/schools/classes/tenant settings/feature flags), `LoginMembershipReader` (gọi `identity.memberships_for_user(user_id)` trong `Bypass(ctx, "auth_login")`), `LoginEventWriter` (dòng tenant NULL qua client `identity_platform` + `PlatformScope`) | Lý do `auth_login` và hàm chỉ dùng trong package đăng nhập (F013-AC-30, F013-AC-31) |
-| presentation | Handler `gameLogin`, `selectGameLoginTenant`, `refreshGameToken`, `gameLogout`; consumer `user.access_revoked`, `user.status_changed`, `student.cleaned_up`; middleware `tenant` (`pkg/httpx`) | Không `Idempotency-Key` cho login/refresh (không lưu token vào kho idempotency) |
+| presentation | Handler `gameLogin`, `selectGameLoginTenant`, `refreshGameToken`, `gameLogout`; consumer `user.access_revoked`, `user.status_changed`, `student.cleaned_up`; middleware `tenant` (`src/backend/pkg/httpx`) | Không `Idempotency-Key` cho login/refresh (không lưu token vào kho idempotency) |
 
 ### Tích hợp và phụ thuộc
 
@@ -97,7 +97,7 @@ modules/identity/
 
 ### Bảo mật, tenant, idempotency, audit
 
-- APISIX + `core-api`: không log body route `/auth/game/*` (`game_login_body_logging`); redaction ở `pkg/observability`.
+- APISIX + `core-api`: không log body route `/auth/game/*` (`game_login_body_logging`); redaction ở `src/backend/pkg/observability`.
 - Rate limit: thiết bị + username + toàn cục (`login_rate`); brute-force do Keycloak; thông điệp chung `INVALID_CREDENTIALS`, cân bằng thời gian phản hồi.
 - Refresh (ADR-0086): tìm `GameAuthSession` theo SHA-256 token; hash đã xoay → `REFRESH_TOKEN_REUSED` + thu hồi cả phiên; `device_id` khác → `REFRESH_TOKEN_DEVICE_MISMATCH` (không gọi Keycloak); không thấy/đã thu hồi/Keycloak `invalid_grant` → `REFRESH_TOKEN_INVALID`. Cập nhật hash trong transaction có khóa hàng (`SELECT … FOR UPDATE`) để hai refresh song song không cùng thành công.
 - Middleware `tenant`: `X-Tenant-Id` bắt buộc ngoài danh sách miễn; so với membership (`checkMemberships`/cache) và tenant của game session (token game) → `TENANT_MISMATCH` + audit.

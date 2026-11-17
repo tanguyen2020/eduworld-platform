@@ -2,11 +2,11 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Viết tắt: `ID/` = `modules/identity/`, `CH/` = `modules/chat/`. Fixture chỉ dùng placeholder, không từ nhạy cảm (R15).
+Viết tắt: `ID/` = `src/backend/modules/identity/`, `CH/` = `src/backend/modules/chat/`. Fixture chỉ dùng placeholder, không từ nhạy cảm (R15).
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký permission platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`), kiểm khởi động — file: `pkg/authz/catalog.go`
+- [ ] T001 Đăng ký permission platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`), kiểm khởi động — file: `src/backend/pkg/authz/catalog.go`
 - [ ] T002 [P] Cấu hình SMTP (`EW_SMTP_HOST`, `EW_SMTP_PORT`, `EW_SMTP_FROM`, `EW_SMTP_PASSWORD_FILE`), `EW_PORTAL_BASE_URL` vào `.env.example` và compose (mailpit local) — file: `deploy/compose/.env.example`, `deploy/compose/identity.yml`
 - [ ] T003 [P] Lịch job `email-sender`, `oncall-escalator`, `break-glass-expirer`; linter allowlist `tenancy.Bypass` thêm `CH/internal/application/query/breakglass/` — file: `ID/config/worker.yaml`, `CH/config/worker.yaml`, `.go-arch-lint.yml`
 

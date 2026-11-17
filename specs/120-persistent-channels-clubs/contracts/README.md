@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `modules/chat.v1.yaml`).
+Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/chat.v1.yaml`).
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

@@ -11,7 +11,7 @@ Thêm module `moderation` (phần pipeline + danh mục + công tắc) vào modu
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, oapi-codegen, `golang.org/x/text/unicode/norm`, Aho–Corasick (`github.com/cloudflare/ahocorasick` hoặc tự viết trong `internal/domain/moderation/ac`), RE2 (`regexp` chuẩn Go), `valkey-go`, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/authz` |
+| Primary Dependencies | ent, Atlas, oapi-codegen, `golang.org/x/text/unicode/norm`, Aho–Corasick (`github.com/cloudflare/ahocorasick` hoặc tự viết trong `internal/domain/moderation/ac`), RE2 (`regexp` chuẩn Go), `valkey-go`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/authz` |
 | Storage | PostgreSQL `eduworld_chat` (`chat.sensitive_term_categories`, `chat.sensitive_terms`, `chat.sensitive_allowlist`, `chat.sensitive_catalog_versions`, `chat.tenant_category_settings`, `chat.moderation_switches`, `chat.moderation_switch_changes`, `chat.moderation_decisions` P tháng, `chat.sanctions`, `chat.quick_messages`); Valkey (`ew:chat:sensitive:*`, `ew:chat:switches:*`, `ew:rl:chat:*`, cửa sổ spam) |
 | Testing | go test (unit bảng normalize/engine), benchmark CI (`go test -bench`), testcontainers (PG, Valkey, NATS); bộ hồi quy placeholder trong CI |
 | Target Platform | Linux container: module `chat` nạp trong `core-api` + profile `worker-chat` (job expirer, phát pub/sub version) |
@@ -30,7 +30,7 @@ Thêm module `moderation` (phần pipeline + danh mục + công tắc) vào modu
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ module chat; engine thuần ở domain; không gọi module khác trên đường gửi |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng H/T có RLS; term tenant chỉ hiệu lực tenant đó; xóa mềm; version append-only |
 | IV Server-authoritative | ✅ | Quyết định ở server; ghi quản trị có `Idempotency-Key`/`If-Match` + audit |
-| V Xác thực, phân quyền | ✅ | `chat.sensitive_terms.read/write`, `chat.policy.toggle`, `chat.tenant_terms.write`, `chat.tenant_category.toggle` platform-only (catalog `pkg/authz` kiểm lúc khởi động) |
+| V Xác thực, phân quyền | ✅ | `chat.sensitive_terms.read/write`, `chat.policy.toggle`, `chat.tenant_terms.write`, `chat.tenant_category.toggle` platform-only (catalog `src/backend/pkg/authz` kiểm lúc khởi động) |
 | VI An toàn trẻ em | ✅ | R15 đầy đủ: không hardcode từ, không lộ từ khớp, không cờ tắt trong code/env, không điều kiện khối |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo CONFIG_DEFAULTS; ngưỡng spam đề xuất đăng ký |
 | VIII UI tách logic, token | ✅ | Không có UI (Portal ở F122) |
@@ -50,7 +50,7 @@ specs/116-chat-moderation-pipeline/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/        # sensitivetermcategory.go, sensitiveterm.go, sensitiveallowlist.go, sensitivecatalogversion.go,
 │                      # tenantcategorysetting.go, moderationswitch.go, moderationswitchchange.go, moderationdecision.go, sanction.go, quickmessage.go
 ├── internal/domain/moderation/

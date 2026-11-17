@@ -1,21 +1,27 @@
 # Feature Specification: F001 — Monorepo, Docker Compose local, CI GitHub Actions theo path, khung modular monolith
 
-**Feature Branch**: `001-monorepo-compose-ci-skeleton` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: hạ tầng (`go.mod` gốc, `cmd/`, `modules/`, `Makefile`, `deploy/compose`, `deploy/postgres`, `.github/`) · **Mốc**: M-C0 · **Phụ thuộc**: —
+**Feature Branch**: `001-monorepo-compose-ci-skeleton` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: hạ tầng (`go.mod` gốc, `src/backend/cmd/`, `src/backend/modules/`, `Makefile`, `deploy/compose`, `deploy/postgres`, `.github/`) · **Mốc**: M-C0 · **Phụ thuộc**: —
 **Input**: Dựng monorepo (ADR-0002) theo modular monolith có ranh giới cưỡng chế (ADR-0074): một Go module gốc, ba binary `core-api`, `realtime`, `worker` (`--profile`), khung 5 module domain + module `realtime`; môi trường Docker Compose local (ADR-0024); CI/CD GitHub Actions theo lane và path filter (ADR-0088); mọi binary có health/readiness — FR-OPS-001, FR-OPS-002, FR-OPS-004, FR-OPS-005, NFR-DEPL-001, NFR-DEPL-002, NFR-SEC-005.
 
 ## Clarifications
 
 ### Session 2026-11-16
 
-- Q: Thư mục mã là `services/learning/` hay `modules/learning/`? → A: `modules/<module>/` (và `modules/realtime/`). Chốt bởi [ADR-0074](../../docs/adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) mục 1 (thay đề xuất D1).
+- Q: Thư mục mã là `services/learning/` hay `src/backend/modules/learning/`? → A: `src/backend/modules/<module>/` (và `src/backend/modules/realtime/`). Chốt bởi [ADR-0074](../../docs/adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) mục 1 (thay đề xuất D1).
 - Q: Tên biến môi trường DB/kết nối? → A: Bảng duy nhất ở [LOCAL_DEVELOPMENT §4](../../docs/11-operations/LOCAL_DEVELOPMENT.md): kết nối database theo module `EW_DB_<MODULE>_*` (vì `core-api`/`worker` nạp nhiều module), `EW_S3_*`, `OTEL_*`, `EW_WORKER_PROFILE`; secret ở staging/prod dùng hậu tố `_FILE`. Không còn `EW_SVC_*` (không gọi HTTP giữa module); client Keycloak duy nhất cho backend là `svc-identity` qua `EW_KC_ADMIN_CLIENT_*`.
 - Q: Cổng quản trị: một cổng hay tách health/metrics? → A: Một cổng `EW_ADMIN_ADDR` phục vụ `/livez`, `/readyz`, `/healthz`, `/metrics`, `/version`.
 
 ### Session 2026-11-17
 
 - Q: Nền CI/CD? → A: GitHub Actions ([ADR-0088](../../docs/adr/ADR-0088-ci-cd-bang-github-actions.md)): mỗi lane một workflow trong `.github/workflows/` chạy theo `paths` filter; registry `ghcr.io`; GitHub Environments `staging`/`production`; runner GitHub-hosted, macOS cho iOS, self-hosted chỉ cho bước triển khai. Bỏ toàn bộ GitLab CI.
-- Q: Có cổng internal API (82xx) không? → A: Không. Module gọi nhau trong tiến trình qua facade `modules/<module>/api` (ADR-0074 mục 3). Cổng: `core-api` 8100 (admin host 9100), `realtime` 8106 (admin host 9106), `worker` admin host 9200; trong container admin luôn `:9090` ([LOCAL_DEVELOPMENT §3.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Q: Có cổng internal API (82xx) không? → A: Không. Module gọi nhau trong tiến trình qua facade `src/backend/modules/<module>/api` (ADR-0074 mục 3). Cổng: `core-api` 8100 (admin host 9100), `realtime` 8106 (admin host 9106), `worker` admin host 9200; trong container admin luôn `:9090` ([LOCAL_DEVELOPMENT §3.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Q: Đơn vị build và phát hành? → A: Ba binary build từ cùng commit, chung version `backend/vX.Y.Z`; image `eduworld/core-api`, `eduworld/realtime`, `eduworld/worker`, `eduworld/migrate` trên `ghcr.io` ([DEPLOYMENT §3.1](../../docs/11-operations/DEPLOYMENT.md)).
+
+### Session 2026-11-17 (triển khai)
+
+- Q: Mã nguồn đặt ở đâu? → A: Trong `src/` theo [ADR-0092](../../docs/adr/ADR-0092-to-chuc-ma-nguon-trong-src.md): `src/backend` là Go module duy nhất (`go.mod`, `cmd/`, `modules/`, `pkg/`, `tools/`, `test/`), `src/cms/frontend` (Admin Portal), `src/game` (Godot); `deploy/`, `specs/`, `docs/`, `scripts/`, `design/` ở gốc.
+- Q: Role `<module>_readonly/_relay/_partition_admin` tạo ở đâu? → A: Trong script init của cụm (`deploy/postgres/init/02-roles.sh`) cùng các role khác, vì role là đối tượng cấp cụm và `<module>_migrator` không được có `CREATEROLE`; F003 chỉ `GRANT` trong migration.
+- Q: Kiểm tra ranh giới module dùng công cụ nào? → A: `tools/archgen --check` (phân tích `go list`) là kiểm tra chính cho import chéo module, `x-allowed-callers`, `pkg/`, `cmd/` và quy tắc tầng; `archgen` sinh thêm `src/backend/.golangci.arch.yml` (depguard) cho `make lint`.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -32,7 +38,7 @@ Developer mới clone repo, chạy `make up`, `make migrate`, `make seed`, `make
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F001-AC-01 | KHI developer chạy `make up`, HỆ THỐNG PHẢI khởi động mọi dịch vụ hạ tầng profile default của [LOCAL_DEVELOPMENT §3.1](../../docs/11-operations/LOCAL_DEVELOPMENT.md) (một cụm PostgreSQL, NATS JetStream, Valkey, Keycloak, APISIX, floci và các container phụ) và mọi container đạt trạng thái healthy | FR-OPS-002 · LOCAL_DEVELOPMENT §3.1 | — |
-| F001-AC-02 | HỆ THỐNG PHẢI có `.env.example` gốc và `modules/<module>/.env.example` khai báo mọi biến bắt buộc của [LOCAL_DEVELOPMENT §4](../../docs/11-operations/LOCAL_DEVELOPMENT.md) với giá trị chỉ dùng local; `.env` thật PHẢI nằm trong `.gitignore` | FR-OPS-002 · FR-OPS-004 · AGENTS R4 | — |
+| F001-AC-02 | HỆ THỐNG PHẢI có `.env.example` gốc và `src/backend/modules/<module>/.env.example` khai báo mọi biến bắt buộc của [LOCAL_DEVELOPMENT §4](../../docs/11-operations/LOCAL_DEVELOPMENT.md) với giá trị chỉ dùng local; `.env` thật PHẢI nằm trong `.gitignore` | FR-OPS-002 · FR-OPS-004 · AGENTS R4 | — |
 | F001-AC-03 | KHI chạy `make migrate`, job `migrate --module=<module>` PHẢI áp migration Atlas của từng module vào đúng database của module đó bằng role `<module>_migrator`; `core-api`, `realtime`, `worker` PHẢI KHÔNG tự migrate khi khởi động | FR-OPS-002 · NFR-DEPL-002 · ADR-0039 · ADR-0074 | — |
 | F001-AC-04 | Mọi binary (`core-api`, `realtime`, `worker` ở mọi profile) PHẢI mở cổng quản trị `EW_ADMIN_ADDR` phục vụ `/livez`, `/readyz`, `/healthz`, `/metrics`, `/version`; `/livez` PHẢI KHÔNG gọi phụ thuộc ngoài | FR-OPS-001 · [DEPLOYMENT §14](../../docs/11-operations/DEPLOYMENT.md) | — |
 | F001-AC-05 | TRONG KHI database của một module mà binary nạp, Valkey hoặc NATS không truy cập được, `/readyz` của binary đó PHẢI trả `503` kèm tên check lỗi (vd. `db:learning`, `valkey`, `nats`) và `/livez` PHẢI vẫn trả `200`; readiness PHẢI KHÔNG phụ thuộc binary khác | FR-OPS-001 · [BACKEND_DESIGN §14](../../docs/07-backend/BACKEND_DESIGN.md) · ADR-0074 | — |
@@ -66,13 +72,13 @@ Tech Lead cần pull request chỉ chạy lane liên quan, luôn quét secret v�
 
 **Why this priority**: Không có CI thì không có bằng chứng kiểm thử (constitution IX); quét secret là điều kiện R4; ADR-0088 chốt GitHub Actions.
 
-**Independent Test**: Mở PR mẫu chỉ sửa `modules/learning/**`; xác nhận danh sách workflow/job chạy; mở PR mẫu chỉ sửa `docs/**`; commit một secret giả và xác nhận check đỏ, PR không merge được.
+**Independent Test**: Mở PR mẫu chỉ sửa `src/backend/modules/learning/**`; xác nhận danh sách workflow/job chạy; mở PR mẫu chỉ sửa `docs/**`; commit một secret giả và xác nhận check đỏ, PR không merge được.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F001-AC-12 | KHI PR chỉ thay đổi `modules/<module>/**`, workflow `go.yml` PHẢI chạy job matrix (`gen-check`, `lint`, `test`, `test-integration`, `migrate-lint`) chỉ cho module đó cùng job `arch` toàn repo, và PHẢI KHÔNG chạy matrix của module khác, `godot.yml`, `web.yml`; KHI thay đổi `pkg/**`, `cmd/**` hoặc `go.mod`, `go.yml` PHẢI chạy matrix của mọi module | FR-OPS-005 · ADR-0088 · [DEPLOYMENT §10.2](../../docs/11-operations/DEPLOYMENT.md) | — |
+| F001-AC-12 | KHI PR chỉ thay đổi `src/backend/modules/<module>/**`, workflow `go.yml` PHẢI chạy job matrix (`gen-check`, `lint`, `test`, `test-integration`, `migrate-lint`) chỉ cho module đó cùng job `arch` toàn repo, và PHẢI KHÔNG chạy matrix của module khác, `godot.yml`, `web.yml`; KHI thay đổi `src/backend/pkg/**`, `src/backend/cmd/**` hoặc `go.mod`, `go.yml` PHẢI chạy matrix của mọi module | FR-OPS-005 · ADR-0088 · [DEPLOYMENT §10.2](../../docs/11-operations/DEPLOYMENT.md) | — |
 | F001-AC-13 | HỆ THỐNG PHẢI chạy workflow `security.yml` (gitleaks) ở mọi PR và mọi push, là required status check, và PHẢI chặn merge khi phát hiện secret | FR-OPS-004 · NFR-SEC-005 · ADR-0088 | — |
 | F001-AC-14 | KHI PR chạy, `security.yml` PHẢI quét dependency (govulncheck, OSV/npm audit) và filesystem (trivy fs) theo ngưỡng [SECURITY_ARCHITECTURE §15](../../docs/10-security/SECURITY_ARCHITECTURE.md) và PHẢI fail khi vượt ngưỡng | NFR-SEC-005 | — |
 | F001-AC-15 | KHI `release.yml` build image trên `main` hoặc tag `backend/vX.Y.Z`, HỆ THỐNG PHẢI build multi-stage `CGO_ENABLED=0` bốn image `core-api`, `realtime`, `worker`, `migrate`, chạy user non-root UID ≥ 10001, quét Trivy và chặn khi có CVE Critical đã có bản vá, đính SBOM, ký cosign, đẩy lên `ghcr.io`, tag bằng `git sha` + version backend và PHẢI KHÔNG dùng tag `latest` | NFR-SEC-005 · ADR-0088 · [DEPLOYMENT §3.1](../../docs/11-operations/DEPLOYMENT.md) | — |
@@ -89,18 +95,18 @@ Backend dev thêm code vào một module mà không vô tình phụ thuộc vào
 
 **Why this priority**: ADR-0074 chỉ giữ được lợi ích (tách module sau rẻ) khi ranh giới được compiler và linter cưỡng chế từ commit đầu tiên; cần trước khi nhiều người làm song song ở M-C1.
 
-**Independent Test**: Thêm import `modules/learning/internal/...` vào module `game` → `go build` fail; thêm import `modules/identity/api` vào module không có trong `x-allowed-callers` → `make arch-check` fail; `make up-app EXCEPT=core-api` + `make run-core-api`.
+**Independent Test**: Thêm import `src/backend/modules/learning/internal/...` vào module `game` → `go build` fail; thêm import `src/backend/modules/identity/api` vào module không có trong `x-allowed-callers` → `make arch-check` fail; `make up-app EXCEPT=core-api` + `make run-core-api`.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F001-AC-17 | Repository PHẢI có một `go.mod` duy nhất ở gốc, ba binary `cmd/core-api`, `cmd/realtime`, `cmd/worker` (cờ `--profile` nhận `events`, `chat`, `jobs`, `all`) và module `identity`, `learning`, `game`, `competition`, `chat`, `realtime` theo cấu trúc `modules/<module>/{api/, internal/{domain,application,infrastructure,presentation}/, ent/, migrations/, module.go}` (module `realtime` không có `ent/`, `migrations/`); `go build ./cmd/...` PHẢI thành công | NFR-DEPL-001 · ADR-0074 | — |
+| F001-AC-17 | Repository PHẢI có một `go.mod` duy nhất (`src/backend/go.mod`, ADR-0092), ba binary `src/backend/cmd/core-api`, `src/backend/cmd/realtime`, `src/backend/cmd/worker` (cờ `--profile` nhận `events`, `chat`, `jobs`, `all`) và module `identity`, `learning`, `game`, `competition`, `chat`, `realtime` theo cấu trúc `src/backend/modules/<module>/{api/, internal/{domain,application,infrastructure,presentation}/, ent/, migrations/, module.go}` (module `realtime` không có `ent/`, `migrations/`); `go -C src/backend build ./cmd/...` PHẢI thành công | NFR-DEPL-001 · ADR-0074 | — |
 | F001-AC-18 | KHI developer chạy `make up-app EXCEPT=<binary>`, HỆ THỐNG PHẢI chạy các binary còn lại trong container và cho phép chạy binary đó native bằng `make run-core-api`, `make run-realtime` hoặc `make run-worker PROFILE=<profile>` | NFR-DEPL-001 · LOCAL_DEVELOPMENT §3.2, §7 | — |
 | F001-AC-19 | `GET /version` PHẢI trả `binary`, `version`, `commit`, `build_time` (và `profile` với `worker`) được gắn lúc build; ba binary build từ cùng commit PHẢI có cùng `version`, phát hành bằng tag `backend/vX.Y.Z` | NFR-DEPL-001 · DEPLOYMENT §2, §14 · ADR-0074 | — |
-| F001-AC-21 | NẾU mã của một module import gói `modules/<khác>/internal/...`, THÌ `go build` PHẢI fail (quy tắc `internal/` của Go) | NFR-MAINT-001 · ADR-0074 · AGENTS R13 | — |
-| F001-AC-22 | NẾU module A import `modules/<B>/api` mà A không có trong `x-allowed-callers` của operation nào trong `specs/openapi/modules/<B>.internal.v1.yaml`, THÌ `make arch-check` (cấu hình `depguard`/`go-arch-lint` sinh từ spec internal) PHẢI fail trong job `arch` của `go.yml`; import `modules/<B>/api` của module có trong `x-allowed-callers` PHẢI được phép | NFR-MAINT-001 · ADR-0074 · AGENTS R13, R29 | — |
-| F001-AC-23 | NẾU `pkg/**` import `modules/**`, hoặc `cmd/<binary>` truy cập module khác ngoài hàm `Register` trong `modules/<module>/module.go`, THÌ `make arch-check` PHẢI fail | NFR-MAINT-001 · ADR-0074 | — |
+| F001-AC-21 | NẾU mã của một module import gói `src/backend/modules/<khác>/internal/...`, THÌ `go build` PHẢI fail (quy tắc `internal/` của Go) | NFR-MAINT-001 · ADR-0074 · AGENTS R13 | — |
+| F001-AC-22 | NẾU module A import `src/backend/modules/<B>/api` mà A không có trong `x-allowed-callers` của operation nào trong `specs/openapi/modules/<B>.internal.v1.yaml`, THÌ `make arch-check` (cấu hình `depguard`/`go-arch-lint` sinh từ spec internal) PHẢI fail trong job `arch` của `go.yml`; import `src/backend/modules/<B>/api` của module có trong `x-allowed-callers` PHẢI được phép | NFR-MAINT-001 · ADR-0074 · AGENTS R13, R29 | — |
+| F001-AC-23 | NẾU `src/backend/pkg/**` import `src/backend/modules/**`, hoặc `src/backend/cmd/<binary>` truy cập module khác ngoài hàm `Register` trong `src/backend/modules/<module>/module.go`, THÌ `make arch-check` PHẢI fail | NFR-MAINT-001 · ADR-0074 | — |
 
 ---
 
@@ -134,7 +140,7 @@ Developer sao lưu/khôi phục database của một module trước thử nghi�
 
 | FR (PRD) | Phần feature này làm | Tài liệu sở hữu quy tắc |
 |---|---|---|
-| FR-OPS-001 | `pkg/health` + cổng quản trị cho `core-api`, `realtime`, `worker` | DEPLOYMENT §14, BACKEND_DESIGN §14 |
+| FR-OPS-001 | `src/backend/pkg/health` + cổng quản trị cho `core-api`, `realtime`, `worker` | DEPLOYMENT §14, BACKEND_DESIGN §14 |
 | FR-OPS-002 | Compose local, `.env.example`, job migrate theo module, backup/restore local | LOCAL_DEVELOPMENT §3–§7 |
 | FR-OPS-004 | `.gitignore`, gitleaks, secret qua `_FILE`, secret theo GitHub Environment | SECURITY_ARCHITECTURE §6, DEPLOYMENT §10.3, §13 |
 | FR-OPS-005 | Workflow GitHub Actions theo lane + path filter, branch protection, `check-workflows` | DEPLOYMENT §10, ADR-0088 |
@@ -146,7 +152,7 @@ Developer sao lưu/khôi phục database của một module trước thử nghi�
 ### Key Entities
 
 - **Binary**: `core-api` (REST public của mọi module, route `game-admin`, handler NATS request/reply), `realtime` (WebSocket, không DB), `worker` (profile `events`, `chat`, `jobs`; local `all`); mỗi binary một cổng quản trị và một image.
-- **Module skeleton**: `modules/<module>/` gồm facade `api/` (sinh từ spec internal), `internal/` theo Clean Architecture + CQRS, `ent/`, `migrations/`, `module.go` (`Register`).
+- **Module skeleton**: `src/backend/modules/<module>/` gồm facade `api/` (sinh từ spec internal), `internal/` theo Clean Architecture + CQRS, `ent/`, `migrations/`, `module.go` (`Register`).
 - **Database của module**: database PostgreSQL riêng trên một cụm, bộ role `<module>_*`, các schema namespace của module.
 - **Workflow CI**: một lane GitHub Actions (`.github/workflows/<lane>.yml`) với path filter, required status check, runner và environment theo ADR-0088.
 
@@ -182,10 +188,17 @@ Developer sao lưu/khôi phục database của một module trước thử nghi�
 - Realm Keycloak và route APISIX (`/api/v1/*` → `core-api`, `/realtime/v1` → `realtime`) → F004 (F001 chỉ khai báo container `keycloak`, `apisix` trong compose).
 - Lane `design.yml` → F005; `web.yml` → F050; `godot.yml` (export Windows/Android/Web trên runner Linux, iOS trên runner macOS) → F060, ký và phát hành 4 nền tảng → F133. F001 chỉ đặt quy ước runner/environment và kiểm bằng `check-workflows` (F001-AC-25).
 - Seed dữ liệu nghiệp vụ của từng module → F010 trở đi; Swarm staging/production, job deploy thật, backup PITR, DR → F130; dashboard/alert → F131.
-- Khung web (`web/`) → F050; khung Godot (`godot/`) → F060; design tokens → F005.
+- Khung web (`src/cms/frontend/`) → F050; khung Godot (`src/game/`) → F060; design tokens → F005.
 
 ## Assumptions
 
 - ADR-0074 và ADR-0088 Accepted (2026-11-17); cổng, tên biến, tên target theo LOCAL_DEVELOPMENT §3.2, §4, §7 và DEPLOYMENT §3.1, §10.
 - Runner GitHub-hosted có Docker cho testcontainers; repository có quyền cấu hình branch protection/rulesets và GitHub Environments (Owner repo áp cấu hình bằng script `scripts/ci/apply-repo-settings.sh` dùng `gh api` [Proposed]; F001 kiểm lại bằng cùng script ở chế độ `--check`).
 - Image `migrate` chứa migration của mọi module; job `migrate --module=<module>` là đơn vị áp migration ([DEPLOYMENT §3.1](../../docs/11-operations/DEPLOYMENT.md)).
+- Ghi nhận khi triển khai (2026-11-17):
+  - floci bật `FLOCI_SERVICES_S3_ENFORCE_AUTH` chỉ nhận credential mặc định `test`/`test` → local/CI dùng giá trị này (staging/production theo ADR-0075).
+  - `sis-mock` dùng `stoplight/prism:4` (prism 5 lỗi khi khởi động).
+  - Atlas chạy bằng image ghim `arigaio/atlas:0.38.0` trong mạng compose; Atlas cảnh báo bản này sắp hết hỗ trợ → nâng phiên bản trong `tools/versions.mk` khi có tag mới.
+  - CI dùng Go `stable` mới nhất (bản patch vá CVE của thư viện chuẩn); máy dev nên cập nhật Go lên bản patch mới nhất.
+  - Required status check của `main` chỉ gồm job `security.yml` (luôn chạy). Lane có path filter (`go`, `specs`, `docs`) không đặt required trực tiếp được (workflow bị bỏ qua sẽ treo "pending"); cần thêm job cổng không có path filter tổng hợp kết quả lane đã chạy [Proposed, việc tiếp theo].
+  - Không commit file secret giả hay module có lỗ hổng: `test-gitleaks.sh`, `test-vuln-scan.sh` sinh fixture lúc chạy.

@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F043, F044, F052, F055, F057 (bộ lọc tenant), F050, F051.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; nạp golden dataset dashboard của F043; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; nạp golden dataset dashboard của F043; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Chuẩn bị dữ liệu: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` làm bài giao do `qlcm.truong.a` tạo (F055); một học sinh làm rất nhanh để có cờ `rapid_guess`.
 - Tài khoản: `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`, `ad.donvi`, `sa.admin`, `sm.antoan`, `cm.noidung`.
 
@@ -39,7 +39,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter ops-ui test -- src/dashboard
 pnpm --filter portal test -- src/workspaces/school-lms/dashboard
 pnpm --filter portal exec playwright test e2e/dashboard

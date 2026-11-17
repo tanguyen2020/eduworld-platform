@@ -26,7 +26,7 @@
 
 - [ ] T007 [P] [US1] Test F131-AC-02: `check-metric-catalog` với `/metrics` fixture thiếu metric/thiếu label `service` hoặc `module` → exit ≠ 0, liệt kê đúng — file: `scripts/obs/check-metric-catalog.test.mjs` — phải FAIL trước khi code
 - [ ] T008 [P] [US1] Test F131-AC-06: `check-label-policy` phát hiện label cấm trong rule/dashboard/fixture metric — file: `scripts/obs/check-label-policy.test.mjs`
-- [ ] T009 [P] [US1] Go test F131-AC-01: `swarm-exporter` với Docker API giả xuất đúng 4 metric — file: `tools/swarm-exporter/internal/collector/collector_test.go`
+- [ ] T009 [P] [US1] Go test F131-AC-01: `swarm-exporter` với Docker API giả xuất đúng 4 metric — file: `src/backend/tools/swarm-exporter/internal/collector/collector_test.go`
 - [ ] T010 [P] [US1] Test F131-AC-05 (TC-AUTH-060): chạy Collector với cấu hình production trên log/span fixture chứa JWT/email/SĐT/mật khẩu mẫu → đầu ra đã che — file: `deploy/observability/otel-collector/tests/redaction_test.sh`
 - [ ] T011 [P] [US1] Kịch bản staging F131-AC-01, F131-AC-03, F131-AC-04: target `up`, trace xuyên `core-api` → facade → NATS → `worker` + log cùng `trace_id`, tỷ lệ sampling — file: `tests/obs/staging/trace_e2e.sh`
 - [ ] T012 [P] [US1] Kịch bản staging F131-AC-07: `ad.truong.a` và nhân sự không MFA bị Grafana từ chối; truy vấn Loki có audit — file: `tests/obs/staging/access_control.sh`
@@ -36,7 +36,7 @@
 - [ ] T013 [US1] Collector staging/production: receiver OTLP + filelog, processor `redaction`, `tail_sampling` (lỗi, > 1 s), `probabilistic_sampler` 10%, exporter Tempo/Loki/Prometheus — file: `deploy/observability/otel-collector/collector.production.yaml`
 - [ ] T014 [US1] Prometheus `dockerswarm_sd_configs` (role tasks, label `prometheus.scrape`), `sample_limit`, scrape exporter — file: `deploy/observability/prometheus/prometheus.production.yml`
 - [ ] T015 [P] [US1] Loki (`app_log_retention`, tenant `audit-ops`), Tempo (`metrics_generator` service graph) — file: `deploy/observability/loki/loki.yaml`
-- [ ] T016 [P] [US1] `swarm-exporter` (socket proxy chỉ `GET`) + Dockerfile non-root — file: `tools/swarm-exporter/cmd/swarm-exporter/main.go`
+- [ ] T016 [P] [US1] `swarm-exporter` (socket proxy chỉ `GET`) + Dockerfile non-root — file: `src/backend/tools/swarm-exporter/cmd/swarm-exporter/main.go`
 - [ ] T017 [US1] Thêm service observability, exporter global, Grafana (OAuth Keycloak, `role_attribute_strict`), GlitchTip vào stack; label `prometheus.scrape=true` cho `core-api`, `realtime`, `worker-*` — file: `deploy/swarm/production/infra.stack.yml`
 - [ ] T018 [US1] `check-metric-catalog.mjs`, `check-label-policy.mjs` + job `obs-label-policy` (workflow `obs.yml`) và `obs-metric-catalog` (sau deploy staging trong `release.yml`) — file: `.github/workflows/obs.yml`
 
@@ -92,14 +92,14 @@
 
 ### Tests cho User Story 4
 
-- [ ] T033 [P] [US4] Go test F131-AC-17: `BeforeSend` của `pkg/otel` xóa body/header nhạy cảm, gắn `trace_id`/`service`/`module`/`version` — file: `pkg/otel/errortracking_test.go` — phải FAIL trước khi code
-- [ ] T034 [P] [US4] Test F131-AC-18: webhook GlitchTip → GitHub Issue khử trùng theo `issue_id` (mock HTTP có nhãn MOCK) — file: `tools/glitchtip-bridge/bridge_test.go`
+- [ ] T033 [P] [US4] Go test F131-AC-17: `BeforeSend` của `src/backend/pkg/otel` xóa body/header nhạy cảm, gắn `trace_id`/`service`/`module`/`version` — file: `src/backend/pkg/otel/errortracking_test.go` — phải FAIL trước khi code
+- [ ] T034 [P] [US4] Test F131-AC-18: webhook GlitchTip → GitHub Issue khử trùng theo `issue_id` (mock HTTP có nhãn MOCK) — file: `src/backend/tools/glitchtip-bridge/bridge_test.go`
 - [ ] T035 [P] [US4] Test F131-AC-19, F131-AC-20 (TC-AUTH-044): k6 script với server giả trả 5xx/429 + `Retry-After` → metric `result` đúng, không retry dồn, không gọi endpoint attempt — file: `tests/synthetic/k6/student_login.test.js`
 
 ### Implementation cho User Story 4
 
-- [ ] T036 [US4] Tích hợp `sentry-go` trong `pkg/otel` (`SendDefaultPII=false`, `BeforeSend`), DSN qua `EW_ERROR_TRACKING_DSN_FILE` — file: `pkg/otel/errortracking.go`
-- [ ] T037 [P] [US4] `glitchtip-bridge` (webhook → GitHub Issues, label `module:<name>`/`service:<binary>`) — file: `tools/glitchtip-bridge/main.go`
+- [ ] T036 [US4] Tích hợp `sentry-go` trong `src/backend/pkg/otel` (`SendDefaultPII=false`, `BeforeSend`), DSN qua `EW_ERROR_TRACKING_DSN_FILE` — file: `src/backend/pkg/otel/errortracking.go`
+- [ ] T037 [P] [US4] `glitchtip-bridge` (webhook → GitHub Issues, label `module:<name>`/`service:<binary>`) — file: `src/backend/tools/glitchtip-bridge/main.go`
 - [ ] T038 [US4] Script k6 `client_config.js`, `student_login.js` (login → session → logout), service `synthetic-probe` + rule `SyntheticProbeFailing` — file: `tests/synthetic/k6/student_login.js`
 - [ ] T039 [US4] Seed tenant QA + `hs.qa.probe` cho staging/production qua CSV import (F011), loại trừ khỏi `student-inactive-cleanup` — file: `deploy/seed/qa-tenant/README.md`
 

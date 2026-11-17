@@ -47,4 +47,4 @@ Client gọi qua `ApiClient` (token game, `X-Tenant-Id` của phiên, `Accept-La
 ## 6. Delta cần thực hiện
 
 - Không có delta riêng của F119; phụ thuộc delta của F116 (`params` quick message, `category_code` trong lỗi), F118 (`toggleMessageReaction`, `CHAT_REACTION_LIMIT`), F117 (`chat_channel_ids` trong message trận).
-- Fixture GdUnit4 sinh từ example OpenAPI/AsyncAPI (`godot/tests/fixtures/chat/`).
+- Fixture GdUnit4 sinh từ example OpenAPI/AsyncAPI (`src/game/tests/fixtures/chat/`).

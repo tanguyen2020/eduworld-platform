@@ -10,7 +10,7 @@ Mở rộng tầng xã hội và thêm tầng live-ops của game client theo [G
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim trong `godot/.godot-version`), static typing bắt buộc |
+| Language/Version | GDScript (Godot 4.x ghim trong `src/game/.godot-version`), static typing bắt buộc |
 | Primary Dependencies | GdUnit4; autoload `ApiClient`, `RealtimeClient`, `SceneRouter`, `AppState`, `EventBus`, `QualityManager`, `ContentCache`; F092 `HubSync`; F071 `SceneRouter.request_area`; F072 `QuestService`/`QuestTracker`; F110 `SocialService`/`FriendsStore`/`FriendsScreen`/`FindFriendsTab`; F119 `ChatDock`; F123 `NotificationService` (deep link `EventBus.ui_requested`); F069 hiển thị phần thưởng |
 | Storage | Không có dữ liệu bền; store trong RAM (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner; integration headless 2 client với docker compose; benchmark `tests/perf/EventCenterBenchmark.tscn` |
@@ -50,7 +50,7 @@ specs/111-godot-clubs-events-social/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/
 │   ├── social/{FindFriendsTab.tscn (sửa: nhóm gợi ý), SuggestionGroup.tscn, JoinFriendButton.tscn,
 │   │           ClubTab.tscn, ClubCard.tscn, ClubPage.tscn, ClubGoalProgress.tscn, ClubEventList.tscn,

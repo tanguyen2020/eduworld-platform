@@ -40,7 +40,7 @@
 
 ```bash
 make godot-test
-godot --headless --path godot -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/unit/competition -a res://tests/scene/competition -a res://tests/contract/competition
+godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/unit/competition -a res://tests/scene/competition -a res://tests/contract/competition
 make design-tokens-check
 ```
 

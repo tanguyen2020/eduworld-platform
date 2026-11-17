@@ -7,7 +7,7 @@
 
 ## 1. Phạm vi
 
-Tài liệu này mô tả cách đóng gói, triển khai, phát hành và vận hành EduWorld trên 4 môi trường. Backend là **modular monolith** ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md), thay ADR-0036): một Go module, 5 module domain (`identity`, `learning`, `game`, `competition`, `chat`) + module `realtime`, đóng gói thành **3 binary** (`core-api`, `realtime`, `worker`) và triển khai thành 5 Swarm service theo hồ sơ chạy (§3.1). Mỗi module domain có database riêng (ADR-0037) trên **một cụm PostgreSQL** chung. Module gọi nhau trong tiến trình qua facade sinh từ spec internal (`pkg/modcall`), không có HTTP nội bộ; phản ứng phụ đi qua outbox → NATS JetStream (ADR-0042); `realtime` gửi lệnh tới `core-api` qua NATS request/reply.
+Tài liệu này mô tả cách đóng gói, triển khai, phát hành và vận hành EduWorld trên 4 môi trường. Backend là **modular monolith** ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md), thay ADR-0036): một Go module, 5 module domain (`identity`, `learning`, `game`, `competition`, `chat`) + module `realtime`, đóng gói thành **3 binary** (`core-api`, `realtime`, `worker`) và triển khai thành 5 Swarm service theo hồ sơ chạy (§3.1). Mỗi module domain có database riêng (ADR-0037) trên **một cụm PostgreSQL** chung. Module gọi nhau trong tiến trình qua facade sinh từ spec internal (`src/backend/pkg/modcall`), không có HTTP nội bộ; phản ứng phụ đi qua outbox → NATS JetStream (ADR-0042); `realtime` gửi lệnh tới `core-api` qua NATS request/reply.
 
 Nền tảng chạy container là **Docker** (ADR-0024, Accepted): Docker Compose cho local/dev, **Docker Engine chế độ Swarm** cho staging/production. **Chưa dùng Kubernetes.** Topology ứng dụng đã chốt bằng ADR-0074 (trả lời OQ-10); nhà cung cấp cloud tại VN hay on-prem, managed hay tự vận hành là lựa chọn mua sắm còn [TBD]; yêu cầu lưu trữ dữ liệu tại Việt Nam phụ thuộc **OQ-12**. Các con số dưới đây là mặc định **[Proposed]**, đủ để dựng staging từ Phase 1.
 
@@ -29,15 +29,15 @@ Quy tắc:
 
 ### 3.1. Binary và Swarm service backend (ADR-0074)
 
-Mã nguồn là một Go module ở gốc repository (`go.mod` duy nhất): `modules/<module>/` (facade `api/`, `internal/`, `module.go`), `pkg/` (platform kit), `cmd/` (composition root của từng binary). Image đẩy lên GitHub Container Registry (`ghcr.io/<org>/eduworld/<image>`, ADR-0088).
+Mã nguồn backend là một Go module ở `src/backend/` (`src/backend/go.mod` duy nhất, module path `github.com/tanguyen2020/eduworld-platform/src/backend`; [ADR-0092](../adr/ADR-0092-to-chuc-ma-nguon-trong-src.md)): `src/backend/modules/<module>/` (facade `api/`, `internal/`, `module.go`), `src/backend/pkg/` (platform kit), `src/backend/cmd/` (composition root của từng binary). Docker build context là gốc repository, Dockerfile chép mã từ `src/backend/` (ADR-0092). Image đẩy lên GitHub Container Registry (`ghcr.io/<org>/eduworld/<image>`, ADR-0088).
 
 | Swarm service | Image (binary) | Module nạp | Database kết nối | Nội dung | Replica |
 |---|---|---|---|---|---|
-| `core-api` | `eduworld/core-api` (`cmd/core-api`) | `identity`, `learning`, `game`, `competition`, `chat` | 5 database module (mỗi module một pool, role của module đó) | REST public `/api/v1/*`, route `game-admin`/`admin`/`sis` cho gateway nội bộ, handler NATS request/reply `ew.cmd.<module>.>` cho lệnh từ realtime; room host của module competition (hub instance, battle/co-op state machine, lease theo room trong Valkey, input `ew.in.room.<room_id>`) | ≥ 2 |
-| `realtime` | `eduworld/realtime` (`cmd/realtime`) | `realtime` | Không (chỉ Valkey, NATS) | Kết thúc WebSocket `/realtime/v1`, xác thực ticket, presence, định tuyến lệnh/sự kiện qua NATS và Valkey Pub/Sub; không nạp module domain, không có database | ≥ 2, drain khi deploy (§11.2) |
-| `worker-events` | `eduworld/worker` (`cmd/worker --profile=events`) | 5 module domain | 5 database module | Outbox relay (role `<module>_relay`), consumer event domain (projection `ref_*`, quest progress, reward/XP, mastery, rollup dashboard, analytics, membership Keycloak, audit sink), `media-processor`, `content-snapshot-builder`, `dashboard-export` | ≥ 1 (thường 2) |
-| `worker-chat` | `eduworld/worker` (`cmd/worker --profile=chat`) | `chat` | `eduworld_chat` | `chat-persister`, `chat-notifier`, `chat-moderation-async`, `chat-stats`, `chat-channel-closer`, `gameplay-chat-purge` (role `chat_purger`, ADR-0033) | ≥ 1 (thường 2) |
-| `worker-jobs` | `eduworld/worker` (`cmd/worker --profile=jobs`) | 5 module domain | 5 database module | Job định kỳ có khóa leader (§7): `game-session-timeout`, `student-inactive-cleanup` (saga), `sis-sync`, matchmaker loop, tournament scheduler, leaderboard snapshot, `dashboard-day-close`, auto-submit đề hết giờ, `partition-maintainer`/`infra-partition-maintenance` (ADR-0089) | 2 (một giữ khóa leader, một dự phòng) |
+| `core-api` | `eduworld/core-api` (`src/backend/cmd/core-api`) | `identity`, `learning`, `game`, `competition`, `chat` | 5 database module (mỗi module một pool, role của module đó) | REST public `/api/v1/*`, route `game-admin`/`admin`/`sis` cho gateway nội bộ, handler NATS request/reply `ew.cmd.<module>.>` cho lệnh từ realtime; room host của module competition (hub instance, battle/co-op state machine, lease theo room trong Valkey, input `ew.in.room.<room_id>`) | ≥ 2 |
+| `realtime` | `eduworld/realtime` (`src/backend/cmd/realtime`) | `realtime` | Không (chỉ Valkey, NATS) | Kết thúc WebSocket `/realtime/v1`, xác thực ticket, presence, định tuyến lệnh/sự kiện qua NATS và Valkey Pub/Sub; không nạp module domain, không có database | ≥ 2, drain khi deploy (§11.2) |
+| `worker-events` | `eduworld/worker` (`src/backend/cmd/worker --profile=events`) | 5 module domain | 5 database module | Outbox relay (role `<module>_relay`), consumer event domain (projection `ref_*`, quest progress, reward/XP, mastery, rollup dashboard, analytics, membership Keycloak, audit sink), `media-processor`, `content-snapshot-builder`, `dashboard-export` | ≥ 1 (thường 2) |
+| `worker-chat` | `eduworld/worker` (`src/backend/cmd/worker --profile=chat`) | `chat` | `eduworld_chat` | `chat-persister`, `chat-notifier`, `chat-moderation-async`, `chat-stats`, `chat-channel-closer`, `gameplay-chat-purge` (role `chat_purger`, ADR-0033) | ≥ 1 (thường 2) |
+| `worker-jobs` | `eduworld/worker` (`src/backend/cmd/worker --profile=jobs`) | 5 module domain | 5 database module | Job định kỳ có khóa leader (§7): `game-session-timeout`, `student-inactive-cleanup` (saga), `sis-sync`, matchmaker loop, tournament scheduler, leaderboard snapshot, `dashboard-day-close`, auto-submit đề hết giờ, `partition-maintainer`/`infra-partition-maintenance` (ADR-0089) | 2 (một giữ khóa leader, một dự phòng) |
 
 Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của mọi module, chạy như job `migrate --module=<module>` trước khi rollout (§12). Một profile worker hỏng hoặc quá tải không chặn profile khác; chat tăng đột biến chỉ cần tăng replica `worker-chat` (ADR-0074 mục 2).
 
@@ -47,15 +47,15 @@ Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của m�
 
 | Thành phần | Image / artifact | Nguồn | Ghi chú |
 |---|---|---|---|
-| Admin Portal (5 workspace) | `eduworld/web-portal` | `web/apps/portal` (`vite build`) | Static trên CDN public `portal.<domain>`; mã mỗi workspace là chunk lazy-load (không phải lớp bảo mật). API workspace platform (`/api/v1/game-admin/*`, `/api/v1/admin/*`) chỉ trên APISIX nội bộ/VPN, yêu cầu MFA (ADR-0027 mục 3, 7) |
-| Godot client | Artifact | `godot/` | 4 nền tảng Windows, Android, iOS, Web, phát hành từ pilot (ADR-0013, ADR-0073) |
-| Godot content packs | `.pck` / asset bundle | `godot/` + CMS | Object storage + CDN, manifest phiên bản |
+| Admin Portal (5 workspace) | `eduworld/web-portal` | `src/cms/frontend/apps/portal` (`vite build`) | Static trên CDN public `portal.<domain>`; mã mỗi workspace là chunk lazy-load (không phải lớp bảo mật). API workspace platform (`/api/v1/game-admin/*`, `/api/v1/admin/*`) chỉ trên APISIX nội bộ/VPN, yêu cầu MFA (ADR-0027 mục 3, 7) |
+| Godot client | Artifact | `src/game/` | 4 nền tảng Windows, Android, iOS, Web, phát hành từ pilot (ADR-0013, ADR-0073) |
+| Godot content packs | `.pck` / asset bundle | `src/game/` + CMS | Object storage + CDN, manifest phiên bản |
 | Keycloak | `quay.io/keycloak/keycloak:26.x` + theme/provider | `deploy/keycloak/` | Build optimized image |
 | APISIX | `apache/apisix:3.x` | `deploy/apisix/` | Config declarative trong Git |
 | PostgreSQL | `postgres:17` (hoặc managed) | `deploy/postgres/` (init script tạo database/role theo module) | Extension: `pgcrypto`, `pg_stat_statements`, `unaccent` |
 | Valkey | `valkey/valkey:8` | — | |
 | Object storage | local/CI: **floci** (ADR-0044); staging/production: **S3-compatible managed tại Việt Nam** (ưu tiên) hoặc **Garage/SeaweedFS ≥ 3 node** tự host có replication — chọn sau spike [TBD] ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md), [Confirmed — Technical Architect 2026-11-17]; thay ADR-0071) | `deploy/object-storage/` (bucket, policy, lifecycle) | 6 bucket theo ADR-0044 (§9b) |
-| Media pipeline | Thư viện `pkg/media` chạy trong profile `worker-events` (consumer `media-processor`, `content-snapshot-builder`); image phụ `eduworld/media-tools` (ffmpeg, libvips, gltf-transform) | `modules/*/` + `deploy/media/` | Tách thành profile/Swarm service riêng (`--profile=media`) khi tải lớn [Proposed] |
+| Media pipeline | Thư viện `src/backend/pkg/media` chạy trong profile `worker-events` (consumer `media-processor`, `content-snapshot-builder`); image phụ `eduworld/media-tools` (ffmpeg, libvips, gltf-transform) | `src/backend/modules/*/` + `deploy/media/` | Tách thành profile/Swarm service riêng (`--profile=media`) khi tải lớn [Proposed] |
 | ClamAV | `clamav/clamav:stable` (clamd + freshclam) | — | Media worker quét file trong quarantine qua TCP clamd |
 | NATS | `nats:2.10-alpine` (JetStream) | `deploy/nats/` (server config, account/user JWT, không chứa secret) | Cluster 3 node; `prometheus-nats-exporter` |
 | Observability | otel-collector, prometheus, grafana, loki, tempo | `deploy/observability/` | ADR-0023 |
@@ -180,7 +180,7 @@ Swarm overlay network tách lớp; một service chỉ được gắn vào netwo
 | Data | PostgreSQL, Valkey, NATS, etcd | Chỉ từ App/Worker/Identity |
 | Ops | Observability, bastion, APISIX internal | Từ VPN quản trị |
 
-Gọi đồng bộ giữa module diễn ra trong tiến trình nên tầng mạng không thấy và không cần chặn. **Ma trận gọi facade** được cưỡng chế lúc build: quy tắc `internal/` của Go chặn import vào bên trong module, `depguard`/`go-arch-lint` chỉ cho module import `modules/<khác>/api` khi có trong `x-allowed-callers` của operation (ADR-0074 mục 1). Ở runtime, ranh giới dữ liệu do role DB theo module (mỗi pool chỉ `CONNECT` database của module đó) và quyền NATS theo binary bảo đảm. Tầng mạng chỉ chặn ở mức network (binary không gắn `data` thì không tới được database). Firewall host (nftables/security group) chỉ mở cổng Swarm giữa các node (2377/tcp tới manager, 7946/tcp+udp, 4789/udp, ESP cho overlay mã hóa) và cổng publish của LB/APISIX.
+Gọi đồng bộ giữa module diễn ra trong tiến trình nên tầng mạng không thấy và không cần chặn. **Ma trận gọi facade** được cưỡng chế lúc build: quy tắc `internal/` của Go chặn import vào bên trong module, `depguard`/`go-arch-lint` chỉ cho module import `src/backend/modules/<khác>/api` khi có trong `x-allowed-callers` của operation (ADR-0074 mục 1). Ở runtime, ranh giới dữ liệu do role DB theo module (mỗi pool chỉ `CONNECT` database của module đó) và quyền NATS theo binary bảo đảm. Tầng mạng chỉ chặn ở mức network (binary không gắn `data` thì không tới được database). Firewall host (nftables/security group) chỉ mở cổng Swarm giữa các node (2377/tcp tới manager, 7946/tcp+udp, 4789/udp, ESP cho overlay mã hóa) và cổng publish của LB/APISIX.
 
 Ma trận gọi facade cho phép (cưỡng chế bằng linter, không phải tầng mạng) — [Proposed]:
 
@@ -465,16 +465,18 @@ flowchart LR
 
 | Workflow (`.github/workflows/`) | Kích hoạt khi thay đổi | Job chính |
 |---|---|---|
-| `specs.yml` | `specs/**` | `specs-lint` (`make specs-lint`), `specs-breaking` (oasdiff public + internal), `node scripts/specs/check-features.mjs`, `node scripts/specs/check-cross-features.mjs`, `node scripts/specs/check-portal-catalog.mjs` (danh mục menu/action ↔ `x-portal-action`, ADR-0090) |
-| `go.yml` | `modules/**`, `pkg/**` (bật mọi module), `cmd/**`, `specs/openapi/modules/**`, `specs/events/**`, `specs/asyncapi/**`, `go.mod` | `changes` (paths-filter → danh sách module) → matrix `test` theo module (`make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` với `MOD=<module>`) → `arch` (toàn repo: `make arch-check`, `make test-contract` — facade test khi đổi spec internal, chạy cho module đích và mọi module trong `x-allowed-callers`) → `build-check` (`go build ./cmd/...`) |
-| `release.yml` | `push` lên `main` có thay đổi `modules/**`, `pkg/**`, `cmd/**`, `deploy/**`; tag `backend/vX.Y.Z` | `build-image` (3 image `core-api`, `realtime`, `worker` + `migrate`, push GHCR, SBOM, cosign) → `scan` → `deploy-dev`; tag → `deploy-staging` (environment `staging`) → `e2e` → `deploy-production` (environment `production`, cần phê duyệt) |
+| `specs.yml` | `specs/**`, `scripts/specs/**`, `scripts/openapi/**`, `scripts/ci/**`, `scripts/package*.json`, `.github/**` | `make specs-lint`, `make specs-breaking` (oasdiff public + internal), `check-features`, `check-cross-features`, `check-portal-catalog` (ADR-0090) (trong `specs-lint`); quy tắc workflow (`check-workflows.mjs` + test), path filter (`test-path-filters.sh`), cổng quản trị (`check-admin-ports.sh`) |
+| `go.yml` | `src/backend/**`, `tools/**`, `Makefile`, `specs/openapi/modules/**`, `specs/events/**`, `specs/asyncapi/**`, `deploy/postgres/**` | `changes` (paths-filter + `.github/module-filters.yml` → danh sách module; nhóm `shared` — `src/backend/pkg/**`, `cmd/**`, `go.mod`, `tools/**`, `test/**`, `Makefile`, `deploy/postgres/**`, spec event/AsyncAPI — bật mọi module) → matrix `test (<module>)` (`make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` với `MOD=<module>`) → `arch` (`go -C src/backend build ./cmd/...`, `make arch-check`, `test-arch-fixtures.sh`, `make test-contract`, integration test của `cmd/`, `pkg/`) → `db-privileges` (test cô lập database + `make migrate` + `make db-privileges`) |
+| `release.yml` | `push` lên `main` có thay đổi `src/backend/**`, `deploy/docker/**`; tag `backend/vX.Y.Z` | `build-image` (matrix 4 image `core-api`, `realtime`, `worker`, `migrate`: build → Trivy image chặn Critical/High có bản vá → `check-image.sh` → push GHCR tag `git sha` + version, không `latest` → SBOM (Syft) → ký cosign keyless) → `deploy-staging` (khung, chỉ khi `vars.DEPLOY_ENABLED == 'true'`, runner `[self-hosted, deploy]`, environment `staging`, chặn fork); bước deploy thật và `deploy-production` do F130 |
 | `design.yml` | `design/**` | `make design-tokens-check` rồi gọi lại `godot.yml` và `web.yml` (`workflow_call`) (ADR-0047) |
-| `godot.yml` | `godot/**`, `specs/**`, `design/game-tokens/**`, `design/shared-tokens/**` | lint, GdUnit4 headless, benchmark TC-PERF-018, export 4 target (Windows, Android, Web trên Linux; iOS trên macOS runner) |
-| `web.yml` | `web/**`, `specs/openapi/**`, `design/admin-tokens/**`, `design/shared-tokens/**` | ESLint + stylelint, test, build portal, Storybook (`web/packages/ops-ui`), visual regression Playwright |
-| `render-thumbnails.yml` | Asset 3D mới/đổi trong `godot/assets/models/**` hoặc `workflow_dispatch` từ job publish | Godot headless render thumbnail/turntable → object storage (WORLD_RENDERING §8.3) |
+| `godot.yml` | `src/game/**`, `specs/**`, `design/game-tokens/**`, `design/shared-tokens/**` | lint, GdUnit4 headless, benchmark TC-PERF-018, export 4 target (Windows, Android, Web trên Linux; iOS trên macOS runner) |
+| `web.yml` | `src/cms/frontend/**`, `specs/openapi/**`, `design/admin-tokens/**`, `design/shared-tokens/**` | ESLint + stylelint, test, build portal, Storybook (`src/cms/frontend/packages/ops-ui`), visual regression Playwright |
+| `render-thumbnails.yml` | Asset 3D mới/đổi trong `src/game/assets/models/**` hoặc `workflow_dispatch` từ job publish | Godot headless render thumbnail/turntable → object storage (WORLD_RENDERING §8.3) |
 | `deploy-config.yml` | `deploy/**` | APISIX diff, Keycloak config diff, NATS config, compose validate |
-| `docs.yml` | `docs/**`, `README.md`, `scripts/docs/**`, `specs/openapi/eduworld-api.v1.yaml` | `npm ci --prefix scripts` → `node scripts/docs/check-mermaid.mjs` → `node scripts/docs/check-links.mjs` → `node scripts/docs/build-rtm.mjs --check` ([TRACEABILITY_MATRIX](../12-project/TRACEABILITY_MATRIX.md)); tương đương `make docs-check` |
-| `security.yml` | **Luôn chạy** (mọi PR và push) | gitleaks, govulncheck, trivy fs, npm audit |
+| `docs.yml` | `docs/**`, `*.md`, `specs/**/*.md`, `scripts/docs/**`, `specs/openapi/eduworld-api.v1.yaml` | `make docs-check`: `check-mermaid.mjs` → `check-links.mjs` → `build-rtm.mjs --check` ([TRACEABILITY_MATRIX](../12-project/TRACEABILITY_MATRIX.md)) |
+| `security.yml` | **Luôn chạy** (mọi PR và push) | `gitleaks` (`.gitleaks.toml`), `govulncheck` (`src/backend`), `osv-scanner` (đệ quy, gồm npm lockfile), `trivy-fs` (vuln + misconfig, Critical/High có bản vá) |
+
+Mọi workflow: `permissions: contents: read` mặc định, action bên thứ ba ghim SHA đầy đủ, Go `stable` mới nhất (`check-latest`, vì CVE của thư viện chuẩn được vá ở bản patch); kiểm bằng `node scripts/ci/check-workflows.mjs`. Nguồn chuẩn là file trong `.github/workflows/`; khung dưới đây chỉ minh họa.
 
 Ví dụ khung workflow (trích):
 
@@ -483,10 +485,10 @@ Ví dụ khung workflow (trích):
 name: go
 on:
   pull_request:
-    paths: ["modules/**", "pkg/**", "cmd/**", "specs/openapi/modules/**", "specs/events/**", "specs/asyncapi/**", "go.mod"]
+    paths: ["src/backend/**", "tools/**", "Makefile", "specs/openapi/modules/**", "specs/events/**", "specs/asyncapi/**", "deploy/postgres/**"]
   push:
     branches: [main]
-    paths: ["modules/**", "pkg/**", "cmd/**", "specs/openapi/modules/**", "specs/events/**", "specs/asyncapi/**", "go.mod"]
+    paths: ["src/backend/**", "tools/**", "Makefile", "specs/openapi/modules/**", "specs/events/**", "specs/asyncapi/**", "deploy/postgres/**"]
 permissions: { contents: read }
 jobs:
   changes:
@@ -495,7 +497,7 @@ jobs:
     steps:
       - uses: actions/checkout@<sha>
       - id: filter
-        uses: dorny/paths-filter@<sha>          # ghim SHA; mỗi module một filter, thay đổi pkg/** hoặc go.mod bật mọi module
+        uses: dorny/paths-filter@<sha>          # ghim SHA; mỗi module một filter, thay đổi src/backend/pkg/** hoặc src/backend/go.mod bật mọi module
         with: { filters: .github/module-filters.yml }
   test:
     needs: changes
@@ -505,7 +507,7 @@ jobs:
     steps:
       - uses: actions/checkout@<sha>
       - uses: actions/setup-go@<sha>
-        with: { go-version-file: go.mod }
+        with: { go-version: stable, check-latest: true }
       - run: make gen-check MOD=${{ matrix.mod }}        # ent + oapi-codegen (facade api/) không lệch
       - run: make lint MOD=${{ matrix.mod }}             # gofmt, golangci-lint, go-arch-lint tầng Clean Architecture
       - run: make test MOD=${{ matrix.mod }}             # unit
@@ -517,10 +519,10 @@ jobs:
     steps:
       - uses: actions/checkout@<sha>
       - uses: actions/setup-go@<sha>
-        with: { go-version-file: go.mod }
-      - run: make arch-check                              # ranh giới module: chỉ import modules/<khác>/api có trong x-allowed-callers
+        with: { go-version: stable, check-latest: true }
+      - run: make arch-check                              # ranh giới module: chỉ import src/backend/modules/<khác>/api có trong x-allowed-callers
       - run: make test-contract                          # facade test theo spec internal
-      - run: go build ./cmd/...                          # 3 binary nối đủ module
+      - run: go -C src/backend build ./cmd/...           # 3 binary nối đủ module
 
 # .github/workflows/release.yml (trích job deploy staging)
   deploy-staging:
@@ -535,7 +537,7 @@ jobs:
 
 ### 10.3. Quy tắc
 
-- Pull request phải xanh mới merge; `main` được bảo vệ, cần ≥ 1 approval (≥ 2 cho thay đổi `deploy/`, `migrations/`, `pkg/`, `cmd/`, spec internal, module `identity`), có review CODEOWNERS theo module.
+- Pull request phải xanh mới merge; `main` được bảo vệ, cần ≥ 1 approval (≥ 2 cho thay đổi `deploy/`, `migrations/`, `src/backend/pkg/`, `src/backend/cmd/`, spec internal, module `identity`), có review CODEOWNERS theo module.
 - Đổi spec internal của module X phải chạy facade test của X và mọi module trong `x-allowed-callers` của X; compiler bắt lệch chữ ký ngay trong PR. Spec public vẫn chặn breaking change bằng oasdiff.
 - Secret CI là **GitHub encrypted secrets** theo **environment** (`dev`, `staging`, `production`); environment `production` bật required reviewers (Release Manager) và chỉ cho tag `*/v*`; workflow mặc định `permissions: contents: read`, chỉ job cần mới cấp thêm (`packages: write` cho GHCR, `id-token: write` cho ký cosign); action bên thứ ba ghim theo SHA commit.
 - Deploy production cần approval của Release Manager, ngoài giờ học cao điểm (22:00–06:00 hoặc cuối tuần) trừ hotfix.
@@ -572,7 +574,7 @@ Một tính năng chạm nhiều module domain được phát hành trong cùng 
 
 ## 12. Migration trong deploy (ADR-0039)
 
-1. Mỗi module có thư mục `modules/<module>/migrations/` do **Atlas** sinh từ ent schema (versioned migrations), review SQL trong merge request; CI chạy `atlas migrate lint` (chặn thao tác phá hủy, cột string thiếu giới hạn độ dài theo ADR-0041, thiếu `tenant_id`/`deleted_at`).
+1. Mỗi module có thư mục `src/backend/modules/<module>/migrations/` do **Atlas** sinh từ ent schema (versioned migrations), review SQL trong merge request; CI chạy `atlas migrate lint` (chặn thao tác phá hủy, cột string thiếu giới hạn độ dài theo ADR-0041, thiếu `tenant_id`/`deleted_at`).
 2. Job migrate chạy **trước** rollout `core-api`/`worker`, mỗi database module một **one-off Swarm service** (`docker service create --mode replicated-job --restart-condition none --network data --secret <module>_migrator_dsn ghcr.io/<org>/eduworld/migrate:<tag> --module=<module>`), lần lượt 5 module; CI chờ mọi task `Complete` rồi mới `docker stack deploy`; credential `<module>_migrator`, timeout 10 phút, `lock_timeout` 5 s.
 3. Migration nặng dùng `CREATE INDEX CONCURRENTLY` trong file không-transaction riêng.
 4. Partition theo tháng/ngày được tạo trước bởi job `partition-maintainer` của từng module (profile `worker-jobs`).

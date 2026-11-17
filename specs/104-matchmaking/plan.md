@@ -11,9 +11,9 @@ Module `matchmaking` trong module `competition`. API nhận ticket (REST, `Idemp
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream + core request/reply), go-redis (Valkey), `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/idempotency`, `pkg/natsx`, `pkg/clock`, `pkg/ids` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream + core request/reply), go-redis (Valkey), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/natsx`, `src/backend/pkg/clock`, `src/backend/pkg/ids` |
 | Storage | PostgreSQL `eduworld_competition` (schema `competition`, `ref`, `infra`); Valkey `ew:competition:mm:*` (ephemeral) |
-| Testing | go test + testcontainers (PostgreSQL, Valkey, NATS); đồng hồ giả `pkg/clock`; k6 WS cho TC-PERF-004 |
+| Testing | go test + testcontainers (PostgreSQL, Valkey, NATS); đồng hồ giả `src/backend/pkg/clock`; k6 WS cho TC-PERF-004 |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`, `worker-jobs` cho matchmaker) |
 | Project Type | backend module |
 | Performance Goals | NFR-PERF-007; vòng matchmaker < 1 s ([MATCHMAKING §10](../../docs/03-social-multiplayer/MATCHMAKING.md#10-metrics--alert)) |
@@ -54,7 +54,7 @@ specs/104-matchmaking/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── ent/schema/
 │   ├── match.go, match_participant.go       # mới (cột theo data-model)
 │   ├── duel.go, competition_restriction.go  # mới
@@ -101,7 +101,7 @@ Không có. Thuật toán (hard constraint → soft scoring, expanding window, g
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `QueueKey`, `HardConstraints` (H1–H7), `Cost`, `Window(t)`, `Pairing`, `TeamDraft`, `Proposal` (deadline, accept flags), `Duel` | Invariant: không nới H1–H7; lớp 1–5 `grade_key = g<n>`; lớp 6–9 `b6_7`/`b8_9` |
-| application | Command `CreateTicket`, `CancelTicket`, `AcceptProposal`, `DeclineProposal`, `RunMatchmakerTick`, `CreateMatch`, `CreateDirectProposal` (cho F107), `StartBotMatch`, `ExpireTickets`, `CreateDuel`, `AcceptDuel`, `DeclineDuel`, `ExpireDuels` · Query `GetTicket`, `ListCompetitionModes` | Command/query tách (ADR-0087); log/trace/idempotency ở middleware `pkg/httpx`, authz tường minh đầu handler, validation trong DTO/handler |
+| application | Command `CreateTicket`, `CancelTicket`, `AcceptProposal`, `DeclineProposal`, `RunMatchmakerTick`, `CreateMatch`, `CreateDirectProposal` (cho F107), `StartBotMatch`, `ExpireTickets`, `CreateDuel`, `AcceptDuel`, `DeclineDuel`, `ExpireDuels` · Query `GetTicket`, `ListCompetitionModes` | Command/query tách (ADR-0087); log/trace/idempotency ở middleware `src/backend/pkg/httpx`, authz tường minh đầu handler, validation trong DTO/handler |
 | infrastructure | Valkey store (Lua cho tạo proposal nguyên tử: ZREM + HSET status), ent repo, outbox, realtime publisher | Key `ew:competition:mm:*` |
 | presentation | Handler `createMatchmakingTicket`, `getMatchmakingTicket`, `cancelMatchmakingTicket`, `acceptMatchProposal`, `declineMatchProposal`, `startBotMatch`, `listCompetitionModes`, `createDuel`, `acceptDuel`, `declineDuel`; NATS command handler; consumer; job | |
 

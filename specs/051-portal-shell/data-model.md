@@ -4,7 +4,7 @@
 
 ## 1. Entity
 
-Không áp dụng — F051 là client (`web/apps/portal`), không tạo/sửa bảng hay migration. Dữ liệu bền vững thuộc module `identity` (F010, F012). Dưới đây là **model phía client** để code đúng, không phải bảng.
+Không áp dụng — F051 là client (`src/cms/frontend/apps/portal`), không tạo/sửa bảng hay migration. Dữ liệu bền vững thuộc module `identity` (F010, F012). Dưới đây là **model phía client** để code đúng, không phải bảng.
 
 ### Trạng thái phiên (bộ nhớ, `session/sessionMachine.ts`)
 

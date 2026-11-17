@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.7 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-17 (ADR-0091: đăng nhập portal qua backend — §3.3, cookie + CSRF, `portal_login_rate`; ADR-0090: `featuregate` không phải lớp authz; ADR-0074: gọi giữa module trong tiến trình thay token service-to-service, phân vùng mạng và NATS user theo binary/Swarm service; ADR-0076 Rejected: bỏ đăng nhập QR/PIN/mật khẩu hình; Windows mặc định máy dùng chung, màn "Tiếp tục là…"; PII/grooming luôn chạy và giờ giới nghiêm — ADR-0078; object storage theo ADR-0075) · 2026-11-16 (ADR-0086)
 > Liên quan: [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0005..0009, 0016, 0020, 0040](../adr/README.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [CHILD_SAFETY](CHILD_SAFETY.md) · [ANTI_CHEAT](ANTI_CHEAT.md) · [MODERATION](../03-social-multiplayer/MODERATION.md)
 
-> **Thay đổi v0.7 (ADR-0074, thay ADR-0036):** backend là modular monolith gồm 3 binary (`core-api`, `realtime`, `worker` chạy 3 profile). Gọi giữa module diễn ra **trong tiến trình** qua facade (`pkg/modcall`), nên bỏ token service-to-service, allowlist `azp` nội bộ và mTLS giữa service; ranh giới giữa module được cưỡng chế bằng compiler + linter (`x-allowed-callers`) và role DB theo module (§5.5). Phân vùng mạng, NATS user và secret tính theo binary/Swarm service (§8, §8.1); database riêng mỗi module trên một cụm (ADR-0037, ADR-0074 mục 4).
+> **Thay đổi v0.7 (ADR-0074, thay ADR-0036):** backend là modular monolith gồm 3 binary (`core-api`, `realtime`, `worker` chạy 3 profile). Gọi giữa module diễn ra **trong tiến trình** qua facade (`src/backend/pkg/modcall`), nên bỏ token service-to-service, allowlist `azp` nội bộ và mTLS giữa service; ranh giới giữa module được cưỡng chế bằng compiler + linter (`x-allowed-callers`) và role DB theo module (§5.5). Phân vùng mạng, NATS user và secret tính theo binary/Swarm service (§8, §8.1); database riêng mỗi module trên một cụm (ADR-0037, ADR-0074 mục 4).
 >
 > **Thay đổi v0.3:** backend là 6 microservice (ADR-0036, nay thay bằng ADR-0074) — thêm ranh giới tin cậy giữa service, xác thực service-to-service, NATS user theo service, database riêng mỗi service.
 
@@ -16,7 +16,7 @@
 ## 1. Nguyên tắc
 
 1. **Zero trust với client:** Godot và SPA là môi trường không tin cậy; mọi kết quả có giá trị do server quyết định (ADR-0016).
-2. **Defense in depth:** APISIX → authn/authz trong `core-api` (ent interceptor) → RLS PostgreSQL → audit; giữa module: facade có `x-allowed-callers` được linter và `pkg/modcall` kiểm, ngữ cảnh tenant/Principal truyền trong tiến trình (ADR-0074).
+2. **Defense in depth:** APISIX → authn/authz trong `core-api` (ent interceptor) → RLS PostgreSQL → audit; giữa module: facade có `x-allowed-callers` được linter và `src/backend/pkg/modcall` kiểm, ngữ cảnh tenant/Principal truyền trong tiến trình (ADR-0074).
 3. **Least privilege:** role DB theo database của module (mỗi pool chỉ dùng role của module đó), Valkey ACL theo module, NATS user theo Swarm service, network segment tối thiểu theo binary; chỉ module identity có Keycloak client `svc-identity` (Keycloak Admin API). Không module nào dùng credential database của module khác.
 4. **Privacy by default:** dữ liệu tối thiểu, nickname thay tên thật, mọi tin nhắn qua kiểm duyệt theo chính sách (ADR-0020, ADR-0030); bước PII và phát hiện grooming luôn chạy, không có công tắc tắt (ADR-0078, [MODERATION §12](../03-social-multiplayer/MODERATION.md#12-công-tắc-kiểm-duyệt-moderation-switches--adr-0030)).
 5. **Secure by configuration:** không secret trong code/Git; cấu hình qua env + secret manager.
@@ -102,7 +102,7 @@ sequenceDiagram
   AX->>AX: verify signature (JWKS cache 10'), exp, iss, aud, có X-Tenant-Id
   AX->>GO: request nghiệp vụ (giữ nguyên Authorization, X-Tenant-Id)
   GO->>GO: verify lại (go-oidc, JWKS cache)
-  GO->>IDS: facade principals:resolve trong tiến trình (pkg/modcall, cache 60s)
+  GO->>IDS: facade principals:resolve trong tiến trình (src/backend/pkg/modcall, cache 60s)
   IDS-->>GO: Principal (tenant đã kiểm tra khớp header + membership, permission từ UserRole)
   GO->>GO: authz.Require(ctx, p, perm, resource) + TenantScope (ent interceptor: tenant_id + deleted_at IS NULL) + RLS app.tenant_id
   C->>AX: POST /auth/game/token:refresh {refresh_token, device_id, mode=renew hoặc resume} (rotation, reuse detection, gắn thiết bị qua IDS)
@@ -215,8 +215,8 @@ Admin Portal không còn chuyển hướng OIDC (Authorization Code + PKCE của
 | **Authz** | Permission (catalog trong code) gom thành Role (DB) và gán qua UserRole có scope (platform/tenant/school/class/subject) và thời hạn (ADR-0066) + ownership + policy (chat, party). Route portal yêu cầu `azp = eduworld-portal` và `user_type = staff` (`403 PORTAL_ACCESS_STAFF_ONLY`); nhân sự platform và nhân sự trường đều là `staff`, phân biệt bằng role (role platform `tenant_id = NULL`) và tenant gốc, không bằng `user_type` (ADR-0081). Route `/api/v1/game-admin/*`, `/api/v1/admin/*` yêu cầu thêm `azp = eduworld-portal` + MFA (`acr`) + role platform (ADR-0027) | — |
 | **Validation** | Request validation sinh từ OpenAPI; giới hạn độ dài chuỗi; chuẩn hóa Unicode NFC; whitelist enum | — |
 | **Data access** | ent (query tham số hóa, interceptor tenant + soft-delete), SQL tường minh tham số hóa cho read model, RLS (ADR-0005/0039); mỗi module chỉ dùng pool database của mình | SQL ghép chuỗi; truy cập database module khác |
-| **Module ↔ module** | Facade sinh từ spec internal; linter chặn import ngoài `x-allowed-callers`, `pkg/modcall` kiểm lại lúc chạy (`403 CALLER_NOT_ALLOWED`); `TenantScope` và Principal gốc truyền trong context, bên nhận vẫn kiểm tenant tồn tại/hoạt động (§5.5) | Import `internal/` của module khác; gọi facade không khai báo |
-| **Featuregate (chỉ portal)** | Middleware `featuregate` (`pkg/httpx`) sau xác thực/tenant và trước `authz.Require`: action/menu đang tắt (ADR-0090) → `403 FEATURE_DISABLED`. Đây là công tắc vận hành, **không** phải lớp authorization: bật lại một action không cấp thêm quyền, mọi kiểm tra permission/tenant vẫn chạy ([API_DESIGN §11](../07-backend/API_DESIGN.md)) | Thay authz; dùng để phân quyền theo người |
+| **Module ↔ module** | Facade sinh từ spec internal; linter chặn import ngoài `x-allowed-callers`, `src/backend/pkg/modcall` kiểm lại lúc chạy (`403 CALLER_NOT_ALLOWED`); `TenantScope` và Principal gốc truyền trong context, bên nhận vẫn kiểm tenant tồn tại/hoạt động (§5.5) | Import `internal/` của module khác; gọi facade không khai báo |
+| **Featuregate (chỉ portal)** | Middleware `featuregate` (`src/backend/pkg/httpx`) sau xác thực/tenant và trước `authz.Require`: action/menu đang tắt (ADR-0090) → `403 FEATURE_DISABLED`. Đây là công tắc vận hành, **không** phải lớp authorization: bật lại một action không cấp thêm quyền, mọi kiểm tra permission/tenant vẫn chạy ([API_DESIGN §11](../07-backend/API_DESIGN.md)) | Thay authz; dùng để phân quyền theo người |
 | **Audit** | Mỗi module phát `audit.recorded` qua outbox; module identity ghi `audit.audit_logs` (append-only, partition tháng, không UPDATE/DELETE) | Ghi nội dung nhạy cảm (mật khẩu, token, nội dung chat đầy đủ) |
 
 ## 5. Mô hình ủy quyền
@@ -248,7 +248,7 @@ Role hệ thống seed sẵn (`is_system = true`):
 ### 5.2. Permission catalog và bất biến
 
 ```go
-// pkg/authz/catalog.go — mọi binary nạp lúc khởi động (AGENTS R20)
+// src/backend/pkg/authz/catalog.go — mọi binary nạp lúc khởi động (AGENTS R20)
 type Permission string // "lms.assignment.write", "game.quest.write", "competition.config.season.write", ...
 
 type ScopeKind string // "tenant" | "platform"
@@ -262,7 +262,7 @@ type RoleDef struct {
 // Nhóm permission cấm với role tenant (ADR-0027).
 var platformOnlyPrefixes = []string{"game.", "competition.config.", "platform."}
 
-// ValidateCatalog chạy khi khởi động module identity (nơi sở hữu catalog) và trong unit test của pkg/authz.
+// ValidateCatalog chạy khi khởi động module identity (nơi sở hữu catalog) và trong unit test của src/backend/pkg/authz.
 // Vi phạm → tiến trình không start.
 func ValidateCatalog(roles []RoleDef) error {
     for _, r := range roles {
@@ -316,14 +316,14 @@ func ValidateCatalog(roles []RoleDef) error {
   | `platform.role.read` / `platform.role.write` | Platform-only | `system_admin` | `/admin/roles*`, `/admin/permissions` |
   | `platform.user_role.write` | Platform-only | `system_admin` | `/admin/user-roles*` |
 
-- Catalog do **module identity** sở hữu; module khác nhận permission hiệu lực của Principal qua facade `principals:resolve` (trong tiến trình) và kiểm tra bằng `pkg/authz` (không tự định nghĩa role).
+- Catalog do **module identity** sở hữu; module khác nhận permission hiệu lực của Principal qua facade `principals:resolve` (trong tiến trình) và kiểm tra bằng `src/backend/pkg/authz` (không tự định nghĩa role).
 - Màn quản trị Role/UserRole trong Admin Portal: Tenant Admin (`tenant.role.write`, `tenant.user_role.write`) trong tenant mình; System Admin (`platform.role.write`, `platform.user_role.write`) cho role platform và mọi tenant ([ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [API_DESIGN §9.16](../07-backend/API_DESIGN.md#916-admin-internal--apiv1admin)).
 - `GET /api/v1/me/permissions` (tenant theo header `X-Tenant-Id`, ADR-0065; System Admin bỏ header = phạm vi platform) trả danh sách permission hiệu lực của Principal trong tenant đó, dùng để dựng menu SPA. Không phải nguồn quyết định quyền.
 
 ### 5.3. Policy check
 
 ```go
-// pkg/authz
+// src/backend/pkg/authz
 type Resource struct {
     Type      string     // "attempt", "class", "channel", "quest", ...
     ID        uuid.UUID
@@ -386,8 +386,8 @@ Module gọi nhau **trong tiến trình** qua facade sinh từ `specs/openapi/mo
 | `identity` | mọi module: nhóm `platform/*` (saga clone, Thùng rác, cleanup/restore học sinh, merge, anonymize) |
 | `realtime` | Không gọi facade; chỉ NATS (`ew.cmd.>`, `ew.in.>`) tới `core-api` |
 
-- **Cưỡng chế lúc build:** quy tắc `internal/` của Go chặn import vào bên trong module; `depguard`/`go-arch-lint` và analyzer `x-allowed-callers` (`make arch-check`) chỉ cho import `modules/<khác>/api` và gọi operation khi module gọi có tên trong `x-allowed-callers`; vi phạm chặn merge.
-- **Cưỡng chế lúc chạy:** `pkg/modcall` kiểm lại module gọi theo `x-allowed-callers` và trả `403 CALLER_NOT_ALLOWED` + audit `module_call_denied` (lớp phòng thủ cuối, không thay linter).
+- **Cưỡng chế lúc build:** quy tắc `internal/` của Go chặn import vào bên trong module; `depguard`/`go-arch-lint` và analyzer `x-allowed-callers` (`make arch-check`) chỉ cho import `src/backend/modules/<khác>/api` và gọi operation khi module gọi có tên trong `x-allowed-callers`; vi phạm chặn merge.
+- **Cưỡng chế lúc chạy:** `src/backend/pkg/modcall` kiểm lại module gọi theo `x-allowed-callers` và trả `403 CALLER_NOT_ALLOWED` + audit `module_call_denied` (lớp phòng thủ cuối, không thay linter).
 - Không có access token nào đi giữa module. Principal gốc (on-behalf) và `TenantScope` truyền qua `context.Context`; quyền nghiệp vụ của người dùng được kiểm ở use case nhận request đầu tiên, module nhận vẫn kiểm tenant tồn tại/hoạt động và tài nguyên thuộc scope.
 - Operation nhóm `platform/*` chỉ cho `identity` gọi và luôn kèm `job_id`/`Idempotency-Key` + lý do để audit.
 - Ranh giới dữ liệu vẫn ở mức database: pool của mỗi module dùng role chỉ `CONNECT` được database của module đó, nên lỗi hoặc chiếm quyền trong một module không đọc được database module khác bằng SQL.
@@ -474,7 +474,7 @@ LaTeX do người biên tập nhập trên Admin Portal và **SVG do trình duy�
 | **APISIX** | Token giả → JWKS verify | Header injection `X-User-*` → strip; `X-Tenant-Id` giả → `core-api` so với token + membership (ADR-0065) | Access log tập trung (không body route đăng nhập) | Lộ route nội bộ → không publish | Flood → `limit-req`, `limit-conn`, LB protection | Cấu hình sai → config-as-code + review |
 | **`core-api` (REST public)** | Token của client khác (`azp`) | Mass assignment → DTO tách model, OpenAPI validation | Audit log thao tác nhạy cảm | IDOR cross-tenant → TenantScope + RLS + 404 | Query nặng → pagination bắt buộc, timeout ctx | Lỗi authz → bảng policy test, deny mặc định |
 | **realtime** | Dùng lại ticket → GETDEL 1 lần | Forge lệnh/header → chỉ user NATS `realtime` publish `ew.cmd.>`; module sở hữu validate | Tin chat vào JetStream trước fan-out | Subscribe channel trường khác → kiểm tra quyền | Kết nối treo/flood → heartbeat, queue bounded, 4429 | — |
-| **Facade (module ↔ module, trong tiến trình)** | Module gọi facade không được phép → linter `x-allowed-callers` chặn merge, `pkg/modcall` trả `403 CALLER_NOT_ALLOWED` | Ngữ cảnh sai → bên nhận kiểm tenant/quyền với `TenantScope` trong context | Principal gốc trong context, audit theo use case | Module đọc database module khác → role DB chỉ `CONNECT` database của mình | Một module chậm/panic kéo cả `core-api` → recover middleware, deadline theo thao tác, nhiều replica, giới hạn tài nguyên (ADR-0074 hệ quả) | Module bị lỗi gọi platform ops → chỉ `identity` trong `x-allowed-callers`, kèm job_id + audit |
+| **Facade (module ↔ module, trong tiến trình)** | Module gọi facade không được phép → linter `x-allowed-callers` chặn merge, `src/backend/pkg/modcall` trả `403 CALLER_NOT_ALLOWED` | Ngữ cảnh sai → bên nhận kiểm tenant/quyền với `TenantScope` trong context | Principal gốc trong context, audit theo use case | Module đọc database module khác → role DB chỉ `CONNECT` database của mình | Một module chậm/panic kéo cả `core-api` → recover middleware, deadline theo thao tác, nhiều replica, giới hạn tài nguyên (ADR-0074 hệ quả) | Module bị lỗi gọi platform ops → chỉ `identity` trong `x-allowed-callers`, kèm job_id + audit |
 | **NATS** | Publish giả lệnh/event → user + quyền subject theo Swarm service | Event sửa → chỉ relay `worker-events` publish `ew.evt.>`, mỗi module chỉ ghi outbox của mình | Stream lưu + audit | Đọc stream ngoài phạm vi → quyền subscribe tối thiểu | Flood → giới hạn account, max payload | — |
 | **Worker / SIS (module identity)** | SIS webhook giả → HMAC signature + IP allowlist | Dữ liệu SIS bẩn → staging + reconciliation | Sync run log | Rò SIS credential → secret manager, chỉ Swarm service chạy adapter SIS | SIS chậm → timeout, retry backoff, circuit breaker | Service account Keycloak quá quyền → chỉ `manage-users` realm `eduworld` |
 | **PostgreSQL** | Kết nối trái phép → overlay network `data` + pg_hba theo user/database + password/TLS | SQLi → ent/SQL tham số hóa | WAL + audit | Backup rò → mã hóa backup | Bảng lớn → partition, statement_timeout | `BYPASSRLS` lạm dụng → chỉ `<module>_platform`, audit; lộ credential một DB không ảnh hưởng DB khác |
@@ -553,7 +553,7 @@ Các chương trọng tâm: V2 Authentication (do Keycloak, cấu hình theo KEY
 
 ### 13.4. Authorization test matrix
 
-Tự sinh test từ bảng `permissions × roles × scope relation` (cùng lớp / khác lớp cùng trường / khác trường / khác tenant) cho mọi operation **của mọi module**; kỳ vọng 2xx hoặc 403/404. Bổ sung ma trận facade: mỗi operation spec internal × mọi module gọi → chỉ module trong `x-allowed-callers` biên dịch được (`make arch-check`) và gọi được lúc chạy, module khác nhận `403 CALLER_NOT_ALLOWED` từ `pkg/modcall`. Bắt buộc pass trong CI (Master Prompt §22 Multi-tenancy).
+Tự sinh test từ bảng `permissions × roles × scope relation` (cùng lớp / khác lớp cùng trường / khác trường / khác tenant) cho mọi operation **của mọi module**; kỳ vọng 2xx hoặc 403/404. Bổ sung ma trận facade: mỗi operation spec internal × mọi module gọi → chỉ module trong `x-allowed-callers` biên dịch được (`make arch-check`) và gọi được lúc chạy, module khác nhận `403 CALLER_NOT_ALLOWED` từ `src/backend/pkg/modcall`. Bắt buộc pass trong CI (Master Prompt §22 Multi-tenancy).
 
 Route người chơi: test tự sinh mỗi route × {school_admin, tenant_admin, safety_moderator, system_admin} → `403 GAME_ACCESS_STUDENT_ONLY` (cơ chế ở §5.3b). Endpoint internal: cơ chế ở §5.5.
 
@@ -619,7 +619,7 @@ Renovate/Dependabot mở MR cập nhật hằng tuần; base image distroless/`a
 | Secret scan | `gitleaks` | Mỗi MR |
 | DAST | OWASP ZAP baseline với API staging | Hàng tuần |
 | Authz matrix test | Test tự động mọi endpoint × role × tenant | Mỗi MR |
-| Module-to-module | `make arch-check` chặn import/gọi facade ngoài `x-allowed-callers`; test `pkg/modcall` trả `403 CALLER_NOT_ALLOWED` khi gọi sai; role DB của module A không `CONNECT` được database module B; NATS user không publish được subject ngoài quyền | Mỗi MR (lint + integration) |
+| Module-to-module | `make arch-check` chặn import/gọi facade ngoài `x-allowed-callers`; test `src/backend/pkg/modcall` trả `403 CALLER_NOT_ALLOWED` khi gọi sai; role DB của module A không `CONNECT` được database module B; NATS user không publish được subject ngoài quyền | Mỗi MR (lint + integration) |
 | Pentest | Bên thứ ba | Trước production (Phase 6) |
 | WebSocket fuzz (envelope sai, message type lạ, flood) | Fuzzer nội bộ | Nightly |
 | Anti-cheat (sửa client, replay, speed hack vị trí, thời gian trả lời) | Kịch bản [ANTI_CHEAT](ANTI_CHEAT.md) | Mỗi phase từ P2 |

@@ -6,7 +6,7 @@
 
 - [ ] T001 Khởi tạo `design/package.json` (style-dictionary@4, fontkit, script `build`, `check`, `test`), `design/README.md` quy trình đổi token, `design/CHANGELOG.md` `tokens@0.1.0` — file: `design/package.json`
 - [ ] T002 [P] Target `make design-tokens` (build web + JSON Godot + Godot headless) và `make design-tokens-check` (build vào thư mục tạm rồi so) — file: `Makefile`
-- [ ] T003 [P] Ghim phiên bản Godot nếu chưa có — file: `godot/.godot-version`
+- [ ] T003 [P] Ghim phiên bản Godot nếu chưa có — file: `src/game/.godot-version`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -32,13 +32,13 @@
 - [ ] T012 [P] [US1] Test F005-AC-04: alias hỏng, vòng lặp, literal ở semantic → fail — file: `design/checks/aliases.test.mjs`
 - [ ] T013 [P] [US1] Test F005-AC-05, F005-AC-06: màu nghiệp vụ khai báo ngoài shared → fail; thiếu biến thể → fail; giá trị trùng giữa đầu ra game và web (TC-UI-008) — file: `design/checks/domain-variants.test.mjs`
 - [ ] T014 [P] [US1] Test F005-AC-07: đầu ra Godot không có token admin, đầu ra web không có token game (TC-UI-010) — file: `design/checks/separation.test.mjs`
-- [ ] T015 [P] [US1] Test GdUnit4: `.tres` sinh nạp được, có biến thể density, `UiTokens` compile typed — file: `godot/tests/unit/theme/test_generated_theme.gd`
+- [ ] T015 [P] [US1] Test GdUnit4: `.tres` sinh nạp được, có biến thể density, `UiTokens` compile typed — file: `src/game/tests/unit/theme/test_generated_theme.gd`
 
 ### Implementation cho User Story 1
 
 - [ ] T016 [P] [US1] Transform + format `antd-theme.mjs`, `css-vars.mjs` — file: `design/sd/formats/antd-theme.mjs`
 - [ ] T017 [P] [US1] Format `godot-json.mjs`, `gdscript-tokens.mjs` — file: `design/sd/formats/gdscript-tokens.mjs`
-- [ ] T018 [US1] Script Godot headless dựng `Theme`, biến thể density, `ShaderMaterial`/`Environment`/`Gradient` từ JSON trung gian — file: `tools/godot/build_theme.gd`
+- [ ] T018 [US1] Script Godot headless dựng `Theme`, biến thể density, `ShaderMaterial`/`Environment`/`Gradient` từ JSON trung gian — file: `src/game/tools/build_theme.gd`
 - [ ] T019 [US1] Bộ kiểm `aliases.mjs`, `domain-variants.mjs`, `separation.mjs`, `generated.mjs` gọi từ `pnpm --dir design check` — file: `design/checks/aliases.mjs`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.

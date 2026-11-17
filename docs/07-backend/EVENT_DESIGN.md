@@ -5,7 +5,7 @@
 
 > **Thay đổi v0.3:** domain event giữa các module đi qua transactional outbox trong database của từng module → NATS JetStream (stream `EVT_<MODULE>`, subject `ew.evt.<module>.<event_type>`), thay Valkey Streams (ADR-0042). Cột "Producer" trong catalog ghi tên domain con; domain con thuộc module nào theo [DOMAIN_MODEL §1](../06-architecture/DOMAIN_MODEL.md).
 >
-> **Thay đổi v0.6 (ADR-0074):** backend là modular monolith, nhưng mỗi module vẫn có database và transaction riêng nên domain event vẫn là cơ chế tích hợp giữa module (không gọi thẳng handler của module khác). Outbox relay và consumer domain event chạy ở profile `worker-events`, consumer của `CHAT_MESSAGES` ở `worker-chat`, job ở `worker-jobs` (binary `cmd/worker`); `core-api` chỉ ghi outbox trong transaction. Stream, subject và tên consumer không đổi.
+> **Thay đổi v0.6 (ADR-0074):** backend là modular monolith, nhưng mỗi module vẫn có database và transaction riêng nên domain event vẫn là cơ chế tích hợp giữa module (không gọi thẳng handler của module khác). Outbox relay và consumer domain event chạy ở profile `worker-events`, consumer của `CHAT_MESSAGES` ở `worker-chat`, job ở `worker-jobs` (binary `src/backend/cmd/worker`); `core-api` chỉ ghi outbox trong transaction. Stream, subject và tên consumer không đổi.
 
 ## 1. Hai loại event
 
@@ -134,7 +134,7 @@ Realtime push tới client **không** là consumer JetStream: module xử lý ev
 
 ## 4. Catalog domain events
 
-Producer/consumer ghi theo domain con (package trong `modules/<module>/internal/domain`); domain con → module: identity/tenancy/organization/sis/audit → **module identity**; content/curriculum/activity/exam/learning_record/learning_analytics/lms → **module learning**; game_session/quest/minigame/gamification/reward → **module game**; party/multiplayer/competition/ranking/leaderboard/tournament/season → **module competition**; friend/chat/moderation/notification → **module chat**; RT = đẩy realtime qua Valkey Pub/Sub tới binary `realtime`. Bản đồ consumer giữa module: §3.2.
+Producer/consumer ghi theo domain con (package trong `src/backend/modules/<module>/internal/domain`); domain con → module: identity/tenancy/organization/sis/audit → **module identity**; content/curriculum/activity/exam/learning_record/learning_analytics/lms → **module learning**; game_session/quest/minigame/gamification/reward → **module game**; party/multiplayer/competition/ranking/leaderboard/tournament/season → **module competition**; friend/chat/moderation/notification → **module chat**; RT = đẩy realtime qua Valkey Pub/Sub tới binary `realtime`. Bản đồ consumer giữa module: §3.2.
 
 **Feature sở hữu schema (R33, ADR-0082).** Mỗi event có đúng một module phát (cột Producer) và, trong module đó, đúng một feature sở hữu: feature hiện thực use case phát event, ghi event trong mục "Event / outbox" của `specs/<NNN>-*/data-model.md` và tạo `specs/events/payloads/<module>/<event_type>.v<N>.schema.json`. Feature khác cùng phát (vd. thêm trường tương thích) ghi "owner F<NNN>" trên dòng event; feature tiêu thụ chỉ tham chiếu schema, không tạo. Event chung `audit.recorded` có một schema ở `payloads/common/` (owner F003). Cột Producer có thể ghi mã feature (vd. `quest (F103)`) và khi đó phải khớp feature sở hữu. Kiểm tra: `node scripts/specs/check-cross-features.mjs` (`--list` in bảng module:event → feature).
 
@@ -528,7 +528,7 @@ Actor xAPI dùng `account { homePage: "https://eduworld.vn", name: <pseudonymous
 | At-least-once | Consumer bắt buộc idempotent (`infra.processed_events` trong database của module nhận) |
 | Retry | Lỗi tạm thời: `Nak` với delay theo `NumDelivered`: 1′, 5′, 30′ (`BackOff` của consumer); `ack_wait` 60 s |
 | DLQ | `NumDelivered > 5` hoặc lỗi không phục hồi (schema invalid) → publish `ew.dlq.<module>.<consumer>` (stream `DLQ_<MODULE>`) + bản ghi `infra.dead_letters` (database của module nhận) + `Term` message gốc; cảnh báo vận hành |
-| Replay | Trong 7 ngày: tạo consumer tạm với `DeliverByStartTime`; xa hơn: `cmd/worker replay --module=<module phát> --from <time>` đọc `infra.outbox_events` của module phát (30 ngày) và publish lại (khử trùng nhờ `Nats-Msg-Id` + `processed_events`) |
+| Replay | Trong 7 ngày: tạo consumer tạm với `DeliverByStartTime`; xa hơn: `src/backend/cmd/worker replay --module=<module phát> --from <time>` đọc `infra.outbox_events` của module phát (30 ngày) và publish lại (khử trùng nhờ `Nats-Msg-Id` + `processed_events`) |
 | Poison message | Không chặn consumer; luôn chuyển DLQ |
 
 ## 8. Retention

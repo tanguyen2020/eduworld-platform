@@ -89,7 +89,7 @@ Một bạn rớt mạng thì cả nhóm vẫn chơi tiếp (nếu hoạt độn
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F101-AC-19 | HỆ THỐNG PHẢI trả `403 GAME_ACCESS_STUDENT_ONLY` cho `setPartyReady`, `selectPartyActivity`, `startPartySession`, `listPartyEligibleActivities` khi token không phải token game của học sinh | AGENTS R23 · ADR-0031 | TC-AUTH-014 |
-| F101-AC-20 | NẾU REST hoặc lệnh WS (`party.member.ready_set`, `party.activity.select`, `party.session.start`) tham chiếu party của tenant/trường khác hoặc party người gọi không là thành viên, THÌ module competition PHẢI từ chối (`404 PARTY_NOT_FOUND` / `system.command.failed` `PERMISSION_DENIED`) không tiết lộ party tồn tại; gọi facade `game` PHẢI mang `TenantScope` của party trong context (`pkg/modcall`) | AGENTS R8 · AGENTS R29 · ADR-0065 | TC-TEN-012 |
+| F101-AC-20 | NẾU REST hoặc lệnh WS (`party.member.ready_set`, `party.activity.select`, `party.session.start`) tham chiếu party của tenant/trường khác hoặc party người gọi không là thành viên, THÌ module competition PHẢI từ chối (`404 PARTY_NOT_FOUND` / `system.command.failed` `PERMISSION_DENIED`) không tiết lộ party tồn tại; gọi facade `game` PHẢI mang `TenantScope` của party trong context (`src/backend/pkg/modcall`) | AGENTS R8 · AGENTS R29 · ADR-0065 | TC-TEN-012 |
 
 ### Edge Cases
 

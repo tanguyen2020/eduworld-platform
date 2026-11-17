@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F021, F022, F027, F051 (F023 cho 3 dạng nâng cao); delta contract T005–T009 có backend.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd web && pnpm gen:api && pnpm gen:schemas && pnpm dev`; `pnpm storybook`.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm gen:api && pnpm gen:schemas && pnpm dev`; `pnpm storybook`.
 - Tài khoản demo: `cm.noidung` (content_admin), `cm.duyet` (content_reviewer), `qlcm.truong.a` (academic_manager `th-demo-a`), `ad.truong.b` (tenant khác), `sa.admin`.
 - Ảnh mẫu PNG có alt text; file âm thanh đề bài cho khối 3.
 
@@ -47,7 +47,7 @@
 ```bash
 make web-lint
 make web-test
-cd web && pnpm --filter portal test:e2e -- --grep @F053
+cd src/cms/frontend && pnpm --filter portal test:e2e -- --grep @F053
 make storybook
 ```
 

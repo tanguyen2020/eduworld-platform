@@ -11,7 +11,7 @@ Frontend (chunk `game-ops`): module `chat-assets/` (Sticker pack editor, thư vi
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript strict (React 18, Vite) · Go ≥ 1.24 |
-| Primary Dependencies | Ant Design 5 + Pro, TanStack Query, `apiClient` (F050), `ContentEditorShell`/`SchemaForm` (F079), `BilingualField` (F053), Web Crypto (sha256) · ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/idempotency`, `pkg/outbox`, S3 SDK (floci, ADR-0071), `encoding/xml`, `encoding/csv`, `golang.org/x/text/unicode/norm` |
+| Primary Dependencies | Ant Design 5 + Pro, TanStack Query, `apiClient` (F050), `ContentEditorShell`/`SchemaForm` (F079), `BilingualField` (F053), Web Crypto (sha256) · ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/idempotency`, `src/backend/pkg/outbox`, S3 SDK (floci, ADR-0071), `encoding/xml`, `encoding/csv`, `golang.org/x/text/unicode/norm` |
 | Storage | PostgreSQL `eduworld_game`: `game.config_translation_states` (Mới), `game.translation_jobs` (Mới), đọc bảng item/version của F071–F078; object storage bucket `ew-exports` (file xuất), `media/<sha256>/…` (file nhập qua presign game-media) |
 | Testing | Vitest + Testing Library + MSW (chỉ test, nhãn `MOCK`), Playwright E2E · go test + testcontainers (PostgreSQL, floci) |
 | Target Platform | Trình duyệt desktop (editor), tablet xem · Linux container (`core-api` + `worker`, module `game`) |
@@ -55,7 +55,7 @@ specs/082-game-studio-chat-assets-translations/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/{configtranslationstate.go,translationjob.go}
 ├── internal/domain/i18ntext/{pointers.go,status.go,key.go}          # R1, R3; khóa <config_type>/<id>/<version>/<pointer>
 ├── internal/application/command/translation/{recompute_translation_state.go,export_game_translations.go,
@@ -68,17 +68,17 @@ modules/game/
 ├── internal/presentation/http/public/game_translations.go            # exportGameTranslations, importGameTranslations, getGameTranslationJob
 ├── internal/presentation/job/translation_jobs.go                     # worker profile jobs
 └── tests/{unit,integration,contract}/translation/
-web/packages/ops-ui/src/translations/{TranslationExportDialog.tsx,TranslationImportDialog.tsx,TranslationJobProgress.tsx,TranslationStatusBadge.tsx}
-web/packages/ops-ui/src/upload/{useChecksumUpload.ts,UploadQueue.tsx}
-web/apps/portal/src/workspaces/game-ops/
+src/cms/frontend/packages/ops-ui/src/translations/{TranslationExportDialog.tsx,TranslationImportDialog.tsx,TranslationJobProgress.tsx,TranslationStatusBadge.tsx}
+src/cms/frontend/packages/ops-ui/src/upload/{useChecksumUpload.ts,UploadQueue.tsx}
+src/cms/frontend/apps/portal/src/workspaces/game-ops/
 ├── chat-assets/{routes.tsx,StickerPackListPage.tsx,StickerPackEditor.tsx,StickerGridEditor.tsx,UnlockRulePicker.tsx,
 │                GifLibraryPage.tsx,GifUploadDialog.tsx,GifReviewPanel.tsx,ChatAssetPreview.tsx}
 ├── chat-assets/api/{chatAssets.ts,presignChatAsset.ts}
 ├── translations/{routes.tsx,TranslationsPage.tsx,BilingualConfigFields.tsx,OutdatedDiffDrawer.tsx}
 ├── translations/api/{gameTranslations.ts,gameMediaPresign.ts}
 └── registry/configTypes.ts                                           # thêm sticker-packs, gifs (permission game.chat_assets.write)
-web/apps/portal/src/i18n/locales/{vi,en}/portal.game_ops.json
-web/apps/portal/tests/{unit,e2e}/game-ops/{chat-assets,translations}/
+src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.game_ops.json
+src/cms/frontend/apps/portal/tests/{unit,e2e}/game-ops/{chat-assets,translations}/
 ```
 
 **Structure Decision**: Dịch là bounded context riêng trong module game để không chạm schema của module từng loại; hook tính trạng thái gắn vào command lưu draft chung của F078. UI dùng lại khung editor F079 và dialog dịch tách từ F053 sang `ops-ui` (ADMIN_PORTAL §1.4: một khung editor dùng chung).
@@ -98,7 +98,7 @@ web/apps/portal/tests/{unit,e2e}/game-ops/{chat-assets,translations}/
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `i18ntext.Pointers`, `ComputeStatus(prevMeta, payload, required_languages)`, `TranslationKey` parse/format, `ImportDecision` (R2) | Thuần, test unit |
-| application | Command `RecomputeTranslationState` (gọi trong transaction lưu draft của F078), `ExportGameTranslations`, `ImportGameTranslations`, `RunTranslationJob` · Query `GetGameTranslationJob`, mở rộng `ListGameConfigs` | Permission `game.content.translate`; authz tường minh đầu handler, idempotency middleware `pkg/httpx`, tracing `pkg/observability` |
+| application | Command `RecomputeTranslationState` (gọi trong transaction lưu draft của F078), `ExportGameTranslations`, `ImportGameTranslations`, `RunTranslationJob` · Query `GetGameTranslationJob`, mở rộng `ListGameConfigs` | Permission `game.content.translate`; authz tường minh đầu handler, idempotency middleware `src/backend/pkg/httpx`, tracing `src/backend/pkg/observability` |
 | infrastructure | `XLIFF21Codec`, `CSVCodec` (chặn DTD/entity), `ExportStorage` (S3 `ew-exports`, presign GET theo `report_link_ttl`), repo ent | |
 | presentation | Handler `exportGameTranslations`, `importGameTranslations`, `getGameTranslationJob`; job `translation-jobs` (`worker` profile `jobs`) · Portal gọi `listGameConfigs`, `createGameConfig`, `getGameConfigVersion`, `updateGameConfigDraft`, `transitionGameConfigVersion`, `publishGameConfigVersion`, `rollbackGameConfig`, `unpublishGameConfig`, `listGameConfigVersions`, `diffGameConfigVersions`, `presignChatAssetUpload`, `presignGameMediaUpload`, `getGameMediaAsset`, `exportGameTranslations`, `importGameTranslations`, `getGameTranslationJob`, `getMyPermissions` | |
 

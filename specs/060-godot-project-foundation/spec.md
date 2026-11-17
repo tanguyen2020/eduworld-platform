@@ -1,13 +1,13 @@
 # Feature Specification: F060 — Khung project Godot: autoload, theme sinh từ token, i18n vi/en, CI, Prism mock
 
-**Feature Branch**: `060-godot-project-foundation` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M-C0 · **Phụ thuộc**: F005
+**Feature Branch**: `060-godot-project-foundation` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C0 · **Phụ thuộc**: F005
 **Input**: Khung project Godot 4.x (GDScript static typing) theo GODOT_ARCHITECTURE: autoload nền, phân lớp Service ← Gameplay ← UI, Theme và mật độ theo grade band sinh từ `design/game-tokens/`, song ngữ vi-VN/en-US qua gettext, định dạng theo locale, pipeline CI headless, mock API có nhãn để làm client trước khi backend sẵn sàng, và kho bảo mật `SecureStorage` theo nền tảng để giữ phiên game (ADR-0086) — NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-MAINT-007.
 
 ## Clarifications
 
 ### Session 2026-11-16
 
-- Q: File cấu hình môi trường: `res://config/<env>.json` (GODOT_ARCHITECTURE §4), `res://config/env/<env>.json` (KEYCLOAK_SSO §11) hay `godot/config/env/local.cfg` (LOCAL_DEVELOPMENT §4)? → A: `res://config/env/<env>.json` (JSON, sinh lúc build theo `--env`) — xem [research.md](research.md) R1 [Proposed]; hai tài liệu còn lại sửa ở task tài liệu.
+- Q: File cấu hình môi trường: `res://config/<env>.json` (GODOT_ARCHITECTURE §4), `res://config/env/<env>.json` (KEYCLOAK_SSO §11) hay `src/game/config/env/local.cfg` (LOCAL_DEVELOPMENT §4)? → A: `res://config/env/<env>.json` (JSON, sinh lúc build theo `--env`) — xem [research.md](research.md) R1 [Proposed]; hai tài liệu còn lại sửa ở task tài liệu.
 - Q: `Config` có khóa `oidc_issuer`, `oidc_client_id` (GODOT_ARCHITECTURE §4)? → A: Không. Game đăng nhập qua `POST /auth/game/login` (ADR-0068); gỡ dấu vết OIDC theo D16.
 - Q: Mật độ (density) trước khi có bootstrap (chưa biết khối)? → A: Dùng `g1_3` (chữ/nút lớn nhất) cho màn trước đăng nhập để đạt NFR-A11Y-001; sau bootstrap theo `grade_band` [Proposed].
 - Q: Autoload nào thuộc F060? → A: `Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector` (khung âm lượng), `Settings`; `AuthService`, `ApiClient` → F061; `RealtimeClient` → F092; `ContentCache`, `QualityManager` → F062. Thứ tự giữ đúng bảng GODOT_ARCHITECTURE §4.
@@ -35,7 +35,7 @@ Godot dev mở project đúng phiên bản ghim, có autoload nền theo thứ t
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F060-AC-01 | `godot/project.godot` PHẢI dùng phiên bản trong `godot/.godot-version` và bật `debug/gdscript/warnings/untyped_declaration = error`; NẾU script có khai báo không typed, THÌ CI PHẢI fail | ADR-0014 · [GODOT_ARCHITECTURE §1](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | — |
+| F060-AC-01 | `src/game/project.godot` PHẢI dùng phiên bản trong `src/game/.godot-version` và bật `debug/gdscript/warnings/untyped_declaration = error`; NẾU script có khai báo không typed, THÌ CI PHẢI fail | ADR-0014 · [GODOT_ARCHITECTURE §1](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | — |
 | F060-AC-02 | Autoload PHẢI được khai báo theo thứ tự GODOT_ARCHITECTURE §4 cho các thành phần của feature này (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector`, `Settings`), và `res://scenes/bootstrap/Boot.tscn` PHẢI khởi động được ở chế độ headless | GODOT_ARCHITECTURE §4 · NFR-MAINT-007 | — |
 | F060-AC-03 | `Config` PHẢI đọc `res://config/env/<env>.json` theo tham số `--env`, PHẢI KHÔNG chứa secret hay khóa `oidc_issuer`/`oidc_client_id`; NẾU artifact export chứa client secret, URL token endpoint Keycloak hoặc khóa OIDC, THÌ CI PHẢI fail | ADR-0068 · AGENTS R3, R4 | TC-AUTH-010 |
 | F060-AC-04 | `Log` PHẢI ghi log có cấu trúc vào ring buffer và PHẢI lọc token, mật khẩu, header `Authorization`, họ tên trước khi ghi | AGENTS R14 · GODOT_ARCHITECTURE §4 | — |
@@ -56,11 +56,11 @@ Học sinh lớp 1–3 thấy chữ và nút đủ lớn; mọi màn lấy style
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F060-AC-07 | Mọi `Control` PHẢI lấy style từ `res://resources/ui/theme/eduworld_theme*.tres` sinh bởi F005; NẾU `.tscn` override màu, font hoặc cỡ chữ ngoài allowlist, THÌ `tools/godot/lint_theme_overrides.gd` PHẢI fail | NFR-MAINT-007 · AGENTS R32 · [DESIGN_SYSTEM §5](../../docs/05-ux/DESIGN_SYSTEM.md) | TC-UI-003 |
+| F060-AC-07 | Mọi `Control` PHẢI lấy style từ `res://resources/ui/theme/eduworld_theme*.tres` sinh bởi F005; NẾU `.tscn` override màu, font hoặc cỡ chữ ngoài allowlist, THÌ `src/game/tools/lint_theme_overrides.gd` PHẢI fail | NFR-MAINT-007 · AGENTS R32 · [DESIGN_SYSTEM §5](../../docs/05-ux/DESIGN_SYSTEM.md) | TC-UI-003 |
 | F060-AC-08 | `ThemeService` PHẢI áp biến thể density theo `AppState.player.grade_band`; TRONG KHI chưa có bootstrap, HỆ THỐNG PHẢI dùng density `g1_3`; KHI density đổi, mọi màn đang mở PHẢI cập nhật mà không khởi động lại | NFR-A11Y-001 · DESIGN_SYSTEM §5.2 | — |
 | F060-AC-09 | `Settings` PHẢI lưu cỡ chữ (3 mức), tương phản cao, giảm chuyển động, ngôn ngữ, âm lượng vào `user://settings.cfg` và PHẢI KHÔNG lưu dữ liệu nghiệp vụ hay token | NFR-A11Y-001 · GODOT_ARCHITECTURE §10 | — |
 | F060-AC-10 | Scene `res://scenes/ui/debug/UiGallery.tscn` (chỉ build debug) PHẢI hiển thị component nền ở 4 density, tương phản cao và locale `vi`, `en`, `xx-PS`; CI PHẢI chụp ảnh và so baseline | DESIGN_SYSTEM §9 · NFR-A11Y-001 | TC-UI-001 |
-| F060-AC-11 | NẾU `godot/` chứa thư viện, Theme hoặc token của Admin UI web, THÌ CI PHẢI fail | AGENTS R32 · ADR-0047 | TC-UI-010 |
+| F060-AC-11 | NẾU `src/game/` chứa thư viện, Theme hoặc token của Admin UI web, THÌ CI PHẢI fail | AGENTS R32 · ADR-0047 | TC-UI-010 |
 
 ---
 
@@ -77,7 +77,7 @@ Học sinh chọn tiếng Việt hoặc tiếng Anh, đổi ngay khi đang chơi
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F060-AC-12 | Chuỗi UI tĩnh PHẢI qua gettext `res://locale/vi.po`, `en.po` với khóa `ui.<screen>.<element>[.<state>]`; mã lỗi API PHẢI ánh xạ khóa `ui.error.<CODE>`, thiếu khóa dùng `ui.error.generic` và gửi telemetry `i18n.missing_key` (không hiện khóa thô) | NFR-I18N-001 · ADR-0056 · [GODOT_ARCHITECTURE §10.1](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | — |
-| F060-AC-13 | NẾU khóa trong `messages.pot` (sinh bởi `tools/godot/extract_pot.gd`) thiếu ở `vi.po` hoặc `en.po`, THÌ CI PHẢI fail | NFR-I18N-001 | TC-I18N-005 |
+| F060-AC-13 | NẾU khóa trong `messages.pot` (sinh bởi `src/game/tools/extract_pot.gd`) thiếu ở `vi.po` hoặc `en.po`, THÌ CI PHẢI fail | NFR-I18N-001 | TC-I18N-005 |
 | F060-AC-14 | KHI người dùng đổi ngôn ngữ, HỆ THỐNG PHẢI gọi `TranslationServer.set_locale()`, phát `EventBus.locale_changed` và cập nhật màn đang mở mà không khởi động lại | NFR-I18N-001 · ADR-0056 | TC-I18N-004 |
 | F060-AC-15 | Locale PHẢI chỉ thuộc `supported_locales`; mặc định trước bootstrap là `vi-VN`, sau bootstrap theo hồ sơ học sinh rồi `tenant_default_locale` | NFR-I18N-001 · ADR-0056 | — |
 | F060-AC-16 | `LocaleFormat` PHẢI định dạng số, ngày, giờ, thời lượng theo bảng GODOT_ARCHITECTURE §10.1 cho `vi-VN` và `en-US`, không phụ thuộc locale hệ điều hành | NFR-I18N-003 | TC-I18N-007 |
@@ -98,7 +98,7 @@ Godot dev có pipeline tự động (lint, test, export Windows/Android, smoke) 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F060-AC-19 | KHI PR thay đổi `godot/**`, `specs/**`, `design/game-tokens/**` hoặc `design/shared-tokens/**`, workflow `.github/workflows/godot.yml` (GitHub Actions, runner Linux) PHẢI chạy theo thứ tự: `design-tokens-check` → gdlint + typed check + lint override theme + lint lớp → GdUnit4 headless → export Windows và Android → smoke boot | [GODOT_ARCHITECTURE §11](../../docs/08-game-client/GODOT_ARCHITECTURE.md) · DEPLOYMENT §10.2 · ADR-0088 | — |
+| F060-AC-19 | KHI PR thay đổi `src/game/**`, `specs/**`, `design/game-tokens/**` hoặc `design/shared-tokens/**`, workflow `.github/workflows/godot.yml` (GitHub Actions, runner Linux) PHẢI chạy theo thứ tự: `design-tokens-check` → gdlint + typed check + lint override theme + lint lớp → GdUnit4 headless → export Windows và Android → smoke boot | [GODOT_ARCHITECTURE §11](../../docs/08-game-client/GODOT_ARCHITECTURE.md) · DEPLOYMENT §10.2 · ADR-0088 | — |
 | F060-AC-20 | Compose profile `mock` PHẢI chạy Prism từ `specs/openapi/eduworld-api.v1.yaml`; cấu hình `res://config/env/mock.json` PHẢI có `is_mock: true` và game PHẢI hiển thị nhãn "MOCK" cố định trên mọi màn khi dùng cấu hình này | AGENTS R17 · CODE_PLAN §2 | — |
 | F060-AC-21 | NẾU preset export phát hành chứa `mock.json`, cờ `is_mock` hoặc URL mock, THÌ CI PHẢI fail | AGENTS R17 · CODE_PLAN §2 | — |
 | F060-AC-22 | Test contract PHẢI parse mọi response mẫu từ `specs/openapi` và `specs/examples` mà client sẽ dùng thành model GDScript không lỗi | GODOT_ARCHITECTURE §12 · NFR-MAINT-002 | — |
@@ -191,4 +191,4 @@ Học sinh dùng máy cá nhân không phải nhập mật khẩu mỗi lần m�
 
 - Godot 4.x bản stable tại Phase 1 (ghim minor), GdUnit4, gdtoolkit (`gdlint`) [Proposed — ADR-0014].
 - Đầu ra Theme/`UiTokens` của F005 có sẵn; F060 không sửa file sinh.
-- Prism (`stoplight/prism`) chạy trong compose profile `mock` cổng `4011` [Proposed]; dữ liệu mock chỉ là ví dụ trong spec.
+- Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) chạy trong compose profile `mock` cổng `4011` [Proposed]; dữ liệu mock chỉ là ví dụ trong spec.

@@ -2,13 +2,13 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ trong test (`// MOCK (test-only)`, R17).
+Backend gốc `src/backend/modules/game/`; frontend gốc `src/cms/frontend/apps/portal/`. MSW chỉ trong test (`// MOCK (test-only)`, R17).
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký permission `game.analytics.read`, `game.liveops.read`, `game.event.operate`, `analytics.tenant.read`, `analytics.school.read` vào kiểm tra catalog — file: `modules/game/internal/bootstrap/authz.go`
-- [ ] T002 [P] Cấu hình: durable consumer `analytics`, lịch `rollup-hourly`, `dashboard-day-close`, `analytics-retention`, `export-worker`; env `EW_PROMETHEUS_URL`, secret khóa HMAC (chỉ `.env.example`) — file: `modules/game/config/worker.yaml`, `modules/game/.env.example`
-- [ ] T003 [P] Golden dataset + script phát event — file: `modules/game/tests/fixtures/analytics/golden/`
+- [ ] T001 Đăng ký permission `game.analytics.read`, `game.liveops.read`, `game.event.operate`, `analytics.tenant.read`, `analytics.school.read` vào kiểm tra catalog — file: `src/backend/modules/game/internal/bootstrap/authz.go`
+- [ ] T002 [P] Cấu hình: durable consumer `analytics`, lịch `rollup-hourly`, `dashboard-day-close`, `analytics-retention`, `export-worker`; env `EW_PROMETHEUS_URL`, secret khóa HMAC (chỉ `.env.example`) — file: `src/backend/modules/game/config/worker.yaml`, `src/backend/modules/game/.env.example`
+- [ ] T003 [P] Golden dataset + script phát event — file: `src/backend/modules/game/tests/fixtures/analytics/golden/`
 - [ ] T004 [P] Route lazy `/live-ops/{dashboard,analytics,events}` + `RequirePermission` — file: `src/workspaces/live-ops/routes.tsx`
 
 ## Phase 2: Foundational (chặn mọi user story)
@@ -19,7 +19,7 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 - [ ] T008 [P] Cập nhật API_DESIGN §9 (`getGameAnalyticsExport`, `getLiveOpsOverview`), GAME_ANALYTICS §6 theo DATABASE_DESIGN — file: `docs/07-backend/API_DESIGN.md`, `docs/11-operations/GAME_ANALYTICS.md`
 - [ ] T009 ent schema + migration: cột mới raw/player_days/rollup, `rollup_monthly`, `export_jobs`, `ref.tenants.product_telemetry_enabled`; partition; role `game_dashboard` (SELECT rollup) — file: `ent/schema/analytics/*.go`, `deploy/postgres/roles/game.sql` — kiểm: `make migrate-diff MOD=game`, `make migrate-lint MOD=game`
 - [ ] T010 [P] Domain: `EventMapping`, `PlayerKey`, `MetricCatalog`, `Suppress`, `GrainFor` + unit test bảng — file: `internal/domain/analytics/`
-- [ ] T011 [P] `ops-ui` `GrainLabel`, `DataAsOf` + story; dùng lại `DashboardWidget`, `SuppressedCell` của F056 (không tạo component ẩn ô thứ hai, DESIGN_SYSTEM §4) — file: `web/packages/ops-ui/src/dashboard/`
+- [ ] T011 [P] `ops-ui` `GrainLabel`, `DataAsOf` + story; dùng lại `DashboardWidget`, `SuppressedCell` của F056 (không tạo component ẩn ô thứ hai, DESIGN_SYSTEM §4) — file: `src/cms/frontend/packages/ops-ui/src/dashboard/`
 - [ ] T012 Sinh lại client TS — file: `src/api/schema.d.ts` — kiểm: `pnpm gen:api`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
@@ -96,13 +96,13 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 
 ### Báo cáo hoạt động game cho nhà trường (chuyển từ F081 US4, F080-AC-27…32)
 
-- [ ] T055 [US5] Contract + setup: mở rộng `TenantGameSummary` (field ở [data-model §5](data-model.md)) + `404` cho `getTenantGameSummary`; mục "Hoạt động game" trong `menu.school_lms.reports` của catalog (`action.school_lms.reports.view`; không đăng ký menu tay — ADR-0090) + route lazy `/school-lms/reports/game-activity`, khóa i18n `portal.school_lms.game_report.*`; seed rollup 60 ngày `pgd-demo` có nhóm 3 học sinh (chuyển từ F081 T001–T003, T005) — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/game.v1.yaml`, `web/apps/portal/src/workspaces/school-lms/routes.tsx`, `web/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json`, `deploy/seed/analytics/rollup_pgd_demo.sql` — kiểm: `make specs-lint`, `make specs-breaking`, `pnpm gen:api`
+- [ ] T055 [US5] Contract + setup: mở rộng `TenantGameSummary` (field ở [data-model §5](data-model.md)) + `404` cho `getTenantGameSummary`; mục "Hoạt động game" trong `menu.school_lms.reports` của catalog (`action.school_lms.reports.view`; không đăng ký menu tay — ADR-0090) + route lazy `/school-lms/reports/game-activity`, khóa i18n `portal.school_lms.game_report.*`; seed rollup 60 ngày `pgd-demo` có nhóm 3 học sinh (chuyển từ F081 T001–T003, T005) — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/game.v1.yaml`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx`, `src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json`, `deploy/seed/analytics/rollup_pgd_demo.sql` — kiểm: `make specs-lint`, `make specs-breaking`, `pnpm gen:api`
 - [ ] T056 [P] [US5] Integration test F080-AC-31: field mới chỉ đọc `analytics.rollup_*`/`funnel_daily`/`perf_daily` qua role `game_dashboard`, ẩn ô theo `analytics_min_cell_size`, `is_partial`/`data_as_of` (TC-DASH-001, TC-ANL-005) — file: `tests/integration/analytics/tenant_summary_extended_test.go` — phải FAIL trước khi code
 - [ ] T057 [P] [US5] Integration test authorization + tenant isolation F080-AC-32: tenant khác `TENANT_MISMATCH`, trường ngoài scope / scope `subject` `PERMISSION_DENIED`, thiếu permission `PERMISSION_DENIED` (TC-ANL-004) — file: `tests/integration/analytics/tenant_summary_authz_test.go`
-- [ ] T058 [P] [US5] Unit test UI F080-AC-27, F080-AC-28: bộ lọc, widget độc lập (≤ 4 song song), đúng nhóm chỉ số, không Xu/danh sách học sinh, thời lượng chỉ trung vị — file: `web/apps/portal/tests/unit/school-lms/game-report/GameActivityReportPage.test.tsx`
-- [ ] T059 [P] [US5] Unit test UI F080-AC-29, F080-AC-30: "< 5", `suppressed_cells`, không tự cộng ô; `DASHBOARD_RANGE_TOO_LARGE`/`DASHBOARD_BUSY` (retry 2)/`DASHBOARD_QUERY_TIMEOUT`, "Tạm tính"; E2E điện thoại chỉ xem thẻ Tổng quan/Chơi lành mạnh — file: `web/apps/portal/tests/unit/school-lms/game-report/dashboardStates.test.tsx`, `web/apps/portal/tests/e2e/school-lms/game-report.spec.ts`
+- [ ] T058 [P] [US5] Unit test UI F080-AC-27, F080-AC-28: bộ lọc, widget độc lập (≤ 4 song song), đúng nhóm chỉ số, không Xu/danh sách học sinh, thời lượng chỉ trung vị — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/game-report/GameActivityReportPage.test.tsx`
+- [ ] T059 [P] [US5] Unit test UI F080-AC-29, F080-AC-30: "< 5", `suppressed_cells`, không tự cộng ô; `DASHBOARD_RANGE_TOO_LARGE`/`DASHBOARD_BUSY` (retry 2)/`DASHBOARD_QUERY_TIMEOUT`, "Tạm tính"; E2E điện thoại chỉ xem thẻ Tổng quan/Chơi lành mạnh — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/game-report/dashboardStates.test.tsx`, `src/cms/frontend/apps/portal/tests/e2e/school-lms/game-report.spec.ts`
 - [ ] T060 [US5] Mở rộng query catalog + `GetTenantSummary` (field mới, scope `subject` → `PERMISSION_DENIED`) và DTO handler — file: `internal/application/query/analytics/get_tenant_summary.go`, `internal/infrastructure/persistence/analytics/tenant_summary_repo.go`
-- [ ] T061 [US5] `GameActivityReportPage` + 5 widget (`OverviewWidget`, `ProgressionWidget`, `SocialWidget`, `WellbeingWidget`, `DeviceWidget`) dùng `DashboardRangePicker`, `DashboardWidget`, `SuppressedCell`, `useDashboardQueue` của `ops-ui`; cập nhật GAME_ANALYTICS §8 (Academic Manager) — file: `web/apps/portal/src/workspaces/school-lms/game-report/GameActivityReportPage.tsx`, `docs/11-operations/GAME_ANALYTICS.md`
+- [ ] T061 [US5] `GameActivityReportPage` + 5 widget (`OverviewWidget`, `ProgressionWidget`, `SocialWidget`, `WellbeingWidget`, `DeviceWidget`) dùng `DashboardRangePicker`, `DashboardWidget`, `SuppressedCell`, `useDashboardQueue` của `ops-ui`; cập nhật GAME_ANALYTICS §8 (Academic Manager) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/game-report/GameActivityReportPage.tsx`, `docs/11-operations/GAME_ANALYTICS.md`
 
 ## Phase 8: User Story 6 — Live dashboard, giám sát sự kiện (Priority: P1)
 
@@ -123,7 +123,7 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 ### Tests cho User Story 7
 
 - [ ] T041 [P] [US7] Test F080-AC-21: 11 panel, bộ lọc, so sánh kỳ, ≤ 4 yêu cầu song song (TC-ANL-008) — file: `src/workspaces/live-ops/__tests__/GameAnalyticsPage.test.tsx` — phải FAIL trước khi code
-- [ ] T042 [P] [US7] Test F080-AC-22: quy tắc UI dashboard, thử lại `DASHBOARD_BUSY` ≤ 2 (TC-DASH-003) — file: `web/packages/ops-ui/src/dashboard/__tests__/DashboardWidget.test.tsx`
+- [ ] T042 [P] [US7] Test F080-AC-22: quy tắc UI dashboard, thử lại `DASHBOARD_BUSY` ≤ 2 (TC-DASH-003) — file: `src/cms/frontend/packages/ops-ui/src/dashboard/__tests__/DashboardWidget.test.tsx`
 - [ ] T043 [P] [US7] Test F080-AC-23: link sang workspace A, Xuất bất đồng bộ, vị trí chỉ số thời lượng (TC-DASH-008) — file: `src/workspaces/live-ops/__tests__/AnalyticsActions.test.tsx`
 
 ### Implementation cho User Story 7
@@ -150,8 +150,8 @@ Backend gốc `modules/game/`; frontend gốc `web/apps/portal/`. MSW chỉ tron
 - [ ] T052 [P] Cập nhật DATABASE_DESIGN §2.8b (`rollup_monthly`, `export_jobs`, cột mới) — file: `docs/07-backend/DATABASE_DESIGN.md`
 - [ ] T053 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
-- [ ] T062 [P] Test F080-AC-33: tắt `action.live_ops.game_analytics.export` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `web/apps/portal/tests/e2e/live-ops/analytics-feature-toggle.spec.ts`
-- [ ] T063 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F080-AC-33) — file: `web/apps/portal/src/workspaces/live-ops/routes.tsx`
+- [ ] T062 [P] Test F080-AC-33: tắt `action.live_ops.game_analytics.export` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/live-ops/analytics-feature-toggle.spec.ts`
+- [ ] T063 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F080-AC-33) — file: `src/cms/frontend/apps/portal/src/workspaces/live-ops/routes.tsx`
 
 ## Dependencies & Execution Order
 

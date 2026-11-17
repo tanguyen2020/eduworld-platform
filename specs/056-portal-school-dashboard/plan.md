@@ -15,7 +15,7 @@ Xây module `dashboard` của workspace C: trang tổng quan trường (5 widget
 | Storage | Không; per-viewer `localStorage` chỉ nhớ bộ lọc khối/môn/khoảng gần nhất |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose (golden dataset F043), axe, visual regression |
 | Target Platform | Trình duyệt desktop/tablet đầy đủ; điện thoại xem thẻ tóm tắt ([ADMIN_PORTAL §1.5.1](../../docs/04-admin-portal/ADMIN_PORTAL.md)) |
-| Project Type | web app (workspace C) + component `web/packages/ops-ui` |
+| Project Type | web app (workspace C) + component `src/cms/frontend/packages/ops-ui` |
 | Performance Goals | NFR-PERF-017, NFR-PERF-018; ≤ `dashboard_max_concurrent_per_user` truy vấn đồng thời mỗi trang |
 | Constraints | AGENTS R1, R7, R8, R14, R16, R32; ADR-0047, ADR-0062, ADR-0065, ADR-0072 |
 | Scale/Scope | Trường 1.500 học sinh, lớp 45 học sinh, khoảng ≤ `dashboard_max_range_days` |
@@ -54,7 +54,7 @@ specs/056-portal-school-dashboard/
 ### Source Code (repository)
 
 ```text
-web/packages/ops-ui/src/dashboard/
+src/cms/frontend/packages/ops-ui/src/dashboard/
 ├── DashboardRangePicker.tsx     # preset + giới hạn dashboard_max_range_days, độ hạt thô hơn
 ├── DashboardWidget.tsx          # skeleton, "Cập nhật lúc", "Tạm tính", "Đang tính…", lỗi DASHBOARD_*
 ├── MasteryHeatmap.tsx           # ECharts + ký hiệu ○◔◑◕●, aria
@@ -62,7 +62,7 @@ web/packages/ops-ui/src/dashboard/
 ├── ExportButton.tsx             # tạo job, theo dõi, link + hạn
 ├── useDashboardQueue.ts         # giới hạn truy vấn song song/trang, retry DASHBOARD_BUSY 2 lần
 └── *.stories.tsx
-web/apps/portal/src/workspaces/school-lms/dashboard/
+src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/
 ├── routes.tsx                   # /portal/school-lms/dashboard/{overview,classes/:id,students/:id,courses/:id/results,analysis/:id,reports,tenant,platform}
 ├── api/{schoolDashboard,classDashboard,studentProfile,courseResults,itemAnalysis,reports,summaries}.ts
 ├── overview/OverviewPage.tsx + widgets/{AssignmentsWidget,WeakObjectivesWidget,AttentionWidget,SelfStudyWidget,SafetyWidget}.tsx
@@ -73,7 +73,7 @@ web/apps/portal/src/workspaces/school-lms/dashboard/
 ├── summary/{TenantSummaryPage,PlatformSummaryPage}.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/
-web/apps/portal/e2e/dashboard/*.spec.ts
+src/cms/frontend/apps/portal/e2e/dashboard/*.spec.ts
 ```
 
 **Structure Decision**: Component dashboard dùng chung đặt ở `ops-ui` (R32, F080 tái dùng); màn nghiệp vụ trong chunk workspace C.

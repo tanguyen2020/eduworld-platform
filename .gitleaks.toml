@@ -1,0 +1,13 @@
+# gitleaks configuration (F001 T004, AGENTS R4).
+# Default rules + a narrow allowlist: only the literal local placeholder `change-me-local`.
+title = "EduWorld gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local-only placeholder secret used in .env.example, compose and the dev realm"
+regexTarget = "match"
+regexes = ['''change-me-local''']
+# Third-party and local data directories are never committed (.gitignore) — skip them in `gitleaks dir`.
+paths = ['''(^|/)node_modules/''', '''^data/''', '''^bin/''']

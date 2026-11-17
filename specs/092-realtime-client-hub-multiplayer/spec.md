@@ -1,6 +1,6 @@
 # Feature Specification: F092 — `RealtimeClient` Godot và Main Hub nhiều người chơi
 
-**Feature Branch**: `092-realtime-client-hub-multiplayer` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M2 · **Phụ thuộc**: F091 (cùng F061, F062, F070; F090 qua F091)
+**Feature Branch**: `092-realtime-client-hub-multiplayer` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M2 · **Phụ thuộc**: F091 (cùng F061, F062, F070; F090 qua F091)
 **Input**: Game client mở một kết nối realtime sau khi tạo game session, tự kết nối lại và resume khi rớt mạng, xử lý đăng xuất do thiết bị khác; trong Main Hub thấy các bạn cùng instance di chuyển mượt (nội suy), đúng avatar và emote, chạy đạt FPS trên máy tầm trung và trong ngân sách băng thông. FR nguồn: FR-MP-004, FR-MP-005, FR-GAME-004; NFR-PERF-008.
 
 ## Clarifications

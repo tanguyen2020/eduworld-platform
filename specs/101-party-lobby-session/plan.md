@@ -11,7 +11,7 @@ Mở rộng bounded context `party` của module competition (F100): lobby state
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `competition.v1.yaml`), facade `game` (`modules/game/api`), `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/modcall`, `pkg/natsx` (`HandleCommand`), Valkey client |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `competition.v1.yaml`), facade `game` (`src/backend/modules/game/api`), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, `src/backend/pkg/natsx` (`HandleCommand`), Valkey client |
 | Storage | PostgreSQL `eduworld_competition` (`multiplayer.party_activities`, `rooms`, `session_memberships`; bảng F100); Valkey `ew:party:*`, `ew:presence:user:*` (chỉ đọc), `ew:rt:user:<id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với module game (fake facade phía competition); E2E WS 3 client headless |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`) |
@@ -50,7 +50,7 @@ specs/101-party-lobby-session/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── ent/schema/            # partyactivity.go, room.go, sessionmembership.go
 ├── migrations/
 ├── internal/domain/party/                   # lobby.go (LobbyState, ReadyRule), activity.go (PartyActivity, EndReason), leader_grace.go
@@ -104,7 +104,7 @@ Xem [research.md](research.md): R1 facade module game, R2 thứ tự gọi/commi
 
 ### Quan sát
 
-- Metric `eduworld_party_lobby_update_seconds`, `eduworld_party_session_start_total{activity_type,result}`, `eduworld_party_leader_auto_transfer_total`, `eduworld_party_activity_end_total{reason}`, span/metric gọi facade `game` (`pkg/modcall`); span `StartPartySession` gồm lời gọi module game.
+- Metric `eduworld_party_lobby_update_seconds`, `eduworld_party_session_start_total{activity_type,result}`, `eduworld_party_leader_auto_transfer_total`, `eduworld_party_activity_end_total{reason}`, span/metric gọi facade `game` (`src/backend/pkg/modcall`); span `StartPartySession` gồm lời gọi module game.
 
 ## Complexity Tracking
 

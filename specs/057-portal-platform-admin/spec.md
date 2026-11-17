@@ -1,6 +1,6 @@
 # Feature Specification: F057 — Workspace D — Platform Administration: tenant, gán/clone, thùng rác, danh mục, cấu hình hệ thống
 
-**Feature Branch**: `057-portal-platform-admin` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F045, F051
+**Feature Branch**: `057-portal-platform-admin` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F045, F051
 **Input**: Workspace D chỉ cho System Admin (gateway nội bộ + MFA): bộ lọc tenant liên tenant dùng chung cho mọi workspace, quản lý tenant, gán dữ liệu platform cho tenant, clone giữa tenant, Thùng rác mọi tenant, danh mục quốc gia/tỉnh/trường, cấu hình hệ thống (dọn học sinh, thời hạn chat gameplay). FR nguồn: FR-AUTH-024, FR-CMS-013, FR-CMS-015, FR-ORG-012, FR-ORG-013, FR-ORG-015.
 
 ## Clarifications
@@ -232,7 +232,7 @@ System Admin tạo tenant trường mới, tắt tenant ngừng hợp đồng.
 
 ## Assumptions
 
-- Thư mục `web/apps/portal/src/workspaces/platform-admin/` (ADMIN_PORTAL §1.2), route `/portal/platform-admin/*`; `TenantFilter` đặt ở `web/packages/ops-ui/src/tenant/` và gắn vào topbar của F051.
+- Thư mục `src/cms/frontend/apps/portal/src/workspaces/platform-admin/` (ADMIN_PORTAL §1.2), route `/portal/platform-admin/*`; `TenantFilter` đặt ở `src/cms/frontend/packages/ops-ui/src/tenant/` và gắn vào topbar của F051.
 - [Proposed] Lựa chọn bộ lọc tenant lưu `sessionStorage` (theo phiên làm việc, per-viewer — ADMIN_PORTAL §2.5).
 - [Proposed] Cảnh báo số ngày dọn thấp theo ngưỡng ADMIN_PORTAL §3.10 (chưa đăng ký CONFIG_DEFAULTS) — đề xuất đăng ký tên tham số.
 - Màn danh sách dữ liệu platform để bấm "Gán cho tenant" là màn của workspace B/A (F053/F054, F079); F057 cung cấp hộp thoại gán và tab "Tenant được gán" dùng chung.

@@ -4,14 +4,14 @@
 
 ## Summary
 
-module identity thêm command `LockUser`, `UnlockUser`, `DeactivateUser` (outbox `user.status_changed`, `user.access_revoked`/`user.access_restored`), consumer `keycloak-provisioner` nhánh thu hồi/khôi phục, worker `student-inactive-cleanup` (preview, báo trước, ngưỡng duyệt) và engine saga (`platform.saga_runs`/`saga_steps`) cho `student_cleanup`, `student_restore`, `user_anonymize`. Saga gọi `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData` của learning và game qua facade (`pkg/modcall`, `Idempotency-Key`). Module game và module learning hiện thực ba operation facade và consumer `user.access_revoked`/`student.cleaned_up`. Job `retention-anonymizer` và yêu cầu dữ liệu (`createDataRequest`).
+module identity thêm command `LockUser`, `UnlockUser`, `DeactivateUser` (outbox `user.status_changed`, `user.access_revoked`/`user.access_restored`), consumer `keycloak-provisioner` nhánh thu hồi/khôi phục, worker `student-inactive-cleanup` (preview, báo trước, ngưỡng duyệt) và engine saga (`platform.saga_runs`/`saga_steps`) cho `student_cleanup`, `student_restore`, `user_anonymize`. Saga gọi `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData` của learning và game qua facade (`src/backend/pkg/modcall`, `Idempotency-Key`). Module game và module learning hiện thực ba operation facade và consumer `user.access_revoked`/`student.cleaned_up`. Job `retention-anonymizer` và yêu cầu dữ liệu (`createDataRequest`).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, oapi-codegen (facade `game`, `learning` sinh vào `modules/<m>/api`), `pkg/modcall`, `pkg/outbox`, `pkg/entx` (`UnitOfWork`), `pkg/clock` |
+| Primary Dependencies | ent, Atlas, oapi-codegen (facade `game`, `learning` sinh vào `src/backend/modules/<m>/api`), `src/backend/pkg/modcall`, `src/backend/pkg/outbox`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/clock` |
 | Storage | PostgreSQL `eduworld_identity` (`identity.users`, `org.students`, `platform.cleanup_exclusions`, `platform.student_cleanup_runs`, `platform.saga_runs`, `platform.saga_steps`, `platform.deletion_requests`, `platform.erasure_log`); `eduworld_game`, `eduworld_learning` (phần nhận saga) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Keycloak); Clock giả; chaos tắt module game giữa saga (TC-SVC-009) |
 | Target Platform | Linux container (`core-api`; `worker` profile `events`/`jobs`) |
@@ -50,7 +50,7 @@ specs/016-account-lifecycle/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/                       # cleanupexclusion.go, studentcleanuprun.go, sagarun.go, sagastep.go, deletionrequest.go, erasurelog.go
 ├── internal/domain/lifecycle/        # UserStatus transitions, CleanupPolicy, CleanupCandidate
 ├── internal/domain/saga/             # Saga, Step, compensation
@@ -63,8 +63,8 @@ modules/identity/
 ├── internal/presentation/http/public/{user_lifecycle.go, student_cleanup.go, data_requests.go}
 ├── internal/presentation/consumer/keycloak_provisioner.go   # nhánh access_revoked/restored, cleaned_up, restored
 ├── internal/presentation/job/{student_inactive_cleanup.go, retention_anonymizer.go, saga_runner.go}
-modules/game/internal/presentation/http/internal/platform_students.go   # consumer access_revoked.go thuộc F014 (T039)
-modules/learning/internal/presentation/http/internal/platform_students.go
+src/backend/modules/game/internal/presentation/http/internal/platform_students.go   # consumer access_revoked.go thuộc F014 (T039)
+src/backend/modules/learning/internal/presentation/http/internal/platform_students.go
 ```
 
 **Structure Decision**: identity điều phối (ACCOUNT_PROVISIONING §7b); mỗi module thực hiện phần dữ liệu của mình (R13).
@@ -85,7 +85,7 @@ Không có tài liệu research riêng; hai quyết định ghi ở spec Clarifi
 |---|---|---|
 | domain | `UserStatus` (chuyển trạng thái hợp lệ theo IDENTITY_MAPPING §5), `CleanupPolicy.EffectiveDays`, `CleanupCandidate`, `Saga` (bước, bù) | Thuần |
 | application | Command/Query ở cây trên | Permission: [contracts](contracts/README.md) §1 |
-| infrastructure | ent repo, adapter facade `game`/`learning` (`pkg/modcall`, `Idempotency-Key`), Keycloak adapter (F010) | |
+| infrastructure | ent repo, adapter facade `game`/`learning` (`src/backend/pkg/modcall`, `Idempotency-Key`), Keycloak adapter (F010) | |
 | presentation | `lockUser`, `unlockUser`*, `deactivateUser`*, `lockTenantUser`*, `unlockTenantUser`*, `previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`, `listStudentCleanupRuns`, `approveStudentCleanupRun`, `restoreTenantTrashItem` (student), `listDataRequests`, `createDataRequest`, `getDataRequest` · internal (game, learning): `cleanupStudentData`, `restoreStudentData`, `anonymizeUserData` | * = Cần thêm |
 
 ### Tích hợp và phụ thuộc

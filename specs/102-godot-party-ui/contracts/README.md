@@ -44,4 +44,4 @@ Client chỉ tiêu thụ contract; không sở hữu contract nào.
 
 ## 6. Delta cần thực hiện
 
-- Không có delta riêng của F102. Phụ thuộc delta của F100 (`state_version`) và F101 (`listPartyEligibleActivities`, `expected_version`, `PARTY_NOT_READY`, `room_type: boss`). Fixture `godot/tests/fixtures/multiplayer/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example (GODOT_ARCHITECTURE §12).
+- Không có delta riêng của F102. Phụ thuộc delta của F100 (`state_version`) và F101 (`listPartyEligibleActivities`, `expected_version`, `PARTY_NOT_READY`, `room_type: boss`). Fixture `src/game/tests/fixtures/multiplayer/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example (GODOT_ARCHITECTURE §12).

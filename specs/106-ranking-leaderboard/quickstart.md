@@ -12,7 +12,7 @@
 
 | # | Bước | Kết quả mong đợi | Tiêu chí |
 |---|---|---|---|
-| 1 | `go test ./internal/domain/ranking -run Glickman` | Khớp r'≈1464.06, RD'≈151.52 (sai số < 0.01) | F106-AC-01 |
+| 1 | `go -C src/backend test ./modules/competition/internal/domain/ranking -run Glickman` | Khớp r'≈1464.06, RD'≈151.52 (sai số < 0.01) | F106-AC-01 |
 | 2 | Phát `match.completed` ranked (fixture lớp 7) hai lần | `ratings` đổi một lần; `rating_changes` 1 dòng/học sinh; `rating.updated` 1 lần | F106-AC-01, F106-AC-02 |
 | 3 | Phát `match.completed` bot, duel, giải, `aborted` | Rating và points không đổi | F106-AC-03 |
 | 4 | Fixture trận đội 3v3 có 1 người `abandoned` | Mỗi thành viên cập nhật theo đối thủ ảo; người bỏ nhận 0 | F106-AC-04 |

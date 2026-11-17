@@ -99,7 +99,7 @@ System Admin xem bản ghi đã xóa của mọi tenant (và dữ liệu platfor
 
 ### User Story 5 — Gọi module khác an toàn khi điều phối (Priority: P2)
 
-module identity gọi facade của module sở hữu trong tiến trình qua `pkg/modcall`; khi module đích lỗi hoặc chưa được nối thì báo lỗi có kiểm soát, không bao giờ cho qua.
+module identity gọi facade của module sở hữu trong tiến trình qua `src/backend/pkg/modcall`; khi module đích lỗi hoặc chưa được nối thì báo lỗi có kiểm soát, không bao giờ cho qua.
 
 **Why this priority**: Ràng buộc kiến trúc cho mọi luồng US2–US4.
 
@@ -109,7 +109,7 @@ module identity gọi facade của module sở hữu trong tiến trình qua `pk
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F045-AC-24 | HỆ THỐNG PHẢI gọi module khác chỉ qua facade sinh từ spec internal, bằng adapter sau port `OwnerServiceGateway` dùng `pkg/modcall` truyền trong `context` span tracing, deadline, `TenantScope`, Principal gốc (on-behalf) và `Idempotency-Key` cho thao tác ghi; NẾU module không có trong `x-allowed-callers` import facade platform ops, THÌ `make arch-check` PHẢI fail | AGENTS R29 · ADR-0074 | TC-SVC-006 |
+| F045-AC-24 | HỆ THỐNG PHẢI gọi module khác chỉ qua facade sinh từ spec internal, bằng adapter sau port `OwnerServiceGateway` dùng `src/backend/pkg/modcall` truyền trong `context` span tracing, deadline, `TenantScope`, Principal gốc (on-behalf) và `Idempotency-Key` cho thao tác ghi; NẾU module không có trong `x-allowed-callers` import facade platform ops, THÌ `make arch-check` PHẢI fail | AGENTS R29 · ADR-0074 | TC-SVC-006 |
 | F045-AC-25 | NẾU facade của module sở hữu `resource_type` trả lỗi hạ tầng, vượt deadline hoặc module chưa được nối trong binary, THÌ HỆ THỐNG PHẢI trả `503 UNAVAILABLE` cho thao tác đọc/ghi đồng bộ và không suy ra kết quả từ cache | ADR-0074 · [API_DESIGN §12.3](../../docs/07-backend/API_DESIGN.md#123-resilience-mặc-định-proposed) | TC-SVC-004 |
 | F045-AC-26 | NẾU body chứa chuỗi vượt `maxLength` (`reason`, `q`) hoặc mảng vượt giới hạn (`tenant_ids` > 100), THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` chỉ rõ trường | ADR-0041 | TC-TEN-024 |
 

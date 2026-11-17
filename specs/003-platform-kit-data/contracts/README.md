@@ -13,7 +13,7 @@
 
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|
-| `resolvePrincipal` | mọi module domain → identity (adapter `PrincipalResolver` ở composition root, qua `pkg/modcall`) | `specs/openapi/modules/identity.internal.v1.yaml` | `learning`, `game`, `competition`, `chat` | Có sẵn (áp 2026-11-17) (delta `issuer`/`subject`, `tenant_id` nullable: nội dung F012 §6, áp ở F002 T005) |
+| `resolvePrincipal` | mọi module domain → identity (adapter `PrincipalResolver` ở composition root, qua `src/backend/pkg/modcall`) | `specs/openapi/modules/identity.internal.v1.yaml` | `learning`, `game`, `competition`, `chat` | Có sẵn (áp 2026-11-17) (delta `issuer`/`subject`, `tenant_id` nullable: nội dung F012 §6, áp ở F002 T005) |
 | — (extension) | `x-context-required: [tenant_scope, idempotency_key]` (ngữ cảnh `modcall` kiểm), `x-allowed-callers`; schema `Problem` dùng chung. Không còn header ngữ cảnh (`X-Tenant-Id`, `X-On-Behalf-Of`, `traceparent`) trong spec internal — ngữ cảnh đi qua `context` (ADR-0074) | `specs/openapi/modules/*.internal.v1.yaml`, `common/internal-common.v1.yaml` | — | Có sẵn |
 
 ## 3. Realtime (AsyncAPI)
@@ -44,5 +44,5 @@
 ## 6. Delta cần thực hiện
 
 - **Đã áp 2026-11-17 (T004).** Thêm `specs/events/payloads/common/audit.recorded.v1.schema.json`: `actor_id` (uuid, nullable), `actor_type` (enum `user|service|system`), `action` (maxLength 64), `target_type` (64), `target_id` (128), `result` (enum `success|denied|error`), `reason` (1000, nullable), `metadata` (object, `maxProperties` 50, giá trị string maxLength 255) — khớp DATABASE_DESIGN §3.11; thêm `school_id` (uuid, nullable, tùy chọn) vì cột `audit.audit_logs.school_id` cần nguồn cho lọc audit của School Admin (F015); cập nhật bảng trong `specs/events/README.md`. Task T004.
-- ~~Thêm payload tối thiểu cho `tenant_membership.changed`, `user.access_revoked`, `enrollment.changed`, `tenant.updated`~~ — **đối soát 2026-11-17:** F003 không tạo schema payload của event identity (khớp tasks T005: chỉ fixture trong `pkg/natsx/testdata/events/`); schema do owner tạo — F010 (`tenant_membership.changed`, `enrollment.changed`, `tenant.updated`), F011 (`user.access_revoked`) — đã có. Payload không có `version`; consumer vô hiệu cache theo `user_id`/`tenant_id`.
+- ~~Thêm payload tối thiểu cho `tenant_membership.changed`, `user.access_revoked`, `enrollment.changed`, `tenant.updated`~~ — **đối soát 2026-11-17:** F003 không tạo schema payload của event identity (khớp tasks T005: chỉ fixture trong `src/backend/pkg/natsx/testdata/events/`); schema do owner tạo — F010 (`tenant_membership.changed`, `enrollment.changed`, `tenant.updated`), F011 (`user.access_revoked`) — đã có. Payload không có `version`; consumer vô hiệu cache theo `user_id`/`tenant_id`.
 - **Đã áp 2026-11-17 (T006).** Spec gộp: khai báo header response `Idempotent-Replayed` (`components.headers.IdempotentReplayed`, `type: string, enum: ["true"]`) và gắn vào response 2xx của operation có `IdempotencyKey`. Task T006.

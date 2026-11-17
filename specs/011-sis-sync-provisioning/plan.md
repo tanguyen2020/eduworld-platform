@@ -4,14 +4,14 @@
 
 ## Summary
 
-Pipeline SIS của module identity chạy trong `cmd/worker` (profile `worker-jobs` cho lịch/import, consumer ở `worker-events`): port `SISProvider` với hiện thực `csvImportReader` (hiện thực `contractV1Client` → F017) dùng DTO sinh từ contract; validator JSON Schema → `sis.staging_records` → `Reconciler` → apply qua command của F010 (school/class/student/enrollment) trong lô 500, outbox event. Job vào JetStream work-queue `IDENTITY_SIS_JOBS`. Consumer `keycloak-provisioner` tạo Keycloak user + ExternalIdentity + `sis_identity_links`. `LoginSync` (port application, tra cứu qua `SisLookupPort`) phục vụ F013. API: import CSV (public), connection `csv_import`/run/issue (gateway nội bộ). Pull `contract_v1`, webhook, conformance kit, `sis-mock` → F017.
+Pipeline SIS của module identity chạy trong `src/backend/cmd/worker` (profile `worker-jobs` cho lịch/import, consumer ở `worker-events`): port `SISProvider` với hiện thực `csvImportReader` (hiện thực `contractV1Client` → F017) dùng DTO sinh từ contract; validator JSON Schema → `sis.staging_records` → `Reconciler` → apply qua command của F010 (school/class/student/enrollment) trong lô 500, outbox event. Job vào JetStream work-queue `IDENTITY_SIS_JOBS`. Consumer `keycloak-provisioner` tạo Keycloak user + ExternalIdentity + `sis_identity_links`. `LoginSync` (port application, tra cứu qua `SisLookupPort`) phục vụ F013. API: import CSV (public), connection `csv_import`/run/issue (gateway nội bộ). Pull `contract_v1`, webhook, conformance kit, `sis-mock` → F017.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, oapi-codegen (server; models từ `specs/sis` cho DTO), santhosh-tekuri/jsonschema hoặc tương đương cho validator, nats.go JetStream, AWS SDK v2 (S3 floci), failsafe-go (`pkg/modcall`) |
+| Primary Dependencies | ent, Atlas, oapi-codegen (server; models từ `specs/sis` cho DTO), santhosh-tekuri/jsonschema hoặc tương đương cho validator, nats.go JetStream, AWS SDK v2 (S3 floci), failsafe-go (`src/backend/pkg/modcall`) |
 | Storage | PostgreSQL `eduworld_identity` (`sis`, `identity`, `org`); object storage (CSV, mã hóa at-rest, `sis_staging_retention`); Valkey lock `ew:identity:sis:lock:<connection_id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, Keycloak); fake `SisLookupPort` (chỉ test) |
 | Target Platform | Linux container (module `identity` api + worker) |
@@ -50,7 +50,7 @@ specs/011-sis-sync-provisioning/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/                     # sisconnection.go, sisconnectionschool.go, syncrun.go, stagingrecord.go,
 │                                   # syncrecorderror.go, sisimport.go, sislink.go, syncedstudent.go,
 │                                   # studentloginkey.go, reconciliationissue.go, externalidentity.go, sisidentitylink.go

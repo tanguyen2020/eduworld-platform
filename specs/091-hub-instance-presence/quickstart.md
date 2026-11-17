@@ -35,7 +35,7 @@
 make test MOD=competition
 make test-integration MOD=competition
 make test-integration MOD=realtime      # presence
-go test ./modules/competition/tests/load/... -run Hub40 -tags load   # TC-PERF-003, TC-PERF-023
+go -C src/backend test ./modules/competition/tests/load/... -run Hub40 -tags load   # TC-PERF-003, TC-PERF-023
 ```
 
 ## 4. Bằng chứng cần nộp

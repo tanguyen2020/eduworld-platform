@@ -2,7 +2,7 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Đường dẫn gốc `web/apps/portal/` trừ khi ghi rõ. MSW chỉ trong test, nhãn `// MOCK (test-only)` (R17); E2E chạy với backend local thật.
+Đường dẫn gốc `src/cms/frontend/apps/portal/` trừ khi ghi rõ. MSW chỉ trong test, nhãn `// MOCK (test-only)` (R17); E2E chạy với backend local thật.
 
 ## Phase 1: Setup
 
@@ -16,8 +16,8 @@
 - [ ] T005 [P] Delta contract (owner F074/F077): `simulateGameConfig` + `SimulationRequest`/`SimulationResult` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T006 [P] Kiểm permission `progression-curves`/`progression-levels` (`game.progression.write`), `collections` (`game.collection.write`), `shop-items` (`game.shop.write`) khớp giữa API_DESIGN §9.13b, ADMIN_PORTAL §2.2 và `registry/configTypes.ts` (RB-309) — file: `docs/07-backend/API_DESIGN.md`, `docs/04-admin-portal/ADMIN_PORTAL.md`
 - [ ] T007 Sinh lại client TS — file: `src/api/schema.d.ts` — kiểm: `pnpm gen:api` không diff trong CI
-- [ ] T008 [P] `ops-ui` `ContentEditorShell`, `SchemaForm` (rule từ JSON Schema + `maxLength` + bộ đếm), `WorkflowBar`, `VersionTab`, `DiffView`, `useAutosave` + story — file: `web/packages/ops-ui/src/content-editor/`
-- [ ] T009 [P] `ops-ui` `GamePreviewFrame`, `ThumbnailImage`, `TurntableViewer`, `ManifestRefPicker` + story — file: `web/packages/ops-ui/src/game/`
+- [ ] T008 [P] `ops-ui` `ContentEditorShell`, `SchemaForm` (rule từ JSON Schema + `maxLength` + bộ đếm), `WorkflowBar`, `VersionTab`, `DiffView`, `useAutosave` + story — file: `src/cms/frontend/packages/ops-ui/src/content-editor/`
+- [ ] T009 [P] `ops-ui` `GamePreviewFrame`, `ThumbnailImage`, `TurntableViewer`, `ManifestRefPicker` + story — file: `src/cms/frontend/packages/ops-ui/src/game/`
 - [ ] T010 [P] MSW handler test-only cho contracts §1 — file: `src/workspaces/game-ops/__tests__/msw/handlers.ts`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
@@ -31,7 +31,7 @@
 ### Tests cho User Story 1
 
 - [ ] T011 [P] [US1] Test F079-AC-01: danh sách theo `config_type`, lọc, cursor, menu theo permission (TC-CMS-001) — file: `src/workspaces/game-ops/__tests__/ConfigListPage.test.tsx` — phải FAIL trước khi code
-- [ ] T012 [P] [US1] Test F079-AC-02: form từ schema, autosave `If-Match`, dừng khi 409/412 (TC-CMS-002) — file: `web/packages/ops-ui/src/content-editor/__tests__/ContentEditorShell.test.tsx`
+- [ ] T012 [P] [US1] Test F079-AC-02: form từ schema, autosave `If-Match`, dừng khi 409/412 (TC-CMS-002) — file: `src/cms/frontend/packages/ops-ui/src/content-editor/__tests__/ContentEditorShell.test.tsx`
 - [ ] T013 [P] [US1] Test F079-AC-03: transition + publish ngay/hẹn giờ có `Idempotency-Key`, ẩn duyệt với tác giả (TC-CMS-001) — file: `…/content-editor/__tests__/WorkflowBar.test.tsx`
 - [ ] T014 [P] [US1] Test F079-AC-04: version publish chỉ đọc, diff, releases, rollback/unpublish bắt buộc lý do (TC-CMS-003) — file: `…/content-editor/__tests__/VersionTab.test.tsx`
 - [ ] T015 [P] [US1] Test F079-AC-05: map `VALIDATION_FAILED`/`TRANSLATION_INCOMPLETE` về field, chặn gửi duyệt (TC-EVT-010) — file: `…/content-editor/__tests__/ServerErrors.test.tsx`
@@ -48,7 +48,7 @@
 ### Tests cho User Story 2
 
 - [ ] T018 [P] [US2] Test F079-AC-06: bước quest kéo-thả đúng `quest.schema.json`; graph NPC đúng `npc-dialogue.schema.json` (TC-GAM-012) — file: `src/workspaces/game-ops/__tests__/QuestStepEditor.test.tsx`, `DialogueGraphEditor.test.tsx` — phải FAIL trước khi code
-- [ ] T019 [P] [US2] Test F079-AC-07: bộ chọn tham chiếu chỉ từ manifest/nội dung publish, không nhập ID tự do — file: `web/packages/ops-ui/src/game/__tests__/ManifestRefPicker.test.tsx`
+- [ ] T019 [P] [US2] Test F079-AC-07: bộ chọn tham chiếu chỉ từ manifest/nội dung publish, không nhập ID tự do — file: `src/cms/frontend/packages/ops-ui/src/game/__tests__/ManifestRefPicker.test.tsx`
 - [ ] T020 [P] [US2] Test F079-AC-08: form loại còn lại theo schema; không trường tiền thật (TC-ECO-003) — file: `src/workspaces/game-ops/__tests__/GenericBuilders.test.tsx`
 
 ### Implementation cho User Story 2
@@ -85,8 +85,8 @@
 
 ### Tests cho User Story 5
 
-- [ ] T032 [P] [US5] Test F079-AC-16: thumbnail đúng version, placeholder khi `pending`/`failed` (TC-UI-009) — file: `web/packages/ops-ui/src/game/__tests__/ThumbnailImage.test.tsx` — phải FAIL trước khi code
-- [ ] T033 [P] [US5] Test F079-AC-17: `createGamePreviewSession` + iframe `GamePreviewFrame`; lint không import game ngoài khung (TC-UI-010) — file: `web/packages/ops-ui/src/game/__tests__/GamePreviewFrame.test.tsx`
+- [ ] T032 [P] [US5] Test F079-AC-16: thumbnail đúng version, placeholder khi `pending`/`failed` (TC-UI-009) — file: `src/cms/frontend/packages/ops-ui/src/game/__tests__/ThumbnailImage.test.tsx` — phải FAIL trước khi code
+- [ ] T033 [P] [US5] Test F079-AC-17: `createGamePreviewSession` + iframe `GamePreviewFrame`; lint không import game ngoài khung (TC-UI-010) — file: `src/cms/frontend/packages/ops-ui/src/game/__tests__/GamePreviewFrame.test.tsx`
 
 ### Implementation cho User Story 5
 
@@ -110,8 +110,8 @@
 - [ ] T040 [P] Lint hardcode style, không import game (TC-UI-003, TC-UI-010) — kiểm: `make web-lint`
 - [ ] T041 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T042 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng
-- [ ] T043 [P] Test F079-AC-21: tắt `menu.game_ops.shop` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `web/apps/portal/tests/e2e/game-ops/feature-toggle.spec.ts`
-- [ ] T044 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F079-AC-21) — file: `web/apps/portal/src/workspaces/game-ops/routes.tsx`
+- [ ] T043 [P] Test F079-AC-21: tắt `menu.game_ops.shop` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/game-ops/feature-toggle.spec.ts`
+- [ ] T044 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F079-AC-21) — file: `src/cms/frontend/apps/portal/src/workspaces/game-ops/routes.tsx`
 
 ## Dependencies & Execution Order
 

@@ -4,14 +4,14 @@
 
 ## Summary
 
-Module `media` trong module `learning`: presign PUT vào `ew-media-quarantine`, xác nhận upload (`completeMediaUpload`), outbox `media.uploaded` → media worker (consumer module `learning` trong profile `worker-events`) dùng `pkg/media` (ClamAV, magic bytes, xóa EXIF, libvips/ffmpeg) → biến thể content-addressed ở `ew-media-public`/`ew-media-private`, `media.processed`/`media.rejected`. Module `mathx` kiểm tra LaTeX allowlist + sanitize SVG từ portal và lưu `math/<sha256>.svg`, được gọi từ pipeline validate nội dung khi lưu draft. Module `preview` tạo phiên ngắn hạn trong Valkey, dựng render bằng builder của F022/F030 và chấm thử không ghi DB.
+Module `media` trong module `learning`: presign PUT vào `ew-media-quarantine`, xác nhận upload (`completeMediaUpload`), outbox `media.uploaded` → media worker (consumer module `learning` trong profile `worker-events`) dùng `src/backend/pkg/media` (ClamAV, magic bytes, xóa EXIF, libvips/ffmpeg) → biến thể content-addressed ở `ew-media-public`/`ew-media-private`, `media.processed`/`media.rejected`. Module `mathx` kiểm tra LaTeX allowlist + sanitize SVG từ portal và lưu `math/<sha256>.svg`, được gọi từ pipeline validate nội dung khi lưu draft. Module `preview` tạo phiên ngắn hạn trong Valkey, dựng render bằng builder của F022/F030 và chấm thử không ghi DB.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, AWS SDK v2 (s3 + presign), libvips (binding Go), ffmpeg (process), clamd client, valkey-go, `pkg/{media,outbox,tenancy,entx,authz,problem}` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, AWS SDK v2 (s3 + presign), libvips (binding Go), ffmpeg (process), clamd client, valkey-go, `src/backend/pkg/{media,outbox,tenancy,entx,authz,problem}` |
 | Storage | PostgreSQL `eduworld_learning` (`content.media_assets`, `media_usages`, `math_svgs`); floci S3 (`ew-media-quarantine`, `ew-media-public`, `ew-media-private`); Valkey (phiên preview) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, floci, clamav); file mẫu EICAR, ảnh có EXIF GPS |
 | Target Platform | Linux container (module `learning` trong `core-api`; image `worker` có libvips + ffmpeg cho profile `worker-events`) |
@@ -27,7 +27,7 @@ Module `media` trong module `learning`: presign PUT vào `ew-media-quarantine`, 
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Delta `completeMediaUpload`, `submitPreviewResponse`, payload `media.*` ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | `pkg/media` không chứa nghiệp vụ; `domain/mathx` thuần; không gọi module khác |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | `src/backend/pkg/media` không chứa nghiệp vụ; `domain/mathx` thuần; không gọi module khác |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | `media_assets` có `tenant_id`/`deleted_at`; preview chỉ Valkey tạm (không dữ liệu quan trọng, R9) |
 | IV Server-authoritative | ✅ | Preview chấm server-side, render không đáp án; presign/complete có Idempotency-Key + audit `media.uploaded` |
 | V Xác thực, phân quyền | ✅ | `media.upload`, `learning_content.read`; token game bị chặn; endpoint S3 qua env |
@@ -51,8 +51,8 @@ specs/027-media-math-preview/
 ### Source Code (repository)
 
 ```text
-pkg/media/{scanner.go,magic.go,exif.go,transcode.go,keys.go}
-modules/learning/
+src/backend/pkg/media/{scanner.go,magic.go,exif.go,transcode.go,keys.go}
+src/backend/modules/learning/
 ├── ent/schema/{media_asset.go,media_usage.go,math_svg.go}
 ├── internal/domain/media/                 # MediaAsset, Status, Kind, allowlist mime, Variant
 ├── internal/domain/mathx/                 # LatexValidator, SvgSanitizer, MathBlock
@@ -66,7 +66,7 @@ modules/learning/
 └── internal/presentation/consumer/media_on_uploaded.go   # learning.media_worker
 ```
 
-**Structure Decision**: Xử lý file nặng nằm trong `pkg/media` (ADR-0044 mục 3: dùng chung cho game/module chat sau này); quyết định nghiệp vụ (trạng thái, bucket, quyền) ở module `learning`. Chi tiết công cụ: [research.md](research.md).
+**Structure Decision**: Xử lý file nặng nằm trong `src/backend/pkg/media` (ADR-0044 mục 3: dùng chung cho game/module chat sau này); quyết định nghiệp vụ (trạng thái, bucket, quyền) ở module `learning`. Chi tiết công cụ: [research.md](research.md).
 
 ## Phase 0: Research
 
@@ -84,7 +84,7 @@ modules/learning/
 |---|---|---|
 | domain | `media.MediaAsset` (Quarantine → Processing → Ready/Rejected), `media.AllowedMime(kind)`, `mathx.ValidateLatex`, `mathx.SanitizeSvg`, `preview.Session` | Không I/O |
 | application | Command `PresignMediaUpload`, `CompleteMediaUpload`, `ProcessMedia`, `ValidateMathAssets` (gọi từ hook lưu draft), `CreateLearningPreviewSession`, `SubmitPreviewResponse` · Query `ListMediaAssets`, `GetMediaAsset` | Permission: `media.upload`; đọc/preview `learning_content.read` |
-| infrastructure | `S3Storage` (presign PUT/GET, HEAD, PUT biến thể với `Cache-Control: immutable`), `CdnSigner` (`EW_CDN_SIGNING_KEY`), `MediaProcessor` (pkg/media), `PreviewStore` (Valkey `ew:learning:preview:<id>`), `Scorer` (port của F022) | |
+| infrastructure | `S3Storage` (presign PUT/GET, HEAD, PUT biến thể với `Cache-Control: immutable`), `CdnSigner` (`EW_CDN_SIGNING_KEY`), `MediaProcessor` (src/backend/pkg/media), `PreviewStore` (Valkey `ew:learning:preview:<id>`), `Scorer` (port của F022) | |
 | presentation | `presignMediaUpload`, `completeMediaUpload`, `listMediaAssets`, `getMediaAsset`, `createLearningPreviewSession`, `submitPreviewResponse`; consumer `learning.media_worker` | |
 
 ### Tích hợp và phụ thuộc

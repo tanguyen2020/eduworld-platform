@@ -2,7 +2,7 @@
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md) · Nguồn sự thật bảng: [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md) §2.6, §2.6a, §2.16
 
-DB `eduworld_learning`. Bảng T có cột chung `tenant_id`, `created_at/by`, `updated_at/by`, `deleted_at/by`, `version` (mixin `pkg/entx`, ADR-0028/0039) và RLS theo `tenant_id` (ADR-0005). Bảng G (platform) không có `tenant_id`.
+DB `eduworld_learning`. Bảng T có cột chung `tenant_id`, `created_at/by`, `updated_at/by`, `deleted_at/by`, `version` (mixin `src/backend/pkg/entx`, ADR-0028/0039) và RLS theo `tenant_id` (ADR-0005). Bảng G (platform) không có `tenant_id`.
 
 ## 1. Entity
 

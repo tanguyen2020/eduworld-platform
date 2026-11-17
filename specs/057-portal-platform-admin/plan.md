@@ -15,7 +15,7 @@ Xây workspace D (chunk lazy-load `src/workspaces/platform-admin`) chỉ cho Sys
 | Storage | Không; `sessionStorage` cho lựa chọn bộ lọc tenant (per-viewer) |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose (gateway nội bộ local) |
 | Target Platform | Trình duyệt desktop/tablet ≥ 1024 px cho gán/clone/tenant; mobile chỉ đọc |
-| Project Type | web app (workspace D) + component `web/packages/ops-ui` |
+| Project Type | web app (workspace D) + component `src/cms/frontend/packages/ops-ui` |
 | Performance Goals | `TenantFilter` tìm kiếm debounce 300 ms, phân trang cursor |
 | Constraints | AGENTS R3, R7, R8, R10, R20, R21, R22, R28, R32; ADR-0027, ADR-0028, ADR-0029, ADR-0032, ADR-0060, ADR-0065 |
 | Scale/Scope | Hàng trăm tenant; Thùng rác/danh mục phân trang cursor |
@@ -54,13 +54,13 @@ specs/057-portal-platform-admin/
 ### Source Code (repository)
 
 ```text
-web/packages/ops-ui/src/tenant/
+src/cms/frontend/packages/ops-ui/src/tenant/
 ├── TenantFilter.tsx              # Select tìm kiếm, chọn nhiều, "Tất cả tenant", cursor
 ├── TenantColumn.tsx              # cột Tenant (tên + loại, Trường với unit)
 ├── TargetTenantField.tsx         # trường bắt buộc "Tenant đích" / "Platform" trong form ghi
 └── *.stories.tsx
-web/apps/portal/src/shared/tenancy/useCrossTenantScope.ts   # đọc permission + lựa chọn → tham số list / header ghi
-web/apps/portal/src/workspaces/platform-admin/
+src/cms/frontend/apps/portal/src/shared/tenancy/useCrossTenantScope.ts   # đọc permission + lựa chọn → tham số list / header ghi
+src/cms/frontend/apps/portal/src/workspaces/platform-admin/
 ├── routes.tsx                    # /portal/platform-admin/{tenants,assignments,clones,trash,catalog/*,settings/*}
 ├── api/{tenants,assignments,clones,trash,catalog,schoolImports,cleanup,chatRetention}.ts
 ├── tenants/{TenantListPage,TenantForm}.tsx
@@ -72,7 +72,7 @@ web/apps/portal/src/workspaces/platform-admin/
 ├── errors/{VpnRequiredBanner,MfaStepUp}.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/
-web/apps/portal/e2e/platform/*.spec.ts
+src/cms/frontend/apps/portal/e2e/platform/*.spec.ts
 ```
 
 **Structure Decision**: `TenantFilter`, `TenantColumn`, `TargetTenantField` ở `ops-ui` vì mọi workspace dùng; `useCrossTenantScope` ở `src/shared` để `apiClient` (F050) và các workspace áp chung quy ước. Màn platform-only trong chunk riêng (ADR-0027 mục 7).

@@ -1,6 +1,6 @@
 # Feature Specification: F069 — Godot — tiến trình, kho đồ, shop, bộ sưu tập, thành tựu, challenge solo
 
-**Feature Branch**: `069-godot-progression-economy-challenge` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M3 · **Phụ thuộc**: F062, F074, F075, F076 (và F063 activity player, F070 `ProfileService`/`CustomizationStudio`, F092 `RealtimeClient`)
+**Feature Branch**: `069-godot-progression-economy-challenge` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M3 · **Phụ thuộc**: F062, F074, F075, F076 (và F063 activity player, F070 `ProfileService`/`CustomizationStudio`, F092 `RealtimeClient`)
 **Input**: Học sinh thấy level, danh hiệu, thanh XP, ví Xu trên HUD; xem hiệu ứng lên cấp và "Hành trình của tôi"; mở Tủ đồ/Shop/Lịch sử, mua cosmetic bằng Xu có xác nhận; xem thành tựu, bộ sưu tập, chọn huy hiệu trưng bày; chơi challenge một người (7 loại, 5 mức khó) với đồng hồ server. Màn S03 (phần tiến trình), S06 (phần challenge solo), S07, S08, S09 của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn: FR-GAM-001, FR-GAM-006, FR-GAM-007, FR-GAM-008, FR-ECO-001…005, FR-RWD-001…003, FR-CHL-001, FR-CHL-003, FR-GAME-004.
 
 ## Clarifications

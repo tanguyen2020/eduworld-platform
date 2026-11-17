@@ -11,7 +11,7 @@ module game thêm (1) **lõi nội dung game có version** dùng chung cho F071�
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · GDScript (Godot 4.x) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/httpx`, `pkg/tenancy`, nats.go, Valkey client, S3 client (floci) · GdUnit4 |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/httpx`, `src/backend/pkg/tenancy`, nats.go, Valkey client, S3 client (floci) · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (bảng ở [data-model.md](data-model.md)); Valkey snapshot + presence (tạm); floci bucket snapshot/bundle |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, floci); GdUnit4 headless; benchmark zone headless (TC-PERF-018) |
 | Target Platform | Linux container (`core-api` + `worker`) · Windows, Android, iOS, Web |
@@ -50,7 +50,7 @@ specs/071-world-areas-npc-story/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/                         # mixin versioned.go; worldarea*.go, storychapter*.go, npcdialogue*.go, level*.go,
 │                                       # levelsession.go, areaunlock.go, explorationprogress.go, storyprogress.go,
 │                                       # contentrelease.go, refmasterysummary.go, refschool.go
@@ -64,9 +64,9 @@ modules/game/
 ├── internal/infrastructure/world/      # instance_allocator_v0.go (NHÃN: allocator tạm, F091 thay), presence_valkey.go
 ├── internal/presentation/http/public/world.go
 ├── internal/presentation/consumer/     # unlock_on_events.go, story_on_quest_completed.go, mastery_projection.go, school_projection.go
-├── cmd/seed/                           # seed qua PublishGameContent
+├── cmd/seed/                                       # seed qua PublishGameContent
 └── seed/world/                         # areas.v1.json, story_chapters.v1.json, npc_dialogues/*.json, levels.v1.json
-godot/
+src/game/
 ├── scenes/world/{WorldRoot.tscn, AreaPortal.tscn, WorldMap.tscn, zones/<area>/Zone.tscn}
 ├── scenes/npc/{NPC.tscn, DialogueBubble.tscn}
 ├── scripts/world/{world_service.gd, zone_loader.gd, area_portal.gd, spawn_point.gd, interactable.gd, dialogue_runner.gd, world_map.gd}
@@ -74,7 +74,7 @@ godot/
 └── tests/unit/world/, tools/zone_lint.gd
 ```
 
-**Structure Decision**: Lõi phát hành đặt ở `internal/domain/content` vì quest (F072), mini-game (F073), item/reward (F074–F075) dùng lại; module `world` theo WORLD_DESIGN. Godot theo [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md#3-cấu-trúc-thư-mục-godot) và [WORLD_RENDERING §2–§5](../../docs/08-game-client/WORLD_RENDERING.md).
+**Structure Decision**: Lõi phát hành đặt ở `internal/domain/content` vì quest (F072), mini-game (F073), item/reward (F074–F075) dùng lại; module `world` theo WORLD_DESIGN. Godot theo [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md#3-cấu-trúc-thư-mục-srcgame) và [WORLD_RENDERING §2–§5](../../docs/08-game-client/WORLD_RENDERING.md).
 
 ## Phase 0: Research
 
@@ -91,7 +91,7 @@ Không có — thuật toán phát hành ở ADR-0043/DATABASE_DESIGN §3.13, un
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `UnlockRule.Evaluate(facts) (met, missing[])`; `WorldArea.IsLearningArea()`; `ExplorationProgress.Record(id, kind, totals)`; `StoryChapterRules.Status(completedChapters)`; `InstanceKey(tenant, school, area, grade_band)` | Thuần, không I/O |
-| application | Command `PublishGameContent` (nội bộ), `EnterWorldArea`, `StartLevel`, `EndLevelSession`, `ReportDiscovery`, `EvaluateAreaUnlocks`, `UpdateStoryProgress` · Query `GetWorldManifest`, `ListWorldAreas`, `GetWorldExploration`, `GetNpcDialogue` | Command/query tách (ADR-0087); `Idempotency-Key` (middleware `pkg/httpx`) cho `StartLevel`, `EndLevelSession`, `ReportDiscovery` |
+| application | Command `PublishGameContent` (nội bộ), `EnterWorldArea`, `StartLevel`, `EndLevelSession`, `ReportDiscovery`, `EvaluateAreaUnlocks`, `UpdateStoryProgress` · Query `GetWorldManifest`, `ListWorldAreas`, `GetWorldExploration`, `GetNpcDialogue` | Command/query tách (ADR-0087); `Idempotency-Key` (middleware `src/backend/pkg/httpx`) cho `StartLevel`, `EndLevelSession`, `ReportDiscovery` |
 | infrastructure | ent repo; `SnapshotStore` (Valkey + floci, khóa bất biến); `ManifestBuilder`; `InstanceAllocatorV0`; `PresenceStore` Valkey `ew:game:presence:<student_id>`; publisher realtime Valkey `ew:rt:user:<id>` | |
 | presentation | `getWorldManifest`, `listWorldAreas`, `enterWorldArea`, `startLevel`, `endLevelSession`, `getNpcDialogue`, `getWorldExploration`, `reportDiscovery` · consumer `game.unlock_on_events`, `game.story_on_quest_completed`, `game.mastery_projection`, `game.school_projection` | |
 

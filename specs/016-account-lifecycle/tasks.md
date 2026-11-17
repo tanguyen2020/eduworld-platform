@@ -6,16 +6,16 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Adapter facade `game`, `learning` cho identity qua `pkg/modcall` (`Idempotency-Key`, Principal gốc, deadline; thử lại do engine saga, không retry trong adapter) — file: `modules/identity/internal/infrastructure/modules/game.go`, `modules/identity/internal/infrastructure/modules/learning.go`
-- [ ] T002 [P] Thêm permission `tenant.user.lock` vào catalog, gán `tenant_admin`, `school_admin` — file: `pkg/authz/catalog.go`
+- [ ] T001 Adapter facade `game`, `learning` cho identity qua `src/backend/pkg/modcall` (`Idempotency-Key`, Principal gốc, deadline; thử lại do engine saga, không retry trong adapter) — file: `src/backend/modules/identity/internal/infrastructure/modules/game.go`, `src/backend/modules/identity/internal/infrastructure/modules/learning.go`
+- [ ] T002 [P] Thêm permission `tenant.user.lock` vào catalog, gán `tenant_admin`, `school_admin` — file: `src/backend/pkg/authz/catalog.go`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T003 Thêm `unlockUser`, `deactivateUser`, `lockTenantUser`, `unlockTenantUser` — file: `specs/openapi/modules/identity.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=identity`
 - [ ] T004 [P] Thêm payload schema `user.access_restored`, `student.cleanup_scheduled`, `student.restored`, `user.anonymized`, `student.cleaned_up` (F016 sở hữu; F013 T045 chỉ dùng fixture) — file: `specs/events/payloads/identity/` — kiểm: `make specs-lint` — **2026-11-17:** đã áp `student.cleaned_up`, `student.restored` (F013/F014 tiêu thụ qua fixture ở M-C1); còn `user.access_restored`, `student.cleanup_scheduled`, `user.anonymized`
 - [x] T048 Contract `resetStudentPassword` (`StudentPasswordResetRequest`/`StudentPasswordResetResult`, `x-portal-action: action.school_lms.classes.reset_student_password`), permission `lms.student.password_reset` (ADMIN_PORTAL §2.2), `user.access_revoked.reason` thêm `password_changed` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/events/payloads/identity/user.access_revoked.v1.schema.json` — **xong 2026-11-17** (quyết định Technical Architect; kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`)
-- [ ] T005 ent schema `CleanupExclusion`, `StudentCleanupRun`, `SagaRun`, `SagaStep` (nếu F045 chưa tạo), `DeletionRequest`, `ErasureLog`; cột `status_reason`, `status_changed_by` trên `identity.users` — file: `modules/identity/ent/schema/` — kiểm: `make migrate-diff MOD=identity name=f016_lifecycle`, `make migrate-lint MOD=identity`
-- [ ] T006 [P] Engine saga: chạy bước tuần tự, retry backoff, bù khi `blocked`/`failed`, idempotent theo `saga_id`, alert `SagaStuck` — file: `modules/identity/internal/application/saga/orchestrator.go`
+- [ ] T005 ent schema `CleanupExclusion`, `StudentCleanupRun`, `SagaRun`, `SagaStep` (nếu F045 chưa tạo), `DeletionRequest`, `ErasureLog`; cột `status_reason`, `status_changed_by` trên `identity.users` — file: `src/backend/modules/identity/ent/schema/` — kiểm: `make migrate-diff MOD=identity name=f016_lifecycle`, `make migrate-lint MOD=identity`
+- [ ] T006 [P] Engine saga: chạy bước tuần tự, retry backoff, bù khi `blocked`/`failed`, idempotent theo `saga_id`, alert `SagaStuck` — file: `src/backend/modules/identity/internal/application/saga/orchestrator.go`
 
 **Checkpoint**: nền tảng sẵn sàng.
 
@@ -27,75 +27,75 @@
 
 ### Tests cho User Story 1
 
-- [ ] T007 [P] [US1] Test F016-AC-01, F016-AC-02: lock ghi status + audit + outbox cùng transaction; REST `403 ACCOUNT_LOCKED` ≤ 60 s ở identity và module game — file: `modules/identity/tests/integration/lock_user_test.go` — phải FAIL trước khi code
-- [ ] T036 [P] [US1] Test end-to-end F016-AC-24 (core-api + worker-events, module identity + game): khóa thật, SIS `suspended`, dọn thật học sinh đang có session + phiên game → session `account_locked`/`cleanup` (consumer F014), phiên game thu hồi, refresh → `401 REFRESH_TOKEN_INVALID` (consumer F013), tất cả ≤ 1 phút — file: `tests/e2e/identity/account_lifecycle_game_revoke_test.go` — phải FAIL trước khi code
-- [ ] T008 [P] [US1] Test F016-AC-03, F016-AC-04: Keycloak `enabled=false` + logout ≤ 1 phút (retry khi Keycloak lỗi); unlock → `user.access_restored`, bật lại Keycloak — file: `modules/identity/tests/integration/access_revoke_propagation_test.go`
-- [ ] T009 [P] [US1] Test tenant isolation + authorization F016-AC-05, F016-AC-06 cho `lockTenantUser`, `unlockTenantUser`, `lockUser`, `unlockUser`, `deactivateUser`: trường khác/tenant khác → 403/404; khóa nhân sự bằng School Admin → 403; thiếu `reason` → 422; lý do trung tính với học sinh — file: `modules/identity/tests/integration/lock_authz_test.go`
-- [ ] T046 [P] [US1] Test F016-AC-25, F016-AC-26, F016-AC-27: `resetStudentPassword` bởi School Admin/Tenant Admin/System Admin (`common`) → mật khẩu mới đăng nhập được, `temporary` theo khối, `initial_password` một lần + `no-store`, không có trong log/span/DB; replay → `password_redacted`; phiên game bị thu hồi (`password_changed`, refresh → `401 REFRESH_TOKEN_INVALID`), `user.access_revoked` không làm Keycloak `enabled=false`; học sinh gọi → 403, trường/tenant khác → 404, thiếu `reason` → 422 (TC-AUTH-087) — file: `modules/identity/tests/integration/reset_student_password_test.go` — phải FAIL trước khi code
+- [ ] T007 [P] [US1] Test F016-AC-01, F016-AC-02: lock ghi status + audit + outbox cùng transaction; REST `403 ACCOUNT_LOCKED` ≤ 60 s ở identity và module game — file: `src/backend/modules/identity/tests/integration/lock_user_test.go` — phải FAIL trước khi code
+- [ ] T036 [P] [US1] Test end-to-end F016-AC-24 (core-api + worker-events, module identity + game): khóa thật, SIS `suspended`, dọn thật học sinh đang có session + phiên game → session `account_locked`/`cleanup` (consumer F014), phiên game thu hồi, refresh → `401 REFRESH_TOKEN_INVALID` (consumer F013), tất cả ≤ 1 phút — file: `src/backend/test/e2e/identity/account_lifecycle_game_revoke_test.go` — phải FAIL trước khi code
+- [ ] T008 [P] [US1] Test F016-AC-03, F016-AC-04: Keycloak `enabled=false` + logout ≤ 1 phút (retry khi Keycloak lỗi); unlock → `user.access_restored`, bật lại Keycloak — file: `src/backend/modules/identity/tests/integration/access_revoke_propagation_test.go`
+- [ ] T009 [P] [US1] Test tenant isolation + authorization F016-AC-05, F016-AC-06 cho `lockTenantUser`, `unlockTenantUser`, `lockUser`, `unlockUser`, `deactivateUser`: trường khác/tenant khác → 403/404; khóa nhân sự bằng School Admin → 403; thiếu `reason` → 422; lý do trung tính với học sinh — file: `src/backend/modules/identity/tests/integration/lock_authz_test.go`
+- [ ] T046 [P] [US1] Test F016-AC-25, F016-AC-26, F016-AC-27: `resetStudentPassword` bởi School Admin/Tenant Admin/System Admin (`common`) → mật khẩu mới đăng nhập được, `temporary` theo khối, `initial_password` một lần + `no-store`, không có trong log/span/DB; replay → `password_redacted`; phiên game bị thu hồi (`password_changed`, refresh → `401 REFRESH_TOKEN_INVALID`), `user.access_revoked` không làm Keycloak `enabled=false`; học sinh gọi → 403, trường/tenant khác → 404, thiếu `reason` → 422 (TC-AUTH-087) — file: `src/backend/modules/identity/tests/integration/reset_student_password_test.go` — phải FAIL trước khi code
 
 ### Implementation cho User Story 1
 
-- [ ] T010 [P] [US1] Domain `UserStatus` (chuyển trạng thái hợp lệ) — file: `modules/identity/internal/domain/lifecycle/status.go`
-- [ ] T011 [US1] Command `LockUser`, `UnlockUser`, `DeactivateUser` + handler — file: `modules/identity/internal/application/command/user_lifecycle.go`, `modules/identity/internal/presentation/http/public/user_lifecycle.go`
-- [ ] T012 [US1] Consumer `keycloak-provisioner` nhánh `user.access_revoked` (disable + logout), `user.access_restored` (enable) — file: `modules/identity/internal/presentation/consumer/keycloak_provisioner.go`
-- [ ] T047 [US1] Command `ResetStudentPassword` + handler (sinh mật khẩu, Keycloak Admin API `reset-password` với `temporary` theo khối, thu hồi `game_auth_sessions` `password_changed`, outbox `user.access_revoked`, audit, redaction `initial_password`, replay không mật khẩu); nhánh consumer `password_changed` không disable user — file: `modules/identity/internal/application/command/reset_student_password.go`, `modules/identity/internal/presentation/http/public/student_password.go`
-- [ ] T013 [US1] Contract test producer: `LockUser`, apply SIS và saga dọn phát `user.status_changed`, `user.access_revoked`, `student.cleaned_up` đúng payload schema (`user.*` owner F011 T005, `student.cleaned_up` T004); consumer module game kết thúc session thuộc F014 T039 — file: `modules/identity/tests/contract/lifecycle_events_producer_test.go`
+- [ ] T010 [P] [US1] Domain `UserStatus` (chuyển trạng thái hợp lệ) — file: `src/backend/modules/identity/internal/domain/lifecycle/status.go`
+- [ ] T011 [US1] Command `LockUser`, `UnlockUser`, `DeactivateUser` + handler — file: `src/backend/modules/identity/internal/application/command/user_lifecycle.go`, `src/backend/modules/identity/internal/presentation/http/public/user_lifecycle.go`
+- [ ] T012 [US1] Consumer `keycloak-provisioner` nhánh `user.access_revoked` (disable + logout), `user.access_restored` (enable) — file: `src/backend/modules/identity/internal/presentation/consumer/keycloak_provisioner.go`
+- [ ] T047 [US1] Command `ResetStudentPassword` + handler (sinh mật khẩu, Keycloak Admin API `reset-password` với `temporary` theo khối, thu hồi `game_auth_sessions` `password_changed`, outbox `user.access_revoked`, audit, redaction `initial_password`, replay không mật khẩu); nhánh consumer `password_changed` không disable user — file: `src/backend/modules/identity/internal/application/command/reset_student_password.go`, `src/backend/modules/identity/internal/presentation/http/public/student_password.go`
+- [ ] T013 [US1] Contract test producer: `LockUser`, apply SIS và saga dọn phát `user.status_changed`, `user.access_revoked`, `student.cleaned_up` đúng payload schema (`user.*` owner F011 T005, `student.cleaned_up` T004); consumer module game kết thúc session thuộc F014 T039 — file: `src/backend/modules/identity/tests/contract/lifecycle_events_producer_test.go`
 
 ## Phase 4: User Story 2 — Lan truyền trạng thái từ SIS (Priority: P1)
 
 ### Tests cho User Story 2
 
-- [ ] T014 [P] [US2] Test F016-AC-07, F016-AC-08: import SIS `suspended`/`transferred_out` → thu hồi như US1 trong một chu kỳ; session/đăng nhập sau bị từ chối — file: `modules/identity/tests/integration/sis_status_propagation_test.go` — phải FAIL trước khi code
+- [ ] T014 [P] [US2] Test F016-AC-07, F016-AC-08: import SIS `suspended`/`transferred_out` → thu hồi như US1 trong một chu kỳ; session/đăng nhập sau bị từ chối — file: `src/backend/modules/identity/tests/integration/sis_status_propagation_test.go` — phải FAIL trước khi code
 
 ### Implementation cho User Story 2
 
-- [ ] T015 [US2] Bảo đảm apply SIS (F011) dùng cùng domain `UserStatus` và chuỗi event; reconciliation Keycloak cho trạng thái lệch — file: `modules/identity/internal/application/command/sis_apply_status.go`
+- [ ] T015 [US2] Bảo đảm apply SIS (F011) dùng cùng domain `UserStatus` và chuỗi event; reconciliation Keycloak cho trạng thái lệch — file: `src/backend/modules/identity/internal/application/command/sis_apply_status.go`
 
 ## Phase 5: User Story 3 — Dọn học sinh không đăng nhập game (Priority: P2)
 
 ### Tests cho User Story 3
 
-- [ ] T016 [P] [US3] Test F016-AC-09, F016-AC-13: chọn ứng viên theo `COALESCE(last_login_at, provisioned_at)` và số ngày hiệu lực; soft-delete `inactive_cleanup`; user Keycloak vẫn `enabled`, không còn membership Organization, mọi phiên/refresh token bị thu hồi, token cũ bị từ chối ≤ 60 s (TC-AUTH-020); không câu `DELETE` (log truy vấn) — file: `modules/identity/tests/integration/student_cleanup_test.go` — phải FAIL trước khi code
-- [ ] T017 [P] [US3] Test F016-AC-10, F016-AC-11: báo trước + `student.cleanup_scheduled`; loại trừ có `reason` + audit được tôn trọng — file: `modules/identity/tests/integration/cleanup_notice_exclusion_test.go`
-- [ ] T018 [P] [US3] Test F016-AC-12: vượt ngưỡng → `awaiting_approval` + alert; `approveStudentCleanupRun` chỉ `platform.student_cleanup.approve` — file: `modules/identity/tests/integration/cleanup_approval_test.go`
-- [ ] T019 [P] [US3] Test F016-AC-14, F016-AC-15: game trả `blocked` → bù `restoreStudentData`, `skipped_active`; tắt module game giữa saga → hội tụ, không chạy hai lần — file: `modules/identity/tests/integration/cleanup_saga_test.go`
-- [ ] T020 [P] [US3] Test tenant isolation + authorization F016-AC-16 cho `previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`, `listStudentCleanupRuns` — file: `modules/identity/tests/integration/cleanup_authz_test.go`
-- [ ] T021 [P] [US3] Facade test game/learning `cleanupStudentData` (`done`/`blocked`/`nothing_to_do`, chỉ module `identity` theo `x-allowed-callers`, idempotent) — file: `modules/game/tests/integration/platform_students_test.go`, `modules/learning/tests/integration/platform_students_test.go`
+- [ ] T016 [P] [US3] Test F016-AC-09, F016-AC-13: chọn ứng viên theo `COALESCE(last_login_at, provisioned_at)` và số ngày hiệu lực; soft-delete `inactive_cleanup`; user Keycloak vẫn `enabled`, không còn membership Organization, mọi phiên/refresh token bị thu hồi, token cũ bị từ chối ≤ 60 s (TC-AUTH-020); không câu `DELETE` (log truy vấn) — file: `src/backend/modules/identity/tests/integration/student_cleanup_test.go` — phải FAIL trước khi code
+- [ ] T017 [P] [US3] Test F016-AC-10, F016-AC-11: báo trước + `student.cleanup_scheduled`; loại trừ có `reason` + audit được tôn trọng — file: `src/backend/modules/identity/tests/integration/cleanup_notice_exclusion_test.go`
+- [ ] T018 [P] [US3] Test F016-AC-12: vượt ngưỡng → `awaiting_approval` + alert; `approveStudentCleanupRun` chỉ `platform.student_cleanup.approve` — file: `src/backend/modules/identity/tests/integration/cleanup_approval_test.go`
+- [ ] T019 [P] [US3] Test F016-AC-14, F016-AC-15: game trả `blocked` → bù `restoreStudentData`, `skipped_active`; tắt module game giữa saga → hội tụ, không chạy hai lần — file: `src/backend/modules/identity/tests/integration/cleanup_saga_test.go`
+- [ ] T020 [P] [US3] Test tenant isolation + authorization F016-AC-16 cho `previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`, `listStudentCleanupRuns` — file: `src/backend/modules/identity/tests/integration/cleanup_authz_test.go`
+- [ ] T021 [P] [US3] Facade test game/learning `cleanupStudentData` (`done`/`blocked`/`nothing_to_do`, chỉ module `identity` theo `x-allowed-callers`, idempotent) — file: `src/backend/modules/game/tests/integration/platform_students_test.go`, `src/backend/modules/learning/tests/integration/platform_students_test.go`
 
 ### Implementation cho User Story 3
 
-- [ ] T022 [P] [US3] Domain `CleanupPolicy`, `CleanupCandidate` — file: `modules/identity/internal/domain/lifecycle/cleanup.go`
-- [ ] T023 [US3] Command `ScheduleCleanupNotices`, `RunStudentCleanup`, `ApproveStudentCleanupRun`, exclusions; query preview/runs; job `student-inactive-cleanup` — file: `modules/identity/internal/application/command/student_cleanup.go`, `modules/identity/internal/presentation/job/student_inactive_cleanup.go`
-- [ ] T024 [US3] Endpoint internal `cleanupStudentData`, `restoreStudentData` ở module game và module learning — file: `modules/game/internal/presentation/http/internal/platform_students.go`, `modules/learning/internal/presentation/http/internal/platform_students.go`
-- [ ] T025 [US3] Consumer `keycloak-provisioner` nhánh `student.cleaned_up`: gỡ membership Organization + logout mọi phiên, **không** đặt `enabled=false`; nhánh `student.restored`: thêm lại membership Organization — file: `modules/identity/internal/presentation/consumer/keycloak_provisioner.go`
+- [ ] T022 [P] [US3] Domain `CleanupPolicy`, `CleanupCandidate` — file: `src/backend/modules/identity/internal/domain/lifecycle/cleanup.go`
+- [ ] T023 [US3] Command `ScheduleCleanupNotices`, `RunStudentCleanup`, `ApproveStudentCleanupRun`, exclusions; query preview/runs; job `student-inactive-cleanup` — file: `src/backend/modules/identity/internal/application/command/student_cleanup.go`, `src/backend/modules/identity/internal/presentation/job/student_inactive_cleanup.go`
+- [ ] T024 [US3] Endpoint internal `cleanupStudentData`, `restoreStudentData` ở module game và module learning — file: `src/backend/modules/game/internal/presentation/http/internal/platform_students.go`, `src/backend/modules/learning/internal/presentation/http/internal/platform_students.go`
+- [ ] T025 [US3] Consumer `keycloak-provisioner` nhánh `student.cleaned_up`: gỡ membership Organization + logout mọi phiên, **không** đặt `enabled=false`; nhánh `student.restored`: thêm lại membership Organization — file: `src/backend/modules/identity/internal/presentation/consumer/keycloak_provisioner.go`
 
 ## Phase 6: User Story 4 — Khôi phục học sinh bị dọn (Priority: P2)
 
 ### Tests cho User Story 4
 
-- [ ] T026 [P] [US4] Test F016-AC-17, F016-AC-18: đăng nhập lại hợp lệ SIS (password grant thành công vì user Keycloak `enabled`) → saga khôi phục + `student.restored`, membership Organization được thêm lại, dữ liệu cũ dùng lại; SIS không hợp lệ → `ACCOUNT_DEACTIVATED` — file: `modules/identity/tests/integration/restore_on_login_test.go` — phải FAIL trước khi code
-- [ ] T027 [P] [US4] Test F016-AC-19: `restoreTenantTrashItem` (`student`) bởi Tenant Admin chạy cùng saga + audit; School Admin `403 PERMISSION_DENIED`; tenant khác 404 — file: `modules/identity/tests/integration/restore_from_trash_test.go`
+- [ ] T026 [P] [US4] Test F016-AC-17, F016-AC-18: đăng nhập lại hợp lệ SIS (password grant thành công vì user Keycloak `enabled`) → saga khôi phục + `student.restored`, membership Organization được thêm lại, dữ liệu cũ dùng lại; SIS không hợp lệ → `ACCOUNT_DEACTIVATED` — file: `src/backend/modules/identity/tests/integration/restore_on_login_test.go` — phải FAIL trước khi code
+- [ ] T027 [P] [US4] Test F016-AC-19: `restoreTenantTrashItem` (`student`) bởi Tenant Admin chạy cùng saga + audit; School Admin `403 PERMISSION_DENIED`; tenant khác 404 — file: `src/backend/modules/identity/tests/integration/restore_from_trash_test.go`
 
 ### Implementation cho User Story 4
 
-- [ ] T028 [US4] Command `RestoreCleanedStudent` + nhánh trong `GameLogin` (F013) và handler Thùng rác tenant cho `student` — file: `modules/identity/internal/application/command/restore_student.go`
+- [ ] T028 [US4] Command `RestoreCleanedStudent` + nhánh trong `GameLogin` (F013) và handler Thùng rác tenant cho `student` — file: `src/backend/modules/identity/internal/application/command/restore_student.go`
 
 ## Phase 7: User Story 5 — Ẩn danh hóa theo retention và yêu cầu (Priority: P3)
 
 ### Tests cho User Story 5
 
-- [ ] T029 [P] [US5] Test F016-AC-20, F016-AC-21: saga `user_anonymize` ghi đè PII, `anon.<user_id>`, Keycloak disable + ẩn danh, `anonymizeUserData` game/learning, erasure log, không `DELETE`, chỉ hoàn tất khi mọi bước `done` — file: `modules/identity/tests/integration/anonymize_test.go` — phải FAIL trước khi code
-- [ ] T030 [P] [US5] Test F016-AC-22 (authorization `platform.data_request.write`, `X-Tenant-Id` đích, audit mã yêu cầu) và F016-AC-23 (payload event/projection không chứa họ tên, ngày sinh, mã học sinh — kiểm schema) — file: `modules/identity/tests/integration/data_request_test.go`
+- [ ] T029 [P] [US5] Test F016-AC-20, F016-AC-21: saga `user_anonymize` ghi đè PII, `anon.<user_id>`, Keycloak disable + ẩn danh, `anonymizeUserData` game/learning, erasure log, không `DELETE`, chỉ hoàn tất khi mọi bước `done` — file: `src/backend/modules/identity/tests/integration/anonymize_test.go` — phải FAIL trước khi code
+- [ ] T030 [P] [US5] Test F016-AC-22 (authorization `platform.data_request.write`, `X-Tenant-Id` đích, audit mã yêu cầu) và F016-AC-23 (payload event/projection không chứa họ tên, ngày sinh, mã học sinh — kiểm schema) — file: `src/backend/modules/identity/tests/integration/data_request_test.go`
 
 ### Implementation cho User Story 5
 
-- [ ] T031 [US5] Command `AnonymizeUser`, `CreateDataRequest`; job `retention-anonymizer` (Clock, thời hạn theo DATA_PRIVACY §2) — file: `modules/identity/internal/application/command/anonymize.go`, `modules/identity/internal/presentation/job/retention_anonymizer.go`
-- [ ] T032 [US5] Endpoint internal `anonymizeUserData` ở module game và module learning — file: `modules/game/internal/presentation/http/internal/platform_users.go`, `modules/learning/internal/presentation/http/internal/platform_users.go`
+- [ ] T031 [US5] Command `AnonymizeUser`, `CreateDataRequest`; job `retention-anonymizer` (Clock, thời hạn theo DATA_PRIVACY §2) — file: `src/backend/modules/identity/internal/application/command/anonymize.go`, `src/backend/modules/identity/internal/presentation/job/retention_anonymizer.go`
+- [ ] T032 [US5] Endpoint internal `anonymizeUserData` ở module game và module learning — file: `src/backend/modules/game/internal/presentation/http/internal/platform_users.go`, `src/backend/modules/learning/internal/presentation/http/internal/platform_users.go`
 
 ## Phase 8: Polish & Cross-Cutting
 
 - [ ] T033 [P] Kiểm ACCOUNT_PROVISIONING §6b khớp quyết định Keycloak (giữ `enabled`; main agent đã sửa) và sửa thứ tự saga, §7b (`done/blocked/nothing_to_do`), IDENTITY_MAPPING §5 (không xóa Keycloak user), EVENT_DESIGN (close 4403, `user.anonymized`), ADMIN_PORTAL §2.2 (`tenant.user.lock`), CONFIG_DEFAULTS (tham số retention), CHANGELOG — file: `docs/09-identity/ACCOUNT_PROVISIONING.md`
-- [ ] T034 [P] Metric `eduworld_student_cleanup_total`, `eduworld_saga_*`, `eduworld_access_revoke_latency_seconds`; alert `SagaStuck`, `StudentCleanupLargeBatch` — file: `modules/identity/internal/infrastructure/observability/lifecycle_metrics.go`
+- [ ] T034 [P] Metric `eduworld_student_cleanup_total`, `eduworld_saga_*`, `eduworld_access_revoke_latency_seconds`; alert `SagaStuck`, `StudentCleanupLargeBatch` — file: `src/backend/modules/identity/internal/infrastructure/observability/lifecycle_metrics.go`
 - [ ] T035 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
 ## Dependencies & Execution Order

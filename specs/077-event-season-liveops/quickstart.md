@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F072, F074, F075 (F078 nếu publish qua HTTP; nếu chưa, dùng `seed-config`). Season track cần `season.started` (F106 hoặc fixture).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events` (2 instance cho kịch bản scheduler), `make seed-check` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Seed config: sự kiện `world_festival` khối 3–5 (`th-demo-a`, `pgd-demo`) có điểm sự kiện, 2 mốc, community goal scope `school`; season track 30 cấp; template sự kiện trường gán `th-demo-a`.
-- Ở local đặt `start_at`/`end_at`/`claim_until` của sự kiện seed cách hiện tại vài phút để quan sát chuyển trạng thái; integration test dùng fake clock (`pkg/clock`).
+- Ở local đặt `start_at`/`end_at`/`claim_until` của sự kiện seed cách hiện tại vài phút để quan sát chuyển trạng thái; integration test dùng fake clock (`src/backend/pkg/clock`).
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` (`th-demo-a`), `hs.dung.7a` (khối 7), `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`, `sa.admin` (vận hành, MFA tắt ở local).
 
 ## 2. Kịch bản kiểm tra

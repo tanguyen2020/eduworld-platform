@@ -44,7 +44,7 @@ flowchart LR
 
 Nguyên tắc:
 - Metric qua Prometheus (pull `/metrics` trên cổng admin `:909x`); trace qua OTLP; log JSON ra stdout, collector đẩy Loki.
-- Mỗi request có `trace_id` từ APISIX (W3C `traceparent`) xuyên **mọi binary và module** tham gia (NFR-OBS-001): lời gọi facade trong tiến trình (span con do `pkg/modcall` mở, ADR-0074 mục 3), NATS request/reply và JetStream (header `traceparent` trong message), rồi tới PostgreSQL (comment SQL `/* trace_id=... */` qua pgx tracer).
+- Mỗi request có `trace_id` từ APISIX (W3C `traceparent`) xuyên **mọi binary và module** tham gia (NFR-OBS-001): lời gọi facade trong tiến trình (span con do `src/backend/pkg/modcall` mở, ADR-0074 mục 3), NATS request/reply và JetStream (header `traceparent` trong message), rồi tới PostgreSQL (comment SQL `/* trace_id=... */` qua pgx tracer).
 - Mọi metric, log, span có thuộc tính `service` (= `OTEL_SERVICE_NAME` = binary: `core-api`, `realtime`, `worker`), `module` (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`; gắn theo route, handler, consumer, job) và với `worker` thêm `profile` (`events`, `chat`, `jobs`). Dashboard và alert tách theo module bằng nhãn `module`, theo tiến trình bằng `service`/`profile`.
 - `trace_id` được trả cho client trong Problem Details (ADR-0010) để hỗ trợ tra cứu.
 - **Hạ tầng Docker Swarm (ADR-0024):** `node_exporter` và `cAdvisor` chạy dạng service `mode: global` (một task mỗi node) để lấy CPU/RAM/disk/network của node và từng container; Docker Engine bật endpoint metrics (`metrics-addr`) để lấy trạng thái engine; một exporter nhỏ đọc Docker API của manager (chỉ đọc, qua socket proxy) xuất `swarm_service_replicas_desired`, `swarm_service_replicas_running`, `swarm_task_restarts_total`, `swarm_node_ready`. Prometheus tìm target bằng `dockerswarm_sd_configs` (role `tasks`, lọc theo label `prometheus.scrape=true`). Không dùng Kubernetes metrics/KEDA.
@@ -81,7 +81,7 @@ Nguyên tắc:
 | | `eduworld_chat_seq_gaps_total` | Counter | `channel_type` | client telemetry → module game |
 | | `nats_consumer_num_pending`, `nats_consumer_num_redelivered`, `nats_stream_total_bytes` (từ `prometheus-nats-exporter`) | Gauge | `stream`, `consumer` | NATS |
 | | `eduworld_moderation_queue_size` | Gauge | `priority` | module chat (`worker-chat`) |
-| | `eduworld_tenant_filter_bypass_total` | Counter | `module`, `reason` (danh sách đóng ADR-0089 §3: `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`) | mọi module qua `pkg/tenancy.Bypass` (ADR-0039, ADR-0072, ADR-0089) |
+| | `eduworld_tenant_filter_bypass_total` | Counter | `module`, `reason` (danh sách đóng ADR-0089 §3: `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`) | mọi module qua `src/backend/pkg/tenancy.Bypass` (ADR-0039, ADR-0072, ADR-0089) |
 | | `eduworld_moderation_school_notifications_total` | Counter | `status` (sent/acknowledged/overdue) | module chat (`worker-chat`) [Proposed] |
 | | `eduworld_reports_total` | Counter | `target_type`, `reason` | module chat |
 | Learning Completion | `eduworld_learning_activities_completed_total` | Counter | `activity_type`, `context` (practice/assignment/quest/competition), `subject`, `grade_band` | module learning |
@@ -100,7 +100,7 @@ Metric bổ sung:
 |---|---|
 | `eduworld_outbox_pending`, `eduworld_outbox_relay_lag_seconds` | Độ trễ outbox → NATS theo `module` (relay chạy trong profile `worker-events`, ADR-0042) |
 | `eduworld_event_consume_lag_seconds` (`module`, `stream`, `consumer`), `nats_consumer_num_pending` | Consumer event NATS chậm (thay Valkey Streams, ADR-0042) |
-| `eduworld_internal_client_requests_total` (`caller_module`, `callee_module`, `operation`, `outcome`), `eduworld_internal_client_duration_seconds` (`caller_module`, `callee_module`, `operation`) — tên theo [API_DESIGN §12.3](../07-backend/API_DESIGN.md) | Lời gọi facade trong tiến trình qua `pkg/modcall` (ADR-0074 mục 3): RED theo cặp module; không có retry/circuit breaker giữa module |
+| `eduworld_internal_client_requests_total` (`caller_module`, `callee_module`, `operation`, `outcome`), `eduworld_internal_client_duration_seconds` (`caller_module`, `callee_module`, `operation`) — tên theo [API_DESIGN §12.3](../07-backend/API_DESIGN.md) | Lời gọi facade trong tiến trình qua `src/backend/pkg/modcall` (ADR-0074 mục 3): RED theo cặp module; không có retry/circuit breaker giữa module |
 | `eduworld_external_client_requests_total` (`module`, `integration`: keycloak_admin/keycloak_token/sis/s3/smtp, `outcome`), `eduworld_external_client_circuit_state` (`module`, `integration`) gauge 0=closed/1=half-open/2=open, `eduworld_external_client_retries_total`, `eduworld_external_client_bulkhead_rejected_total` (`module`, `integration`) | Resilience của adapter tích hợp bên ngoài (ADR-0074 mục 5): timeout, retry cho thao tác idempotent, circuit breaker |
 | `eduworld_nats_request_duration_seconds` (`module`, `subject_group`), `eduworld_nats_request_errors_total` (`module`, `reason`: timeout/no_responders) | Lệnh từ `realtime` tới handler trong `core-api` qua NATS request/reply (ADR-0074) |
 | `eduworld_projection_lag_seconds` (`module`, `projection`) | Độ trễ projection `ref_*` so với event gốc (ADR-0037) |
@@ -261,7 +261,7 @@ Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
 
 ## 7. Tracing
 
-- OTel SDK Go (qua `pkg/otel`): span cho HTTP handler, command/query handler (`<module>.command.<Name>`, `<module>.query.<Name>`, ADR-0038), truy vấn DB (pgx tracer dưới ent), Valkey, lời gọi facade sang module khác (span `<caller>→<callee>.<operationId>` do `pkg/modcall` mở, cùng trace, ADR-0074), NATS request/reply và publish/consume JetStream (`traceparent` trong header message; consumer tạo span con hoặc link tới span publish), lời gọi SIS/Keycloak.
+- OTel SDK Go (qua `src/backend/pkg/otel`): span cho HTTP handler, command/query handler (`<module>.command.<Name>`, `<module>.query.<Name>`, ADR-0038), truy vấn DB (pgx tracer dưới ent), Valkey, lời gọi facade sang module khác (span `<caller>→<callee>.<operationId>` do `src/backend/pkg/modcall` mở, cùng trace, ADR-0074), NATS request/reply và publish/consume JetStream (`traceparent` trong header message; consumer tạo span con hoặc link tới span publish), lời gọi SIS/Keycloak.
 - Tempo bật **service graph** (từ span client/server, span `modcall` và producer/consumer) để vẽ dashboard Module Map.
 - Saga liên module có một trace gốc; mỗi bước gắn thuộc tính `saga.id`, `saga.step`.
 - Sampling: 100% ở local/dev; staging/prod: head sampling 10% + tail sampling ở collector giữ 100% trace lỗi và trace > 1s [Proposed].

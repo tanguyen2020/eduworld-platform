@@ -18,7 +18,7 @@ Chuẩn Spec Kit (ADR-0082). Định dạng: `- [ ] T001 [P] [US1] Mô tả — 
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T00x [Contract chung: OpenAPI/AsyncAPI/schema/event/spec internal facade] — file: `specs/…` — kiểm: `make specs-lint`, `make gen MOD=<module>`, `make arch-check`
-- [ ] T00x [ent schema + migration] — file: `modules/<module>/ent/schema/…` — kiểm: `make migrate-diff MOD=<module>`, `make migrate-lint MOD=<module>`
+- [ ] T00x [ent schema + migration] — file: `src/backend/modules/<module>/ent/schema/…` — kiểm: `make migrate-diff MOD=<module>`, `make migrate-lint MOD=<module>`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -35,9 +35,9 @@ Chuẩn Spec Kit (ADR-0082). Định dạng: `- [ ] T001 [P] [US1] Mô tả — 
 
 ### Implementation cho User Story 1
 
-- [ ] T0xx [P] [US1] [Domain/aggregate] — file: `modules/<module>/internal/domain/…`
+- [ ] T0xx [P] [US1] [Domain/aggregate] — file: `src/backend/modules/<module>/internal/domain/…`
 - [ ] T0xx [US1] [Command/query handler] — file: `…/internal/application/…`
-- [ ] T0xx [US1] [Repository/handler/consumer; đăng ký điểm vào trong `modules/<module>/module.go`] — file: `…`
+- [ ] T0xx [US1] [Repository/handler/consumer; đăng ký điểm vào trong `src/backend/modules/<module>/module.go`] — file: `…`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 

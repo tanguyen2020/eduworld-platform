@@ -11,7 +11,7 @@ Module `lms` của module `learning` thêm aggregate `Assignment` (vòng đời 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/idempotency` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency` |
 | Storage | PostgreSQL `eduworld_learning` (schema `lms`, `assessment`, `ref`); Valkey chỉ đếm nhắc tạm (nguồn sự thật bảng `lms.assignment_reminders`) |
 | Testing | go test + testcontainers (PostgreSQL, NATS); contract test payload `assignment.*`; đồng hồ giả cho worker |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -54,7 +54,7 @@ specs/041-school-assignments/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/
 │   ├── assignment.go                     # lms.assignments (thêm cột)
 │   ├── assignment_target.go              # lms.assignment_targets
@@ -106,7 +106,7 @@ Không có. Quy tắc ở SCHOOL_LMS §4, ACTIVITY_ENGINE §8.1, API_DESIGN §9.
 ### Tích hợp và phụ thuộc
 
 - Feature phụ thuộc: F032 (rule engine), F040 (course, port thành viên study group), F030 (Attempt, `startActivityAttempt`), F026 (version published), F078 (event danh mục game, mốc sau).
-- Không phụ thuộc F042: port `ExamSessionCreator` + adapter mặc định "chưa khả dụng" (`modules/learning/internal/infrastructure/examsession/unavailable_creator.go`); F042 đăng ký adapter thật thay thế trong `module.go`.
+- Không phụ thuộc F042: port `ExamSessionCreator` + adapter mặc định "chưa khả dụng" (`src/backend/modules/learning/internal/infrastructure/examsession/unavailable_creator.go`); F042 đăng ký adapter thật thay thế trong `module.go`.
 - Facade: không gọi facade module khác (R29: phản ứng phụ qua event).
 - Event phát: `assignment.created`, `assignment.published`, `assignment.results_released`, `assignment.completed` (EVENT_DESIGN §4.3), `assignment.closed`, `assignment.submission_updated`, `assignment.reminded` (Cần thêm), `audit.recorded`. Event tiêu thụ: `activity.started`, `activity.submitted`, `activity.graded` (owner F030), `exam.graded`, `attempt.re_evaluated`, `enrollment.changed`, `user.access_revoked`, event danh mục game của F078 (Cần thêm).
 

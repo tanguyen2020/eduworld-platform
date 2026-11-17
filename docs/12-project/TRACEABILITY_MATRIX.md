@@ -45,7 +45,7 @@
 | `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 79 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 43 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
-| `OPS` Vận hành | pkg/ (platform kit) · mọi service | 5 | 5 | 0 | 16 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
+| `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 16 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
 | **Tổng** | | **346** | 345 | 18 | 484 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
@@ -658,7 +658,7 @@ AC: AC-CMS-001, AC-CMS-002, AC-CMS-003, AC-CMS-004, AC-CMS-005 · US: US-CMS-001
 | FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
 | FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
 | FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-009 | Một Admin Portal React (TypeScript) web/apps/portal với 5 workspace (School & Learning Management, Learning… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
+| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
 | FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
 | FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
 | FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
@@ -703,7 +703,7 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 4 AC, 0 US — [AUDIO_LANGUAGE_LEA
 
 ### 3.33. `OPS` Vận hành
 
-Service: pkg/ (platform kit) · mọi service · Tài liệu sở hữu: [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [MONITORING](../11-operations/MONITORING.md)
+Service: src/backend/pkg/ (platform kit) · mọi module · Tài liệu sở hữu: [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [MONITORING](../11-operations/MONITORING.md)
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|

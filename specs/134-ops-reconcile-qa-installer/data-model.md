@@ -61,7 +61,7 @@ Chữ ký RSA-SHA256 bằng cùng khóa phát hành của F133 (manifest phát h
 ## 3. Quy tắc kiểm tra dữ liệu
 
 - Cửa sổ đối soát `window_to − window_from ≤ outbox_retention`, `window_from ≤ restore_point ≤ window_to`.
-- Event lọc theo `event_types` mà consumer bên nhận đăng ký (registry `pkg/messaging`), tránh đếm event không ai tiêu thụ.
+- Event lọc theo `event_types` mà consumer bên nhận đăng ký (registry `src/backend/pkg/messaging`), tránh đếm event không ai tiêu thụ.
 - Cờ QA không áp cho tenant `common`; dashboard luôn anti-join `ref.tenants.is_qa`.
 - Bộ cài chỉ trả khi chỉ mục đúng schema và chữ ký; lọc `grade_bands ∩ grade_bands(trường)` với `grade_bands(trường)` suy từ `ref.classes.grade_level` của lớp đang hoạt động.
 

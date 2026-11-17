@@ -1,0 +1,49 @@
+# Specs lane (F001 T038): contract checks, SDD feature specs, workflow rules (F001-AC-25).
+name: specs
+
+on:
+  pull_request:
+    paths:
+      - "specs/**"
+      - "scripts/specs/**"
+      - "scripts/openapi/**"
+      - "scripts/ci/**"
+      - "scripts/package.json"
+      - "scripts/package-lock.json"
+      - ".github/**"
+  push:
+    branches: [main]
+    paths:
+      - "specs/**"
+      - "scripts/specs/**"
+      - "scripts/openapi/**"
+      - "scripts/ci/**"
+      - "scripts/package.json"
+      - "scripts/package-lock.json"
+      - ".github/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: specs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: make specs-lint
+      - run: make specs-breaking
+      - name: workflow rules and path filters
+        run: |
+          node scripts/ci/check-workflows.mjs
+          node --test scripts/ci/check-workflows.test.mjs
+          bash scripts/ci/test-path-filters.sh
+          bash scripts/ci/check-admin-ports.sh

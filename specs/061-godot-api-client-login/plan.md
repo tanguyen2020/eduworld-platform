@@ -55,7 +55,7 @@ specs/061-godot-api-client-login/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── config/{local,staging,production}.json   # api_base_url (không oidc_*); mock.json nhãn MOCK do F060
 ├── scripts/networking/
 │   ├── api_client.gd            # autoload ApiClient: request(), post_public(), header, retry, refresh hook

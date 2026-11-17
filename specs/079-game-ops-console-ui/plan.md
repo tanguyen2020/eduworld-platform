@@ -15,7 +15,7 @@ Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gate
 | Storage | Không (RAM; autosave lên server) |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose (gateway nội bộ local), axe, visual regression |
 | Target Platform | Desktop ≥ 1280 px cho builder; tablet/điện thoại chỉ xem |
-| Project Type | web app (workspace A) + component `web/packages/ops-ui` |
+| Project Type | web app (workspace A) + component `src/cms/frontend/packages/ops-ui` |
 | Performance Goals | Danh sách ≤ 2 s trang đầu; autosave mỗi 10 s (ADMIN_PORTAL §1.4) |
 | Constraints | AGENTS R1, R2, R3, R10, R11, R19, R20, R32; ADR-0027, ADR-0043, ADR-0047, ADR-0056, ADR-0057 |
 | Scale/Scope | 21 loại cấu hình module game; payload ≤ giới hạn schema |
@@ -54,11 +54,11 @@ specs/079-game-ops-console-ui/
 ### Source Code (repository)
 
 ```text
-web/packages/ops-ui/src/
+src/cms/frontend/packages/ops-ui/src/
 ├── content-editor/{ContentEditorShell.tsx,SchemaForm.tsx,VersionTab.tsx,DiffView.tsx,WorkflowBar.tsx,useAutosave.ts}
 ├── game/{GamePreviewFrame.tsx,ThumbnailImage.tsx,TurntableViewer.tsx,ManifestRefPicker.tsx}
 └── *.stories.tsx
-web/apps/portal/src/workspaces/game-ops/
+src/cms/frontend/apps/portal/src/workspaces/game-ops/
 ├── routes.tsx                     # /game-ops/{:configType,:configType/:configId/v/:version,events/calendar,progression}
 ├── registry/configTypes.ts        # config_type → permission, builder, schema id (chỉ metadata hiển thị)
 ├── api/{gameConfigs.ts,preview.ts,manifest.ts,simulate.ts,schemas.ts}
@@ -72,7 +72,7 @@ web/apps/portal/src/workspaces/game-ops/
 │   └── generic/GenericSchemaBuilder.tsx       # reward-rules, items, shop-items, currencies, world-areas…
 ├── i18n/{vi,en}.json
 └── __tests__/
-web/apps/portal/tests/e2e/game-ops/*.spec.ts
+src/cms/frontend/apps/portal/tests/e2e/game-ops/*.spec.ts
 ```
 
 **Structure Decision**: Khung editor và thành phần game-media ở `ops-ui` để F108 (thi đấu), sticker/GIF và Learning Content Studio dùng lại (ADMIN_PORTAL §1.4); builder đặc thù trong chunk `game-ops` (ADR-0027 mục 7).

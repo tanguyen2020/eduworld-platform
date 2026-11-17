@@ -11,7 +11,7 @@ Mở rộng module chat (đã có lõi F115–F118) với: (1) consumer đồng 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go (JetStream), go-redis (Valkey), `pkg/outbox`, `pkg/tenancy`, `pkg/entx`, `pkg/authz`, `santhosh-tekuri/jsonschema` (chat-policy v5) |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go (JetStream), go-redis (Valkey), `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/authz`, `santhosh-tekuri/jsonschema` (chat-policy v5) |
 | Storage | PostgreSQL `eduworld_chat` (schema `chat`, `social`, `ref`, `infra`); Valkey (cache policy, seq — tạm, ADR-0004) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); contract test consumer event (`study_group.*`, `enrollment.changed`) |
 | Target Platform | Linux container (module `chat` nạp trong `core-api`; profile `worker-chat` gồm `chat-persister`, consumer và job) |
@@ -54,7 +54,7 @@ specs/120-persistent-channels-clubs/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/{channel.go,channel_member.go,chat_policy.go,persistent_retention_run.go,
 │               club.go,club_member.go,club_join_request.go,club_invitation.go,club_goal.go,club_goal_progress.go,club_event.go}
 ├── internal/domain/
@@ -75,7 +75,7 @@ modules/chat/
 └── tests/{unit,integration,contract}/
 ```
 
-**Structure Decision**: Một module `chat` (chat, social) theo ADR-0074; consumer và job chạy ở profile `worker-chat` (`cmd/worker --profile=chat`), tin nhắn vẫn qua `chat-persister` (ADR-0035). Policy là aggregate riêng vì có version và luật hợp lệ phức tạp.
+**Structure Decision**: Một module `chat` (chat, social) theo ADR-0074; consumer và job chạy ở profile `worker-chat` (`src/backend/cmd/worker --profile=chat`), tin nhắn vẫn qua `chat-persister` (ADR-0035). Policy là aggregate riêng vì có version và luật hợp lệ phức tạp.
 
 ## Phase 0: Research
 
@@ -92,7 +92,7 @@ Không có. Thuật toán policy ở [CHAT_SYSTEM §3](../../docs/03-social-mult
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `channel.Channel`, `policy.Rule`/`Intersect`/`ValidateLowerLevel`, `club.Club` | Invariant: không `grade_*`; always-on; cấp dưới ⊆ cấp trên; club ≤ `max_members`; staff không là member |
-| application | Command `SyncClassChannel`, `SyncStudyGroupChannel`, `FreezeDirectChannel`, `PutChatPolicy`, `CreateClub`, `ApproveClub`, `JoinClub`, `LeaveClub`, `ArchiveClub`, `RecordClubGoalProgress`, `RunPersistentRetention` · Query `GetChatPolicy`, `GetEffectivePolicy`, `SearchMessages`, `ListClubs`, `ListMyChannels` | Permission theo spec US2/US4; authz tường minh đầu handler + idempotency middleware `pkg/httpx` |
+| application | Command `SyncClassChannel`, `SyncStudyGroupChannel`, `FreezeDirectChannel`, `PutChatPolicy`, `CreateClub`, `ApproveClub`, `JoinClub`, `LeaveClub`, `ArchiveClub`, `RecordClubGoalProgress`, `RunPersistentRetention` · Query `GetChatPolicy`, `GetEffectivePolicy`, `SearchMessages`, `ListClubs`, `ListMyChannels` | Permission theo spec US2/US4; authz tường minh đầu handler + idempotency middleware `src/backend/pkg/httpx` |
 | infrastructure | Repository ent (global filter tenant + soft-delete), `PolicyCache` Valkey `ew:chat:policy:<tenant>:<scope>`, outbox publisher, port `ModerationChecker` (pipeline in-process F116) | Không đọc DB module khác |
 | presentation | Handler `getChatPolicy`, `putChatPolicy`, `listClubs`, `createClub`, `getClub`, `updateClub`, `approveClub`, `leaveClub`, `archiveClub`, `listClubMembers`, `updateClubMemberRole`, `removeClubMember`, `listClubJoinRequests`, `requestJoinClub`, `acceptClubJoinRequest`, `rejectClubJoinRequest`, `inviteToClub`, `acceptClubInvitation`, `declineClubInvitation`, `listClubGoals`, `createClubGoal`, `listClubEvents`, `createClubEvent`, `searchMessages`, `listMyChannels`, `listChannelMessages` · consumer `class.synced`, `class.created`, `enrollment.changed`, `study_group.*`, `user.blocked`/`user.unblocked`, `school.updated`, `activity.graded`, `quest.completed`, `boss.encounter_completed`, `world.discovery_found` · job `persistent-chat-retention` | |
 

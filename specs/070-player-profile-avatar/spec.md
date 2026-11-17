@@ -1,6 +1,6 @@
 # Feature Specification: F070 — Hồ sơ người chơi, nickname, tạo avatar lần đầu, trang phục, emote
 
-**Feature Branch**: `070-player-profile-avatar` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `godot/`) · **Mốc**: M2 · **Phụ thuộc**: F014, F062
+**Feature Branch**: `070-player-profile-avatar` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F014, F062
 **Input**: Học sinh vào game lần đầu tạo nhân vật (preset, dáng, màu da/tóc, trang phục mặc định), chọn nickname từ danh sách sinh tự động; sau đó đổi trang phục, phụ kiện, emote trong Tủ đồ; người khác chỉ thấy nickname/avatar/level. FR nguồn: FR-GAME-004, FR-GAME-005, FR-GAME-015.
 
 ## Clarifications
@@ -10,7 +10,7 @@
 - Q: GameProfile được tạo khi nào? → A: Trong transaction `StartGameSession` của F014 (bước `EnsureGameProfile`, cùng cập nhật `last_game_login_at`), không qua event identity, để không có độ trễ trước màn tạo nhân vật. Profile mới có `avatar_config = NULL`, `nickname = NULL`.
 - Q: Shape `AvatarConfig` theo OpenAPI (`hair_item_id` UUID, `emote_item_ids` ≤ 8) hay CHARACTER_SYSTEM §5.1 (`item_id` mã chuỗi, `emote_slots` ≤ 6, slot phụ kiện)? → A: Theo tài liệu sở hữu [CHARACTER_SYSTEM §5.1](../../docs/01-game-design/CHARACTER_SYSTEM.md#51-data-model-khớp-domain_model-5); `item_id` là mã `varchar(64)` như `item_ledger`, `quest.schema.json`. Sửa OpenAPI ở Phase 2 (contracts §6).
 - Q: Nickname duy nhất theo trường (DATABASE_DESIGN §2.8 [Proposed]) hay theo tenant (`suggestNicknames`, STUDENT_GAME_UX_CORE S02)? → A: Theo tenant (chặt hơn, đúng với tương tác liên trường trong tenant `unit`, ADR-0054); cập nhật DATABASE_DESIGN ở Polish.
-- Q: Danh mục preset, dáng người, bảng màu, đồ mặc định, bộ từ sinh nickname lưu ở đâu? → A: Nội dung platform có version (ADR-0043) `CharacterCatalog`, seed bởi `modules/game/seed/`; không hardcode trong client (R2). Biên tập trên Game Operations Console → F078.
+- Q: Danh mục preset, dáng người, bảng màu, đồ mặc định, bộ từ sinh nickname lưu ở đâu? → A: Nội dung platform có version (ADR-0043) `CharacterCatalog`, seed bởi `src/backend/modules/game/seed/`; không hardcode trong client (R2). Biên tập trên Game Operations Console → F078.
 - Q: Giới hạn đổi nickname/tháng? → A: CHARACTER_SYSTEM §5.3 nêu "giới hạn số lần/tháng theo policy trường" nhưng chưa có giá trị; dùng tham số mới `nickname_change_monthly_limit` [Proposed], đăng ký CONFIG_DEFAULTS ở Polish.
 
 ### Session 2026-11-17

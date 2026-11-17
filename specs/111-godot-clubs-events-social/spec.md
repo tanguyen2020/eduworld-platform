@@ -1,6 +1,6 @@
 # Feature Specification: F111 — Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn"
 
-**Feature Branch**: `111-godot-clubs-events-social` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M5 · **Phụ thuộc**: F077, F110, F120 (và F071 `SceneRouter.request_area`, F072 `QuestService`, F091/F092 `hub.instance.join`/`HubSync`, F095 bạn bè, F119 `ChatDock`, F123 deep link thông báo)
+**Feature Branch**: `111-godot-clubs-events-social` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M5 · **Phụ thuộc**: F077, F110, F120 (và F071 `SceneRouter.request_area`, F072 `QuestService`, F091/F092 `hub.instance.join`/`HubSync`, F095 bạn bè, F119 `ChatDock`, F123 deep link thông báo)
 **Input**: Học sinh "Tham gia bạn" đang ở khu công khai; tìm bạn qua nhóm "Bạn cùng lớp" và "Vừa chơi cùng" (không tìm kiếm tự do); mở Event center xem sự kiện live-ops, mục tiêu cộng đồng, nhiệm vụ ngày/tuần và season track miễn phí, nhận thưởng mốc; xem, xin vào, nhận lời mời và tạo club theo chính sách `student_club_creation` của trường. Màn S11 (phần Tìm bạn, Club, Tham gia bạn) và S14 của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn (phía client): FR-SOC-001…004, FR-MP-002, FR-MP-003, FR-EVT-001, FR-EVT-003…008, FR-GAM-001, FR-GAME-010.
 
 ## Clarifications

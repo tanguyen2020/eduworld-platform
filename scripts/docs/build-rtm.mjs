@@ -49,7 +49,7 @@ const DOMAINS = {
   CMS: { svc: 'module learning · module game (game-admin)', docs: ['04-admin-portal/ADMIN_PORTAL.md'], ops: /^\/(cms|game-admin|game-media)/, tc: ['CMS'] },
   LMS: { svc: 'module learning', docs: ['04-admin-portal/SCHOOL_LMS.md'], ops: /^\/lms\//, tc: ['LMS', 'DASH'] },
   AUD: { svc: 'module identity', docs: ['10-security/SECURITY_ARCHITECTURE.md'], ops: /trash|login-events|roles|permissions|user-roles/, tc: ['AUD'] },
-  OPS: { svc: 'pkg/ (platform kit) · mọi service', docs: ['11-operations/DEPLOYMENT.md', '11-operations/MONITORING.md'], ops: /settings|student-cleanup|chat-retention|users\/\{user_id\}:lock/, tc: ['SVC', 'PERF'] },
+  OPS: { svc: 'src/backend/pkg/ (platform kit) · mọi module', docs: ['11-operations/DEPLOYMENT.md', '11-operations/MONITORING.md'], ops: /settings|student-cleanup|chat-retention|users\/\{user_id\}:lock/, tc: ['SVC', 'PERF'] },
 };
 // Mã domain chỉ dùng cho AC/US/TC, ánh xạ về domain FR.
 const ALIAS = { GDD: 'GAME', WLD: 'GAME', TEN: 'ORG', LRN: 'EXR', ACT: 'EXR', SIM: 'EXR', VID: 'EXR', MATH: 'EXR', DASH: 'ANL' };

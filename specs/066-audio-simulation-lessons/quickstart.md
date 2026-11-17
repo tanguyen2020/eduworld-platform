@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F030, F031, F063, F065, F027, F058.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); Godot chạy `res://scenes/bootstrap/bootstrap.tscn`; web `cd web && pnpm install && pnpm gen:api && pnpm dev`.
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); Godot chạy `res://scenes/bootstrap/bootstrap.tscn`; web `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev`.
 - Tài khoản demo: `hs.an.3a` (học sinh `th-demo-a`), `hs.dung.7a` (tenant `pgd-demo`, thử cô lập), `cm.noidung` (content_admin), `cm.duyet` (content_reviewer), `ad.truong.a` (thử route người chơi).
 - Dữ liệu: seed bài nghe Tiếng Anh 3 "My name is Mai" (4 câu: 2 `single_choice`, 1 `ordering`, 1 `fill_in_blank`, `max_plays = 2`, transcript) và mô phỏng `physics.lever` v1 (khối lượng 2 kg/1 kg, mục tiêu "cân bằng đòn bẩy", `max_runs = 5`), đã publish và gán cho `th-demo-a`.
 
@@ -45,7 +45,7 @@ make test MOD=learning
 make test-integration MOD=learning
 make migrate-lint MOD=learning
 make godot-test
-cd web && pnpm --filter portal test -- src/workspaces/content-studio/activities/editors
+cd src/cms/frontend && pnpm --filter portal test -- src/workspaces/content-studio/activities/editors
 ```
 
 ## 4. Bằng chứng cần nộp

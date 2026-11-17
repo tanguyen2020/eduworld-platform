@@ -1,7 +1,7 @@
 # Feature Specification: F076 — Challenge Engine solo, 5 mức khó, room host dùng chung
 
-**Feature Branch**: `076-challenge-engine-solo` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `pkg/roomhost`) · **Mốc**: M3 · **Phụ thuộc**: F072, F074
-**Input**: Challenge PvE một người chơi trên hoạt động học tập thật: các loại `time`, `perfect`, `survival`, `puzzle`, `knowledge`, `weekly`, `seasonal`; năm mức khó ánh xạ dải độ khó câu trong khối của học sinh; mỗi hoạt động là attempt học tập cá nhân do module learning chấm; thời gian theo giờ server; giới hạn lượt/ngày, cooldown; thưởng qua Reward Engine. Dựng thư viện room host dùng chung `pkg/roomhost` (lease owner, timer, checkpoint, grace) cho boss (F103) và battle (F105). FR nguồn: FR-CHL-001, FR-CHL-003.
+**Feature Branch**: `076-challenge-engine-solo` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/backend/pkg/roomhost`) · **Mốc**: M3 · **Phụ thuộc**: F072, F074
+**Input**: Challenge PvE một người chơi trên hoạt động học tập thật: các loại `time`, `perfect`, `survival`, `puzzle`, `knowledge`, `weekly`, `seasonal`; năm mức khó ánh xạ dải độ khó câu trong khối của học sinh; mỗi hoạt động là attempt học tập cá nhân do module learning chấm; thời gian theo giờ server; giới hạn lượt/ngày, cooldown; thưởng qua Reward Engine. Dựng thư viện room host dùng chung `src/backend/pkg/roomhost` (lease owner, timer, checkpoint, grace) cho boss (F103) và battle (F105). FR nguồn: FR-CHL-001, FR-CHL-003.
 
 ## Clarifications
 
@@ -9,7 +9,7 @@
 
 - Q: Loại nào thuộc F076? → A: Bảy loại chơi một mình (`time`, `perfect`, `survival`, `puzzle`, `knowledge`, `weekly`, `seasonal`). `boss`, `coop`, `party` → F103; `tournament` (vòng PvE của giải) → F107.
 - Q: Câu hỏi theo mức khó lấy thế nào? → A: module game gọi `createAttempt` (learning internal) với mode `challenge`, dải độ khó của mức và khối học sinh; module learning chọn câu và chấm (ADR-0016). Contract internal hiện chỉ cho `quest`/`minigame` → delta "Cần sửa" ([contracts](contracts/README.md) §6).
-- Q: "Room host dùng chung" nghĩa là gì ở F076? → A: F076 tạo `pkg/roomhost` (không logic nghiệp vụ) và dùng nó cho timer/lease/checkpoint của challenge solo; F103 (boss) và F105 (battle) dùng lại. Lựa chọn ghi ở [research.md](research.md).
+- Q: "Room host dùng chung" nghĩa là gì ở F076? → A: F076 tạo `src/backend/pkg/roomhost` (không logic nghiệp vụ) và dùng nó cho timer/lease/checkpoint của challenge solo; F103 (boss) và F105 (battle) dùng lại. Lựa chọn ghi ở [research.md](research.md).
 - Q: Mỗi "hoạt động" có bao nhiêu câu? → A: Theo `activity_source` của challenge version; loại `survival` dùng một câu mỗi hoạt động để trừ sức bền theo từng câu.
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -102,8 +102,8 @@ Mỗi lượt trong challenge là bài học tập thật của chính học sin
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F076-AC-17 | `pkg/roomhost` PHẢI cấp lease độc quyền mỗi phòng cho một node; KHI owner ngừng gia hạn, node khác PHẢI chiếm lease sau khi lease hết hạn và khôi phục trạng thái từ checkpoint, không chạy timer hai lần | [CHALLENGE_BOSS_SYSTEM §4](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [REALTIME_ARCHITECTURE](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) | — |
-| F076-AC-18 | `pkg/roomhost` PHẢI tính timer bằng đồng hồ server, lưu checkpoint qua port do module cung cấp, hỗ trợ grace theo loại phòng, và không import code nghiệp vụ của module nào | AGENTS R13 · NFR-MAINT-001 | — |
+| F076-AC-17 | `src/backend/pkg/roomhost` PHẢI cấp lease độc quyền mỗi phòng cho một node; KHI owner ngừng gia hạn, node khác PHẢI chiếm lease sau khi lease hết hạn và khôi phục trạng thái từ checkpoint, không chạy timer hai lần | [CHALLENGE_BOSS_SYSTEM §4](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [REALTIME_ARCHITECTURE](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) | — |
+| F076-AC-18 | `src/backend/pkg/roomhost` PHẢI tính timer bằng đồng hồ server, lưu checkpoint qua port do module cung cấp, hỗ trợ grace theo loại phòng, và không import code nghiệp vụ của module nào | AGENTS R13 · NFR-MAINT-001 | — |
 | F076-AC-19 | NẾU Valkey không khả dụng, THÌ job `challenge-deadline` PHẢI kết thúc challenge quá `deadline_at` dựa trên PostgreSQL; không mất kết quả đã chấm | NFR-AVAIL-003 · AGENTS R9 | — |
 
 ---
@@ -165,9 +165,9 @@ Game Designer lưu cấu hình challenge sai thì bị chặn với lỗi rõ r�
 | Ràng buộc | Nguồn |
 |---|---|
 | Chấm điểm chỉ ở module learning; module game không nhận kết quả từ client | ADR-0016 · AGENTS R5, R6 |
-| Gọi module learning qua facade `learning` (`pkg/modcall`), không fail-open | AGENTS R29 · ADR-0074 |
+| Gọi module learning qua facade `learning` (`src/backend/pkg/modcall`), không fail-open | AGENTS R29 · ADR-0074 |
 | Lượt chơi ghim version | AGENTS R11, R31 · ADR-0043 |
-| `pkg/roomhost` không chứa nghiệp vụ, không import service | AGENTS R13 |
+| `src/backend/pkg/roomhost` không chứa nghiệp vụ, không import service | AGENTS R13 |
 
 ## Success Criteria *(bắt buộc)*
 
@@ -191,4 +191,4 @@ Game Designer lưu cấu hình challenge sai thì bị chặn với lỗi rõ r�
 
 - module learning (F030) mở `createAttempt` cho mode `challenge` với dải độ khó và khối trước khi US3 Done (delta §6).
 - Reward rule có trigger `challenge.completed` (delta `reward-rule.schema.json`) và dùng `conditions.first_completion_only` cho phần thưởng lần đầu; hệ số `reward_multiplier` đọc từ payload event [Proposed].
-- Nếu F091 đã có lease/out cho hub, F076 trích phần đó vào `pkg/roomhost` thay vì viết mới [Proposed].
+- Nếu F091 đã có lease/out cho hub, F076 trích phần đó vào `src/backend/pkg/roomhost` thay vì viết mới [Proposed].

@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F014, F062 (và F061 cho luồng Godot).
-- Lệnh: `make up`, `make seed` (nạp `modules/game/seed/character_catalog.v1.json`), `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make seed` (nạp `src/backend/modules/game/seed/character_catalog.v1.json`), `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (cùng tenant `th-demo-a`), `hs.dung.7a` (tenant `pgd-demo`), `ad.truong.a` (nhân sự).
 - Token game bằng `gameLogin` (F013) + `createGameSession` (F014).
 

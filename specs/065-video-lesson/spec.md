@@ -1,6 +1,6 @@
 # Feature Specification: F065 — Bài học video: plugin `video_lesson` và renderer Godot
 
-**Feature Branch**: `065-video-lesson` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` + `godot/` · **Mốc**: M-C3 · **Phụ thuộc**: F063 (và F030 attempt engine, F027 media/transcode Theora, F031 learning events)
+**Feature Branch**: `065-video-lesson` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` + `src/game/` · **Mốc**: M-C3 · **Phụ thuộc**: F063 (và F030 attempt engine, F027 media/transcode Theora, F031 learning events)
 **Input**: Activity `video_lesson`: video có chương, phụ đề WebVTT vi/en, resume, câu hỏi chèn tự chấm tại mốc thời gian, nhánh tương tác, hoàn thành theo phần đã xem thật — plugin Go trong Activity Registry và renderer trong activity player Godot. FR nguồn: FR-CNT-014 (kèm FR-EXR-004 resume, FR-CNT-011 ghim version).
 
 ## Clarifications

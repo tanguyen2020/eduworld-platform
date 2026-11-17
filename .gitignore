@@ -7,10 +7,14 @@
 secrets/
 
 # Go
-backend/bin/
-backend/tmp/
+/bin/
+/tmp/
 *.test
 coverage.out
+*.out.json
+
+# Local data (volumes, backups) — never commit
+/data/
 
 # Godot
 godot/.godot/
@@ -25,6 +29,7 @@ web/dist/
 
 # Tooling / OS
 node_modules/
+**/node_modules/
 .idea/
 .vscode/*
 !.vscode/extensions.json

@@ -11,7 +11,7 @@ Ba phần. (1) **module game**: item `minigame_config` trên lõi phát hành F0
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · GDScript (Godot 4.x) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/modcall`, nats.go, JSON Schema validator · GdUnit4 |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, nats.go, JSON Schema validator · GdUnit4 |
 | Storage | `eduworld_game`: `game.minigame_configs`, `game.minigame_config_versions`, `game.minigame_plays`; `eduworld_learning`: `ref.minigame_config_versions`, cột `assessment.attempts.game_score` |
 | Testing | go test + testcontainers; facade test game ↔ learning (`createAttempt`, `validateMinigameQuestionSource`), contract test event; test hợp đồng plugin chung (TC-ACT-001); GdUnit4 |
 | Target Platform | Linux container (`core-api` + `worker`; module game, learning) · Windows, Android, iOS, Web |
@@ -50,7 +50,7 @@ specs/073-minigame-engine/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/                        # minigameconfig.go, minigameconfigversion.go, minigameplay.go
 ├── internal/domain/minigame/          # MiniGameConfig (parse), Compatibility (minigame_type ↔ QuestionType), PublishValidator, Play
 ├── internal/domain/quest/handlers/minigame.go
@@ -59,13 +59,13 @@ modules/game/
 ├── internal/presentation/http/public/minigames.go
 ├── internal/presentation/consumer/minigame_on_activity_graded.go
 └── seed/minigames/                    # 2 cấu hình + quest mẫu Gấu Nâu
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/refminigameconfigversion.go
 ├── internal/domain/activity/plugins/minigame/   # plugin.go, scorer.go (game points), render.go
 ├── internal/application/query/validate_minigame_question_source.go
 ├── internal/presentation/http/internal/minigame_source.go
 └── internal/presentation/consumer/minigame_config_projection.go
-godot/
+src/game/
 ├── scenes/learning/activity_renderers/minigame/MinigameRenderer.tscn
 ├── scenes/minigames/{MiniGameHost.tscn, types/<type>/<Type>.tscn}
 ├── scripts/learning/{minigame_base.gd, minigame_registry.gd, minigame_host.gd}

@@ -1,6 +1,6 @@
 # Feature Specification: F080 — Game Analytics và Live Ops dashboard (workspace E)
 
-**Feature Branch**: `080-game-analytics-liveops` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` + `web/apps/portal` (workspace E `live-ops`; màn "Hoạt động game" ở workspace C `school-lms`) · **Mốc**: M4b · **Phụ thuộc**: F078, F079, F052, F056 (và F014 telemetry endpoint, F077 event run)
+**Feature Branch**: `080-game-analytics-liveops` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` + `src/cms/frontend/apps/portal` (workspace E `live-ops`; màn "Hoạt động game" ở workspace C `school-lms`) · **Mốc**: M4b · **Phụ thuộc**: F078, F079, F052, F056 (và F014 telemetry endpoint, F077 event run)
 **Input**: Thu telemetry client không PII; analytics consumer ghi `analytics.events_raw` từ domain event NATS với định danh giả `player_key`; rollup ngày/tuần/tháng, cohort, funnel, hiệu năng thiết bị; API Game Analytics cho platform và báo cáo tổng hợp tenant (ẩn ô < 5) kèm màn "Hoạt động game" cho nhà trường ở workspace C (chuyển từ F081); Live dashboard thời gian thực từ Prometheus; giám sát/dừng khẩn cấp sự kiện; UI workspace E. FR nguồn: FR-ANL-006…013, FR-CMS-016, FR-GAME-011, FR-OPS-003, NFR-OBS-003.
 
 ## Clarifications
@@ -257,6 +257,6 @@ Game designer xem 11 panel, lọc khối/nền tảng/hạng thiết bị, so s�
 
 - [Proposed] Live dashboard đọc Prometheus HTTP API qua adapter trong module game, URL `EW_PROMETHEUS_URL` từ env (R3); query catalog cố định trong code.
 - [Proposed] `getGameAnalyticsExport` là operationId mới (API_DESIGN chỉ có `createGameAnalyticsExport`).
-- [Proposed] UI Game Analytics đặt `web/apps/portal/src/workspaces/live-ops/{dashboard,analytics,events}/` (F051 slug `live-ops`).
+- [Proposed] UI Game Analytics đặt `src/cms/frontend/apps/portal/src/workspaces/live-ops/{dashboard,analytics,events}/` (F051 slug `live-ops`).
 - [Proposed] Màn "Hoạt động game" route `/school-lms/reports/game-activity` trong chunk `school-lms` (F052), menu "Tiến độ & báo cáo → Hoạt động game"; dùng `DashboardRangePicker`, `DashboardWidget`, `SuppressedCell`, `useDashboardQueue` của F056 trong `ops-ui`.
 - ADR-0058 ở trạng thái Proposed nhưng được liệt kê "đang dùng làm mặc định" trong chỉ mục ADR.

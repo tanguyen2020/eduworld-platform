@@ -20,7 +20,7 @@ Không định nghĩa lại quy tắc/tham số; link tài liệu sở hữu. Th
 | Storage | [PostgreSQL `eduworld_<module>` / Valkey (tạm) / floci S3 / không có] |
 | Testing | [go test + testcontainers / Vitest + Playwright / GdUnit4] |
 | Target Platform | [Linux container / trình duyệt / Windows, Android] |
-| Project Type | [backend module (`modules/<module>`, binary `core-api`/`realtime`/`worker` profile …) / web app / game client / platform kit] |
+| Project Type | [backend module (`src/backend/modules/<module>`, binary `core-api`/`realtime`/`worker` profile …) / web app / game client / platform kit] |
 | Performance Goals | [link NFR/PERFORMANCE_BUDGET] |
 | Constraints | [link AGENTS R…, ADR…] |
 | Scale/Scope | [link CONFIG_DEFAULTS / NFR-SCAL] |
@@ -61,7 +61,7 @@ specs/[NNN-slug]/
 
 ```text
 [Cây thư mục thật sẽ tạo/sửa, ví dụ:]
-modules/<module>/
+src/backend/modules/<module>/
 ├── module.go                              # Register: route, consumer, job, facade (BACKEND_DESIGN §3.3)
 ├── api/                                   # facade sinh từ specs/openapi/modules/<module>.internal.v1.yaml (không sửa tay)
 ├── ent/schema/
@@ -71,7 +71,7 @@ modules/<module>/
 ├── internal/application/query/            # read context
 ├── internal/application/port/{write,read}/
 ├── internal/infrastructure/persistence/{write,read}/
-├── internal/infrastructure/{modules,messaging}/   # modules/: adapter gọi facade module khác qua pkg/modcall
+├── internal/infrastructure/{modules,messaging}/   # modules/: adapter gọi facade module khác qua src/backend/pkg/modcall
 ├── internal/presentation/{http,facade,natscmd,consumer,job}/
 └── tests/{unit,integration,facade}/
 ```

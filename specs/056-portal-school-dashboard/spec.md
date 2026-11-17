@@ -1,6 +1,6 @@
 # Feature Specification: F056 — Workspace C — School Learning Dashboard và báo cáo
 
-**Feature Branch**: `056-portal-school-dashboard` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace C) · **Mốc**: M-C3 · **Phụ thuộc**: F043, F044, F052
+**Feature Branch**: `056-portal-school-dashboard` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace C) · **Mốc**: M-C3 · **Phụ thuộc**: F043, F044, F052
 **Input**: Màn School Learning Dashboard (trường → lớp → học sinh), bản đồ kỹ năng LO, hồ sơ học sinh, bảng kết quả course, phân tích đề/bài, xuất báo cáo bất đồng bộ (gồm báo cáo tham khảo TT27/TT22), tổng hợp tenant và platform. FR nguồn: FR-LMS-003, FR-LMS-011, FR-LMS-013, FR-ANL-012, FR-ANL-013, FR-ANL-014, FR-ANL-015.
 
 ## Clarifications
@@ -35,7 +35,7 @@
 | F056-AC-03 | HỆ THỐNG PHẢI cung cấp bộ chọn khoảng thời gian với preset (Hôm nay, 7 ngày, 30 ngày, Học kỳ này, Năm học này, 12 tháng) và khoảng tùy chọn không vượt `dashboard_max_range_days`; ngày ngoài giới hạn bị vô hiệu; không có "toàn bộ thời gian"; người dùng chỉ chọn được độ hạt thô hơn quy tắc `dashboard_grain_daily_max_days`/`dashboard_grain_weekly_max_days` | FR-ANL-013 · AC-DASH-002 · AC-DASH-003 | TC-DASH-002 |
 | F056-AC-04 | NẾU API trả `422 DASHBOARD_RANGE_TOO_LARGE` hoặc `504 DASHBOARD_QUERY_TIMEOUT`, THÌ widget PHẢI hiển thị gợi ý thu hẹp khoảng/phạm vi; NẾU trả `429 DASHBOARD_BUSY`, THÌ widget PHẢI tự thử lại sau 2–5 giây tối đa 2 lần; mỗi widget tải độc lập (skeleton riêng) và một trang không gửi quá `dashboard_max_concurrent_per_user` truy vấn đồng thời | FR-ANL-013 · AC-DASH-004 · AC-DASH-005 | TC-DASH-006 |
 | F056-AC-05 | KHI hiển thị "Cần chú ý", Portal PHẢI liệt kê học sinh với nhãn theo `reason` (`inactive`, `low_accuracy`, `missed_assignments`, `rapid_guessing` → "làm quá nhanh") bằng ngôn ngữ trung tính, không xếp hạng học sinh theo điểm | FR-LMS-011 · AC-LMS-017 · [SCHOOL_LMS §8.8](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003 |
-| F056-AC-06 | KHI giá trị có `suppressed = true` hoặc ô dưới 5 học sinh ở báo cáo cấp tenant/platform, Portal PHẢI hiển thị "< 5" thay cho số bằng component dùng chung `SuppressedCell` (`web/packages/ops-ui/src/dashboard/`, kèm tooltip) | FR-ANL-016 · AC-DASH-011 | TC-DASH-009 |
+| F056-AC-06 | KHI giá trị có `suppressed = true` hoặc ô dưới 5 học sinh ở báo cáo cấp tenant/platform, Portal PHẢI hiển thị "< 5" thay cho số bằng component dùng chung `SuppressedCell` (`src/cms/frontend/packages/ops-ui/src/dashboard/`, kèm tooltip) | FR-ANL-016 · AC-DASH-011 | TC-DASH-009 |
 | F056-AC-07 | Widget an toàn PHẢI chỉ hiển thị số thông báo chưa xác nhận (`safety_notifications_unacknowledged`) và liên kết tới màn thông báo an toàn; HỆ THỐNG PHẢI không hiển thị nội dung chat ở bất kỳ màn nào của F056 | AC-LMS-018 · AGENTS R14, R16 | — |
 
 ---
@@ -202,6 +202,6 @@ Academic Manager xuất kết quả bài giao (XLSX) và báo cáo tham khảo T
 
 ## Assumptions
 
-- Thư mục `web/apps/portal/src/workspaces/school-lms/dashboard/`, route `/portal/school-lms/dashboard/*` (ADMIN_PORTAL §1.2, F051).
+- Thư mục `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/`, route `/portal/school-lms/dashboard/*` (ADMIN_PORTAL §1.2, F051).
 - [Proposed] Endpoint hồ sơ học sinh và phân tích đề/bài theo đề xuất ở [contracts §6](contracts/README.md) — chờ owner F043/F044 chốt; US2 phần hồ sơ và US3 phần phân tích chỉ chạy sau delta.
 - Số liệu "tự học sau gợi ý" (câu hỏi 4) cần trường bổ sung trong `SchoolDashboard` (delta [Proposed]); trước khi có, widget ẩn kèm "Chưa có số liệu".

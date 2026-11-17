@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F001, F002
 - Lệnh: `make up`, `make migrate`, `make test MOD=pkg`, `make test-integration MOD=pkg` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); `nats-box` (profile `tools`) để xem stream.
-- Module mẫu: `pkg/testkit/sample` theo khuôn ADR-0087 (entity `Widget` mixin `Base`; write context: command `CreateWidget`/`DeleteWidget` có `IdempotencyKey`, `UnitOfWork` + outbox; read context: query `ListWidgets` qua `ReadSession`; consumer `sample.widget_on_created`; không mediator). Fixture tenant A = `th-demo-a`, B = `pgd-demo`; Principal `ad.truong.a`, `ad.truong.b`, `sa.admin`.
+- Module mẫu: `src/backend/pkg/testkit/sample` theo khuôn ADR-0087 (entity `Widget` mixin `Base`; write context: command `CreateWidget`/`DeleteWidget` có `IdempotencyKey`, `UnitOfWork` + outbox; read context: query `ListWidgets` qua `ReadSession`; consumer `sample.widget_on_created`; không mediator). Fixture tenant A = `th-demo-a`, B = `pgd-demo`; Principal `ad.truong.a`, `ad.truong.b`, `sa.admin`.
 
 ## 2. Kịch bản kiểm tra
 
@@ -20,7 +20,7 @@
 | 6 | Trong `InTenantTx` của A, `SELECT current_setting('app.tenant_id')` | = A; với `CrossTenantScope` dùng role `_platform` | F003-AC-06 |
 | 7 | Thêm `field.String("x")` không MaxLen; thêm SQL `DELETE FROM` | `make lint` fail (entlint/tenancyguard) | F003-AC-07 |
 | 8 | Command lỗi sau khi ghi outbox; `ListWidgets` bằng role chỉ đọc; adapter read thử `INSERT` trong `ReadSession` | Rollback, outbox trống; query thành công; lệnh ghi bị từ chối (`READ ONLY`) | F003-AC-08, F003-AC-09 |
-| 9 | Thêm vào `internal/application/query` của module mẫu một import `port/write` hoặc `pkg/outbox`; chạy `make lint MOD=pkg` | `go-arch-lint`/`depguard` fail, chỉ rõ file/dòng | F003-AC-10 |
+| 9 | Thêm vào `internal/application/query` của module mẫu một import `port/write` hoặc `src/backend/pkg/outbox`; chạy `make lint MOD=pkg` | `go-arch-lint`/`depguard` fail, chỉ rõ file/dòng | F003-AC-10 |
 | 10 | Tên widget dài hơn MaxLen; gọi `CreateWidget` bằng Principal thiếu permission | 422 `VALIDATION_FAILED` `MAX_LENGTH`, không mở transaction; lỗi `authz.Require`, repository không được gọi | F003-AC-11 |
 | 10b | Gọi `CreateWidget` rồi xem trace/metric/log | Span `sample.command.CreateWidget` là con của span HTTP; metric `eduworld_usecase_duration_seconds{kind="command"}`; log không có payload | F003-AC-33 |
 | 11 | Hai lần `Save` cùng version | Lần 2: 409 `CONFLICT` | F003-AC-12 |

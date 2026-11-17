@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F080, F131, F133 (và F010, F043/F044, F057 cho phần liên quan).
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`, `cd web && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`, `cd src/cms/frontend && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `sa.admin` (system_admin), `ad.truong.a`, `ad.truong.b`, `ad.donvi` (tenant_admin `pgd-demo`), `qlcm.truong.a` (academic_manager), `hs.an.3a`, `hs.dung.7a`.
 - Chỉ mục bộ cài local: `deploy/installer/school-kit/publish-index.sh --channel production --local` ghi vào floci `ew-game-bundles` (khóa ký local), `EW_CLIENT_RELEASES_BASE_URL` trỏ floci.
 

@@ -11,7 +11,7 @@ Dựng nền dữ liệu của module `learning` (DB `eduworld_learning`): consu
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go (JetStream), `pkg/{entx,tenancy,authz,outbox,httpx,modcall,problem,observability}` |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go (JetStream), `src/backend/pkg/{entx,tenancy,authz,outbox,httpx,modcall,problem,observability}` |
 | Storage | PostgreSQL `eduworld_learning` (schema `ref`, `content`, `infra`); Valkey chỉ cache (`ew:learning:*`) |
 | Testing | `go test` + testcontainers (PostgreSQL, NATS, Valkey); facade test (identity gọi với fake facade; learning kiểm hiện thực facade theo ví dụ spec internal) |
 | Target Platform | Linux container (module `learning` trong `core-api` + `worker-events`) |
@@ -27,10 +27,10 @@ Dựng nền dữ liệu của module `learning` (DB `eduworld_learning`): consu
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | spec Ready; delta spec internal (facade) + event payload ở Phase 2 tasks (T004–T007) |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ ghi DB `eduworld_learning`; identity → learning qua facade `learning` (`modules/learning/api`, `x-allowed-callers: [identity]`); projection qua event |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ ghi DB `eduworld_learning`; identity → learning qua facade `learning` (`src/backend/modules/learning/api`, `x-allowed-callers: [identity]`); projection qua event |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Mọi bảng mới có `tenant_id` (NULL chỉ với platform loại H) + `deleted_at`; RLS; chỉ soft-delete; test isolation |
 | IV Server-authoritative | ✅ | Không có điểm/kết quả; nền cho bất biến version (trigger mẫu) |
-| V Xác thực, phân quyền | ✅ | Facade platform-ops: `x-allowed-callers: [identity]` cưỡng chế bằng `make arch-check`; public đọc dùng permission catalog `pkg/authz` |
+| V Xác thực, phân quyền | ✅ | Facade platform-ops: `x-allowed-callers: [identity]` cưỡng chế bằng `make arch-check`; public đọc dùng permission catalog `src/backend/pkg/authz` |
 | VI An toàn trẻ em | ✅ | Projection chỉ cột tối thiểu, không PII trong log |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo tên CONFIG_DEFAULTS; MaxLen theo DATABASE_DESIGN §1.4 |
 | VIII UI tách logic, token | ✅ | Không có UI |
@@ -54,7 +54,7 @@ specs/020-learning-foundation/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/
 │   ├── mixin_content.go            # ContentItemMixin (HybridContent + owner_scope + current_version_id + latest_version_no + cloned_from_*), ContentVersionMixin
 │   ├── ref_tenant.go ref_school.go ref_class.go ref_student.go ref_enrollment.go ref_province.go
@@ -72,13 +72,13 @@ modules/learning/
 │   ├── persistence/                 # hybrid_scope.go (SQL đọc nội dung lai §4.2), assignment_repo.go, ref_repo.go
 │   └── messaging/                   # JetStream consumer adapter (filter subject identity)
 ├── internal/presentation/
-│   ├── facade/platform_ops.go          # hiện thực modules/learning/api: listTrash, restoreTrashItem, executeTenantCloneStep, applyTenantAssignments, revokeTenantAssignments, listResourceAssignments
+│   ├── facade/platform_ops.go          # hiện thực src/backend/modules/learning/api: listTrash, restoreTrashItem, executeTenantCloneStep, applyTenantAssignments, revokeTenantAssignments, listResourceAssignments
 │   ├── consumer/identity_projection.go  # consumer learning.projection_identity
 │   └── job/                         # (để trống — rebuild projection chờ operation facade F010)
 └── tests/{unit,integration,contract}/  # integration/fixtures/fixture_content.go (chỉ test)
 ```
 
-**Structure Decision**: Theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md#3-cấu-trúc-repository-và-module-clean-architecture), đường dẫn `modules/learning/` (D1). Mixin content đặt trong module (không phải `pkg/`) vì là quy tắc nghiệp vụ nội dung, `pkg/entx` chỉ cung cấp `PlatformBase`.
+**Structure Decision**: Theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md#3-cấu-trúc-repository-và-module-clean-architecture), đường dẫn `src/backend/modules/learning/` (D1). Mixin content đặt trong module (không phải `src/backend/pkg/`) vì là quy tắc nghiệp vụ nội dung, `src/backend/pkg/entx` chỉ cung cấp `PlatformBase`.
 
 ## Phase 0: Research
 
@@ -97,7 +97,7 @@ Không có. ADR-0029, ADR-0028, MULTITENANCY §4.2 và DATABASE_DESIGN §3.0 đ�
 | domain | `contentmodel.OwnerScope`, `ContentMeta.Validate(kind)`, `Lifecycle.Transition(from, action)`, `resourceassignment.Assignment`, `trash.RestorePolicy` | Thuần Go, không I/O |
 | application | Command `ApplyTenantAssignments`, `RevokeTenantAssignments`, `SoftDeleteResource`, `RestoreResource`, `ExecuteCloneStep`, `UpsertProjection` · Query `ListTrash`, `ListResourceAssignments` | Facade: chỉ module `identity` được import (`x-allowed-callers`), use case kiểm Principal gốc (on-behalf) trong `context`; public delete dùng permission của loại (đăng ký ở F021/F022/F024) |
 | infrastructure | ent repository, `HybridScopeQuery`, outbox writer, JetStream consumer, Valkey invalidation `ew:learning:qb:pool:<tenant_id>:*` | SQL tường minh có tham số scope + `deleted_at IS NULL` |
-| presentation | Hiện thực facade (6 operationId) của `modules/learning/api`, consumer `learning.projection_identity` | Interface + DTO sinh từ `specs/openapi/modules/learning.internal.v1.yaml` |
+| presentation | Hiện thực facade (6 operationId) của `src/backend/modules/learning/api`, consumer `learning.projection_identity` | Interface + DTO sinh từ `specs/openapi/modules/learning.internal.v1.yaml` |
 
 ### Tích hợp và phụ thuộc
 
@@ -107,7 +107,7 @@ Không có. ADR-0029, ADR-0028, MULTITENANCY §4.2 và DATABASE_DESIGN §3.0 đ�
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Facade: chỉ module `identity` gọi (`x-allowed-callers`, `make arch-check`), Principal gốc (on-behalf) qua `context` (`pkg/modcall`) bắt buộc cho audit; `Idempotency-Key` bắt buộc cho assign/revoke/restore/clone (`infra.idempotency_records`).
+- Facade: chỉ module `identity` gọi (`x-allowed-callers`, `make arch-check`), Principal gốc (on-behalf) qua `context` (`src/backend/pkg/modcall`) bắt buộc cho audit; `Idempotency-Key` bắt buộc cho assign/revoke/restore/clone (`infra.idempotency_records`).
 - Thùng rác và clone đọc liên tenant qua `tenancy.Bypass(ctx, reason)` với reason `trash` / `tenant_clone`; mọi lần bypass phát audit + metric.
 - Audit action: `tenant_data.assigned`, `tenant_data.unassigned`, `tenant_data.cloned`, `content.deleted`, `content.restored`, `cross_tenant.accessed`.
 

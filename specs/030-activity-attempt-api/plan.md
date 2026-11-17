@@ -11,7 +11,7 @@ Module `activity` trong module `learning`: interface `Plugin` + `Registry` (ACTI
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + internal), nats.go, `santhosh-tekuri/jsonschema` (validate config theo `specs/schemas/activities/*`), `pkg/{outbox,tenancy,entx,authz,problem,clock,ids,httpx}` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + internal), nats.go, `santhosh-tekuri/jsonschema` (validate config theo `specs/schemas/activities/*`), `src/backend/pkg/{outbox,tenancy,entx,authz,problem,clock,ids,httpx}` |
 | Storage | PostgreSQL `eduworld_learning` (`content.activities`, `content.activity_versions`, `assessment.*`, `learning.learning_events`, `infra.idempotency_records`); Valkey chỉ cache snapshot (F026) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); contract test plugin; facade test với module game (game test với fake facade `learning`; learning test hiện thực facade theo ví dụ spec internal) |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-events`) |
@@ -27,7 +27,7 @@ Module `activity` trong module `learning`: interface `Plugin` + `Registry` (ACTI
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Contract attempt có sẵn; delta (`activity.abandoned` payload, `learning-event` `exercise.*` → `activity.*`, `ProblemCode`, `context_type`) ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | module game gọi qua facade `learning` (`modules/learning/api`, `pkg/modcall`); kết quả trả bằng event; plugin không truy cập DB module khác |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | module game gọi qua facade `learning` (`src/backend/modules/learning/api`, `src/backend/pkg/modcall`); kết quả trả bằng event; plugin không truy cập DB module khác |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `assessment.*` loại T/TA; `attempt_answers`, `learning_events` append-only; attempt chấm rồi không xóa |
 | IV Server-authoritative | ✅ | Chấm, thời gian, điểm ở server; DTO không đáp án; start/response/submit có Idempotency-Key |
 | V Xác thực, phân quyền | ✅ | `game_player` cho route học sinh; `portal_staff` + `learning_content.activity.*` cho CMS; `x-allowed-callers: [game]` |
@@ -51,7 +51,7 @@ specs/030-activity-attempt-api/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{activity.go,activity_version.go,attempt.go,attempt_item.go,attempt_answer.go,evaluation.go,learning_event.go}
 ├── internal/domain/activity/          # Plugin, Registry, Type, RenderPayload, Response, Evidence, CompletionRule
 ├── internal/domain/activity/plugins/quiz/, plugins/interactive/
@@ -61,10 +61,10 @@ modules/learning/
 ├── internal/application/port/{attempt_repo.go,learning_event_writer.go,question_scorer.go,question_selector.go}
 ├── internal/infrastructure/persistence/{attempt_repo.go,learning_event_writer.go}
 ├── internal/presentation/http/public/{activity_attempt_handler.go,cms_activity_handler.go}
-├── internal/presentation/facade/attempt_facade.go     # hiện thực modules/learning/api: createAttempt, getAttemptResult
+├── internal/presentation/facade/attempt_facade.go     # hiện thực src/backend/modules/learning/api: createAttempt, getAttemptResult
 ├── internal/presentation/job/attempt_lifecycle.go
 └── tests/{unit,integration,contract}/attempt/
-modules/game/internal/infrastructure/modules/learning.go      # adapter facade `learning` sau port của game (facade test với fake)
+src/backend/modules/game/internal/infrastructure/modules/learning.go      # adapter facade `learning` sau port của game (facade test với fake)
 ```
 
 **Structure Decision**: Registry ở domain (interface thuần), plugin là package con; aggregate `Attempt` không biết loại activity cụ thể — gọi plugin qua interface (ADR-0048).
@@ -92,11 +92,11 @@ Không có — ACTIVITY_ENGINE, QUESTION_BANK, ADR-0016/0043/0048/0059 đủ.
 
 - Phụ thuộc: F026 (resolver/reader, snapshot), F025 (`i18ntext.Resolve` cho `display_language`), F022 (scorer, selector, render câu hỏi), F027 (`math_ref` trong render).
 - Event phát: domain `activity.started` (EVENT_DESIGN §4.3, consumer LMS F041, gợi ý F032), `activity.submitted`, `activity.graded`, `activity.abandoned`, `audit.recorded` (CMS); feature này là owner payload schema mọi domain event `activity.*` (không phát `exercise.*`, ACTIVITY_ENGINE §9); learning event `activity.started`, `question.answered`, `activity.submitted`, `activity.graded`.
-- Gọi vào: module game → `createAttempt`/`getAttemptResult` (facade `learning`, `pkg/modcall`, facade test).
+- Gọi vào: module game → `createAttempt`/`getAttemptResult` (facade `learning`, `src/backend/pkg/modcall`, facade test).
 
 ### Bảo mật, tenant, idempotency, audit
 
-- `game_player` (azp `eduworld-game-backend`, `user_type = student`) cho `/learning/activities/*`, `/learning/activity-attempts/*`; `portal_staff` cho `/cms/learning/activities*`; facade: chỉ module `game` (`x-allowed-callers`, `make arch-check`), `TenantScope` và Principal gốc (on-behalf) qua `context` (`pkg/modcall`).
+- `game_player` (azp `eduworld-game-backend`, `user_type = student`) cho `/learning/activities/*`, `/learning/activity-attempts/*`; `portal_staff` cho `/cms/learning/activities*`; facade: chỉ module `game` (`x-allowed-callers`, `make arch-check`), `TenantScope` và Principal gốc (on-behalf) qua `context` (`src/backend/pkg/modcall`).
 - Idempotency-Key: start, response, pause, submit (public) và `createAttempt` (facade); unique DB `(attempt_id, idempotency_key, answered_at)`.
 - Audit: `content.version_created` (activity), `authz.denied`; attempt của học sinh không audit từng thao tác (learning event là bằng chứng).
 

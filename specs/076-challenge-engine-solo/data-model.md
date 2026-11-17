@@ -36,7 +36,7 @@ Database `eduworld_game`.
 
 **Index**: UNIQUE `(student_id) WHERE status = 'in_progress' AND deleted_at IS NULL` (DATABASE_DESIGN ghi partial index — nâng thành UNIQUE); `(tenant_id, student_id, started_at DESC)`; `(tenant_id, student_id, challenge_id, period_key)` đếm lượt; `(status, deadline_at) WHERE status = 'in_progress'` cho job.
 
-### Room checkpoint (`pkg/roomhost`)
+### Room checkpoint (`src/backend/pkg/roomhost`)
 
 Không có bảng riêng: checkpoint của challenge = cột của `challenge_attempts` (nguồn sự thật PostgreSQL). Valkey (ephemeral, VALKEY_DESIGN §3.1): `ew:rt:room:<challenge_attempt_id>` (HASH owner_node, type `challenge_solo`, tenant_id, state_version), `ew:rt:room:<id>:lease` (owner, TTL 10 s).
 

@@ -11,7 +11,7 @@ Ba module trong module `competition`: `ranking` (hàm thuần `glicko2.Update`, 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream consumer), go-redis, `pkg/outbox`, `pkg/entx` (`UnitOfWork`), `pkg/tenancy`, `pkg/clock` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream consumer), go-redis, `src/backend/pkg/outbox`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/tenancy`, `src/backend/pkg/clock` |
 | Storage | PostgreSQL `eduworld_competition` (`competition`, `ref`); Valkey `ew:competition:lb:*` (Rebuildable) |
 | Testing | go test (vector Glickman, property test tier/visibility), testcontainers (PostgreSQL, Valkey, NATS), đồng hồ giả cho kỳ/mùa |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`, `worker-jobs`) |
@@ -54,7 +54,7 @@ specs/106-ranking-leaderboard/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── ent/schema/rating.go, rating_change.go, competition_point_entry.go, competition_points.go,
 │   leaderboard_contribution.go, leaderboard_definition.go, leaderboard_snapshot.go, season.go, season_result.go
 ├── internal/domain/

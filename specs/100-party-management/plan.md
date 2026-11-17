@@ -11,7 +11,7 @@ Feature đầu tiên của module competition: dựng skeleton theo BACKEND_DESI
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `competition.v1.yaml`) + facade `chat`, `identity` (`modules/<callee>/api`), `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/httpx` (`game_player`, `tenant`, rate limit), `pkg/modcall`, Valkey client |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `competition.v1.yaml`) + facade `chat`, `identity` (`src/backend/modules/<callee>/api`), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/httpx` (`game_player`, `tenant`, rate limit), `src/backend/pkg/modcall`, Valkey client |
 | Storage | PostgreSQL `eduworld_competition` (`multiplayer.parties`, `party_members`, `party_invitations`, `party_histories`, `party_policies`, `ref.*`, `infra.*`); Valkey `ew:party:*`, `ew:rl:*`, pub/sub `ew:rt:user:<id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với module chat (`moderateDisplayText`: fake facade phía competition, ví dụ spec phía chat) |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`) |
@@ -50,7 +50,7 @@ specs/100-party-management/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── cmd/{api,worker,migrate}/main.go
 ├── ent/schema/        # party.go, partymember.go, partyinvitation.go, partyhistory.go, partypolicy.go,
 │                      # refstudent.go, refenrollment.go, refplayerprofile.go, reffriendship.go, refblock.go, refsanction.go, reftenant.go
@@ -72,7 +72,7 @@ modules/competition/
 └── tests/{unit,integration,contract}/
 ```
 
-**Structure Decision**: theo BACKEND_DESIGN §3 (D1: `modules/competition/`). Bounded context `party` là package domain đầu tiên; matchmaking/battle (F104, F105) thêm package cạnh bên.
+**Structure Decision**: theo BACKEND_DESIGN §3 (D1: `src/backend/modules/competition/`). Bounded context `party` là package domain đầu tiên; matchmaking/battle (F104, F105) thêm package cạnh bên.
 
 ## Phase 0: Research
 

@@ -11,7 +11,7 @@
 
 ## R2. Kiểm duyệt tên party
 
-- **Decision**: command `CreateParty`/`UpdatePartySettings` gọi `moderateDisplayText` của facade `chat` (trong tiến trình qua `pkg/modcall`, deadline của request) khi `name` khác tên mặc định. Kết quả `blocked` → `422 VALIDATION_FAILED` (`errors[].field = name`, `reason = content_not_allowed`), không trả từ đã khớp (R15). Hết deadline hoặc facade trả lỗi `UNAVAILABLE` → lưu tên mặc định "Nhóm của {nickname}" (khóa dịch phía client, server lưu chuỗi tiếng Việt cắt ≤ 40 ký tự) và trả `201`.
+- **Decision**: command `CreateParty`/`UpdatePartySettings` gọi `moderateDisplayText` của facade `chat` (trong tiến trình qua `src/backend/pkg/modcall`, deadline của request) khi `name` khác tên mặc định. Kết quả `blocked` → `422 VALIDATION_FAILED` (`errors[].field = name`, `reason = content_not_allowed`), không trả từ đã khớp (R15). Hết deadline hoặc facade trả lỗi `UNAVAILABLE` → lưu tên mặc định "Nhóm của {nickname}" (khóa dịch phía client, server lưu chuỗi tiếng Việt cắt ≤ 40 ký tự) và trả `201`.
 - **Rationale**: MODERATION §1 yêu cầu tên party qua pipeline; pipeline thuộc module chat (R13 không gọi chéo DB). Fallback an toàn: không để tên chưa kiểm duyệt hiển thị, không chặn trải nghiệm khi module chat lỗi.
 - **Alternatives**: (a) chỉ cho chọn tên từ danh sách sinh sẵn như nickname — trái PARTY_SYSTEM §3 (tên tự đặt [Confirmed]); (b) kiểm duyệt bất đồng bộ sau khi lưu — tên vi phạm hiển thị trong khoảng trễ.
 - **Contract**: operation facade `moderateDisplayText` (`x-allowed-callers: [competition]`) — Cần thêm vào `chat.internal.v1.yaml`, F116 hiện thực.

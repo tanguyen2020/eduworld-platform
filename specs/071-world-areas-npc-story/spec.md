@@ -1,6 +1,6 @@
 # Feature Specification: F071 — Thế giới: 8 vùng đất, zone, world map, cổng, mở khóa, mạch truyện, NPC và hội thoại
 
-**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `godot/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070
+**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070
 **Input**: Thế giới "Quần đảo Tri Thức" 8 vùng bao trọn 7 khu chức năng; học sinh xem bản đồ, đi qua cổng gió, vào khu theo quyền do server quyết; vùng phiêu lưu mở theo quest/level/LO, khu học tập luôn mở; mạch truyện 7 chương; khám phá và % hoàn thành bản đồ; NPC hội thoại data-driven có version. FR nguồn: FR-GAME-001, FR-GAME-002, FR-GAME-003, FR-GAME-006, FR-GAME-016, FR-GAME-017, FR-GAME-018, FR-GAM-009.
 
 ## Clarifications

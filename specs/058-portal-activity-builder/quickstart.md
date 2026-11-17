@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F030, F031, F053, F065, F027 (và F054 nếu kiểm lịch sử version).
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm gen:schemas && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm gen:schemas && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản: `cm.noidung` (content_admin), `cm.duyet` (content_reviewer), `qlcm.truong.a` (academic_manager, tenant `th-demo-a` scope Toán), `ad.truong.a` (school_admin), `sa.admin` (system_admin), học sinh demo `hs.an.3a`.
 - Dữ liệu: câu hỏi Toán lớp 3 seed đã xuất bản (gồm `single_choice`, `numeric`); một video ngắn (~4 phút) đã `ready`; một file `.vtt` tiếng Việt.
 
@@ -44,7 +44,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter ops-ui test -- src/activity-editor
 pnpm --filter portal test -- tests/unit/content-studio/activities tests/unit/content-studio/regrade
 pnpm --filter portal exec playwright test tests/e2e/content-studio --grep @F058

@@ -4,18 +4,18 @@
 
 ## Summary
 
-Dùng `pkg/audit` (interface `audit.Recorder` của F002) và hiện thực outbox `outbox.AuditRecorder` của F003 (ghi `audit.recorded` trong cùng transaction, lọc khóa cấm — F003-AC-22); feature này không định nghĩa lại `pkg/audit`; module identity có consumer `audit-sink` trong profile `worker-events` (durable trên `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_COMPETITION`, `EVT_CHAT` với `FilterSubjects` `ew.evt.<module>.audit.recorded`) ghi `audit.audit_logs` (partition tháng). Job `partition-maintainer` tạo trước partition cho bảng partitioned của `eduworld_identity`; job `audit-retention` ẩn danh hóa. Query audit tenant/platform. Command cài đặt platform/tenant/trường/feature flag (gồm bật/tắt menu/action của Admin Portal theo ADR-0090: `flag_kind`, `parent_key`, catalog đọc-chỉ `platform.portal_menu_catalog` đồng bộ bởi `cmd/migrate`, hiện thực `featuregate.Source` cho middleware của F012) với `If-Match` + `reason`, event `platform_settings.changed`, `tenant.updated`, `school.updated`; hook khung giờ truy cập trong `GameLogin` (F013).
+Dùng `src/backend/pkg/audit` (interface `audit.Recorder` của F002) và hiện thực outbox `outbox.AuditRecorder` của F003 (ghi `audit.recorded` trong cùng transaction, lọc khóa cấm — F003-AC-22); feature này không định nghĩa lại `src/backend/pkg/audit`; module identity có consumer `audit-sink` trong profile `worker-events` (durable trên `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_COMPETITION`, `EVT_CHAT` với `FilterSubjects` `ew.evt.<module>.audit.recorded`) ghi `audit.audit_logs` (partition tháng). Job `partition-maintainer` tạo trước partition cho bảng partitioned của `eduworld_identity`; job `audit-retention` ẩn danh hóa. Query audit tenant/platform. Command cài đặt platform/tenant/trường/feature flag (gồm bật/tắt menu/action của Admin Portal theo ADR-0090: `flag_kind`, `parent_key`, catalog đọc-chỉ `platform.portal_menu_catalog` đồng bộ bởi `src/backend/cmd/migrate`, hiện thực `featuregate.Source` cho middleware của F012) với `If-Match` + `reason`, event `platform_settings.changed`, `tenant.updated`, `school.updated`; hook khung giờ truy cập trong `GameLogin` (F013).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, nats.go JetStream, `pkg/outbox`, `pkg/entx` (`UnitOfWork`), JSON Schema validator cho settings |
+| Primary Dependencies | ent, Atlas, nats.go JetStream, `src/backend/pkg/outbox`, `src/backend/pkg/entx` (`UnitOfWork`), JSON Schema validator cho settings |
 | Storage | PostgreSQL `eduworld_identity` (`audit.audit_logs` TA P, `platform.platform_settings` G, `platform.feature_flags` G, `platform.portal_menu_catalog` G (đọc-chỉ), `platform.tenants.settings`, `org.schools.settings`); Valkey cache settings/flag `ew:identity:settings:<tenant_id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS); Clock giả cho retention/khung giờ |
 | Target Platform | Linux container |
-| Project Type | backend module (dùng `pkg/audit` của F002/F003) |
+| Project Type | backend module (dùng `src/backend/pkg/audit` của F002/F003) |
 | Performance Goals | SC-003 (truy vấn audit 30 ngày ≤ 2 s); sink bắt kịp không vượt `EventConsumerLag` (`alert_thresholds`) |
 | Constraints | AGENTS R14, R21, R26, R28, R33; ADR-0028, ADR-0032, ADR-0033, ADR-0042, ADR-0070 |
 | Scale/Scope | NFR-SCAL-004 |
@@ -50,8 +50,8 @@ specs/015-audit-settings/
 ### Source Code (repository)
 
 ```text
-modules/identity/
-├── cmd/migrate/                        # sync_portal_catalog.go: specs/portal/menu-catalog.yaml → platform.portal_menu_catalog (ADR-0090)
+src/backend/modules/identity/
+├── cmd/migrate/                                    # sync_portal_catalog.go: specs/portal/menu-catalog.yaml → platform.portal_menu_catalog (ADR-0090)
 ├── ent/schema/                         # auditlog.go (AppendOnly), platformsetting.go, featureflag.go (flag_kind, parent_key), portalmenucatalogitem.go (đọc-chỉ)
 ├── migrations/                         # partition audit, REVOKE UPDATE/DELETE, feature_flags (+ FK catalog), REVOKE ghi portal_menu_catalog
 ├── internal/domain/settings/           # PlatformSettings, TenantSettings, SchoolSettings (AllowedHours), FeatureFlag, EffectiveValue
@@ -67,7 +67,7 @@ modules/identity/
 └── tests/{unit,integration}/
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §3; `pkg/audit` (interface F002) + `outbox.AuditRecorder` (F003) là tiện ích dùng chung; F015 chỉ sở hữu consumer `audit-sink`, bảng `audit.audit_logs` và API truy vấn.
+**Structure Decision**: Theo BACKEND_DESIGN §3; `src/backend/pkg/audit` (interface F002) + `outbox.AuditRecorder` (F003) là tiện ích dùng chung; F015 chỉ sở hữu consumer `audit-sink`, bảng `audit.audit_logs` và API truy vấn.
 
 ## Phase 0: Research
 

@@ -11,7 +11,7 @@ Thêm bounded context `reward` + `progression` vào module game. Consumer durabl
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/outbox`, `pkg/natsx`, `pkg/entx`, `pkg/tenancy`, `pkg/clock`, santhosh-tekuri/jsonschema (validate payload) |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/outbox`, `src/backend/pkg/natsx`, `src/backend/pkg/entx`, `src/backend/pkg/tenancy`, `src/backend/pkg/clock`, santhosh-tekuri/jsonschema (validate payload) |
 | Storage | PostgreSQL `eduworld_game` (`gamification.xp_ledger` TA, `gamification.xp_daily_caps` T, `gamification.reward_rules`/`reward_rule_versions` G, `gamification.reward_grants` T, `game.progression_curves`/`progression_curve_versions`/`progression_levels` G, `game.level_history` TA, `game.game_profiles` T); Valkey cache `ew:gam:cap:*`, `ew:game:current:_platform:*` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); property test cho `reward.Engine` |
 | Target Platform | Linux container (`core-api` + `worker`, module `game`) |
@@ -50,7 +50,7 @@ specs/074-xp-level-reward-engine/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/        # xpledger.go, xpdailycap.go, rewardrule.go, rewardruleversion.go, rewardgrant.go,
 │                      # progressioncurve.go, progressioncurveversion.go, progressionlevel.go, levelhistory.go
 ├── migrations/

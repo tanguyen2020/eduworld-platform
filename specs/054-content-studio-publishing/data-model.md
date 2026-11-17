@@ -4,7 +4,7 @@
 
 ## 1. Entity
 
-Không áp dụng — F054 là client (`web/apps/portal`), không tạo/sửa bảng hay migration. `content_items`, `content_versions`, `content_releases`, `media_assets`, review task, import job thuộc module learning (F024–F027); Thùng rác đọc bản ghi soft-delete qua API. Dưới đây là **model phía client**.
+Không áp dụng — F054 là client (`src/cms/frontend/apps/portal`), không tạo/sửa bảng hay migration. `content_items`, `content_versions`, `content_releases`, `media_assets`, review task, import job thuộc module learning (F024–F027); Thùng rác đọc bản ghi soft-delete qua API. Dưới đây là **model phía client**.
 
 ### Cache truy vấn (mọi key có `scopeKey`; System Admin thêm `tenantFilter`)
 

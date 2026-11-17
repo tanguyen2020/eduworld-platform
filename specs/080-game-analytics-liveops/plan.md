@@ -11,7 +11,7 @@ Backend (module game, module `analytics`): mở rộng `postTelemetry` (schema �
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · TypeScript strict (React 18, Vite) |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, go-redis, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/tenancy`, Prometheus HTTP API client · Ant Design 5 + Pro (StatisticCard), chart theo DESIGN_SYSTEM §4.4, TanStack Query |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, go-redis, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, Prometheus HTTP API client · Ant Design 5 + Pro (StatisticCard), chart theo DESIGN_SYSTEM §4.4, TanStack Query |
 | Storage | PostgreSQL `eduworld_game` schema `analytics` (primary ghi, replica đọc); Valkey cache/HLL (tạm); object storage `ew-exports` |
 | Testing | go test + testcontainers (PG, NATS, Valkey); golden dataset; EXPLAIN catalog; Vitest + Playwright; k6 tải dashboard |
 | Target Platform | Linux container (`core-api` + `worker` profile `events`/`jobs`, module `game`); trình duyệt desktop/tablet |
@@ -54,7 +54,7 @@ specs/080-game-analytics-liveops/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/analytics/{events_raw.go,player_days.go,rollup_daily.go,rollup_weekly.go,rollup_monthly.go,
 │                         cohort_retention.go,funnel_daily.go,content_stats_weekly.go,perf_daily.go,export_job.go}
 ├── internal/domain/analytics/{event_mapping.go,player_key.go,metric_catalog.go,suppression.go,grain.go}
@@ -72,17 +72,17 @@ modules/game/
 │   ├── consumer/analytics_consumer.go                  # durable `analytics`
 │   └── job/{rollup_hourly.go,day_close.go,export_worker.go,analytics_retention.go}
 └── tests/{unit,integration,contract,perf}/analytics/
-web/apps/portal/src/workspaces/live-ops/
+src/cms/frontend/apps/portal/src/workspaces/live-ops/
 ├── dashboard/{LiveDashboardPage.tsx,KpiCards.tsx}
 ├── analytics/{GameAnalyticsPage.tsx,filters/AnalyticsFilterBar.tsx,panels/*.tsx}   # 11 panel
 ├── events/{EventMonitorPage.tsx,EventRunActions.tsx}
 ├── api/{liveops.ts,analytics.ts,eventRuns.ts}
 └── __tests__/
-web/apps/portal/src/workspaces/school-lms/game-report/   # màn "Hoạt động game" (chuyển từ F081)
+src/cms/frontend/apps/portal/src/workspaces/school-lms/game-report/   # màn "Hoạt động game" (chuyển từ F081)
 ├── GameActivityReportPage.tsx         # /school-lms/reports/game-activity
 ├── widgets/{OverviewWidget,ProgressionWidget,SocialWidget,WellbeingWidget,DeviceWidget}.tsx
 └── api/tenantGameSummary.ts
-web/packages/ops-ui/src/dashboard/{GrainLabel.tsx,DataAsOf.tsx}   # DashboardWidget, SuppressedCell dùng lại của F056
+src/cms/frontend/packages/ops-ui/src/dashboard/{GrainLabel.tsx,DataAsOf.tsx}   # DashboardWidget, SuppressedCell dùng lại của F056
 deploy/observability/prometheus/rules/analytics.yaml
 ```
 

@@ -5,9 +5,9 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F026, F070 (và F014, F062).
-- Lệnh: `make up`, `make seed` (nạp `modules/game/seed/world/*` qua `PublishGameContent`), `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make seed` (nạp `src/backend/modules/game/seed/world/*` qua `PublishGameContent`), `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a`, `hs.chi.3b` (TH Demo A), `hs.em.4a` (TH Demo C, tenant `pgd-demo`), `hs.dung.7a` (THCS Demo B), `ad.truong.a`.
-- Phát event thử (trước khi F072 xong) bằng `nats pub ew.evt.game.quest.completed "$(cat <fixture>)"` trong `nats-box` (`make tools`), fixture ở `modules/game/tests/fixtures/events/` (envelope chuẩn EVENT_DESIGN §2).
+- Phát event thử (trước khi F072 xong) bằng `nats pub ew.evt.game.quest.completed "$(cat <fixture>)"` trong `nats-box` (`make tools`), fixture ở `src/backend/modules/game/tests/fixtures/events/` (envelope chuẩn EVENT_DESIGN §2).
 
 ## 2. Kịch bản kiểm tra
 

@@ -5,9 +5,9 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F014, F015, F051, F052, F056, F077, F078, F079 (và các feature phát event nguồn).
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); Prometheus trong compose observability.
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); Prometheus trong compose observability.
 - Tài khoản: `sa.admin`, tài khoản `liveops` seed [Proposed: `lo.vanhanh`], `ad.donvi`, `ad.truong.a`, `ad.truong.b`, `sm.antoan`; học sinh `hs.an.3a`, `hs.dung.7a`.
-- Dữ liệu: golden dataset `modules/game/tests/fixtures/analytics/golden/` (event giả danh), script phát event `make seed-analytics` [Proposed].
+- Dữ liệu: golden dataset `src/backend/modules/game/tests/fixtures/analytics/golden/` (event giả danh), script phát event `make seed-analytics` [Proposed].
 
 ## 2. Kịch bản kiểm tra
 
@@ -53,7 +53,7 @@ make lint MOD=game
 make test MOD=game
 make test-integration MOD=game
 make migrate-lint MOD=game
-cd web && pnpm --filter portal test -- src/workspaces/live-ops && pnpm --filter portal exec playwright test tests/e2e/live-ops tests/e2e/school-lms/game-report.spec.ts
+cd src/cms/frontend && pnpm --filter portal test -- src/workspaces/live-ops && pnpm --filter portal exec playwright test tests/e2e/live-ops tests/e2e/school-lms/game-report.spec.ts
 ```
 
 ## 4. Bằng chứng cần nộp

@@ -11,7 +11,7 @@ Thêm hiện thực thứ hai của port `SISProvider` (F011): `contractV1Client
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | oapi-codegen (client từ `specs/sis`, server từ `identity.v1.yaml`), ent, Atlas, nats.go JetStream, go-redis (Valkey), golang.org/x/oauth2/clientcredentials, golang.org/x/time/rate, failsafe-go (retry, circuit breaker, bulkhead cho adapter tích hợp ngoài; `pkg/modcall` không có resilience — ADR-0074), robfig/cron v3; Postman CLI; stoplight/prism |
+| Primary Dependencies | oapi-codegen (client từ `specs/sis`, server từ `identity.v1.yaml`), ent, Atlas, nats.go JetStream, go-redis (Valkey), golang.org/x/oauth2/clientcredentials, golang.org/x/time/rate, failsafe-go (retry, circuit breaker, bulkhead cho adapter tích hợp ngoài; `src/backend/pkg/modcall` không có resilience — ADR-0074), robfig/cron v3; Postman CLI; stoplight/prism |
 | Storage | PostgreSQL `eduworld_identity` (`sis.sis_connections`, `sis.sync_runs` — thêm cột); Valkey (lock run, nonce webhook — tạm, không phải nguồn sự thật, R9); secret manager (Swarm secret/file local) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); fake SIS `httptest` (chỉ test, nhãn `MOCK`); Postman CLI + `sis-mock` trong CI |
 | Target Platform | Linux container (module `identity` api + worker); `sis-mock` trong `deploy/compose` |
@@ -50,7 +50,7 @@ specs/017-sis-contract-v1/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/sisconnection.go, syncrun.go           # thêm cột (data-model.md)
 ├── internal/domain/sis/
 │   ├── connection.go        # SISConnection: ValidateConfig, Activate/Pause/MarkAuthError/MarkContractError, RecordRunResult (circuit)

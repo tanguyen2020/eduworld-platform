@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F090, F091, F061, F062, F070.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; Godot mở `godot/project.godot`, `Config` `realtime_url="ws://localhost:9080/realtime/v1"`; profile `chaos` bật toxiproxy.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; Godot mở `src/game/project.godot`, `Config` `realtime_url="ws://localhost:9080/realtime/v1"`; profile `chaos` bật toxiproxy.
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (`th-demo-a`), `hs.dung.7a` (`pgd-demo`), `ad.truong.a`; bot hub `tests/load/hubbot` (F091).
 - Thiết bị lab: DEV-AND-MID1, DEV-PC-MID, DEV-WEB-MID ([PERFORMANCE_BUDGET §2](../../docs/08-game-client/PERFORMANCE_BUDGET.md)).
 

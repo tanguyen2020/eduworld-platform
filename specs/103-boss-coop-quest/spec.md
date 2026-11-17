@@ -95,7 +95,7 @@ Mỗi thành viên giữ một vai (ví dụ "Người đo", "Người đọc b�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F103-AC-25 | HỆ THỐNG PHẢI trả `403 GAME_ACCESS_STUDENT_ONLY` cho `listBosses`, `createBossEncounter`, `getBossEncounter`, `leaveBossEncounter`, `getQuestStepClues`, `shareQuestStepClue`, `assignQuestStepRoles` khi token không phải token game của học sinh | AGENTS R23 · ADR-0031 | TC-AUTH-014 |
-| F103-AC-26 | NẾU module khác `competition` (ngoài `x-allowed-callers`) import operation facade party-activity của `modules/game/api`, THÌ `make arch-check` PHẢI fail; mọi thành viên trong request PHẢI thuộc tenant của `TenantScope` trong context, nếu không module game PHẢI trả `422 VALIDATION_FAILED` | AGENTS R29 · ADR-0074 | TC-SVC-005 |
+| F103-AC-26 | NẾU module khác `competition` (ngoài `x-allowed-callers`) import operation facade party-activity của `src/backend/modules/game/api`, THÌ `make arch-check` PHẢI fail; mọi thành viên trong request PHẢI thuộc tenant của `TenantScope` trong context, nếu không module game PHẢI trả `422 VALIDATION_FAILED` | AGENTS R29 · ADR-0074 | TC-SVC-005 |
 | F103-AC-27 | NẾU học sinh đọc/ghi encounter, phiên quest chung hoặc thẻ dữ kiện không thuộc mình hoặc thuộc tenant khác (REST hay lệnh WS `boss.*`), THÌ module game PHẢI trả `404` / `PERMISSION_DENIED` không tiết lộ tồn tại; mọi truy vấn PHẢI lọc tenant + `deleted_at IS NULL` | AGENTS R8 · ADR-0065 | TC-TEN-001, TC-TEN-012 |
 | F103-AC-28 | NẾU thiếu `Idempotency-Key` ở `createBossEncounter`, `leaveBossEncounter`, `shareQuestStepClue`, `assignQuestStepRoles`, `startPartyActivity`, THÌ module game PHẢI trả `428 PRECONDITION_REQUIRED`; chuỗi vượt `maxLength` (role, `phase_id`, `requirement_id`) PHẢI trả `422 VALIDATION_FAILED` | AGENTS R10 · ADR-0041 | TC-TEN-024 |
 
@@ -162,7 +162,7 @@ Mỗi thành viên giữ một vai (ví dụ "Người đo", "Người đọc b�
 
 ## Ngoài phạm vi
 
-- Party, lobby, Start Session, giữ chỗ phòng `private_instance` → F100, F101. Room host dùng chung (`pkg/roomhost`), challenge solo, 5 mức độ khó → F076.
+- Party, lobby, Start Session, giữ chỗ phòng `private_instance` → F100, F101. Room host dùng chung (`src/backend/pkg/roomhost`), challenge solo, 5 mức độ khó → F076.
 - Quest engine nền (10 loại quest còn lại, bước `talk_npc`/`go_to`/`activity`, `pass_rule`) → F072; Reward Engine/cap XP → F074; vật phẩm thưởng → F075.
 - Room `coop` puzzle (`party_activity`, `coop.*`) của module competition và `coop_challenge` → F105.
 - Giao diện boss S06, HUD tiến độ quest chung, thẻ dữ kiện trong Godot: chưa có feature trong danh mục (đề xuất bổ sung). Party UI → F102.
@@ -170,6 +170,6 @@ Mỗi thành viên giữ một vai (ví dụ "Người đo", "Người đọc b�
 
 ## Assumptions
 
-- F076 cung cấp `pkg/roomhost` (owner node, lease, checkpoint, timer) và aggregate challenge; F072 cung cấp `QuestProgress`, consumer `activity.graded`; F074 cung cấp Reward Engine idempotent trong module game.
+- F076 cung cấp `src/backend/pkg/roomhost` (owner node, lease, checkpoint, timer) và aggregate challenge; F072 cung cấp `QuestProgress`, consumer `activity.graded`; F074 cung cấp Reward Engine idempotent trong module game.
 - module learning thêm `game` vào `x-allowed-callers` của `createQuestionPlan`/`scorePlanAnswer` và thêm API render dữ kiện (delta contract, nhóm D sở hữu) [Proposed].
 - Mã lý do không đủ điều kiện (`reason_code`) là enum mới trong spec internal (facade) [Proposed].

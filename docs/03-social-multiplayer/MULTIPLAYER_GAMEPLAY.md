@@ -31,7 +31,7 @@ Yêu cầu nguồn **[Confirmed]** (Master Prompt §13.4, §19, Party Addendum):
 
 1. **Server-authoritative** cho mọi trạng thái có giá trị: kết quả, tiến độ quest chung, điểm trận, trạng thái boss (ADR-0016) **[Confirmed]**.
 2. **Không phải persistent MMO**: thế giới Hybrid gồm hub instance, private instance và match/boss room (ADR-0012) **[Proposed]**.
-3. **Một kênh WebSocket** tới `realtime`; logic room/party/matchmaking/battle chạy trong **module competition**, boss/challenge PvE chạy trong **module game** (dùng chung `pkg/roomhost`) **[Proposed]**.
+3. **Một kênh WebSocket** tới `realtime`; logic room/party/matchmaking/battle chạy trong **module competition**, boss/challenge PvE chạy trong **module game** (dùng chung `src/backend/pkg/roomhost`) **[Proposed]**.
 4. **An toàn trẻ em trước hết:** chỉ gặp người trong phạm vi policy cho phép (cùng trường mặc định, ADR-0054), không ghép lớp nhỏ với lớp lớn ở không gian chung; hiển thị nickname, không tên thật **[Confirmed]**.
 5. Valkey giữ trạng thái tạm (presence, room registry, lobby); PostgreSQL giữ bản ghi bền vững (room tóm tắt, `session_memberships`, party, match, encounter) (ADR-0004) **[Confirmed]**.
 

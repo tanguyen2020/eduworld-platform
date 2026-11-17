@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F030, F071 (và F014, F031).
-- Lệnh: `make up`, `make seed` (quest `modules/game/seed/quests/` + gán 3 tenant), `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make seed` (quest `src/backend/modules/game/seed/quests/` + gán 3 tenant), `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a` (lớp 3), `hs.em.4a` (lớp 4, tenant `pgd-demo`), `hs.tudo` (tenant chung, khối 4), `ad.truong.a`.
 - Token game + `createGameSession` + `enterWorldArea("learning_zone.math")` (F071) trước khi báo bước.
 

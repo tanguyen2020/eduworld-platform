@@ -1,6 +1,6 @@
 # Feature Specification: F[NNN] — [Tên tính năng]
 
-**Feature Branch**: `[NNN-slug]` · **Created**: [YYYY-MM-DD] · **Status**: Draft · **Module**: `[module (identity/learning/game/competition/chat/realtime) hoặc web/godot/pkg]` · **Mốc**: [M…] · **Phụ thuộc**: [F…, hoặc —]
+**Feature Branch**: `[NNN-slug]` · **Created**: [YYYY-MM-DD] · **Status**: Draft · **Module**: `[module (identity/learning/game/competition/chat/realtime) hoặc src/cms/frontend / src/game / src/backend/pkg]` · **Mốc**: [M…] · **Phụ thuộc**: [F…, hoặc —]
 **Input**: [Mô tả ngắn và FR nguồn trong PRD]
 
 <!--

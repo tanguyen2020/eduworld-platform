@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F020 (và F015 cho bước 10; F027 nếu import qua portal).
-- Lệnh: `make up`, `make migrate`, `make seed` (gồm `go run ./modules/learning/cmd/seed`), `make run-core-api`, `make run-worker PROFILE=events`.
+- Lệnh: `make up`, `make migrate`, `make seed` (gồm `go -C src/backend run ./modules/learning/cmd/seed`), `make run-core-api`, `make run-worker PROFILE=events`.
 - Tài khoản demo: `cm.noidung` (content_admin), `cm.duyet` (content_reviewer — kiểm 403 khi không có `curriculum.publish` nếu role không được cấp), `sa.admin`, `qlcm.truong.a` (academic_manager, `th-demo-a`), `ad.truong.a` (school_admin), `ad.truong.b` (school_admin, `pgd-demo`), `hs.an.3a` (học sinh lớp 3).
 
 ## 2. Kịch bản kiểm tra

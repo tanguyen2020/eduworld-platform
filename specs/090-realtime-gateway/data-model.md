@@ -18,7 +18,7 @@ Không áp dụng — feature không tạo/sửa bảng PostgreSQL: `realtime` k
 | `ew:gateway:rt:resume:<token>` | LIST message JSON (≤ số message của `resume_window`) | `resume_window` | realtime | Có sẵn |
 | `ew:gateway:rt:resume:<token>:meta` | HASH `{user_id, game_session_id, last_seq, subs}` (`subs` = JSON mảng topic ≤ 64 phần tử) | `resume_window` | realtime | **Mới** |
 | `ew:gateway:rt:cmd:<user_id>:<cmd_id>` | STRING JSON kết quả ack/failed | `resume_window` | realtime | **Mới** |
-| `ew:<module>:rl:ws_ticket:<user_id>:<window>` | STRING counter | = window | game · `pkg/httpx` | Có sẵn (`ew:rl:*`) |
+| `ew:<module>:rl:ws_ticket:<user_id>:<window>` | STRING counter | = window | game · `src/backend/pkg/httpx` | Có sẵn (`ew:rl:*`) |
 
 Kênh Pub/Sub dùng: `ew:rt:user:<user_id>`, `ew:rt:party:<id>`, `ew:rt:room:<id>:out`, `ew:chat:fanout:<id>`, `ew:rt:broadcast`, `ew:rt:node:<node_id>:in` (VALKEY_DESIGN §3.2, có sẵn). Payload theo `RtPubSubEnvelope` ([research R1](research.md)).
 

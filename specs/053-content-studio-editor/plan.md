@@ -4,7 +4,7 @@
 
 ## Summary
 
-Xây component soạn thảo dùng chung trong `web/packages/ops-ui` (presentational, không gọi API): `ContentEditorShell` + `ItemStatusBar` + `useAutosave`, `RichContentEditor` (khối `paragraph`, `heading`, `list`, `math`, `image`, `audio`, `table`, `callout`, `worked_example`), `MathInput` (MathLive) / `MathText` (MathJax 4) / `renderMath` (LaTeX → SVG `currentColor` + speech text trên trình duyệt), `BilingualField`, `QuestionEditor` với 11 editor theo `QuestionType`. Trong `web/apps/portal/src/workspaces/content-studio/` nối API: Question Editor page, Curriculum tree, media picker, xuất/nhập file dịch. Validation client dùng chính `specs/schemas/question.schema.json` (ajv) + `maxLength` OpenAPI; server vẫn là nơi quyết định (validator F022/F023, sanitize SVG F027, reviewer ≠ author).
+Xây component soạn thảo dùng chung trong `src/cms/frontend/packages/ops-ui` (presentational, không gọi API): `ContentEditorShell` + `ItemStatusBar` + `useAutosave`, `RichContentEditor` (khối `paragraph`, `heading`, `list`, `math`, `image`, `audio`, `table`, `callout`, `worked_example`), `MathInput` (MathLive) / `MathText` (MathJax 4) / `renderMath` (LaTeX → SVG `currentColor` + speech text trên trình duyệt), `BilingualField`, `QuestionEditor` với 11 editor theo `QuestionType`. Trong `src/cms/frontend/apps/portal/src/workspaces/content-studio/` nối API: Question Editor page, Curriculum tree, media picker, xuất/nhập file dịch. Validation client dùng chính `specs/schemas/question.schema.json` (ajv) + `maxLength` OpenAPI; server vẫn là nơi quyết định (validator F022/F023, sanitize SVG F027, reviewer ≠ author).
 
 ## Technical Context
 
@@ -55,21 +55,21 @@ specs/053-content-studio-editor/
 ### Source Code (repository)
 
 ```text
-web/packages/ops-ui/src/
+src/cms/frontend/packages/ops-ui/src/
 ├── editor/{ContentEditorShell.tsx,ItemStatusBar.tsx,useAutosave.ts,ConflictBanner.tsx}
 ├── rich-content/{RichContentEditor.tsx,blocks/*.tsx,WorkedExampleBlock.tsx,collectMath.ts}
 ├── math/{MathInput.tsx,MathText.tsx,renderMath.ts,mathjaxConfig.ts}
 ├── i18n-field/{BilingualField.tsx,translationStatus.ts}
 └── question-editor/{QuestionEditor.tsx,itemId.ts,types/{SingleChoice,MultipleChoice,TrueFalse,FillInBlank,ShortAnswer,Numeric,Matching,Ordering,DragDrop,ImageBased,Interactive}Editor.tsx,mappers/*.ts,OptionFeedbackFields.tsx,HintsField.tsx}
-web/apps/portal/src/workspaces/content-studio/
+src/cms/frontend/apps/portal/src/workspaces/content-studio/
 ├── index.tsx, routes.tsx   # route theo khóa `menu.content_studio.*` của catalog (ADR-0090)
 ├── questions/{QuestionEditorPage.tsx,useQuestion.ts,useWorkflow.ts,StudentViewPreview.tsx}
 ├── media/{MediaPicker.tsx,useMediaUpload.ts}
 ├── curriculum/{CurriculumTreePage.tsx,TopicTree.tsx,ObjectiveForm.tsx,useCurriculum.ts,CurriculumVersionPanel.tsx}
 ├── translations/{TranslationExportDialog.tsx,TranslationImportDialog.tsx,useTranslationJobs.ts}
 └── shared/{OwnerScopeField.tsx,AssignedBadge.tsx,schemaValidator.ts}
-web/apps/portal/src/api/schemas/question.schema.json   # sinh từ specs/schemas (pnpm gen:schemas), không sửa tay
-web/apps/portal/tests/{unit/content-studio,e2e/content-studio}/
+src/cms/frontend/apps/portal/src/api/schemas/question.schema.json   # sinh từ specs/schemas (pnpm gen:schemas), không sửa tay
+src/cms/frontend/apps/portal/tests/{unit/content-studio,e2e/content-studio}/
 ```
 
 **Structure Decision**: Component soạn thảo tái sử dụng (F054, F079 dùng `ContentEditorShell`) đặt ở `ops-ui` theo [ADMIN_PORTAL §1.4](../../docs/04-admin-portal/ADMIN_PORTAL.md); page nối API ở workspace `content-studio`.

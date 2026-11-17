@@ -1,0 +1,26 @@
+# Dependabot (F001 T006, F001-AC-25, ADR-0088): weekly, patch updates grouped.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-patch:
+        update-types: [patch, minor]
+
+  - package-ecosystem: gomod
+    directory: /src/backend
+    schedule:
+      interval: weekly
+    groups:
+      go-patch:
+        update-types: [patch]
+
+  - package-ecosystem: npm
+    directory: /scripts
+    schedule:
+      interval: weekly
+    groups:
+      npm-patch:
+        update-types: [patch]

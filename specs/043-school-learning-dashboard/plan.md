@@ -11,7 +11,7 @@ Dựng module `learning_analytics` trong module `learning` theo ADR-0062: (1) co
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream durable consumer), pgx (SQL đọc query catalog), `pkg/entx` (`UnitOfWork`), `pkg/authz`, `pkg/tenancy`, `pkg/outbox` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream durable consumer), pgx (SQL đọc query catalog), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/outbox` |
 | Storage | PostgreSQL `eduworld_learning` schema `learning` (primary ghi rollup; read replica đọc); Valkey: cache `ew:learning:dash:*`, HLL hôm nay, bộ đếm đồng thời |
 | Testing | go test + testcontainers (PostgreSQL primary + replica giả lập bằng role, NATS, Valkey); golden dataset; EXPLAIN test; k6 cho TC-PERF-025 |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -54,7 +54,7 @@ specs/043-school-learning-dashboard/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/                              # rollup_*.go, rm_*.go, mastery_snapshot_weekly.go (mixin AppendOnly/Derived, không soft-delete)
 ├── migrations/                              # partition tháng/năm, BRIN, role learning_dashboard, GRANT SELECT
 ├── internal/domain/analytics/               # metric.go (MetricVersion, Ratio, Histogram), grain.go (ChooseGrain), attention.go, kanon.go
@@ -98,7 +98,7 @@ Không có. Cơ chế đã chốt ở ADR-0062 và DASHBOARD_DATA §3–§9.
 ### Tích hợp và phụ thuộc
 
 - Feature phụ thuộc: F031 (learning events, mastery), F041 (`assignment.*`, `lms.assignment_submissions`), F032 (`recommendation_id`, `rm_student_recommendations`), F014 (event đăng nhập → `ref.login_activity`).
-- Facade: `chat` đếm `school-notifications` [Proposed, khi F122 Done], gọi trong tiến trình qua `pkg/modcall` (R29).
+- Facade: `chat` đếm `school-notifications` [Proposed, khi F122 Done], gọi trong tiến trình qua `src/backend/pkg/modcall` (R29).
 - Event tiêu thụ: `question.answered`, `activity.submitted`, `activity.graded`, `exam.graded`, `attempt.re_evaluated`, `assignment.created/published/completed/results_released`, `assignment.submission_updated`, `learning_objective.progressed/mastered`, `learning.recommendation_generated`, `student.game_logged_in/out`. Event phát: không.
 
 ### Bảo mật, tenant, idempotency, audit

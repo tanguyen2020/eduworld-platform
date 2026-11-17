@@ -71,7 +71,7 @@ Khóa (Mới, schema): `allowed_hours {timezone varchar(64), windows[{days[], fr
 | `synced_at` | timestamptz | | |
 | `deleted_at`, `deleted_by`, `delete_reason` | | | mục bị gỡ khỏi file → soft-delete |
 
-Chỉ `cmd/migrate` (role migrate) ghi; `REVOKE INSERT, UPDATE, DELETE` khỏi `identity_app` (cùng mẫu `identity.permissions`).
+Chỉ `src/backend/cmd/migrate` (role migrate) ghi; `REVOKE INSERT, UPDATE, DELETE` khỏi `identity_app` (cùng mẫu `identity.permissions`).
 
 ### Trạng thái hiệu lực (không lưu bền) — Valkey `ew:fg:{tenant_id|platform}`
 
@@ -83,7 +83,7 @@ Tập `disabled_menus`, `disabled_actions` đã tính sẵn; TTL `feature_toggle
 |---|---|
 | AuditLog | ghi một lần → (hết retention) ẩn danh hóa; không xóa |
 | Settings / FeatureFlag | version tăng mỗi lần ghi; soft-delete flag (kể cả khi mục catalog bị gỡ) |
-| PortalMenuCatalogItem | `cmd/migrate` upsert theo `catalog_version` → soft-delete khi bị gỡ khỏi file |
+| PortalMenuCatalogItem | `src/backend/cmd/migrate` upsert theo `catalog_version` → soft-delete khi bị gỡ khỏi file |
 
 ## 3. Quy tắc kiểm tra dữ liệu
 

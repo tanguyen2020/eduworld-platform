@@ -4,14 +4,14 @@
 
 ## Summary
 
-Frontend: thêm module `school-events/` vào chunk workspace C (`web/apps/portal/src/workspaces/school-lms/`): danh sách, wizard tạo từ template, sửa `If-Match`, hủy có lý do, tiến độ. Mọi quyết định quyền, `allowed_params`, giới hạn do server; client chỉ ẩn/hiện và map lỗi theo `code`. Backend nhỏ trong module game: query `GetSchoolEventProgress` (bounded context `liveops` của F077, đọc PostgreSQL). Delta contract ở Phase 2. Màn "Hoạt động game" và mở rộng `GetTenantSummary` đã chuyển sang F080 US5 (tách F081, CODE_PLAN §4.1).
+Frontend: thêm module `school-events/` vào chunk workspace C (`src/cms/frontend/apps/portal/src/workspaces/school-lms/`): danh sách, wizard tạo từ template, sửa `If-Match`, hủy có lý do, tiến độ. Mọi quyết định quyền, `allowed_params`, giới hạn do server; client chỉ ẩn/hiện và map lỗi theo `code`. Backend nhỏ trong module game: query `GetSchoolEventProgress` (bounded context `liveops` của F077, đọc PostgreSQL). Delta contract ở Phase 2. Màn "Hoạt động game" và mở rộng `GetTenantSummary` đã chuyển sang F080 US5 (tách F081, CODE_PLAN §4.1).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript strict (React 18, Vite) · Go ≥ 1.24 (module game) |
-| Primary Dependencies | Ant Design 5 + Pro (ProTable, StepsForm, StatisticCard), TanStack Query, openapi-fetch + `apiClient` (F050), `withTenantScope`/`TenantTargetField` (F051), chart theo DESIGN_SYSTEM §4.4, i18next · ent, `pkg/tenancy`, `pkg/authz` |
+| Primary Dependencies | Ant Design 5 + Pro (ProTable, StepsForm, StatisticCard), TanStack Query, openapi-fetch + `apiClient` (F050), `withTenantScope`/`TenantTargetField` (F051), chart theo DESIGN_SYSTEM §4.4, i18next · ent, `src/backend/pkg/tenancy`, `src/backend/pkg/authz` |
 | Storage | Không bảng mới. Đọc `eduworld_game`: `game.event_runs`, `game.event_participation`, `game.community_goals`, `game.community_goal_progress`, `game.community_goal_contributions`, `ref.classes` |
 | Testing | Vitest + Testing Library + MSW (chỉ trong test, nhãn `MOCK`), Playwright E2E với backend compose, axe · go test + testcontainers (PostgreSQL) |
 | Target Platform | Trình duyệt desktop/tablet (form), điện thoại chỉ xem · Linux container |
@@ -54,7 +54,7 @@ specs/081-school-events-game-report/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/workspaces/school-lms/
+src/cms/frontend/apps/portal/src/workspaces/school-lms/
 ├── school-events/
 │   ├── routes.tsx                         # /school-lms/school-events, /new, /:eventId, /:eventId/edit
 │   ├── SchoolEventListPage.tsx
@@ -65,10 +65,10 @@ web/apps/portal/src/workspaces/school-lms/
 │   ├── api/{eventTemplates.ts,schoolEvents.ts,schoolEventProgress.ts}
 │   └── mapProblem.ts                      # code → khóa i18n, errors[].field → field form
 ├── routes.tsx                             # route cho `menu.school_lms.school_events` của catalog (ADR-0090)
-web/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json
-web/apps/portal/tests/unit/school-lms/school-events/*.test.tsx
-web/apps/portal/tests/e2e/school-lms/{school-events,school-events-common}.spec.ts
-modules/game/
+src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json
+src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/*.test.tsx
+src/cms/frontend/apps/portal/tests/e2e/school-lms/{school-events,school-events-common}.spec.ts
+src/backend/modules/game/
 ├── internal/application/query/liveops/get_school_event_progress.go
 ├── internal/infrastructure/persistence/liveops/school_event_progress_repo.go
 ├── internal/presentation/http/public/school_events.go                  # thêm handler getSchoolEventProgress
@@ -92,7 +92,7 @@ Không có — ADR và tài liệu sở hữu đủ; delta contract đã xác đ
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `liveops.ClassBreakdownPolicy` (dải khối được xem đóng góp theo lớp — EVENT_SEASON_SYSTEM §6) | Hàm thuần, test unit |
-| application | Query `GetSchoolEventProgress` (permission `lms.school_event.write`, scope trường) | authz `authz.Require` tường minh đầu handler; tracing `pkg/observability`; validation trong DTO/handler |
+| application | Query `GetSchoolEventProgress` (permission `lms.school_event.write`, scope trường) | authz `authz.Require` tường minh đầu handler; tracing `src/backend/pkg/observability`; validation trong DTO/handler |
 | infrastructure | `SchoolEventProgressRepo` (ent + SQL tường minh `GROUP BY class_id` có `tenant_id`) | R27 |
 | presentation | Handler `getSchoolEventProgress` · Portal gọi `listEventTemplates`, `listSchoolEvents`, `createSchoolEvent`, `getSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent`, `getSchoolEventProgress`, `listTenantSchoolClasses`, `getMyPermissions` | |
 

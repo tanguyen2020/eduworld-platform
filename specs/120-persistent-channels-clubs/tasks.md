@@ -2,13 +2,13 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Đường dẫn gốc `modules/chat/` trừ khi ghi rõ. Fixture chỉ dùng chuỗi placeholder, không từ nhạy cảm thật (R15).
+Đường dẫn gốc `src/backend/modules/chat/` trừ khi ghi rõ. Fixture chỉ dùng chuỗi placeholder, không từ nhạy cảm thật (R15).
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký permission dùng trong module (`tenant.settings.read/write`, `school.settings.read/write`, `platform.settings.write`, `social.club.approve`) vào kiểm tra catalog lúc khởi động — file: `modules/chat/internal/bootstrap/authz.go`
-- [ ] T002 [P] Khai báo durable consumer `chat-membership`, `chat-club-goals` (stream `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_CHAT`) và lịch job `persistent-chat-retention` trong cấu hình worker — file: `modules/chat/config/worker.yaml`
-- [ ] T003 [P] Fixture event mẫu (`class.synced`, `enrollment.changed`, `study_group.*`, `user.blocked`, `activity.graded`) — file: `modules/chat/tests/fixtures/events/`
+- [ ] T001 Đăng ký permission dùng trong module (`tenant.settings.read/write`, `school.settings.read/write`, `platform.settings.write`, `social.club.approve`) vào kiểm tra catalog lúc khởi động — file: `src/backend/modules/chat/internal/bootstrap/authz.go`
+- [ ] T002 [P] Khai báo durable consumer `chat-membership`, `chat-club-goals` (stream `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_CHAT`) và lịch job `persistent-chat-retention` trong cấu hình worker — file: `src/backend/modules/chat/config/worker.yaml`
+- [ ] T003 [P] Fixture event mẫu (`class.synced`, `enrollment.changed`, `study_group.*`, `user.blocked`, `activity.graded`) — file: `src/backend/modules/chat/tests/fixtures/events/`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -17,7 +17,7 @@
 - [ ] T006 [P] AsyncAPI `chat.channel.membership_changed` — file: `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T007 [P] Payload schema `chat_policy.updated`, `club.created/approved/archived/member_joined/member_left/goal_completed`; thêm `chat_policy.updated` vào EVENT_DESIGN §4.9 — file: `specs/events/payloads/chat/`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `make specs-lint`
 - [ ] T008 Xác nhận payload schema owner khác đã có (`study_group.*` F040, `enrollment.changed`/`class.created`/`school.updated` F010/F015, `user.blocked` F095); thiếu → chặn US tương ứng, không tự tạo — file: `specs/events/payloads/` (chỉ đọc)
-- [ ] T009 ent schema: thêm cột `channels.status/capabilities`, `channel_members.joined_at/left_at/source_event_id`, `messages.anonymized_at`, `chat_policies.reason/updated_by`, `club_goal_progress.last_event_id`, `ref.schools.student_club_creation`; bảng `persistent_retention_runs`; CHECK `club_type` bỏ `study_group`; unique channel theo phạm vi — file: `modules/chat/ent/schema/*.go` — kiểm: `make migrate-diff MOD=chat`, `make migrate-lint MOD=chat`
+- [ ] T009 ent schema: thêm cột `channels.status/capabilities`, `channel_members.joined_at/left_at/source_event_id`, `messages.anonymized_at`, `chat_policies.reason/updated_by`, `club_goal_progress.last_event_id`, `ref.schools.student_club_creation`; bảng `persistent_retention_runs`; CHECK `club_type` bỏ `study_group`; unique channel theo phạm vi — file: `src/backend/modules/chat/ent/schema/*.go` — kiểm: `make migrate-diff MOD=chat`, `make migrate-lint MOD=chat`
 - [ ] T010 [P] Domain policy: `Rule`, `Intersect`, `ValidateLowerLevel` (siết chặt), `ValidateAlwaysOn`, chặn `grade_*` (+ unit test bảng) — file: `internal/domain/policy/`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
@@ -55,15 +55,15 @@
 - [ ] T023 [P] [US2] Test F120-AC-10: effective policy giao 4 cấp + sanction + quan hệ; thiếu rule = deny; invalidate cache khi event — file: `internal/domain/policy/effective_test.go`, `tests/integration/policy_cache_test.go`
 - [ ] T024 [P] [US2] Test F120-AC-11 authorization + tenant isolation: tenant/trường khác → `404`, cấp platform → `403`, gateway public không có route platform (TC-TEN-003) — file: `tests/integration/chat_policy_authz_test.go`
 - [ ] T025 [P] [US2] Test giới hạn độ dài `reason` (`maxLength` 500) và kích thước `rules` (TC-TEN-024) — file: `tests/integration/chat_policy_limits_test.go`
-- [ ] T055 [P] [US2] Test F120-AC-26: School Admin đặt preset có audit + `chat_policy.updated`, hiệu lực ≤ 60 s; preset theo khối/lớp → 422; trường khác không đổi — file: `modules/chat/tests/integration/school_preset_test.go` — phải FAIL trước khi code
-- [ ] T056 [P] [US2] Test F120-AC-27: `allowed_hours` 06:00–22:00 ở cấp trường khi `platform_curfew` 21:30–06:30 → `422 CHAT_POLICY_RELAX_NOT_ALLOWED`; 07:00–21:00 hợp lệ — file: `modules/chat/tests/integration/allowed_hours_curfew_test.go`
+- [ ] T055 [P] [US2] Test F120-AC-26: School Admin đặt preset có audit + `chat_policy.updated`, hiệu lực ≤ 60 s; preset theo khối/lớp → 422; trường khác không đổi — file: `src/backend/modules/chat/tests/integration/school_preset_test.go` — phải FAIL trước khi code
+- [ ] T056 [P] [US2] Test F120-AC-27: `allowed_hours` 06:00–22:00 ở cấp trường khi `platform_curfew` 21:30–06:30 → `422 CHAT_POLICY_RELAX_NOT_ALLOWED`; 07:00–21:00 hợp lệ — file: `src/backend/modules/chat/tests/integration/allowed_hours_curfew_test.go`
 
 ### Implementation cho User Story 2
 
 - [ ] T026 [US2] Command `PutChatPolicy`, query `GetChatPolicy`, `GetEffectivePolicy` — file: `internal/application/command/policy/put_chat_policy.go`, `internal/application/query/policy/`
 - [ ] T027 [US2] `PolicyCache` Valkey (TTL `chat_policy_cache`, invalidate theo `chat_policy.updated`) — file: `internal/infrastructure/cache/policy_cache.go`
 - [ ] T028 [US2] Handler `getChatPolicy`, `putChatPolicy`, `getEffectiveChatPolicy`, `getPlatformChatPolicy`, `putPlatformChatPolicy` — file: `internal/presentation/http/public/chat_policy.go`
-- [ ] T057 [US2] Command `SetSchoolChatPreset` + validate `allowed_hours` theo giới nghiêm hiệu lực trong đường ghi chat policy; contract `chat_policy_preset` ở schema/API chat policy — file: `modules/chat/internal/application/command/set_school_chat_preset.go`, `modules/chat/internal/domain/policy/validate_rule.go`, `specs/schemas/chat-policy.schema.json`
+- [ ] T057 [US2] Command `SetSchoolChatPreset` + validate `allowed_hours` theo giới nghiêm hiệu lực trong đường ghi chat policy; contract `chat_policy_preset` ở schema/API chat policy — file: `src/backend/modules/chat/internal/application/command/set_school_chat_preset.go`, `src/backend/modules/chat/internal/domain/policy/validate_rule.go`, `specs/schemas/chat-policy.schema.json`
 
 ## Phase 5: User Story 3 — World, Area, DM (Priority: P2)
 
@@ -73,13 +73,13 @@
 - [ ] T030 [P] [US3] Test F120-AC-13: Area chỉ nhận khi `room_id` gateway gắn khớp — file: `tests/integration/area_channel_test.go`
 - [ ] T031 [P] [US3] Test F120-AC-14, F120-AC-15: DM chỉ bạn bè không block (`CHAT_NOT_ALLOWED`, TC-CHAT-005); `user.blocked` → `frozen`; nickname với người ngoài trường (TC-SOC-006) — file: `tests/integration/direct_channel_test.go`
 - [ ] T032 [P] [US3] Test F120-AC-16: quét OpenAPI/AsyncAPI không có voice; `capabilities.voice=false` (TC-AUD-004) — file: `tests/unit/no_voice_test.go`
-- [ ] T058 [P] [US3] Test F120-AC-28: học sinh tenant `common` mở DM, gửi `world` → `CHAT_NOT_ALLOWED`; `area` `text` → `CHAT_KIND_NOT_ALLOWED`, `quick` được; System Admin bật lại có `reason` + audit; `tenant_admin` bật lại → 403 — file: `modules/chat/tests/integration/common_tenant_defaults_test.go` — phải FAIL trước khi code
+- [ ] T058 [P] [US3] Test F120-AC-28: học sinh tenant `common` mở DM, gửi `world` → `CHAT_NOT_ALLOWED`; `area` `text` → `CHAT_KIND_NOT_ALLOWED`, `quick` được; System Admin bật lại có `reason` + audit; `tenant_admin` bật lại → 403 — file: `src/backend/modules/chat/tests/integration/common_tenant_defaults_test.go` — phải FAIL trước khi code
 
 ### Implementation cho User Story 3
 
 - [ ] T033 [US3] Resolver channel `world`/`area` (lười, quyền động theo `ref.students`, `room_id` từ gateway) — file: `internal/application/command/channel/resolve_ephemeral_channel.go`
 - [ ] T034 [US3] Tạo `direct` lần đầu, consumer `user.blocked`/`user.unblocked` → `FreezeDirectChannel` — file: `internal/application/command/channel/freeze_direct.go`, `internal/presentation/consumer/user_blocked.go`
-- [ ] T059 [US3] Rule mặc định tenant `common` (seed chat policy cấp tenant: `world`/`direct` tắt, `area` chỉ `quick` + `emoji`) + command `SetCommonTenantSocialOverride` (System Admin, `reason`, audit) — file: `modules/chat/internal/application/command/set_common_tenant_social_override.go`, `deploy/seed/chat/common_tenant_policy.json`
+- [ ] T059 [US3] Rule mặc định tenant `common` (seed chat policy cấp tenant: `world`/`direct` tắt, `area` chỉ `quick` + `emoji`) + command `SetCommonTenantSocialOverride` (System Admin, `reason`, audit) — file: `src/backend/modules/chat/internal/application/command/set_common_tenant_social_override.go`, `deploy/seed/chat/common_tenant_policy.json`
 
 ## Phase 6: User Story 4 — Club (Priority: P2)
 
@@ -124,7 +124,7 @@
 
 - [ ] T050 [P] Cập nhật DATABASE_DESIGN §2.11–§2.12 (bỏ study group khỏi club, cột mới, `persistent_retention_runs`), CHAT_SYSTEM §2, §4 (club = team cố định, membership study group từ module learning, bỏ `teaching_assignments`), SOCIAL_SYSTEM §6.1 — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/03-social-multiplayer/CHAT_SYSTEM.md`, `docs/03-social-multiplayer/SOCIAL_SYSTEM.md`
 - [ ] T051 [P] Đăng ký `persistent_chat_retention_days` ở CONFIG_DEFAULTS §12 (sở hữu CHAT_SYSTEM) — file: `docs/00-overview/CONFIG_DEFAULTS.md`
-- [ ] T052 [P] Metric mới + alert lag membership — file: `modules/chat/internal/infrastructure/metrics/metrics.go`, `deploy/observability/prometheus/rules/chat.yaml`
+- [ ] T052 [P] Metric mới + alert lag membership — file: `src/backend/modules/chat/internal/infrastructure/metrics/metrics.go`, `deploy/observability/prometheus/rules/chat.yaml`
 - [ ] T053 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 

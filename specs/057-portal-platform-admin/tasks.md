@@ -4,18 +4,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Tạo chunk workspace D, route lazy `/portal/platform-admin/*` có guard role `system_admin` từ `getMyPermissions` — file: `web/apps/portal/src/workspaces/platform-admin/routes.tsx`
-- [ ] T002 [P] Biến môi trường base URL gateway nội bộ `VITE_EW_INTERNAL_API_BASE_URL` (chỉ `.env.example`) — file: `web/apps/portal/.env.example`
-- [ ] T003 [P] File dịch vi/en (`platform.*`, `error.MFA_REQUIRED`, `error.RETENTION_BELOW_MINIMUM`, `error.CONFLICT`, thông điệp "Cần kết nối mạng quản trị (VPN)") — file: `web/apps/portal/src/workspaces/platform-admin/i18n/vi.json`, `en.json`
+- [ ] T001 Tạo chunk workspace D, route lazy `/portal/platform-admin/*` có guard role `system_admin` từ `getMyPermissions` — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/routes.tsx`
+- [ ] T002 [P] Biến môi trường base URL gateway nội bộ `VITE_EW_INTERNAL_API_BASE_URL` (chỉ `.env.example`) — file: `src/cms/frontend/apps/portal/.env.example`
+- [ ] T003 [P] File dịch vi/en (`platform.*`, `error.MFA_REQUIRED`, `error.RETENTION_BELOW_MINIMUM`, `error.CONFLICT`, thông điệp "Cần kết nối mạng quản trị (VPN)") — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/i18n/vi.json`, `en.json`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T004 Delta contract (owner F010/F045): `createTenant`, `updateTenant`, schema `TenantCreate`/`TenantUpdate` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — **2026-11-17:** `createTenant`, `updateTenant`, `TenantCreate`, `TenantUpdate` đã áp bởi owner F010 (contracts §6 của F057 tham chiếu bản owner)
 - [ ] T005 Delta contract (owner F045): `previewTenantClone` + `TenantClonePreview` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T006 Delta contract (owner F016): `cancelStudentCleanupRun`, thêm `cancelled` vào `StudentCleanupRun.status`; cập nhật ADMIN_PORTAL §8 — file: `specs/openapi/eduworld-api.v1.yaml`, `docs/04-admin-portal/ADMIN_PORTAL.md` — kiểm: `make specs-lint`
-- [ ] T007 Sinh lại client TS — file: `web/apps/portal/src/api/generated/eduworld-api.d.ts` — kiểm: `pnpm gen:api` + CI diff
-- [ ] T008 [P] Xử lý lỗi chung workspace D: `403 MFA_REQUIRED` → step-up, lỗi mạng gateway nội bộ → `VpnRequiredBanner` — file: `web/apps/portal/src/workspaces/platform-admin/errors/MfaStepUp.tsx`, `VpnRequiredBanner.tsx`
-- [ ] T009 [P] MSW handler test-only (nhãn `MOCK`) — file: `web/apps/portal/src/workspaces/platform-admin/__tests__/msw/handlers.ts`
+- [ ] T007 Sinh lại client TS — file: `src/cms/frontend/apps/portal/src/api/generated/eduworld-api.d.ts` — kiểm: `pnpm gen:api` + CI diff
+- [ ] T008 [P] Xử lý lỗi chung workspace D: `403 MFA_REQUIRED` → step-up, lỗi mạng gateway nội bộ → `VpnRequiredBanner` — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/errors/MfaStepUp.tsx`, `VpnRequiredBanner.tsx`
+- [ ] T009 [P] MSW handler test-only (nhãn `MOCK`) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/msw/handlers.ts`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -27,16 +27,16 @@
 
 ### Tests cho User Story 1
 
-- [ ] T010 [P] [US1] Test F057-AC-01: tìm `listTenants` (`q` `maxLength`, debounce, cursor), mặc định "Tất cả", chọn nhiều, giữ trong `sessionStorage` (TC-TEN-018) — file: `web/packages/ops-ui/src/tenant/TenantFilter.test.tsx` — phải FAIL trước khi code
-- [ ] T011 [P] [US1] Test F057-AC-02: list System Admin không `X-Tenant-Id`, có `tenant_ids[]`; cột Tenant + Trường với `unit` (TC-CMS-TEN-02) — file: `web/apps/portal/src/shared/tenancy/useCrossTenantScope.test.ts`
-- [ ] T012 [P] [US1] Test F057-AC-03: `TargetTenantField` bắt buộc một tenant hoặc Platform, header `X-Tenant-Id` = tenant đích (TC-CMS-TEN-03) — file: `web/packages/ops-ui/src/tenant/TargetTenantField.test.tsx`
-- [ ] T013 [P] [US1] Test F057-AC-04: người dùng tenant không thấy filter/cột, không gửi `tenant_ids` (TC-CMS-TEN-01, TC-TEN-011) — file: `web/apps/portal/src/shared/tenancy/useCrossTenantScope.tenantUser.test.ts`
+- [ ] T010 [P] [US1] Test F057-AC-01: tìm `listTenants` (`q` `maxLength`, debounce, cursor), mặc định "Tất cả", chọn nhiều, giữ trong `sessionStorage` (TC-TEN-018) — file: `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.test.tsx` — phải FAIL trước khi code
+- [ ] T011 [P] [US1] Test F057-AC-02: list System Admin không `X-Tenant-Id`, có `tenant_ids[]`; cột Tenant + Trường với `unit` (TC-CMS-TEN-02) — file: `src/cms/frontend/apps/portal/src/shared/tenancy/useCrossTenantScope.test.ts`
+- [ ] T012 [P] [US1] Test F057-AC-03: `TargetTenantField` bắt buộc một tenant hoặc Platform, header `X-Tenant-Id` = tenant đích (TC-CMS-TEN-03) — file: `src/cms/frontend/packages/ops-ui/src/tenant/TargetTenantField.test.tsx`
+- [ ] T013 [P] [US1] Test F057-AC-04: người dùng tenant không thấy filter/cột, không gửi `tenant_ids` (TC-CMS-TEN-01, TC-TEN-011) — file: `src/cms/frontend/apps/portal/src/shared/tenancy/useCrossTenantScope.tenantUser.test.ts`
 
 ### Implementation cho User Story 1
 
-- [ ] T014 [P] [US1] `TenantFilter`, `TenantColumn`, `TargetTenantField` + story — file: `web/packages/ops-ui/src/tenant/TenantFilter.tsx`, `TenantColumn.tsx`, `TargetTenantField.tsx`
-- [ ] T015 [US1] Hook `useCrossTenantScope` và tích hợp với `apiClient` (F050) — file: `web/apps/portal/src/shared/tenancy/useCrossTenantScope.ts`
-- [ ] T016 [US1] Gắn `TenantFilter` vào topbar shell (điểm mở rộng của F051) — file: `web/apps/portal/src/shell/topbar/TopbarTenantSlot.tsx`
+- [ ] T014 [P] [US1] `TenantFilter`, `TenantColumn`, `TargetTenantField` + story — file: `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.tsx`, `TenantColumn.tsx`, `TargetTenantField.tsx`
+- [ ] T015 [US1] Hook `useCrossTenantScope` và tích hợp với `apiClient` (F050) — file: `src/cms/frontend/apps/portal/src/shared/tenancy/useCrossTenantScope.ts`
+- [ ] T016 [US1] Gắn `TenantFilter` vào topbar shell (điểm mở rộng của F051) — file: `src/cms/frontend/apps/portal/src/shell/topbar/TopbarTenantSlot.tsx`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -44,9 +44,9 @@
 
 ### Tests cho User Story 2
 
-- [ ] T017 [P] [US2] Test F057-AC-05: hộp gán chọn nhiều tenant, `assignToTenants` + `Idempotency-Key`, tab `listTenantAssignments` (TC-TEN-019) — file: `web/apps/portal/src/workspaces/platform-admin/__tests__/AssignToTenantsDialog.test.tsx` — phải FAIL trước khi code
+- [ ] T017 [P] [US2] Test F057-AC-05: hộp gán chọn nhiều tenant, `assignToTenants` + `Idempotency-Key`, tab `listTenantAssignments` (TC-TEN-019) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/AssignToTenantsDialog.test.tsx` — phải FAIL trước khi code
 - [ ] T018 [P] [US2] Test F057-AC-06: xác nhận gỡ gán có thông điệp lịch sử giữ nguyên, `unassignFromTenants` — file: `…/platform/__tests__/AssignedTenantsTab.test.tsx`
-- [ ] T019 [US2] E2E gán → `ad.truong.a` thấy chỉ đọc → gỡ gán (TC-CMS-ASG-02) — file: `web/apps/portal/e2e/platform/assignments.spec.ts`
+- [ ] T019 [US2] E2E gán → `ad.truong.a` thấy chỉ đọc → gỡ gán (TC-CMS-ASG-02) — file: `src/cms/frontend/apps/portal/e2e/platform/assignments.spec.ts`
 
 ### Implementation cho User Story 2
 
@@ -117,7 +117,7 @@
 
 ### Tests cho User Story 8
 
-- [ ] T040 [P] [US8] E2E F057-AC-18: `ad.truong.a`, `cm.noidung`, `sm.antoan` mở URL D → trang 403, network log không có chunk D (TC-CMS-AUTHZ-05, TC-CMS-WS-01) — file: `web/apps/portal/e2e/platform/authz.spec.ts` — phải FAIL trước khi code
+- [ ] T040 [P] [US8] E2E F057-AC-18: `ad.truong.a`, `cm.noidung`, `sm.antoan` mở URL D → trang 403, network log không có chunk D (TC-CMS-AUTHZ-05, TC-CMS-WS-01) — file: `src/cms/frontend/apps/portal/e2e/platform/authz.spec.ts` — phải FAIL trước khi code
 - [ ] T041 [P] [US8] Test F057-AC-19: `MFA_REQUIRED` → step-up và quay lại URL; lỗi mạng → banner VPN (TC-CMS-WS-02) — file: `…/platform/__tests__/errors.test.tsx`
 - [ ] T042 [P] [US8] Test F057-AC-20: mọi mutation D có `Idempotency-Key` giữ nguyên khi retry; lỗi hiển thị `code` + `trace_id` (TC-CMS-ASG-01) — file: `…/platform/__tests__/idempotency.test.ts`
 - [ ] T043 [P] [US8] Test F057-AC-21: ô nhập theo `maxLength` + bộ đếm (TC-TEN-024) — file: `…/platform/__tests__/inputLimits.test.tsx`
@@ -129,11 +129,11 @@
 ## Phase N: Polish & Cross-Cutting
 
 - [ ] T045 [P] Kiểm không import component/Theme game (TC-UI-010), lint hardcode style (TC-UI-003) — kiểm: `make web-lint`
-- [ ] T046 [P] axe + visual regression màn D (TC-UI-004, TC-UI-006) — file: `web/apps/portal/e2e/platform/a11y-visual.spec.ts`
+- [ ] T046 [P] axe + visual regression màn D (TC-UI-004, TC-UI-006) — file: `src/cms/frontend/apps/portal/e2e/platform/a11y-visual.spec.ts`
 - [ ] T047 [P] Cập nhật CHANGELOG — file: `CHANGELOG.md`
 - [ ] T048 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng
-- [ ] T049 [P] Test F057-AC-22: tắt `action.platform_admin.tenant_data.clone` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `web/apps/portal/tests/e2e/platform-admin/feature-toggle.spec.ts`
-- [ ] T050 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F057-AC-22) — file: `web/apps/portal/src/workspaces/platform-admin/routes.tsx`
+- [ ] T049 [P] Test F057-AC-22: tắt `action.platform_admin.tenant_data.clone` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/platform-admin/feature-toggle.spec.ts`
+- [ ] T050 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F057-AC-22) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/routes.tsx`
 
 ## Dependencies & Execution Order
 

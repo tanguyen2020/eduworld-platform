@@ -1,6 +1,6 @@
 # Feature Specification: F108 — Cấu hình thi đấu `/game-admin/*` và UI workspace A
 
-**Feature Branch**: `108-competition-config-portal` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `competition` + `web/apps/portal` · **Mốc**: M4b · **Phụ thuộc**: F079, F107
+**Feature Branch**: `108-competition-config-portal` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `competition` + `src/cms/frontend/apps/portal` · **Mốc**: M4b · **Phụ thuộc**: F079, F107
 **Input**: Competition Admin (platform) soạn, duyệt, publish, rollback cấu hình thi đấu có phiên bản (matchmaking, ranking rules, mùa giải, template giải/thử thách, định nghĩa bảng xếp hạng) qua `/game-admin/*` và màn "Thi đấu" của workspace A; School Admin tạo và điều hành thử thách lớp/giải trường từ template trong workspace C. FR nguồn: FR-CMS-005, FR-LMS-004 (màn workspace C).
 
 ## Clarifications

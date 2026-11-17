@@ -13,7 +13,7 @@
 | # | Bước | Kết quả mong đợi | Tiêu chí |
 |---|---|---|---|
 | 1 | Tag `client/v0.9.0-rc1` | 4 artifact; `Config.client_version = 0.9.0`, build = `github.run_number` | F133-AC-01 |
-| 2 | Xem `godot/config/production.json` trong artifact; thử `user://override.json` trên bản production | URL lấy từ CI; override bị bỏ qua; `export_presets.cfg` không có mật khẩu | F133-AC-02 |
+| 2 | Xem `src/game/config/production.json` trong artifact; thử `user://override.json` trên bản production | URL lấy từ CI; override bị bỏ qua; `export_presets.cfg` không có mật khẩu | F133-AC-02 |
 | 3 | `scan-artifact.sh` trên artifact; nhánh thử nhúng chuỗi `/protocol/openid-connect/token` | Lần đầu sạch; nhánh thử đỏ | F133-AC-03 |
 | 4 | Thêm asset 600 MB vào nhánh thử | `godot / size-check` đỏ; báo cáo dung lượng đính release | F133-AC-04 |
 | 5 | `build-bundles.sh`; tải lại cùng gói | Chỉ mục có chữ ký; object theo hash không bị ghi đè | F133-AC-05 |

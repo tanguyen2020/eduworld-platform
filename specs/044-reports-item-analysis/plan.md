@@ -11,7 +11,7 @@ Bổ sung vào module `learning`: (1) module `reporting`: bảng `learning.repor
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (work-queue), AWS SDK for Go v2 (S3 presign, floci), excelize (XLSX), thư viện PDF server-side [Proposed], `pkg/entx` (`UnitOfWork`), `pkg/authz`, `pkg/idempotency`, `pkg/outbox` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (work-queue), AWS SDK for Go v2 (S3 presign, floci), excelize (XLSX), thư viện PDF server-side [Proposed], `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/idempotency`, `src/backend/pkg/outbox` |
 | Storage | PostgreSQL `eduworld_learning` (`learning`, `content`, `assessment`); object storage bucket `ew-exports` (ADR-0044); Valkey không dùng cho dữ liệu bền |
 | Testing | go test + testcontainers (PostgreSQL, NATS, floci S3); dữ liệu mẫu tính tay cho item analysis/KR-20 |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -54,7 +54,7 @@ specs/044-reports-item-analysis/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/                         # report_job.go, assessment_profile.go, reference_level.go, question_stat.go, difficulty_calibration_proposal.go, exam_quality_report.go
 ├── internal/domain/
 │   ├── reporting/                      # report_job.go (trạng thái, giới hạn), watermark.go

@@ -154,7 +154,7 @@ Dữ liệu seed cho môi trường dev và pilot. Đây là **ví dụ cấu tr
 | 5 | NUM | Tỉ số phần trăm | `MATH.G5.NUM.PERCENT` | Giải bài toán tỉ số phần trăm | — |
 | 5 | GEO | Diện tích, thể tích | `MATH.G5.GEO.AREA_VOLUME` | Tính diện tích hình thang, thể tích hình hộp chữ nhật | — |
 
-File seed: `modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (mã curriculum `GDPT2018_SAMPLE`) — dạng cây `curriculum → version → subject_grade → topics[] → objectives[]`. Seed chạy bằng `cmd/seed` gọi cùng use case import của CMS (không SQL thủ công) để đi qua validation và audit; chạy lại không tạo bản ghi trùng.
+File seed: `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (mã curriculum `GDPT2018_SAMPLE`) — dạng cây `curriculum → version → subject_grade → topics[] → objectives[]`. Seed chạy bằng `src/backend/cmd/seed` gọi cùng use case import của CMS (không SQL thủ công) để đi qua validation và audit; chạy lại không tạo bản ghi trùng.
 
 ## 8. Yêu cầu chức năng
 

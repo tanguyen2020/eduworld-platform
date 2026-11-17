@@ -1,6 +1,6 @@
 # Feature Specification: F055 — Workspace C — LMS: course, learning path, wizard giao bài, theo dõi nộp bài, lịch, nhóm học tập
 
-**Feature Branch**: `055-portal-lms-assignments` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace C) · **Mốc**: M-C3 · **Phụ thuộc**: F040, F041, F042, F052
+**Feature Branch**: `055-portal-lms-assignments` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace C) · **Mốc**: M-C3 · **Phụ thuộc**: F040, F041, F042, F052
 **Input**: Màn LMS của workspace C cho `school_admin`/`academic_manager`: course, learning path, wizard giao bài, theo dõi nộp bài + extend/excuse/remind/release, lịch, nhóm học tập, gia hạn thời gian thi cá nhân. FR nguồn: FR-LMS-001, FR-LMS-002, FR-LMS-004, FR-LMS-012, FR-EXM-009.
 
 ## Clarifications
@@ -205,7 +205,7 @@ Mọi màn của F055 chỉ hiện thao tác người dùng được phép và c
 
 ## Assumptions
 
-- Thư mục workspace C là `web/apps/portal/src/workspaces/school-lms/`, route gốc `/portal/school-lms/...` (ADMIN_PORTAL §1.2, F051).
+- Thư mục workspace C là `src/cms/frontend/apps/portal/src/workspaces/school-lms/`, route gốc `/portal/school-lms/...` (ADMIN_PORTAL §1.2, F051).
 - `RegradeDialog` (ops-ui) do F058 tạo (cùng mốc M-C3); F055 chỉ gắn vào màn bài giao có đề kiểm tra.
 - [Proposed] Client TS sinh bằng `pnpm gen:api` (openapi-typescript) từ `specs/openapi/eduworld-api.v1.yaml`; `apiClient` (F050) tự gắn `Authorization`, `X-Tenant-Id`, `Idempotency-Key`, `If-Match`.
 - Server là nguồn quyết định quyền, scope và trạng thái; Portal chỉ ẩn/hiện theo `getMyPermissions` (ADR-0027 mục 3).

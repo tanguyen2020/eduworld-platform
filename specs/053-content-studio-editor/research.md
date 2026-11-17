@@ -10,7 +10,7 @@
 
 ## R2. Validation client bằng `question.schema.json`
 
-- **Decision**: Script `pnpm gen:schemas` sao chép `specs/schemas/question.schema.json` (và `$defs`) vào `web/apps/portal/src/api/schemas/` (file sinh, không sửa tay, CI kiểm khớp). `schemaValidator.ts` dùng ajv 2020-12 kiểm payload trước khi gửi; lỗi map về field path giống `422 VALIDATION_FAILED`.
+- **Decision**: Script `pnpm gen:schemas` sao chép `specs/schemas/question.schema.json` (và `$defs`) vào `src/cms/frontend/apps/portal/src/api/schemas/` (file sinh, không sửa tay, CI kiểm khớp). `schemaValidator.ts` dùng ajv 2020-12 kiểm payload trước khi gửi; lỗi map về field path giống `422 VALIDATION_FAILED`.
 - **Rationale**: Một nguồn sự thật (R33); báo lỗi sớm trên form; server vẫn kiểm (F022).
 - **Alternatives**: Tự viết Zod cho từng dạng — loại vì lặp quy tắc và lệch schema.
 

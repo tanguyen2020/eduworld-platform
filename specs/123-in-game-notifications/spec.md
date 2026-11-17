@@ -1,6 +1,6 @@
 # Feature Specification: F123 — Thông báo trong game: realtime, lưu bền vững, không push
 
-**Feature Branch**: `123-in-game-notifications` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `chat` (module notification) + `godot/` · **Mốc**: M5 · **Phụ thuộc**: F090, F115 (nguồn sự kiện: F095, F100, F041, F074)
+**Feature Branch**: `123-in-game-notifications` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `chat` (module notification) + `src/game/` · **Mốc**: M5 · **Phụ thuộc**: F090, F115 (nguồn sự kiện: F095, F100, F041, F074)
 **Input**: Học sinh nhận thông báo ngay trong game khi có lời mời kết bạn/party, bài nhà trường giao, kết quả được công bố, phần thưởng; thông báo được lưu để xem lại trong hộp thông báo, có badge chưa đọc; không gửi push ngoài game tới học sinh. FR nguồn: FR-NTF-001, FR-NTF-002, FR-NTF-003.
 
 ## Clarifications

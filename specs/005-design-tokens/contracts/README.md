@@ -36,10 +36,10 @@ Hợp đồng đầu ra (giữa F005 và F050/F060), không thuộc `specs/`:
 
 | Đầu ra | Bên dùng | Giao diện |
 |---|---|---|
-| `web/packages/ops-ui/src/theme/antd-theme.ts` | F050 | `export const lightTheme, darkTheme, compactTheme: ThemeConfig`; `export const domainColors: Record<string, {light: string; dark: string}>` |
-| `web/packages/ops-ui/src/theme/tokens.css` | F050 | `:root` và `[data-theme="dark"]` biến `--ew-*` |
-| `godot/resources/ui/theme/eduworld_theme*.tres` | F060 | `Theme` gốc + một file mỗi density |
-| `godot/scripts/core/ui_tokens.gd` | F060 | `class_name UiTokens` hằng `const` (spacing, duration, `TEXT_EXPANSION_ALLOWANCE`, màu nghiệp vụ) |
+| `src/cms/frontend/packages/ops-ui/src/theme/antd-theme.ts` | F050 | `export const lightTheme, darkTheme, compactTheme: ThemeConfig`; `export const domainColors: Record<string, {light: string; dark: string}>` |
+| `src/cms/frontend/packages/ops-ui/src/theme/tokens.css` | F050 | `:root` và `[data-theme="dark"]` biến `--ew-*` |
+| `src/game/resources/ui/theme/eduworld_theme*.tres` | F060 | `Theme` gốc + một file mỗi density |
+| `src/game/scripts/core/ui_tokens.gd` | F060 | `class_name UiTokens` hằng `const` (spacing, duration, `TEXT_EXPANSION_ALLOWANCE`, màu nghiệp vụ) |
 
 ## 6. Delta cần thực hiện
 

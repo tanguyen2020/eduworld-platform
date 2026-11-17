@@ -28,4 +28,4 @@
 ## Notes
 
 - Mục chưa đạt phải sửa trước khi chuyển Status sang Ready.
-- 2026-11-17: viết lại theo ADR-0074 (một `go.mod`, ba binary, `modules/<module>/`, ranh giới module F001-AC-21…23) và ADR-0088 (GitHub Actions, F001-AC-12…16, F001-AC-24…26); bỏ toàn bộ GitLab CI, `go.work`, image/tag theo service, cổng internal 82xx.
+- 2026-11-17: viết lại theo ADR-0074 (một `go.mod`, ba binary, `src/backend/modules/<module>/`, ranh giới module F001-AC-21…23) và ADR-0088 (GitHub Actions, F001-AC-12…16, F001-AC-24…26); bỏ toàn bộ GitLab CI, `go.work`, image/tag theo service, cổng internal 82xx.

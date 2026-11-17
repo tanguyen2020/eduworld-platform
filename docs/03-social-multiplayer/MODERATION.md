@@ -7,7 +7,7 @@
 
 Tài liệu **sở hữu** kiểm duyệt giao tiếp: pipeline kiểm tra nội dung (đồng bộ và bất đồng bộ), danh mục từ nhạy cảm, công tắc kiểm duyệt, report flow, moderation queue của Platform Safety Team, sanction, thông báo vụ việc cho nhà trường, kiểm soát an toàn cấp trường. Kênh chat và UX chat thuộc [CHAT_SYSTEM](CHAT_SYSTEM.md); quan hệ block/mute thuộc [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md); chính sách an toàn trẻ em tổng thể thuộc [CHILD_SAFETY](../10-security/CHILD_SAFETY.md). Chạy trong **module chat**.
 
-**Nơi chạy (ADR-0074):** bước kiểm tra đồng bộ chạy trong module chat của `core-api` (lệnh gửi tin nhận từ `realtime` qua NATS); phân tích bất đồng bộ (`chat-moderation-async`), thông báo (`chat-notifier`), thống kê (`chat-stats`) và purge chat gameplay chạy trong Swarm service `worker-chat` (`cmd/worker --profile=chat`); job định kỳ khác của moderation (vd. hết hạn công tắc) chạy trong `worker-jobs` ([DEPLOYMENT §3.1](../11-operations/DEPLOYMENT.md#31-binary-và-swarm-service-backend-adr-0074)).
+**Nơi chạy (ADR-0074):** bước kiểm tra đồng bộ chạy trong module chat của `core-api` (lệnh gửi tin nhận từ `realtime` qua NATS); phân tích bất đồng bộ (`chat-moderation-async`), thông báo (`chat-notifier`), thống kê (`chat-stats`) và purge chat gameplay chạy trong Swarm service `worker-chat` (`src/backend/cmd/worker --profile=chat`); job định kỳ khác của moderation (vd. hết hạn công tắc) chạy trong `worker-jobs` ([DEPLOYMENT §3.1](../11-operations/DEPLOYMENT.md#31-binary-và-swarm-service-backend-adr-0074)).
 
 ## 1. Yêu cầu nguồn [Confirmed]
 

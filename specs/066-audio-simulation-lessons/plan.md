@@ -11,7 +11,7 @@ Backend (module learning): hai plugin mới hiện thực `activity.Plugin` (ACT
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 / GDScript (Godot 4.x ghim, static typing) / TypeScript strict (React 18, Vite) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx`, `pkg/outbox`, `pkg/tenancy`, `pkg/problem`, `santhosh-tekuri/jsonschema` (validate `parameter_schema`) / GdUnit4, `AudioStreamPlayer`, `ProjectSettings.load_resource_pack` / Ant Design 5 + Pro, `@rjsf/antd` (form từ JSON Schema), TanStack Query, ajv |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, `src/backend/pkg/problem`, `santhosh-tekuri/jsonschema` (validate `parameter_schema`) / GdUnit4, `AudioStreamPlayer`, `ProjectSettings.load_resource_pack` / Ant Design 5 + Pro, `@rjsf/antd` (form từ JSON Schema), TanStack Query, ajv |
 | Storage | PostgreSQL `eduworld_learning` (schema `content`, `assessment`); floci S3 cho media (F027) |
 | Testing | go test (unit domain/checker), testcontainers (integration, global filter), contract test plugin chung (TC-ACT-001), vector chung / GdUnit4 unit + scene + integration headless / Vitest + Testing Library + MSW (nhãn `MOCK`), Playwright |
 | Target Platform | Linux container / Windows, Android, Web (Compatibility renderer) / trình duyệt desktop |
@@ -55,7 +55,7 @@ specs/066-audio-simulation-lessons/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{simulation_template.go,simulation_run.go}            # + thêm field plays_used vào video_progress.go (F065)
 ├── migrations/<ts>_audio_simulation.sql                              # Atlas diff + RLS viết tay
 ├── internal/domain/activity/audiolesson/{config.go,plays.go,completion.go}
@@ -72,10 +72,10 @@ modules/learning/
 ├── internal/infrastructure/persistence/{simulation_run_repo.go,simulation_template_repo.go}
 ├── internal/presentation/http/public/simulation_run_handler.go      # submitSimulationRun
 ├── internal/presentation/job/simtemplates_sync.go                    # upsert danh mục lúc khởi động
-├── cmd/api/main.go                                                   # Registry.Register(audiolesson, simulation)
+├── cmd/api/main.go                                                               # Registry.Register(audiolesson, simulation)
 └── tests/{unit,integration,contract/plugins}/{audiolesson,simulation}/
 specs/examples/simulation/physics.lever/v1/vectors.json               # vector chung Go + GdUnit4
-godot/
+src/game/
 ├── scenes/learning/activity_renderers/{audio_lesson/AudioLessonRenderer.tscn,simulation/SimulationRenderer.tscn}
 ├── scenes/learning/audio/AudioLessonPlayer.tscn (+ .gd)
 ├── scenes/learning/simulation/SimulationHost.tscn (+ .gd)
@@ -83,13 +83,13 @@ godot/
 ├── scripts/learning/{simulation_action_log.gd,simulation_template_loader.gd,audio_play_tracker.gd}
 ├── locale/{vi.po,en.po}                                              # ui.audio.*, ui.simulation.*
 └── tests/{unit,scene,integration,perf}/{audio,simulation}/
-web/apps/portal/src/workspaces/content-studio/activities/editors/
+src/cms/frontend/apps/portal/src/workspaces/content-studio/activities/editors/
 ├── audio_lesson/{AudioLessonEditor.tsx,SegmentTable.tsx,TimedQuestionList.tsx}
 ├── simulation/{SimulationEditor.tsx,TemplatePicker.tsx,GoalEditor.tsx}
 └── __tests__/
 ```
 
-**Structure Decision**: Theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md) (`modules/learning/`, Bước 0 D1); checker và mô hình toán ở domain (thuần, test bằng vector), plugin ở application vì cần port. Godot theo [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md) (`scenes/learning/audio`, `scenes/learning/simulation`, `scripts/learning/simulation_action_log.gd`). Editor trong `content-studio` cùng workspace B (F053/F054/F058).
+**Structure Decision**: Theo [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md) (`src/backend/modules/learning/`, Bước 0 D1); checker và mô hình toán ở domain (thuần, test bằng vector), plugin ở application vì cần port. Godot theo [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md) (`scenes/learning/audio`, `scenes/learning/simulation`, `scripts/learning/simulation_action_log.gd`). Editor trong `content-studio` cùng workspace B (F053/F054/F058).
 
 ## Phase 0: Research
 

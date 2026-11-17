@@ -2,13 +2,13 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). Dùng lại từ F051: `withTenantScope`, `requireSingleTenant`, `useIdempotentMutation`, `ReasonDialog`, `mapValidationErrors`, `LargeScreenRequired`, registry menu sinh từ `specs/portal/menu-catalog.yaml`, `<ActionGate>`. Mock MSW chỉ trong test (`// MOCK (test-only)`).
+Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). Dùng lại từ F051: `withTenantScope`, `requireSingleTenant`, `useIdempotentMutation`, `ReasonDialog`, `mapValidationErrors`, `LargeScreenRequired`, registry menu sinh từ `specs/portal/menu-catalog.yaml`, `<ActionGate>`. Mock MSW chỉ trong test (`// MOCK (test-only)`).
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký route và mục menu workspace C (Trường, Lớp, Học sinh chưa có lớp, Đồng bộ SIS, Người dùng & phân quyền, Cài đặt, Học sinh sắp bị dọn, Nhật ký) theo khóa menu từ `specs/portal/menu-catalog.yaml` (registry sinh, F051; không khai báo menu tay), bảng khóa trong plan.md — file: `web/apps/portal/src/workspaces/school-lms/routes.tsx`
-- [ ] T002 [P] Khóa i18n `portal.school_lms.*` vi/en (thông điệp lỗi theo `code`, nhãn `issue_type`, `end_reason`) — file: `web/apps/portal/src/i18n/locales/vi/portal.school_lms.json`, `web/apps/portal/src/i18n/locales/en/portal.school_lms.json`
-- [ ] T003 [P] Playwright project `@F052`, CSV mẫu (một dòng trùng username tenant khác) — file: `web/apps/portal/tests/e2e/fixtures/sis/students_sample.csv`
+- [ ] T001 Đăng ký route và mục menu workspace C (Trường, Lớp, Học sinh chưa có lớp, Đồng bộ SIS, Người dùng & phân quyền, Cài đặt, Học sinh sắp bị dọn, Nhật ký) theo khóa menu từ `specs/portal/menu-catalog.yaml` (registry sinh, F051; không khai báo menu tay), bảng khóa trong plan.md — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx`
+- [ ] T002 [P] Khóa i18n `portal.school_lms.*` vi/en (thông điệp lỗi theo `code`, nhãn `issue_type`, `end_reason`) — file: `src/cms/frontend/apps/portal/src/i18n/locales/vi/portal.school_lms.json`, `src/cms/frontend/apps/portal/src/i18n/locales/en/portal.school_lms.json`
+- [ ] T003 [P] Playwright project `@F052`, CSV mẫu (một dòng trùng username tenant khác) — file: `src/cms/frontend/apps/portal/tests/e2e/fixtures/sis/students_sample.csv`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -16,7 +16,7 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 - [ ] T005 Contract: thêm `listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue`, schema `ReconciliationIssue` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
 - [x] T006 Contract: thêm `getSchoolSettings`, `updateSchoolSettings`, schema `SchoolSettings` (`ETag`/`If-Match`, `curfew_window`, `platform_curfew`, `effective_curfew`), `CurfewWindow`; action `action.school_lms.settings.edit_school` trong `specs/portal/menu-catalog.yaml` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/portal/menu-catalog.yaml` — kiểm: `node scripts/specs/check-maxlength.mjs`, `node scripts/specs/check-portal-catalog.mjs`
 - [ ] T007 Contract: bỏ `class` khỏi `UserRoleScopeType` và `TenantUserCreateRequest.initial_user_roles[].scope_type` (ADR-0072) — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-breaking` (ghi chú breaking có chủ đích)
-- [ ] T008 Sinh lại kiểu client — file: `web/apps/portal/src/api/schema.d.ts` — kiểm: `pnpm gen:api`
+- [ ] T008 Sinh lại kiểu client — file: `src/cms/frontend/apps/portal/src/api/schema.d.ts` — kiểm: `pnpm gen:api`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -28,22 +28,22 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 ### Tests cho User Story 1
 
-- [ ] T009 [P] [US1] Unit test `SchoolEditForm`: chỉ tỉnh `active`, trường SIS chỉ đọc, gửi `If-Match` (F052-AC-02) — file: `web/apps/portal/tests/unit/school-lms/schools/SchoolEditForm.test.tsx` — phải FAIL trước khi code
-- [ ] T010 [P] [US1] Unit test `ApproveSchoolDialog` khóa khi thiếu tỉnh (F052-AC-03) — file: `web/apps/portal/tests/unit/school-lms/schools/ApproveSchoolDialog.test.tsx`
-- [ ] T011 [P] [US1] Unit test view model login event chỉ giữ field cho phép, tính số ngày chưa vào game (F052-AC-06) — file: `web/apps/portal/tests/unit/school-lms/students/loginEventView.test.ts`
-- [ ] T012 [P] [US1] Unit test `ClassStudentsPage`, `UnassignedStudentsPage` không có thao tác sửa/gán (F052-AC-04, F052-AC-05) — file: `web/apps/portal/tests/unit/school-lms/classes/readOnly.test.tsx`
-- [ ] T013 [US1] E2E trường/lớp/học sinh/hoạt động đăng nhập với `ad.donvi`, `ad.truong.a` (F052-AC-01, F052-AC-02, F052-AC-03, F052-AC-04, F052-AC-05, F052-AC-06; TC-ORG-102, TC-ORG-104, TC-SIS-103) — file: `web/apps/portal/tests/e2e/school-lms/schools.spec.ts`
-- [ ] T014 [US1] E2E tenant isolation + authorization cho `getTenantSchool`, `listTenantSchoolClasses`, `listTenantClassStudents` (mới), `listTenantStudentLoginEvents`: `ad.truong.b` mở tài nguyên TH Demo A → "Không tìm thấy" (F052-AC-07; TC-TEN-001, TC-TEN-003) — file: `web/apps/portal/tests/e2e/school-lms/isolation.spec.ts`
-- [ ] T058 [P] [US1] Test F052-AC-31: dialog đặt lại mật khẩu (bắt buộc `reason`, `Idempotency-Key` dùng lại khi thử lại, mật khẩu hiện một lần + in thẻ, `password_redacted` → thông báo, ẩn nút khi thiếu `lms.student.password_reset`/action tắt; không ghi mật khẩu vào storage/log) — file: `web/apps/portal/src/workspaces/school/classes/__tests__/ResetStudentPasswordDialog.test.tsx` — phải FAIL trước khi code
+- [ ] T009 [P] [US1] Unit test `SchoolEditForm`: chỉ tỉnh `active`, trường SIS chỉ đọc, gửi `If-Match` (F052-AC-02) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/schools/SchoolEditForm.test.tsx` — phải FAIL trước khi code
+- [ ] T010 [P] [US1] Unit test `ApproveSchoolDialog` khóa khi thiếu tỉnh (F052-AC-03) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/schools/ApproveSchoolDialog.test.tsx`
+- [ ] T011 [P] [US1] Unit test view model login event chỉ giữ field cho phép, tính số ngày chưa vào game (F052-AC-06) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/students/loginEventView.test.ts`
+- [ ] T012 [P] [US1] Unit test `ClassStudentsPage`, `UnassignedStudentsPage` không có thao tác sửa/gán (F052-AC-04, F052-AC-05) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/classes/readOnly.test.tsx`
+- [ ] T013 [US1] E2E trường/lớp/học sinh/hoạt động đăng nhập với `ad.donvi`, `ad.truong.a` (F052-AC-01, F052-AC-02, F052-AC-03, F052-AC-04, F052-AC-05, F052-AC-06; TC-ORG-102, TC-ORG-104, TC-SIS-103) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/schools.spec.ts`
+- [ ] T014 [US1] E2E tenant isolation + authorization cho `getTenantSchool`, `listTenantSchoolClasses`, `listTenantClassStudents` (mới), `listTenantStudentLoginEvents`: `ad.truong.b` mở tài nguyên TH Demo A → "Không tìm thấy" (F052-AC-07; TC-TEN-001, TC-TEN-003) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/isolation.spec.ts`
+- [ ] T058 [P] [US1] Test F052-AC-31: dialog đặt lại mật khẩu (bắt buộc `reason`, `Idempotency-Key` dùng lại khi thử lại, mật khẩu hiện một lần + in thẻ, `password_redacted` → thông báo, ẩn nút khi thiếu `lms.student.password_reset`/action tắt; không ghi mật khẩu vào storage/log) — file: `src/cms/frontend/apps/portal/src/workspaces/school/classes/__tests__/ResetStudentPasswordDialog.test.tsx` — phải FAIL trước khi code
 
 ### Implementation cho User Story 1
 
-- [ ] T015 [P] [US1] Hook `useSchools` (`listTenantSchools`, `getTenantSchool`, `updateTenantSchool`, `approveTenantSchool`, `listProvinces`) — file: `web/apps/portal/src/workspaces/school-lms/schools/useSchools.ts`
-- [ ] T016 [US1] `SchoolListPage`, `SchoolDetailPage`, `SchoolEditForm`, `ApproveSchoolDialog` — file: `web/apps/portal/src/workspaces/school-lms/schools/SchoolDetailPage.tsx`
-- [ ] T017 [US1] `ClassListPage`, `ClassStudentsPage`, `useClasses` (`listTenantSchoolClasses`, `listTenantClassStudents`) — file: `web/apps/portal/src/workspaces/school-lms/classes/ClassStudentsPage.tsx`
-- [ ] T059 [US1] `ResetStudentPasswordDialog` trên `ClassStudentsPage` gọi `resetStudentPassword` (`x-portal-action: action.school_lms.classes.reset_student_password`) — file: `web/apps/portal/src/workspaces/school/classes/ResetStudentPasswordDialog.tsx`
-- [ ] T018 [P] [US1] `UnassignedStudentsPage` (`listUnassignedStudents`) — file: `web/apps/portal/src/workspaces/school-lms/students/UnassignedStudentsPage.tsx`
-- [ ] T019 [P] [US1] `StudentLoginActivityPanel`, `useLoginEvents` (`listTenantStudentLoginEvents`, view model whitelist) — file: `web/apps/portal/src/workspaces/school-lms/students/StudentLoginActivityPanel.tsx`
+- [ ] T015 [P] [US1] Hook `useSchools` (`listTenantSchools`, `getTenantSchool`, `updateTenantSchool`, `approveTenantSchool`, `listProvinces`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/schools/useSchools.ts`
+- [ ] T016 [US1] `SchoolListPage`, `SchoolDetailPage`, `SchoolEditForm`, `ApproveSchoolDialog` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/schools/SchoolDetailPage.tsx`
+- [ ] T017 [US1] `ClassListPage`, `ClassStudentsPage`, `useClasses` (`listTenantSchoolClasses`, `listTenantClassStudents`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/classes/ClassStudentsPage.tsx`
+- [ ] T059 [US1] `ResetStudentPasswordDialog` trên `ClassStudentsPage` gọi `resetStudentPassword` (`x-portal-action: action.school_lms.classes.reset_student_password`) — file: `src/cms/frontend/apps/portal/src/workspaces/school/classes/ResetStudentPasswordDialog.tsx`
+- [ ] T018 [P] [US1] `UnassignedStudentsPage` (`listUnassignedStudents`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/students/UnassignedStudentsPage.tsx`
+- [ ] T019 [P] [US1] `StudentLoginActivityPanel`, `useLoginEvents` (`listTenantStudentLoginEvents`, view model whitelist) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/students/StudentLoginActivityPanel.tsx`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -55,16 +55,16 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 ### Tests cho User Story 2
 
-- [ ] T020 [P] [US2] Unit test kiểm file (`.csv`, `csv_import_max`) và `sha256` (F052-AC-08) — file: `web/apps/portal/tests/unit/school-lms/sis/fileCheck.test.ts` — phải FAIL trước khi code
-- [ ] T021 [P] [US2] Unit test luồng `createSisImport` → PUT `upload_url` → poll `getSisImport`; `expired` tạo key mới; retry giữ key (F052-AC-08, F052-AC-09, F052-AC-11) — file: `web/apps/portal/tests/unit/school-lms/sis/useSisImport.test.ts`
-- [ ] T022 [P] [US2] Unit test `ResolveIssueDialog`: lý do bắt buộc (độ dài theo OpenAPI), dùng lại Idempotency-Key khi retry (F052-AC-10, F052-AC-11) — file: `web/apps/portal/tests/unit/school-lms/sis/ResolveIssueDialog.test.tsx`
-- [ ] T023 [US2] E2E import CSV + xung đột với `ad.truong.a`; authorization: `qlcm.truong.a` không có nút Tải/Xử lý; tenant isolation: `ad.truong.b` gọi `listSchoolReconciliationIssues`/`resolveSchoolReconciliationIssue` của TH Demo A → 404 (F052-AC-08, F052-AC-09, F052-AC-10, F052-AC-11; TC-AUTH-074) — file: `web/apps/portal/tests/e2e/school-lms/sis.spec.ts`
+- [ ] T020 [P] [US2] Unit test kiểm file (`.csv`, `csv_import_max`) và `sha256` (F052-AC-08) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/sis/fileCheck.test.ts` — phải FAIL trước khi code
+- [ ] T021 [P] [US2] Unit test luồng `createSisImport` → PUT `upload_url` → poll `getSisImport`; `expired` tạo key mới; retry giữ key (F052-AC-08, F052-AC-09, F052-AC-11) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/sis/useSisImport.test.ts`
+- [ ] T022 [P] [US2] Unit test `ResolveIssueDialog`: lý do bắt buộc (độ dài theo OpenAPI), dùng lại Idempotency-Key khi retry (F052-AC-10, F052-AC-11) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/sis/ResolveIssueDialog.test.tsx`
+- [ ] T023 [US2] E2E import CSV + xung đột với `ad.truong.a`; authorization: `qlcm.truong.a` không có nút Tải/Xử lý; tenant isolation: `ad.truong.b` gọi `listSchoolReconciliationIssues`/`resolveSchoolReconciliationIssue` của TH Demo A → 404 (F052-AC-08, F052-AC-09, F052-AC-10, F052-AC-11; TC-AUTH-074) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/sis.spec.ts`
 
 ### Implementation cho User Story 2
 
-- [ ] T024 [P] [US2] `sha256.ts` (Web Crypto, đọc theo khối) và `useSisImport` — file: `web/apps/portal/src/workspaces/school-lms/sis/useSisImport.ts`
-- [ ] T025 [US2] `SisImportPage`, `SisImportProgress` (hiển thị lịch `sis_sync_schedule`, cột mẫu theo SIS Contract) — file: `web/apps/portal/src/workspaces/school-lms/sis/SisImportPage.tsx`
-- [ ] T026 [US2] `ReconciliationIssuesPage`, `ResolveIssueDialog` (`listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue`; tab `missing_class` dùng `listUnassignedStudents`) — file: `web/apps/portal/src/workspaces/school-lms/sis/ReconciliationIssuesPage.tsx`
+- [ ] T024 [P] [US2] `sha256.ts` (Web Crypto, đọc theo khối) và `useSisImport` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/sis/useSisImport.ts`
+- [ ] T025 [US2] `SisImportPage`, `SisImportProgress` (hiển thị lịch `sis_sync_schedule`, cột mẫu theo SIS Contract) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/sis/SisImportPage.tsx`
+- [ ] T026 [US2] `ReconciliationIssuesPage`, `ResolveIssueDialog` (`listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue`; tab `missing_class` dùng `listUnassignedStudents`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/sis/ReconciliationIssuesPage.tsx`
 
 **Checkpoint**: User Story 2 chạy và kiểm độc lập được.
 
@@ -76,19 +76,19 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 ### Tests cho User Story 3
 
-- [ ] T027 [P] [US3] Unit test `CreateStaffForm`: trường bắt buộc, pattern/maxLength username, map `409 USERNAME_TAKEN`/`EMAIL_TAKEN` + gợi ý (F052-AC-13) và học sinh không có nút gán role (F052-AC-12) — file: `web/apps/portal/tests/unit/school-lms/users/CreateStaffForm.test.tsx` — phải FAIL trước khi code
-- [ ] T028 [P] [US3] Unit test `PermissionPicker` chỉ permission từ `listTenantPermissions`, map sub-code `PERMISSION_NOT_ALLOWED_FOR_SCOPE` (F052-AC-14) — file: `web/apps/portal/tests/unit/school-lms/roles/PermissionPicker.test.tsx`
-- [ ] T029 [P] [US3] Unit test `RoleEditor`: `is_system` chỉ đọc + nhân bản; lưu cần lý do + `If-Match`; xóa 409 → gợi ý (F052-AC-15) — file: `web/apps/portal/tests/unit/school-lms/roles/RoleEditor.test.tsx`
-- [ ] T030 [P] [US3] Unit test `GrantUserRoleDialog`: phạm vi Đơn vị/Trường/Môn (không Lớp), lọc role theo `canGrant`, School Admin gọi `grantSchoolUserRole`, map `PERMISSION_DENIED`/`ROLE_NOT_FOUND`; thu hồi cần lý do + thông báo hiệu lực (F052-AC-16, F052-AC-17) — file: `web/apps/portal/tests/unit/school-lms/users/GrantUserRoleDialog.test.tsx`
-- [ ] T031 [US3] E2E người dùng/role/UserRole/nhật ký phân quyền với `ad.donvi`, `ad.truong.a`, `qlcm.truong.a` (F052-AC-12, F052-AC-13, F052-AC-14, F052-AC-15, F052-AC-16, F052-AC-17, F052-AC-18; TC-CMS-RBAC-01, TC-CMS-RBAC-02, TC-CMS-RBAC-03, TC-CMS-RBAC-05, TC-CMS-RBAC-06, TC-AUTH-073, TC-AUTH-076, TC-AUTH-077, TC-AUTH-078, TC-CMS-LOGIN-04) — file: `web/apps/portal/tests/e2e/school-lms/users-roles.spec.ts`
+- [ ] T027 [P] [US3] Unit test `CreateStaffForm`: trường bắt buộc, pattern/maxLength username, map `409 USERNAME_TAKEN`/`EMAIL_TAKEN` + gợi ý (F052-AC-13) và học sinh không có nút gán role (F052-AC-12) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/users/CreateStaffForm.test.tsx` — phải FAIL trước khi code
+- [ ] T028 [P] [US3] Unit test `PermissionPicker` chỉ permission từ `listTenantPermissions`, map sub-code `PERMISSION_NOT_ALLOWED_FOR_SCOPE` (F052-AC-14) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/roles/PermissionPicker.test.tsx`
+- [ ] T029 [P] [US3] Unit test `RoleEditor`: `is_system` chỉ đọc + nhân bản; lưu cần lý do + `If-Match`; xóa 409 → gợi ý (F052-AC-15) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/roles/RoleEditor.test.tsx`
+- [ ] T030 [P] [US3] Unit test `GrantUserRoleDialog`: phạm vi Đơn vị/Trường/Môn (không Lớp), lọc role theo `canGrant`, School Admin gọi `grantSchoolUserRole`, map `PERMISSION_DENIED`/`ROLE_NOT_FOUND`; thu hồi cần lý do + thông báo hiệu lực (F052-AC-16, F052-AC-17) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/users/GrantUserRoleDialog.test.tsx`
+- [ ] T031 [US3] E2E người dùng/role/UserRole/nhật ký phân quyền với `ad.donvi`, `ad.truong.a`, `qlcm.truong.a` (F052-AC-12, F052-AC-13, F052-AC-14, F052-AC-15, F052-AC-16, F052-AC-17, F052-AC-18; TC-CMS-RBAC-01, TC-CMS-RBAC-02, TC-CMS-RBAC-03, TC-CMS-RBAC-05, TC-CMS-RBAC-06, TC-AUTH-073, TC-AUTH-076, TC-AUTH-077, TC-AUTH-078, TC-CMS-LOGIN-04) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/users-roles.spec.ts`
 
 ### Implementation cho User Story 3
 
-- [ ] T032 [P] [US3] `UserListPage`, `useUsers` (`listTenantUsers`, `updateTenantUser`) — file: `web/apps/portal/src/workspaces/school-lms/users/UserListPage.tsx`
-- [ ] T033 [US3] `CreateStaffForm` (`createTenantUser`) — file: `web/apps/portal/src/workspaces/school-lms/users/CreateStaffForm.tsx`
-- [ ] T034 [US3] `RoleListPage`, `RoleEditor`, `PermissionPicker`, `useRoles` — file: `web/apps/portal/src/workspaces/school-lms/roles/RoleEditor.tsx`
-- [ ] T035 [US3] `UserRolesPanel`, `GrantUserRoleDialog`, `canGrant.ts`, `useUserRoles` — file: `web/apps/portal/src/workspaces/school-lms/users/GrantUserRoleDialog.tsx`
-- [ ] T036 [P] [US3] `PermissionAuditPage` (`listTenantAuditLogs` lọc `role.*`, `user_role.*`) — file: `web/apps/portal/src/workspaces/school-lms/audit/PermissionAuditPage.tsx`
+- [ ] T032 [P] [US3] `UserListPage`, `useUsers` (`listTenantUsers`, `updateTenantUser`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/users/UserListPage.tsx`
+- [ ] T033 [US3] `CreateStaffForm` (`createTenantUser`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/users/CreateStaffForm.tsx`
+- [ ] T034 [US3] `RoleListPage`, `RoleEditor`, `PermissionPicker`, `useRoles` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/roles/RoleEditor.tsx`
+- [ ] T035 [US3] `UserRolesPanel`, `GrantUserRoleDialog`, `canGrant.ts`, `useUserRoles` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/users/GrantUserRoleDialog.tsx`
+- [ ] T036 [P] [US3] `PermissionAuditPage` (`listTenantAuditLogs` lọc `role.*`, `user_role.*`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/audit/PermissionAuditPage.tsx`
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
 
@@ -100,19 +100,19 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 ### Tests cho User Story 4
 
-- [ ] T037 [P] [US4] Unit test `TenantSettingsPage`: Merge Patch + `If-Match`, hiện `effective_cleanup_days`, cảnh báo ngưỡng, map `PERMISSION_DENIED`/`RETENTION_BELOW_MINIMUM` tại trường (F052-AC-19, F052-AC-20) — file: `web/apps/portal/tests/unit/school-lms/settings/TenantSettingsPage.test.tsx` — phải FAIL trước khi code
-- [ ] T038 [P] [US4] Unit test `ExcludeDialog`: tối đa `maxItems`, lý do bắt buộc, Idempotency-Key (F052-AC-21) — file: `web/apps/portal/tests/unit/school-lms/student-cleanup/ExcludeDialog.test.tsx`
-- [ ] T055 [P] [US4] Unit test `CurfewSettingsCard`: hiển thị `platform_curfew` chỉ đọc, `curfew_window`, `effective_curfew`, khung qua nửa đêm; ẩn ô sửa khi thiếu `action.school_lms.settings.edit_school` hoặc tenant `common`; không có lựa chọn theo khối (F052-AC-29) — file: `web/apps/portal/tests/unit/school-lms/settings/CurfewSettingsCard.test.tsx` — phải FAIL trước khi code
-- [ ] T056 [P] [US4] Unit test lưu khung giới nghiêm: khung không chứa trọn `platform_curfew` (vd. 22:00–06:30, 21:00–06:00) → lỗi tại ô, khóa Lưu; khung 21:00–07:00 → Merge Patch `curfew_window` + `If-Match` + `reason`; "Bỏ khung trường" → `null`; mock `422 VALIDATION_FAILED` `errors[curfew_window.start]` và `412` → lỗi tại ô, giữ giá trị (F052-AC-30) — file: `web/apps/portal/tests/unit/school-lms/settings/CurfewSettingsForm.test.tsx`
-- [ ] T039 [P] [US4] Unit test `SchoolSettingsPage` (`updateSchoolSettings` + `If-Match`) (F052-AC-22) — file: `web/apps/portal/tests/unit/school-lms/settings/SchoolSettingsPage.test.tsx`
-- [ ] T040 [US4] E2E cài đặt + dọn học sinh + khung giới nghiêm trường (`ad.truong.a` mở rộng 21:00–07:00 thành công, thu hẹp bị `422` tại ô — F052-AC-29, F052-AC-30); authorization: `qlcm.truong.a` không có màn cài đặt; tenant isolation: `ad.truong.b` gọi `getSchoolSettings`/`updateSchoolSettings` (mới) của TH Demo A → 404 (F052-AC-19, F052-AC-20, F052-AC-21, F052-AC-22) — file: `web/apps/portal/tests/e2e/school-lms/settings.spec.ts`
+- [ ] T037 [P] [US4] Unit test `TenantSettingsPage`: Merge Patch + `If-Match`, hiện `effective_cleanup_days`, cảnh báo ngưỡng, map `PERMISSION_DENIED`/`RETENTION_BELOW_MINIMUM` tại trường (F052-AC-19, F052-AC-20) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/settings/TenantSettingsPage.test.tsx` — phải FAIL trước khi code
+- [ ] T038 [P] [US4] Unit test `ExcludeDialog`: tối đa `maxItems`, lý do bắt buộc, Idempotency-Key (F052-AC-21) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/student-cleanup/ExcludeDialog.test.tsx`
+- [ ] T055 [P] [US4] Unit test `CurfewSettingsCard`: hiển thị `platform_curfew` chỉ đọc, `curfew_window`, `effective_curfew`, khung qua nửa đêm; ẩn ô sửa khi thiếu `action.school_lms.settings.edit_school` hoặc tenant `common`; không có lựa chọn theo khối (F052-AC-29) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/settings/CurfewSettingsCard.test.tsx` — phải FAIL trước khi code
+- [ ] T056 [P] [US4] Unit test lưu khung giới nghiêm: khung không chứa trọn `platform_curfew` (vd. 22:00–06:30, 21:00–06:00) → lỗi tại ô, khóa Lưu; khung 21:00–07:00 → Merge Patch `curfew_window` + `If-Match` + `reason`; "Bỏ khung trường" → `null`; mock `422 VALIDATION_FAILED` `errors[curfew_window.start]` và `412` → lỗi tại ô, giữ giá trị (F052-AC-30) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/settings/CurfewSettingsForm.test.tsx`
+- [ ] T039 [P] [US4] Unit test `SchoolSettingsPage` (`updateSchoolSettings` + `If-Match`) (F052-AC-22) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/settings/SchoolSettingsPage.test.tsx`
+- [ ] T040 [US4] E2E cài đặt + dọn học sinh + khung giới nghiêm trường (`ad.truong.a` mở rộng 21:00–07:00 thành công, thu hẹp bị `422` tại ô — F052-AC-29, F052-AC-30); authorization: `qlcm.truong.a` không có màn cài đặt; tenant isolation: `ad.truong.b` gọi `getSchoolSettings`/`updateSchoolSettings` (mới) của TH Demo A → 404 (F052-AC-19, F052-AC-20, F052-AC-21, F052-AC-22) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/settings.spec.ts`
 
 ### Implementation cho User Story 4
 
-- [ ] T041 [US4] `TenantSettingsPage`, `useTenantSettings` — file: `web/apps/portal/src/workspaces/school-lms/settings/TenantSettingsPage.tsx`
-- [ ] T042 [P] [US4] `SchoolSettingsPage`, `useSchoolSettings` — file: `web/apps/portal/src/workspaces/school-lms/settings/SchoolSettingsPage.tsx`
-- [ ] T057 [US4] `CurfewSettingsCard`, `CurfewSettingsForm` (kiểm chứa trọn khung platform qua nửa đêm bằng hàm thuần `curfewCovers`, không tự tính giờ hiệu lực — lấy `effective_curfew` từ server; nhãn qua file dịch, style theo token) — file: `web/apps/portal/src/workspaces/school-lms/settings/CurfewSettingsCard.tsx`, `web/apps/portal/src/workspaces/school-lms/settings/curfewCovers.ts`
-- [ ] T043 [US4] `CleanupPreviewPage`, `ExcludeDialog`, `useCleanup` (`previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`) — file: `web/apps/portal/src/workspaces/school-lms/student-cleanup/CleanupPreviewPage.tsx`
+- [ ] T041 [US4] `TenantSettingsPage`, `useTenantSettings` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/settings/TenantSettingsPage.tsx`
+- [ ] T042 [P] [US4] `SchoolSettingsPage`, `useSchoolSettings` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/settings/SchoolSettingsPage.tsx`
+- [ ] T057 [US4] `CurfewSettingsCard`, `CurfewSettingsForm` (kiểm chứa trọn khung platform qua nửa đêm bằng hàm thuần `curfewCovers`, không tự tính giờ hiệu lực — lấy `effective_curfew` từ server; nhãn qua file dịch, style theo token) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/settings/CurfewSettingsCard.tsx`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/settings/curfewCovers.ts`
+- [ ] T043 [US4] `CleanupPreviewPage`, `ExcludeDialog`, `useCleanup` (`previewTenantStudentCleanup`, `createStudentCleanupExclusions`, `deleteStudentCleanupExclusions`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/student-cleanup/CleanupPreviewPage.tsx`
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.
 
@@ -124,25 +124,25 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 
 ### Tests cho User Story 5
 
-- [ ] T044 [P] [US5] Unit test `AuditLogPage`: bộ lọc, hiển thị `changes`, `trace_id` (F052-AC-23) — file: `web/apps/portal/tests/unit/school-lms/audit/AuditLogPage.test.tsx` — phải FAIL trước khi code
-- [ ] T045 [US5] E2E audit `ad.donvi`; authorization: `qlcm.truong.a` không có menu Nhật ký (F052-AC-23) — file: `web/apps/portal/tests/e2e/school-lms/audit.spec.ts`
+- [ ] T044 [P] [US5] Unit test `AuditLogPage`: bộ lọc, hiển thị `changes`, `trace_id` (F052-AC-23) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/audit/AuditLogPage.test.tsx` — phải FAIL trước khi code
+- [ ] T045 [US5] E2E audit `ad.donvi`; authorization: `qlcm.truong.a` không có menu Nhật ký (F052-AC-23) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/audit.spec.ts`
 
 ### Implementation cho User Story 5
 
-- [ ] T046 [US5] `AuditLogPage`, `useAuditLogs` (`listTenantAuditLogs`) — file: `web/apps/portal/src/workspaces/school-lms/audit/AuditLogPage.tsx`
+- [ ] T046 [US5] `AuditLogPage`, `useAuditLogs` (`listTenantAuditLogs`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/audit/AuditLogPage.tsx`
 
 **Checkpoint**: User Story 5 chạy và kiểm độc lập được.
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T047 E2E yêu cầu chung: `sa.admin` phải chọn một tenant (F052-AC-24; TC-TEN-004); ma trận ẩn hành động ghi theo permission cho `ad.donvi`/`ad.truong.a`/`qlcm.truong.a` + xử lý 403 (F052-AC-25; TC-TEN-003) — file: `web/apps/portal/tests/e2e/school-lms/cross.spec.ts`
-- [ ] T048 [P] E2E giới hạn `maxLength`/`pattern` và map `VALIDATION_FAILED` (F052-AC-26; TC-TEN-024); < 768 px dạng thẻ + "cần màn hình lớn hơn" + axe (F052-AC-27; TC-UI-006) — file: `web/apps/portal/tests/e2e/school-lms/responsive-a11y.spec.ts`
-- [ ] T049 [P] Story Storybook cho dialog/form chính (sáng/tối) — file: `web/apps/portal/src/workspaces/school-lms/school-lms.stories.tsx`
+- [ ] T047 E2E yêu cầu chung: `sa.admin` phải chọn một tenant (F052-AC-24; TC-TEN-004); ma trận ẩn hành động ghi theo permission cho `ad.donvi`/`ad.truong.a`/`qlcm.truong.a` + xử lý 403 (F052-AC-25; TC-TEN-003) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/cross.spec.ts`
+- [ ] T048 [P] E2E giới hạn `maxLength`/`pattern` và map `VALIDATION_FAILED` (F052-AC-26; TC-TEN-024); < 768 px dạng thẻ + "cần màn hình lớn hơn" + axe (F052-AC-27; TC-UI-006) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/responsive-a11y.spec.ts`
+- [ ] T049 [P] Story Storybook cho dialog/form chính (sáng/tối) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-lms.stories.tsx`
 - [ ] T050 [P] Cập nhật SIS_INTEGRATION §10 theo route public `/schools/{school_id}/sis-imports`, `/schools/{school_id}/reconciliation-issues`; cập nhật API_DESIGN, CHANGELOG — file: `docs/09-identity/SIS_INTEGRATION.md`, `CHANGELOG.md`
 - [ ] T051 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/052-school-admin-workspace/quickstart.md`
 - [ ] T052 Cập nhật trạng thái F052 — file: `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
-- [ ] T053 [P] Test F052-AC-28: tắt `menu.school_lms.audit_logs` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `web/apps/portal/tests/e2e/school-lms/feature-toggle.spec.ts`
-- [ ] T054 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F052-AC-28) — file: `web/apps/portal/src/workspaces/school-lms/routes.tsx`
+- [ ] T053 [P] Test F052-AC-28: tắt `menu.school_lms.audit_logs` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/feature-toggle.spec.ts`
+- [ ] T054 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F052-AC-28) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx`
 
 ## Dependencies & Execution Order
 

@@ -8,7 +8,7 @@
 ### Session 2026-11-16
 
 - Q: Event đóng channel `match` là `match.ended` (CHAT_SYSTEM §4) hay `match.completed`? → A: `match.completed` và `match.aborted` theo EVENT_DESIGN §4.8 và REALTIME_ARCHITECTURE §6 (RB-507, CHAT_SYSTEM §4 đã sửa).
-- Q: "Tạo channel cùng transaction với trận/party" (CHAT_SYSTEM §4.1) khi hai module khác database? → A: module competition ghi outbox cùng transaction (đảm bảo event được phát); module chat tạo channel khi tiêu thụ event, idempotent. `channel_id` là UUIDv5 tất định từ loại + `party_id`/`match_id`/`team_id` (hàm thuần trong `pkg/`) để competition trả `chat_channel_id` ngay mà không gọi đồng bộ (research R1).
+- Q: "Tạo channel cùng transaction với trận/party" (CHAT_SYSTEM §4.1) khi hai module khác database? → A: module competition ghi outbox cùng transaction (đảm bảo event được phát); module chat tạo channel khi tiêu thụ event, idempotent. `channel_id` là UUIDv5 tất định từ loại + `party_id`/`match_id`/`team_id` (hàm thuần trong `src/backend/pkg/`) để competition trả `chat_channel_id` ngay mà không gọi đồng bộ (research R1).
 - Q: Purge cần kiểm report/case/sanction, nhưng report/case do F121 (M5) làm sau F117 (M4b)? → A: Job purge **fail-closed**: chưa có module moderation thì không xóa gì, chỉ cảnh báo; dữ liệu giữ lâu hơn hạn tạm thời là chấp nhận được, mất bằng chứng thì không (research R3) — [Confirmed, RB-001].
 - Q: Party chat văn bản tự do P5 (FR-PTY-001) hay P4 (FR-CHAT-009)? → A: Theo FR-CHAT-009 (Confirmed, ADR-0020 mục 6): đủ text/emoji/quick ngay từ P4; ghi mâu thuẫn PRD.
 - Q: Reaction trong FR-CHAT-003? → A: Reaction (≤ `chat_reactions_per_user`) làm ở F118; F117 làm text/emoji/quick, lịch sử, unread, badge.

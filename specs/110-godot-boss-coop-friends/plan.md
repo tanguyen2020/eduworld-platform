@@ -10,7 +10,7 @@ Thêm ba domain phía client theo [GODOT_ARCHITECTURE §4, §6](../../docs/08-ga
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim trong `godot/.godot-version`), static typing bắt buộc (ADR-0014) |
+| Language/Version | GDScript (Godot 4.x ghim trong `src/game/.godot-version`), static typing bắt buộc (ADR-0014) |
 | Primary Dependencies | GdUnit4; autoload `ApiClient`, `RealtimeClient`, `SceneRouter`, `AppState`, `EventBus`, `QualityManager`, `ContentCache`; F063 `QuestionRendererRegistry`, `ActivityHost`; F072 `QuestService`/`QuestTracker`; F102 `PartyService`/`PartyStore`; F092 hub player registry; F069 `LevelUpQueue`; F119 `ChatDock`, `ReportDialog` (tùy chọn) |
 | Storage | Không có dữ liệu bền; store trong RAM (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner; integration headless 2 client với docker compose; benchmark `tests/perf/BossArenaBenchmark.tscn` |
@@ -50,7 +50,7 @@ specs/110-godot-boss-coop-friends/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── project.godot                                  # input action open_friends (F)
 ├── scenes/
 │   ├── challenge/boss/{BossInfoCard.tscn, BossArena.tscn, BossHud.tscn, BossEnergyBar.tscn, PhaseTimer.tscn,

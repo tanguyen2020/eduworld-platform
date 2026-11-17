@@ -6,7 +6,7 @@
 ## 1. Phạm vi và phương pháp
 
 - **Đối tượng audit:** toàn bộ `docs/` (62 tài liệu, ~21.000 dòng), `specs/` (12 OpenAPI, 1 AsyncAPI, 11 JSON Schema, 4 ví dụ, event envelope), `scripts/`, các file root (README, AGENTS, CONTRIBUTING, CHANGELOG, VIBE_CODING_PROMPT).
-- **Mã nguồn:** repository **chưa có code triển khai** (không có `services/`, `godot/`, `web/`). Mọi nội dung hiện có là đặc tả, không phải chức năng đã tồn tại.
+- **Mã nguồn:** repository **chưa có code triển khai** (không có `services/`, `src/game/`, `src/cms/frontend/`). Mọi nội dung hiện có là đặc tả, không phải chức năng đã tồn tại.
 - **Cách đánh giá:** đối chiếu từng mục §5–§34 của Master Prompt mới với tài liệu hiện có (đọc + grep từ khóa), chạy lại toàn bộ công cụ kiểm tra.
 - **Phân loại** theo Master Prompt §4: **CONFIRMED**, **PROPOSED**, **TBD**, **CONFLICT**, **DEPRECATED**.
 

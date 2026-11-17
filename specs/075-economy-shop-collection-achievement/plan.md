@@ -4,14 +4,14 @@
 
 ## Summary
 
-Thêm bounded context `economy` (ví, sổ cái Xu/vật phẩm, shop, điều chỉnh) và `collection`/`achievement` vào module game, schema PostgreSQL `gamification` (+ `game.item_definitions`, `game.inventory_items`). Đăng ký applier `currency`, `item`, `badge`, `collection_item` vào `GrantApplierRegistry` của F074 nên mọi phần thưởng (rule, level, achievement, collection, sự kiện) đi chung một transaction sổ cái. `PurchaseShopItem` là command có `Idempotency-Key` (`pkg/idempotency`), khóa `wallets` `FOR UPDATE` theo `(student_id, 'xu')` và `(student_id, item_id)`. Consumer `game.achievement_evaluator` và `game.collection_on_mastery` xử lý event. `CreateEconomyAdjustment`/`ApproveEconomyAdjustment` qua gateway nội bộ, four-eyes. Job `wallet-reconcile` hằng đêm.
+Thêm bounded context `economy` (ví, sổ cái Xu/vật phẩm, shop, điều chỉnh) và `collection`/`achievement` vào module game, schema PostgreSQL `gamification` (+ `game.item_definitions`, `game.inventory_items`). Đăng ký applier `currency`, `item`, `badge`, `collection_item` vào `GrantApplierRegistry` của F074 nên mọi phần thưởng (rule, level, achievement, collection, sự kiện) đi chung một transaction sổ cái. `PurchaseShopItem` là command có `Idempotency-Key` (`src/backend/pkg/idempotency`), khóa `wallets` `FOR UPDATE` theo `(student_id, 'xu')` và `(student_id, item_id)`. Consumer `game.achievement_evaluator` và `game.collection_on_mastery` xử lý event. `CreateEconomyAdjustment`/`ApproveEconomyAdjustment` qua gateway nội bộ, four-eyes. Job `wallet-reconcile` hằng đêm.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/idempotency`, `pkg/outbox`, `pkg/authz`, `pkg/tenancy`, jsonschema validator |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/idempotency`, `src/backend/pkg/outbox`, `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, jsonschema validator |
 | Storage | PostgreSQL `eduworld_game`: `gamification.currencies` G, `wallets` T, `currency_ledger` TA P, `item_ledger` TA P, `shop_items`/`shop_item_versions` G, `shop_purchases` T, `collections`/`collection_versions`/`collection_items` G, `collection_progress` T, `achievements`/`achievement_versions` G, `student_achievements` T, `economy_adjustments` T (Mới); `game.item_definitions`/`item_definition_versions` G, `game.inventory_items` T; `infra.tenant_resource_assignments`, `infra.idempotency_records` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); test race mua đồng thời |
 | Target Platform | Linux container (`core-api` + `worker`, module `game`) |
@@ -50,7 +50,7 @@ specs/075-economy-shop-collection-achievement/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/        # currency.go, wallet.go, currencyledger.go, itemledger.go, itemdefinition.go, itemdefinitionversion.go,
 │                      # inventoryitem.go, shopitem.go, shopitemversion.go, shoppurchase.go, collection*.go,
 │                      # achievement.go, achievementversion.go, studentachievement.go, economyadjustment.go
@@ -88,7 +88,7 @@ Không có — INVENTORY_ECONOMY, ADR-0049, DATABASE_DESIGN §2.8a đủ. Kiểu
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `economy.Wallet`, `economy.PurchasePolicy` (giá, limit, sở hữu, availability), `economy.DuplicatePolicy`, `economy.Adjustment` (creator ≠ approver), `achievement.Evaluator`, `collection.Progress` | Thuần; Clock inject |
-| application | Command `PurchaseShopItem` (permission: học sinh self), `CreateEconomyAdjustment`/`ApproveEconomyAdjustment`/`RejectEconomyAdjustment` (`game.economy.adjust`), `EvaluateAchievements`, `GrantKnowledgeCard`, `ReconcileWallets` · Query như cây trên | idempotency middleware `pkg/httpx` cho command HTTP; authz `authz.Require` tường minh đầu handler |
+| application | Command `PurchaseShopItem` (permission: học sinh self), `CreateEconomyAdjustment`/`ApproveEconomyAdjustment`/`RejectEconomyAdjustment` (`game.economy.adjust`), `EvaluateAchievements`, `GrantKnowledgeCard`, `ReconcileWallets` · Query như cây trên | idempotency middleware `src/backend/pkg/httpx` cho command HTTP; authz `authz.Require` tường minh đầu handler |
 | infrastructure | ent repo, applier theo loại grant, module config | |
 | presentation | `getWallet`, `listWalletLedger`, `listShopItems`, `purchaseShopItem`, `listInventory`, `listInventoryHistory`, `listCollections`, `getCollection`, `listAchievements`, `createEconomyAdjustment`, `approveEconomyAdjustment`, `listEconomyAdjustments` (Cần thêm), `rejectEconomyAdjustment` (Cần thêm) · consumer · job | |
 

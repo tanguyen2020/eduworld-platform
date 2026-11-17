@@ -4,14 +4,14 @@
 
 ## Summary
 
-Trong module game: aggregate `BossEncounter` chạy trên `pkg/roomhost` (F076) với lệnh WS `ew.cmd.game.boss.*`, bộ câu hỏi và chấm điểm qua question plan của module learning (research R1); encounter solo qua REST, encounter party qua facade `startPartyActivity` do F101 gọi (R2). Aggregate `PartyQuestSession` giữ tiến độ chung (R4) cạnh `QuestProgress` của F072: bước khung chia sẻ, `collective_target`, phân vai và thẻ dữ kiện `interdependent` (R3). Kết thúc encounter/phiên chốt trong một transaction, gọi Reward Engine (F074) idempotent, phát `boss.encounter_completed`/`quest.party_completed` qua outbox cho module competition (F101) và reward/LA.
+Trong module game: aggregate `BossEncounter` chạy trên `src/backend/pkg/roomhost` (F076) với lệnh WS `ew.cmd.game.boss.*`, bộ câu hỏi và chấm điểm qua question plan của module learning (research R1); encounter solo qua REST, encounter party qua facade `startPartyActivity` do F101 gọi (R2). Aggregate `PartyQuestSession` giữ tiến độ chung (R4) cạnh `QuestProgress` của F072: bước khung chia sẻ, `collective_target`, phân vai và thẻ dữ kiện `interdependent` (R3). Kết thúc encounter/phiên chốt trong một transaction, gọi Reward Engine (F074) idempotent, phát `boss.encounter_completed`/`quest.party_completed` qua outbox cho module competition (F101) và reward/LA.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `game.v1.yaml`; facade `modules/game/api` sinh từ `game.internal.v1.yaml`; gọi facade `learning`), `pkg/roomhost`, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency`, `pkg/modcall`, `pkg/natsx`, Valkey client |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server `game.v1.yaml`; facade `src/backend/modules/game/api` sinh từ `game.internal.v1.yaml`; gọi facade `learning`), `src/backend/pkg/roomhost`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, `src/backend/pkg/natsx`, Valkey client |
 | Storage | PostgreSQL `eduworld_game` (`game.boss_encounters`, `boss_encounter_members`, `boss_encounter_contributions`, `boss_phase_plans`, `boss_answer_results`, `party_quest_sessions`, `party_quest_contributions`, `quest_progress`); Valkey `ew:rt:room:<encounter_id>*`, `ew:game:clue:*`, `ew:rt:user:<id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test phía bên nhận (bên gọi `competition`) và phía bên gọi (fake facade `learning`); E2E boss 2 client headless |
 | Target Platform | Linux container (module `game` api + worker) |
@@ -50,7 +50,7 @@ specs/103-boss-coop-quest/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/        # bossencounter.go (cột mới), bossencountermember.go, bossencountercontribution.go,
 │                      # bossphaseplan.go, bossanswerresult.go, partyquestsession.go, partyquestcontribution.go
 ├── migrations/
@@ -96,7 +96,7 @@ Xem [research.md](research.md): R1 chấm qua question plan, R2 encounter party 
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F076 (`pkg/roomhost`, challenge), F072 (`QuestProgress`, consumer `activity.graded`), F074 (Reward Engine), F101 (gọi internal, tiêu thụ event), F030/F026 (learning activity, version).
+- Feature phụ thuộc: F076 (`src/backend/pkg/roomhost`, challenge), F072 (`QuestProgress`, consumer `activity.graded`), F074 (Reward Engine), F101 (gọi internal, tiêu thụ event), F030/F026 (learning activity, version).
 - Event phát: `boss.encounter_started`, `boss.phase_completed`, `boss.encounter_completed`, `quest.party_completed`, `quest.completed`/`quest.step_completed` (F072), `audit.recorded`.
 - Event tiêu thụ: `party.member_left`, `party.member_kicked`, `party.disbanded`, `party.leader_transferred` (competition); `activity.graded` (learning).
 
@@ -108,7 +108,7 @@ Xem [research.md](research.md): R1 chấm qua question plan, R2 encounter party 
 
 ### Quan sát
 
-- Metric `eduworld_boss_encounters_active`, `eduworld_boss_answer_total{result}`, `eduworld_boss_phase_retry_total`, `eduworld_boss_encounter_end_total{outcome}`, `eduworld_party_quest_step_shared_total{policy}`, span/metric gọi facade `learning` (`pkg/modcall`); log không có đáp án/nội dung câu trả lời (R14).
+- Metric `eduworld_boss_encounters_active`, `eduworld_boss_answer_total{result}`, `eduworld_boss_phase_retry_total`, `eduworld_boss_encounter_end_total{outcome}`, `eduworld_party_quest_step_shared_total{policy}`, span/metric gọi facade `learning` (`src/backend/pkg/modcall`); log không có đáp án/nội dung câu trả lời (R14).
 
 ## Complexity Tracking
 

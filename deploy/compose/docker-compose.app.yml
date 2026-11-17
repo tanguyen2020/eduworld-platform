@@ -1,0 +1,105 @@
+# The three backend binaries (F001 T022, LOCAL_DEVELOPMENT §3.2) + one-off migrate job.
+# Run via `make up-app [EXCEPT=<binary>]` together with docker-compose.yml.
+# Admin port is :9090 inside every container, published only on host 9100/9106/9200 (F001-AC-06).
+name: eduworld
+
+x-db-env: &db-env
+  EW_DB_IDENTITY_DSN: postgres://identity_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+  EW_DB_LEARNING_DSN: postgres://learning_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
+  EW_DB_GAME_DSN: postgres://game_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
+  EW_DB_COMPETITION_DSN: postgres://competition_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_competition?sslmode=disable
+  EW_DB_CHAT_DSN: postgres://chat_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
+
+x-common-env: &common-env
+  EW_ENV: local
+  EW_LOG_FORMAT: json
+  EW_ADMIN_ADDR: ":9090"
+  EW_VALKEY_ADDR: valkey:6379
+  EW_NATS_URLS: nats://nats:4222
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+
+x-app-deps: &app-deps
+  postgres: { condition: service_healthy }
+  valkey: { condition: service_healthy }
+  nats: { condition: service_healthy }
+
+x-hc: &hc
+  interval: 5s
+  timeout: 3s
+  retries: 30
+  start_period: 5s
+
+services:
+  core-api:
+    profiles: [app]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/core-api.Dockerfile
+      args: &build-args
+        VERSION: ${EW_VERSION:-dev}
+        COMMIT: ${EW_COMMIT:-unknown}
+        BUILD_TIME: ${EW_BUILD_TIME:-unknown}
+    image: eduworld/core-api:local
+    environment:
+      <<: [*common-env, *db-env]
+      EW_HTTP_ADDR: ":8100"
+      OTEL_SERVICE_NAME: core-api
+    ports: ["8100:8100", "9100:9090"]
+    depends_on: *app-deps
+    healthcheck:
+      <<: *hc
+      test: ["CMD", "/app/core-api", "healthcheck"]
+
+  realtime:
+    profiles: [app]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/realtime.Dockerfile
+      args: *build-args
+    image: eduworld/realtime:local
+    environment:
+      <<: *common-env
+      EW_HTTP_ADDR: ":8106"
+      OTEL_SERVICE_NAME: realtime
+    ports: ["8106:8106", "9106:9090"]
+    depends_on:
+      valkey: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    healthcheck:
+      <<: *hc
+      test: ["CMD", "/app/realtime", "healthcheck"]
+
+  worker:
+    profiles: [app]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/worker.Dockerfile
+      args: *build-args
+    image: eduworld/worker:local
+    command: ["--profile=all"]
+    environment:
+      <<: [*common-env, *db-env]
+      OTEL_SERVICE_NAME: worker
+    ports: ["9200:9090"]
+    depends_on: *app-deps
+    healthcheck:
+      <<: *hc
+      test: ["CMD", "/app/worker", "healthcheck"]
+
+  migrate:
+    profiles: [migrate]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/migrate.Dockerfile
+      args: *build-args
+    image: eduworld/migrate:local
+    command: ["--all"]
+    environment:
+      EW_DB_IDENTITY_MIGRATOR_DSN: postgres://identity_migrator:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+      EW_DB_LEARNING_MIGRATOR_DSN: postgres://learning_migrator:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
+      EW_DB_GAME_MIGRATOR_DSN: postgres://game_migrator:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
+      EW_DB_COMPETITION_MIGRATOR_DSN: postgres://competition_migrator:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_competition?sslmode=disable
+      EW_DB_CHAT_MIGRATOR_DSN: postgres://chat_migrator:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"

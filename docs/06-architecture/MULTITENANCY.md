@@ -1,11 +1,11 @@
 # Multi-tenancy
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-17 (Áp ADR-0074: database theo module trên một cụm, ngữ cảnh tenant giữa module truyền trong tiến trình qua `pkg/modcall`; áp ADR-0089: RLS chỉ lọc tenant, quy tắc interceptor theo mixin, ba loại scope, danh sách đóng `tenancy.Bypass`, bảng `infra` không RLS, role `_relay`/`_partition_admin`; làm rõ: mixin `TenantOptionalAppendOnly`, 10 reason kèm quyền DB, audit `cross_tenant.accessed`, hàm `identity.memberships_for_user`)
+> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-17 (Áp ADR-0074: database theo module trên một cụm, ngữ cảnh tenant giữa module truyền trong tiến trình qua `src/backend/pkg/modcall`; áp ADR-0089: RLS chỉ lọc tenant, quy tắc interceptor theo mixin, ba loại scope, danh sách đóng `tenancy.Bypass`, bảng `infra` không RLS, role `_relay`/`_partition_admin`; làm rõ: mixin `TenantOptionalAppendOnly`, 10 reason kèm quyền DB, audit `cross_tenant.accessed`, hàm `identity.memberships_for_user`)
 > Liên quan: [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [DOMAIN_MODEL](DOMAIN_MODEL.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)
 
 **Mục đích & phạm vi.** Mô hình tenant (trường / đơn vị / tenant chung), cách cô lập dữ liệu ở tầng ứng dụng và RLS, tenant chung, soft-delete, gán/clone giữa tenant. SQL RLS chuẩn ở DATABASE_DESIGN §4; thuật toán xác định tenant khi đăng nhập ở IDENTITY_MAPPING §3.
 
-> **Thay đổi v0.6 (ADR-0074):** backend là modular monolith; 5 module domain giữ 5 database riêng trên **một cụm** PostgreSQL. Mọi quy tắc cô lập tenant dưới đây giữ nguyên; "giữa service" nay là "giữa module": ngữ cảnh tenant truyền trong tiến trình qua `context.Context` (`pkg/modcall`), không qua header HTTP nội bộ hay token service.
+> **Thay đổi v0.6 (ADR-0074):** backend là modular monolith; 5 module domain giữ 5 database riêng trên **một cụm** PostgreSQL. Mọi quy tắc cô lập tenant dưới đây giữ nguyên; "giữa service" nay là "giữa module": ngữ cảnh tenant truyền trong tiến trình qua `context.Context` (`src/backend/pkg/modcall`), không qua header HTTP nội bộ hay token service.
 >
 > **Thay đổi v0.4:** áp dụng cho 5 database (ADR-0037; khi đó là 6 microservice theo ADR-0036, nay thay bằng ADR-0074): mỗi database tự áp RLS `app.tenant_id` và có `infra.current_tenant_id()`; lớp ứng dụng dùng **ent interceptor** (global filter tenant + soft-delete, ADR-0039) thay cho quy ước sqlc; tenant/membership là nguồn sự thật ở module identity, module khác dùng projection `ref.tenants`/`ref.students` và facade `principals:resolve` của module identity ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 
@@ -19,7 +19,7 @@
 | NFR-SEC-013 | Chỉ System Admin xem/thao tác liên tenant đầy đủ; `safety_moderator` chỉ đọc liên tenant trong module moderation (case, bằng chứng, tin nhắn thuộc case) qua `tenancy.Bypass(ctx, "moderation_case")`; mọi truy cập liên tenant có điều kiện `tenant_id` tường minh và được audit | [Confirmed] ADR-0027, ADR-0072 |
 | NFR-SEC-014 | Không người dùng nào truy cập toàn bộ chat của tất cả tenant | [Confirmed] |
 | NFR-SEC-015 | Hai lớp bảo vệ độc lập trong **mỗi** module: ứng dụng (ent interceptor, bắt buộc) + RLS của database module (defense-in-depth) | [Confirmed] ADR-0005, ADR-0039 |
-| NFR-SEC-019 | Lời gọi facade giữa module và event giữ đúng tenant: `TenantScope` trong context (`pkg/modcall`)/envelope `tenant_id` bị bên nhận đối chiếu với dữ liệu của mình; không module nào đọc database của module khác | [Confirmed] ADR-0037, ADR-0074 |
+| NFR-SEC-019 | Lời gọi facade giữa module và event giữ đúng tenant: `TenantScope` trong context (`src/backend/pkg/modcall`)/envelope `tenant_id` bị bên nhận đối chiếu với dữ liệu của mình; không module nào đọc database của module khác | [Confirmed] ADR-0037, ADR-0074 |
 | NFR-SEC-016 | Khi đăng nhập phải xác định đúng tenant của người dùng; không ai mở được phiên trong ngữ cảnh tenant mình không thuộc về | [Confirmed] ADR-0026 |
 | NFR-SEC-017 | Mọi truy vấn lọc theo `tenant_id` **và** `deleted_at IS NULL`; ứng dụng không bao giờ hard-delete | [Confirmed] ADR-0005, ADR-0028 |
 | NFR-SEC-018 | Tài khoản chỉ đến từ tenant SIS (provisioning) hoặc tenant chung `common` do platform tạo có chủ đích; không thuộc tenant chung và không thuộc tenant SIS nào → không cho đăng nhập (`ACCOUNT_NOT_PROVISIONED`), **không** tự đưa vào tenant chung | [Confirmed] ADR-0063 |
@@ -67,7 +67,7 @@ flowchart TD
 | **Hạ tầng `infra`** | `tenant_id` (nếu có) chỉ là dữ liệu envelope | **Không bật** (ADR-0089 §4): `<module>_app` có `INSERT` trên outbox (cùng transaction trong `UnitOfWork`), `INSERT`/`SELECT` trên processed/idempotency, `INSERT` dead letters; relay dùng `<module>_relay` (`SELECT, UPDATE (published_at, attempts)`) để publish; `<module>_platform` `SELECT`/`UPDATE` cột xử lý dead letters; không role nào có `DELETE`/`TRUNCATE` | `infra.outbox_events`, `infra.processed_events`, `infra.idempotency_records`, `infra.dead_letters` (mọi DB) |
 | **Platform internal** | — | Chỉ role `<module>_platform` | `platform.tenant_clone_jobs` (DB identity) |
 
-Mỗi loại bảng ánh xạ đúng một mixin `pkg/entx` (`Base`, `TenantAppendOnly`, `TenantOptional`, `TenantOptionalAppendOnly`, `HybridContent`, `GlobalBase`, `AppendOnly`), xem [DATABASE_DESIGN §2](../07-backend/DATABASE_DESIGN.md#2-danh-sách-bảng-theo-database--schema) và §4.4.
+Mỗi loại bảng ánh xạ đúng một mixin `src/backend/pkg/entx` (`Base`, `TenantAppendOnly`, `TenantOptional`, `TenantOptionalAppendOnly`, `HybridContent`, `GlobalBase`, `AppendOnly`), xem [DATABASE_DESIGN §2](../07-backend/DATABASE_DESIGN.md#2-danh-sách-bảng-theo-database--schema) và §4.4.
 
 **Trường (School) là dữ liệu tenant-scoped:** `org.schools` có `tenant_id NOT NULL` — mỗi trường thuộc đúng một tenant và tham chiếu một tỉnh/thành trong danh mục platform. System Admin xem danh mục trường liên tenant với bộ lọc tenant/tỉnh/cấp học (ADR-0027 mục 6); Tenant Admin chỉ thấy trường của tenant mình. Học sinh có đúng một enrollment active (một trường, một lớp) trong tenant của mình (ADR-0060).
 
@@ -86,7 +86,7 @@ Draft/in_review chỉ người có quyền biên tập/duyệt trong phạm vi t
 ### 4.1. Principal và TenantScope
 
 ```go
-// pkg/authz — Principal dựng từ module identity (facade principals:resolve, gọi trong tiến trình), cache 60 s
+// src/backend/pkg/authz — Principal dựng từ module identity (facade principals:resolve, gọi trong tiến trình), cache 60 s
 type Principal struct {
     UserID      uuid.UUID
     UserType    UserType         // student, staff (ADR-0081); platform/tenant phân biệt bằng role + TenantID
@@ -111,12 +111,12 @@ type TenantScope struct {
 Quy tắc:
 
 1. Scope **chỉ** được tạo bởi package `authz`: `authz.ScopeFor(p)` cho người dùng tenant (luôn `[p.TenantID]`), `authz.CrossTenantScope(p, ids, reason)` cho System Admin, `authz.PlatformScope(p)` cho nhân sự platform và `authz.SystemPlatformScope(job)` cho job platform thao tác dữ liệu `tenant_id IS NULL` (§4.4). Bỏ filter chỉ qua `tenancy.Bypass(ctx, reason)` với `reason` thuộc danh sách đóng (§4.4); riêng module moderation của module chat dùng `tenancy.Bypass(ctx, "moderation_case")` cho `safety_moderator` khi đọc case, bằng chứng và tin nhắn thuộc case (ADR-0072). Linter cấm literal `TenantScope{}` ngoài `authz`.
-2. `TenantScope` được đặt vào `context` bởi middleware `principal`/`tenant` của `pkg/httpx` (HTTP), adapter NATS (lệnh realtime) hoặc `outbox.Consumer` (event, `tenant_id` lấy từ envelope) — không qua mediator (ADR-0087); **ent interceptor** (`pkg/entx`, đọc scope của `pkg/tenancy`) tự thêm điều kiện theo mixin của entity (§4.4, vd. `tenant_id IN (scope) AND deleted_at IS NULL` với `Base`) và trả lỗi `ErrMissingTenantScope` nếu entity cần scope mà context không có. SQL tường minh cho read model phải nhận `scope` làm tham số, tự có `deleted_at IS NULL` và được job `tenancy-guard` kiểm tra (§11).
+2. `TenantScope` được đặt vào `context` bởi middleware `principal`/`tenant` của `src/backend/pkg/httpx` (HTTP), adapter NATS (lệnh realtime) hoặc `outbox.Consumer` (event, `tenant_id` lấy từ envelope) — không qua mediator (ADR-0087); **ent interceptor** (`src/backend/pkg/entx`, đọc scope của `src/backend/pkg/tenancy`) tự thêm điều kiện theo mixin của entity (§4.4, vd. `tenant_id IN (scope) AND deleted_at IS NULL` với `Base`) và trả lỗi `ErrMissingTenantScope` nếu entity cần scope mà context không có. SQL tường minh cho read model phải nhận `scope` làm tham số, tự có `deleted_at IS NULL` và được job `tenancy-guard` kiểm tra (§11).
 3. Command/query handler gọi **tường minh** `authz.Require(ctx, p, permission, resource)` ở đầu use case, **trước** khi gọi repository (ADR-0087); resource chứa `tenant_id`/`school_id`/`class_id` nạp từ DB, không lấy từ request body.
 4. ID trong URL không đủ để truy cập: `GET /attempts/{id}` → load với scope → không thấy (khác tenant hoặc đã soft-delete) = `404`.
 5. **Header `X-Tenant-Id` bắt buộc (ADR-0065):** mọi request REST tenant-scoped của game và portal mang `X-Tenant-Id` (giá trị lấy từ PlayerBootstrap/`GET /me/tenants` sau đăng nhập). APISIX từ chối thiếu/sai định dạng (`400 TENANT_HEADER_REQUIRED`); middleware `tenant` so header với tenant của phiên (claim `organization` + membership) — lệch → `403 TENANT_MISMATCH` + audit. `Principal.TenantID` = kết quả kiểm tra, **không** lấy thẳng từ header. Người dùng tenant gửi `tenant_ids` → bị bỏ qua. Miễn header: `POST /auth/session`, `GET /game/client-config`, health, `GET /me/tenants`. WebSocket: tenant cố định khi cấp realtime ticket.
 6. System Admin: thao tác ghi gửi `X-Tenant-Id` = tenant đích; danh sách nhận `tenant_ids[]` từ dropdown (không gửi header) (rỗng = "tất cả tenant" → `CrossTenantScope` với toàn bộ tenant active, vẫn là danh sách tường minh); thao tác ghi bắt buộc **một** `tenant_id` đích hoặc phạm vi platform. Mỗi lần dùng `CrossTenantScope` hoặc `tenancy.Bypass` phát `audit.recorded` với `action = cross_tenant.accessed` (trường `reason`, `tenant_ids`, `mode` = `read`/`write`; ADR-0089 §3).
-7. **Giữa module:** module gọi facade của module khác trong tiến trình; `pkg/modcall` mang `TenantScope` và Principal gốc của request qua `context.Context` (ADR-0074 mục 3); module nhận kiểm tra caller có trong `x-allowed-callers` và tenant tồn tại/hoạt động trong `ref.tenants` của mình, rồi dùng đúng scope đó. Consumer event tạo `TenantScope` từ `tenant_id` của envelope. Event platform (`tenant_id = null`) chỉ consumer platform xử lý.
+7. **Giữa module:** module gọi facade của module khác trong tiến trình; `src/backend/pkg/modcall` mang `TenantScope` và Principal gốc của request qua `context.Context` (ADR-0074 mục 3); module nhận kiểm tra caller có trong `x-allowed-callers` và tenant tồn tại/hoạt động trong `ref.tenants` của mình, rồi dùng đúng scope đó. Consumer event tạo `TenantScope` từ `tenant_id` của envelope. Event platform (`tenant_id = null`) chỉ consumer platform xử lý.
 
 ### 4.2. Đọc nội dung lai (riêng tenant + được gán)
 
@@ -156,7 +156,7 @@ Cache Principal (`ew:<module>:principal:<user_id>:<tenant_id>`, mỗi module m�
 
 ### 4.4. Quy tắc interceptor theo mixin, ba loại scope và cổng bypass (ADR-0089)
 
-| Loại bảng | Mixin `pkg/entx` | Điều kiện interceptor thêm vào | Context không có scope |
+| Loại bảng | Mixin `src/backend/pkg/entx` | Điều kiện interceptor thêm vào | Context không có scope |
 |---|---|---|---|
 | **T** | `Base` | `tenant_id IN (scope) AND deleted_at IS NULL` | `ErrMissingTenantScope` |
 | **TA** | `TenantAppendOnly` | `tenant_id IN (scope)` | `ErrMissingTenantScope` |
@@ -170,7 +170,7 @@ Dòng `tenant_id IS NULL` của bảng T\*/TA\*/H chỉ được ghi bằng role
 
 Mỗi entity khai báo đúng một mixin; CI có test liệt kê mọi schema ent và từ chối schema không có mixin. Hiển thị nội dung platform cho tenant chỉ qua `infra.tenant_resource_assignments` (ADR-0029), không có cờ "public cho mọi tenant".
 
-**Ba loại scope** (API công khai của `pkg/tenancy`/`pkg/authz` khóa từ F002; đổi chữ ký cần ADR):
+**Ba loại scope** (API công khai của `src/backend/pkg/tenancy`/`src/backend/pkg/authz` khóa từ F002; đổi chữ ký cần ADR):
 
 | Scope | Dùng cho | Phạm vi |
 |---|---|---|
@@ -219,7 +219,7 @@ Bảng do `<module>_migrator` sở hữu và bật `FORCE ROW LEVEL SECURITY`. K
 ### 5.2. Set ngữ cảnh mỗi transaction
 
 ```go
-// pkg/entx — unit of work dùng chung cho ent (mọi module)
+// src/backend/pkg/entx — unit of work dùng chung cho ent (mọi module)
 func (u *UnitOfWork) InTenantTx(ctx context.Context, scope authz.TenantScope, fn func(ctx context.Context, tx *ent.Tx) error) error {
     return u.withTx(ctx, u.clientFor(scope), func(ctx context.Context, tx *ent.Tx) error {
         if _, err := tx.Exec(ctx,
@@ -232,7 +232,7 @@ func (u *UnitOfWork) InTenantTx(ctx context.Context, scope authz.TenantScope, fn
 }
 ```
 
-`set_config(..., true)` tương đương `SET LOCAL`. `u.clientFor(scope)` chọn ent client của `<module>_app` (người dùng tenant) hoặc `<module>_platform` (CrossTenantScope). Command handler (write context) gọi `UnitOfWork.InTenantTx` (`pkg/entx`); adapter read model (read context, `infrastructure/persistence/read`) dùng phiên chỉ đọc `entx.ReadSession.InTenantRead` (transaction `READ ONLY`, cùng `set_config`, được dùng replica), không dùng `UnitOfWork` (ADR-0087). **Cấm** truy vấn tenant-scoped ngoài hai cơ chế này.
+`set_config(..., true)` tương đương `SET LOCAL`. `u.clientFor(scope)` chọn ent client của `<module>_app` (người dùng tenant) hoặc `<module>_platform` (CrossTenantScope). Command handler (write context) gọi `UnitOfWork.InTenantTx` (`src/backend/pkg/entx`); adapter read model (read context, `infrastructure/persistence/read`) dùng phiên chỉ đọc `entx.ReadSession.InTenantRead` (transaction `READ ONLY`, cùng `set_config`, được dùng replica), không dùng `UnitOfWork` (ADR-0087). **Cấm** truy vấn tenant-scoped ngoài hai cơ chế này.
 
 ### 5.3. Policy RLS
 
@@ -334,8 +334,8 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 
 | Quy tắc | Cách thực thi |
 |---|---|
-| Không hard-delete | `REVOKE DELETE, TRUNCATE` cho `<module>_app`/`<module>_platform` ở mọi database; ent hook chuyển delete → update `deleted_at`; lint `sqlguard` chặn `DELETE FROM` trong SQL tường minh của `modules/**` (trừ purge của module chat); CI kiểm tra grant |
-| "Xóa" = `UPDATE ... SET deleted_at = now(), deleted_by = $actor` | ent `DeleteOne` qua hook soft-delete (`pkg/tenancy`); command phát event `<entity>.deleted` qua outbox; audit |
+| Không hard-delete | `REVOKE DELETE, TRUNCATE` cho `<module>_app`/`<module>_platform` ở mọi database; ent hook chuyển delete → update `deleted_at`; lint `sqlguard` chặn `DELETE FROM` trong SQL tường minh của `src/backend/modules/**` (trừ purge của module chat); CI kiểm tra grant |
+| "Xóa" = `UPDATE ... SET deleted_at = now(), deleted_by = $actor` | ent `DeleteOne` qua hook soft-delete (`src/backend/pkg/tenancy`); command phát event `<entity>.deleted` qua outbox; audit |
 | Đọc mặc định loại dữ liệu đã xóa | ent interceptor `deleted_at IS NULL` (§4.4) + SQL tường minh có test + view `<table>_live` cho `<module>_readonly`; RLS chỉ lọc tenant (ADR-0089) |
 | Unique sau khi xóa | Partial unique index `WHERE deleted_at IS NULL` |
 | Khôi phục | Chỉ qua Thùng rác (System Admin liên tenant; Tenant Admin trong tenant của mình — School Admin không dùng Thùng rác, [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md)): module identity điều phối, module sở hữu thực hiện qua facade platform `trash/{resource_type}/{id}:restore` (spec internal, gọi trong tiến trình); event `<entity>.restored`; audit |

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Tạo thư mục `design/` theo DESIGN_SYSTEM §2 với token W3C cho shared/game/admin, cấu hình Style Dictionary v4 có transform/format riêng: (1) web — `antd-theme.ts` (`ThemeConfig` light/dark/compact) + `tokens.css`; (2) Godot — JSON trung gian rồi `tools/godot/build_theme.gd` (headless) dựng `eduworld_theme.tres`, biến thể density, `ui_tokens.gd`, resource 3D. Thêm các bộ kiểm: alias/literal, tương phản WCAG, cỡ chữ tối thiểu, biến thể màu nghiệp vụ, license + glyph font, semver/deprecated; target `make design-tokens`, `make design-tokens-check` và job CI `design:*`.
+Tạo thư mục `design/` theo DESIGN_SYSTEM §2 với token W3C cho shared/game/admin, cấu hình Style Dictionary v4 có transform/format riêng: (1) web — `antd-theme.ts` (`ThemeConfig` light/dark/compact) + `tokens.css`; (2) Godot — JSON trung gian rồi `src/game/tools/build_theme.gd` (headless) dựng `eduworld_theme.tres`, biến thể density, `ui_tokens.gd`, resource 3D. Thêm các bộ kiểm: alias/literal, tương phản WCAG, cỡ chữ tối thiểu, biến thể màu nghiệp vụ, license + glyph font, semver/deprecated; target `make design-tokens`, `make design-tokens-check` và job CI `design:*`.
 
 ## Technical Context
 
@@ -63,11 +63,11 @@ design/
 ├── sd/{transforms.mjs,formats/{antd-theme.mjs,css-vars.mjs,godot-json.mjs,gdscript-tokens.mjs}}
 ├── checks/{aliases.mjs,contrast.mjs,min-sizes.mjs,domain-variants.mjs,fonts.mjs,semver.mjs,separation.mjs}
 └── build/                       # JSON trung gian (gitignore)
-tools/godot/build_theme.gd       # đọc design/build/godot/*.json → .tres
-godot/resources/ui/theme/eduworld_theme.tres (+ eduworld_theme_g1_3.tres …)     # sinh
-godot/scripts/core/ui_tokens.gd                                                 # sinh
-godot/resources/art/generated/                                                  # sinh
-web/packages/ops-ui/src/theme/{antd-theme.ts,tokens.css}                        # sinh
+src/game/tools/build_theme.gd       # đọc design/build/godot/*.json → .tres
+src/game/resources/ui/theme/eduworld_theme.tres (+ eduworld_theme_g1_3.tres …)     # sinh
+src/game/scripts/core/ui_tokens.gd                                                 # sinh
+src/game/resources/art/generated/                                                  # sinh
+src/cms/frontend/packages/ops-ui/src/theme/{antd-theme.ts,tokens.css}                        # sinh
 .github/workflows/design.yml   # gọi lại godot.yml, web.yml qua workflow_call (ADR-0088)
 ```
 

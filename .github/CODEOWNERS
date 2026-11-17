@@ -1,0 +1,31 @@
+# CODEOWNERS (F001 T006, ADR-0088). Review by owners is required on `main`.
+# Teams are placeholders until the GitHub organisation exists; the repository owner covers all paths.
+# Source layout: src/backend (Go), src/cms/frontend (Admin Portal), src/game (Godot) — ADR-0092.
+
+*                                          @tanguyen2020
+
+# Backend modules (one owner group per module)
+/src/backend/modules/identity/             @tanguyen2020
+/src/backend/modules/learning/             @tanguyen2020
+/src/backend/modules/game/                 @tanguyen2020
+/src/backend/modules/competition/          @tanguyen2020
+/src/backend/modules/chat/                 @tanguyen2020
+/src/backend/modules/realtime/             @tanguyen2020
+
+# Shared kit, composition roots, migrations
+/src/backend/pkg/                          @tanguyen2020
+/src/backend/cmd/                          @tanguyen2020
+/src/backend/modules/*/migrations/         @tanguyen2020
+
+# Clients
+/src/cms/frontend/                         @tanguyen2020
+/src/game/                                 @tanguyen2020
+
+# Deployment and CI
+/deploy/                                   @tanguyen2020
+/.github/                                  @tanguyen2020
+
+# Contracts between modules (facade specs) and architecture decisions
+/specs/openapi/modules/*.internal.v1.yaml  @tanguyen2020
+/docs/adr/                                 @tanguyen2020
+/AGENTS.md                                 @tanguyen2020

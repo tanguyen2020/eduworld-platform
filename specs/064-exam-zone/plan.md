@@ -54,7 +54,7 @@ specs/064-exam-zone/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/exam/
 │   ├── ExamLobby.tscn (+ exam_lobby.gd)       # danh sách đề + màn quy chế
 │   ├── ExamRunner.tscn (+ exam_runner.gd)     # header đồng hồ, QuestionGrid, nút Trước/Sau, Đánh dấu, Nộp, SubmitConfirm

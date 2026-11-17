@@ -171,7 +171,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 | Điểm, thời gian, kết quả tính ở server; đáp án không xuống client trước khi câu đóng | AGENTS R5, R6 · ADR-0016 |
 | Kết quả idempotent + audit | AGENTS R10 · ADR-0010 |
 | Plan ghim version | AGENTS R11, R31 · ADR-0043 |
-| Gọi module learning qua facade `learning` (`pkg/modcall`) | AGENTS R29 · ADR-0074 |
+| Gọi module learning qua facade `learning` (`src/backend/pkg/modcall`) | AGENTS R29 · ADR-0074 |
 | Chat trận always-on | AGENTS R15 · ADR-0020 |
 | Không log câu trả lời học sinh ở INFO | AGENTS R14 |
 | Tải liên module battle → learning p95 | TC-PERF-013 |
@@ -196,7 +196,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 
 ## Assumptions
 
-- [Proposed] `pkg/roomhost` (lease, checkpoint, input `ew.in.room.<room_id>`) có sẵn từ F091/F101; nếu chưa, F105 tạo trong `pkg/roomhost` với review Backend Architect.
+- [Proposed] `src/backend/pkg/roomhost` (lease, checkpoint, input `ew.in.room.<room_id>`) có sẵn từ F091/F101; nếu chưa, F105 tạo trong `src/backend/pkg/roomhost` với review Backend Architect.
 - [Proposed] Bot luyện tập: độ chính xác và phân bố thời gian trả lời là cấu hình trong payload matchmaking config (`bot_profiles`), mặc định theo [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback).
 - [Proposed] Class Challenge Timed Quiz: học sinh vào phòng trong khung từ `starts_at` trừ 5 phút tới câu cuối (`joinChallenge` của F107).
 - Trọng số mastery cho `competition` theo ADR-0017 (cấu hình mastery của module learning).

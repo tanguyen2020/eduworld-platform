@@ -16,7 +16,7 @@
 
 ## R3. Lint kiến trúc lớp và quy ước signal
 
-- **Decision**: Script `tools/godot/lint_layers.gd` (headless) duyệt `scenes/ui/**`, `scenes/world/**`, `scripts/world/**`, `scripts/player/**`: cấm `HTTPRequest`, `HTTPClient`, `WebSocketPeer`, `StreamPeerTCP`, gọi `ApiClient`/`RealtimeClient` trực tiếp; `tools/godot/lint_signals.gd` kiểm tên signal (`snake_case`, động từ quá khứ theo danh sách hậu tố `_ed`/bất quy tắc cho phép) và signal toàn cục chỉ trong `event_bus.gd`.
+- **Decision**: Script `src/game/tools/lint_layers.gd` (headless) duyệt `scenes/ui/**`, `scenes/world/**`, `scripts/world/**`, `scripts/player/**`: cấm `HTTPRequest`, `HTTPClient`, `WebSocketPeer`, `StreamPeerTCP`, gọi `ApiClient`/`RealtimeClient` trực tiếp; `src/game/tools/lint_signals.gd` kiểm tên signal (`snake_case`, động từ quá khứ theo danh sách hậu tố `_ed`/bất quy tắc cho phép) và signal toàn cục chỉ trong `event_bus.gd`.
 - **Rationale**: GODOT_ARCHITECTURE §6 "quy tắc review code" cần tự động hóa để R1 được kiểm bằng máy.
 - **Alternatives**: Chỉ review thủ công (không có bằng chứng, constitution IX).
 

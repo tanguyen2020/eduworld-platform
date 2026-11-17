@@ -1,6 +1,6 @@
 # Feature Specification: F072 — Quest Engine: 12 loại quest, bước, tiến độ qua event, lọc theo khối
 
-**Feature Branch**: `072-quest-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ module `learning` consumer, `godot/`) · **Mốc**: M2 · **Phụ thuộc**: F030, F071
+**Feature Branch**: `072-quest-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ module `learning` consumer, `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F030, F071
 **Input**: Quest là dữ liệu có version nối thế giới với Learning Engine: học sinh nhận quest đúng khối, làm bước tương tác do server xác minh và bước học tập tạo attempt riêng; tiến độ lưu server, cập nhật qua domain event; daily/weekly không phạt; phần thưởng chỉ là ý định gửi Reward Engine. FR nguồn: FR-QST-001…006, FR-QST-008.
 
 ## Clarifications
@@ -179,7 +179,7 @@ Quest đổi version không ảnh hưởng người đang làm; quest lặp lạ
 | Ràng buộc | Nguồn |
 |---|---|
 | Tiến độ quyết ở server; client chỉ báo sự kiện | ADR-0016 · AGENTS R5 |
-| Gọi learning chỉ qua facade `learning` (`pkg/modcall`); phản ứng qua event | AGENTS R29 · ADR-0074 · ADR-0042 |
+| Gọi learning chỉ qua facade `learning` (`src/backend/pkg/modcall`); phản ứng qua event | AGENTS R29 · ADR-0074 · ADR-0042 |
 | Thao tác ghi quan trọng có `Idempotency-Key` + audit | AGENTS R10 · NFR-SEC-004 |
 | Không streak phạt, thất bại không mất tiến độ | NFR-SAFE-003 · AGENTS R19 |
 | Văn bản quest đủ vi/en trước publish | NFR-I18N-002 · ADR-0056 |

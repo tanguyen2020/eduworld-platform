@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F115, F116, F101 (party lobby), F105 (battle); F121 cho kịch bản bằng chứng (trước đó kiểm chế độ fail-closed).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=chat` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` (`th-demo-a`), `hs.dung.7a` (`pgd-demo`), `ad.truong.a` (School Admin), `sm.antoan`.
-- Đồng hồ giả lập cho job: `go run ./cmd/worker --profile=chat --job=gameplay-chat-purge --once --now=<RFC3339>` (chỉ build tag `dev`).
+- Đồng hồ giả lập cho job: `go -C src/backend run ./cmd/worker --profile=chat --job=gameplay-chat-purge --once --now=<RFC3339>` (chỉ build tag `dev`).
 
 ## 2. Kịch bản kiểm tra
 
@@ -36,7 +36,7 @@
 make test MOD=chat
 make test-integration MOD=chat     # role chat_purger thật, đồng hồ giả lập
 make test-contract                         # consumer chat ↔ competition (party.*, match.*)
-go test ./modules/chat/tests/static/... # DELETE chỉ trong internal/infrastructure/purge; không cờ tắt always-on
+go -C src/backend test ./modules/chat/tests/static/... # DELETE chỉ trong internal/infrastructure/purge; không cờ tắt always-on
 ```
 
 ## 4. Bằng chứng cần nộp

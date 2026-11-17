@@ -30,5 +30,5 @@
 
 ## R5. Chạy encounter
 
-- **Decision**: encounter dùng `pkg/roomhost` (F076): lease `ew:rt:room:<encounter_id>:lease`, checkpoint `ew:rt:room:<encounter_id>:ckpt` mỗi chuyển trạng thái, output `ew:rt:room:<encounter_id>:out`; lệnh `ew.cmd.game.boss.ready|answer` (reply `boss.encounter.ready` trả `subscribe: [ew:rt:room:<id>:out]`); câu hỏi riêng và kết quả câu gửi `ew:rt:user:<student_id>`. Timer phase/grace chạy trong owner, khôi phục từ `deadline_at` lưu PG.
+- **Decision**: encounter dùng `src/backend/pkg/roomhost` (F076): lease `ew:rt:room:<encounter_id>:lease`, checkpoint `ew:rt:room:<encounter_id>:ckpt` mỗi chuyển trạng thái, output `ew:rt:room:<encounter_id>:out`; lệnh `ew.cmd.game.boss.ready|answer` (reply `boss.encounter.ready` trả `subscribe: [ew:rt:room:<id>:out]`); câu hỏi riêng và kết quả câu gửi `ew:rt:user:<student_id>`. Timer phase/grace chạy trong owner, khôi phục từ `deadline_at` lưu PG.
 - **Rationale**: CHALLENGE_BOSS_SYSTEM §4 (module game, dùng chung room host); VALKEY_DESIGN ghi `ew:rt:room:*` thuộc competition — cần thêm game là owner cho room `boss`.

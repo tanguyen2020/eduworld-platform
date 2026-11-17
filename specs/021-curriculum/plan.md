@@ -4,14 +4,14 @@
 
 ## Summary
 
-Module `curriculum` trong module `learning` (schema PostgreSQL `curriculum`): aggregate `Curriculum` với `CurriculumVersion` là gốc bất biến sau publish, chứa SubjectGrade, Topic, LearningObjective, Competency. Dùng `contentmodel.Lifecycle` và `content.content_releases` của F020; publish phát `curriculum.version_published` qua outbox. Kiểm DAG tiên quyết bằng DFS trong domain. Import/export qua khung job `content.import_jobs` (F021 dựng khung, F024 thêm loại câu hỏi/bài học). Seed GDPT chạy bằng `cmd/seed` gọi cùng command import. Đăng ký `ResourceHandler` `curriculum` cho Thùng rác/gán/clone của F020.
+Module `curriculum` trong module `learning` (schema PostgreSQL `curriculum`): aggregate `Curriculum` với `CurriculumVersion` là gốc bất biến sau publish, chứa SubjectGrade, Topic, LearningObjective, Competency. Dùng `contentmodel.Lifecycle` và `content.content_releases` của F020; publish phát `curriculum.version_published` qua outbox. Kiểm DAG tiên quyết bằng DFS trong domain. Import/export qua khung job `content.import_jobs` (F021 dựng khung, F024 thêm loại câu hỏi/bài học). Seed GDPT chạy bằng `src/backend/cmd/seed` gọi cùng command import. Đăng ký `ResourceHandler` `curriculum` cho Thùng rác/gán/clone của F020.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, `gopkg.in/yaml.v3`, `encoding/csv`, `pkg/{entx,tenancy,authz,outbox,httpx,problem}` |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, `gopkg.in/yaml.v3`, `encoding/csv`, `src/backend/pkg/{entx,tenancy,authz,outbox,httpx,problem}` |
 | Storage | PostgreSQL `eduworld_learning` schema `curriculum`, `content` (import_jobs, releases); Valkey cache read model cây `ew:learning:cur:tree:<curriculum_version_id>:<subject_id>:<grade>` (bất biến theo version published) |
 | Testing | go test (unit domain), testcontainers (integration), API test |
 | Target Platform | Linux container |
@@ -54,12 +54,12 @@ specs/021-curriculum/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/curriculum.go curriculum_version.go subject.go subject_grade.go topic.go learning_objective.go
 │   competency.go lo_version_mapping.go textbook_series.go textbook.go textbook_section.go textbook_section_objective.go import_job.go
 ├── migrations/                                  # + trigger curriculum_versions_immutable, CHECK cardinality
 ├── seed/curriculum/gdpt2018_math_g1_5.yaml       # mã GDPT2018_SAMPLE, yccd_ref trống
-├── cmd/seed/main.go                             # gọi command ImportCurriculum với file cục bộ (System Admin principal seed)
+├── cmd/seed/main.go                                         # gọi command ImportCurriculum với file cục bộ (System Admin principal seed)
 ├── internal/domain/curriculum/                  # curriculum.go, version.go, topic_tree.go, objective.go (LoCode), prerequisite_dag.go, mapping.go, textbook.go
 ├── internal/application/command/curriculum/     # CreateCurriculum, UpdateCurriculum, CreateCurriculumVersion, UpdateCurriculumVersionDraft,
 │                                                # Create/Update/DeleteSubject|Topic|Objective|Competency, TransitionCurriculumVersion,

@@ -11,7 +11,7 @@ module identity sở hữu tenant, danh mục (`catalog`), tổ chức (`org`) t
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `pkg/entx`, `pkg/tenancy`, `pkg/outbox`, `pkg/authz`, `pkg/problem` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `src/backend/pkg/entx`, `src/backend/pkg/tenancy`, `src/backend/pkg/outbox`, `src/backend/pkg/authz`, `src/backend/pkg/problem` |
 | Storage | PostgreSQL `eduworld_identity` (schema `platform`, `catalog`, `org`, `identity`, `infra`); Valkey cache tenant (`ew:identity:tenant:<tenant_id>`) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Keycloak test realm) |
 | Target Platform | Linux container (module `identity` api + worker) |
@@ -54,7 +54,7 @@ specs/010-tenant-org-structure/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/                      # tenant.go, country.go, province.go, provincesuccession.go,
 │                                    # school.go, academicyear.go, class.go, student.go, enrollment.go, user.go
 ├── migrations/                      # Atlas: bảng + RLS + view identity.tenant_memberships_v + seed catalog/common
@@ -73,7 +73,7 @@ modules/identity/
 └── tests/{unit,integration,contract}/
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §3 với tên thư mục `modules/identity/` (CODE_PLAN Bước 0 D1).
+**Structure Decision**: Theo BACKEND_DESIGN §3 với tên thư mục `src/backend/modules/identity/` (CODE_PLAN Bước 0 D1).
 
 ## Phase 0: Research
 

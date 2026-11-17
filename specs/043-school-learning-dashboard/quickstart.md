@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F031, F041 (và F032 cho khối tự học & gợi ý).
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); local dùng primary với role `learning_dashboard`.
-- Dữ liệu: chạy kịch bản học sinh làm bài của F041 (3A: `hs.an.3a`, `hs.binh.3a`; 3B: `hs.chi.3b`) hoặc nạp golden dataset `modules/learning/tests/fixtures/analytics/golden/`.
+- Dữ liệu: chạy kịch bản học sinh làm bài của F041 (3A: `hs.an.3a`, `hs.binh.3a`; 3B: `hs.chi.3b`) hoặc nạp golden dataset `src/backend/modules/learning/tests/fixtures/analytics/golden/`.
 - Tài khoản demo: `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a` (scope môn Toán), `ad.donvi` (tenant_admin `pgd-demo`), `sa.admin`, `sm.antoan`.
 
 ## 2. Kịch bản kiểm tra

@@ -4,7 +4,7 @@
 
 ## R1. Id channel gameplay tất định
 
-- **Decision**: `pkg/chatid.ChannelID(kind, scopeID, teamID)` = UUIDv5(namespace cố định của EduWorld, `"<kind>:<scope_id>[:<team_id>]"`). module competition điền `Party.chat_channel_id` và id channel trận/đội trong payload realtime bằng cùng hàm; module chat tạo channel với đúng id khi tiêu thụ event (upsert).
+- **Decision**: `src/backend/pkg/chatid.ChannelID(kind, scopeID, teamID)` = UUIDv5(namespace cố định của EduWorld, `"<kind>:<scope_id>[:<team_id>]"`). module competition điền `Party.chat_channel_id` và id channel trận/đội trong payload realtime bằng cùng hàm; module chat tạo channel với đúng id khi tiêu thụ event (upsert).
 - **Rationale**: Client có `chat_channel_id` ngay khi nhận state party/trận mà không cần gọi đồng bộ module chat (R29, R30); idempotent tự nhiên khi event giao lại.
 - **Alternatives**: competition gọi facade `chat` để mở channel — loại (R29: phản ứng phụ "mở channel chat" phải dùng event, API_DESIGN §12); module chat sinh UUIDv7 rồi phát ngược `chat.channel_opened` để competition lưu — loại vì client phải chờ vòng event thứ hai.
 - **Hệ quả**: Nếu client `chat.channel.join` trước khi module chat xử lý event, nhận `NOT_FOUND` → client thử lại với backoff `client_reconnect_backoff` (F119); SC-001 đo độ trễ này.

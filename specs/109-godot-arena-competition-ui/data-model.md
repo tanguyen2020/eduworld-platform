@@ -6,7 +6,7 @@
 
 Không áp dụng — F109 là game client, không tạo hay sửa bảng. Dữ liệu trận, rating, leaderboard, tournament thuộc module competition (`eduworld_competition`, F105–F107; [COMPETITION_SYSTEM §14.1](../../docs/01-game-design/COMPETITION_SYSTEM.md)).
 
-Model typed phía client (chỉ RAM, `godot/scripts/competition/models/`):
+Model typed phía client (chỉ RAM, `src/game/scripts/competition/models/`):
 
 | Model | Nguồn | Trường giữ lại | Trường bị bỏ khi parse |
 |---|---|---|---|

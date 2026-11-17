@@ -1,6 +1,6 @@
 # Feature Specification: F062 — Main Hub greybox, character controller, `QualityManager`, tab "Nhà trường giao"
 
-**Feature Branch**: `062-main-hub-greybox` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M-C2 · **Phụ thuộc**: F041, F061 (F041 dùng Prism mock có nhãn cho tới khi Done — [CODE_PLAN §5 (\*)](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md))
+**Feature Branch**: `062-main-hub-greybox` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C2 · **Phụ thuộc**: F041, F061 (F041 dùng Prism mock có nhãn cho tới khi Done — [CODE_PLAN §5 (\*)](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md))
 **Input**: Học sinh đã đăng nhập (F061) vào Main Hub dạng greybox, điều khiển nhân vật, chạy mượt trên máy tầm trung, thấy và mở bài nhà trường giao. FR nguồn: FR-GAME-003, FR-GAME-009, FR-GAME-010, FR-GAME-012, FR-LMS-006; NFR-COMP-001, NFR-PERF-005.
 
 ## Clarifications

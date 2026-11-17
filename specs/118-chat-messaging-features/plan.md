@@ -11,7 +11,7 @@ Mở rộng aggregate `Message` (F115) với `Edit`, `Recall`, `Reply`, `Quote`,
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | ent, Atlas, oapi-codegen, `nats.go`, `valkey-go`, S3 SDK (floci, ADR-0071), `image/gif`/`golang.org/x/image/webp` kiểm kích thước, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/idempotency` |
+| Primary Dependencies | ent, Atlas, oapi-codegen, `nats.go`, `valkey-go`, S3 SDK (floci, ADR-0071), `image/gif`/`golang.org/x/image/webp` kiểm kích thước, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency` |
 | Storage | PostgreSQL `eduworld_chat` (`chat.message_revisions`, `chat.message_reactions`, `chat.pinned_messages`, `chat.sticker_packs`, `chat.stickers`, `chat.gif_assets`, `chat.gif_tags`, `chat.chat_asset_versions` (Mới), `ref.sticker_unlocks` (Mới), `infra.tenant_resource_assignments`); Valkey `ew:chat:typing`, `ew:chat:cursor_buf`, `ew:chat:mentions`, `ew:chat:unread`; object storage + CDN EduWorld cho asset |
 | Testing | go test + testcontainers (PG, NATS, Valkey, floci S3) |
 | Target Platform | Linux container: module `chat` nạp trong `core-api` + profile `worker-chat` |
@@ -50,7 +50,7 @@ specs/118-chat-messaging-features/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/                         # messagerevision.go, messagereaction.go, pinnedmessage.go, stickerpack.go, sticker.go,
 │                                       # gifasset.go, giftag.go, chatassetversion.go, refstickerunlock.go
 ├── internal/domain/message/            # edit.go, recall.go, quote.go, forward.go, reaction.go, pin.go, mention.go

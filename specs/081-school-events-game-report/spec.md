@@ -1,6 +1,6 @@
 # Feature Specification: F081 — Workspace C — sự kiện trường từ template
 
-**Feature Branch**: `081-school-events-game-report` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace C `school-lms`) + module `game` (1 query đọc) · **Mốc**: M3 · **Phụ thuộc**: F052, F077
+**Feature Branch**: `081-school-events-game-report` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace C `school-lms`) + module `game` (1 query đọc) · **Mốc**: M3 · **Phụ thuộc**: F052, F077
 **Input**: Màn "Sự kiện của trường" trong workspace C cho Tenant Admin/School Admin (và System Admin trên tenant đích): tạo sự kiện từ template platform đã gán, chỉ điền `allowed_params`; danh sách, sửa trước khi chạy, hủy có lý do; xem tiến độ community goal theo lớp. Backend nhỏ ở module game: query tiến độ sự kiện trường. Màn "Hoạt động game" (báo cáo game tổng hợp cho nhà trường) đã chuyển sang F080 US5 (M4b) khi tách F081 (Clarifications Session 2026-11-17). FR nguồn: FR-EVT-006, FR-EVT-004, FR-LMS-007, FR-CMS-010, FR-CMS-013.
 
 ## Clarifications

@@ -1,6 +1,6 @@
 # Feature Specification: F053 — Workspace B — cây curriculum, editor nội dung, công thức, song ngữ, trình soạn câu hỏi
 
-**Feature Branch**: `053-content-studio-editor` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace `content_studio`) + `web/packages/ops-ui` · **Mốc**: M-C2 · **Phụ thuộc**: F021, F022, F027, F051
+**Feature Branch**: `053-content-studio-editor` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace `content_studio`) + `src/cms/frontend/packages/ops-ui` · **Mốc**: M-C2 · **Phụ thuộc**: F021, F022, F027, F051
 **Input**: Phần soạn thảo của Learning Content Studio: cây curriculum (môn, curriculum, chủ đề, LO), khung editor dùng chung `ContentEditorShell` (autosave, khóa lạc quan, thanh trạng thái, thao tác workflow cơ bản), công thức (MathLive nhập, MathJax 4 hiển thị, SVG render trên trình duyệt), biên tập song ngữ, trình soạn 11 dạng câu hỏi (phản hồi theo phương án, gợi ý nhiều cấp, lồng tiếng `g1_3`), khối `worked_example`. FR nguồn: FR-CMS-002, FR-CMS-003, FR-CNT-017, FR-CNT-018, FR-CNT-020, FR-QB-001, FR-QB-013.
 
 ## Clarifications

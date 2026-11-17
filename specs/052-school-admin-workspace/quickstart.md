@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F011, F015, F016, F051 (và F010, F012 của chúng); delta contract T004–T007 đã có backend.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd web && pnpm gen:api && pnpm dev`.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm gen:api && pnpm dev`.
 - Tài khoản demo: `ad.truong.a` (school_admin TH Demo A), `ad.truong.b` (school_admin THCS Demo B), `ad.donvi` (tenant_admin `pgd-demo`), `qlcm.truong.a` (academic_manager), `sa.admin` (system_admin); học sinh `hs.an.3a`, `hs.sapbidon`.
 - File mẫu: CSV theo [EduWorld SIS Contract](../sis/eduworld-sis-contract.v1.yaml), một dòng trùng username với học sinh tenant khác.
 
@@ -46,7 +46,7 @@
 ```bash
 make web-lint
 make web-test
-cd web && pnpm --filter portal test:e2e -- --grep @F052
+cd src/cms/frontend && pnpm --filter portal test:e2e -- --grep @F052
 ```
 
 ## 4. Bằng chứng cần nộp

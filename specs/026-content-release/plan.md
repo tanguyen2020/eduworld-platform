@@ -11,7 +11,7 @@ Aggregate `ContentItem` (con trỏ `current_version_id`, `latest_version_no`) d�
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, valkey-go, AWS SDK v2 S3, `pkg/{outbox,tenancy,entx,authz,problem,clock}` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, valkey-go, AWS SDK v2 S3, `src/backend/pkg/{outbox,tenancy,entx,authz,problem,clock}` |
 | Storage | PostgreSQL `eduworld_learning` (`content.*`), `eduworld_game` (`game.content_manifests`); Valkey (cache); floci S3 `ew-media-public`/`ew-media-private` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); clock giả cho hẹn giờ |
 | Target Platform | Linux container: `core-api` (module `learning`), `worker-events` (consumer của module `learning` và `game`) |
@@ -51,7 +51,7 @@ specs/026-content-release/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{content_release.go,scheduled_publication.go}
 ├── ent/schema/mixin/release_fields.go            # current_version_id, latest_version_no, snapshot_key, snapshot_sha256, based_on_version_id, change_note, publish_at
 ├── migrations/<ts>_f026_release.sql              # trigger forbid_published_update, check_release_target cho 7 bảng item
@@ -64,7 +64,7 @@ modules/learning/
 ├── internal/presentation/http/public/cms_release_handler.go
 ├── internal/presentation/consumer/release_pointer_cache.go     # learning.release_pointer_cache
 └── internal/presentation/job/scheduled_publish.go              # content-scheduled-publish
-modules/game/
+src/backend/modules/game/
 ├── internal/application/command/merge_learning_manifest_entries.go
 └── internal/presentation/consumer/manifest_on_learning_content.go  # game.manifest_on_learning_content
 ```

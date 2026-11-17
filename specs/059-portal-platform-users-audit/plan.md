@@ -4,7 +4,7 @@
 
 ## Summary
 
-Thêm 9 màn vào chunk workspace D (`web/apps/portal/src/workspaces/platform-admin/`, do F057 tạo): Permission catalog (chỉ xem), Role platform/dùng chung (+ xem role tùy biến của tenant), UserRole (platform + tenant đích), Người dùng mọi tenant, Nhật ký toàn hệ thống, Nhật ký phân quyền, Đăng nhập game liên tenant, Feature flag, Tích hợp (Keycloak/SIS/APISIX chỉ xem). Gọi `/api/v1/admin/*` qua gateway nội bộ với token MFA, dùng lại `TenantFilter`, `TargetTenantField`, `useCrossTenantScope`, `MfaStepUp`, `VpnRequiredBanner` của F057. Không có logic nghiệp vụ ở client: picker permission/role chỉ lọc hiển thị, server quyết định (`422`/`403`). Delta contract (owner F011, F012, F015, F016, identity) đưa vào Phase 2; màn phụ thuộc delta ẩn sau feature flag tới khi contract có.
+Thêm 9 màn vào chunk workspace D (`src/cms/frontend/apps/portal/src/workspaces/platform-admin/`, do F057 tạo): Permission catalog (chỉ xem), Role platform/dùng chung (+ xem role tùy biến của tenant), UserRole (platform + tenant đích), Người dùng mọi tenant, Nhật ký toàn hệ thống, Nhật ký phân quyền, Đăng nhập game liên tenant, Feature flag, Tích hợp (Keycloak/SIS/APISIX chỉ xem). Gọi `/api/v1/admin/*` qua gateway nội bộ với token MFA, dùng lại `TenantFilter`, `TargetTenantField`, `useCrossTenantScope`, `MfaStepUp`, `VpnRequiredBanner` của F057. Không có logic nghiệp vụ ở client: picker permission/role chỉ lọc hiển thị, server quyết định (`422`/`403`). Delta contract (owner F011, F012, F015, F016, identity) đưa vào Phase 2; màn phụ thuộc delta ẩn sau feature flag tới khi contract có.
 
 ## Technical Context
 
@@ -54,10 +54,10 @@ specs/059-portal-platform-users-audit/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/shared/authz/
+src/cms/frontend/apps/portal/src/shared/authz/
 ├── groupPermissions.ts            # nhóm PermissionList theo group_code, lọc scope_kind (hàm thuần)
 └── PermissionPicker.tsx           # picker chỉ đọc catalog; workspace C (F052) có thể dùng lại
-web/apps/portal/src/workspaces/platform-admin/
+src/cms/frontend/apps/portal/src/workspaces/platform-admin/
 ├── routes.tsx                     # thêm route F059 (file của F057)
 ├── (không có menu.ts)             # mục menu = khóa `menu.platform_admin.*` của catalog, lọc theo permission (F059-AC-24, ADR-0090)
 ├── api/{permissions,roles,userRoles,users,audit,loginEvents,featureFlags,integrations,sisConnections}.ts
@@ -71,7 +71,7 @@ web/apps/portal/src/workspaces/platform-admin/
 ├── integrations/{IntegrationsPage,KeycloakPanel,ApisixPanel,SisConnectionsTab}.tsx
 ├── i18n/{vi,en}.json              # thêm khóa platform.users.*, platform.roles.*, platform.audit.*…
 └── __tests__/
-web/apps/portal/e2e/platform/{roles,user-roles,users,audit,login-events,feature-flags,integrations,authz-f059}.spec.ts
+src/cms/frontend/apps/portal/e2e/platform/{roles,user-roles,users,audit,login-events,feature-flags,integrations,authz-f059}.spec.ts
 ```
 
 **Structure Decision**: Màn đặt trong chunk D của F057 (ADR-0027 mục 7). `PermissionPicker`/`groupPermissions` đặt ở `src/shared/authz` vì workspace C (F052) và D cùng dùng catalog; không đặt ở `ops-ui` vì phụ thuộc kiểu sinh từ OpenAPI.

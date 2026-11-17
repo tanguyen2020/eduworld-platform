@@ -29,7 +29,7 @@
 | 14 | `withdrawEfficacyParticipants` `students=[hs.binh.3a]`, gọi lại cùng key | Participant `withdrawn`, snapshot soft-delete; lần 2 trả kết quả cũ | F035-AC-18, F035-AC-19 |
 | 15 | Tạo thử nghiệm `mastery-we-1-1` (control `we-1.0`, `we-1.1` 50/50, `unit=class`, `th-demo-a`); `:start` `shadow`; `hs.an.3a` luyện tập | Hai học sinh 3A cùng arm; `getMyMastery` không đổi; `experiment_mastery_states` có dòng; event có `experiment_arms` | F035-AC-21, F035-AC-22, F035-AC-23, F035-AC-25 |
 | 16 | `:start` `live`; so `getMyMastery` (học sinh arm thử) với `getStudentProgress` (`ad.truong.a`) | Học sinh thấy mức theo `we-1.1`; nhà trường thấy theo `we-1.0` | F035-AC-24 |
-| 17 | Bơm dữ liệu làm arm giảm chính xác vượt ngưỡng, chạy `worker learning experiment-guardrail` (lệnh vận hành của `cmd/worker`) | Thử nghiệm `stopped` `guardrail_breach`, alert, audit | F035-AC-26 |
+| 17 | Bơm dữ liệu làm arm giảm chính xác vượt ngưỡng, chạy `worker learning experiment-guardrail` (lệnh vận hành của `src/backend/cmd/worker`) | Thử nghiệm `stopped` `guardrail_breach`, alert, audit | F035-AC-26 |
 | 18 | `getLearningExperimentResults`; `ad.truong.a` gọi | Ô nhỏ bị ẩn; `403` | F035-AC-27 |
 | 19 | Seed dataset golden, đợt `post` mở, `createEfficacyStudyReport` | Snapshot `M_eff`; báo cáo khớp giá trị tính tay; ô < 5 ẩn; `descriptive_only = true` | F035-AC-28, F035-AC-29, F035-AC-30, F035-AC-31 |
 | 20 | `createPlatformReport` `efficacy_dataset`; tải CSV; xuất cho study thứ hai; bỏ secret rồi xuất | Chỉ mã giả danh, không `hs.binh.3a`; mã khác giữa study; thiếu khóa → `failed` | F035-AC-32, F035-AC-33, F035-AC-34 |

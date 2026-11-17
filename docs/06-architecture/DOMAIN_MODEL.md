@@ -8,7 +8,7 @@
 
 ## 1. Bounded contexts
 
-Mỗi bounded context thuộc đúng **một module** của modular monolith và lưu trong **database của module đó** (ADR-0074, ADR-0037). "Module" là thư mục `modules/<module>/` (năm module domain + `realtime`); "Package domain" là package trong `modules/<module>/internal/domain/`; "Schema" là namespace trong database của module.
+Mỗi bounded context thuộc đúng **một module** của modular monolith và lưu trong **database của module đó** (ADR-0074, ADR-0037). "Module" là thư mục `src/backend/modules/<module>/` (năm module domain + `realtime`); "Package domain" là package trong `src/backend/modules/<module>/internal/domain/`; "Schema" là namespace trong database của module.
 
 | Context | Module · Database | Package domain | Schema | Aggregate chính | Sở hữu dữ liệu |
 |---|---|---|---|---|---|

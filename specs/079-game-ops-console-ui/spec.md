@@ -1,6 +1,6 @@
 # Feature Specification: F079 — Workspace A — Game Operations Console UI (world, NPC, quest builder, reward, item, event, season)
 
-**Feature Branch**: `079-game-ops-console-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace A `game-ops`) · **Mốc**: M3 · **Phụ thuộc**: F051, F077, F078
+**Feature Branch**: `079-game-ops-console-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace A `game-ops`) · **Mốc**: M3 · **Phụ thuộc**: F051, F077, F078
 **Input**: Giao diện workspace A (chỉ platform, gateway nội bộ + MFA) cho Game Designer/Live-ops/System Admin: danh sách và editor có version chung (`ContentEditorShell`) cho mọi `GameConfigType` của module game; builder đặc thù cho quest, hội thoại NPC, thế giới/area, phần thưởng, item/shop/tiền tệ, level & XP, Event Builder 8 bước, season track, template sự kiện; thumbnail/turntable 3D; preview Godot Web. FR nguồn: FR-CMS-004, FR-CMS-017, FR-EVT-002, FR-GAM-007.
 
 ## Clarifications
@@ -195,6 +195,6 @@ Danh sách item hiển thị thumbnail theo version; mở chi tiết xem turntab
 
 ## Assumptions
 
-- [Proposed] Thư mục `web/apps/portal/src/workspaces/game-ops/`, route `/game-ops/*` (F051).
+- [Proposed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/game-ops/`, route `/game-ops/*` (F051).
 - [Proposed] Thumbnail đọc từ trường mới `GameConfigVersion.media` (delta F078); trước khi có, cột thumbnail ẩn.
 - Permission ghi `progression-curves`/`progression-levels` là `game.progression.write`; `shop-items` là `game.shop.write`, `collections` là `game.collection.write` (RB-309); UI chỉ dựa `getMyPermissions`.

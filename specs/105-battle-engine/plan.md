@@ -4,14 +4,14 @@
 
 ## Summary
 
-Hai phần theo thứ tự bên nhận → bên gọi. (1) **module learning**: hiện thực facade `createQuestionPlan`, `scorePlanAnswer`, `revealPlanItem` (mới) dùng port `Delivery`/grader của F022/F030; plan lưu `assessment.question_plans` (ghim version), câu trả lời ghi `attempt_answers` `mode = competition`. (2) **module competition**: module `battle` gồm aggregate `MatchRoom` (state machine theo [REALTIME_ARCHITECTURE §7.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md#71-state-machine-knowledge-battle)) chạy trong room host (`pkg/roomhost`: lease Valkey, checkpoint, input NATS), luật từng mode là `ModeRules` thuần (1v1, team, co-op, timed quiz, tournament, bot). Gọi learning qua typed client + `pkg/modcall` (R29). Kết thúc trận: command `RecordMatchResult` ghi `match_results` + participant + outbox `match.completed` + audit trong một transaction (ADR-0038/0042).
+Hai phần theo thứ tự bên nhận → bên gọi. (1) **module learning**: hiện thực facade `createQuestionPlan`, `scorePlanAnswer`, `revealPlanItem` (mới) dùng port `Delivery`/grader của F022/F030; plan lưu `assessment.question_plans` (ghim version), câu trả lời ghi `attempt_answers` `mode = competition`. (2) **module competition**: module `battle` gồm aggregate `MatchRoom` (state machine theo [REALTIME_ARCHITECTURE §7.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md#71-state-machine-knowledge-battle)) chạy trong room host (`src/backend/pkg/roomhost`: lease Valkey, checkpoint, input NATS), luật từng mode là `ModeRules` thuần (1v1, team, co-op, timed quiz, tournament, bot). Gọi learning qua typed client + `src/backend/pkg/modcall` (R29). Kết thúc trận: command `RecordMatchResult` ghi `match_results` + participant + outbox `match.completed` + audit trong một transaction (ADR-0038/0042).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public; facade `modules/learning/api` sinh từ `learning.internal.v1.yaml`), nats.go, go-redis, `pkg/roomhost`, `pkg/modcall`, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/clock` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public; facade `src/backend/modules/learning/api` sinh từ `learning.internal.v1.yaml`), nats.go, go-redis, `src/backend/pkg/roomhost`, `src/backend/pkg/modcall`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/clock` |
 | Storage | PostgreSQL `eduworld_competition` (`competition`, `multiplayer`); `eduworld_learning` (`assessment`); Valkey `ew:rt:room:*` (lease, checkpoint) |
 | Testing | go test + testcontainers (PostgreSQL ×2, Valkey, NATS); bot WS; đồng hồ giả; facade test competition ↔ learning (fake facade phía competition, ví dụ spec phía learning) |
 | Target Platform | Linux container (`core-api` nạp module `competition` + `learning`, `worker-events`, `realtime`) |
@@ -54,14 +54,14 @@ specs/105-battle-engine/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/question_plan.go                     # mới
 ├── internal/application/command/questionplan/      # create_question_plan.go, score_plan_answer.go
 ├── internal/application/query/questionplan/reveal_plan_item.go
 ├── internal/presentation/http/internal/question_plan_handler.go
 └── tests/{integration,contract}/questionplan/
 
-modules/competition/
+src/backend/modules/competition/
 ├── ent/schema/match_result.go, integrity_signal.go, room.go, session_membership.go  # mới/thêm cột
 ├── internal/domain/battle/
 │   ├── room.go             # MatchRoom aggregate: trạng thái, câu hiện tại, deadline, điểm tạm
@@ -106,7 +106,7 @@ Không có. State machine, chấm, checkpoint, grace đã định ở REALTIME_A
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F104 (`CreateMatch`, `match.created`), F030/F022 (grader, `Delivery`), F090 (gateway, `ew:rt:room:<id>:out`), F091/F101 (`pkg/roomhost`), F014 (takeover `game_session.replaced`).
+- Feature phụ thuộc: F104 (`CreateMatch`, `match.created`), F030/F022 (grader, `Delivery`), F090 (gateway, `ew:rt:room:<id>:out`), F091/F101 (`src/backend/pkg/roomhost`), F014 (takeover `game_session.replaced`).
 - Facade: `learning` → `createQuestionPlan`, `scorePlanAnswer`, `revealPlanItem`.
 - Event phát: `match.started`, `match.completed`, `match.aborted`, `audit.recorded`. Tiêu thụ: `match.created` (nội bộ), `game_session.replaced`, `user.access_revoked`.
 - Bên dùng: F106 (rating, points, leaderboard), F107 (bracket), F117 (chat), module game (XP).

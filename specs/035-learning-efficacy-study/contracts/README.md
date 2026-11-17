@@ -80,5 +80,5 @@ ProblemCode dùng: `PERMISSION_DENIED`, `MFA_REQUIRED`, `TENANT_HEADER_REQUIRED`
 Còn lại:
 
 - EVENT_DESIGN: ghi rõ ExamSession đo hiệu quả không phát `exam.*`; `experiment_arms`, `efficacy_wave_id` trong context — task T009.
-- Permission catalog code `pkg/authz/catalog.go` + seed role `system_admin` — task T006.
+- Permission catalog code `src/backend/pkg/authz/catalog.go` + seed role `system_admin` — task T006.
 - `applyTenantAssignments` (F020) mô tả `422` cho tài nguyên `efficacy_instrument`; `listExamSessionPapers`, `getExamAttemptAnalysis`, `getExamSessionReport` mô tả chặn khi F042/F044 thêm operation.

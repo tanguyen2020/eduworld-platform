@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F090 (realtime), F095 (skeleton module chat, projection `ref.*`), F116 nối `ContentValidator` thật (hoặc chạy `make test` với test double có nhãn).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=chat`; kiểm `make seed-check`, `nats stream info CHAT_MESSAGES` trong `nats-box` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (TH Demo A), `hs.chi.3b`, `hs.dung.7a` (tenant `pgd-demo`), `ad.truong.a`, `sm.antoan`.
-- Channel thử: `go run ./tools/devtool chat open-channel --type=party --members=hs.an.3a,hs.binh.3a` (lệnh dev gọi command `OpenChannel`, chỉ build tag `dev`).
+- Channel thử: `go -C src/backend run ./tools/devtool chat open-channel --type=party --members=hs.an.3a,hs.binh.3a` (lệnh dev gọi command `OpenChannel`, chỉ build tag `dev`).
 
 ## 2. Kịch bản kiểm tra
 
@@ -33,8 +33,8 @@
 ```bash
 make test MOD=chat
 make test-integration MOD=chat      # testcontainers PG + NATS + Valkey
-go test ./modules/chat/tests/chaos/... -tags chaos
-go test ./modules/chat/tests/static/... # không grade_*, không DELETE FROM
+go -C src/backend test ./modules/chat/tests/chaos/... -tags chaos
+go -C src/backend test ./modules/chat/tests/static/... # không grade_*, không DELETE FROM
 ```
 
 ## 4. Bằng chứng cần nộp

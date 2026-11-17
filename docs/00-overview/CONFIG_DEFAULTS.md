@@ -360,7 +360,7 @@ Bảng rate limit đầy đủ theo endpoint nằm ở [SECURITY_ARCHITECTURE §
 | `request_body_max` / `csv_import_max` | 256 KB / 10 MB | code | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `secret_rotation` | 90 ngày | code | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `critical_vuln_fix` | ≤ 72 giờ | quy trình | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
-| `module_call_deadline` | Deadline gọi facade giữa module trong tiến trình (`pkg/modcall`): 800 ms đọc / 2 s ghi / 5 s bước saga; không retry, không circuit breaker giữa module (thay `internal_api_resilience`, đã bỏ) | code | [Proposed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
+| `module_call_deadline` | Deadline gọi facade giữa module trong tiến trình (`src/backend/pkg/modcall`): 800 ms đọc / 2 s ghi / 5 s bước saga; không retry, không circuit breaker giữa module (thay `internal_api_resilience`, đã bỏ) | code | [Proposed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
 | `external_api_resilience` | Adapter tích hợp ngoài (Keycloak Admin, SIS, object storage): timeout theo adapter; retry 2 (chỉ thao tác idempotent); circuit breaker 50% / 20 request, nửa mở sau 10 s; bulkhead 50 | code | [Proposed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
 | `idempotency_record_ttl` | 24 giờ | code | [Proposed] | [API_DESIGN](../07-backend/API_DESIGN.md) |
 

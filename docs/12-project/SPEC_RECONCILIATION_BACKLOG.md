@@ -40,7 +40,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | Mã | Mâu thuẫn | Feature đã chọn | Ưu tiên | Feature |
 |---|---|---|---|---|
 | RB-101 | Còn sót scope `class`, `UserRole.source = sis`, `UserRoleScopeType.class` (trái ADR-0072) | Bỏ | P1 | F012, F052, F059 |
-| RB-102 | Vị trí catalog permission: `internal/authorization` (ADMIN_PORTAL §2.1, SECURITY_ARCHITECTURE §5.2, D4) vs `pkg/authz` (R20) | `pkg/authz` | P2 | F002 |
+| RB-102 | Vị trí catalog permission: `internal/authorization` (ADMIN_PORTAL §2.1, SECURITY_ARCHITECTURE §5.2, D4) vs `src/backend/pkg/authz` (R20) | `src/backend/pkg/authz` | P2 | F002 |
 | RB-103 | `platform.audit.read` vs `platform.audit.read_all` | `platform.audit.read` | P2 | F015, F059 |
 | RB-104 | Key cache Principal `ew:id:` / `ew:identity:` | `ew:<module>:principal:` | P3 | F002 |
 | RB-105 | `last_login_at` cùng transaction (IDENTITY_MAPPING §3.3) vs bất đồng bộ (DATABASE_DESIGN §3.12) | Bất đồng bộ | P2 | F013, F014 |
@@ -119,7 +119,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | RB-413 | Rating/`rating_delta` hiển thị cho học sinh (GAME_NETWORKING §7) trái COMPETITION §8.2; FR-RNK-003 chỉ ẩn lớp 1–5 | Ẩn mọi khối | P1 | F106, F109 |
 | RB-414 | Hết grace 1v1: "câu còn lại 0" vs "thua do abandon"; thời điểm tạo question plan | Theo MULTIPLAYER §9.2; chưa chốt thời điểm | P2 | F105 |
 | RB-415 | `competition.config.reward.write` không có `config_type`; vị trí leaderboard ±5 vs ±3 | Chưa chốt | P3 | F106, F108 |
-| RB-416 | Season track (F077, M3) cần lịch mùa F106 (M4b); `pkg/roomhost` (F076) chồng lấn F091 | Fixture tới M4b | P2 | F076, F077 |
+| RB-416 | Season track (F077, M3) cần lịch mùa F106 (M4b); `src/backend/pkg/roomhost` (F076) chồng lấn F091 | Fixture tới M4b | P2 | F076, F077 |
 
 ### 3.5. Chat, kiểm duyệt, an toàn
 
@@ -212,14 +212,14 @@ Quyết định Technical Architect 2026-11-17 đã áp vào tài liệu sở h�
 
 ### 3.9. Delta theo ADR-0074 (modular monolith) và ADR-0088 (2026-11-17)
 
-**Trạng thái:** tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) (DEPLOYMENT, LOCAL_DEVELOPMENT, MONITORING, BACKUP_RECOVERY, DATABASE_DESIGN, MULTITENANCY, REALTIME_ARCHITECTURE, KEYCLOAK_SSO, 09-identity, 10-security, ROADMAP, RISKS, TEST_STRATEGY, GLOSSARY, CONFIG_DEFAULTS). Phép đổi tên cơ học (`services/<x>-service/` → `modules/<x>/`, `pkg/svcclient` → `pkg/modcall`, `SVC=` → `MOD=`) đã chạy trên `specs/`, nhưng **ngữ nghĩa trong feature spec và contract chưa sửa**. Mỗi dòng dưới đây cần xử lý trước khi feature liên quan sang `In progress`.
+**Trạng thái:** tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) (DEPLOYMENT, LOCAL_DEVELOPMENT, MONITORING, BACKUP_RECOVERY, DATABASE_DESIGN, MULTITENANCY, REALTIME_ARCHITECTURE, KEYCLOAK_SSO, 09-identity, 10-security, ROADMAP, RISKS, TEST_STRATEGY, GLOSSARY, CONFIG_DEFAULTS). Phép đổi tên cơ học (`services/<x>-service/` → `src/backend/modules/<x>/`, `src/backend/pkg/svcclient` → `src/backend/pkg/modcall`, `SVC=` → `MOD=`) đã chạy trên `specs/`, nhưng **ngữ nghĩa trong feature spec và contract chưa sửa**. Mỗi dòng dưới đây cần xử lý trước khi feature liên quan sang `In progress`.
 
 | Mã | Delta | Tài liệu sở hữu | Ưu tiên | Feature |
 |---|---|---|---|---|
-| RB-901 | Feature spec/plan/tasks còn mô tả token `svc-*`, gọi HTTP `/internal/v1/*`, retry/circuit breaker giữa module, contract test HTTP (Pact) → đổi sang facade sinh từ spec internal gọi trong tiến trình (`pkg/modcall`), `x-allowed-callers` là tên module, facade test + `make arch-check`; TC-SVC-004…007, 009…011, 013, 015 đã viết lại, thêm TC-SVC-016/017 | SECURITY_ARCHITECTURE §5.5; TEST_STRATEGY §6.7; BACKEND_DESIGN | P1 | F001, F002, F003, F004 và mọi feature có `contracts/` internal |
+| RB-901 | Feature spec/plan/tasks còn mô tả token `svc-*`, gọi HTTP `/internal/v1/*`, retry/circuit breaker giữa module, contract test HTTP (Pact) → đổi sang facade sinh từ spec internal gọi trong tiến trình (`src/backend/pkg/modcall`), `x-allowed-callers` là tên module, facade test + `make arch-check`; TC-SVC-004…007, 009…011, 013, 015 đã viết lại, thêm TC-SVC-016/017 | SECURITY_ARCHITECTURE §5.5; TEST_STRATEGY §6.7; BACKEND_DESIGN | P1 | F001, F002, F003, F004 và mọi feature có `contracts/` internal |
 | RB-902 | Feature vận hành còn giả định image/pipeline/stack theo service, `go.work`, tag `<service>/vX.Y.Z` → 3 image `core-api`/`realtime`/`worker` + `migrate`, một `go.mod`, `app.stack.yml`, tag `backend/vX.Y.Z`, workflow `go.yml`/`release.yml` | DEPLOYMENT §3, §10–§12; LOCAL_DEVELOPMENT §3, §7 | P1 | F001, F130, F131, F132 |
 | RB-903 | Biến môi trường `EW_SVC_<NAME>_URL`, `EW_SVC_CLIENT_*`, `EW_INTERNAL_HTTP_ADDR`, `EW_DB_DSN` một database → bỏ; dùng `EW_DB_<MODULE>_*`, `EW_KC_ADMIN_CLIENT_*`, `EW_EXT_CLIENT_*`, `EW_WORKER_PROFILE` | LOCAL_DEVELOPMENT §4; CONFIG_DEFAULTS | P2 | F001, F002, F003 |
-| RB-904 | Room host (hub instance, battle/co-op state machine) thuộc module competition, chạy trong `core-api` như handler NATS `ew.cmd.competition.*`/`ew.in.room.*` với state và lease theo room trong Valkey, chấm điểm qua facade module learning trong tiến trình; binary `realtime` không nạp module domain — feature thi đấu/party (vd. `pkg/roomhost`, RB-416) cần cập nhật plan nếu còn giả định room host là process riêng hoặc gọi HTTP sang learning | REALTIME_ARCHITECTURE §1, §5.1, §7; DEPLOYMENT §3.1 | P2 | F076, F091 và feature party/battle/co-op (M4a, M4b) |
+| RB-904 | Room host (hub instance, battle/co-op state machine) thuộc module competition, chạy trong `core-api` như handler NATS `ew.cmd.competition.*`/`ew.in.room.*` với state và lease theo room trong Valkey, chấm điểm qua facade module learning trong tiến trình; binary `realtime` không nạp module domain — feature thi đấu/party (vd. `src/backend/pkg/roomhost`, RB-416) cần cập nhật plan nếu còn giả định room host là process riêng hoặc gọi HTTP sang learning | REALTIME_ARCHITECTURE §1, §5.1, §7; DEPLOYMENT §3.1 | P2 | F076, F091 và feature party/battle/co-op (M4a, M4b) |
 
 ## 4. Tham số chưa đăng ký CONFIG_DEFAULTS
 

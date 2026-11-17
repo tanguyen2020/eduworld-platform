@@ -1,6 +1,6 @@
 # Feature Specification: F109 — Giao diện Arena, trận đấu, bảng xếp hạng, giải đấu trong Godot
 
-**Feature Branch**: `109-godot-arena-competition-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M4b · **Phụ thuộc**: F102, F105, F106, F107 (+ F063 renderer câu hỏi, F092 `RealtimeClient`, F119 chat trận)
+**Feature Branch**: `109-godot-arena-competition-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F102, F105, F106, F107 (+ F063 renderer câu hỏi, F092 `RealtimeClient`, F119 chat trận)
 **Input**: Màn Competition Arena của học sinh: chọn chế độ, hàng chờ, ready check, chơi trận 1v1/đội theo message server, màn kết quả chỉ hiển thị tier, lịch sử trận, bảng xếp hạng theo khối và chính sách trường, danh sách/chi tiết/đăng ký/check-in giải đấu, bracket, thách đấu bạn. FR nguồn: FR-CMP-001, FR-CMP-006, FR-RNK-003, FR-LDB-003, FR-LDB-004.
 
 ## Clarifications

@@ -10,7 +10,7 @@
 
 ## R2. Chạy render thumbnail/turntable
 
-- **Decision**: Worker module game nhận `content.published` (loại có asset 3D) → ghi job vào work-queue NATS `ew.job.game.render.>` (stream `GAME_RENDER_JOBS`, retention WorkQueue) → container `game-renderer` (Godot headless, script `godot/tools/thumbnail_renderer/render_thumbnails.gd`, cùng lệnh `make render-thumbnails`) lấy job, tải asset từ object storage, render, tải kết quả lên `media/<sha256>/…` và trả kết quả qua `ew.job.game.render.result`; worker module game đăng ký `media_assets`/`media_usages` trong transaction.
+- **Decision**: Worker module game nhận `content.published` (loại có asset 3D) → ghi job vào work-queue NATS `ew.job.game.render.>` (stream `GAME_RENDER_JOBS`, retention WorkQueue) → container `game-renderer` (Godot headless, script `src/game/tools/thumbnail_renderer/render_thumbnails.gd`, cùng lệnh `make render-thumbnails`) lấy job, tải asset từ object storage, render, tải kết quả lên `media/<sha256>/…` và trả kết quả qua `ew.job.game.render.result`; worker module game đăng ký `media_assets`/`media_usages` trong transaction.
 - **Rationale**: Godot headless nặng và có vòng đời khác Go worker; tách container cho phép scale riêng và không cài Godot vào image `worker`. Kết quả ghi DB vẫn do module game (R13: không module nào khác ghi DB của game).
 - **Alternatives**: (a) Gọi `godot --headless` trực tiếp trong worker Go — image phình, crash renderer ảnh hưởng consumer khác; (b) Render trong CI lúc build asset — không phủ "mọi version publish" khi version chỉ đổi material/tham số.
 

@@ -15,6 +15,6 @@
     "old_device_id": { "type": "string", "format": "uuid", "description": "X-Device-Id của bản cài cũ (không phải định danh phần cứng)" }
   },
   "examples": [
-    { "old_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "new_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "new_platform": "ios", "old_keycloak_sid": "6f1d2c4e-0d9a-4c51-9b8e-3a2f1e0d9c8b", "old_device_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002" }
+    { "old_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "new_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "new_platform": "ios", "old_keycloak_sid": "example-keycloak-sid", "old_device_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002" }
   ]
 }

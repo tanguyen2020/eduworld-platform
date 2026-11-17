@@ -204,6 +204,6 @@ Case p1 tạo lúc 23:00 → nếu 15 phút chưa ai nhận, on-call nhận cả
 ## Assumptions
 
 - [Proposed] Ánh xạ reason → mức: `asked_personal_info` → p1; `bullying`, `inappropriate_content` → p2; `rude_language`, `spam`, `cheating`, `other` → p3 (MODERATION §6.2 chỉ quy định loại vụ việc).
-- [Proposed] Permission `moderation.case.lead` cho trưởng ca; cần thêm vào catalog ADMIN_PORTAL §2.2 và `pkg/authz/catalog.go`.
+- [Proposed] Permission `moderation.case.lead` cho trưởng ca; cần thêm vào catalog ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
 - [Proposed] Thời hạn giữ snapshot = case đóng + 1 năm (MODERATION §10), chưa đăng ký CONFIG_DEFAULTS.
 - Hold p1 dùng sanction hệ thống (`issued_by_kind = system`) để tái sử dụng cơ chế thực thi.

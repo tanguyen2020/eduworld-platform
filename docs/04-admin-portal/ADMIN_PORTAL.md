@@ -7,7 +7,7 @@
 
 - **[Confirmed]** CMS quản lý **nội dung** (curriculum, nội dung học tập, nội dung game, cấu hình thi đấu). LMS quản lý **hoạt động học tập** (giao bài, theo dõi). Backend: nội dung học tập và LMS thuộc **module learning**; Game Studio (quest, mini-game, NPC, item, reward) thuộc **module game**; cấu hình thi đấu thuộc **module competition**; sticker/GIF và danh mục từ nhạy cảm thuộc **module chat**; tenant, người dùng, phân quyền, Thùng rác/gán/clone điều phối ở **module identity** (ADR-0036). SPA gọi qua APISIX, gateway định tuyến theo prefix tới module sở hữu.
 - **[Confirmed — ADR-0005]** Tenant là một **trường độc lập** (`tenant_type = school`), một **đơn vị nhiều trường** (`unit`) hoặc **tenant chung** (`common`). Khóa cô lập dữ liệu là `tenant_id`; `school_id` là chiều phân loại bên trong tenant.
-- **[Confirmed — ADR-0027 mục 7]** Giao diện quản trị là **một Admin Portal duy nhất** (`web/apps/portal`, một ứng dụng React, một Keycloak client confidential `eduworld-portal` chỉ dùng qua module identity — ADR-0091) gồm **5 workspace** (§1.2). Người dùng chỉ thấy workspace và menu mà permission cho phép và đang bật (§2.7, ADR-0090). Mô hình 2 bundle `cms`/`admin` trước đây đã bị thay thế.
+- **[Confirmed — ADR-0027 mục 7]** Giao diện quản trị là **một Admin Portal duy nhất** (`src/cms/frontend/apps/portal`, một ứng dụng React, một Keycloak client confidential `eduworld-portal` chỉ dùng qua module identity — ADR-0091) gồm **5 workspace** (§1.2). Người dùng chỉ thấy workspace và menu mà permission cho phép và đang bật (§2.7, ADR-0090). Mô hình 2 bundle `cms`/`admin` trước đây đã bị thay thế.
 - Hai nhóm người dùng và phạm vi dữ liệu không đổi:
 
 | Nhóm | Người dùng | Workspace thấy được | Phạm vi dữ liệu | Gateway gọi API |
@@ -26,7 +26,7 @@
 ### 1.1. Giao diện: Admin/Ops UI, không theo phong cách game (ADR-0047)
 
 - **[Confirmed — ADR-0047]** Toàn bộ Admin Portal (mọi workspace) dùng **Admin/Ops design system** dành cho vận hành game: gọn, trung tính, dày dữ liệu. **Không** dùng phong cách, component hay Theme của game. Chi tiết: [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin).
-- **[Proposed]** Thư viện: **Ant Design 5** + Ant Design Pro components (ProLayout, ProTable, ProForm, QueryFilter, StatisticCard), theme EduWorld qua `ConfigProvider` sinh từ `design/admin-tokens/` (màu thương hiệu, compact, sáng/tối, locale `vi_VN`). Component đặc thù trong `web/packages/ops-ui`: trình soạn 11 dạng câu hỏi, graph editor quest/NPC dialogue, bracket giải đấu, thư viện media có thumbnail 3D, `GamePreviewFrame`.
+- **[Proposed]** Thư viện: **Ant Design 5** + Ant Design Pro components (ProLayout, ProTable, ProForm, QueryFilter, StatisticCard), theme EduWorld qua `ConfigProvider` sinh từ `design/admin-tokens/` (màu thương hiệu, compact, sáng/tối, locale `vi_VN`). Component đặc thù trong `src/cms/frontend/packages/ops-ui`: trình soạn 11 dạng câu hỏi, graph editor quest/NPC dialogue, bracket giải đấu, thư viện media có thumbnail 3D, `GamePreviewFrame`.
 - **Ánh xạ mẫu màn → component:** danh sách = QueryFilter (có dropdown tenant cho System Admin) + ProTable + thao tác hàng loạt; chi tiết = Tabs (Thông tin/Phiên bản/Phát hành/Sử dụng/Audit) + Timeline; form = ProForm/StepsForm với validation sinh từ OpenAPI (`maxLength`, `required`); dashboard = StatisticCard + chart (ECharts hoặc Ant Design Charts).
 - Layout: ProLayout, sidebar menu **sinh từ danh mục** `specs/portal/menu-catalog.yaml` (§2.7) và lọc theo `GET /api/v1/me/permissions` (permission + `disabled_menus`/`disabled_actions`); header có bộ lọc tenant (System Admin, chọn nhiều) hoặc bộ chọn đơn vị làm việc (nhân sự thuộc nhiều tenant, §1.3b), trạng thái hệ thống, thông báo; banner cảnh báo hệ thống (ví dụ "Đang tắt kiểm duyệt", ADR-0030).
 - Màu môn học, độ hiếm, trạng thái nội dung dùng **mã màu nghiệp vụ dùng chung** với game (`design/shared-tokens/`), hiển thị bằng `Tag`.
@@ -44,7 +44,7 @@
 
 - Tenant **không bao giờ** thấy workspace A, D, E; trong B và C chỉ thấy dữ liệu tenant mình + dữ liệu platform được gán (chỉ đọc).
 - Safety Moderator chỉ thấy module Kiểm duyệt của workspace E; không thấy workspace A, B, C, D.
-- Mã nguồn mỗi workspace là một **chunk lazy-load** trong `web/apps/portal/src/workspaces/<thư mục>`, tên thư mục cố định: A `game-ops`, B `content-studio`, C `school-lms`, D `platform-admin`, E `live-ops`; chỉ tải khi `GET /api/v1/me/permissions` trả về workspace đó. Đây là tối ưu tải trang, **không phải lớp bảo mật**: bảo mật dựa vào permission backend, gateway nội bộ và MFA (ADR-0027 mục 3).
+- Mã nguồn mỗi workspace là một **chunk lazy-load** trong `src/cms/frontend/apps/portal/src/workspaces/<thư mục>`, tên thư mục cố định: A `game-ops`, B `content-studio`, C `school-lms`, D `platform-admin`, E `live-ops`; chỉ tải khi `GET /api/v1/me/permissions` trả về workspace đó. Đây là tối ưu tải trang, **không phải lớp bảo mật**: bảo mật dựa vào permission backend, gateway nội bộ và MFA (ADR-0027 mục 3).
 - Workspace A, D, E gọi API chỉ có ở gateway nội bộ. Người dùng platform ngoài VPN mở portal vẫn thấy menu nhưng mọi thao tác trả lỗi kết nối; portal hiển thị thông báo "Cần kết nối mạng quản trị (VPN)" thay vì lỗi chung [Proposed].
 
 ### 1.3. Information Architecture (bố cục chung)
@@ -183,7 +183,7 @@ Portal là web app (React + Ant Design 5, ADR-0047), chạy trên trình duyệt
 | Quy tắc | Mô tả |
 |---|---|
 | Sidebar | Desktop: mở mặc định, nhớ trạng thái thu gọn theo người dùng; tablet/mobile: drawer đè nội dung, đóng khi chọn mục |
-| Bảng → thẻ | Component `ResponsiveTable` (`web/packages/ops-ui`): khai báo cột có `priority` (1 = luôn hiện) và `cardTitle`; < 768 px tự render thẻ; thao tác hàng loạt chuyển thành chế độ chọn nhiều bằng nhấn giữ |
+| Bảng → thẻ | Component `ResponsiveTable` (`src/cms/frontend/packages/ops-ui`): khai báo cột có `priority` (1 = luôn hiện) và `cardTitle`; < 768 px tự render thẻ; thao tác hàng loạt chuyển thành chế độ chọn nhiều bằng nhấn giữ |
 | Form | 1 cột trên mobile; nhóm trường thành bước (step) khi > 8 trường; trường công thức dùng `MathInput` (MathLive) có bàn phím ảo riêng |
 | Vùng chạm | ≥ 44 px trên mobile/tablet |
 | Hành động chính | Một nút chính cố định ở đáy màn mobile; hành động phụ trong menu ⋯ |
@@ -278,7 +278,7 @@ Mobile
 
 ### 1.4. Editor chung cho nội dung có version
 
-Mọi builder (activity, quest, challenge, boss, achievement, item, event…) dùng chung khung editor `ContentEditorShell` trong `web/packages/ops-ui`:
+Mọi builder (activity, quest, challenge, boss, achievement, item, event…) dùng chung khung editor `ContentEditorShell` trong `src/cms/frontend/packages/ops-ui`:
 
 | Khả năng | Mô tả |
 |---|---|
@@ -312,7 +312,7 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 
 ### 2.1. Nguyên tắc
 
-1. Authorization dựa trên **permission** — quyền nguyên tử **định nghĩa trong code** ở platform kit (`pkg/authz/catalog.go`, có `scope_kind` `tenant`/`platform`; mọi binary kiểm tra catalog lúc khởi động — AGENTS R20). **Role** là tập permission **lưu trong DB** (`identity.roles`, `identity.role_permissions`): role hệ thống seed sẵn (`is_system`, không sửa/xóa) và role tùy biến của tenant [Proposed]. **UserRole** (`identity.user_roles`) gán role cho người dùng theo phạm vi và thời hạn (ADR-0066, [SECURITY_ARCHITECTURE §5](../10-security/SECURITY_ARCHITECTURE.md)).
+1. Authorization dựa trên **permission** — quyền nguyên tử **định nghĩa trong code** ở platform kit (`src/backend/pkg/authz/catalog.go`, có `scope_kind` `tenant`/`platform`; mọi binary kiểm tra catalog lúc khởi động — AGENTS R20). **Role** là tập permission **lưu trong DB** (`identity.roles`, `identity.role_permissions`): role hệ thống seed sẵn (`is_system`, không sửa/xóa) và role tùy biến của tenant [Proposed]. **UserRole** (`identity.user_roles`) gán role cho người dùng theo phạm vi và thời hạn (ADR-0066, [SECURITY_ARCHITECTURE §5](../10-security/SECURITY_ARCHITECTURE.md)).
 2. Mỗi role có `role_scope_kind`:
    - `tenant`: UserRole ở scope `tenant`, `school` hoặc `subject`, luôn trong **một** tenant. Không có scope `class` hay `class × subject` theo phân công giảng dạy (ADR-0072).
    - `platform`: UserRole chỉ ở scope `platform`.
@@ -321,7 +321,7 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 3d. **Hai loại người dùng (ADR-0081):** `user_type` chỉ có `student` và `staff`. Nhân sự trường là `staff` có `primary_tenant_id`, chỉ nhận role tenant; nhân sự platform là `staff` có `primary_tenant_id = NULL`, chỉ nhận role platform. Một người làm cả hai việc dùng hai tài khoản. Portal phân biệt phạm vi platform/tenant theo role và tenant của phiên, không theo `user_type`.
 3c. **Đánh giá quyền:** Principal = hợp permission của mọi UserRole còn hiệu lực trong tenant hiện tại (header `X-Tenant-Id`, ADR-0065) và phạm vi tài nguyên; cache 60 s; đổi role/UserRole phát `role.updated`/`user_role.changed` để làm mới cache và menu.
 4. **Chỉ `system_admin` có permission `platform.cross_tenant.read`** (xem dữ liệu của tenant). Các role platform khác thao tác dữ liệu platform (`tenant_id = NULL`) và không đọc được dữ liệu của tenant; ngoại lệ duy nhất là `safety_moderator` đọc liên tenant **chỉ trong module moderation** (§2.5b).
-5. Mỗi use case gọi tường minh `authz.Require(ctx, p, perm, resource)` (`pkg/authz`) ở đầu handler command/query ([ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md)). Endpoint `/api/v1/game-admin/*`, `/api/v1/admin/*` còn kiểm tra `azp = eduworld-portal`, **MFA** (`acr` mức MFA, `amr` chứa `otp`) và principal có role `platform`.
+5. Mỗi use case gọi tường minh `authz.Require(ctx, p, perm, resource)` (`src/backend/pkg/authz`) ở đầu handler command/query ([ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md)). Endpoint `/api/v1/game-admin/*`, `/api/v1/admin/*` còn kiểm tra `azp = eduworld-portal`, **MFA** (`acr` mức MFA, `amr` chứa `otp`) và principal có role `platform`.
 6. Menu và workspace **sinh từ danh mục** `specs/portal/menu-catalog.yaml` và lọc theo `GET /api/v1/me/permissions` với header `X-Tenant-Id` của phiên (trả role, permission, danh sách workspace, `disabled_menus[]`, `disabled_actions[]`; nhân sự platform không gửi header) — §2.7, ADR-0090. Ẩn/hiện menu chỉ là tiện ích hiển thị; menu/action bị tắt còn bị chặn ở backend (`featuregate`, `403 FEATURE_DISABLED`).
 
 ### 2.2. Permission catalog
@@ -452,7 +452,7 @@ Tenant chung chứa học sinh không thuộc tenant nào (ADR-0026). Không có
 
 - `required_permissions` theo nghĩa **ít nhất một** (any-of): menu/action hiện khi người dùng có một trong các permission đã liệt kê (§2.2). Mục chỉ có giao diện (vd. Tổng quan) có `operation_ids` rỗng.
 - Mỗi operation OpenAPI mà portal gọi khai báo `x-portal-action` = khóa action sở hữu nó (operation dùng chung theo tham số như `/game-admin/{config_type}` khai báo bảng ánh xạ theo tham số); operation của khung portal (đăng nhập, `me/*`, danh mục quốc gia/tỉnh/trường, thông báo) khai báo `x-portal-shell` và không bao giờ bị chặn. Quy ước chi tiết: [API_DESIGN](../07-backend/API_DESIGN.md) (§11).
-- Từ danh mục sinh `menuRegistry`/`workspaceRegistry` cho `web/apps/portal` (không khai báo menu tay trong TSX) và bảng đọc-chỉ `platform.portal_menu_catalog` ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md), ghi bởi `cmd/migrate` lúc deploy). Thêm menu/action mới vẫn cần code (màn hình, API); database chỉ giữ danh mục và trạng thái bật/tắt.
+- Từ danh mục sinh `menuRegistry`/`workspaceRegistry` cho `src/cms/frontend/apps/portal` (không khai báo menu tay trong TSX) và bảng đọc-chỉ `platform.portal_menu_catalog` ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md), ghi bởi `src/backend/cmd/migrate` lúc deploy). Thêm menu/action mới vẫn cần code (màn hình, API); database chỉ giữ danh mục và trạng thái bật/tắt.
 - Một operation chỉ thuộc một action. Tắt một menu tắt mọi operation của menu đó, kể cả khi màn khác gọi để tra cứu (vd. danh sách môn học dùng trong bộ chọn của editor câu hỏi); màn "Bật/tắt menu & action" hiển thị cảnh báo trước khi tắt menu có operation được dùng chung.
 
 **Trạng thái bật/tắt** lưu trong `platform.feature_flags` (`flag_kind` = `menu`/`action`, `parent_key` của action là menu cha):
@@ -655,7 +655,7 @@ Chỉ có builder cho hoạt động **server tự chấm** (ADR-0072). Tự lu�
 | **Báo cáo hoạt động game của tenant** | C. School & Learning Management | Bộ chỉ số tổng hợp [GAME_ANALYTICS §7.2](../11-operations/GAME_ANALYTICS.md#72-báo-cáo-tenant-workspace-school--learning-management); ô < 5 học sinh bị ẩn | Trường (tenant `unit`), khối, khoảng ngày | `analytics.tenant.read` (Tenant Admin), `analytics.school.read` (School Admin trường mình; Academic Manager có UserRole scope tenant/trường). Dữ liệu game không có chiều môn: UserRole chỉ scope `subject` → `403 PERMISSION_DENIED` |
 
 - Component: StatisticCard, chart chuỗi thời gian, heatmap cohort, biểu đồ funnel, ProTable top nội dung; xuất CSV qua job bất đồng bộ.
-- Trạng thái: đang tải; không đủ dữ liệu (ô bị ẩn hiển thị "< 5" bằng component dùng chung `SuppressedCell` của `web/packages/ops-ui`, [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin)); dữ liệu hôm nay tạm tính (nhãn "cập nhật hằng giờ"); lỗi API theo `code`.
+- Trạng thái: đang tải; không đủ dữ liệu (ô bị ẩn hiển thị "< 5" bằng component dùng chung `SuppressedCell` của `src/cms/frontend/packages/ops-ui`, [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin)); dữ liệu hôm nay tạm tính (nhãn "cập nhật hằng giờ"); lỗi API theo `code`.
 - Từ panel quest/challenge mở thẳng item trong Game Operations Console (workspace A) để chỉnh độ khó.
 - Responsive: desktop đầy đủ; điện thoại chỉ xem thẻ tổng quan và chơi lành mạnh.
 
@@ -1011,7 +1011,7 @@ Mã chuẩn `FR-CMS-*`/`FR-LMS-*` nằm trong [PRODUCT_REQUIREMENTS §2.26–2.2
 | CMS-D-010 | Vận hành tenant đăng nhập CMS và thao tác chức năng Learning Management trong đúng một tenant | [Confirmed] ADR-0027 |
 | CMS-D-011 | Vận hành tenant không thấy và không gọi được menu/API cấu hình game (`/api/v1/game-admin/*`) | [Confirmed] ADR-0027 |
 | CMS-D-012 | Permission catalog trong code; role tenant không chứa `game.*`/`competition.config.*`/`platform.*`; kiểm tra lúc khởi động + trigger DB | [Confirmed] ADR-0027 |
-| CMS-D-013 | **Một Admin Portal** (`web/apps/portal`, client `eduworld-portal`) với 5 workspace; workspace hiển thị theo permission; mã workspace lazy-load (không phải lớp bảo mật); workspace platform gọi gateway nội bộ, token bắt buộc MFA (thay mô hình 2 bundle) | [Confirmed] ADR-0027 mục 7 |
+| CMS-D-013 | **Một Admin Portal** (`src/cms/frontend/apps/portal`, client `eduworld-portal`) với 5 workspace; workspace hiển thị theo permission; mã workspace lazy-load (không phải lớp bảo mật); workspace platform gọi gateway nội bộ, token bắt buộc MFA (thay mô hình 2 bundle) | [Confirmed] ADR-0027 mục 7 |
 | CMS-D-014 | Menu sinh từ danh mục `specs/portal/menu-catalog.yaml`, lọc theo `GET /api/v1/me/permissions` (permission + `disabled_menus`/`disabled_actions`) | [Confirmed] ADR-0027, ADR-0090 |
 | CMS-D-015 | Tenant tạo thử thách lớp/giải trường từ template được gán, chỉ điền tham số cho phép | [Proposed] ADR-0027 |
 | CMS-D-016 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn nhiều), cột Tenant, ghi luôn chọn một tenant đích | [Confirmed] ADR-0027 §6 |
@@ -1096,7 +1096,7 @@ Các TC ghi "(đổi — ADR-0072)" dùng tác nhân theo role hiện hành (§2
 | TC-CMS-SAF-05 | Safety Moderator đăng nhập form portal không nhập mã xác thực; token không có MFA (giả lập) gọi route moderation | `401 INVALID_CREDENTIALS` (thông điệp chung, ADR-0091) / `403 MFA_REQUIRED` |
 | TC-CMS-LMS-01 | Tạo activity `written_response`/`speaking`/`project` hoặc assignment tham chiếu loại đó | `422` (loại ngoài version này, ADR-0082) |
 | TC-CMS-LMS-02 | Academic Manager kích hoạt re-evaluate một version có lỗi; Tenant Content Editor gọi cùng API | Evaluation mới, cũ `superseded`, `attempt.re_evaluated`, audit `content.re_evaluated` / 403 |
-| TC-CMS-MENU-01 | Deploy với danh mục mới: `cmd/migrate` đồng bộ `platform.portal_menu_catalog`; `identity_app` thử INSERT/UPDATE bảng danh mục | Bảng khớp file danh mục (`catalog_version`); `identity_app` bị từ chối |
+| TC-CMS-MENU-01 | Deploy với danh mục mới: `src/backend/cmd/migrate` đồng bộ `platform.portal_menu_catalog`; `identity_app` thử INSERT/UPDATE bảng danh mục | Bảng khớp file danh mục (`catalog_version`); `identity_app` bị từ chối |
 | TC-CMS-MENU-02 | System Admin tắt `menu.school_lms.challenges` cho tenant A | Trong `feature_toggle_cache_ttl`: người dùng tenant A không thấy menu (`disabled_menus`), gọi API của action thuộc menu → `403 FEATURE_DISABLED` (`feature_key`); tenant B không bị ảnh hưởng |
 | TC-CMS-MENU-03 | Tắt `menu.platform_admin.feature_toggles` hoặc action của nó; Tenant Admin/Content Admin gọi `putFeatureFlag`; System Admin thiếu lý do / thiếu `If-Match` | `422 FEATURE_NOT_DISABLEABLE` / `403 PERMISSION_DENIED` / `422 VALIDATION_FAILED` / `428 PRECONDITION_REQUIRED`; ghi thành công có audit `feature_flag.updated` + `platform_settings.changed` |
 | TC-CMS-MENU-04 | Gọi operation thuộc action đang tắt bằng token game (`eduworld-game-backend`), không token, token portal thiếu permission; System Admin liên tenant không gửi `X-Tenant-Id`; gọi `getMyPermissions` | Token game không bị chặn; `401` trước; `403 FEATURE_DISABLED` (featuregate trước `authz.Require`); System Admin theo mặc định platform; operation `x-portal-shell` không bao giờ bị chặn |

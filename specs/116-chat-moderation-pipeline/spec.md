@@ -184,7 +184,7 @@ Học sinh lớp 2 chạm "Cố lên!"; bạn chọn tiếng Anh thấy "Go for 
 
 ## Assumptions
 
-- Bảng teencode/leetspeak dùng cho normalize nạp từ cấu hình có version trong `modules/chat/seed/normalization/` (không chứa từ nhạy cảm); API quản lý chưa có trong contract → ghi "Cần thêm" ở contracts §6 [Proposed].
+- Bảng teencode/leetspeak dùng cho normalize nạp từ cấu hình có version trong `src/backend/modules/chat/seed/normalization/` (không chứa từ nhạy cảm); API quản lý chưa có trong contract → ghi "Cần thêm" ở contracts §6 [Proposed].
 - Bộ test hồi quy ≥ 2.000 câu là dữ liệu vận hành lưu ngoài repo (object storage, quyền `chat.sensitive_terms.read`); CI dùng bộ placeholder không chứa từ thật (R15) [Proposed].
 - Thời gian hiệu lực ≤ 60 s, timeout RE2 5 ms, ngưỡng spam (3 tin/60 s, 4 channel/2 phút, 3 block/10 phút) chưa có tên trong CONFIG_DEFAULTS → task Polish đề xuất đăng ký [Proposed].
 - Ánh xạ severity → action và chi tiết pipeline là [Proposed] theo PRD FR-MOD-010, FR-CHAT-005.

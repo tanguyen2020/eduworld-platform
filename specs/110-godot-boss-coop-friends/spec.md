@@ -1,6 +1,6 @@
 # Feature Specification: F110 — Godot — màn boss co-op, thẻ dữ kiện bước `interdependent`, danh sách bạn bè
 
-**Feature Branch**: `110-godot-boss-coop-friends` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M4a · **Phụ thuộc**: F095, F102, F103 (và F063 renderer câu hỏi, F072 quest tracker, F092 `RealtimeClient`, F069 `LevelUpQueue`)
+**Feature Branch**: `110-godot-boss-coop-friends` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F095, F102, F103 (và F063 renderer câu hỏi, F072 quest tracker, F092 `RealtimeClient`, F069 `LevelUpQueue`)
 **Input**: Học sinh đánh boss nhiều phase một mình hoặc cùng party (HUD năng lượng, phase, đồng hồ server, câu hỏi riêng theo khối, đóng góp không xếp hạng); thấy tiến độ quest co-op chung; nhận vai và thẻ dữ kiện ở bước `interdependent`, chia sẻ thẻ, tự trả lời câu cuối; quản lý bạn bè (danh sách, trạng thái online, lời mời, mã bạn bè, mời party, chặn, tắt tiếng). Màn S06 (phần boss), S11 (phần bạn bè) của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn: FR-CHL-002, FR-CHL-003, FR-QST-002, FR-QST-007, FR-QST-009, FR-PTY-013, FR-SOC-001…003, FR-MP-003.
 
 ## Clarifications

@@ -1,6 +1,6 @@
 # Glossary — Thuật ngữ
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Technical Writer · Cập nhật: 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Technical Writer · Cập nhật: 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `src/backend/pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
 > Liên quan: [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md) · [docs/README](../README.md)
 
 Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "Tên trong code" là tên chuẩn cho entity/field/enum. Glossary chỉ định nghĩa; quy tắc và tham số nằm ở tài liệu sở hữu (xem [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md)).
@@ -54,7 +54,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Academic Manager | `academic_manager` | Quản lý chuyên môn (scope trường/tenant, có thể theo môn): curriculum, blueprint, giao bài/đề, nhóm học tập, School Learning Dashboard, kích hoạt re-evaluate (ADR-0072) |
 | Safety Moderator | `safety_moderator` | Role platform của **Platform Safety Team** (MFA): xử lý moderation case và sanction của mọi tenant, đọc chat chỉ trong phạm vi case qua `tenancy.Bypass(ctx, "moderation_case")` có audit, ghi danh mục từ nhạy cảm cấp tenant (ADR-0072) |
 | Nhân sự (staff) | `tenant_staff`, `platform_staff` | Người dùng Admin Portal (realm role tương ứng); học sinh không thuộc nhóm này (ADR-0066) |
-| Admin Portal | `web/apps/portal`, client `eduworld-portal` | Ứng dụng quản trị web duy nhất (ADR-0027 mục 7) gồm 5 workspace; trang `/login` do portal tự vẽ, đăng nhập qua module identity (client confidential `eduworld-portal`, ADR-0091), học sinh không đăng nhập được (ADR-0066); menu và workspace hiển thị theo permission và trạng thái bật/tắt trong danh mục menu/action (ADR-0090) |
+| Admin Portal | `src/cms/frontend/apps/portal`, client `eduworld-portal` | Ứng dụng quản trị web duy nhất (ADR-0027 mục 7) gồm 5 workspace; trang `/login` do portal tự vẽ, đăng nhập qua module identity (client confidential `eduworld-portal`, ADR-0091), học sinh không đăng nhập được (ADR-0066); menu và workspace hiển thị theo permission và trạng thái bật/tắt trong danh mục menu/action (ADR-0090) |
 | Danh mục menu/action portal | `specs/portal/menu-catalog.yaml`, `platform.portal_menu_catalog` | Contract phân cấp workspace → menu (`menu.<workspace>.<menu>`) → action (`action.<workspace>.<menu>.<action>`) của Admin Portal, có bản sao đọc-chỉ trong DB; System Admin bật/tắt menu/action qua `platform.feature_flags` (mặc định platform hoặc ghi đè theo tenant); mục `can_disable = false` không tắt được (ADR-0090) |
 | Setup ticket | `setup_ticket` | Vé dùng một lần (10 phút, `portal_setup_ticket_ttl`) trả kèm `403 ACCOUNT_SETUP_REQUIRED` khi tài khoản nhân sự còn bước bắt buộc (đổi mật khẩu tạm, đăng ký OTP); không chứa mật khẩu (ADR-0091) |
 | Client đăng nhập game | `eduworld-game-backend` | Client Keycloak **confidential** chỉ bật Direct Access Grants; chỉ module identity giữ secret và gọi khi học sinh đăng nhập bằng form trong game (ADR-0068) |
@@ -200,19 +200,19 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 
 | Thuật ngữ | Định nghĩa |
 |---|---|
-| Module | Đơn vị mã theo bounded context trong `modules/<module>/` (ADR-0074): 5 module domain `identity`, `learning`, `game`, `competition`, `chat`, mỗi module có database riêng, cộng module `realtime` (không DB). Module khác chỉ được import facade `api/` của nó; bên trong là `internal/{domain,application,infrastructure,presentation}` và `module.go` (`Register`) |
-| Facade | Interface + DTO công khai duy nhất của một module (`modules/<module>/api/`), sinh bằng `make gen` từ `specs/openapi/modules/<module>.internal.v1.yaml`; module khác gọi **trong tiến trình** qua adapter `infrastructure` và `pkg/modcall`, chỉ khi có tên trong `x-allowed-callers` (ADR-0074 mục 3) |
+| Module | Đơn vị mã theo bounded context trong `src/backend/modules/<module>/` (ADR-0074): 5 module domain `identity`, `learning`, `game`, `competition`, `chat`, mỗi module có database riêng, cộng module `realtime` (không DB). Module khác chỉ được import facade `api/` của nó; bên trong là `internal/{domain,application,infrastructure,presentation}` và `module.go` (`Register`) |
+| Facade | Interface + DTO công khai duy nhất của một module (`src/backend/modules/<module>/api/`), sinh bằng `make gen` từ `specs/openapi/modules/<module>.internal.v1.yaml`; module khác gọi **trong tiến trình** qua adapter `infrastructure` và `src/backend/pkg/modcall`, chỉ khi có tên trong `x-allowed-callers` (ADR-0074 mục 3) |
 | Binary / profile | Ba binary backend (ADR-0074 mục 2): `core-api` (REST của 5 module, handler NATS lệnh realtime), `realtime` (WebSocket, ticket, presence, định tuyến), `worker` (outbox relay, consumer, job). `worker` chọn nhóm việc bằng `--profile` (`events`, `chat`, `jobs`), triển khai thành Swarm service `worker-events`, `worker-chat`, `worker-jobs` ([DEPLOYMENT §3.1](../11-operations/DEPLOYMENT.md#31-binary-và-swarm-service-backend-adr-0074)) |
-| `pkg/modcall` | Helper gọi facade trong tiến trình: span tracing, deadline (`module_call_deadline`), `TenantScope`, Principal gốc (on-behalf), `Idempotency-Key`, kiểm `x-allowed-callers`, ánh xạ lỗi sang `problem`; thay `pkg/svcclient` (ADR-0074) |
+| `src/backend/pkg/modcall` | Helper gọi facade trong tiến trình: span tracing, deadline (`module_call_deadline`), `TenantScope`, Principal gốc (on-behalf), `Idempotency-Key`, kiểm `x-allowed-callers`, ánh xạ lỗi sang `problem`; thay `src/backend/pkg/svcclient` (ADR-0074) |
 | Microservice / Service — **Superseded** | Mô hình 6 service triển khai độc lập của ADR-0036, đã thay bằng modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md)). Trong tài liệu hiện hành, "service" chỉ còn nghĩa Swarm service (đơn vị triển khai Docker Swarm) hoặc dịch vụ bên ngoài; tên cũ `<x>-service` đọc là module `<x>` |
-| Platform kit (`pkg/`) | Thư viện Go dùng chung cho mọi module: config, logging, tracing, HTTP middleware, `UnitOfWork`, outbox, NATS/Valkey, `pkg/modcall`, auth, testkit (không có mediator — ADR-0087) |
+| Platform kit (`src/backend/pkg/`) | Thư viện Go dùng chung cho mọi module: config, logging, tracing, HTTP middleware, `UnitOfWork`, outbox, NATS/Valkey, `src/backend/pkg/modcall`, auth, testkit (không có mediator — ADR-0087) |
 | Clean Architecture | Tổ chức mỗi module thành các tầng Domain → Application → Infrastructure/Presentation; phụ thuộc chỉ hướng vào trong (ADR-0038) |
 | Hexagonal / Ports & Adapters | Domain ở trung tâm, giao tiếp ngoài qua port (interface) và adapter; cách hiện thực ranh giới tầng trong Clean Architecture |
 | CQRS | Command Query Responsibility Segregation: tách luồng ghi (write context, command) và luồng đọc (read context, query) thành package, port và persistence riêng; presentation gọi handler qua interface có kiểu, không mediator/bus (ADR-0038, ADR-0087) |
 | Command | Yêu cầu thay đổi trạng thái; handler trong `internal/application/command/` nạp aggregate qua port `port/write`, ghi DB + outbox trong một `UnitOfWork`, trả ID/version |
 | Query | Yêu cầu chỉ đọc; handler trong `internal/application/query/` đọc read model/projection qua port `port/read`, không ghi DB, không phát event, không dùng `UnitOfWork`, có thể dùng replica/cache |
 | Write context / Read context | Hai nửa tách biệt của CQRS trong một module: write context (`application/command`, `port/write`, `infrastructure/persistence/write`, primary DB, `UnitOfWork` + outbox) và read context (`application/query`, `port/read`, `infrastructure/persistence/read`, replica/cache, chỉ đọc); ranh giới kiểm bằng `go-arch-lint`/`depguard` (ADR-0087) |
-| Unit of work (`UnitOfWork`) | Transaction ent của write context (`pkg/entx`): đặt `app.tenant_id`, gom ghi nghiệp vụ và outbox vào một commit; chỉ command handler dùng (ADR-0087) |
+| Unit of work (`UnitOfWork`) | Transaction ent của write context (`src/backend/pkg/entx`): đặt `app.tenant_id`, gom ghi nghiệp vụ và outbox vào một commit; chỉ command handler dùng (ADR-0087) |
 | Read model | Bảng/view tối ưu cho màn hình đọc, cập nhật đồng bộ hoặc qua event |
 | ent | ORM Go code-first (entgo.io) dùng thay Entity Framework: schema bằng code, query type-safe, interceptor global filter `tenant_id` + `deleted_at`, hook soft-delete (ADR-0039) |
 | Atlas | Công cụ versioned migration sinh từ ent schema, có `migrate lint` (ADR-0039) |
@@ -234,7 +234,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Idempotency Key | Khóa để một thao tác lặp lại chỉ có hiệu lực một lần |
 | RLS | Row-Level Security của PostgreSQL |
 | PKCE | Proof Key for Code Exchange — bảo vệ OIDC cho public client. Release 1.0 **không** client nào dùng: game (ADR-0068) và Admin Portal (ADR-0091) đều đăng nhập qua backend bằng client confidential |
-| Featuregate | Middleware `featuregate` trong `pkg/httpx` (`core-api`), chỉ áp cho token `azp = eduworld-portal`: chặn operation có `x-portal-action` thuộc action/menu đang tắt bằng `403 FEATURE_DISABLED`; chạy sau xác thực, trước `authz.Require`; không phải lớp authorization (ADR-0090) |
+| Featuregate | Middleware `featuregate` trong `src/backend/pkg/httpx` (`core-api`), chỉ áp cho token `azp = eduworld-portal`: chặn operation có `x-portal-action` thuộc action/menu đang tắt bằng `403 FEATURE_DISABLED`; chạy sau xác thực, trước `authz.Require`; không phải lớp authorization (ADR-0090) |
 | CSRF double-submit | Bảo vệ CSRF cho cookie refresh token của portal: cookie `__Host-ew_portal_csrf` (JavaScript đọc được) phải trùng header `X-EW-CSRF` ở `token:refresh`/`logout`, sai → `403 CSRF_TOKEN_INVALID` (ADR-0091) |
 | JWKS | JSON Web Key Set — khóa công khai để kiểm tra chữ ký JWT |
 | Server-authoritative | Server là nguồn quyết định trạng thái/kết quả |
@@ -279,10 +279,10 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Design token | Giá trị giao diện có tên (màu, font, cỡ chữ, khoảng cách, bo góc, tham số shader…) khai báo một lần trong `design/` (W3C Design Tokens), sinh tự động cho từng nền tảng |
 | Game design system | Hệ thống giao diện của game Godot 3D: Theme Godot, `UiTokens`, token 3D (toon/outline, ánh sáng, VFX, độ hiếm), density theo grade band; nguồn `design/game-tokens/` |
 | Admin/Ops UI | Hệ thống giao diện của CMS/LMS/Admin dành cho vận hành game: Ant Design 5 + Ant Design Pro với theme EduWorld (sáng/tối/compact); nguồn `design/admin-tokens/`; không theo phong cách game |
-| Game Theme | Resource `Theme` của Godot sinh từ game-tokens (`godot/resources/ui/theme/eduworld_theme.tres`), áp dụng cho mọi `Control` |
+| Game Theme | Resource `Theme` của Godot sinh từ game-tokens (`src/game/resources/ui/theme/eduworld_theme.tres`), áp dụng cho mọi `Control` |
 | Mã màu nghiệp vụ | Màu có ý nghĩa nghiệp vụ dùng chung giữa game và CMS: môn học/khu vực, độ hiếm, trạng thái nội dung; nguồn `design/shared-tokens/` |
 | Density | Tập token ghi đè mật độ hiển thị: theo grade band ở game, compact ở CMS |
 | Thumbnail / Turntable | Ảnh tĩnh / chuỗi ảnh xoay 360° render headless bằng Godot từ asset 3D của game, dùng trong CMS để nhận diện nội dung |
 | Renderer parity | Yêu cầu hình ảnh tương đương giữa renderer Mobile, Forward+ và Compatibility (Web) của Godot, kiểm tra bằng ảnh so sánh trong CI |
-| Storybook | Trang tài liệu và kiểm thử component web (`web/packages/ops-ui`) |
+| Storybook | Trang tài liệu và kiểm thử component web (`src/cms/frontend/packages/ops-ui`) |
 | Visual regression | Kiểm thử so sánh ảnh chụp giao diện với ảnh chuẩn để phát hiện thay đổi ngoài ý muốn |

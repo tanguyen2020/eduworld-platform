@@ -4,7 +4,7 @@
 
 ## 1. Chuẩn bị
 
-- Phụ thuộc đã Done: F002 (`pkg/otel`, log JSON), F130 (staging Swarm, network `admin`, metric backup/scale), F004 (plugin APISIX, client Keycloak cho công cụ).
+- Phụ thuộc đã Done: F002 (`src/backend/pkg/otel`, log JSON), F130 (staging Swarm, network `admin`, metric backup/scale), F004 (plugin APISIX, client Keycloak cho công cụ).
 - Kiểm cấu hình nhanh ở local: `make up-obs` (F001) + `make obs-check` (promtool, amtool, script `scripts/obs/*`). Nghiệm thu trên **staging**.
 - Tài khoản: `sa.admin` (system_admin — Grafana Admin), một nhân sự vận hành platform (role `platform_ops`), `ad.truong.a` (school_admin — phải bị từ chối), học sinh QA `hs.qa.probe` (tenant QA, chỉ staging/production) cho probe; `hs.an.3a` tạo lưu lượng mẫu.
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 1 | Mở Prometheus `Status → Targets` trên staging | Mọi target (`core-api`, `realtime`, `worker-*`, exporter, APISIX, Keycloak, NATS, PG, Valkey, node, cAdvisor, swarm-exporter) `up == 1` | F131-AC-01 |
 | 2 | `make obs-metric-catalog ENV=staging` | Exit 0; xóa tạm một metric khỏi build thử → job liệt kê metric thiếu | F131-AC-02 |
-| 3 | `hs.an.3a` làm một quest (`core-api`: module game → facade learning qua `pkg/modcall` → event NATS → `worker-events`); lấy `trace_id` từ Problem Details lỗi cố ý | Tempo có trace đủ span gateway/server/client/producer/consumer/DB; Loki có log cùng `trace_id` | F131-AC-03 |
+| 3 | `hs.an.3a` làm một quest (`core-api`: module game → facade learning qua `src/backend/pkg/modcall` → event NATS → `worker-events`); lấy `trace_id` từ Problem Details lỗi cố ý | Tempo có trace đủ span gateway/server/client/producer/consumer/DB; Loki có log cùng `trace_id` | F131-AC-03 |
 | 4 | Gửi 100 request thường + 5 request lỗi | Tempo giữ đủ 5 trace lỗi, ~10% trace thường | F131-AC-04 |
 | 5 | Ghi log thử chứa JWT/email/SĐT giả từ endpoint test của `core-api` | Loki chỉ thấy giá trị đã che; retention Loki = `app_log_retention` | F131-AC-05 |
 | 6 | Thêm label `school_id` vào rule thử | `obs-label-policy` đỏ | F131-AC-06 |
@@ -36,7 +36,7 @@
 ```bash
 make obs-check                      # promtool check/test rules, amtool check-config, scripts/obs/*
 node --test scripts/obs/*.test.mjs
-go test ./tools/swarm-exporter/...
+go -C src/backend test ./tools/swarm-exporter/...
 make obs-metric-catalog ENV=staging
 ```
 

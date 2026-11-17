@@ -4,14 +4,14 @@
 
 ## Summary
 
-Feature đầu tiên của module game: dựng skeleton module `modules/game/` theo BACKEND_DESIGN và ADR-0074, projection `ref.tenants`/`ref.students`, aggregate `GameSession`. `StartGameSession` chạy một transaction trong `eduworld_game` với `pg_advisory_xact_lock(hashtextextended(student_id::text, 0))`: kiểm Principal (`resolvePrincipal` qua facade `identity`, cache) + `ref.students`, xử lý session cũ (409/takeover/timeout/cùng thiết bị), insert `game_sessions` + `login_events`, outbox `student.game_logged_in` (+ `game_session.replaced`). Sau commit publish Valkey `ew:rt:user:<student_id>` để gateway gửi `session.session.replaced`. Job `session-timeout`. module identity thêm hai consumer: `last_login_at` và thu hồi Keycloak `sid`.
+Feature đầu tiên của module game: dựng skeleton module `src/backend/modules/game/` theo BACKEND_DESIGN và ADR-0074, projection `ref.tenants`/`ref.students`, aggregate `GameSession`. `StartGameSession` chạy một transaction trong `eduworld_game` với `pg_advisory_xact_lock(hashtextextended(student_id::text, 0))`: kiểm Principal (`resolvePrincipal` qua facade `identity`, cache) + `ref.students`, xử lý session cũ (409/takeover/timeout/cùng thiết bị), insert `game_sessions` + `login_events`, outbox `student.game_logged_in` (+ `game_session.replaced`). Sau commit publish Valkey `ew:rt:user:<student_id>` để gateway gửi `session.session.replaced`. Job `session-timeout`. module identity thêm hai consumer: `last_login_at` và thu hồi Keycloak `sid`.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + facade `identity` sinh vào `modules/identity/api`), `pkg/modcall`, `pkg/outbox`, `pkg/httpx` (`game_player`, `tenant`), Valkey client |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + facade `identity` sinh vào `src/backend/modules/identity/api`), `src/backend/pkg/modcall`, `src/backend/pkg/outbox`, `src/backend/pkg/httpx` (`game_player`, `tenant`), Valkey client |
 | Storage | PostgreSQL `eduworld_game` (`game.game_sessions` T, `game.login_events` TA P tháng, `game.content_manifests` T, `ref.tenants`, `ref.students`, `infra.*`); Valkey pub/sub `ew:rt:user:<id>` |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); E2E 2 client headless (TC-AUTH-015) |
 | Target Platform | Linux container (module `game` api + worker) |
@@ -27,7 +27,7 @@ Feature đầu tiên của module game: dựng skeleton module `modules/game/` t
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Operation có sẵn; delta payload event game và field `old_keycloak_sid`, `old_device_id` (ADR-0086) ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | module game không đọc DB identity; Principal qua facade `identity` (`pkg/modcall`); `last_login_at` và thu hồi `sid` qua event |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | module game không đọc DB identity; Principal qua facade `identity` (`src/backend/pkg/modcall`); `last_login_at` và thu hồi `sid` qua event |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | `game_sessions`, `content_manifests` T + RLS; `login_events` TA; test isolation mọi endpoint |
 | IV Server-authoritative | ✅ | Thời điểm theo giờ server; `createGameSession` có `Idempotency-Key`; audit từ chối/takeover |
 | V Xác thực, phân quyền | ✅ | `game_player` (`azp = eduworld-game-backend`, `user_type = student`); `lms.student_activity.read`; `platform.cross_tenant.read` |
@@ -50,7 +50,7 @@ specs/014-game-session-thin/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── cmd/{api,worker,migrate}/main.go
 ├── ent/schema/                      # gamesession.go, loginevent.go, contentmanifest.go, reftenant.go, refstudent.go
 ├── migrations/
@@ -58,19 +58,19 @@ modules/game/
 ├── internal/application/command/    # StartGameSession, EndGameSession, HeartbeatGameSession, TimeoutStaleSessions
 ├── internal/application/query/      # GetClientConfig, GetContentManifest, ListTenantStudentLoginEvents, ListLoginEventsCrossTenant
 ├── internal/application/port/       # IdentityClient, RealtimePublisher, IPHasher, Clock
-├── internal/infrastructure/modules/identity.go       # adapter facade `identity` (modules/identity/api) qua pkg/modcall
+├── internal/infrastructure/modules/identity.go       # adapter facade `identity` (src/backend/modules/identity/api) qua src/backend/pkg/modcall
 ├── internal/infrastructure/persistence/
 ├── internal/infrastructure/realtime/valkey_publisher.go
 ├── internal/presentation/http/public/{sessions.go, client_config.go, content_manifest.go, login_events.go}
 ├── internal/presentation/consumer/projection_identity.go   # tenant.*, student.synced, user.status_changed, student.cleaned_up/restored
 ├── internal/presentation/job/session_timeout.go
 └── tests/{unit,integration,contract,e2e}/
-modules/identity/internal/presentation/consumer/
+src/backend/modules/identity/internal/presentation/consumer/
 ├── last_login_on_game_logged_in.go
 └── revoke_on_session_replaced.go
 ```
 
-**Structure Decision**: module game theo BACKEND_DESIGN §3 (D1: `modules/game/`); hai consumer nhỏ ở module identity vì Keycloak và `identity.users` chỉ identity sở hữu (R13).
+**Structure Decision**: module game theo BACKEND_DESIGN §3 (D1: `src/backend/modules/game/`); hai consumer nhỏ ở module identity vì Keycloak và `identity.users` chỉ identity sở hữu (R13).
 
 ## Phase 0: Research
 

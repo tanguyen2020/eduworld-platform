@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F052, F077 (và F050, F051); delta T004, T006 đã có backend.
-- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev`.
+- Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev`.
 - Tài khoản demo: `ad.truong.a` (school_admin TH Demo A), `ad.truong.b` (school_admin THCS Demo B), `qlcm.truong.a` (academic_manager), `sa.admin` (system_admin); học sinh `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b`.
 - Dữ liệu: seed F077 (template "Tuần lễ Toán học" gán `th-demo-a`, có community goal); fixture từ nhạy cảm placeholder (không dùng từ thật — R15).
 

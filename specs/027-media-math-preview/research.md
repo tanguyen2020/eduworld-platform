@@ -4,7 +4,7 @@
 
 ## R1. Công cụ xử lý media trong worker
 
-- **Decision**: Gói dùng chung `pkg/media` (ADR-0044 mục 3) với interface `Scanner`, `MagicSniffer`, `ExifStripper`, `Transcoder`. Hiện thực: ClamAV qua giao thức `clamd` TCP (`INSTREAM`); magic bytes bằng `net/http.DetectContentType` + bảng chữ ký bổ sung (WebP, OGG, MP4 `ftyp`, WebM EBML, GLB); ảnh bằng libvips (binding Go) — xuất WebP + PNG 256/1024/2048 px, không giữ metadata; âm thanh/video bằng `ffmpeg` (process con, timeout) → Ogg Vorbis + MP3; Ogg Theora `.ogv` + HLS 360p/720p + MP4.
+- **Decision**: Gói dùng chung `src/backend/pkg/media` (ADR-0044 mục 3) với interface `Scanner`, `MagicSniffer`, `ExifStripper`, `Transcoder`. Hiện thực: ClamAV qua giao thức `clamd` TCP (`INSTREAM`); magic bytes bằng `net/http.DetectContentType` + bảng chữ ký bổ sung (WebP, OGG, MP4 `ftyp`, WebM EBML, GLB); ảnh bằng libvips (binding Go) — xuất WebP + PNG 256/1024/2048 px, không giữ metadata; âm thanh/video bằng `ffmpeg` (process con, timeout) → Ogg Vorbis + MP3; Ogg Theora `.ogv` + HLS 360p/720p + MP4.
 - **Rationale**: libvips và ffmpeg là chuẩn thực tế, hỗ trợ đủ định dạng Godot cần (Vorbis, Theora); `clamd` có sẵn image `clamav/clamav` trong compose.
 - **Alternatives**: thư viện Go thuần (`imaging`) — chậm, không có WebP encode; dịch vụ transcode SaaS — vi phạm ADR-0071 (floci, tự vận hành).
 

@@ -50,7 +50,7 @@
 ## 6. Delta cần thực hiện
 
 - Event payload chat mới (§4): `chat.channel_opened`, `chat.channel_closed`, `chat.gameplay_purged`, `chat.daily_stats`, `chat-cursor`.
-- Phối hợp competition (F101/F105): `match.started` thêm `participants[]` + `mode`; tạo schema payload `party.*`, `match.*`; thêm `chat_channel_ids` vào message trận AsyncAPI; dùng `pkg/chatid` để điền `chat_channel_id`.
+- Phối hợp competition (F101/F105): `match.started` thêm `participants[]` + `mode`; tạo schema payload `party.*`, `match.*`; thêm `chat_channel_ids` vào message trận AsyncAPI; dùng `src/backend/pkg/chatid` để điền `chat_channel_id`.
 - Phối hợp realtime (F090): message fan-out nội bộ `ew:chat:fanout:<channel_id>` mang `exclude_user_ids` (gateway không giao cho các user này); khai báo định dạng ở REALTIME_ARCHITECTURE §5.0.
 - `ProblemCode`/API: `sendChannelMessage` khai báo `409 CHAT_CHANNEL_CLOSED` (đã nằm trong delta F115).
 - Kiểm: `make specs-lint`, `make test-contract` (consumer contract với module competition).

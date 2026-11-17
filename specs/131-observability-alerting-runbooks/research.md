@@ -10,13 +10,13 @@
 
 ## R2. Metric trạng thái Swarm
 
-- **Decision**: Viết `tools/swarm-exporter` (Go, ~200 dòng) đọc Docker API qua socket proxy chỉ `GET`, xuất 4 metric MONITORING §1 đặt tên.
+- **Decision**: Viết `src/backend/tools/swarm-exporter` (Go, ~200 dòng) đọc Docker API qua socket proxy chỉ `GET`, xuất 4 metric MONITORING §1 đặt tên.
 - **Rationale**: Docker Engine `metrics-addr` không có replica desired/running theo service; exporter cộng đồng thường cần socket đầy đủ.
 - **Alternatives**: `docker_state_exporter`/`swarm-exporter` bên thứ ba (quyền socket rộng, tên metric khác MONITORING).
 
 ## R3. Error tracking
 
-- **Decision**: GlitchTip tự host (API tương thích Sentry SDK), 1 replica trên node `ops`, PostgreSQL riêng `glitchtip` + Valkey nhỏ riêng; SDK `sentry-go` trong `pkg/otel` (F002) với `SendDefaultPII=false`, `BeforeSend` xóa request body/header; tích hợp ticket bằng webhook GlitchTip → GitHub Issues (label `module:<name>` hoặc `service:<binary>`).
+- **Decision**: GlitchTip tự host (API tương thích Sentry SDK), 1 replica trên node `ops`, PostgreSQL riêng `glitchtip` + Valkey nhỏ riêng; SDK `sentry-go` trong `src/backend/pkg/otel` (F002) với `SendDefaultPII=false`, `BeforeSend` xóa request body/header; tích hợp ticket bằng webhook GlitchTip → GitHub Issues (label `module:<name>` hoặc `service:<binary>`).
 - **Rationale**: ADR-0023 đề xuất GlitchTip/Sentry tự host; GlitchTip nhẹ hơn Sentry self-hosted (không Kafka/ClickHouse).
 - **Alternatives**: Sentry self-hosted (≥ 16 GB RAM, nhiều thành phần); chỉ dùng Loki (không gom nhóm issue).
 

@@ -152,5 +152,5 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 
 - F095 đã dựng skeleton module chat (cmd, cấu hình, outbox relay, projection `ref.tenants`, `ref.schools`, `ref.classes`, `ref.students`, `ref.enrollments`, `ref.player_profiles`) và bảng `social.blocks`/`social.mutes`; F115 không tạo lại.
 - F090 đã định tuyến `chat.*` → NATS request `ew.cmd.chat.<type>` kèm header `Ew-Tenant-Id`, `Ew-User-Id` và subscribe `ew:chat:fanout:<channel_id>` khi reply có `subscribe`.
-- Seed platform `chat_policies` (8 loại channel, mặc định CHAT_SYSTEM §3.1) được nạp bằng `modules/chat/seed/` [Proposed — giá trị số].
+- Seed platform `chat_policies` (8 loại channel, mặc định CHAT_SYSTEM §3.1) được nạp bằng `src/backend/modules/chat/seed/` [Proposed — giá trị số].
 - Timeout ack 2 s, lô persister (500 sự kiện/50 ms), `max_deliver` 5 chưa có tên trong CONFIG_DEFAULTS; giữ là hằng số cấu hình code, task Polish đề xuất đăng ký [Proposed].

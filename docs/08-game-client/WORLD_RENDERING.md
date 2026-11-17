@@ -13,7 +13,7 @@ Tài liệu là nguồn duy nhất cho **kỹ thuật dựng** thế giới 3D t
 |---|---|---|
 | Thiết bị, FPS, renderer, preset | Theo hạng thiết bị tầm trung: [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §2–§5 (nơi sở hữu) | [Confirmed] yêu cầu ADR-0057 |
 | Tổ chức thế giới | Hybrid: hub instance, private instance, match room — không có open world liền mạch; phong cách hình ảnh theo [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) §11 | [Proposed] ADR-0012 |
-| Token 3D/art | Palette vật liệu theo khu vực, tham số toon/outline, Environment, gradient VFX, màu độ hiếm khai báo trong `design/game-tokens/art3d.json` và mã màu nghiệp vụ `design/shared-tokens/`; sinh ra `godot/resources/art/generated/` (ADR-0047, [DESIGN_SYSTEM §5.3](../05-ux/DESIGN_SYSTEM.md#53-token-3dart-art3djson)). Material và Environment của zone tham chiếu preset sinh ra, không tự đặt màu | [Confirmed] ADR-0047 |
+| Token 3D/art | Palette vật liệu theo khu vực, tham số toon/outline, Environment, gradient VFX, màu độ hiếm khai báo trong `design/game-tokens/art3d.json` và mã màu nghiệp vụ `design/shared-tokens/`; sinh ra `src/game/resources/art/generated/` (ADR-0047, [DESIGN_SYSTEM §5.3](../05-ux/DESIGN_SYSTEM.md#53-token-3dart-art3djson)). Material và Environment của zone tham chiếu preset sinh ra, không tự đặt màu | [Confirmed] ADR-0047 |
 | Renderer parity | Hình ảnh tương đương giữa Mobile (mặc định PC/Android/iOS), Compatibility (Web, máy Tối thiểu, preview CMS) và Forward+ (chỉ preset Cao, thumbnail) — [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4; shader toon viết tương thích cả ba renderer; kiểm tra bằng ảnh so sánh trong CI | [Proposed] |
 
 ## 2. Cấu trúc scene theo zone

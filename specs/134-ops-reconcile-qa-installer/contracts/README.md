@@ -16,7 +16,7 @@
 
 ## 2. Internal API
 
-Mỗi module có DB (`identity`, `learning`, `game`, `competition`, `chat`) hiện thực cùng hai operation facade (gọi trong tiến trình qua `pkg/modcall`, ADR-0074) khai báo trong `specs/openapi/modules/<module>.internal.v1.yaml`; định nghĩa schema chung một lần trong `specs/openapi/modules/common/internal-common.v1.yaml` rồi `$ref`.
+Mỗi module có DB (`identity`, `learning`, `game`, `competition`, `chat`) hiện thực cùng hai operation facade (gọi trong tiến trình qua `src/backend/pkg/modcall`, ADR-0074) khai báo trong `specs/openapi/modules/<module>.internal.v1.yaml`; định nghĩa schema chung một lần trong `specs/openapi/modules/common/internal-common.v1.yaml` rồi `$ref`.
 
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|

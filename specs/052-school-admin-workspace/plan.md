@@ -4,14 +4,14 @@
 
 ## Summary
 
-Thêm các màn quản trị vào chunk workspace `school_lms` (`web/apps/portal/src/workspaces/school-lms/`): Trường/Lớp/Học sinh, Học sinh chưa có lớp, Hoạt động đăng nhập, Nhập CSV SIS + Xung đột đồng bộ, Người dùng/Role/UserRole/Nhật ký phân quyền, Cài đặt tenant, Cài đặt trường, Học sinh sắp bị dọn, Nhật ký. Mỗi màn = page (ProTable/ProForm) + hook TanStack Query gọi operationId của module identity qua `apiClient` (F050) với `withTenantScope` (F051). Không business logic ở client: quyền, scope, trùng định danh, giới hạn số ngày đều do server; client chỉ ẩn/hiện và hiển thị lỗi theo `code`.
+Thêm các màn quản trị vào chunk workspace `school_lms` (`src/cms/frontend/apps/portal/src/workspaces/school-lms/`): Trường/Lớp/Học sinh, Học sinh chưa có lớp, Hoạt động đăng nhập, Nhập CSV SIS + Xung đột đồng bộ, Người dùng/Role/UserRole/Nhật ký phân quyền, Cài đặt tenant, Cài đặt trường, Học sinh sắp bị dọn, Nhật ký. Mỗi màn = page (ProTable/ProForm) + hook TanStack Query gọi operationId của module identity qua `apiClient` (F050) với `withTenantScope` (F051). Không business logic ở client: quyền, scope, trùng định danh, giới hạn số ngày đều do server; client chỉ ẩn/hiện và hiển thị lỗi theo `code`.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript (strict) · React 18 · Vite |
-| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, QueryFilter), TanStack Query, React Hook Form + Zod (schema sinh từ OpenAPI — F050), `react-i18next`, `web/packages/ops-ui` (`ResponsiveTable`, Tag trạng thái) |
+| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, QueryFilter), TanStack Query, React Hook Form + Zod (schema sinh từ OpenAPI — F050), `react-i18next`, `src/cms/frontend/packages/ops-ui` (`ResponsiveTable`, Tag trạng thái) |
 | Storage | Không có (client); dữ liệu ở `eduworld_identity` (F010, F011, F015, F016) |
 | Testing | Vitest + Testing Library + MSW (`// MOCK (test-only)`); Playwright E2E với backend local; axe |
 | Target Platform | Trình duyệt desktop/tablet/mobile |
@@ -54,7 +54,7 @@ specs/052-school-admin-workspace/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/workspaces/school-lms/
+src/cms/frontend/apps/portal/src/workspaces/school-lms/
 ├── index.tsx                      # đăng ký route; menu/action lấy từ registry sinh từ catalog (F051, ADR-0090)
 ├── routes.tsx                     # ánh xạ khóa `menu.school_lms.*` của catalog → trang
 ├── schools/{SchoolListPage.tsx,SchoolDetailPage.tsx,SchoolEditForm.tsx,ApproveSchoolDialog.tsx,useSchools.ts}
@@ -66,9 +66,9 @@ web/apps/portal/src/workspaces/school-lms/
 ├── audit/{AuditLogPage.tsx,PermissionAuditPage.tsx,useAuditLogs.ts}
 ├── settings/{TenantSettingsPage.tsx,SchoolSettingsPage.tsx,useTenantSettings.ts,useSchoolSettings.ts}
 └── student-cleanup/{CleanupPreviewPage.tsx,ExcludeDialog.tsx,useCleanup.ts}
-web/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json
-web/apps/portal/tests/unit/school-lms/**/*.test.ts(x)
-web/apps/portal/tests/e2e/school-lms/*.spec.ts
+src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json
+src/cms/frontend/apps/portal/tests/unit/school-lms/**/*.test.ts(x)
+src/cms/frontend/apps/portal/tests/e2e/school-lms/*.spec.ts
 ```
 
 **Structure Decision**: Một thư mục con theo module của workspace C ([ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md) sitemap); hook API đặt cạnh màn, dùng `apiClient` + `withTenantScope` của F050/F051.

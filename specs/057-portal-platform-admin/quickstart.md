@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F045, F051, F010, F016, F050.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md); local gọi public + internal cùng máy).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md); local gọi public + internal cùng máy).
 - Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), `ad.truong.a`, `cm.noidung`, `sm.antoan`.
 - Dữ liệu: bộ câu hỏi platform seed; một câu hỏi TH Demo A đã xóa mềm ở workspace B.
 
@@ -40,7 +40,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter ops-ui test -- src/tenant
 pnpm --filter portal test -- src/workspaces/platform-admin src/shared/tenancy
 pnpm --filter portal exec playwright test e2e/platform

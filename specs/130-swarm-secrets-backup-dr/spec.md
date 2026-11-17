@@ -1,6 +1,6 @@
 # Feature Specification: F130 — Staging/production Docker Swarm, secret, backup PITR và DR drill
 
-**Feature Branch**: `130-swarm-secrets-backup-dr` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: hạ tầng (`deploy/swarm`, `deploy/secrets`, `deploy/backup`, `scripts/deploy`, `scripts/backup`, `tools/ops-scheduler`, workflow deploy GitHub Actions) · **Mốc**: M6 · **Phụ thuộc**: F001
+**Feature Branch**: `130-swarm-secrets-backup-dr` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: hạ tầng (`deploy/swarm`, `deploy/secrets`, `deploy/backup`, `scripts/deploy`, `scripts/backup`, `src/backend/tools/ops-scheduler`, workflow deploy GitHub Actions) · **Mốc**: M6 · **Phụ thuộc**: F001
 **Input**: Dựng staging/production trên Docker Swarm (ADR-0024), phân phối secret qua Docker secrets, deploy/rollback/scale độc lập từng Swarm service backend theo [ADR-0074](../../docs/adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`), backup PITR cụm PostgreSQL (khôi phục được từng database module) + object storage, diễn tập khôi phục và DR — FR-OPS-002, FR-OPS-004, NFR-DEPL-001.
 
 ## Clarifications
@@ -15,7 +15,7 @@
 
 ### Session 2026-11-17
 
-- Q: Đơn vị triển khai backend sau ADR-0074? → A: 3 image (`core-api`, `realtime`, `worker`) + image `migrate`, đẩy lên `ghcr.io` ([ADR-0088](../../docs/adr/ADR-0088-ci-cd-bang-github-actions.md)); `deploy/swarm/<env>/app.stack.yml` chứa 5 Swarm service `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs` (`cmd/worker --profile=events|chat|jobs`); một version backend `backend/vX.Y.Z` cho cả 3 binary; job migrate `migrate --module=<module>` cho từng database module trước rollout ([DEPLOYMENT §3.1, §11, §12](../../docs/11-operations/DEPLOYMENT.md)).
+- Q: Đơn vị triển khai backend sau ADR-0074? → A: 3 image (`core-api`, `realtime`, `worker`) + image `migrate`, đẩy lên `ghcr.io` ([ADR-0088](../../docs/adr/ADR-0088-ci-cd-bang-github-actions.md)); `deploy/swarm/<env>/app.stack.yml` chứa 5 Swarm service `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs` (`src/backend/cmd/worker --profile=events|chat|jobs`); một version backend `backend/vX.Y.Z` cho cả 3 binary; job migrate `migrate --module=<module>` cho từng database module trước rollout ([DEPLOYMENT §3.1, §11, §12](../../docs/11-operations/DEPLOYMENT.md)).
 - Q: Nền CI/CD? → A: GitHub Actions (ADR-0088): `deploy-config.yml` (validate stack, secret refs, schema), `release.yml` (build, quét, ký, deploy theo tag), `security.yml` (gitleaks); job deploy chạy trên self-hosted runner nhãn `deploy` trong mạng quản trị; secret theo GitHub Environment `staging`/`production` (production có required reviewers).
 
 ## User Scenarios & Testing *(bắt buộc)*

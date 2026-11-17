@@ -32,7 +32,7 @@
 | 17 | `ad.truong.a` gọi `createRegradeRequest`; `qlcm.truong.a` cho môn ngoài scope | `403 PERMISSION_DENIED`; `403 PERMISSION_DENIED` | F031-AC-19 |
 | 18 | Kiểm mastery LO bị ảnh hưởng sau bước 16 | Tính lại theo kết quả mới, event cũ còn nguyên | F031-AC-21 |
 | 19 | Gửi lại cùng key; gửi yêu cầu khác khi đang `running` | Yêu cầu cũ; `409 CONFLICT` | F031-AC-22 |
-| 20 | `worker learning mastery-recompute --model-version=we-1.1` (lệnh vận hành của `cmd/worker`) | Báo cáo chênh lệch; `objective_masteries` không đổi | F031-AC-23 |
+| 20 | `worker learning mastery-recompute --model-version=we-1.1` (lệnh vận hành của `src/backend/cmd/worker`) | Báo cáo chênh lệch; `objective_masteries` không đổi | F031-AC-23 |
 | 21 | `sa.admin` kích hoạt `we-1.1` | Bản ghi mang `we-1.1`; không có `mastered` lặp | F031-AC-24 |
 | 22 | `hs.an.3a` bắt đầu activity 1 của lesson (`context_type = lesson`); `cm.noidung` publish version bài mới; `hs.an.3a` gọi `getLesson` | Có `lesson_sessions` `in_progress` ghim version cũ; `getLesson` trả version cũ, activity 1 chưa `completed`; start activity không thuộc version ghim → `422 VALIDATION_FAILED` | F031-AC-25 |
 | 23 | `hs.an.3a` gọi `completeLesson` khi mới nộp activity 1 | `409 CONFLICT`, `errors[]` chỉ activity 2 | F031-AC-28 |

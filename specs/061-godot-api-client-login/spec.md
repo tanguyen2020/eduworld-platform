@@ -1,6 +1,6 @@
 # Feature Specification: F061 — `ApiClient`, đăng nhập game trong form, chọn tenant, takeover, buộc cập nhật, đăng xuất
 
-**Feature Branch**: `061-godot-api-client-login` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M-C1 · **Phụ thuộc**: F013, F014, F060
+**Feature Branch**: `061-godot-api-client-login` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C1 · **Phụ thuộc**: F013, F014, F060
 **Input**: Lớp mạng REST (`ApiClient`) và luồng vào game của học sinh trong Godot: kiểm tra phiên bản, form đăng nhập S01 gửi `POST /auth/game/login`, chọn tenant sau đăng nhập, xác nhận takeover một thiết bị, giữ phiên bằng refresh token trong kho bảo mật của hệ điều hành và tự vào lại khi phiên còn hạn (ADR-0086; Web và máy dùng chung chỉ RAM), refresh có rotation, giữ game session bằng heartbeat, đăng xuất/thoát. FR nguồn: FR-AUTH-002, FR-AUTH-003, FR-AUTH-008, FR-AUTH-009, FR-AUTH-017, FR-AUTH-023, FR-AUTH-027, FR-GAME-008, FR-GAME-014.
 
 ## Clarifications

@@ -55,7 +55,7 @@ specs/022-question-bank-core/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/question.go question_version.go question_version_objective.go
 ├── migrations/                                   # trigger question_versions_immutable, view content.question_delivery_v, CHECK octet_length
 ├── internal/domain/question/

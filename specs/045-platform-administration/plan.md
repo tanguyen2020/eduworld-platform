@@ -4,14 +4,14 @@
 
 ## Summary
 
-Module `platformadmin` trong module `identity` phục vụ các route System Admin `/api/v1/admin/{tenants, trash, tenant-assignments, tenant-clones, users:merge, user-merges}` và route Tenant Admin `/api/v1/tenant/trash*`. Module identity **không** đọc DB module khác: nó định tuyến theo `resource_type` tới module sở hữu qua facade (trong tiến trình, `pkg/modcall`) sinh từ `specs/openapi/modules/<module>.internal.v1.yaml` (interface chung `common/internal-common.v1.yaml`: `listTrash`, `restoreTrashItem`, `executeTenantCloneStep`, và các operation gán tài nguyên cần thêm). Thao tác nhiều bước (clone, gán nhiều tenant, khôi phục) chạy bằng saga lưu ở `platform.saga_runs`/`saga_steps`, consumer/job `platform-saga` (profile `worker-jobs`) thực thi tuần tự từng bước idempotent. Đọc liên tenant dùng `authz.CrossTenantScope` + audit `cross_tenant.accessed`; Thùng rác dùng `tenancy.Bypass` (R27).
+Module `platformadmin` trong module `identity` phục vụ các route System Admin `/api/v1/admin/{tenants, trash, tenant-assignments, tenant-clones, users:merge, user-merges}` và route Tenant Admin `/api/v1/tenant/trash*`. Module identity **không** đọc DB module khác: nó định tuyến theo `resource_type` tới module sở hữu qua facade (trong tiến trình, `src/backend/pkg/modcall`) sinh từ `specs/openapi/modules/<module>.internal.v1.yaml` (interface chung `common/internal-common.v1.yaml`: `listTrash`, `restoreTrashItem`, `executeTenantCloneStep`, và các operation gán tài nguyên cần thêm). Thao tác nhiều bước (clone, gán nhiều tenant, khôi phục) chạy bằng saga lưu ở `platform.saga_runs`/`saga_steps`, consumer/job `platform-saga` (profile `worker-jobs`) thực thi tuần tự từng bước idempotent. Đọc liên tenant dùng `authz.CrossTenantScope` + audit `cross_tenant.accessed`; Thùng rác dùng `tenancy.Bypass` (R27).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + facade sinh từ spec internal), `pkg/entx` (`UnitOfWork`), `pkg/authz`, `pkg/tenancy`, `pkg/modcall`, `pkg/outbox`, `pkg/idempotency`, `pkg/audit` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public + facade sinh từ spec internal), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/modcall`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/audit` |
 | Storage | PostgreSQL `eduworld_identity` (schema `platform`, `infra`); không Valkey cho dữ liệu saga (ADR-0004) |
 | Testing | go test + testcontainers (PostgreSQL, NATS); facade test với module learning (`make test-contract`: identity dùng fake facade, learning test hiện thực facade theo ví dụ spec internal); `make arch-check` |
 | Target Platform | Linux container (module `identity` api + worker) |
@@ -27,7 +27,7 @@ Module `platformadmin` trong module `identity` phục vụ các route System Adm
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | spec.md Ready; delta contract (internal gán tài nguyên, `ResourceType`, `RestoreRequest` public, payload event) ở Phase 2 |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Identity chỉ điều phối; mọi đọc/ghi dữ liệu module khác qua facade (`pkg/modcall`); saga là command handler + outbox |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Identity chỉ điều phối; mọi đọc/ghi dữ liệu module khác qua facade (`src/backend/pkg/modcall`); saga là command handler + outbox |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `platform.*` dùng role `identity_platform` có audit; không hard-delete; test tenant isolation cho `/tenant/trash*` |
 | IV Server-authoritative | ✅ | Không liên quan điểm/kết quả; mọi ghi có `Idempotency-Key` + audit |
 | V Xác thực, phân quyền | ✅ | `/admin/*` gateway nội bộ + `azp = eduworld-portal` + MFA + role platform; permission `platform.cross_tenant.read`, `platform.trash.*`, `platform.tenant_data.assign/clone`, `platform.user.merge` [Proposed], `tenant.trash.*` |
@@ -54,7 +54,7 @@ specs/045-platform-administration/
 ### Source Code (repository)
 
 ```text
-modules/identity/
+src/backend/modules/identity/
 ├── ent/schema/
 │   ├── tenant_clone_job.go              # platform.tenant_clone_jobs (có sẵn trong DATABASE_DESIGN)
 │   ├── saga_run.go, saga_step.go        # platform.saga_runs, platform.saga_steps
@@ -70,7 +70,7 @@ modules/identity/
 │   ├── query/platformadmin/             # list_tenants.go, list_trash.go, list_tenant_assignments.go, get_tenant_clone.go
 │   └── port/                            # OwnerServiceGateway (list/restore/clone/assign), SagaRepository, CloneJobRepository, AuditWriter
 ├── internal/infrastructure/
-│   ├── facade/                          # learning.go, game.go, competition.go, chat.go (adapter facade + pkg/modcall)
+│   ├── facade/                          # learning.go, game.go, competition.go, chat.go (adapter facade + src/backend/pkg/modcall)
 │   │   └── owner_gateway.go             # hiện thực OwnerServiceGateway theo resource_routing
 │   ├── persistence/                     # ent repo saga, clone job, default assignment; trash provider của identity
 │   └── messaging/                       # outbox tenant_data.assigned/unassigned/cloned, audit.recorded
@@ -101,7 +101,7 @@ Không có. Saga, idempotency, resilience, phạm vi liên tenant đã chốt �
 |---|---|---|
 | domain | `ResourceRouting`, `ClonePlan`, `TenantCloneJob`, `SagaRun`/`SagaStep` | Invariant: một tenant đích; nguồn ≠ đích; loại clone trong allowlist; không loại dữ liệu học sinh |
 | application | Command `AssignToTenants`, `UnassignFromTenants`, `ApplyDefaultAssignments`, `CreateTenantClone`, `RunSagaStep`, `RestoreTrashItem` · Query `ListTenants`, `ListTrash`, `ListTenantAssignments`, `GetTenantClone` | Permission: `platform.cross_tenant.read` (đọc liên tenant, `listTenants`), `platform.tenant_data.assign`, `platform.tenant_data.clone`, `platform.trash.read`, `platform.trash.restore`, `tenant.trash.read`, `tenant.trash.restore` |
-| infrastructure | Adapter facade 4 module + `OwnerGateway`; repo ent; trash provider identity (`class_template`, `school_settings`, `tenant_settings`); outbox | `pkg/modcall` (deadline, `TenantScope`, Principal gốc, `Idempotency-Key`; không token, không retry trong tiến trình) |
+| infrastructure | Adapter facade 4 module + `OwnerGateway`; repo ent; trash provider identity (`class_template`, `school_settings`, `tenant_settings`); outbox | `src/backend/pkg/modcall` (deadline, `TenantScope`, Principal gốc, `Idempotency-Key`; không token, không retry trong tiến trình) |
 | presentation | Handler `listTenants`, `listTrash`, `restoreTrashItem`, `listTenantAssignments`, `assignToTenants`, `unassignFromTenants`, `createTenantClone`, `getTenantClone`, `listTenantTrash`, `restoreTenantTrashItem` · consumer `tenant.created` · job `platform-saga` | Middleware `/admin/*`: `azp`, MFA (`acr`/`amr`), role platform |
 
 ### Tích hợp và phụ thuộc
@@ -120,7 +120,7 @@ Không có. Saga, idempotency, resilience, phạm vi liên tenant đã chốt �
 ### Quan sát
 
 - Log không chứa `delete_reason`/tiêu đề ở INFO; chỉ `saga_id`, `job_id`, `resource_type`, số bản ghi.
-- Metric: `eduworld_platform_saga_steps_total{saga_type,service,status}`, `eduworld_platform_saga_duration_seconds{saga_type}`, `eduworld_tenant_filter_bypass_total{module,reason}`, metric gọi facade của `pkg/modcall` (`caller="identity"`, `callee`, `operation`, `outcome`; tên theo API_DESIGN §12.3).
+- Metric: `eduworld_platform_saga_steps_total{saga_type,service,status}`, `eduworld_platform_saga_duration_seconds{saga_type}`, `eduworld_tenant_filter_bypass_total{module,reason}`, metric gọi facade của `src/backend/pkg/modcall` (`caller="identity"`, `callee`, `operation`, `outcome`; tên theo API_DESIGN §12.3).
 - Span: `AssignToTenants`, `CreateTenantClone`, `RunSagaStep(service, action)`, `ListTrash(resource_type)`.
 
 Ước lượng: 1–2 sprint (backend 1–2 dev) [Proposed].

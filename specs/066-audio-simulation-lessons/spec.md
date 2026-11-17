@@ -1,6 +1,6 @@
 # Feature Specification: F066 — Bài nghe và mô phỏng: plugin `audio_lesson`, `simulation` + checker Go, template Godot
 
-**Feature Branch**: `066-audio-simulation-lessons` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` + `godot/` (+ editor `web/apps/portal` workspace B) · **Mốc**: M4a · **Phụ thuộc**: F063 (và F030 attempt engine, F031 learning events/mastery, F065 cơ chế tiến độ media, F027 media, F058 Activity Builder)
+**Feature Branch**: `066-audio-simulation-lessons` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` + `src/game/` (+ editor `src/cms/frontend/apps/portal` workspace B) · **Mốc**: M4a · **Phụ thuộc**: F063 (và F030 attempt engine, F031 learning events/mastery, F065 cơ chế tiến độ media, F027 media, F058 Activity Builder)
 **Input**: Hai loại hoạt động mới trong Activity Registry: `audio_lesson` — bài nghe hiểu/nghe chép có câu hỏi server tự chấm, giới hạn lượt nghe, resume; `simulation` — template Godot đóng gói sẵn, CMS chỉ tham số hóa, client ghi action log, server kiểm chứng xác định bằng checker Go. Kèm renderer Godot, template tham chiếu `physics.lever` v1 và editor tương ứng trong Learning Activity Builder. FR nguồn: FR-CNT-015 (chỉ phần nghe), FR-CNT-016 (kèm FR-CNT-013 Registry).
 
 ## Clarifications

@@ -1,6 +1,6 @@
 # Feature Specification: F064 — Exam Zone: thi có giờ theo server, tự nộp, resume, thông báo bài mới
 
-**Feature Branch**: `064-exam-zone` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M-C3 · **Phụ thuộc**: F042, F063
+**Feature Branch**: `064-exam-zone` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C3 · **Phụ thuộc**: F042, F063
 **Input**: Học sinh làm đề kiểm tra/thi thử có giờ theo đồng hồ server, đánh dấu câu, nộp hoặc được tự nộp khi hết giờ, làm tiếp sau rớt mạng, xem kết quả khi được công bố; nhận thông báo trong game khi có bài/đề mới được giao. FR nguồn: FR-EXM-003, FR-EXM-005, FR-NTF-001.
 
 ## Clarifications

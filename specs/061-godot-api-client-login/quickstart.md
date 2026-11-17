@@ -5,9 +5,9 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F013, F014, F060.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; mở `godot/project.godot`, profile `-- --env=local`, chạy `res://scenes/bootstrap/Boot.tscn` ([LOCAL_DEVELOPMENT §6.3](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; mở `src/game/project.godot`, profile `-- --env=local`, chạy `res://scenes/bootstrap/Boot.tscn` ([LOCAL_DEVELOPMENT §6.3](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản: `hs.an.3a`, `hs.binh.3a`, `hs.tudo`, `hs.nosis`, `hs.locked`, `ad.truong.a`, `qlcm.truong.a`, `sa.admin`; tài khoản thử thuộc 2 tenant từ fixture integration của F013 (seed local không có học sinh 2 tenant).
-- Hai instance để thử takeover: `godot --path godot -- --env=local --device-id=<uuid-A>` và `--device-id=<uuid-B>`.
+- Hai instance để thử takeover: `godot --path src/game -- --env=local --device-id=<uuid-A>` và `--device-id=<uuid-B>`.
 
 ## 2. Kịch bản kiểm tra
 
@@ -54,7 +54,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-make godot-test        # GdUnit4 headless: godot --headless --path godot -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests
+make godot-test        # GdUnit4 headless: godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests
 make godot-export-check
 make test-e2e          # integration headless với backend compose (tests/integration/auth)
 ```

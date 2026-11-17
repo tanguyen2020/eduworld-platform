@@ -1,6 +1,6 @@
 # Feature Specification: F073 — Mini-game Engine: `MiniGameConfig`, plugin `minigame`, scene Godot 11 loại
 
-**Feature Branch**: `073-minigame-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` + module `learning` + `godot/` · **Mốc**: M2 · **Phụ thuộc**: F022, F072
+**Feature Branch**: `073-minigame-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` + module `learning` + `src/game/` · **Mốc**: M2 · **Phụ thuộc**: F022, F072
 **Input**: Mini-game là lớp trình bày trên câu hỏi của Question Bank: cấu hình data-driven có version (`MiniGameConfig`), không có ngân hàng câu hỏi riêng; mỗi lượt chơi là một attempt chấm ở server qua plugin `minigame` của Activity Registry; điểm học tập và điểm vui tách riêng; Godot có scene tái sử dụng cho 11 loại. FR nguồn: FR-MG-001…004, FR-CNT-013.
 
 ## Clarifications

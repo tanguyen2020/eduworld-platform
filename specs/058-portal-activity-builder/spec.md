@@ -1,6 +1,6 @@
 # Feature Specification: F058 — Workspace B — Learning Activity Builder (quiz, interactive_exercise, video_lesson), UI re-evaluate
 
-**Feature Branch**: `058-portal-activity-builder` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace `content-studio`) + `web/packages/ops-ui` · **Mốc**: M-C3 · **Phụ thuộc**: F030, F031, F053, F065
+**Feature Branch**: `058-portal-activity-builder` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace `content-studio`) + `src/cms/frontend/packages/ops-ui` · **Mốc**: M-C3 · **Phụ thuộc**: F030, F031, F053, F065
 **Input**: Learning Activity Builder của Learning Content Studio cho `quiz`, `interactive_exercise` (nguồn câu hỏi, chấm, phản hồi, hoàn thành) và Video Manager cho `video_lesson` (video, chương, phụ đề, câu hỏi chèn, nhánh, quy tắc hoàn thành), preview "như học sinh thấy", thao tác workflow trên một activity, và màn **Chấm lại hệ thống** (re-evaluate) từ trang version câu hỏi/activity. FR nguồn: FR-CNT-013, FR-EXR-008, FR-CMS-003, FR-CMS-006, FR-CNT-014, FR-CNT-010, FR-QB-003.
 
 ## Clarifications
@@ -197,7 +197,7 @@ Biên tập viên upload video, chia chương, gắn phụ đề vi/en, chèn c�
 
 ## Assumptions
 
-- [Proposed] Thư mục `web/apps/portal/src/workspaces/content-studio/activities/`, route `/portal/content-studio/activities/*`; component editor tái sử dụng ở `web/packages/ops-ui/src/activity-editor/`.
+- [Proposed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/content-studio/activities/`, route `/portal/content-studio/activities/*`; component editor tái sử dụng ở `src/cms/frontend/packages/ops-ui/src/activity-editor/`.
 - [Proposed] Phụ đề upload với `kind = subtitle` sau delta F027; trước delta, mục phụ đề hiển thị nhưng khóa upload mới (chọn asset có sẵn).
 - [Proposed] Cờ "video có lời" là trạng thái form (không lưu); điều kiện phụ đề `vi` bắt buộc theo ADMIN_PORTAL §3.13 [Proposed], server vẫn quyết định.
 - [Proposed] Lồng tiếng hướng dẫn khối 1–3 theo PED-07 (OQ-23); bật/tắt theo kết quả OQ chỉ đổi điều kiện hiển thị.

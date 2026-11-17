@@ -11,7 +11,7 @@ Thêm aggregate `ContentWorkflow` dùng chung cho mọi `LearningContentType` tr
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/problem`, AWS SDK v2 (S3) |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/problem`, AWS SDK v2 (S3) |
 | Storage | PostgreSQL `eduworld_learning` (schema `content`); floci S3 bucket `ew-exports` |
 | Testing | go test + testcontainers (PostgreSQL, NATS) |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-events`) |
@@ -54,7 +54,7 @@ specs/025-content-review-workflow/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{review_task.go,content_transition.go,translation_job.go}
 ├── ent/schema/mixin/workflow_fields.go          # translation_status, translation_meta, audio_exempt_*
 ├── internal/domain/workflow/                     # ContentWorkflow, Transition, ReviewLane, errors
@@ -99,7 +99,7 @@ Không có — quy tắc đủ trong CONTENT_MODEL §6, §8, §8.1, ADMIN_PORTAL
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Middleware `portal_staff` (azp `eduworld-portal`, `user_type = staff`); `TenantScope` qua middleware `pkg/httpx` + interceptor ent; dữ liệu platform chỉ role platform ghi; System Admin ghi phải có `X-Tenant-Id` đích.
+- Middleware `portal_staff` (azp `eduworld-portal`, `user_type = staff`); `TenantScope` qua middleware `src/backend/pkg/httpx` + interceptor ent; dữ liệu platform chỉ role platform ghi; System Admin ghi phải có `X-Tenant-Id` đích.
 - `Idempotency-Key` + `If-Match` (ETag = version ent) cho transition; job export/import có Idempotency-Key.
 - Audit action: `content.submitted`, `content.approved`, `content.rejected`, `content.version_created` (import), `authz.denied`, `cross_tenant.accessed`.
 

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Thêm vào module `pkg` các gói `entx` (mixin, interceptor, hook, `UnitOfWork` cho write context, `ReadSession` cho read context, schema bảng `infra`), helper `observability.UseCase` (span + metric + log theo use case), middleware `httpx.Idempotency` + store `idempotency`, `outbox` (Writer, Relay, Consumer, DLQ, recorder audit), `natsx` (JetStream, header ngữ cảnh, consumer invalidate Principal), `modcall` (gọi facade trong tiến trình: span, deadline, ngữ cảnh, ánh xạ lỗi — ADR-0074), adapter `PrincipalResolver` ở composition root, `lifecycle` (graceful shutdown) và `testkit`; công cụ `tools/entlint`, `tools/tenancyguard` và rule read/write context trong cấu hình lint nền `tools/lint` (F002). **Không có `pkg/mediator`** (ADR-0087): CQRS là khuôn package (`command`/`query`, `port/write`/`port/read`, `persistence/write`/`persistence/read`) do module mẫu `pkg/testkit/sample` minh họa và linter cưỡng chế. Mỗi module nhúng schema `infra` của `pkg/entx/infraschema` vào `ent/schema` và sinh migration bằng Atlas.
+Thêm vào module `pkg` các gói `entx` (mixin, interceptor, hook, `UnitOfWork` cho write context, `ReadSession` cho read context, schema bảng `infra`), helper `observability.UseCase` (span + metric + log theo use case), middleware `httpx.Idempotency` + store `idempotency`, `outbox` (Writer, Relay, Consumer, DLQ, recorder audit), `natsx` (JetStream, header ngữ cảnh, consumer invalidate Principal), `modcall` (gọi facade trong tiến trình: span, deadline, ngữ cảnh, ánh xạ lỗi — ADR-0074), adapter `PrincipalResolver` ở composition root, `lifecycle` (graceful shutdown) và `testkit`; công cụ `src/backend/tools/entlint`, `src/backend/tools/tenancyguard` và rule read/write context trong cấu hình lint nền `src/backend/tools/lint` (F002). **Không có `src/backend/pkg/mediator`** (ADR-0087): CQRS là khuôn package (`command`/`query`, `port/write`/`port/read`, `persistence/write`/`persistence/read`) do module mẫu `src/backend/pkg/testkit/sample` minh họa và linter cưỡng chế. Mỗi module nhúng schema `infra` của `src/backend/pkg/entx/infraschema` vào `ent/schema` và sinh migration bằng Atlas.
 
 ## Technical Context
 
@@ -27,7 +27,7 @@ Thêm vào module `pkg` các gói `entx` (mixin, interceptor, hook, `UnitOfWork`
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Schema `audit.recorded` + event identity thiếu → task Phase 2 trước code |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Không mediator; write context dùng `UnitOfWork` + outbox, query chỉ đọc qua `ReadSession`, linter chặn `query` import `port/write`/`UnitOfWork`/publisher (F003-AC-10); facade sinh từ spec internal gọi qua `pkg/modcall`; event qua outbox |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Không mediator; write context dùng `UnitOfWork` + outbox, query chỉ đọc qua `ReadSession`, linter chặn `query` import `port/write`/`UnitOfWork`/publisher (F003-AC-10); facade sinh từ spec internal gọi qua `src/backend/pkg/modcall`; event qua outbox |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Interceptor theo mixin (ADR-0089), `InTenantTx` set `app.tenant_id`, RLS chỉ lọc tenant, `tenancyguard`, không hard-delete; gỡ partition chỉ cho ba bảng `infra` (ngoại lệ có giới hạn ADR-0070 theo ADR-0089 §5) |
 | IV Server-authoritative | ✅ | Idempotency + audit cho thao tác quan trọng (hạ tầng cho R10) |
 | V Xác thực, phân quyền | ✅ | `authz.Require` (F002) gọi tường minh đầu mỗi use case, test thiếu quyền bắt buộc (F003-AC-11); không token giữa module, bên nhận áp quyền của Principal gốc (ADR-0074) |
@@ -54,7 +54,7 @@ specs/003-platform-kit-data/
 ### Source Code (repository)
 
 ```text
-pkg/
+src/backend/pkg/
 ├── entx/          base.go tenant_append_only.go tenant_optional.go hybrid_content.go global_base.go append_only.go
 │                  mixin_coverage_test.go interceptor.go softdelete.go uow.go readsession.go
 │                  infraschema/{outbox_event.go,processed_event.go,dead_letter.go,idempotency_record.go}
@@ -65,23 +65,23 @@ pkg/
 ├── outbox/        writer.go relay.go consumer.go dlq.go auditrecorder.go envelope.go
 ├── natsx/         conn.go streams.go headers.go principal_invalidator.go
 ├── modcall/       call.go (Call, Op, Kind) context.go (Principal gốc, caller, scope, Idempotency-Key) deadline.go mapproblem.go metrics.go callers.go (đọc allowed_callers_gen)
-cmd/internal/wiring/principal_resolver.go   # adapter authz.PrincipalResolver bọc facade identity [Proposed]
+src/backend/cmd/internal/wiring/principal_resolver.go   # adapter authz.PrincipalResolver bọc facade identity [Proposed]
 ├── lifecycle/     shutdown.go (core-api, realtime, worker)
 └── testkit/       containers.go migrate.go fixtures.go contract/{openapi.go,events.go}
     └── sample/    module mẫu Widget theo khuôn ADR-0087:
                    internal/application/{command,query,port/{write,read},dto}/
                    internal/infrastructure/persistence/{write,read}/  internal/presentation/http/
-tools/entlint/  tools/tenancyguard/
-tools/lint/        golangci.base.yml go-arch-lint.base.yml (thêm rule read/write context; file của F002)
+src/backend/tools/entlint/  src/backend/tools/tenancyguard/
+src/backend/tools/lint/        golangci.base.yml go-arch-lint.base.yml (thêm rule read/write context; file của F002)
                    testdata/badquery/ (fixture vi phạm)
-modules/<module>/ent/schema/infra.go       # nhúng infraschema
-modules/<module>/migrations/<ts>_infra.sql # Atlas sinh + REVOKE + GRANT/role _relay, _partition_admin
-modules/<module>/migrations/partitions/<ts>_infra_partitions.sql # viết tay (ADR-0089 §6), atlas migrate lint
+src/backend/modules/<module>/ent/schema/infra.go       # nhúng infraschema
+src/backend/modules/<module>/migrations/<ts>_infra.sql # Atlas sinh + REVOKE + GRANT/role _relay, _partition_admin
+src/backend/modules/<module>/migrations/partitions/<ts>_infra_partitions.sql # viết tay (ADR-0089 §6), atlas migrate lint
 specs/events/payloads/common/audit.recorded.v1.schema.json            # Cần thêm
 specs/events/payloads/identity/{tenant_membership.changed,user.access_revoked,enrollment.changed,tenant.updated}.v1.schema.json  # Cần thêm
 ```
 
-**Structure Decision**: BACKEND_DESIGN §2, §3, §4 + D5/D6 + ADR-0087. Schema `infra` định nghĩa một lần trong `pkg/entx/infraschema`, mỗi module import để ent sinh code trong module của mình (không chia sẻ ent client giữa service).
+**Structure Decision**: BACKEND_DESIGN §2, §3, §4 + D5/D6 + ADR-0087. Schema `infra` định nghĩa một lần trong `src/backend/pkg/entx/infraschema`, mỗi module import để ent sinh code trong module của mình (không chia sẻ ent client giữa service).
 
 ## Phase 0: Research
 
@@ -99,11 +99,11 @@ Không có. Thư viện và luồng đã chốt ở ADR-0039, ADR-0040, ADR-0042
 |---|---|---|
 | domain | `entx` KHÔNG dùng trong domain; aggregate tự `PullEvents()` | Domain không biết ent |
 | application/command (write) | Mỗi use case một kiểu handler + interface có kiểu; port `write.UnitOfWork` (`Do(ctx, fn)`), `write.<Aggregate>Repository`, `write.EventPublisher`; đầu handler: `observability.UseCase` → `in.Validate()` → `authz.Require` (F002) → `UoW.Do` | Không bus/registry; port không import ent |
-| application/query (read) | Handler + interface có kiểu; port `read.<View>ReadModel`; đầu handler: `UseCase` → `Validate` → `Require` → đọc read model | Không import `port/write`, `pkg/entx`, `pkg/outbox` |
+| application/query (read) | Handler + interface có kiểu; port `read.<View>ReadModel`; đầu handler: `UseCase` → `Validate` → `Require` → đọc read model | Không import `port/write`, `src/backend/pkg/entx`, `src/backend/pkg/outbox` |
 | infrastructure/persistence/write | `entx.UnitOfWork` (hiện thực `write.UnitOfWork`, `Publisher()` trả `outbox.Writer` gắn tx), repository ent | `Do(ctx, fn)` = `InTenantTx(ctx, tenancy.ScopeFrom(ctx), fn)` |
 | infrastructure/persistence/read | `entx.ReadSession.InTenantRead(ctx, scope, fn)` (tx `READ ONLY`, client replica nếu cấu hình) | Không `outbox` |
 | infrastructure (khác) | `outbox.Relay`, `outbox.Consumer`, adapter `infrastructure/modules/<callee>.go` dùng `modcall` | |
-| presentation | HTTP handler giữ interface command/query; consumer handler `func(ctx, outbox.Envelope) error` gọi trực tiếp command handler; `lifecycle.RunAPI`, `RunWorker` | `cmd/worker --profile=events` chạy relay + consumers; nối port ↔ adapter trong `module.go`, facade qua `Wire` ở `cmd/` |
+| presentation | HTTP handler giữ interface command/query; consumer handler `func(ctx, outbox.Envelope) error` gọi trực tiếp command handler; `lifecycle.RunAPI`, `RunWorker` | `src/backend/cmd/worker --profile=events` chạy relay + consumers; nối port ↔ adapter trong `module.go`, facade qua `Wire` ở `src/backend/cmd/` |
 
 **Hành vi chính**:
 
@@ -112,7 +112,7 @@ Không có. Thư viện và luồng đã chốt ở ADR-0039, ADR-0040, ADR-0042
 - `observability.UseCase(ctx, name) (context.Context, func(error))`: span `name`, metric `eduworld_usecase_duration_seconds{module,kind,usecase,result}`, log một dòng (không payload); `result` ∈ `ok`, `client_error`, `server_error` theo `problem.Kind`.
 - Middleware `httpx.Idempotency` (chỉ operation khai báo `IdempotencyKey` trong spec): kiểm key là UUIDv7 và timestamp lệch ≤ `idempotency_record_ttl` (nếu không → `400 BAD_REQUEST`), tính `key_issued_on`; đọc `infra.idempotency_records` theo PK (bỏ `expires_at < now()`) → có bản ghi: so `request_hash` (SHA-256 body chuẩn hóa) rồi replay hoặc `409 IDEMPOTENCY_KEY_REUSED`; chưa có: đặt `idempotency.Pending` vào context và chạy handler. `UnitOfWork.Do` thấy `Pending` thì `INSERT` bản ghi (hash + response đã tuần tự hóa do handler đăng ký qua `idempotency.SetResponse(ctx, status, body)`) ngay trước commit, cùng transaction nghiệp vụ. Request trùng đồng thời chờ ở unique index; khi transaction đầu commit, `INSERT` của request sau lỗi unique → đọc lại và replay; chờ vượt `lock_timeout` → `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After`. Không khóa Valkey, không trạng thái `in_progress` (ADR-0089 §4). Lớp cuối vẫn là unique constraint nghiệp vụ (API_DESIGN §6).
 - Relay: `SELECT … WHERE published_at IS NULL ORDER BY event_id LIMIT 500 FOR UPDATE SKIP LOCKED` (dùng role `<module>_relay`, bảng không RLS, ADR-0089 §4) → `js.Publish(subject, data, nats.MsgId(event_id))` → `UPDATE published_at, attempts`.
-- `partitionmaint`: chạy trong `cmd/worker` (profile `worker-jobs`, ADR-0074) theo lịch; tạo partition ngày tiếp theo của bốn bảng `infra` trước tối thiểu 7 ngày (thiếu → cảnh báo P2); `DETACH PARTITION … CONCURRENTLY` + `DROP` partition quá `outbox_retention` (outbox, processed), `idempotency_record_ttl` hoặc retention dead letter (EVENT_DESIGN §8); kiểm `published_at IS NULL` (outbox) và `resolved_at IS NULL` (dead letters) trước khi gỡ, còn dòng → bỏ qua + cảnh báo/metric.
+- `partitionmaint`: chạy trong `src/backend/cmd/worker` (profile `worker-jobs`, ADR-0074) theo lịch; tạo partition ngày tiếp theo của bốn bảng `infra` trước tối thiểu 7 ngày (thiếu → cảnh báo P2); `DETACH PARTITION … CONCURRENTLY` + `DROP` partition quá `outbox_retention` (outbox, processed), `idempotency_record_ttl` hoặc retention dead letter (EVENT_DESIGN §8); kiểm `published_at IS NULL` (outbox) và `resolved_at IS NULL` (dead letters) trước khi gỡ, còn dòng → bỏ qua + cảnh báo/metric.
 - Consumer: durable `<module>.<handler>`, `FilterSubjects`, `AckWait` 60 s, `BackOff` 1′/5′/30′, `MaxDeliver` theo EVENT_DESIGN §7; xử lý trong `InTenantTx` với scope từ envelope; `INSERT … processed_events ON CONFLICT DO NOTHING` → nếu 0 dòng thì ack bỏ qua.
 - modcall (BACKEND_DESIGN §7.2): `Call(ctx, Op{Caller, Callee, Operation, Kind, IdempotencyKey}, fn)` → span + metric → deadline theo `module_call_deadline` → kiểm `x-context-required` (scope, `Idempotency-Key`) và `x-allowed-callers` (allowlist sinh, F002 T006) → gọi `fn` (facade) → recover panic → `problem.Map` (giữ `code`; deadline/DB đích lỗi → `503 UNAVAILABLE`). Không HTTP, token, retry, circuit breaker, bulkhead (ADR-0074 mục 3).
 

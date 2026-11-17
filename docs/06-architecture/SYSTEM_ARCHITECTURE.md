@@ -31,7 +31,7 @@ Tài liệu kỹ thuật dùng chung: [BACKEND_DESIGN](../07-backend/BACKEND_DES
 | 3 | Data-driven content | Quest, mini-game, NPC dialogue, reward là dữ liệu phiên bản hóa (ADR-0015), Game Studio ở module `game` |
 | 4 | An toàn trẻ em mặc định | Kiểm duyệt chat (ADR-0020/0030), PII minimization, tenant isolation (ADR-0005) ở **mọi** database |
 | 5 | Ranh giới hệ thống lớn rõ, vận hành vừa sức đội nhỏ | Modular monolith (ADR-0074): mỗi module một database (ADR-0037), ranh giới mã cưỡng chế bằng compiler + linter, facade trong tiến trình + NATS; hồ sơ chạy khác nhau (`core-api`, `realtime`, profile worker) scale riêng; tách module thành service khi có số đo (ADR-0074 mục 7) |
-| 6 | Dễ bảo trì, kiểm thử | CQRS tách write/read context, không mediator (ADR-0038, ADR-0087) + Clean Architecture đồng nhất ở mọi module, platform kit dùng chung `pkg/` |
+| 6 | Dễ bảo trì, kiểm thử | CQRS tách write/read context, không mediator (ADR-0038, ADR-0087) + Clean Architecture đồng nhất ở mọi module, platform kit dùng chung `src/backend/pkg/` |
 | 7 | Tích hợp trường học | Keycloak SSO (ADR-0006/0026), SIS contract do EduWorld sở hữu (ADR-0021) trong module `identity` |
 
 ## 2. Context diagram (C4 — Level 1)
@@ -138,25 +138,25 @@ Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-00
 | Container | Trách nhiệm | Không làm |
 |---|---|---|
 | Godot Client | Render 3D, input, UI, nội suy, gọi REST/WS, cache nội dung | Chấm điểm, quyết định reward/kết quả, gọi SIS/NATS/Valkey, giữ answer key |
-| Admin Portal (`web/apps/portal`) | Một ứng dụng, 5 workspace theo permission (ADR-0027 mục 7): School & LMS và Learning Content Studio cho tenant; Game Operations, Live Operations, Platform Administration cho platform (qua gateway nội bộ + MFA). Giao diện Admin/Ops (Ant Design 5 + Pro; ADR-0047). Chi tiết: [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | Quyết định phân quyền (chỉ ẩn/hiện) |
+| Admin Portal (`src/cms/frontend/apps/portal`) | Một ứng dụng, 5 workspace theo permission (ADR-0027 mục 7): School & LMS và Learning Content Studio cho tenant; Game Operations, Live Operations, Platform Administration cho platform (qua gateway nội bộ + MFA). Giao diện Admin/Ops (Ant Design 5 + Pro; ADR-0047). Chi tiết: [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | Quyết định phân quyền (chỉ ẩn/hiện) |
 | APISIX public / internal | TLS, JWT validation, rate limit, size limit, CORS, WS proxy; hai upstream: `core-api` (mọi REST) và `realtime` (`/realtime/v1`) ([API_DESIGN §10](../07-backend/API_DESIGN.md#10-apisix-route-mapping)) | Authorization nghiệp vụ, tenant check |
-| **`core-api`** (binary `cmd/core-api`) | Nạp năm module domain; phục vụ REST public `/api/v1/*`, route gateway nội bộ (`/game-admin/*`, `/admin/*`, `/sis/*`), webhook `/internal/sis/*`, `/internal/auth/*`; handler NATS request/reply `ew.cmd.<module>.>` cho lệnh từ realtime; ghi outbox trong transaction của từng module | Relay outbox, consumer event, job định kỳ |
-| **`realtime`** (binary `cmd/realtime`) | Giữ WS, xác thực ticket (Valkey), presence, heartbeat, định tuyến lệnh WS → module trong `core-api` qua NATS request/reply `ew.cmd.*`, giao sự kiện từ Valkey Pub/Sub `ew:rt:*`/`ew:chat:fanout:*` xuống client, backpressure (room host nằm ở `competition` trong `core-api`) | Logic nghiệp vụ, database, gọi facade module domain |
-| **`worker-events`** (`cmd/worker --profile=events`) | Outbox relay của mọi module (role `<module>_relay`), consumer domain event (projection `ref_*`, quest/XP, mastery, rollup dashboard, analytics, membership Keycloak, audit sink), media pipeline | Phục vụ HTTP public |
-| **`worker-chat`** (`cmd/worker --profile=chat`) | `chat-persister`, `chat-notifier`, `chat-moderation-async`, `chat-stats`, `chat-channel-closer`, `gameplay-chat-purge` (role `chat_purger`, ADR-0033) | Consumer của module khác |
-| **`worker-jobs`** (`cmd/worker --profile=jobs`) | Job định kỳ có khóa leader: game session timeout, dọn học sinh (saga), SIS sync, matchmaker loop, tournament, leaderboard snapshot, chốt ngày dashboard, `infra-partition-maintenance` | Phục vụ HTTP public |
+| **`core-api`** (binary `src/backend/cmd/core-api`) | Nạp năm module domain; phục vụ REST public `/api/v1/*`, route gateway nội bộ (`/game-admin/*`, `/admin/*`, `/sis/*`), webhook `/internal/sis/*`, `/internal/auth/*`; handler NATS request/reply `ew.cmd.<module>.>` cho lệnh từ realtime; ghi outbox trong transaction của từng module | Relay outbox, consumer event, job định kỳ |
+| **`realtime`** (binary `src/backend/cmd/realtime`) | Giữ WS, xác thực ticket (Valkey), presence, heartbeat, định tuyến lệnh WS → module trong `core-api` qua NATS request/reply `ew.cmd.*`, giao sự kiện từ Valkey Pub/Sub `ew:rt:*`/`ew:chat:fanout:*` xuống client, backpressure (room host nằm ở `competition` trong `core-api`) | Logic nghiệp vụ, database, gọi facade module domain |
+| **`worker-events`** (`src/backend/cmd/worker --profile=events`) | Outbox relay của mọi module (role `<module>_relay`), consumer domain event (projection `ref_*`, quest/XP, mastery, rollup dashboard, analytics, membership Keycloak, audit sink), media pipeline | Phục vụ HTTP public |
+| **`worker-chat`** (`src/backend/cmd/worker --profile=chat`) | `chat-persister`, `chat-notifier`, `chat-moderation-async`, `chat-stats`, `chat-channel-closer`, `gameplay-chat-purge` (role `chat_purger`, ADR-0033) | Consumer của module khác |
+| **`worker-jobs`** (`src/backend/cmd/worker --profile=jobs`) | Job định kỳ có khóa leader: game session timeout, dọn học sinh (saga), SIS sync, matchmaker loop, tournament, leaderboard snapshot, chốt ngày dashboard, `infra-partition-maintenance` | Phục vụ HTTP public |
 | Keycloak | Xác thực, SSO, brokering, Organization theo tenant; client `svc-identity` chỉ để module identity gọi Admin API (ADR-0074 mục 5) | Phạm vi trường/lớp, permission chi tiết, xác thực giữa module |
 | PostgreSQL (một cụm, 5 database) | Nguồn sự thật của từng module; backup một cụm (pgBackRest), khôi phục được theo từng database | Truy cập chéo database, transaction chéo module |
 | NATS JetStream | Domain events (outbox, ADR-0042), chat durable stream (ADR-0035), request/reply lệnh realtime | Lưu lâu dài; không mở cho client |
 | Valkey | Cache, presence, queue matchmaking, rate limit, ticket, seq chat, Pub/Sub fan-out (ADR-0004), snapshot nội dung bất biến + con trỏ release (ADR-0043) | Nguồn sự thật; domain event (không còn Streams) |
 | Object storage + CDN | File media (ADR-0044), snapshot/gói nội dung game và content manifest bất biến (ADR-0043), build Godot/PCK | Câu hỏi đề kiểm tra, answer key (chỉ qua API) |
-| Media pipeline | Quét ClamAV, kiểm magic bytes, xóa EXIF, chuyển đổi ảnh/âm thanh/video/3D, dựng snapshot và manifest khi publish; thư viện `pkg/media` chạy trong `worker-events` thay module sở hữu nội dung (learning, game, chat) [Proposed] | Quyết định publish (chỉ thực thi sau event) |
+| Media pipeline | Quét ClamAV, kiểm magic bytes, xóa EXIF, chuyển đổi ảnh/âm thanh/video/3D, dựng snapshot và manifest khi publish; thư viện `src/backend/pkg/media` chạy trong `worker-events` thay module sở hữu nội dung (learning, game, chat) [Proposed] | Quyết định publish (chỉ thực thi sau event) |
 
 Trách nhiệm nghiệp vụ của từng module (`identity`, `learning`, `game`, `competition`, `chat`) ở bảng §0; ranh giới mã và composition root ở [BACKEND_DESIGN §3](../07-backend/BACKEND_DESIGN.md#3-cấu-trúc-repository-và-module-clean-architecture).
 
 ## 4. Module và phụ thuộc
 
-Sơ đồ thể hiện phụ thuộc **logic** giữa module; mọi mũi tên "facade" là lời gọi trong tiến trình (`pkg/modcall`), mũi tên "evt" đi qua outbox → NATS JetStream, mũi tên "NATS req/reply" là lệnh từ binary `realtime` tới `core-api`.
+Sơ đồ thể hiện phụ thuộc **logic** giữa module; mọi mũi tên "facade" là lời gọi trong tiến trình (`src/backend/pkg/modcall`), mũi tên "evt" đi qua outbox → NATS JetStream, mũi tên "NATS req/reply" là lệnh từ binary `realtime` tới `core-api`.
 
 ```mermaid
 flowchart LR
@@ -331,55 +331,61 @@ Các NFR còn lại (scale theo hồ sơ chạy, cô lập lỗi, bảo trì, ma
 
 ## 8. Cấu trúc repository
 
-Monorepo (ADR-0002); backend là **một Go module** ở gốc (`go.mod` duy nhất, ADR-0074).
+Monorepo (ADR-0002); mã nguồn nằm trong `src/` ([ADR-0092](../adr/ADR-0092-to-chuc-ma-nguon-trong-src.md)): backend là **một Go module** ở `src/backend/` (`src/backend/go.mod` duy nhất, ADR-0074), Admin Portal ở `src/cms/frontend/`, Godot client ở `src/game/`. Contract, hạ tầng, tài liệu và design token ở gốc repository.
 
 ```text
-eduworld/
-├── go.mod                        # module github.com/<org>/eduworld — go.mod duy nhất
-├── cmd/                          # composition root
-│   ├── core-api/                 # 5 module domain: REST /api/v1/*, route gateway nội bộ, handler NATS ew.cmd.*
-│   ├── realtime/                 # module realtime: WebSocket /realtime/v1
-│   ├── worker/                   # --profile=events|chat|jobs
-│   └── migrate/                  # job Atlas migrate --module=<module>
-├── modules/
-│   ├── identity/                 # module identity · eduworld_identity
-│   ├── learning/                 # module learning · eduworld_learning
-│   ├── game/                     # module game · eduworld_game
-│   ├── competition/              # module competition · eduworld_competition
-│   ├── chat/                     # module chat · eduworld_chat
-│   └── realtime/                 # không database
-│       # mỗi module:
-│       # module.go                 Register(...) cho composition root
-│       # api/                      facade công khai, sinh từ specs/openapi/modules/<module>.internal.v1.yaml
-│       # internal/{domain,application/{command,query,port/{write,read}},infrastructure/{persistence/{write,read},modules},presentation}/
-│       # CQRS tách write/read context, không mediator (ADR-0087)
-│       # ent/schema/  migrations/ (Atlas)  tests/
-├── pkg/                          # platform kit dùng chung (package trong cùng Go module, không import modules/*)
-│   ├── authz/                    # Principal, permission catalog, Require
-│   ├── tenancy/                  # TenantScope, Bypass (lý do + audit), RLS session setter
-│   ├── entx/                     # mixin chung + interceptor tenant/soft-delete + hook soft-delete + UnitOfWork (tx + outbox)
-│   ├── outbox/                   # outbox writer + relay → NATS JetStream
-│   ├── natsx/                    # JetStream publisher/consumer, request/reply helpers
-│   ├── httpx/                    # server, middleware, Problem Details, idempotency
-│   ├── modcall/                  # gọi facade trong tiến trình: span, deadline, TenantScope, Principal gốc, Idempotency-Key, lỗi
-│   ├── module/                   # Registry + Deps cho Register(...) của module
-│   ├── observability/            # slog, OTel, metrics, span theo use case
-│   └── config/
-├── tools/                        # entlint, sqlguard, allowedcallers
-├── godot/                        # Godot 4.x project (ADR-0014); resources/ui/theme + resources/art/generated sinh từ design/game-tokens
-├── design/                       # design tokens & tài sản (ADR-0047)
-│   ├── game-tokens/              # game design system (UI Godot + token 3D)
-│   ├── admin-tokens/             # Admin/Ops design system (theme Ant Design)
-│   ├── shared-tokens/            # logo/brand + mã màu nghiệp vụ dùng chung
+eduworld-platform/
+├── src/
+│   ├── backend/                      # Go module duy nhất — module github.com/tanguyen2020/eduworld-platform/src/backend
+│   │   ├── go.mod  go.sum
+│   │   ├── cmd/                      # composition root
+│   │   │   ├── core-api/             # 5 module domain: REST /api/v1/*, route gateway nội bộ, handler NATS ew.cmd.*
+│   │   │   ├── realtime/             # module realtime: WebSocket /realtime/v1
+│   │   │   ├── worker/               # --profile=events|chat|jobs
+│   │   │   └── migrate/              # job Atlas migrate --module=<module>
+│   │   ├── modules/
+│   │   │   ├── identity/             # module identity · eduworld_identity
+│   │   │   ├── learning/             # module learning · eduworld_learning
+│   │   │   ├── game/                 # module game · eduworld_game
+│   │   │   ├── competition/          # module competition · eduworld_competition
+│   │   │   ├── chat/                 # module chat · eduworld_chat
+│   │   │   └── realtime/             # không database
+│   │   │       # mỗi module:
+│   │   │       # module.go                 Register(...) cho composition root
+│   │   │       # api/                      facade công khai, sinh từ specs/openapi/modules/<module>.internal.v1.yaml
+│   │   │       # internal/{domain,application/{command,query,port/{write,read}},infrastructure/{persistence/{write,read},modules},presentation}/
+│   │   │       # CQRS tách write/read context, không mediator (ADR-0087)
+│   │   │       # ent/schema/  migrations/ (Atlas)  tests/
+│   │   ├── pkg/                      # platform kit dùng chung (package trong cùng Go module, không import modules/*)
+│   │   │   ├── authz/                # Principal, permission catalog, Require
+│   │   │   ├── tenancy/              # TenantScope, Bypass (lý do + audit), RLS session setter
+│   │   │   ├── entx/                 # mixin chung + interceptor tenant/soft-delete + hook soft-delete + UnitOfWork (tx + outbox)
+│   │   │   ├── outbox/               # outbox writer + relay → NATS JetStream
+│   │   │   ├── natsx/                # JetStream publisher/consumer, request/reply helpers
+│   │   │   ├── httpx/                # server, middleware, Problem Details, idempotency
+│   │   │   ├── modcall/              # gọi facade trong tiến trình: span, deadline, TenantScope, Principal gốc, Idempotency-Key, lỗi
+│   │   │   ├── module/               # Registry + Deps cho Register(...) của module
+│   │   │   ├── observability/        # slog, OTel, metrics, span theo use case
+│   │   │   └── config/
+│   │   ├── tools/                    # công cụ Go của repo: archgen, entlint, sqlguard, allowedcallers
+│   │   └── test/                     # integration test không thuộc module nào
+│   ├── cms/
+│   │   └── frontend/                 # React SPA, pnpm workspace (ADR-0022, ADR-0027, ADR-0047)
+│   │       ├── apps/portal/          # Admin Portal duy nhất: 5 workspace, chunk lazy-load theo workspace (ADR-0027 mục 7)
+│   │       └── packages/ops-ui/      # theme Ant Design sinh từ admin-tokens + component đặc thù + Storybook
+│   └── game/                         # Godot 4.x project (ADR-0014); resources/ui/theme + resources/art/generated sinh từ design/game-tokens
+├── design/                           # design tokens & tài sản (ADR-0047)
+│   ├── game-tokens/                  # game design system (UI Godot + token 3D)
+│   ├── admin-tokens/                 # Admin/Ops design system (theme Ant Design)
+│   ├── shared-tokens/                # logo/brand + mã màu nghiệp vụ dùng chung
 │   ├── icons/  fonts/
 │   └── style-dictionary.config.mjs
-├── web/                          # React SPA (ADR-0022, ADR-0027, ADR-0047)
-│   ├── apps/portal/              # Admin Portal duy nhất: 5 workspace, chunk lazy-load theo workspace (ADR-0027 mục 7)
-│   └── packages/ops-ui/          # theme Ant Design sinh từ admin-tokens + component đặc thù + Storybook
-├── specs/                        # OpenAPI public + modules/*.internal (hợp đồng facade), AsyncAPI, JSON Schema, events
-├── deploy/                       # compose, apisix, keycloak realm, nats, observability
+├── specs/                            # OpenAPI public + openapi/modules/*.internal (hợp đồng facade), AsyncAPI, JSON Schema, events, feature spec
+├── deploy/                           # compose, apisix, keycloak realm, nats, observability, swarm
 ├── scripts/
+├── tools/versions.mk                 # phiên bản công cụ dùng chung
 ├── docs/
+├── .github/  Makefile
 └── README.md · AGENTS.md · CONTRIBUTING.md · CHANGELOG.md · VIBE_CODING_PROMPT.md
 ```
 

@@ -2,7 +2,7 @@
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
-Đường dẫn gốc `web/apps/portal/` trừ khi ghi rõ. MSW chỉ trong test, nhãn `// MOCK (test-only)` (R17). Fixture danh mục chỉ placeholder (R15).
+Đường dẫn gốc `src/cms/frontend/apps/portal/` trừ khi ghi rõ. MSW chỉ trong test, nhãn `// MOCK (test-only)` (R17). Fixture danh mục chỉ placeholder (R15).
 
 ## Phase 1: Setup
 
@@ -13,9 +13,9 @@
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T004 Delta contract `getTenantModerationStatus` + schema `TenantModerationStatus` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
-- [ ] T005 Hiện thực backend `getTenantModerationStatus` (query đọc công tắc hiệu lực, không trả lý do) + test authz/tenant isolation — file: `modules/chat/internal/application/query/moderation/tenant_moderation_status.go`, `modules/chat/internal/presentation/http/public/moderation_status.go`, `modules/chat/tests/integration/moderation_status_test.go` — kiểm: `make test-integration MOD=chat`
+- [ ] T005 Hiện thực backend `getTenantModerationStatus` (query đọc công tắc hiệu lực, không trả lý do) + test authz/tenant isolation — file: `src/backend/modules/chat/internal/application/query/moderation/tenant_moderation_status.go`, `src/backend/modules/chat/internal/presentation/http/public/moderation_status.go`, `src/backend/modules/chat/tests/integration/moderation_status_test.go` — kiểm: `make test-integration MOD=chat`
 - [ ] T006 Sinh lại client TS sau delta T004 và delta F120/F121 — file: `src/api/schema.d.ts` — kiểm: `pnpm gen:api` không diff trong CI
-- [ ] T007 [P] `ops-ui`: `SensitiveTermTester`, `SlaBadge`, `AlwaysOnLock` + story sáng/tối — file: `web/packages/ops-ui/src/chat-safety/`
+- [ ] T007 [P] `ops-ui`: `SensitiveTermTester`, `SlaBadge`, `AlwaysOnLock` + story sáng/tối — file: `src/cms/frontend/packages/ops-ui/src/chat-safety/`
 - [ ] T008 [P] MSW handler test-only cho mọi operationId ở contracts §1 — file: `src/workspaces/live-ops/moderation/__tests__/msw/handlers.ts`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
@@ -75,7 +75,7 @@
 ### Implementation cho User Story 4
 
 - [ ] T025 [US4] Hook `switches.ts`; `SwitchesPage`, `SwitchConfirmModal`, `SwitchHistoryPage` — file: `src/workspaces/platform-admin/chat-safety/switches/`
-- [ ] T052 [US4] `PendingSwitchRequests`, `ApproveSwitchDialog`; bỏ công tắc `pii` khỏi `SwitchesPage`, `expires_at` bắt buộc — file: `web/apps/portal/src/workspaces/platform/chat-safety/PendingSwitchRequests.tsx`
+- [ ] T052 [US4] `PendingSwitchRequests`, `ApproveSwitchDialog`; bỏ công tắc `pii` khỏi `SwitchesPage`, `expires_at` bắt buộc — file: `src/cms/frontend/apps/portal/src/workspaces/platform/chat-safety/PendingSwitchRequests.tsx`
 
 ## Phase 7: User Story 5 — Banner (Priority: P1)
 
@@ -124,7 +124,7 @@
 ### Implementation cho User Story 8
 
 - [ ] T040 [US8] Hook `chatPolicy.ts`; `ChatPolicyPage`, `ChannelPolicyCard` (dùng `AlwaysOnLock`) — file: `src/workspaces/school-lms/safety/`
-- [ ] T054 [US8] `ChatPresetSelector` trong màn Chính sách chat trường — file: `web/apps/portal/src/workspaces/school-lms/safety/ChatPresetSelector.tsx`
+- [ ] T054 [US8] `ChatPresetSelector` trong màn Chính sách chat trường — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/safety/ChatPresetSelector.tsx`
 
 ## Phase 11: User Story 9 — Club của trường (Priority: P3)
 
@@ -154,8 +154,8 @@
 - [ ] T048 [P] Ghi chú thống nhất MODERATION §11.3 theo ADR-0072 (workspace E, Safety Team bật/tắt nhóm từ) — file: `docs/03-social-multiplayer/MODERATION.md`
 - [ ] T049 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T050 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng
-- [ ] T055 [P] Test F122-AC-29: tắt `menu.live_ops.tenant_terms` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `web/apps/portal/tests/e2e/safety/feature-toggle.spec.ts`
-- [ ] T056 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F122-AC-29) — file: `web/apps/portal/src/workspaces/live-ops/moderation/routes.tsx`
+- [ ] T055 [P] Test F122-AC-29: tắt `menu.live_ops.tenant_terms` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/safety/feature-toggle.spec.ts`
+- [ ] T056 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F122-AC-29) — file: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/routes.tsx`
 
 ## Dependencies & Execution Order
 

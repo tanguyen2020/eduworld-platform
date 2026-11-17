@@ -1,6 +1,6 @@
 # Feature Specification: F054 — Workspace B — media, bộ câu hỏi/lesson/blueprint, version và rollback, hàng đợi duyệt, preview, import, thùng rác
 
-**Feature Branch**: `054-content-studio-publishing` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace `content_studio`) · **Mốc**: M-C3 · **Phụ thuộc**: F024, F025, F026, F053
+**Feature Branch**: `054-content-studio-publishing` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace `content_studio`) · **Mốc**: M-C3 · **Phụ thuộc**: F024, F025, F026, F053
 **Input**: Phần quản lý và phát hành của Learning Content Studio: lịch sử version, so sánh, xuất bản hẹn giờ, rollback, gỡ xuất bản, archive, preview và "thử làm"; hàng đợi duyệt; thư viện media và báo cáo "đang dùng ở đâu"; Question Set / Lesson / Assessment Blueprint builder; danh sách và tìm kiếm nội dung; import hàng loạt; xóa mềm và Thùng rác của tenant. FR nguồn: FR-CMS-006, FR-CMS-007, FR-CMS-014, FR-CNT-008, FR-CNT-009, FR-CNT-010, FR-CNT-021, FR-QB-011.
 
 ## Clarifications

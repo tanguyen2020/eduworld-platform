@@ -1,33 +1,33 @@
 # Feature Specification: F002 — Platform kit lõi: config, observability, problem, httpx, authz, tenancy
 
-**Feature Branch**: `002-platform-kit-core` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `pkg/` · **Mốc**: M-C0 · **Phụ thuộc**: F001
+**Feature Branch**: `002-platform-kit-core` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/backend/pkg/` · **Mốc**: M-C0 · **Phụ thuộc**: F001
 **Input**: Các gói dùng chung để mọi module (trong `core-api`, `realtime`, `worker`) xác thực token độc lập APISIX, dựng Principal, kiểm tra tenant và permission, trả lỗi Problem Details, ghi log/trace/metric thống nhất — FR-AUTH-004, FR-ORG-006, FR-CMS-012, FR-OPS-003, NFR-OBS-002, NFR-SEC-006, NFR-MAINT-001.
 
 ## Clarifications
 
 ### Session 2026-11-16
 
-- Q: Permission catalog đặt ở `internal/authorization` (SECURITY_ARCHITECTURE §5.2) hay `pkg/authz`? → A: `pkg/authz/catalog.go` (D4, AGENTS R20); mọi binary gọi `ValidateCatalog` lúc khởi động.
-- Q: `Bypass`/`TenantScope` ở `pkg/tenancy` hay `pkg/entx`? → A: `TenantScope`, `Bypass` ở `pkg/tenancy`; interceptor/hook ent ở `pkg/entx` (F003) — D5 [Proposed].
+- Q: Permission catalog đặt ở `internal/authorization` (SECURITY_ARCHITECTURE §5.2) hay `src/backend/pkg/authz`? → A: `src/backend/pkg/authz/catalog.go` (D4, AGENTS R20); mọi binary gọi `ValidateCatalog` lúc khởi động.
+- Q: `Bypass`/`TenantScope` ở `src/backend/pkg/tenancy` hay `src/backend/pkg/entx`? → A: `TenantScope`, `Bypass` ở `src/backend/pkg/tenancy`; interceptor/hook ent ở `src/backend/pkg/entx` (F003) — D5 [Proposed].
 - Q: Key cache Principal? → A: Mỗi module dùng prefix của mình `ew:<module>:principal:<user_id>:<tenant_id>` (VALKEY_DESIGN §1, ACL theo module); D7 chỉ chốt endpoint `principals:resolve` [Proposed].
 - Q: Internal API gọi sai `azp` trả `CALLER_NOT_ALLOWED` (API_DESIGN §12.1) hay `PERMISSION_DENIED` (TC-SVC-006)? → A: `403 CALLER_NOT_ALLOWED` theo catalog mã lỗi (API_DESIGN §4.1 là nguồn); TC-SVC-006 cần sửa kỳ vọng.
 
 ### Session 2026-11-17
 
-- Q: Còn middleware `serviceauth` và token client credentials giữa module không? → A: Không (ADR-0074 mục 3, 5). Module gọi nhau trong tiến trình qua facade; `x-allowed-callers` được kiểm bởi linter (`make arch-check`, F001) và bởi `pkg/modcall` lúc chạy (F003, `403 CALLER_NOT_ALLOWED`). F002 chỉ còn xác thực token người dùng trên HTTP public và route gateway nội bộ của `core-api`.
+- Q: Còn middleware `serviceauth` và token client credentials giữa module không? → A: Không (ADR-0074 mục 3, 5). Module gọi nhau trong tiến trình qua facade; `x-allowed-callers` được kiểm bởi linter (`make arch-check`, F001) và bởi `src/backend/pkg/modcall` lúc chạy (F003, `403 CALLER_NOT_ALLOWED`). F002 chỉ còn xác thực token người dùng trên HTTP public và route gateway nội bộ của `core-api`.
 - Q: Permission platform-only gồm những gì ngoài tiền tố `game.`, `competition.config.`, `platform.`? → A: Thêm `moderation.case.*`, `moderation.sanction.*`, `moderation.school_notification.send`, `chat.sensitive_terms.write`, `chat.policy.toggle`, `chat.tenant_terms.write`, `chat.tenant_category.toggle` theo [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md).
 
 ### Session 2026-11-17
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Policy RLS có lọc `deleted_at` không? → A: Không. RLS chỉ lọc tenant (PostgreSQL buộc dòng mới của `UPDATE` thỏa policy `SELECT`, nên `deleted_at` trong policy chặn soft-delete); lớp thứ hai cho bản ghi đã xóa là view `<table>_live` cho `<module>_readonly` (ADR-0089 §1).
-- Q: Có những loại scope nào và `Bypass` nhận lý do gì? → A: `TenantScope` (`authz.ScopeFor(p)`), `CrossTenantScope` (`authz.CrossTenantScope(p, ids, reason)`), `PlatformScope` (`authz.PlatformScope(p)` cho nhân sự platform, `authz.SystemPlatformScope(job)` cho job platform); reason là hằng số kiểu `tenancy.BypassReason`, mỗi reason gắn một quyền DB ([MULTITENANCY §4.4](../../docs/06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089)); `tenancy.Bypass(ctx, reason)` chỉ nhận lý do thuộc danh sách đóng `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`, ghi audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{module,reason}`; API công khai `pkg/tenancy`/`pkg/authz` khóa từ F002, đổi chữ ký cần ADR (ADR-0089 §3).
+- Q: Có những loại scope nào và `Bypass` nhận lý do gì? → A: `TenantScope` (`authz.ScopeFor(p)`), `CrossTenantScope` (`authz.CrossTenantScope(p, ids, reason)`), `PlatformScope` (`authz.PlatformScope(p)` cho nhân sự platform, `authz.SystemPlatformScope(job)` cho job platform); reason là hằng số kiểu `tenancy.BypassReason`, mỗi reason gắn một quyền DB ([MULTITENANCY §4.4](../../docs/06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089)); `tenancy.Bypass(ctx, reason)` chỉ nhận lý do thuộc danh sách đóng `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`, ghi audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{module,reason}`; API công khai `src/backend/pkg/tenancy`/`src/backend/pkg/authz` khóa từ F002, đổi chữ ký cần ADR (ADR-0089 §3).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Service tự xác thực token, không tin APISIX (Priority: P1)
 
-Backend dev gắn `pkg/httpx` vào `core-api`; mọi request có token được kiểm tra đầy đủ ngay cả khi gọi thẳng binary bỏ qua gateway.
+Backend dev gắn `src/backend/pkg/httpx` vào `core-api`; mọi request có token được kiểm tra đầy đủ ngay cả khi gọi thẳng binary bỏ qua gateway.
 
 **Why this priority**: AGENTS R7, ADR-0009; mọi endpoint ở M-C1 phụ thuộc.
 
@@ -62,11 +62,11 @@ Mọi request tenant-scoped mang `X-Tenant-Id`; `core-api` dựng Principal theo
 | F002-AC-08 | HỆ THỐNG PHẢI lấy `Principal.TenantID` từ kết quả resolve, PHẢI KHÔNG lấy thẳng từ header; tham số `tenant_ids` của người dùng không có `platform.cross_tenant.read` PHẢI bị bỏ qua | FR-ORG-006 · ADR-0065 | TC-TEN-011, TC-CMS-TEN-01 |
 | F002-AC-09 | NẾU module identity lỗi hoặc timeout và không có Principal hợp lệ trong cache, THÌ HỆ THỐNG PHẢI trả `503 UNAVAILABLE` có `retryable` và PHẢI KHÔNG cho qua | BACKEND_DESIGN §6 · NFR-AVAIL-005 | TC-SVC-011 |
 | F002-AC-10 | HỆ THỐNG PHẢI cache Principal hai lớp (L1 trong tiến trình + Valkey) theo `principal_cache` và `principal_cache_ttl`; KHI `Invalidate(user_id, tenant_id)` được gọi, cả hai lớp PHẢI bị xóa ngay | [IDENTITY_MAPPING](../../docs/09-identity/IDENTITY_MAPPING.md) · ADR-0066 | — |
-| F002-AC-11 | Scope PHẢI chỉ được tạo qua `authz.ScopeFor(p)` (`TenantScope`, đúng một tenant), `authz.CrossTenantScope(p, ids, reason)` khi Principal có `platform.cross_tenant.read`, `azp = eduworld-portal` và MFA, hoặc `authz.PlatformScope(p)` (nhân sự platform) / `authz.SystemPlatformScope(job)` (job platform) (chỉ dòng `tenant_id IS NULL`, không đọc được dòng có `tenant_id`); linter PHẢI fail khi code ngoài `pkg/authz` tạo scope | FR-ORG-006 · MULTITENANCY §4.1, §4.4 · AGENTS R8 · ADR-0089 | TC-TEN-004, TC-TEN-018 |
+| F002-AC-11 | Scope PHẢI chỉ được tạo qua `authz.ScopeFor(p)` (`TenantScope`, đúng một tenant), `authz.CrossTenantScope(p, ids, reason)` khi Principal có `platform.cross_tenant.read`, `azp = eduworld-portal` và MFA, hoặc `authz.PlatformScope(p)` (nhân sự platform) / `authz.SystemPlatformScope(job)` (job platform) (chỉ dòng `tenant_id IS NULL`, không đọc được dòng có `tenant_id`); linter PHẢI fail khi code ngoài `src/backend/pkg/authz` tạo scope | FR-ORG-006 · MULTITENANCY §4.1, §4.4 · AGENTS R8 · ADR-0089 | TC-TEN-004, TC-TEN-018 |
 | F002-AC-12 | KHI `tenancy.Bypass(ctx, reason)` được gọi, HỆ THỐNG PHẢI từ chối lý do rỗng hoặc ngoài danh sách đóng (`system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`), ghi audit `cross_tenant.accessed` (trường `reason`, `tenant_ids`, `mode` = `read`/`write`) và tăng `eduworld_tenant_filter_bypass_total{module,reason}`; mỗi lần dùng `CrossTenantScope` PHẢI ghi cùng audit đó | AGENTS R27 · ADR-0039 · ADR-0089 | TC-TEN-023 |
 | F002-AC-13 | Helper RLS PHẢI sinh policy cho bảng loại T, TA, T\*, TA\*, H khớp [DATABASE_DESIGN §4](../../docs/07-backend/DATABASE_DESIGN.md): T/TA/T\*/TA\* chỉ có điều kiện tenant, H có điều kiện tenant + gán, không policy nào chứa `deleted_at`; NẾU `app.tenant_id` không được đặt hoặc đặt tenant A, THÌ truy vấn không điều kiện trên bảng có dòng tenant B PHẢI trả 0 dòng | FR-ORG-006 · ADR-0005 · ADR-0089 | TC-TEN-005 |
 | F002-AC-29 | KHI lệnh soft-delete (`UPDATE ... SET deleted_at = now() ... RETURNING`) chạy bằng role `<module>_app` trên bảng loại T có policy do helper sinh, HỆ THỐNG PHẢI thực hiện thành công (không lỗi "new row violates row-level security policy") và dòng đó PHẢI biến mất khỏi truy vấn có `deleted_at IS NULL` và khỏi view `<table>_live` do helper sinh; role `<module>_readonly` PHẢI KHÔNG đọc được bảng gốc | ADR-0089 §1 · ADR-0028 · [DATABASE_DESIGN §4](../../docs/07-backend/DATABASE_DESIGN.md) | — |
-| F002-AC-30 | NẾU code gọi `tenancy.Bypass` với lý do không thuộc danh sách đóng của `pkg/tenancy`, THÌ linter (`make lint`) PHẢI fail; NẾU chữ ký công khai của `TenantScope`, `CrossTenantScope`, `PlatformScope`, `SystemPlatformScope`, `Bypass`, `BypassReason`, `Principal` thay đổi, THÌ test API surface PHẢI fail | AGENTS R27 · ADR-0089 §3 | — |
+| F002-AC-30 | NẾU code gọi `tenancy.Bypass` với lý do không thuộc danh sách đóng của `src/backend/pkg/tenancy`, THÌ linter (`make lint`) PHẢI fail; NẾU chữ ký công khai của `TenantScope`, `CrossTenantScope`, `PlatformScope`, `SystemPlatformScope`, `Bypass`, `BypassReason`, `Principal` thay đổi, THÌ test API surface PHẢI fail | AGENTS R27 · ADR-0089 §3 | — |
 
 ---
 
@@ -82,7 +82,7 @@ Mọi module dùng chung catalog; role tenant không bao giờ chứa quyền pl
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F002-AC-14 | `pkg/authz` PHẢI chứa catalog permission theo [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) và định nghĩa role hệ thống theo ADMIN_PORTAL §2.3 trong code; mọi binary PHẢI gọi `authz.ValidateCatalog` khi khởi động | FR-CMS-012 · AGENTS R20 | TC-CMS-AUTHZ-04 |
+| F002-AC-14 | `src/backend/pkg/authz` PHẢI chứa catalog permission theo [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) và định nghĩa role hệ thống theo ADMIN_PORTAL §2.3 trong code; mọi binary PHẢI gọi `authz.ValidateCatalog` khi khởi động | FR-CMS-012 · AGENTS R20 | TC-CMS-AUTHZ-04 |
 | F002-AC-15 | NẾU role phạm vi `tenant` chứa permission tiền tố `game.`, `competition.config.`, `platform.` hoặc permission platform-only của moderation/chat (Clarifications), THÌ tiến trình PHẢI thoát mã 1 và log tên role + permission | FR-CMS-012 · ADR-0027 | TC-CMS-AUTHZ-04 |
 | F002-AC-16 | KHI request tới `/cms/*`, `/lms/*`, `/tenant/*`, `/schools/*`, `/game-admin/*`, `/admin/*`, middleware `portal_staff` PHẢI yêu cầu `azp = eduworld-portal` và `user_type = staff`; nếu không PHẢI trả `403 PORTAL_ACCESS_STAFF_ONLY` kèm audit | ADR-0066 · ADR-0081 · [API_DESIGN §11](../../docs/07-backend/API_DESIGN.md) | TC-AUTH-070 |
 | F002-AC-17 | KHI request tới route người chơi (API_DESIGN §11 mục 1b), middleware `game_player` PHẢI yêu cầu `azp = eduworld-game-backend` và `user_type = student`; nếu không PHẢI trả `403 GAME_ACCESS_STUDENT_ONLY` kèm audit | ADR-0031 · AGENTS R23 | TC-AUTH-014 |
@@ -104,7 +104,7 @@ Vận hành tra một lỗi bằng `trace_id`, thấy log/trace/metric cùng nh�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F002-AC-20 | Mọi lỗi HTTP PHẢI trả `application/problem+json` RFC 9457 có `code` thuộc `ProblemCode` và `trace_id`; lỗi không nhận diện PHẢI trả `500 INTERNAL` không lộ chi tiết nội bộ | [API_DESIGN §4](../../docs/07-backend/API_DESIGN.md) · ADR-0010 | — |
-| F002-AC-21 | Hằng mã lỗi trong `pkg/problem` PHẢI được sinh từ enum `ProblemCode` của spec gộp; NẾU lệch, THÌ `make gen-check` PHẢI fail | API_DESIGN §4.1 · NFR-MAINT-002 | — |
+| F002-AC-21 | Hằng mã lỗi trong `src/backend/pkg/problem` PHẢI được sinh từ enum `ProblemCode` của spec gộp; NẾU lệch, THÌ `make gen-check` PHẢI fail | API_DESIGN §4.1 · NFR-MAINT-002 | — |
 | F002-AC-22 | NẾU thiếu biến môi trường bắt buộc, THÌ binary PHẢI thoát mã 1 và log tên biến, PHẢI KHÔNG in giá trị; biến `*_FILE` PHẢI được đọc từ file secret | FR-AUTH-012 · [BACKEND_DESIGN §12](../../docs/07-backend/BACKEND_DESIGN.md) | — |
 | F002-AC-23 | Log PHẢI là JSON `slog` có các trường BACKEND_DESIGN §11 và `binary`, `module`; PHẢI KHÔNG chứa token, header `Authorization`, cookie, mật khẩu, nội dung chat, câu trả lời, họ tên, email, IP đầy đủ | NFR-OBS-002 · AGENTS R14 · [MONITORING §8](../../docs/11-operations/MONITORING.md) | TC-AUTH-060 |
 | F002-AC-24 | HỆ THỐNG PHẢI tạo span server cho mọi request, tiếp nhận và lan truyền `traceparent`, và xuất `eduworld_http_server_duration_seconds`, `eduworld_http_server_requests_total` với nhãn MONITORING §2 (không có user_id, IP) | NFR-OBS-002 · FR-OPS-003 · ADR-0023 | — |
@@ -125,7 +125,7 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F002-AC-26 | NẾU `internal/domain` import ent, pgx, `net/http`, nats, valkey hoặc `application` import `infrastructure`/`presentation`, THÌ `make lint` PHẢI fail (import chéo module do `make arch-check` chặn theo F001-AC-21…23) | NFR-MAINT-001 · AGENTS R13 · [BACKEND_DESIGN §3](../../docs/07-backend/BACKEND_DESIGN.md) | — |
-| F002-AC-27 | Gói `pkg/*` PHẢI KHÔNG import `modules/*`; `pkg/authz`, `pkg/problem`, `pkg/tenancy` PHẢI KHÔNG import ent hay pgx | NFR-MAINT-001 · ADR-0038 | — |
+| F002-AC-27 | Gói `src/backend/pkg/*` PHẢI KHÔNG import `src/backend/modules/*`; `src/backend/pkg/authz`, `src/backend/pkg/problem`, `src/backend/pkg/tenancy` PHẢI KHÔNG import ent hay pgx | NFR-MAINT-001 · ADR-0038 | — |
 | F002-AC-28 | Công cụ `routematrix` PHẢI sinh từ spec public và internal danh sách operation tenant-scoped và operation có ID trong path; NẾU một operation của module thiếu ca test tenant A/B và ca role không đủ quyền, THÌ CI PHẢI fail | NFR-SEC-006 · [BACKEND_DESIGN §15](../../docs/07-backend/BACKEND_DESIGN.md) | TC-TEN-001 |
 
 ### Edge Cases
@@ -134,7 +134,7 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 - NẾU System Admin gửi `X-Tenant-Id` của tenant `disabled` khi ghi, THÌ PHẢI trả `403 TENANT_ACCESS_DISABLED` (MULTITENANCY §4.1 mục 6).
 - NẾU người dùng tenant gửi cả `X-Tenant-Id` hợp lệ và `tenant_ids` của tenant khác, THÌ `tenant_ids` bị bỏ qua (F002-AC-08).
 - NẾU token game (`eduworld-game-backend`) gọi `/cms/*`, THÌ trả `403 PORTAL_ACCESS_STAFF_ONLY` (F002-AC-16).
-- Idempotency và audit của thao tác ghi nghiệp vụ: do middleware idempotency (`pkg/httpx`), `UnitOfWork` (`pkg/entx`) và recorder outbox của F003 (ADR-0087); F002 định nghĩa interface `audit.Recorder` dùng cho các audit ở trên.
+- Idempotency và audit của thao tác ghi nghiệp vụ: do middleware idempotency (`src/backend/pkg/httpx`), `UnitOfWork` (`src/backend/pkg/entx`) và recorder outbox của F003 (ADR-0087); F002 định nghĩa interface `audit.Recorder` dùng cho các audit ở trên.
 
 ## Requirements *(bắt buộc)*
 
@@ -146,7 +146,7 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 | FR-ORG-006 | Middleware `tenant`, `TenantScope`, `Bypass`, helper RLS | MULTITENANCY §4–§5, DATABASE_DESIGN §4 |
 | FR-CMS-012 | Catalog permission + role hệ thống + `ValidateCatalog`; guard platform/MFA | ADMIN_PORTAL §2, SECURITY_ARCHITECTURE §5.2 |
 | FR-OPS-003 | Metric HTTP/DB pool chuẩn (API latency, error rate, DB performance); metric nghiệp vụ khác do feature sở hữu | MONITORING §3 |
-| NFR-OBS-002 | `pkg/observability`: slog JSON, OTel, Prometheus, nhãn `binary`/`module` | MONITORING §1, §7, §8 |
+| NFR-OBS-002 | `src/backend/pkg/observability`: slog JSON, OTel, Prometheus, nhãn `binary`/`module` | MONITORING §1, §7, §8 |
 | NFR-SEC-006 | `routematrix` + harness test tenant/role | TEST_STRATEGY §6.7 |
 | NFR-MAINT-001 | Cấu hình depguard + go-arch-lint mẫu | BACKEND_DESIGN §3 |
 
@@ -188,7 +188,7 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 
 ## Ngoài phạm vi
 
-- `pkg/entx` (interceptor, hook soft-delete, unit of work `InTenantTx`), idempotency, outbox, `natsx`, `modcall`, client `principals:resolve` thật và consumer vô hiệu cache, `testkit` → F003.
+- `src/backend/pkg/entx` (interceptor, hook soft-delete, unit of work `InTenantTx`), idempotency, outbox, `natsx`, `modcall`, client `principals:resolve` thật và consumer vô hiệu cache, `testkit` → F003.
 - Endpoint `principals:resolve`, `GET /me/permissions`, bảng Role/UserRole → F012; middleware so tenant với game session → F014.
 - Cấu hình APISIX (`tenant-header` ở gateway) → F004; dashboard/alert → F131.
 

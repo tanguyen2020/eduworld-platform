@@ -11,7 +11,7 @@ Module `learning_record` trong module `learning`: `LearningEventRecorder` chuẩ
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream durable consumer), `santhosh-tekuri/jsonschema` (kiểm `learning-event.schema.json`), `pkg/{outbox,tenancy,entx,authz,problem,clock,ids}` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream durable consumer), `santhosh-tekuri/jsonschema` (kiểm `learning-event.schema.json`), `src/backend/pkg/{outbox,tenancy,entx,authz,problem,clock,ids}` |
 | Storage | PostgreSQL `eduworld_learning` (`learning.*`, `assessment.evaluations`, `assessment.regrade_requests`) |
 | Testing | go test (golden test), testcontainers (PostgreSQL, NATS, Valkey — dừng Valkey cho NFR-AVAIL-003) |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-events`) |
@@ -51,7 +51,7 @@ specs/031-learning-events-mastery/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/{mastery_model_config.go,objective_mastery.go,mastery_history.go,progress_daily.go,regrade_request.go,objective_mastery_shadow.go,mastery_recompute_run.go,lesson_session.go}
 ├── internal/domain/learningrecord/      # Envelope, Validate, IdempotencyKey builders
 ├── internal/domain/mastery/             # MasteryModel, WeightedEvidence, Evidence, State, Level, Effective

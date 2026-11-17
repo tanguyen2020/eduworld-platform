@@ -10,7 +10,7 @@ Thêm bốn domain service phía client theo [GODOT_ARCHITECTURE §4, §6](../..
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim trong `godot/.godot-version`), static typing bắt buộc (ADR-0014) |
+| Language/Version | GDScript (Godot 4.x ghim trong `src/game/.godot-version`), static typing bắt buộc (ADR-0014) |
 | Primary Dependencies | GdUnit4; autoload `Config`, `Log`, `EventBus`, `AppState`, `ApiClient`, `RealtimeClient`, `SceneRouter`, `Settings`, `QualityManager`; F063 `ActivityHost`/`LearningService`; F070 `ProfileService`, `InventoryService`, `AvatarPreview3D`, `ItemVisual` |
 | Storage | Không có dữ liệu bền; store trong RAM, không ghi `user://` (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner headless; contract fixture từ `specs/`; benchmark `tests/perf`; integration headless với docker compose |
@@ -50,7 +50,7 @@ specs/069-godot-progression-economy-challenge/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── project.godot                               # input action open_inventory (I), open_shop (B) — thêm nếu F070 chưa khai báo
 ├── scenes/
 │   ├── ui/hud/{XpBar.tscn, CurrencyChip.tscn}  # + xp_bar.gd, currency_chip.gd; bật slot trong MainHud (F062), PlayerBadge hiện danh hiệu

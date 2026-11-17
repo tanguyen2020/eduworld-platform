@@ -10,7 +10,7 @@ Dựng zone `main_hub` dạng greybox (khối CSG/mesh đơn giản, đúng cây
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim trong `godot/.godot-version`), static typing bắt buộc (ADR-0014) |
+| Language/Version | GDScript (Godot 4.x ghim trong `src/game/.godot-version`), static typing bắt buộc (ADR-0014) |
 | Primary Dependencies | GdUnit4; autoload khung của F060 (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `Settings`); `ApiClient`, `AuthService`, `Clock` của F061 |
 | Storage | Không có dữ liệu nghiệp vụ bền; `user://settings.cfg` (preset, renderer, render scale) |
 | Testing | GdUnit4 unit + scene runner headless; benchmark headless `RenderingServer`; thiết bị lab |
@@ -54,7 +54,7 @@ specs/062-main-hub-greybox/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── project.godot                         # input map: move_*, jump, interact (E), journal (J), camera_*
 ├── scenes/
 │   ├── world/zones/main_hub/Zone.tscn    # greybox: Environment, Terrain, Static, Navigation, Occluders, SpawnPoints, Interactables, Players

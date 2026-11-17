@@ -55,7 +55,7 @@ specs/024-question-set-lesson-blueprint/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/question_set.go question_set_version.go question_set_item.go lesson.go lesson_version.go
 │   learning_material.go learning_material_version.go assessment_blueprint.go assessment_blueprint_version.go
 ├── migrations/                                   # unaccent, content.f_unaccent, search_tsv + GIN, trigger bất biến, kind import mới

@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F022, F072 (và F023, F030, F063, F071).
-- Lệnh: `make up`, `make seed` (câu hỏi Toán lớp 1–5 ở learning; `modules/game/seed/minigames/` qua `PublishGameContent`), `make up-app`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make seed` (câu hỏi Toán lớp 1–5 ở learning; `src/backend/modules/game/seed/minigames/` qua `PublishGameContent`), `make up-app`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a` (lớp 3), `hs.dung.7a` (lớp 7, tenant khác), `ad.truong.a`.
 
 ## 2. Kịch bản kiểm tra

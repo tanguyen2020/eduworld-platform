@@ -10,10 +10,10 @@ Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OT
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | YAML (Prometheus/Alertmanager/Collector/Loki/Tempo), JSON (Grafana), Node 22 (`scripts/obs/*.mjs`), Go ≥ 1.24 (`tools/swarm-exporter`), k6 (JS) |
+| Language/Version | YAML (Prometheus/Alertmanager/Collector/Loki/Tempo), JSON (Grafana), Node 22 (`scripts/obs/*.mjs`), Go ≥ 1.24 (`src/backend/tools/swarm-exporter`), k6 (JS) |
 | Primary Dependencies | otel-collector-contrib (`redaction`, `tail_sampling`), Prometheus 2.5x + `promtool`, Alertmanager + `amtool`, Loki 3, Tempo 2 (`metrics_generator`), Grafana 11 (generic OAuth Keycloak), GlitchTip, k6 |
 | Storage | TSDB Prometheus, chunk Loki/Tempo trên volume node `ops` (không dữ liệu nghiệp vụ); GlitchTip dùng PostgreSQL riêng `glitchtip` trên node `ops` |
-| Testing | `promtool test rules`, `amtool check-config`, `node --test scripts/obs/*.test.mjs`, `go test ./tools/swarm-exporter/...`, kịch bản staging |
+| Testing | `promtool test rules`, `amtool check-config`, `node --test scripts/obs/*.test.mjs`, `go -C src/backend test ./tools/swarm-exporter/...`, kịch bản staging |
 | Target Platform | Docker Swarm node `ops` (2 node, DEPLOYMENT §4.2) |
 | Project Type | Hạ tầng quan sát |
 | Performance Goals | Alert critical tới kênh trực ≤ 2 phút; scrape interval 15 s |
@@ -27,7 +27,7 @@ Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OT
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Không có contract API mới; không chạm deferred |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Không sửa code module; `swarm-exporter` là tool trong `tools/`, không import `modules/` |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Không sửa code module; `swarm-exporter` là tool trong `src/backend/tools/`, không import `src/backend/modules/` |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Không có label `school_id`/user; không dữ liệu tenant trong Prometheus; probe dùng tenant QA |
 | IV Server-authoritative | ✅ | Không áp dụng |
 | V Xác thực, phân quyền | ✅ | Công cụ chỉ qua network `admin` + Keycloak MFA, role vận hành platform; credential kênh trực qua Docker secret |
@@ -65,9 +65,9 @@ deploy/observability/
 ├── grafana/provisioning/{datasources,dashboards}/*.yaml  grafana/dashboards/*.json
 └── glitchtip/glitchtip.env (không secret)
 deploy/swarm/{staging,production}/infra.stack.yml        # thêm service observability (F130 tạo file)
-tools/swarm-exporter/{cmd/swarm-exporter/main.go,internal/collector/}   # thuộc go.mod gốc (ADR-0074)
-tools/glitchtip-bridge/main.go                           # webhook GlitchTip → GitHub Issues
-pkg/otel/errortracking.go                                # sentry-go, BeforeSend (bổ sung vào gói của F002)
+src/backend/tools/swarm-exporter/{cmd/swarm-exporter/main.go,internal/collector/}   # thuộc Go module src/backend (go.mod duy nhất, ADR-0074, ADR-0092)
+src/backend/tools/glitchtip-bridge/main.go                           # webhook GlitchTip → GitHub Issues
+src/backend/pkg/otel/errortracking.go                                # sentry-go, BeforeSend (bổ sung vào gói của F002)
 deploy/seed/qa-tenant/                                   # CSV tenant QA cho staging/production
 tests/synthetic/k6/{client_config.js,student_login.js}
 scripts/obs/{lib-monitoring-md.mjs,check-metric-catalog.mjs,check-alerts.mjs,check-label-policy.mjs,check-dashboards.mjs,alert-drill.sh}
@@ -99,7 +99,7 @@ docs/11-operations/alert-drills/README.md
 
 ### Tích hợp và phụ thuộc
 
-- F002: `pkg/otel` xuất OTLP tới `otel-collector:4317`, log JSON; F130: network `admin`, node `ops`, Docker secret, metric backup/scale; F080: metric client từ telemetry; F004: plugin APISIX `prometheus`/`opentelemetry`, realm Keycloak (client `eduworld-ops-tools` cho Grafana/GlitchTip — task phối hợp F004).
+- F002: `src/backend/pkg/otel` xuất OTLP tới `otel-collector:4317`, log JSON; F130: network `admin`, node `ops`, Docker secret, metric backup/scale; F080: metric client từ telemetry; F004: plugin APISIX `prometheus`/`opentelemetry`, realm Keycloak (client `eduworld-ops-tools` cho Grafana/GlitchTip — task phối hợp F004).
 - Alert routing: receiver `oncall-critical` (webhook chat nhóm + SMS gateway + email), `ops-warning` (chat); URL/token trong Docker secret `ops_alert_*`.
 
 ### Bảo mật, tenant, idempotency, audit

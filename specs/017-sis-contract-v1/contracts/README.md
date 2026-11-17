@@ -21,7 +21,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openap
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|
 | `receiveSisChanges` (webhook `sisChanges`) | SIS của trường → module identity `POST /internal/sis/webhooks/{connection_id}` (HMAC, APISIX internal/partner + IP allowlist) | `specs/sis/eduworld-sis-contract.v1.yaml` | Không áp dụng (hệ thống ngoài, không token `svc-*`) | Có sẵn → Cần sửa |
-| `getHealth`, `listSchools`, `listAcademicYears`, `listClasses`, `listStudents`, `listEnrollments`, `listChanges`, `lookupStudent` | module identity (`cmd/worker`, profile `worker-jobs`) → facade SIS của trường (outbound) | `specs/sis/eduworld-sis-contract.v1.yaml` | Không áp dụng | Có sẵn (thêm `examples`) |
+| `getHealth`, `listSchools`, `listAcademicYears`, `listClasses`, `listStudents`, `listEnrollments`, `listChanges`, `lookupStudent` | module identity (`src/backend/cmd/worker`, profile `worker-jobs`) → facade SIS của trường (outbound) | `specs/sis/eduworld-sis-contract.v1.yaml` | Không áp dụng | Có sẵn (thêm `examples`) |
 
 ## 3. Realtime (AsyncAPI)
 
@@ -34,7 +34,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openap
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
 | `sis.sync_completed` | identity → AUD, NTF | `specs/events/payloads/identity/sis.sync_completed.v1.schema.json` | Có sẵn (owner F011, áp 2026-11-17) → F017 thêm trường tương thích (Cần sửa, T007) |
-| Job `ew.job.identity.sis.scheduled_sync`, `ew.job.identity.sis.webhook_batch` | identity (job lịch/webhook trong `core-api`) → `cmd/worker` profile `worker-jobs` (`IDENTITY_SIS_JOBS`) | nội bộ module (struct Go) | — |
+| Job `ew.job.identity.sis.scheduled_sync`, `ew.job.identity.sis.webhook_batch` | identity (job lịch/webhook trong `core-api`) → `src/backend/cmd/worker` profile `worker-jobs` (`IDENTITY_SIS_JOBS`) | nội bộ module (struct Go) | — |
 
 ## 5. JSON Schema nội dung
 

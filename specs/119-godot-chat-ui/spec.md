@@ -1,6 +1,6 @@
 # Feature Specification: F119 — Giao diện chat trong Godot: panel, quick message, tab, tắt tiếng, báo cáo
 
-**Feature Branch**: `119-godot-chat-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M4b · **Phụ thuộc**: F092, F117
+**Feature Branch**: `119-godot-chat-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F092, F117
 **Input**: Giao diện chat của học sinh trong game Godot cho channel gameplay (party lobby, trận 1v1, trận đội, boss): panel luôn có (thu gọn được, không tắt), hàng quick message một chạm, tab "Đội"/"Cả trận", menu Tắt tiếng/Chặn/Báo cáo trên từng tin và từ màn hình kết quả trận, bảng emoji/sticker/GIF, menu thao tác tin (trả lời, trích dẫn, chuyển tiếp, sao chép, ghim, sửa, thu hồi, cảm xúc), trạng thái gửi/nhận/xem, phản hồi kiểm duyệt thân thiện. FR nguồn: FR-CHAT-003, FR-CHAT-010, FR-CHAT-014.
 
 ## Clarifications

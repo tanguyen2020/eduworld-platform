@@ -55,13 +55,13 @@ specs/133-client-build-release/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── export_presets.cfg                          # 4 preset, không secret
 ├── config/{dev,staging,production}.json        # SINH bởi scripts/godot/gen-config.mjs (không sửa tay)
 ├── scripts/core/{device_config.gd,update_service.gd,manifest_verifier.gd}
 ├── scripts/networking/{content_downloader.gd,prefetch_scheduler.gd,bandwidth_probe.gd}
 ├── scenes/bootstrap/{VersionCheck.tscn,UpdateRequired.tscn}   # UI chỉ gọi update_service
-├── web/shell.html                              # kiểm WebGL 2/trình duyệt trước khi tải engine
+├── web/shell.html                                           # kiểm WebGL 2/trình duyệt trước khi tải engine
 ├── platform/{android,ios}/fastlane/Fastfile
 ├── platform/android/res/xml/data_extraction_rules.xml   # loại thư mục phiên khỏi cloud backup + device transfer (ADR-0086)
 ├── addons/eduworld_platform/ios/ (Swift: IosKeychainSecureStorage) · scripts/platform/adapters/ios_keychain_secure_storage.gd
@@ -73,7 +73,7 @@ deploy/cdn/play/{headers.yaml,README.md}        # Brotli, Cache-Control, index c
 docs/12-project/perf-reports/client-<YYYY-MM-DD>.md
 ```
 
-**Structure Decision**: Theo cây `godot/` ở [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md) (`scripts/core`, `scripts/networking`, `scenes/bootstrap`); workflow theo DEPLOYMENT §10.2 và ADR-0088 (`godot.yml`; job ký hiệu `godot / <job>` như giao diện GitHub Actions). Logic tải/cập nhật là `RefCounted`/autoload service, scene chỉ hiển thị (R1).
+**Structure Decision**: Theo cây `src/game/` ở [GODOT_ARCHITECTURE §3](../../docs/08-game-client/GODOT_ARCHITECTURE.md) (`scripts/core`, `scripts/networking`, `scenes/bootstrap`); workflow theo DEPLOYMENT §10.2 và ADR-0088 (`godot.yml`; job ký hiệu `godot / <job>` như giao diện GitHub Actions). Logic tải/cập nhật là `RefCounted`/autoload service, scene chỉ hiển thị (R1).
 
 ## Phase 0: Research
 
@@ -92,7 +92,7 @@ docs/12-project/perf-reports/client-<YYYY-MM-DD>.md
 | domain (client, `RefCounted`) | `ManifestVerifier.verify(json, sig, pubkey) -> Result`; `DeviceConfig.parse(text) -> DeviceConfig` (kiểm `lan_cache_url`) | Không phụ thuộc Node/scene |
 | application (client service) | `UpdateService` (so `client_version` với `ClientConfig`/manifest, xử lý 426); `ContentDownloader` (thứ tự nguồn preinstalled → LAN → CDN, SHA-256, telemetry `content_download`); `PrefetchScheduler` (`shared_device`, `offhours_prefetch_window`, chế độ dữ liệu thấp) | Signal: `update_required`, `bundle_downloaded`, `prefetch_completed` |
 | infrastructure | `ApiClient` (F061), `HTTPRequest` pool, file `user://cache/` LRU | Không gọi API cần token khi prefetch |
-| presentation | `VersionCheck.tscn`, `UpdateRequired.tscn`, `web/shell.html` | Chuỗi qua file dịch |
+| presentation | `VersionCheck.tscn`, `UpdateRequired.tscn`, `src/game/web/shell.html` | Chuỗi qua file dịch |
 | infrastructure (nền tảng) | `IosKeychainSecureStorage` (plugin iOS, hiện thực interface `SecureStorage` của F060) | `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, `kSecAttrSynchronizable = false` |
 | CI | `export.sh`, `build-bundles.sh`, `sign-manifest.mjs`, `check-build-size.mjs`, `scan-artifact.sh`, `smoke.sh`, `check-secure-storage.mjs` (adapter đúng nền tảng, manifest Android loại backup, entitlement iOS không iCloud Keychain, Web không ghi localStorage/IndexedDB), fastlane, Inno Setup | Ký chỉ ở job gắn GitHub Environment |
 

@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F010.
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=jobs` (job SIS), `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `ad.truong.a` (School Admin TH Demo A), `ad.truong.b`, `sa.admin`; học sinh `hs.an.3a`, `hs.chi.3b`.
-- Bộ CSV mẫu theo [SIS_INTEGRATION §4.3](../../docs/09-identity/SIS_INTEGRATION.md) đặt ở `modules/identity/tests/fixtures/sis/th-demo-a/`.
+- Bộ CSV mẫu theo [SIS_INTEGRATION §4.3](../../docs/09-identity/SIS_INTEGRATION.md) đặt ở `src/backend/modules/identity/tests/fixtures/sis/th-demo-a/`.
 
 ## 2. Kịch bản kiểm tra
 

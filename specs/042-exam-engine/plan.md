@@ -11,9 +11,9 @@ Module `exam` trong module `learning` (schema `assessment`): aggregate `ExamSess
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream), `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/idempotency`, `pkg/clock` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/clock` |
 | Storage | PostgreSQL `eduworld_learning` (schema `assessment`, đọc `content`); object storage bucket private cho media đề (signed URL, ADR-0044); Valkey không dùng cho kết quả |
-| Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); đồng hồ giả `pkg/clock` cho deadline/job |
+| Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); đồng hồ giả `src/backend/pkg/clock` cho deadline/job |
 | Target Platform | Linux container (module `learning` api + worker) |
 | Project Type | backend module |
 | Performance Goals | Start/save answer theo budget API học tập; auto-submit ≤ 1 phút sau hạn ([EXAM_ENGINE §7.2](../../docs/02-learning/EXAM_ENGINE.md#72-tự-động-nộp-khi-hết-giờ)) |
@@ -54,7 +54,7 @@ specs/042-exam-engine/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/
 │   ├── exam_session.go                  # thêm cột (status, accommodations, release policy…)
 │   ├── exam_paper.go                    # thêm variant_no, expected_p, student_id

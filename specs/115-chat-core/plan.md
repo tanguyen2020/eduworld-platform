@@ -11,7 +11,7 @@ Thêm bounded context `chat` vào module chat (skeleton từ F095): aggregate `C
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `nats.go` (JetStream + core request/reply), Valkey client (`valkey-go`), `pkg/outbox`, `pkg/idempotency`, `pkg/httpx` (`game_player`, `tenant`), `pkg/tenancy`, `pkg/entx` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `nats.go` (JetStream + core request/reply), Valkey client (`valkey-go`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/httpx` (`game_player`, `tenant`), `src/backend/pkg/tenancy`, `src/backend/pkg/entx` |
 | Storage | PostgreSQL `eduworld_chat` (`chat.channels`, `chat.channel_members`, `chat.messages` P tháng, `chat.gameplay_messages` P ngày, `chat.chat_policies`, `infra.*`); Valkey (`ew:chat:seq|recent|cmid`, `ew:rl:chat`, `ew:cache:policy:chat`); NATS JetStream stream `CHAT_MESSAGES`, `CHAT_DLQ` |
 | Testing | go test + testcontainers (PostgreSQL 17, NATS 2.10 `-js`, Valkey); bot Go WS cho TC-PERF-010/011 |
 | Target Platform | Linux container: module `chat` nạp trong `core-api` + profile `worker-chat` |
@@ -50,7 +50,7 @@ specs/115-chat-core/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/                         # channel.go, channelmember.go, message.go, gameplaymessage.go, chatpolicy.go
 ├── migrations/                         # Atlas: partition, RLS, unaccent wrapper, REVOKE DELETE
 ├── internal/domain/channel/            # Channel, ChannelMember, ChannelType, Status
@@ -68,7 +68,7 @@ modules/chat/
 └── tests/{unit,integration,contract,chaos,static}/
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §3 (D1: `modules/<name>/`); handler lệnh NATS là một adapter presentation riêng (`natscmd`) ngang hàng HTTP, cùng gọi command/query handler qua interface có kiểu.
+**Structure Decision**: Theo BACKEND_DESIGN §3 (D1: `src/backend/modules/<name>/`); handler lệnh NATS là một adapter presentation riêng (`natscmd`) ngang hàng HTTP, cùng gọi command/query handler qua interface có kiểu.
 
 ## Phase 0: Research
 
@@ -99,7 +99,7 @@ modules/chat/
 
 - `game_player` (`azp = eduworld-game-backend`, `user_type = student`) cho `/chat/*`; lệnh NATS chỉ chấp nhận từ user NATS `realtime`.
 - `TenantScope` từ Principal/`Ew-Tenant-Id`; persister set `app.tenant_id` theo envelope, bỏ envelope có `tenant_id` khác channel (log + metric).
-- Idempotency: Valkey `SET NX ew:chat:cmid:<sender>:<client_message_id>`; REST qua `pkg/idempotency` (`infra.idempotency_records`).
+- Idempotency: Valkey `SET NX ew:chat:cmid:<sender>:<client_message_id>`; REST qua `src/backend/pkg/idempotency` (`infra.idempotency_records`).
 - Audit: từ chối truy cập channel trái phép (`chat.channel.access_denied`, không nội dung).
 
 ### Quan sát

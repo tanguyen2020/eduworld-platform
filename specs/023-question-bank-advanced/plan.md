@@ -54,7 +54,7 @@ specs/023-question-bank-advanced/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── internal/domain/question/
 │   ├── types/{short_answer.go,image_based.go,interactive.go}
 │   ├── normalize/{levenshtein.go}                 # fuzzy, dùng chung chuẩn hóa F022

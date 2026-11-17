@@ -4,7 +4,7 @@
 
 ## R1. Module sở hữu hub instance
 
-- **Decision**: module competition là room host của `hub_instance` (dùng `pkg/roomhost`); realtime chỉ định tuyến (`hub.*` → `ew.cmd.competition.*`, `hub.player.move` → `ew.in.room.*`) và giữ presence online/offline. module game không tham gia đường hub (chỉ phát event hồ sơ, area, mở khóa).
+- **Decision**: module competition là room host của `hub_instance` (dùng `src/backend/pkg/roomhost`); realtime chỉ định tuyến (`hub.*` → `ew.cmd.competition.*`, `hub.player.move` → `ew.in.room.*`) và giữ presence online/offline. module game không tham gia đường hub (chỉ phát event hồ sơ, area, mở khóa).
 - **Rationale**: Tài liệu sở hữu đều thống nhất: [REALTIME_ARCHITECTURE §1, §4.1, §6](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) (thay đổi v0.3), [MULTIPLAYER_GAMEPLAY §3, §4](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md), [VALKEY_DESIGN §3.1](../../docs/07-backend/VALKEY_DESIGN.md) (owner `competition · room`), [DATABASE_DESIGN §2.9](../../docs/07-backend/DATABASE_DESIGN.md) (`multiplayer.rooms` trong `eduworld_competition`), AGENTS §6. Party (cũng ở competition) cần đặt cả nhóm vào cùng instance — cùng service tránh gọi chéo.
 - **Alternatives**: module game (theo CODE_PLAN §4 và mô tả định tuyến AsyncAPI) — mâu thuẫn bốn tài liệu sở hữu và buộc party (competition) gọi đồng bộ module game; bị loại. Cần sửa: CODE_PLAN dòng F091, AsyncAPI `info.description`, LOCAL_DEVELOPMENT §4 (biến `EW_RT_HUB_TICK_HZ`, `EW_RT_HUB_INSTANCE_CAPACITY` đặt ở realtime → chuyển sang module competition).
 

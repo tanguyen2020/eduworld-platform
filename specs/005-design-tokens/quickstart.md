@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F001
-- Công cụ: Node.js LTS + pnpm, Godot headless đúng `godot/.godot-version` ([LOCAL_DEVELOPMENT §1](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Công cụ: Node.js LTS + pnpm, Godot headless đúng `src/game/.godot-version` ([LOCAL_DEVELOPMENT §1](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Lệnh: `make design-tokens`, `make design-tokens-check`.
 - Tài khoản demo: không cần.
 
@@ -34,7 +34,7 @@
 ```bash
 pnpm --dir design test          # node --test cho transform + checks
 make design-tokens-check
-godot --headless --path godot -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/unit/theme
+godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/unit/theme
 ```
 
 ## 4. Bằng chứng cần nộp

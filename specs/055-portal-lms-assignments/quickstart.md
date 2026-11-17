@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F040, F041, F042, F050, F051, F052.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo (mật khẩu seed local): `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`, `ad.donvi`, `sm.antoan`, `sa.admin`; học sinh `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b`.
 
 ## 2. Kịch bản kiểm tra
@@ -38,7 +38,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter portal test -- src/workspaces/school-lms/lms
 pnpm --filter portal exec playwright test e2e/lms
 make web-lint

@@ -54,7 +54,7 @@ specs/122-portal-chat-safety/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/
+src/cms/frontend/apps/portal/src/
 ├── shell/banners/ModerationDisabledBanner.tsx           # đăng ký vào BannerSlot (F051)
 ├── shared/chatSafety/{useModerationStatus.ts,problemMessages.ts}
 ├── workspaces/live-ops/moderation/
@@ -73,8 +73,8 @@ web/apps/portal/src/
 │   ├── routes.tsx                                      # /school-lms/safety/{notifications,chat-policy,categories,clubs}
 │   ├── api/{notifications.ts,chatPolicy.ts,categories.ts,clubs.ts}
 │   └── {NotificationsPage.tsx,NotificationDetail.tsx,ChatPolicyPage.tsx,ChannelPolicyCard.tsx,CategoriesPage.tsx,ClubsPage.tsx}
-web/packages/ops-ui/src/chat-safety/{SensitiveTermTester.tsx,SlaBadge.tsx,AlwaysOnLock.tsx}   # + stories
-web/apps/portal/tests/e2e/chat-safety/*.spec.ts
+src/cms/frontend/packages/ops-ui/src/chat-safety/{SensitiveTermTester.tsx,SlaBadge.tsx,AlwaysOnLock.tsx}   # + stories
+src/cms/frontend/apps/portal/tests/e2e/chat-safety/*.spec.ts
 ```
 
 **Structure Decision**: Theo F051 (`src/workspaces/<slug>`, lazy-load); `SensitiveTermTester`, `SlaBadge`, `AlwaysOnLock` đặt ở `ops-ui` vì DESIGN_SYSTEM §4.3 liệt kê "trình xem danh mục + thử chuỗi" là trình soạn đặc thù dùng lại.

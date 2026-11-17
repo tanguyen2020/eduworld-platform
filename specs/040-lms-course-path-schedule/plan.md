@@ -11,7 +11,7 @@ Module `lms` trong module `learning`: (1) consumer `class.synced` → command `E
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/idempotency` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go, `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency` |
 | Storage | PostgreSQL `eduworld_learning` (schema `lms`, đọc `curriculum`, `content`, `learning`, `ref`) |
 | Testing | go test + testcontainers (PostgreSQL, NATS); contract test với identity (event `class.synced`) |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -54,7 +54,7 @@ specs/040-lms-course-path-schedule/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/
 │   ├── course.go                         # lms.courses
 │   ├── school_curriculum_setting.go      # mới: lms.school_curriculum_settings

@@ -11,7 +11,7 @@ Mở rộng Activity & Attempt Engine (F030) và learning_record (F031) trong mo
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream), `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/idempotency` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream), `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/idempotency` |
 | Storage | PostgreSQL `eduworld_learning` (schema `assessment`, `learning`, `content` đọc); Valkey chỉ cache pool câu (`ew:learning:qb:pool:*`) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); contract test render payload |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -54,7 +54,7 @@ specs/032-self-study-practice/
 ### Source Code (repository)
 
 ```text
-modules/learning/
+src/backend/modules/learning/
 ├── ent/schema/
 │   ├── wrong_question_entry.go          # mới: learning.wrong_question_entries
 │   ├── student_recommendation.go        # mới: learning.rm_student_recommendations
@@ -87,7 +87,7 @@ modules/learning/
 └── tests/{unit,integration,contract}/practice|recommendation|mastery/
 ```
 
-**Structure Decision**: Giữ trong module `learning` vì attempt, mastery, nội dung đều thuộc module này (ADR-0074); rule engine là package domain thuần để F040/F041/F042 đăng ký rule R6/R1/R5 bằng `RuleRegistry` lúc composition root (`cmd/worker/main.go`).
+**Structure Decision**: Giữ trong module `learning` vì attempt, mastery, nội dung đều thuộc module này (ADR-0074); rule engine là package domain thuần để F040/F041/F042 đăng ký rule R6/R1/R5 bằng `RuleRegistry` lúc composition root (`src/backend/cmd/worker/main.go`).
 
 ## Phase 0: Research
 
@@ -104,7 +104,7 @@ Không có. Thuật toán và tham số đã có ở LEARNING_ANALYTICS §3, §6
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `selection.Policy`, `attempt.HintPolicy`, `attempt.RapidGuessDetector`, `mastery.EvidenceWeight`, `mastery.DiagnosticPrior`, `retrywrong.Entry`, `recommendation.Engine` + `Rule` | Thuần, không I/O; seed PRNG từ `attempts.seed` |
-| application | Command `StartAdHocAttempt`, `RevealNextHint`, `ApplyDiagnosticPrior`, `RecordWrongAnswer`, `RecordRetryResult`, `RecomputeStudentRecommendations`, `MarkRecommendationStarted` · Query `ListMyWrongQuestions`, `GetMyRecommendations`, `GetMyProgress`, `GetMyMastery` | Route học sinh: `authz.RequireStudentSelf`; idempotency middleware `pkg/httpx` cho start/hint |
+| application | Command `StartAdHocAttempt`, `RevealNextHint`, `ApplyDiagnosticPrior`, `RecordWrongAnswer`, `RecordRetryResult`, `RecomputeStudentRecommendations`, `MarkRecommendationStarted` · Query `ListMyWrongQuestions`, `GetMyRecommendations`, `GetMyProgress`, `GetMyMastery` | Route học sinh: `authz.RequireStudentSelf`; idempotency middleware `src/backend/pkg/httpx` cho start/hint |
 | infrastructure | Repository ent cho attempt, wrong entry, recommendation; SQL đọc pool/sibling; cache pool Valkey; outbox | SQL tường minh nhận `TenantScope` + `deleted_at IS NULL` (R27) |
 | presentation | Handler `startAdHocAttempt`, `revealNextHint`, `listMyWrongQuestions`, `getMyRecommendations`, `getMyProgress`, `getMyMastery` · consumer `question.answered`, `activity.submitted`, `activity.graded`, `attempt.re_evaluated` · job `recommendation-nightly` | Consumer idempotent qua `infra.processed_events` |
 

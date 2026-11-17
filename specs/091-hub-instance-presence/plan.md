@@ -4,14 +4,14 @@
 
 ## Summary
 
-Feature đầu tiên của module competition: dựng skeleton module, projection `ref.*` cần cho hub, và **room host** `hub_instance` trên `pkg/roomhost` (mới, dùng lại cho lobby/battle/co-op/boss). Lệnh `hub.instance.join`/`hub.player.emote` đến qua NATS request `ew.cmd.competition.hub.*`; input `hub.player.move` qua NATS core `ew.in.room.<room_id>`. Command `JoinHubInstance` chạy thuật toán gán instance ([MULTIPLAYER_GAMEPLAY §6](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)) trên registry Valkey `ew:competition:rt:area:*:instances` + lease `ew:competition:rt:room:<id>:lease`, ghi `multiplayer.rooms`/`session_memberships` trong `eduworld_competition`. Instance giữ lease chạy tick `hub_sync_rate`: validate tốc độ/biên, interest grid 16 m, delta snapshot gom theo gateway node, publish `ew:rt:room:<id>:out`. realtime thêm module presence (Valkey `ew:gateway:presence:*`, NATS core `ew.rt.presence.<tenant_id>`).
+Feature đầu tiên của module competition: dựng skeleton module, projection `ref.*` cần cho hub, và **room host** `hub_instance` trên `src/backend/pkg/roomhost` (mới, dùng lại cho lobby/battle/co-op/boss). Lệnh `hub.instance.join`/`hub.player.emote` đến qua NATS request `ew.cmd.competition.hub.*`; input `hub.player.move` qua NATS core `ew.in.room.<room_id>`. Command `JoinHubInstance` chạy thuật toán gán instance ([MULTIPLAYER_GAMEPLAY §6](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)) trên registry Valkey `ew:competition:rt:area:*:instances` + lease `ew:competition:rt:room:<id>:lease`, ghi `multiplayer.rooms`/`session_memberships` trong `eduworld_competition`. Instance giữ lease chạy tick `hub_sync_rate`: validate tốc độ/biên, interest grid 16 m, delta snapshot gom theo gateway node, publish `ew:rt:room:<id>:out`. realtime thêm module presence (Valkey `ew:gateway:presence:*`, NATS core `ew.rt.presence.<tenant_id>`).
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/natsx`, `pkg/outbox`, `pkg/realtime` (F090), `pkg/roomhost` (mới), `valkey-go` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/natsx`, `src/backend/pkg/outbox`, `src/backend/pkg/realtime` (F090), `src/backend/pkg/roomhost` (mới), `valkey-go` |
 | Storage | PostgreSQL `eduworld_competition` (`multiplayer.rooms`, `multiplayer.session_memberships`, `competition.integrity_signals`, `ref.*`, `infra.*`); Valkey registry/lease/presence (tạm) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); bot Go WS cho TC-PERF-003/023 |
 | Target Platform | Linux container (module `competition` api + worker; `realtime`) |
@@ -50,7 +50,7 @@ specs/091-hub-instance-presence/
 ### Source Code (repository)
 
 ```text
-modules/competition/
+src/backend/modules/competition/
 ├── cmd/{api,worker,migrate}/main.go
 ├── ent/schema/          # room.go, sessionmembership.go, refworldarea.go, refareaunlock.go, reffriendship.go,
 │                        # refblock.go, refplayerprofile.go, reftenant.go, refstudent.go
@@ -58,7 +58,7 @@ modules/competition/
 ├── internal/domain/hub/                 # HubInstance, Member, AssignmentPolicy, MovementValidator, InterestGrid, Partition
 ├── internal/application/command/        # JoinHubInstance, LeaveHubInstance, EmitEmote, CloseIdleHubInstances, RecordHubViolation
 ├── internal/application/port/           # RoomRegistry, RoomHostRuntime, RealtimePublisher, PresenceNotifier, AreaCatalog, SocialGraph, Clock
-├── internal/infrastructure/roomhost/    # wiring pkg/roomhost cho hub: lease, subscribe ew.in.room.<id>, tick, packer theo node
+├── internal/infrastructure/roomhost/    # wiring src/backend/pkg/roomhost cho hub: lease, subscribe ew.in.room.<id>, tick, packer theo node
 ├── internal/infrastructure/cache/       # keys.go, registry (area instances ZSET, room HASH)
 ├── internal/infrastructure/persistence/ # ent repo rooms, memberships, projection readers
 ├── internal/presentation/natscmd/       # hub_instance_join.go, hub_player_emote.go
@@ -66,8 +66,8 @@ modules/competition/
 │                                        # projection_social.go, projection_player_profiles.go, access_revoked.go
 ├── internal/presentation/job/close_idle_hub_instances.go
 └── tests/{unit,integration,contract,load}/
-modules/realtime/internal/presence/   # presence store, handler presence.status.set, control presence.update, NATS publisher
-pkg/roomhost/                                  # Lease, Runtime (tick loop), Checkpoint (dùng ở F104/F105/F103)
+src/backend/modules/realtime/internal/presence/   # presence store, handler presence.status.set, control presence.update, NATS publisher
+src/backend/pkg/roomhost/                                  # Lease, Runtime (tick loop), Checkpoint (dùng ở F104/F105/F103)
 ```
 
 **Structure Decision**: Room host trong module competition theo REALTIME_ARCHITECTURE §1, §5.1 và AGENTS §6 ([research R1](research.md)); presence online/offline ở gateway vì gateway giữ kết nối ([REALTIME_ARCHITECTURE §1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md)).
@@ -88,12 +88,12 @@ pkg/roomhost/                                  # Lease, Runtime (tick loop), Che
 |---|---|---|
 | domain | `HubInstance` (Join, Leave, HoldSeat, Expire), `AssignmentPolicy` (partition, bạn bè, chặn, đông nhất < 90%), `MovementValidator` (tốc độ × 1,2, biên), `InterestGrid` (ô 16 m + 8 ô) | Thuần, Clock inject |
 | application | `JoinHubInstance` (command, `UnitOfWork`, ghi `rooms`/`session_memberships` + outbox audit), `LeaveHubInstance`, `EmitEmote`, `CloseIdleHubInstances`, `RecordHubViolation` | Danh tính từ `Ew-*`; không permission catalog (route người chơi qua ticket học sinh) |
-| infrastructure | Registry Valkey (Lua chọn/giữ chỗ), roomhost runtime, publisher `pkg/realtime`, projection readers | |
+| infrastructure | Registry Valkey (Lua chọn/giữ chỗ), roomhost runtime, publisher `src/backend/pkg/realtime`, projection readers | |
 | presentation | NATS `ew.cmd.competition.hub.instance.join`, `ew.cmd.competition.hub.player.emote`, input `ew.in.room.<room_id>`, consumer projection, job đóng instance | |
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F090 (gateway, `pkg/realtime`), F070 (`game_profile.updated`), F071 (`content.published` (`item_type = world_area`), `world.area_unlocked`), F095 (`friend.*`, `user.blocked/unblocked`), F010/F011 (`tenant.*`, `student.synced`), F016 (`user.access_revoked`).
+- Feature phụ thuộc: F090 (gateway, `src/backend/pkg/realtime`), F070 (`game_profile.updated`), F071 (`content.published` (`item_type = world_area`), `world.area_unlocked`), F095 (`friend.*`, `user.blocked/unblocked`), F010/F011 (`tenant.*`, `student.synced`), F016 (`user.access_revoked`).
 - Event phát: `audit.recorded` (vi phạm vượt ngưỡng). Realtime: `hub.instance.assigned`, `hub.snapshot.updated`, `hub.player.joined/left/emoted/appearance_changed/corrected`, `hub.instance.migrated`; control `presence.update` tới gateway qua `ew:rt:user:<id>`.
 
 ### Bảo mật, tenant, idempotency, audit

@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F012, F015, F057, F014, F016 (lock), F011 (SIS connection), F050, F051.
-- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd web && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), `cm.noidung`, `cm.duyet`, `sm.antoan`, `ad.truong.a`, `ad.donvi`, `qlcm.truong.a`, học sinh `hs.an.3a`, `hs.locked`.
 - Dữ liệu: `hs.an.3a` đã vào game trên 2 thiết bị (seed hoặc chạy F061) để có `end_reason = replaced_by_other_device`.
 
@@ -45,7 +45,7 @@
 ## 3. Lệnh test tự động
 
 ```bash
-cd web
+cd src/cms/frontend
 pnpm --filter portal test -- src/workspaces/platform-admin src/shared/authz
 pnpm --filter portal exec playwright test e2e/platform
 make web-lint

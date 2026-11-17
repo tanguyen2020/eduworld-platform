@@ -4,14 +4,14 @@
 
 ## Summary
 
-Thêm bounded context `moderation` vào module chat: aggregate `Report`, `ModerationCase` (state machine MODERATION §6.2), `Sanction`, `SchoolSafetyNotification`. Report và tín hiệu tự động (consumer `chat.message_held`, lệnh nội bộ từ worker `async_analysis` của F116) tạo/gộp case. Handler `/admin/moderation/*` đọc liên tenant chỉ qua `pkg/tenancy.Bypass(ctx, "moderation_case")` (audit + metric), ghi luôn có `X-Tenant-Id` = tenant của case. Sanction lưu PostgreSQL, cache Valkey cho pipeline, phát `sanction.applied/lifted` qua outbox. Job `moderation-sla-escalator`, `school-notification-reminder`, `case-hold-release` chạy trong `chat-worker`. Bốn enum OpenAPI sửa theo MODERATION ở Phase 2.
+Thêm bounded context `moderation` vào module chat: aggregate `Report`, `ModerationCase` (state machine MODERATION §6.2), `Sanction`, `SchoolSafetyNotification`. Report và tín hiệu tự động (consumer `chat.message_held`, lệnh nội bộ từ worker `async_analysis` của F116) tạo/gộp case. Handler `/admin/moderation/*` đọc liên tenant chỉ qua `src/backend/pkg/tenancy.Bypass(ctx, "moderation_case")` (audit + metric), ghi luôn có `X-Tenant-Id` = tenant của case. Sanction lưu PostgreSQL, cache Valkey cho pipeline, phát `sanction.applied/lifted` qua outbox. Job `moderation-sla-escalator`, `school-notification-reminder`, `case-hold-release` chạy trong `chat-worker`. Bốn enum OpenAPI sửa theo MODERATION ở Phase 2.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, go-redis, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/tenancy` (`Bypass`), `pkg/authz`, `pkg/idempotency`, `pkg/audit` |
+| Primary Dependencies | chi, ent + Atlas, oapi-codegen, nats.go, go-redis, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/tenancy` (`Bypass`), `src/backend/pkg/authz`, `src/backend/pkg/idempotency`, `src/backend/pkg/audit` |
 | Storage | PostgreSQL `eduworld_chat` (schema `chat`); Valkey `ew:chat:sanction:<user_id>` (cache, nguồn sự thật PG) |
 | Testing | go test + testcontainers (PG, NATS, Valkey); test RLS + Bypass; contract test payload event |
 | Target Platform | Linux container (module `chat` nạp trong `core-api`; profile `worker-chat` cho job/consumer) |
@@ -54,7 +54,7 @@ specs/121-moderation-safety-team/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/{report.go,moderation_case.go,moderation_action.go,sanction.go,moderation_evidence.go,school_safety_notification.go}
 ├── internal/domain/moderation/
 │   ├── report.go  case.go  case_state.go  severity.go  sanction.go  school_notification.go  hold.go
@@ -92,7 +92,7 @@ Không có. Quy tắc ở [MODERATION §5–§10](../../docs/03-social-multiplay
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `Report`, `ModerationCase` (transition table, gộp 24 h, `Severity(reason, source)`), `Sanction` (quy tắc trưởng ca), `SchoolSafetyNotification` (`AckDueAt(severity, category)`) | Không import hạ tầng |
-| application | Command `CreateReport`, `OpenCaseFromSignal`, `AssignCase`, `ActOnCase`, `CreateSanction`, `RevokeSanction`, `NotifySchool`, `AcknowledgeSchoolNotification`, `EscalateOverdueCases`, `RemindOverdueNotifications`, `ReleaseCaseHold` · Query `ListCases`, `GetCase`, `ListCaseMessages`, `ListSanctions`, `ListSchoolNotificationsPlatform`, `ListSchoolNotifications` | authz `authz.Require` tường minh đầu handler; idempotency middleware `pkg/httpx`; audit qua outbox trong `UnitOfWork` |
+| application | Command `CreateReport`, `OpenCaseFromSignal`, `AssignCase`, `ActOnCase`, `CreateSanction`, `RevokeSanction`, `NotifySchool`, `AcknowledgeSchoolNotification`, `EscalateOverdueCases`, `RemindOverdueNotifications`, `ReleaseCaseHold` · Query `ListCases`, `GetCase`, `ListCaseMessages`, `ListSanctions`, `ListSchoolNotificationsPlatform`, `ListSchoolNotifications` | authz `authz.Require` tường minh đầu handler; idempotency middleware `src/backend/pkg/httpx`; audit qua outbox trong `UnitOfWork` |
 | infrastructure | Repository ent (query liên tenant chỉ trong hàm có `tenancy.Bypass`), `SanctionCache` Valkey, `ContextSnapshotter` (đọc `messages`/`gameplay_messages`/`ephemeral_messages`), `StudentDirectory` (`ref.students`) | |
 | presentation | Handler `createReport`, `listModerationCases`, `getModerationCase`, `listModerationCaseMessages`, `assignModerationCase`, `actOnModerationCase`, `notifySchoolForCase`, `listSanctions`, `createSanction`, `revokeSanction`, `listSchoolSafetyNotificationsPlatform`, `listSchoolSafetyNotifications`, `acknowledgeSchoolSafetyNotification` · consumer `chat.message_held` · job SLA/nhắc/hold/hết hạn sanction | |
 

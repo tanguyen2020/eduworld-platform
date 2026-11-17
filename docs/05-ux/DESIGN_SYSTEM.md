@@ -10,10 +10,10 @@ EduWorld có **hai hệ thống giao diện tách biệt**, mỗi hệ thống p
 | | Game design system | Admin/Ops design system |
 |---|---|---|
 | Người dùng | Học sinh lớp 1–9 (6–15 tuổi) | Vận hành tenant và nhà trường (Tenant Admin, School Admin, tổ chuyên môn), biên tập nội dung, System Admin, Safety Team, game designer, live-ops |
-| Nền tảng | Godot 4: thế giới 3D + UI `Control` | React SPA: **một Admin Portal** `web/apps/portal` với 5 workspace (ADR-0027 mục 7) |
+| Nền tảng | Godot 4: thế giới 3D + UI `Control` | React SPA: **một Admin Portal** `src/cms/frontend/apps/portal` với 5 workspace (ADR-0027 mục 7) |
 | Mục tiêu | Hấp dẫn, dễ hiểu, an toàn, chữ và nút lớn | Thao tác nhanh, xem nhiều dữ liệu, ít lỗi, đọc số liệu chính xác |
 | Phong cách | Stylized low-poly, toon shading, màu tươi, chuyển động | Trung tính, gọn, dày dữ liệu, ít trang trí |
-| Thư viện | Theme Godot sinh từ token + component scene trong `godot/scenes/ui/components/` | Ant Design 5 + Ant Design Pro components (ProLayout, ProTable, ProForm) [Proposed] + `web/packages/ops-ui` |
+| Thư viện | Theme Godot sinh từ token + component scene trong `src/game/scenes/ui/components/` | Ant Design 5 + Ant Design Pro components (ProLayout, ProTable, ProForm) [Proposed] + `src/cms/frontend/packages/ops-ui` |
 | Nguồn token | `design/game-tokens/` | `design/admin-tokens/` |
 
 **Dùng chung giữa hai hệ thống** (không phải phong cách UI): logo, màu thương hiệu chính, và **mã màu nghiệp vụ** trong `design/shared-tokens/` (§6).
@@ -50,16 +50,16 @@ flowchart LR
   S[design/shared-tokens] --> SD[Style Dictionary\nmake design-tokens]
   G[design/game-tokens] --> SD
   A[design/admin-tokens] --> SD
-  SD --> GT[godot/resources/ui/theme/eduworld_theme.tres\n+ density variants]
-  SD --> GC[godot/scripts/core/ui_tokens.gd\nclass_name UiTokens]
-  SD --> G3[godot/resources/art/generated/\nmaterial presets, Environment, Gradient]
-  SD --> AT[web/packages/ops-ui/src/theme/\nantd-theme.ts light/dark/compact]
-  SD --> CV[web/packages/ops-ui/src/theme/\ntokens.css: --ew-* variables]
+  SD --> GT[src/game/resources/ui/theme/eduworld_theme.tres\n+ density variants]
+  SD --> GC[src/game/scripts/core/ui_tokens.gd\nclass_name UiTokens]
+  SD --> G3[src/game/resources/art/generated/\nmaterial presets, Environment, Gradient]
+  SD --> AT[src/cms/frontend/packages/ops-ui/src/theme/\nantd-theme.ts light/dark/compact]
+  SD --> CV[src/cms/frontend/packages/ops-ui/src/theme/\ntokens.css: --ew-* variables]
   SD --> CK[báo cáo tương phản WCAG\n+ kiểm tra alias]
 ```
 
 - Lệnh: `make design-tokens` (chạy trong CI ở mọi MR chạm `design/**`). File sinh ra **không sửa tay**; CI chạy lại và báo lỗi nếu khác (`make design-tokens-check`).
-- Godot: Style Dictionary xuất JSON trung gian; script `tools/godot/build_theme.gd` (chạy Godot headless) dựng `Theme`/`ShaderMaterial`/`Environment` `.tres` từ JSON đó [Proposed].
+- Godot: Style Dictionary xuất JSON trung gian; script `src/game/tools/build_theme.gd` (chạy Godot headless) dựng `Theme`/`ShaderMaterial`/`Environment` `.tres` từ JSON đó [Proposed].
 - Web: xuất object `ThemeConfig` cho `ConfigProvider` của Ant Design và CSS variables `--ew-*` cho component tự viết trong `ops-ui`.
 - Phiên bản token: `design/CHANGELOG.md` + semver (`tokens@1.4.0`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
 
@@ -97,7 +97,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 - **ProLayout** với menu sinh từ `GET /api/v1/me/permissions` (ẩn menu chỉ là tiện ích, backend vẫn quyết định).
 - **Header:** bộ chọn tenant dạng Select có tìm kiếm (chỉ System Admin, mặc định "Tất cả tenant", chọn nhiều; ADR-0027 §6); chỉ báo trạng thái hệ thống (lấy từ endpoint health tổng hợp); thông báo; menu tài khoản (đổi sáng/tối, ngôn ngữ, đăng xuất).
 - **Banner cảnh báo hệ thống** dùng `Alert` banner cố định đầu vùng nội dung: tắt kiểm duyệt (ADR-0030), bảo trì, sự cố SIS sync, purge tồn đọng.
-- Một Admin Portal duy nhất (`web/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; mã mỗi workspace nằm trong `web/apps/portal/src/workspaces/` theo tên thư mục ở [ADMIN_PORTAL §1.2](../04-admin-portal/ADMIN_PORTAL.md#12-admin-portal-5-workspace-adr-0027-mục-7-master-prompt-tái-cấu-trúc-16); topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
+- Một Admin Portal duy nhất (`src/cms/frontend/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; mã mỗi workspace nằm trong `src/cms/frontend/apps/portal/src/workspaces/` theo tên thư mục ở [ADMIN_PORTAL §1.2](../04-admin-portal/ADMIN_PORTAL.md#12-admin-portal-5-workspace-adr-0027-mục-7-master-prompt-tái-cấu-trúc-16); topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
 
 ### 4.3. Mẫu màn hình
 
@@ -107,7 +107,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 | **Chi tiết** | Header thông tin + **Tabs** (Thông tin, Phiên bản, Phát hành, Sử dụng, Audit) + **Timeline** audit/version | Tab Phiên bản: danh sách version, xem chỉ đọc, diff, preview (ADR-0043) |
 | **Form** | **ProForm** (StepsForm cho nội dung nhiều bước), autosave Draft | Validation sinh từ OpenAPI: `maxLength`, `required`, `pattern` (ADR-0041); hiển thị bộ đếm ký tự; lỗi `VALIDATION_FAILED` map về từng trường |
 | **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Proposed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
-| **Trình soạn đặc thù** | Trong `web/packages/ops-ui` | Trình soạn 11 dạng câu hỏi (gồm gợi ý nhiều cấp và phản hồi theo phương án), sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D, `MasteryHeatmap` (heatmap LO có ký hiệu mức, dùng ở School Learning Dashboard) |
+| **Trình soạn đặc thù** | Trong `src/cms/frontend/packages/ops-ui` | Trình soạn 11 dạng câu hỏi (gồm gợi ý nhiều cấp và phản hồi theo phương án), sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D, `MasteryHeatmap` (heatmap LO có ký hiệu mức, dùng ở School Learning Dashboard) |
 
 **KPI dashboard live-ops (workspace Game Live Operations; phiên bản giới hạn theo tenant trong School & Learning Management):**
 
@@ -126,7 +126,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 - Một thư viện chart thống nhất; palette categorical lấy từ `admin-tokens/semantic.json` (tối đa 8 màu, đã kiểm tra phân biệt được với người mù màu); màu môn học dùng mã màu nghiệp vụ (§6).
 - Trục bắt đầu từ 0 cho cột/thanh; số liệu định dạng `vi-VN`; luôn có đơn vị và thời điểm dữ liệu.
 - Không dùng màu là kênh thông tin duy nhất (thêm nhãn/biểu tượng); tooltip có giá trị chính xác.
-- Báo cáo nhóm < 5 học sinh ẩn số liệu theo LEARNING_ANALYTICS. Mọi màn (School Learning Dashboard, báo cáo tenant/platform, Game Analytics) hiển thị ô bị ẩn bằng **một** component dùng chung `SuppressedCell` (`web/packages/ops-ui/src/dashboard/`): chữ "< 5" kèm tooltip giải thích, không hiện số thật, không tạo component riêng theo workspace.
+- Báo cáo nhóm < 5 học sinh ẩn số liệu theo LEARNING_ANALYTICS. Mọi màn (School Learning Dashboard, báo cáo tenant/platform, Game Analytics) hiển thị ô bị ẩn bằng **một** component dùng chung `SuppressedCell` (`src/cms/frontend/packages/ops-ui/src/dashboard/`): chữ "< 5" kèm tooltip giải thích, không hiện số thật, không tạo component riêng theo workspace.
 
 ### 4.5. Accessibility
 
@@ -142,17 +142,17 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 | Nhập | **MathLive** `<math-field>` trong mọi editor có công thức (Question/Lesson/Activity Builder, đáp án, giải thích, gợi ý, phản hồi theo phương án). Bàn phím ảo với tab Toán, Lý, Hóa; xuất LaTeX để lưu. MathLive chỉ dùng trong editor của portal (game không nhập công thức) |
 | Kích thước và màu | Cỡ công thức theo token `math.font-scale` (mặc định 1.0 × cỡ chữ đoạn văn, 1.15 × với công thức block); màu theo `color.text` của theme sáng/tối, không màu hardcode; công thức lỗi hiển thị khung `color.danger` kèm thông báo vị trí lỗi |
 | Trợ năng | Bật speech/braille của MathJax 4 (menu ngữ cảnh, `aria-label` sinh tự động); MathLive hỗ trợ điều hướng bàn phím và đọc công thức |
-| Component | `MathText` (render chuỗi rich text có delimiter `\( \)`/`\[ \]`), `MathInput` (bọc `<math-field>`) trong `web/packages/ops-ui`; có story trong Storybook (Toán/Lý/Hóa, sáng/tối, compact) |
+| Component | `MathText` (render chuỗi rich text có delimiter `\( \)`/`\[ \]`), `MathInput` (bọc `<math-field>`) trong `src/cms/frontend/packages/ops-ui`; có story trong Storybook (Toán/Lý/Hóa, sáng/tối, compact) |
 | Render sẵn cho game | Khi lưu/publish, portal dùng MathJax 4 trên trình duyệt render mỗi công thức thành **SVG đơn sắc (`currentColor`) + speech text**, gửi kèm nội dung; server sanitize và lưu theo hash. Màn Import hàng loạt cũng render trên trình duyệt |
-| Phiên bản | Ghim `mathjax@4.x` và `mathlive` (phiên bản cố định) trong `web/apps/portal/package.json`; nâng cấp phải qua visual regression công thức mẫu. Đổi phiên bản không render lại nội dung đã publish (SVG bất biến theo version) |
+| Phiên bản | Ghim `mathjax@4.x` và `mathlive` (phiên bản cố định) trong `src/cms/frontend/apps/portal/package.json`; nâng cấp phải qua visual regression công thức mẫu. Đổi phiên bản không render lại nội dung đã publish (SVG bất biến theo version) |
 
 ## 5. Game design system (Godot 3D)
 
 ### 5.1. Token UI
 
 - `semantic.json`: nền panel, chữ, nhấn, phản hồi đúng/sai, cảnh báo nhẹ; `component.json`: nút chính/phụ, panel nhiệm vụ, thẻ câu hỏi, dải phản hồi + nút gợi ý (`HintButton`, đếm cấp gợi ý), khung phụ đề lời thoại có icon người nói (`VoiceCaption`, dùng cho `g1_3` — PED-07), badge XP/cấp độ, thanh tiến độ, toast, HUD.
-- Sinh `Theme` Godot (`godot/resources/ui/theme/eduworld_theme.tres`) và lớp hằng `UiTokens` (`godot/scripts/core/ui_tokens.gd`) để code dùng khi cần giá trị (khoảng cách, thời lượng tween).
-- Mọi `Control` lấy style từ Theme; component tái sử dụng trong `godot/scenes/ui/components/`.
+- Sinh `Theme` Godot (`src/game/resources/ui/theme/eduworld_theme.tres`) và lớp hằng `UiTokens` (`src/game/scripts/core/ui_tokens.gd`) để code dùng khi cần giá trị (khoảng cách, thời lượng tween).
+- Mọi `Control` lấy style từ Theme; component tái sử dụng trong `src/game/scenes/ui/components/`.
 
 ### 5.2. Mật độ theo grade band
 
@@ -249,12 +249,12 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 
 | Kiểm tra | Phạm vi | Công cụ |
 |---|---|---|
-| Storybook | `web/packages/ops-ui` + theme Ant Design (sáng/tối/compact) | Storybook 8 |
+| Storybook | `src/cms/frontend/packages/ops-ui` + theme Ant Design (sáng/tối/compact) | Storybook 8 |
 | UI Gallery | Component UI game, mọi density | Scene `UiGallery.tscn` trong build debug |
 | Visual regression | Màn CMS chính (danh sách, chi tiết, form, dashboard) | Playwright screenshot |
 | Tương phản | Mọi cặp chữ/nền trong token admin | Script khi build token + axe trong E2E |
 | Lint hardcode | Màu/font/kích thước trong CSS/TSX | stylelint + ESLint rule (`no-hardcoded-colors`) |
-| Lint scene Godot | `.tscn` không override màu/font ngoài Theme (trừ allowlist) | Script `tools/godot/lint_theme_overrides.gd` |
+| Lint scene Godot | `.tscn` không override màu/font ngoài Theme (trừ allowlist) | Script `src/game/tools/lint_theme_overrides.gd` |
 | Renderer parity | Ảnh chụp các zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | So sánh ảnh (SSIM ≥ ngưỡng) trong CI [Proposed] |
 
 ## 10. Yêu cầu và acceptance

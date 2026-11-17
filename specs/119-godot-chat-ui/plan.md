@@ -50,7 +50,7 @@ specs/119-godot-chat-ui/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/chat/        ChatDock.tscn, ChatPanel.tscn, ChannelTabs.tscn, MessageList.tscn, MessageBubble.tscn,
 │                       MessageActionMenu.tscn, Composer.tscn, QuickMessageBar.tscn, EmojiStickerGifPicker.tscn,
 │                       MentionAutocomplete.tscn, PinnedBar.tscn, TypingIndicator.tscn, ReceiptBadge.tscn,

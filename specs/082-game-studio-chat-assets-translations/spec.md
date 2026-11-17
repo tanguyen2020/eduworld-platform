@@ -1,6 +1,6 @@
 # Feature Specification: F082 — Game Studio — quản lý sticker/GIF và dịch nội dung game (`/game-admin/translations*`)
 
-**Feature Branch**: `082-game-studio-chat-assets-translations` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `web/apps/portal` (workspace A `game-ops`) + module `game` (trạng thái bản dịch, job xuất/nhập file dịch) · **Mốc**: M4b · **Phụ thuộc**: F079, F118 (và F078 workflow, F053 `BilingualField`)
+**Feature Branch**: `082-game-studio-chat-assets-translations` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace A `game-ops`) + module `game` (trạng thái bản dịch, job xuất/nhập file dịch) · **Mốc**: M4b · **Phụ thuộc**: F079, F118 (và F078 workflow, F053 `BilingualField`)
 **Input**: Trong Game Operations Console (platform-only, gateway nội bộ + MFA): màn "Tài nguyên chat" quản lý sticker pack và thư viện GIF nội bộ trên backend module chat của F118 (upload presigned, alt text/tag song ngữ, mở khóa bằng phần thưởng, duyệt người khác người upload, publish/rollback); màn "Dịch nội dung game" với trạng thái bản dịch (`complete`/`partial`/`outdated`) cho mọi cấu hình module game, biên tập hai cột vi/en, xuất/nhập XLIFF 2.1/CSV qua `/api/v1/game-admin/translations*`. FR nguồn: FR-CHAT-014, FR-CNT-018, NFR-I18N-002, FR-CMS-006, FR-CMS-011.
 
 ## Clarifications

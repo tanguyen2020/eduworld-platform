@@ -1,6 +1,6 @@
 # Feature Specification: F063 — Activity player: renderer registry, renderer 11 loại câu hỏi, gợi ý, kết quả, công thức SVG
 
-**Feature Branch**: `063-activity-player` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` · **Mốc**: M-C2 · **Phụ thuộc**: F030, F032, F062 (phần F032 — gợi ý, gợi ý ôn tập — dùng Prism mock có nhãn tới khi Done, [CODE_PLAN §5 (\*)](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md))
+**Feature Branch**: `063-activity-player` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C2 · **Phụ thuộc**: F030, F032, F062 (phần F032 — gợi ý, gợi ý ôn tập — dùng Prism mock có nhãn tới khi Done, [CODE_PLAN §5 (\*)](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md))
 **Input**: Khung activity player chung cho mọi `activity_type`, renderer `quiz` và `interactive_exercise` với 11 dạng câu hỏi, gợi ý nhiều cấp, phản hồi sau chấm, màn kết quả, công thức SVG. FR nguồn: FR-EXR-003, FR-EXR-004, FR-EXR-012, FR-EXR-015, FR-CNT-017, FR-QB-007, FR-GAME-018.
 
 ## Clarifications

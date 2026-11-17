@@ -142,7 +142,7 @@ Boss có `grade_levels[]`; mỗi khối có bộ yêu cầu riêng (cùng boss, 
 
 ## 4. Multiplayer boss: chạy ở đâu
 
-**Quyết định [Proposed]:** encounter (solo và party) chạy **server-authoritative trong module `game`**, dùng chung thư viện room host (`pkg/roomhost`) với module `competition`.
+**Quyết định [Proposed]:** encounter (solo và party) chạy **server-authoritative trong module `game`**, dùng chung thư viện room host (`src/backend/pkg/roomhost`) với module `competition`.
 
 Lý do:
 - Boss là nội dung PvE gắn quest, progression và phần thưởng (dữ liệu đều ở module game); không có rating nên không cần module competition.

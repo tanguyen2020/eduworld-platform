@@ -169,7 +169,7 @@ Có yêu cầu pháp lý về tin nhắn DM của một học sinh không thuộ
 
 ## Assumptions
 
-- [Proposed] Permission mới platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`); cập nhật ADMIN_PORTAL §2.2 và `pkg/authz/catalog.go`.
+- [Proposed] Permission mới platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`); cập nhật ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
 - [Proposed] Tham số mới cần đăng ký CONFIG_DEFAULTS (R33): `break_glass_max_duration_hours` = 4, `break_glass_max_window_days` = 30, `oncall_shift_max_hours` = 168, `email_delivery_max_attempts` = 8 (backoff lũy thừa tới 1 giờ). Code đọc từ `platform.platform_settings`, không hardcode.
 - [Proposed] Mã lỗi mới: `ACCOUNT_LOCK_HELD_BY_SAFETY` (409), `ONCALL_SHIFT_OVERLAP` (409), `BREAK_GLASS_NOT_PENDING` (409), `BREAK_GLASS_NOT_ACTIVE` (403) — thêm API_DESIGN §4.1 và `ProblemCode`.
 - [Proposed] Không có School Admin → gửi Tenant Admin (MODERATION §6.4 chỉ nêu School Admin).

@@ -27,6 +27,6 @@
 
 ## Notes
 
-- AC-10–AC-12 cần backend nhỏ trong module game (CODE_PLAN ghi `web/apps/portal` + module `game`).
+- AC-10–AC-12 cần backend nhỏ trong module game (CODE_PLAN ghi `src/cms/frontend/apps/portal` + module `game`).
 - 2026-11-17: tách F081 — User Story 4 cũ (báo cáo hoạt động game, tiêu chí 13–18 cũ) chuyển sang F080 US5 (F080-AC-27…32); F081 không còn phụ thuộc F080.
 - AC-02 phụ thuộc delta `EventTemplate.*_option_items` (owner F077).

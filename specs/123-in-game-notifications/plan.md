@@ -11,7 +11,7 @@ Backend: bounded context `notification` trong module chat. Consumer `chat-notifi
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · GDScript (Godot 4.x, static typing) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public), facade `learning` (`modules/learning/api`), `pkg/modcall`, `pkg/outbox` (consumer), `pkg/natsx`, `pkg/realtime` · GdUnit4, `ApiClient`/`RealtimeClient` (F061, F092) |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public), facade `learning` (`src/backend/modules/learning/api`), `src/backend/pkg/modcall`, `src/backend/pkg/outbox` (consumer), `src/backend/pkg/natsx`, `src/backend/pkg/realtime` · GdUnit4, `ApiClient`/`RealtimeClient` (F061, F092) |
 | Storage | PostgreSQL `eduworld_chat` (`social.notifications` mới, `ref.students`); Valkey cache số chưa đọc |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với learning (fake facade phía chat, ví dụ spec phía learning); GdUnit4 unit/scene; integration headless |
 | Target Platform | Linux container (module `chat` nạp trong `core-api` + profile `worker-chat`); Windows/Android/iOS/Web |
@@ -50,21 +50,21 @@ specs/123-in-game-notifications/
 ### Source Code (repository)
 
 ```text
-modules/chat/
+src/backend/modules/chat/
 ├── ent/schema/notification.go
 ├── internal/domain/notification/        # Notification, Category/Kind, RecipientPolicy, MessageCatalog (event → kind, message_code, action)
 ├── internal/application/command/        # CreateNotifications, MarkNotificationsRead, MarkAllNotificationsRead
 ├── internal/application/query/          # ListNotifications (+ unread_count)
 ├── internal/application/port/           # NotificationRepository, AssignmentRecipients, RealtimePublisher, UnreadCounter
-├── internal/infrastructure/modules/learning.go        # adapter facade listAssignmentRecipients (pkg/modcall)
+├── internal/infrastructure/modules/learning.go        # adapter facade listAssignmentRecipients (src/backend/pkg/modcall)
 ├── internal/infrastructure/persistence/notification/
 ├── internal/infrastructure/cache/unread_counter.go
 ├── internal/presentation/http/public/notifications.go
 ├── internal/presentation/natscmd/notification_mark_read.go
 ├── internal/presentation/consumer/notify_*.go
 └── tests/{unit,integration,contract}/
-modules/learning/internal/presentation/facade/assignment_recipients.go   # hiện thực operation facade mới
-godot/
+src/backend/modules/learning/internal/presentation/facade/assignment_recipients.go   # hiện thực operation facade mới
+src/game/
 ├── scripts/notifications/notification_service.gd
 ├── scripts/notifications/models/notification_model.gd
 ├── scenes/ui/notifications/{NotificationInbox,NotificationToast,NotificationBadge}.tscn (+ .gd)
@@ -91,7 +91,7 @@ Không có — CHAT_SYSTEM §10, SOCIAL_SYSTEM §8, EVENT_DESIGN §3.2/§4 đủ
 |---|---|---|
 | domain | `Notification` (MarkRead một lần), `MessageCatalog` (bảng event → `kind`/`message_code`/`action`), `RecipientPolicy` (học sinh hoạt động cùng tenant) | Thuần |
 | application | `CreateNotifications` (lô, `ON CONFLICT DO NOTHING` theo khóa idempotent), `MarkNotificationsRead`, `MarkAllNotificationsRead`, `ListNotifications` | Chủ thể = Principal người gọi |
-| infrastructure | ent repo, adapter facade `learning` (deadline, ánh xạ lỗi; không retry/circuit breaker), cache Valkey, publisher `pkg/realtime` | |
+| infrastructure | ent repo, adapter facade `learning` (deadline, ánh xạ lỗi; không retry/circuit breaker), cache Valkey, publisher `src/backend/pkg/realtime` | |
 | presentation | `listNotifications`, `markNotificationRead`, `markAllNotificationsRead`, NATS `notification.item.mark_read`, consumer `notify_*` | |
 
 Bảng `MessageCatalog`:

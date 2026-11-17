@@ -21,7 +21,7 @@
 | 5 | `sa.admin` token thiếu `acr` MFA gọi `/api/v1/admin/roles` | `403 MFA_REQUIRED` | F012-AC-06 |
 | 6 | `ad.donvi` gọi `listTenantUsers?tenant_ids=<th-demo-a>` | `tenant_ids` bị bỏ qua, chỉ `pgd-demo` | F012-AC-09 |
 | 7 | Module `learning` gọi `resolvePrincipal` (facade test) cho `qlcm.truong.a`/`th-demo-a`; gọi lại với tenant không thuộc membership | Principal scope `subject`; `TENANT_MISMATCH` | F012-AC-11, F012-AC-12 |
-| 8 | Thêm import `modules/identity/api` vào một module không có trong `x-allowed-callers` của `resolvePrincipal`; `curl :9080/internal/v1/principals:resolve` | `make arch-check` fail; 404 (không có route HTTP nội bộ) | F012-AC-13 |
+| 8 | Thêm import `src/backend/modules/identity/api` vào một module không có trong `x-allowed-callers` của `resolvePrincipal`; `curl :9080/internal/v1/principals:resolve` | `make arch-check` fail; 404 (không có route HTTP nội bộ) | F012-AC-13 |
 | 9 | `ad.donvi` tạo role tùy biến chứa `platform.cross_tenant.read`; sửa role `school_admin` | `422 PERMISSION_NOT_ALLOWED_FOR_SCOPE`; `403` | F012-AC-16, F012-AC-17 |
 | 10 | `ad.truong.a` gán `academic_manager` scope môn cho nhân sự trường A; gán ở trường B | Thành công + `user_role.changed`; `403 PERMISSION_DENIED` | F012-AC-22, F012-AC-23 |
 | 11 | Thu hồi UserRole của `qlcm.truong.a` khi đang đăng nhập | Mất quyền ≤ 60 s ở module learning | F012-AC-14, F012-AC-23 |

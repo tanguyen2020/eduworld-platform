@@ -10,7 +10,7 @@ Hiện thực autoload `RealtimeClient` (#7, [GODOT_ARCHITECTURE §4](../../docs
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | GDScript (Godot 4.x ghim ở `godot/.godot-version`), static typing (ADR-0014) |
+| Language/Version | GDScript (Godot 4.x ghim ở `src/game/.godot-version`), static typing (ADR-0014) |
 | Primary Dependencies | GdUnit4; autoload F060 (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `Settings`), F061 (`ApiClient`, `AuthService`, `Clock`, `GameSessionService`), F062 (`main_hub`, `PlayerController`, `QualityManager`), F070 (`AvatarBuilder`) |
 | Storage | Không lưu dữ liệu nghiệp vụ; `resume_token` chỉ trong RAM |
 | Testing | GdUnit4 unit (`FakeWebSocketPeer`, `FakeApiClient`), scene test, integration headless 2 client + backend compose, toxiproxy; lab thiết bị |
@@ -50,7 +50,7 @@ specs/092-realtime-client-hub-multiplayer/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scripts/networking/realtime_client.gd     # autoload RealtimeClient: state machine, send_command, dispatcher, resume
 ├── scripts/networking/ws_envelope.gd         # parse/serialize + validate (maxLength, frame ≤ ws_max_frame)
 ├── scripts/networking/ws_peer.gd             # interface bọc WebSocketPeer (để thay FakeWebSocketPeer)

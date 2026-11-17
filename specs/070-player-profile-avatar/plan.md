@@ -11,7 +11,7 @@ module game thêm aggregate `GameProfile` (nickname, `AvatarConfig`, `avatar_cre
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 · GDScript (Godot 4.x, static typing) |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, `pkg/httpx` (`game_player`, `tenant`), `pkg/tenancy`, Valkey client · GdUnit4 |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/httpx` (`game_player`, `tenant`), `src/backend/pkg/tenancy`, Valkey client · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (`game.game_profiles`, `game.avatar_presets`, `game.nickname_changes`, `game.character_catalogs`/`_versions`, `game.item_definitions`/`_versions`, `game.inventory_items`); Valkey `ew:game:nick:opt:<student_id>` (tạm) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); GdUnit4 headless |
 | Target Platform | Linux container (`core-api` + `worker`, module `game`) · Windows, Android, iOS, Web |
@@ -50,7 +50,7 @@ specs/070-player-profile-avatar/
 ### Source Code (repository)
 
 ```text
-modules/game/
+src/backend/modules/game/
 ├── ent/schema/                       # gameprofile.go, avatarpreset.go, nicknamechange.go, charactercatalog*.go, itemdefinition*.go, inventoryitem.go
 ├── internal/domain/profile/          # GameProfile, AvatarConfig (validate slot/ownership), Nickname, NicknameGenerator
 ├── internal/domain/catalog/          # CharacterCatalog (presets, palette, default items, nickname parts)
@@ -61,8 +61,8 @@ modules/game/
 ├── internal/infrastructure/cache/nickname_option_store.go   # Valkey
 ├── internal/presentation/http/public/profile.go             # handlers operationId
 └── tests/{unit,integration,contract}/
-modules/game/seed/character_catalog.v1.json         # danh mục v1 (vi/en)
-godot/
+src/backend/modules/game/seed/character_catalog.v1.json         # danh mục v1 (vi/en)
+src/game/
 ├── scenes/character/{CharacterCreation.tscn, CustomizationStudio.tscn, EmoteWheel.tscn, AvatarRig.tscn}
 ├── scripts/player/{profile_service.gd, avatar_builder.gd, anim_driver.gd, emote_wheel.gd, character_creation.gd}
 ├── scripts/inventory/inventory_service.gd                   # đọc danh mục + sở hữu (cache)

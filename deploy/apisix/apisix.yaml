@@ -1,0 +1,4 @@
+# APISIX standalone routes (local). F001 ships no route; F004 adds the public and internal routes.
+# Rule (F001-AC-06): no route may target an admin port (9090 / host 9100, 9106, 9200).
+routes: []
+#END

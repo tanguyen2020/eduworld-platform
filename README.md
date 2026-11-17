@@ -53,7 +53,7 @@ Không có vai trò giáo viên trong hệ thống ([ADR-0072](docs/adr/ADR-0072
 | Backend | Go modular monolith: module `identity`, `learning`, `game`, `competition`, `chat`, `realtime`; 3 binary `core-api`, `realtime`, `worker` | ADR-0074 |
 | Kiến trúc trong module | Clean Architecture + CQRS tách read/write context, không mediator | ADR-0038, ADR-0087 |
 | ORM / migration | ent (code-first, interceptor lọc tenant và soft-delete) + Atlas versioned migrations | ADR-0039, ADR-0089 |
-| Gọi giữa module | Facade có kiểu sinh từ spec internal (OpenAPI), gọi trong tiến trình qua `pkg/modcall`; phản ứng phụ qua event | ADR-0074, ADR-0040 |
+| Gọi giữa module | Facade có kiểu sinh từ spec internal (OpenAPI), gọi trong tiến trình qua `src/backend/pkg/modcall`; phản ứng phụ qua event | ADR-0074, ADR-0040 |
 | Admin Portal | Một React SPA (TypeScript, Vite) với 5 workspace; Ant Design 5 + Ant Design Pro | ADR-0022, ADR-0027, ADR-0047 |
 | Công thức Toán/Lý/Hóa | MathJax 4 (hiển thị, mhchem) + MathLive (nhập trên portal); game chỉ hiển thị SVG đã render | ADR-0055 |
 | Design system | Design tokens trong `design/` (Style Dictionary) → Theme Godot cho game và theme Ant Design cho portal | ADR-0047 |
@@ -70,12 +70,12 @@ Không có vai trò giáo viên trong hệ thống ([ADR-0072](docs/adr/ADR-0072
 
 ### 3.1. Backend Go: thư viện và công cụ
 
-Một Go module duy nhất, Go stable mới nhất (≥ 1.24); phiên bản thư viện ghim trong `go.mod` ([ADR-0025](docs/adr/ADR-0025-thu-vien-nen-tang-cho-go-backend.md), [ADR-0039](docs/adr/ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md), [BACKEND_DESIGN](docs/07-backend/BACKEND_DESIGN.md)).
+Một Go module duy nhất, Go stable mới nhất (≥ 1.24); phiên bản thư viện ghim trong `src/backend/go.mod` ([ADR-0025](docs/adr/ADR-0025-thu-vien-nen-tang-cho-go-backend.md), [ADR-0039](docs/adr/ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md), [BACKEND_DESIGN](docs/07-backend/BACKEND_DESIGN.md)).
 
 | Nhóm | Thư viện / công cụ | Dùng để |
 |---|---|---|
-| HTTP | `go-chi/chi` (tương thích `net/http`) | Router và middleware của `core-api` (`pkg/httpx`) |
-| Contract → code | `oapi-codegen` (strict server) | Sinh handler/DTO từ OpenAPI public; sinh kiểu và interface facade từ spec internal vào `modules/<module>/api` |
+| HTTP | `go-chi/chi` (tương thích `net/http`) | Router và middleware của `core-api` (`src/backend/pkg/httpx`) |
+| Contract → code | `oapi-codegen` (strict server) | Sinh handler/DTO từ OpenAPI public; sinh kiểu và interface facade từ spec internal vào `src/backend/modules/<module>/api` |
 | ORM | `ent` (code-first) + driver `jackc/pgx/v5` | Schema có `MaxLen`, mixin theo loại bảng, interceptor lọc tenant + soft-delete, hook soft-delete |
 | Migration | Atlas (versioned, `atlas migrate diff/lint`) | Sinh SQL từ ent schema; RLS, trigger, GRANT, partition viết tay trong cùng thư mục |
 | Messaging | `nats-io/nats.go` (JetStream) | Outbox relay, consumer event, lệnh realtime request/reply, đường ghi chat |
@@ -86,8 +86,8 @@ Một Go module duy nhất, Go stable mới nhất (≥ 1.24); phiên bản thư
 | Config | Biến môi trường + `knadh/koanf` | Cấu hình theo môi trường, secret qua file (`*_FILE`) |
 | Log / trace / metric | `log/slog` (JSON), OpenTelemetry SDK, Prometheus client | Log có `trace_id`, span cho mỗi use case và lời gọi facade, metric chuẩn |
 | Test | `testing` + `testify` + `testcontainers-go` | Unit theo tầng; integration với PostgreSQL, NATS, Valkey thật trong container |
-| Lint / kiến trúc | `golangci-lint` (gồm `depguard`), `go-arch-lint`, `tools/allowedcallers` | Chặn vi phạm tầng Clean Architecture và import chéo module ngoài `x-allowed-callers` |
-| Platform kit nội bộ | `pkg/httpx`, `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/modcall`, `pkg/roomhost`, `pkg/observability`, `pkg/problem` | Phần dùng chung cho mọi module: middleware, phân quyền, phạm vi tenant, `UnitOfWork`, outbox, gọi facade, phòng chơi, Problem Details |
+| Lint / kiến trúc | `golangci-lint` (gồm `depguard`), `go-arch-lint`, `src/backend/tools/allowedcallers` | Chặn vi phạm tầng Clean Architecture và import chéo module ngoài `x-allowed-callers` |
+| Platform kit nội bộ | `src/backend/pkg/httpx`, `src/backend/pkg/authz`, `src/backend/pkg/tenancy`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/modcall`, `src/backend/pkg/roomhost`, `src/backend/pkg/observability`, `src/backend/pkg/problem` | Phần dùng chung cho mọi module: middleware, phân quyền, phạm vi tenant, `UnitOfWork`, outbox, gọi facade, phòng chơi, Problem Details |
 
 Admin Portal dùng React + TypeScript + Vite, Ant Design 5 + Ant Design Pro, TanStack Query, `react-i18next`, kiểu API sinh bằng `openapi-typescript`; game client dùng Godot 4.x với GDScript static typing và test bằng GdUnit4.
 
@@ -156,7 +156,7 @@ flowchart TB
 
 | Binary | Chứa gì | Không làm gì |
 |---|---|---|
-| `core-api` | REST public của mọi module; handler NATS cho lệnh từ realtime, gồm room host battle/co-op/boss (`pkg/roomhost`) | — |
+| `core-api` | REST public của mọi module; handler NATS cho lệnh từ realtime, gồm room host battle/co-op/boss (`src/backend/pkg/roomhost`) | — |
 | `realtime` | Kết thúc WebSocket, xác thực ticket, presence, định tuyến lệnh qua NATS, đẩy sự kiện xuống client | Không chứa logic nghiệp vụ, không có database |
 | `worker` | `worker-events`: relay outbox, consumer event · `worker-chat`: lưu chat, kiểm duyệt bất đồng bộ, purge chat gameplay · `worker-jobs`: job định kỳ có khóa leader | Không phục vụ request của người dùng |
 
@@ -173,7 +173,7 @@ flowchart TB
 
 Quy tắc ranh giới (AGENTS.md R13, R29):
 
-- Mỗi module nằm trong `modules/<module>/`. Module khác chỉ được import `modules/<module>/api` (facade sinh từ `specs/openapi/modules/<module>.internal.v1.yaml`), và chỉ khi có tên trong `x-allowed-callers` của operation. Phần còn lại nằm trong `internal/`, Go compiler tự chặn import.
+- Mỗi module nằm trong `src/backend/modules/<module>/`. Module khác chỉ được import `src/backend/modules/<module>/api` (facade sinh từ `specs/openapi/modules/<module>.internal.v1.yaml`), và chỉ khi có tên trong `x-allowed-callers` của operation. Phần còn lại nằm trong `internal/`, Go compiler tự chặn import.
 - Không module nào đọc/ghi database của module khác; role DB của mỗi module chỉ `CONNECT` được database của mình.
 - Gọi đồng bộ (facade) chỉ khi cần kết quả ngay, ví dụ game tạo attempt ở learning. Phản ứng phụ (XP, quest, projection, mở channel chat) đi qua event.
 - Khi cần tách một module thành service riêng, cùng spec internal sinh HTTP client/server; chỉ đổi adapter ([ADR-0074](docs/adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) mục 7).
@@ -182,7 +182,7 @@ Quy tắc ranh giới (AGENTS.md R13, R29):
 
 ```mermaid
 flowchart LR
-  REQ["HTTP / NATS / event"] --> MW["Middleware pkg/httpx<br/>xác thực → tenant → portal_staff → featuregate"]
+  REQ["HTTP / NATS / event"] --> MW["Middleware src/backend/pkg/httpx<br/>xác thực → tenant → portal_staff → featuregate"]
   MW --> P["presentation<br/>handler, DTO"]
   P -->|"lệnh ghi"| CMD["application/command<br/>authz.Require → aggregate → UnitOfWork"]
   P -->|"truy vấn"| QRY["application/query<br/>authz.Require → read model"]
@@ -395,26 +395,34 @@ Chi tiết: [DEPLOYMENT](docs/11-operations/DEPLOYMENT.md) · [LOCAL_DEVELOPMENT
 
 ## 8. Cấu trúc repository
 
+Mã nguồn nằm trong `src/` ([ADR-0092](docs/adr/ADR-0092-to-chuc-ma-nguon-trong-src.md)); contract, hạ tầng, tài liệu ở gốc repository.
+
 ```text
-go.mod        một Go module cho toàn backend (ADR-0074)
-cmd/          composition root: core-api, realtime, worker (--profile=events|chat|jobs), migrate
-modules/      identity, learning, game, competition, chat, realtime
-              mỗi module: module.go, api/ (facade), internal/{domain,application,infrastructure,presentation}, ent/schema, migrations/
-pkg/          platform kit: httpx, authz, tenancy, entx (UnitOfWork), outbox, natsx, modcall, roomhost, observability, testkit
-godot/        Godot 4.x project
-web/          apps/portal (Admin Portal 5 workspace), packages/ops-ui
-design/       design tokens (game-tokens, admin-tokens, shared-tokens), icon, font
-specs/        contract: openapi/ (gộp + theo module, public và internal), asyncapi/, events/, schemas/, portal/menu-catalog.yaml
-              feature spec SDD: specs/<NNN>-<slug>/
-.specify/     constitution + template Spec Kit
-.claude/      lệnh /speckit.* cho AI agent
-.github/      workflows CI/CD
-deploy/       docker-compose, APISIX, Keycloak realm, NATS, PostgreSQL init, observability
-scripts/      kiểm tra specs/docs, sinh spec theo module, seed, backup
-docs/         tài liệu theo domain (00-overview … 12-project), adr/
+src/
+  backend/        một Go module cho toàn backend (src/backend/go.mod, ADR-0074)
+                  module path github.com/tanguyen2020/eduworld-platform/src/backend; lệnh Go: go -C src/backend … hoặc make
+    cmd/          composition root: core-api, realtime, worker (--profile=events|chat|jobs), migrate
+    modules/      identity, learning, game, competition, chat, realtime
+                  mỗi module: module.go, api/ (facade), internal/{domain,application,infrastructure,presentation}, ent/schema, migrations/
+    pkg/          platform kit: httpx, authz, tenancy, entx (UnitOfWork), outbox, natsx, modcall, roomhost, observability, testkit
+    tools/        công cụ Go của repo (archgen, allowedcallers, entlint…)
+    test/         integration test không thuộc module nào
+  cms/frontend/   Admin Portal (pnpm workspace): apps/portal (5 workspace), packages/ops-ui
+  game/           Godot 4.x project
+design/           design tokens (game-tokens, admin-tokens, shared-tokens), icon, font
+specs/            contract: openapi/ (gộp + theo module, public và internal), asyncapi/, events/, schemas/, portal/menu-catalog.yaml
+                  feature spec SDD: specs/<NNN>-<slug>/
+.specify/         constitution + template Spec Kit
+.claude/          lệnh /speckit.* cho AI agent
+.github/          workflows CI/CD
+deploy/           docker-compose, APISIX, Keycloak realm, NATS, PostgreSQL init, observability
+scripts/          kiểm tra specs/docs, sinh spec theo module, seed, backup
+tools/versions.mk phiên bản công cụ dùng chung (make tools)
+Makefile          lệnh chung cho local và CI
+docs/             tài liệu theo domain (00-overview … 12-project), adr/
 ```
 
-`cmd/`, `modules/`, `pkg/`, `godot/`, `web/`, `deploy/`, `.github/` được tạo từ F001 trở đi.
+`src/backend/`, `src/cms/frontend/`, `src/game/`, `deploy/`, `.github/` được tạo từ F001 trở đi.
 
 ## 9. Quy trình phát triển: Spec-Driven Development
 

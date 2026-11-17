@@ -197,6 +197,6 @@ Vận hành tăng/giảm replica theo lịch học, deploy không làm học sin
 
 ## Assumptions
 
-- F003 cung cấp `pkg/natsx` (request/reply, header ngữ cảnh) và key builder Valkey; F014 đã có game session và `ew:game:active_session:<student_id>`.
+- F003 cung cấp `src/backend/pkg/natsx` (request/reply, header ngữ cảnh) và key builder Valkey; F014 đã có game session và `ew:game:active_session:<student_id>`.
 - Giới hạn tần suất frame, số lệnh đang chờ, hàng đợi gửi, tốc độ nhận kết nối mới chưa có tên trong CONFIG_DEFAULTS; đề xuất `ws_frame_rate`, `ws_inflight_commands`, `ws_send_queue`, `ws_accept_rate` (task Polish) [Proposed].
 - Stream `EVT_REALTIME` cho `audit.recorded` của gateway [Proposed] — cần cập nhật EVENT_DESIGN §3.1.

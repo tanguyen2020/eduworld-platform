@@ -211,7 +211,7 @@ Trường/nhà cung cấp SIS chạy bộ conformance test của EduWorld vào f
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Chỉ module identity (trong `cmd/worker`) gọi SIS; client game/portal không bao giờ gọi | ADR-0021 · FR-SIS-007 |
+| Chỉ module identity (trong `src/backend/cmd/worker`) gọi SIS; client game/portal không bao giờ gọi | ADR-0021 · FR-SIS-007 |
 | Không gọi SIS trên đường đăng nhập ngoài nhánh lookup; không retry đồng bộ | ADR-0045 · ADR-0061 · AGENTS R30 |
 | Không log PII, credential, `secret_ref` | AGENTS R4, R14 |
 | Egress TLS 1.2+, kiểm cert; mTLS khi `auth_type = mtls` | [SIS_INTEGRATION §9](../../docs/09-identity/SIS_INTEGRATION.md) |

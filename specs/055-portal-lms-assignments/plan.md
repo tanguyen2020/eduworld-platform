@@ -15,7 +15,7 @@ Xây các màn LMS của workspace C trong Admin Portal (một ứng dụng Reac
 | Storage | Không có; per-viewer `sessionStorage` chỉ cho bản nháp wizard chưa gửi |
 | Testing | Vitest + Testing Library + MSW (handler sinh từ OpenAPI, gắn nhãn `MOCK` chỉ trong test), Playwright E2E với backend compose, axe |
 | Target Platform | Trình duyệt desktop/tablet/mobile ([ADMIN_PORTAL §1.5](../../docs/04-admin-portal/ADMIN_PORTAL.md)) |
-| Project Type | web app (workspace C của `web/apps/portal`) |
+| Project Type | web app (workspace C của `src/cms/frontend/apps/portal`) |
 | Performance Goals | Danh sách phân trang cursor; mỗi trang ≤ 4 truy vấn song song khi tải |
 | Constraints | AGENTS R1, R3, R7, R8, R10, R20, R28, R32; ADR-0022, ADR-0027, ADR-0047, ADR-0065, ADR-0072 |
 | Scale/Scope | Trường 1.500 học sinh, lớp ≤ 45 học sinh; `targets` ≤ `maxItems` của `AssignmentCreate` |
@@ -54,7 +54,7 @@ specs/055-portal-lms-assignments/
 ### Source Code (repository)
 
 ```text
-web/apps/portal/src/workspaces/school-lms/lms/
+src/cms/frontend/apps/portal/src/workspaces/school-lms/lms/
 ├── routes.tsx                         # /portal/school-lms/lms/{courses,assignments,schedule,study-groups}
 ├── api/                               # hook TanStack Query bọc client sinh
 │   ├── assignments.ts                 # useAssignments, useCreateAndPublishAssignment, useSubmissions, useExtend, useExcuse, useRemind, useReleaseResults, useCancel
@@ -73,7 +73,7 @@ web/apps/portal/src/workspaces/school-lms/lms/
 ├── exams/AccommodationsTab.tsx
 ├── i18n/{vi,en}.json
 └── __tests__/*.test.tsx
-web/apps/portal/e2e/lms/*.spec.ts
+src/cms/frontend/apps/portal/e2e/lms/*.spec.ts
 ```
 
 **Structure Decision**: Workspace C là chunk lazy-load `src/workspaces/school-lms` (ADR-0027 mục 7); module `lms` tách khỏi phần quản trị trường của F052. Hook trong `api/` là lớp duy nhất gọi mạng (R1).

@@ -54,7 +54,7 @@ specs/063-activity-player/
 ### Source Code (repository)
 
 ```text
-godot/
+src/game/
 ├── scenes/learning/
 │   ├── ActivityHost.tscn (+ activity_host.gd)        # khung chung: header, content, FeedbackStrip, ActionBar, ExitConfirm
 │   ├── activity_renderers/quiz/QuizRenderer.tscn

@@ -29,7 +29,7 @@
 
 ```bash
 make godot-test
-godot --headless --path godot -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/integration/exam
+godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests/integration/exam
 ```
 
 ## 4. Bằng chứng cần nộp

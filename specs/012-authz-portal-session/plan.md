@@ -4,18 +4,18 @@
 
 ## Summary
 
-Bổ sung catalog permission nhóm identity vào `pkg/authz/catalog.go` (khung của F002), seed role hệ thống và đồng bộ `identity.permissions` bằng `cmd/migrate`. module identity có aggregate `Role`, `UserRole`; command quản lý role/UserRole/nhân sự; query `ListMyTenants`, `GetMyPermissions`, `GetMe`; command `CreateAuthSession` (bootstrap portal). Internal `resolvePrincipal` dựng Principal từ DB, cache L1 + Valkey `ew:identity:principal:<user_id>:<tenant_id|_platform>`, invalidate bằng event. Trigger DB `role_permissions_scope_chk`, `user_roles_scope_chk` là lớp 2. Theo ADR-0091: command `PortalLogin`, `RefreshPortalToken`, `PortalLogout`, `SetupPortalPassword`, `ForgotPortalPassword`, `ResetPortalPassword` gọi Keycloak (Direct Access Grant bằng client confidential `eduworld-portal`; Admin API bằng `svc-identity`), cookie refresh HttpOnly + CSRF double-submit, `setup_ticket` trong Valkey, bảng `identity.portal_password_reset_tokens`. Theo ADR-0090: middleware `featuregate` (`pkg/httpx`) + port `featuregate.Source` (hiện thực F015) và `disabled_menus`/`disabled_actions` trong `getMyPermissions`.
+Bổ sung catalog permission nhóm identity vào `src/backend/pkg/authz/catalog.go` (khung của F002), seed role hệ thống và đồng bộ `identity.permissions` bằng `src/backend/cmd/migrate`. module identity có aggregate `Role`, `UserRole`; command quản lý role/UserRole/nhân sự; query `ListMyTenants`, `GetMyPermissions`, `GetMe`; command `CreateAuthSession` (bootstrap portal). Internal `resolvePrincipal` dựng Principal từ DB, cache L1 + Valkey `ew:identity:principal:<user_id>:<tenant_id|_platform>`, invalidate bằng event. Trigger DB `role_permissions_scope_chk`, `user_roles_scope_chk` là lớp 2. Theo ADR-0091: command `PortalLogin`, `RefreshPortalToken`, `PortalLogout`, `SetupPortalPassword`, `ForgotPortalPassword`, `ResetPortalPassword` gọi Keycloak (Direct Access Grant bằng client confidential `eduworld-portal`; Admin API bằng `svc-identity`), cookie refresh HttpOnly + CSRF double-submit, `setup_ticket` trong Valkey, bảng `identity.portal_password_reset_tokens`. Theo ADR-0090: middleware `featuregate` (`src/backend/pkg/httpx`) + port `featuregate.Source` (hiện thực F015) và `disabled_menus`/`disabled_actions` trong `getMyPermissions`.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `pkg/authz`, `pkg/httpx`, `pkg/entx` (`UnitOfWork`), `pkg/outbox`, Valkey client, JWKS cache (F002) |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/authz`, `src/backend/pkg/httpx`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, Valkey client, JWKS cache (F002) |
 | Storage | PostgreSQL `eduworld_identity` (`identity.permissions`, `roles`, `role_permissions`, `user_roles`, view `tenant_memberships_v`); Valkey cache Principal/membership |
 | Testing | go test + testcontainers (PostgreSQL, Valkey, NATS, Keycloak test realm); test sinh từ OpenAPI cho authorization matrix |
 | Target Platform | Linux container |
-| Project Type | backend module + platform kit (`pkg/authz` catalog) |
+| Project Type | backend module + platform kit (`src/backend/pkg/authz` catalog) |
 | Performance Goals | Đường đăng nhập portal (`listMyTenants` → `getMyPermissions` → `getMe`) p95 theo `login_slo`; `resolvePrincipal` hit cache ≥ 95% [Proposed] ([BACKEND_DESIGN §6.1](../../docs/07-backend/BACKEND_DESIGN.md)) |
 | Constraints | AGENTS R7, R8, R14, R20, R27, R29, R30; ADR-0027, ADR-0065, ADR-0066, ADR-0067, ADR-0072, ADR-0081, ADR-0090, ADR-0091 |
 | Scale/Scope | `principal_cache`, `principal_cache_ttl`, `portal_login_rate`, `portal_setup_ticket_ttl`, `portal_password_reset_ttl`, `feature_toggle_cache_ttl` |
@@ -50,9 +50,9 @@ specs/012-authz-portal-session/
 ### Source Code (repository)
 
 ```text
-pkg/authz/catalog.go                  # bổ sung permission nhóm identity + role hệ thống (khung F002)
-modules/identity/
-├── cmd/migrate/                      # đồng bộ identity.permissions + seed role từ catalog
+src/backend/pkg/authz/catalog.go                  # bổ sung permission nhóm identity + role hệ thống (khung F002)
+src/backend/modules/identity/
+├── cmd/migrate/                                  # đồng bộ identity.permissions + seed role từ catalog
 ├── ent/schema/                       # permission.go, role.go, rolepermission.go, userrole.go
 ├── migrations/                       # trigger role_permissions_scope_chk, user_roles_scope_chk; view tenant_memberships_v (thêm nhánh user_roles)
 ├── internal/domain/authz/            # Role, UserRole, ScopeRule (ADR-0081, ADR-0072)
@@ -71,11 +71,11 @@ modules/identity/
 ├── internal/presentation/consumer/principal_invalidate.go
 ├── internal/presentation/job/user_role_expiry.go
 └── tests/{unit,integration,contract}/
-pkg/httpx/featuregate/                # middleware featuregate + port Source + bảng route→action sinh từ x-portal-action (ADR-0090)
-cmd/core-api/                         # gắn featuregate sau portal_staff, Source = module identity (F015)
+src/backend/pkg/httpx/featuregate/                # middleware featuregate + port Source + bảng route→action sinh từ x-portal-action (ADR-0090)
+src/backend/cmd/core-api/                         # gắn featuregate sau portal_staff, Source = module identity (F015)
 ```
 
-**Structure Decision**: Theo BACKEND_DESIGN §3, §6; D4 (catalog ở `pkg/authz/catalog.go`), D7 (endpoint/cache key).
+**Structure Decision**: Theo BACKEND_DESIGN §3, §6; D4 (catalog ở `src/backend/pkg/authz/catalog.go`), D7 (endpoint/cache key).
 
 ## Phase 0: Research
 
@@ -98,10 +98,10 @@ Không có research riêng — ADR-0066/0067/0081/0090/0091 và DATABASE_DESIGN 
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F010 (user, tenant, membership view, adapter Keycloak); F002 (`pkg/authz`, middleware).
+- Feature phụ thuộc: F010 (user, tenant, membership view, adapter Keycloak); F002 (`src/backend/pkg/authz`, middleware).
 - Event phát: `role.updated`, `user_role.changed` (payload có sẵn), `audit.recorded`.
 - Event tiêu thụ (invalidate cache): `user_role.changed`, `role.updated`, `tenant_membership.changed`, `user.status_changed`, `user.access_revoked`, `tenant.updated`, `enrollment.changed`.
-- Facade `identity` (`modules/identity/api`) sinh từ `identity.internal.v1.yaml` bằng `make gen`; bên gọi trong tiến trình: learning, game, competition, chat. Realtime (binary riêng, không DB) lấy Principal qua NATS request/reply do `core-api` xử lý (ADR-0074).
+- Facade `identity` (`src/backend/modules/identity/api`) sinh từ `identity.internal.v1.yaml` bằng `make gen`; bên gọi trong tiến trình: learning, game, competition, chat. Realtime (binary riêng, không DB) lấy Principal qua NATS request/reply do `core-api` xử lý (ADR-0074).
 
 ### Bảo mật, tenant, idempotency, audit
 

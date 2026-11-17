@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F042, F043 (và F041 cho bài giao, F025/F026 cho workflow version).
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); bucket `ew-exports` trên floci.
-- Dữ liệu: kịch bản demo M-C3 (đề "Phép nhân" 4 biến thể giao 3A, học sinh `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b`) + fixture lượt trả lời `modules/learning/tests/fixtures/itemanalysis/` (≥ 100 lượt/câu, có `rapid_guess`).
+- Dữ liệu: kịch bản demo M-C3 (đề "Phép nhân" 4 biến thể giao 3A, học sinh `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b`) + fixture lượt trả lời `src/backend/modules/learning/tests/fixtures/itemanalysis/` (≥ 100 lượt/câu, có `rapid_guess`).
 - Tài khoản demo: `qlcm.truong.a` (scope Toán), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `sa.admin`, `cm.noidung`, `cm.duyet`, `hs.an.3a`.
 
 ## 2. Kịch bản kiểm tra

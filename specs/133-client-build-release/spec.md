@@ -1,6 +1,6 @@
 # Feature Specification: F133 — Build và phát hành client Windows, Android, iOS, Web
 
-**Feature Branch**: `133-client-build-release` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `godot/` + hạ tầng CI (`.github/workflows/godot.yml`, `scripts/godot`, `deploy/installer`, CDN `play.<domain>`) · **Mốc**: M6 · **Phụ thuộc**: F062, F130
+**Feature Branch**: `133-client-build-release` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` + hạ tầng CI (`.github/workflows/godot.yml`, `scripts/godot`, `deploy/installer`, CDN `play.<domain>`) · **Mốc**: M6 · **Phụ thuộc**: F062, F130
 **Input**: Pipeline export, ký số, phát hành và chứng nhận hiệu năng client Godot trên 4 nền tảng Release 1.0 (ADR-0013, ADR-0057), giới hạn dung lượng, tương thích phiên bản N-1, và ngân sách phòng máy (bộ cài kèm gói nội dung, cache LAN, tải trước ngoài giờ) — FR-GAME-009, NFR-COMP-001, NFR-COMP-002, NFR-COMP-003, NFR-COMP-004, NFR-PERF-006, NFR-PERF-019.
 
 ## Clarifications

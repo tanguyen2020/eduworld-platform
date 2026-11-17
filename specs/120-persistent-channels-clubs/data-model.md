@@ -2,7 +2,7 @@
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md) · Nguồn sự thật bảng: [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)
 
-Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL` + RLS, `created_at/updated_at`, `deleted_at/deleted_by` (trừ ghi chú append-only), interceptor `pkg/entx` (ADR-0039). Chuỗi `MaxLen` theo ADR-0041.
+Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL` + RLS, `created_at/updated_at`, `deleted_at/deleted_by` (trừ ghi chú append-only), interceptor `src/backend/pkg/entx` (ADR-0039). Chuỗi `MaxLen` theo ADR-0041.
 
 ## 1. Entity
 

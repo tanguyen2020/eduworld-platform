@@ -1,0 +1,120 @@
+# Go lane (F001 T036, ADR-0088, DEPLOYMENT §10.2): matrix per changed module + repository-wide
+# architecture and database-privilege checks. pkg/, cmd/, go.mod changes run every module.
+name: go
+
+on:
+  pull_request:
+    paths:
+      - "src/backend/**"
+      - "tools/**"
+      - "Makefile"
+      - "specs/openapi/modules/**"
+      - "specs/events/**"
+      - "specs/asyncapi/**"
+      - "deploy/postgres/**"
+      - ".github/workflows/go.yml"
+      - ".github/module-filters.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/**"
+      - "tools/**"
+      - "Makefile"
+      - "specs/openapi/modules/**"
+      - "specs/events/**"
+      - "specs/asyncapi/**"
+      - "deploy/postgres/**"
+      - ".github/workflows/go.yml"
+      - ".github/module-filters.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      modules: ${{ steps.matrix.outputs.modules }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: .github/module-filters.yml
+      - id: matrix
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+        run: node scripts/ci/module-matrix.mjs "$CHANGES" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.modules != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJSON(needs.changes.outputs.modules) }}
+    name: test (${{ matrix.module }})
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable # latest patched release (stdlib CVEs are fixed in patches)
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - run: make tools
+      - name: gen-check
+        run: make gen-check MOD=${{ matrix.module }}
+      - name: lint
+        run: make lint MOD=${{ matrix.module }}
+      - name: test
+        run: make test MOD=${{ matrix.module }}
+      - name: test-integration
+        run: make test-integration MOD=${{ matrix.module }}
+      - name: migrate-lint
+        run: |
+          docker compose -f deploy/compose/docker-compose.yml up -d --wait postgres
+          make migrate-lint MOD=${{ matrix.module }}
+
+  arch:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable # latest patched release (stdlib CVEs are fixed in patches)
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - run: make tools
+      - run: go -C src/backend build ./cmd/...
+      - run: make arch-check
+      - run: bash scripts/ci/test-arch-fixtures.sh
+      - run: make test-contract
+      - name: integration (binaries, health)
+        run: go -C src/backend test -count=1 -tags integration ./cmd/... ./pkg/...
+
+  db-privileges:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable # latest patched release (stdlib CVEs are fixed in patches)
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - name: database isolation tests
+        run: go -C src/backend test -count=1 -tags integration ./test/postgres/...
+      - name: privileges after migrations
+        run: |
+          docker compose -f deploy/compose/docker-compose.yml up -d --wait postgres
+          make migrate
+          make db-privileges

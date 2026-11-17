@@ -29,4 +29,4 @@
 
 - Feature chạm thêm module `identity` và module `learning` (cờ QA, tổng hợp học tập platform) — cột Module trong CODE_PLAN chỉ ghi module `game`; đề nghị cập nhật.
 - Phụ thuộc thực tế ngoài cột "Phụ thuộc": F010 (`updateTenant`), F043/F044 (tổng hợp platform), F057 (form tenant).
-- `TC-SVC-006` mô tả `403 PERMISSION_DENIED` trong khi `ProblemCode` có `CALLER_NOT_ALLOWED` — dùng mã do `pkg/modcall` chuẩn hóa, cần thống nhất ở TEST_STRATEGY/API_DESIGN.
+- `TC-SVC-006` mô tả `403 PERMISSION_DENIED` trong khi `ProblemCode` có `CALLER_NOT_ALLOWED` — dùng mã do `src/backend/pkg/modcall` chuẩn hóa, cần thống nhất ở TEST_STRATEGY/API_DESIGN.

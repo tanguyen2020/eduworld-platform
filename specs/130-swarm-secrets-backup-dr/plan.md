@@ -10,7 +10,7 @@ Viết stack file Docker Swarm cho staging/production theo DEPLOYMENT §4 (node 
 
 | Mục | Giá trị |
 |---|---|
-| Language/Version | YAML (Compose spec 3.9 cho Swarm), Bash (POSIX + `set -euo pipefail`), Go ≥ 1.24 (`tools/ops-scheduler`) |
+| Language/Version | YAML (Compose spec 3.9 cho Swarm), Bash (POSIX + `set -euo pipefail`), Go ≥ 1.24 (`src/backend/tools/ops-scheduler`) |
 | Primary Dependencies | Docker Engine Swarm ≥ 25, pgBackRest 2.5x (TLS server), Patroni + etcd riêng, SOPS + age, `aws` CLI (S3 sync tới đích backup), HAProxy (socket proxy), APISIX Admin API (`traffic-split`), `keycloak-config-cli` |
 | Storage | PostgreSQL 17 (Patroni, một cụm, 5 database module + `keycloak`), object storage theo `object_storage_backend` (ADR-0075: S3-compatible managed tại Việt Nam hoặc Garage/SeaweedFS ≥ 3 node RF3; floci chỉ local/CI), repo S3 ngoài hạ tầng chính |
 | Testing | Bats (`tests/ops/*.bats`) cho script; `go test` cho `ops-scheduler`; diễn tập trên staging (bằng chứng ở `restore-tests/`) |
@@ -27,7 +27,7 @@ Viết stack file Docker Swarm cho staging/production theo DEPLOYMENT §4 (node 
 | Điều | Kết quả | Ghi chú |
 |---|---|---|
 | I Spec trước, code sau | ✅ | Không có endpoint mới; delta AsyncAPI `system.server.draining` ở task Phase 2 (T004); không chạm deferred |
-| II Ranh giới module, Clean Architecture + CQRS | ✅ | Mỗi Swarm service chỉ nhận credential của module nó nạp, mỗi module một database/role; `ops-scheduler` không import `modules/` |
+| II Ranh giới module, Clean Architecture + CQRS | ✅ | Mỗi Swarm service chỉ nhận credential của module nó nạp, mỗi module một database/role; `ops-scheduler` không import `src/backend/modules/` |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Credential DB theo module (không `CONNECT` chéo database), network `data` tách; khôi phục không xóa vật lý, chạy `retention-reapply` |
 | IV Server-authoritative | ✅ | Không áp dụng |
 | V Xác thực, phân quyền | ✅ | Secret chỉ qua Docker secrets; Docker API chỉ TLS client cert của self-hosted runner deploy + socket proxy allowlist; deploy production cần approval (GitHub Environment `production`) |
@@ -68,7 +68,7 @@ deploy/secrets/{staging,production}/<owner>.sops.yaml   # SOPS (age)
 deploy/backup/{pgbackrest.conf,pgbackrest-server.conf,Dockerfile}  # image eduworld/backup-tools
 deploy/apisix/canary/traffic-split.tpl.yaml
 deploy/ops-scheduler/socket-proxy.cfg   # HAProxy allowlist
-tools/ops-scheduler/{cmd/ops-scheduler/main.go,internal/{schedule,capacity,dockerapi,metrics}/}   # thuộc go.mod gốc (ADR-0074)
+src/backend/tools/ops-scheduler/{cmd/ops-scheduler/main.go,internal/{schedule,capacity,dockerapi,metrics}/}   # thuộc Go module src/backend (go.mod duy nhất, ADR-0074, ADR-0092)
 scripts/deploy/{validate-stacks.sh,check-secret-refs.sh,deploy-service.sh,run-migrate-job.sh,canary.sh,rollback.sh,secrets-sync.sh}
 scripts/backup/{pg_backup.sh,pg_logical_dump.sh,object_storage_backup.sh,etcd_snapshot.sh,keycloak_export.sh,restore_test.sh,lib-metrics.sh}
 scripts/ops/{rb01-pitr-restore.sh,rb03-cluster-restore.sh,rb04-keycloak-restore.sh,rb05-object-storage-restore.sh,reset-consumers.sh,patroni-switchover.sh}
@@ -79,7 +79,7 @@ tests/ops/*.bats
 docs/11-operations/restore-tests/README.md
 ```
 
-**Structure Decision**: Theo DEPLOYMENT §4.5 (`deploy/swarm/<env>/`) và BACKUP_RECOVERY §10 (`scripts/backup/`). `ops-scheduler` là công cụ trong `tools/` của Go module gốc (`go.mod` duy nhất, ADR-0074), không phải module nghiệp vụ, không DB. Stack `ops.stack.yml` chứa `ops-scheduler`, socket proxy, `backup-tools` (supercronic với `ops-jobs.crontab`, không quyền Docker API), bastion; observability do F131 thêm vào `infra.stack.yml`.
+**Structure Decision**: Theo DEPLOYMENT §4.5 (`deploy/swarm/<env>/`) và BACKUP_RECOVERY §10 (`scripts/backup/`). `ops-scheduler` là công cụ trong `src/backend/tools/` của Go module `src/backend` (`src/backend/go.mod` duy nhất, ADR-0074, ADR-0092), không phải module nghiệp vụ, không DB. Stack `ops.stack.yml` chứa `ops-scheduler`, socket proxy, `backup-tools` (supercronic với `ops-jobs.crontab`, không quyền Docker API), bastion; observability do F131 thêm vào `infra.stack.yml`.
 
 ## Phase 0: Research
 
@@ -95,10 +95,10 @@ docs/11-operations/restore-tests/README.md
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `tools/ops-scheduler/internal/schedule` | Kiểu `Schedule{Service, Baseline, Peak, Windows}`; quy tắc `Peak ≥ Baseline`, khung giờ không chồng |
+| domain | `src/backend/tools/ops-scheduler/internal/schedule` | Kiểu `Schedule{Service, Baseline, Peak, Windows}`; quy tắc `Peak ≥ Baseline`, khung giờ không chồng |
 | application | `capacity.Check(reservations, nodeFree)` · `Planner.Next(now)` | Từ chối scale khi vượt năng lực (F130-AC-23) |
 | infrastructure | `dockerapi` (HTTP tới socket proxy), `metrics` (Prometheus `/metrics` trên `:9090`) | Không truy cập Docker socket trực tiếp |
-| presentation | `cmd/ops-scheduler` (vòng lặp mỗi 30 s; lệnh con `validate <file>`) | Job backup/restore chạy trong service `backup-tools` (research R3), không qua `ops-scheduler` |
+| presentation | `src/backend/tools/ops-scheduler/cmd/ops-scheduler` (vòng lặp mỗi 30 s; lệnh con `validate <file>`) | Job backup/restore chạy trong service `backup-tools` (research R3), không qua `ops-scheduler` |
 
 ### Tích hợp và phụ thuộc
 

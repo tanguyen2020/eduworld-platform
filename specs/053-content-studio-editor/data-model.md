@@ -4,7 +4,7 @@
 
 ## 1. Entity
 
-Không áp dụng — F053 là client (`web/apps/portal`, `web/packages/ops-ui`), không tạo/sửa bảng hay migration. Bảng nội dung (`content_items`, `content_versions`, `media_assets`, `math_svgs`, curriculum) thuộc module learning (F020–F027). Dưới đây là **model phía client**.
+Không áp dụng — F053 là client (`src/cms/frontend/apps/portal`, `src/cms/frontend/packages/ops-ui`), không tạo/sửa bảng hay migration. Bảng nội dung (`content_items`, `content_versions`, `media_assets`, `math_svgs`, curriculum) thuộc module learning (F020–F027). Dưới đây là **model phía client**.
 
 ### `EditorDraft<T>` (bộ nhớ, `ops-ui/editor`)
 

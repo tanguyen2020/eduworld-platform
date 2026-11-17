@@ -28,5 +28,5 @@
 ## Notes
 
 - Chặn bởi delta `createAttempt` (module learning) cho mode `challenge`; spec giữ Ready vì quyết định đã rõ, chỉ còn việc contract ở Phase 2.
-- `pkg/roomhost` có thể chồng lấn F091 (hub, nhóm H) — phối hợp khi viết F091/F103/F105.
+- `src/backend/pkg/roomhost` có thể chồng lấn F091 (hub, nhóm H) — phối hợp khi viết F091/F103/F105.
 - Spec "tiếp tục sau mất kết nối" dùng `attempt_resume_window` của ACTIVITY_ENGINE; CHALLENGE_BOSS_SYSTEM chưa định nghĩa grace riêng cho challenge solo.

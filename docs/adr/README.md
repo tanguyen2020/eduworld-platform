@@ -108,6 +108,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0089](ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) | Chốt tầng dữ liệu: RLS chỉ lọc tenant, bộ mixin ent, outbox và partition hạ tầng | Accepted | — |
 | [0090](ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) | Danh mục menu/action của Admin Portal và bật/tắt lưu trong database | Accepted | — |
 | [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | Admin Portal đăng nhập bằng form riêng qua backend, không chuyển hướng OIDC | Accepted · một phần supersedes ADR-0066, 0067, 0068 | — |
+| [0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) | Tổ chức mã nguồn trong src/: backend dùng chung, cms/frontend, game | Accepted · một phần supersedes ADR-0074 | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -121,6 +122,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted ho
 | [0088](ADR-0088-ci-cd-bang-github-actions.md) | CI/CD bằng GitHub Actions (`.github/workflows/`, ghcr.io, runner macOS cho iOS, GitHub Environments) |
 | [0082](ADR-0082-spec-driven-development-va-noi-dung-deferred.md) | Spec-Driven Development chuẩn Spec Kit + EARS: `.specify/` (constitution, template), feature `specs/<NNN>-<slug>/`, danh mục trong CODE_PLAN; `docs/99-deferred`, `specs/_deferred` ngoài phạm vi |
 | [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) | Modular monolith: module `identity`, `learning`, `game`, `competition`, `chat`, `realtime` trong `modules/`; 3 binary `core-api`, `realtime`, `worker` (profile `events`/`chat`/`jobs`); mỗi module một database trên một cụm PostgreSQL; gọi giữa module trong tiến trình qua facade sinh từ spec internal |
+| [0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) | Mã nguồn trong `src/`: `src/backend` (Go module duy nhất: cmd, modules, pkg), `src/cms/frontend` (Admin Portal), `src/game` (Godot); deploy/specs/docs/scripts/design ở gốc |
 | [0038](ADR-0038-cqrs-clean-architecture-trong-moi-service.md) | CQRS + Clean Architecture trong mỗi service |
 | [0040](ADR-0040-goi-service-to-service-bang-typed-rest-client-sinh-tu-openap.md) | Spec internal là hợp đồng facade có kiểu, `x-allowed-callers` (transport thay bởi ADR-0074) |
 | [0039](ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md) | ORM ent + migration Atlas (thay phần ORM của 0025) |
