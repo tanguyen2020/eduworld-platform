@@ -5,7 +5,7 @@
 
 ## 1. Mục đích và phạm vi
 
-Tài liệu là nguồn duy nhất cho **tiến trình nhân vật** của học sinh: XP (catalog nguồn, cap, giảm dần khi lặp, sổ cái), level, đường cong XP, danh hiệu, phần thưởng lên cấp, lịch sử. Đây là động lực để học sinh quay lại và thấy nhân vật mình lớn lên.
+Tài liệu là nguồn duy nhất cho **tiến trình nhân vật** của học sinh: XP (catalog nguồn, cap, giảm dần khi lặp, sổ cái), level, đường cong XP, danh hiệu, phần thưởng lên cấp, lịch sử, quy tắc chuyển năm học (§5.1). Đây là động lực để học sinh quay lại và thấy nhân vật mình lớn lên.
 
 **Ngoài phạm vi:** điểm và mức thành thạo học tập ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)), rating thi đấu ([COMPETITION_SYSTEM](COMPETITION_SYSTEM.md)), mở khóa vùng/khám phá/hoàn thành bản đồ ([WORLD_DESIGN](WORLD_DESIGN.md) §7–8), vật phẩm/tiền tệ/achievement/collection ([INVENTORY_ECONOMY](INVENTORY_ECONOMY.md)), challenge/boss ([CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md)).
 
@@ -13,22 +13,22 @@ Tài liệu là nguồn duy nhất cho **tiến trình nhân vật** của học
 |---|---|
 | Học sinh | Thấy mình tiến bộ, có mục tiêu gần (lên cấp) và xa (mở khu mới) |
 | Game Designer / Live-ops | Cấu hình đường cong XP, danh hiệu, phần thưởng mà không build lại client |
-| Giáo viên / Nhà trường | Game level **không** bị hiểu nhầm là năng lực học tập |
+| Nhà trường (`school_admin`, `academic_manager`) | Game level **không** bị hiểu nhầm là năng lực học tập; XP không cản trở việc ôn tập |
 | Backend | Mọi thay đổi XP/level server-authoritative, idempotent, kiểm toán được |
 
-Service sở hữu: **`game-service`** (ADR-0036). Database `eduworld_game`.
+Module sở hữu: **module `game`** (ADR-0036). Database `eduworld_game`.
 
 ## 2. Ba miền tiến trình tách biệt [Confirmed]
 
 | Miền | Số liệu | Nguồn sự thật | Dùng cho | Không được dùng cho |
 |---|---|---|---|---|
-| **Game progression** | XP, Game Level, danh hiệu, khám phá, achievement, collection, cosmetic | `game-service`: `xp_ledger`, `level_history`, `exploration_progress` (WORLD_DESIGN) | Động lực chơi, mở khóa cosmetic/khu vực/hoạt động phụ | Đánh giá học tập, báo cáo giáo viên như năng lực |
-| **Learning progression** | Learning Score, Mastery theo LO, kết quả bài, kỹ năng yếu | `learning-service` (ADR-0017) | Giáo viên, học sinh, gợi ý ôn tập | Tính XP trực tiếp theo điểm |
-| **Competition progression** | Game Rating (Glicko-2), Competition Points, thứ hạng mùa | `competition-service` (ADR-0018) | Ghép trận, bảng xếp hạng | Đánh giá học tập |
+| **Game progression** | XP, Game Level, danh hiệu, khám phá, achievement, collection, cosmetic | module `game`: `xp_ledger`, `level_history`, `exploration_progress` (WORLD_DESIGN) | Động lực chơi, mở khóa cosmetic/khu vực/hoạt động phụ | Đánh giá học tập, báo cáo cho nhà trường như năng lực |
+| **Learning progression** | Learning Score, Mastery theo LO, kết quả bài, kỹ năng yếu | module `learning` (ADR-0017) | Học sinh, nhà trường (School Learning Dashboard), gợi ý ôn tập | Tính XP trực tiếp theo điểm |
+| **Competition progression** | Game Rating (Glicko-2), Competition Points, thứ hạng mùa | module `competition` (ADR-0018) | Ghép trận, bảng xếp hạng | Đánh giá học tập |
 
 Quy tắc:
 - **Không gộp** ba miền thành một điểm. UI hiển thị ở ba khu vực khác nhau (hồ sơ game, sổ học tập, bảng thi đấu).
-- Game level **không** là bằng chứng thành thạo kiến thức [Confirmed]. Báo cáo cho giáo viên không hiển thị game level cạnh điểm học tập.
+- Game level **không** là bằng chứng thành thạo kiến thức [Confirmed]. Báo cáo cho nhà trường không hiển thị game level cạnh điểm học tập.
 - Hoạt động học tập **có thể** sinh XP (động lực), nhưng XP không đi ngược vào mastery hay điểm.
 
 ## 3. XP
@@ -42,7 +42,8 @@ Mỗi lần cộng XP gắn một `source_code` trong catalog cấu hình (Game 
 | `quest.main_completed` | `quest.completed` (main) | 150 | Một lần cho mỗi quest |
 | `quest.side_completed` | `quest.completed` (side, learning, exploration) | 60–100 | |
 | `quest.daily_completed` / `quest.weekly_completed` | `quest.completed` (daily/weekly) | 40 / 120 | Theo `period_key` |
-| `activity.completed` | `exercise.submitted` (đạt `pass_rule`) | 5–30 theo độ dài | Tỷ lệ với số câu đúng **lần đầu**; câu trả lời đoán nhanh dưới ngưỡng thời gian tối thiểu không tính |
+| `activity.completed` | `activity.graded` (đạt `pass_rule`) | 5–30 theo độ dài | Tỷ lệ với số câu đúng **lần đầu**; câu gắn cờ `rapid_guess` ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) không tính |
+| `mastery.objective_mastered` | `learning_objective.mastered` | 50 | **Thưởng khi lên mức mastery** của một LO, không theo tốc độ hay chuỗi; một lần cho mỗi `(student_id, objective_id)`, idempotent; LO tụt mức do decay rồi đạt lại không nhận lại [Confirmed — Technical Architect 2026-11-15] (`xp_objective_mastered`) |
 | `lesson.completed` | `lesson.completed` | 20 | |
 | `exploration.discovery` | `world.discovery_found` | 10 | Mỗi điểm khám phá một lần ([WORLD_DESIGN](WORLD_DESIGN.md) §8) |
 | `exploration.area_completed` | `world.area_completed` | 100 | |
@@ -53,7 +54,7 @@ Mỗi lần cộng XP gắn một `source_code` trong catalog cấu hình (Game 
 | `event.participation` | event của live-ops | cấu hình | Phase sau (Event & Season) |
 | `competition.participation` | `match.completed` | 10–25 | Tham gia, không phụ thuộc thắng thua nhiều; tối đa 10 trận/ngày tính XP |
 
-Không có XP cho: đăng nhập hằng ngày đơn thuần, thời gian online, số lần bấm, trả lời đoán nhanh dưới ngưỡng thời gian tối thiểu, bài kiểm tra chính thức (chỉ XP "hoàn thành" cố định, LEARNING_EXPERIENCE).
+Không có XP cho: đăng nhập hằng ngày đơn thuần, thời gian online, số lần bấm, câu gắn cờ `rapid_guess`, tốc độ trả lời, chuỗi đúng liên tiếp, bài kiểm tra chính thức (chỉ XP "hoàn thành" cố định, LEARNING_EXPERIENCE). Mục tiêu: XP thưởng sự kiên trì và tiến bộ thành thạo, không khuyến khích làm nhanh hơn suy nghĩ.
 
 ### 3.2. Cap, giảm dần và chống lạm dụng
 
@@ -61,7 +62,7 @@ Tài liệu này **sở hữu** các quy tắc XP dưới đây; [ANTI_CHEAT](..
 - Giảm dần khi lặp cùng nội dung, trong cửa sổ 7 ngày theo content version: lần 1 = 100%, lần 2 = 50%, lần 3 = 25%, từ lần 4 = 0% [Proposed].
 - Cap tổng **1.000 XP/ngày** và cap theo nhóm nguồn (`xp_daily_caps`) [Proposed].
 - Câu sai không cho XP; câu đúng sau khi đã xem giải thích của chính câu đó: 0 XP.
-- Nội dung có độ khó thấp hơn khối hiện tại của học sinh ≥ 2 khối: XP × 0,25 [Proposed].
+- Nội dung có độ khó thấp hơn khối hiện tại của học sinh ≥ 2 khối: XP × 0,25 [Proposed], **trừ** hoạt động ôn tập LO tiên quyết do **hệ thống gợi ý** (attempt mang `recommendation_id` từ recommendation rule R3, [LEARNING_ANALYTICS §6](../02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc do **nhà trường giao** (attempt mode `assignment`): các hoạt động này nhận XP đầy đủ, để XP không ngược với gợi ý ôn tập [Proposed]. Giảm dần khi lặp và cap ngày vẫn áp dụng.
 - Cap Xu/ngày và cách Xu áp cùng cơ chế giảm dần: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) (nơi sở hữu).
 - XP do **server** tính khi nhận domain event; client không gửi số XP. Mỗi lần cộng idempotent theo `(student_id, source_type, source_id, rule_id)` (ADR-0049).
 - Cảnh báo (không tự phạt) khi phát hiện mẫu bất thường: tỷ lệ đúng đột biến, thời gian trả lời quá ngắn, nhiều tài khoản cùng thiết bị → `integrity_signals` cho moderator xem.
@@ -135,12 +136,12 @@ Cấp phần thưởng qua Reward Engine, idempotent theo `(student_id, level, c
 ```mermaid
 sequenceDiagram
   autonumber
-  participant L as learning-service
+  participant L as module learning
   participant N as NATS JetStream
-  participant G as game-service (Reward Engine)
+  participant G as module game (Reward Engine)
   participant V as Valkey Pub/Sub
   participant C as Godot client
-  L->>N: exercise.submitted (attempt đạt pass_rule)
+  L->>N: activity.graded (attempt đạt pass_rule)
   N->>G: deliver (consumer xp-awarder)
   G->>G: Áp reward rule, cap, giảm dần (idempotent)
   G->>G: Ghi xp_ledger + cập nhật xp_total trong 1 transaction
@@ -164,7 +165,24 @@ sequenceDiagram
 
 Mở khóa vùng, điểm khám phá, vật sưu tầm, secret quest, hoàn thành bản đồ và chương truyện thuộc [WORLD_DESIGN](WORLD_DESIGN.md) §7–8. Progression chỉ cung cấp: điều kiện `min_level` (dùng cho khu trang trí, không cho khu học tập) và XP cho khám phá theo catalog §3.1.
 
-## 6. Dữ liệu (game-service, `eduworld_game`)
+### 5.1. Chuyển năm học (lên lớp) [Proposed]
+
+Khi học sinh lên lớp, module game nhận `student.synced` (đổi `grade_level`) / `enrollment.changed` từ module identity và áp các quy tắc sau trong một command idempotent theo `(student_id, school_year)`:
+
+| Thành phần | Quy tắc |
+|---|---|
+| XP, level, danh hiệu, `xp_ledger` | **Giữ nguyên**; không reset level theo năm học (level là hành trình của nhân vật, không phải năng lực theo khối) |
+| Vùng đã mở, điểm khám phá, vật sưu tầm, cosmetic, inventory | Giữ nguyên ([WORLD_DESIGN](WORLD_DESIGN.md) §7–8, [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md)) |
+| Mạch truyện chính (`main`, `repeatability = once`) | Chương đã hoàn thành giữ trạng thái; vì câu hỏi trong chương theo khối của học sinh ([WORLD_DESIGN §2.2](WORLD_DESIGN.md#22-mạch-truyện-chính-confirmed--người-duyệt-2026-11-15-adr-0056)), mỗi chương môn học mở thêm một **"Hành trình khối mới"** (chuỗi quest `side`/`learning` của khối mới, cùng NPC và bối cảnh) thay vì bắt chơi lại chương cũ |
+| Quest đang `active` của khối cũ | Quest `learning`/`daily`/`weekly` có `grade_levels` không chứa khối mới → `expired` (không phạt); quest khám phá/xã hội không gắn khối giữ nguyên |
+| Quest do nhà trường giao (`start_trigger = assignment`) | Theo trạng thái assignment của lớp cũ (LMS đóng khi hết năm học); kết quả đã nộp vẫn xem được |
+| Cap XP ngày, giảm dần khi lặp | Không đổi; cửa sổ 7 ngày tính tiếp |
+| Learning mastery | Thuộc module learning, không reset ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) |
+| Thông báo | Màn chào năm học mới trong game (cutscene ngắn của Mây), liệt kê hành trình khối mới; không thông báo đẩy |
+
+Học sinh ở lại lớp: không có thay đổi nào; không hiển thị thông điệp gợi ý việc lên/ở lại lớp cho học sinh khác.
+
+## 6. Dữ liệu (module game, `eduworld_game`)
 
 | Bảng | Loại | Cột chính |
 |---|---|---|
@@ -178,7 +196,7 @@ Chi tiết DDL: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 
 ## 7. API đề xuất
 
-Học sinh (`/api/v1/game`, game-service):
+Học sinh (`/api/v1/game`, module game):
 
 | Method | Path | Mô tả | Idem |
 |---|---|---|---|
@@ -186,14 +204,14 @@ Học sinh (`/api/v1/game`, game-service):
 | GET | `/game/progression/xp-history?cursor=` | Lịch sử giao dịch XP (thân thiện) | T |
 | GET | `/game/progression/levels` | Bảng level + phần thưởng sắp tới (theo curve hiện hành) | T |
 
-Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only): `progression-curves`, `levels`. API khám phá/mở vùng: [WORLD_DESIGN](WORLD_DESIGN.md) §12.
+Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only): `progression-curves`, `progression_levels` (bảng level dùng trường `xp_required`). API khám phá/mở vùng: [WORLD_DESIGN](WORLD_DESIGN.md) §12.
 
 ## 8. Event
 
 | Event | Producer | Payload chính |
 |---|---|---|
-| `xp.awarded` | game-service | `amount`, `source_code`, `source_id`, `rule_id`, `capped` |
-| `level.reached` | game-service | `from_level`, `to_level`, `curve_version`, `title_code` |
+| `xp.awarded` | module game | `amount`, `source_code`, `source_id`, `rule_id`, `capped` |
+| `level.reached` | module game | `from_level`, `to_level`, `curve_version`, `title_code` |
 
 ## 9. Lỗi
 
@@ -206,6 +224,9 @@ Không có mã lỗi riêng: XP/level chỉ đọc qua API, mọi thay đổi do
 | AC-GAM-004 | Hoàn thành quest → XP cộng đúng rule, thanh tiến độ cập nhật trong ≤ 2 s; replay event không cộng trùng |
 | AC-GAM-005 | Đủ XP → `level.reached`, phần thưởng level cấp đúng một lần, hiển thị hiệu ứng lên cấp |
 | AC-GAM-006 | Publish curve mới không làm giảm level của học sinh nào |
-| AC-GAM-007 | Báo cáo giáo viên không hiển thị game level như chỉ số học tập |
+| AC-GAM-007 | School Learning Dashboard không hiển thị game level như chỉ số học tập |
+| AC-GAM-014 | Attempt ôn LO tiên quyết thấp hơn ≥ 2 khối có `recommendation_id` hoặc mode `assignment` nhận XP đầy đủ (không × 0,25) |
+| AC-GAM-015 | `learning_objective.mastered` giao lặp hoặc LO đạt lại sau decay → XP `mastery.objective_mastered` chỉ cộng một lần |
+| AC-GAM-016 | Học sinh lên lớp: level, XP, vùng đã mở giữ nguyên; quest `learning` khối cũ chuyển `expired`; xử lý lặp event không áp hai lần |
 
 AC-GAM-008…010 (mở vùng, khám phá) ở [WORLD_DESIGN](WORLD_DESIGN.md) §14. Test case: TC-GAM-004…010 trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md).

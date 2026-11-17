@@ -1,6 +1,9 @@
 # ADR-0061 — Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: đồng bộ "giáo viên chủ nhiệm" trong phạm vi dữ liệu (mục 2). **Còn hiệu lực:** toàn bộ phần còn lại.
 
 ## Bối cảnh
 
@@ -27,3 +30,4 @@ Stakeholder yêu cầu: khi đăng nhập, nếu học sinh thuộc SIS thì **p
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

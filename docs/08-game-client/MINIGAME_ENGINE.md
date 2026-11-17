@@ -5,13 +5,15 @@
 
 **Mục đích & phạm vi.** Kiến trúc phía Godot cho renderer `activity_type = minigame`: interface plugin, registry biến thể, vòng đời trên client. Định nghĩa activity, attempt, chấm điểm và evidence thuộc [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md); renderer registry chung của client ở [GODOT_ARCHITECTURE §6.2](GODOT_ARCHITECTURE.md#62-activity-renderers-adr-0048). `MiniGameRegistry` dưới đây là registry con mà renderer `minigame` dùng để chọn scene theo `minigame_type`.
 
+**Yêu cầu (mã PRD):** [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) FR-MG-001 (danh mục loại mini-game), FR-MG-002 (không có ngân hàng câu hỏi riêng), FR-MG-003 (cấu hình độ khó, thời gian, số câu, điểm, phản hồi, hoàn thành, reward), FR-MG-004 (scene Godot tái sử dụng nhận `MiniGameConfig` + render payload).
+
 ## 1. Nguyên tắc
 
 | # | Nguyên tắc | Nhãn |
 |---|---|---|
 | M-1 | Mini-game **không có ngân hàng câu hỏi riêng**; câu hỏi lấy từ Question Bank qua `question_source` | [Confirmed] (§3.5) |
-| M-2 | Mỗi lượt chơi là một **Attempt** (`mode = minigame`; ngữ cảnh quest/assignment/challenge ghi ở `context_ref`), chấm ở learning-service | [Confirmed] (ADR-0016) |
-| M-3 | Mini-game là **lớp trình bày** (presentation) trên câu hỏi: cùng một câu hỏi có thể hiện dạng thẻ, bóng bay, xe đua... | [Proposed] |
+| M-2 | Mỗi lượt chơi là một **Attempt** (`mode = minigame`; ngữ cảnh quest/assignment/challenge ghi ở `context_ref`), chấm ở module learning | [Confirmed] (ADR-0016) |
+| M-3 | Mini-game là **lớp trình bày** (presentation) trên câu hỏi: cùng một câu hỏi có thể hiện dạng thẻ, bóng bay, xe đua... Ưu tiên mini-game mà thao tác chơi chính là khái niệm học, theo [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | [Proposed] |
 | M-4 | Cấu hình hoàn toàn data-driven, phiên bản hóa (`MiniGameConfig` → `MiniGameConfigVersion`) | [Confirmed] |
 | M-5 | Hai loại điểm tách biệt: **learning score** (attempt, theo scoring rule câu hỏi) và **game score** (điểm vui, thưởng tốc độ/chuỗi). Cả hai do server tính; game score không ảnh hưởng mastery | [Proposed] (DOMAIN_MODEL §10) |
 | M-6 | Mini-game là một `activity_type = minigame` trong [Activity Registry](../02-learning/ACTIVITY_ENGINE.md) (ADR-0048): quest/assignment/challenge tham chiếu activity, không gọi riêng mini-game engine; plugin `minigame` dùng Exercise Engine làm lõi chấm | [Proposed] |
@@ -23,14 +25,14 @@
 | `multiple_choice` | Chọn cổng/bóng bay/thẻ đúng | `single_choice`, `multiple_choice`, `image_based` | immediate |
 | `true_false` | Chạy sang bên Đúng/Sai, giơ biển | `true_false` | immediate |
 | `fill_in_blank` | Điền ô trống bằng bàn phím/khối chữ | `fill_in_blank`, `short_answer` | immediate |
-| `drag_and_drop` | Kéo vật phẩm vào vùng đích | `drag_and_drop`, `image_based` | immediate |
+| `drag_and_drop` | Kéo vật phẩm vào vùng đích | `drag_drop`, `image_based` | immediate |
 | `matching` | Lật/ghép cặp thẻ | `matching` | per-pair hoặc end |
 | `ordering` | Xếp toa tàu/bậc thang theo thứ tự | `ordering` | immediate |
-| `calculation` | Bàn tính/máy tính vui, nhập số | `numeric_answer` | immediate |
+| `calculation` | Bàn tính/máy tính vui, nhập số | `numeric` | immediate |
 | `puzzle` | Mỗi câu đúng mở một mảnh ghép tranh | mọi loại có chấm tự động | immediate |
 | `word_game` | Ô chữ, tìm từ, ghép chữ thành từ | `fill_in_blank`, `short_answer`, `ordering` (ký tự) | end_of_round |
 | `science_simulation` | Mô phỏng (mạch điện, cân, gieo hạt) — học sinh thao tác rồi nộp trạng thái | `interactive` | immediate |
-| `timed_challenge` | Trả lời nhiều nhất trong thời gian | `single_choice`, `true_false`, `numeric_answer` | immediate (nhanh) |
+| `timed_challenge` | Trả lời nhiều nhất trong thời gian | `single_choice`, `true_false`, `numeric` | immediate (nhanh) |
 
 Server từ chối publish config nếu `question_source` có thể trả về loại câu hỏi không tương thích (validate ở CMS + lúc chọn câu).
 
@@ -51,7 +53,7 @@ Schema chuẩn: [specs/schemas/minigame-config.schema.json](../../specs/schemas/
 | Số câu hỏi | `question_count` | 6 |
 | Điểm số | `scoring` | `points_per_correct`, `time_bonus`, `streak_bonus`, `wrong_penalty` (≥ 0, mặc định 0 cho lớp 1–5) |
 | Cách tính kết quả | `result_calculation` | `learning_score: sum_question_scores`, `game_score: points_plus_bonus` |
-| Phản hồi đúng/sai | `feedback_policy` | `{ mode: immediate|end_of_game|none, show_explanation, show_correct_answer }` |
+| Phản hồi đúng/sai | `feedback` | `{ timing: immediate|after_submit|after_close|never, feedback_display: end_of_round|end_of_game, show_explanation, show_correct_answer }` — `timing` theo enum FeedbackTiming ([ACTIVITY_ENGINE §8.1](../02-learning/ACTIVITY_ENGINE.md)) |
 | Cơ chế hoàn thành | `completion_rule` | `{ type: min_correct_ratio, threshold: 0.7 }` |
 | Phần thưởng | `reward_rule_id` | tham chiếu [reward-rule](../../specs/schemas/reward-rule.schema.json) |
 | Trình bày | `presentation` | `{ scene_variant, theme, background_music_id, mascot_npc_id }` |
@@ -108,7 +110,7 @@ Hợp đồng:
 # scripts/learning/minigame_registry.gd
 const TYPES := {
 	"matching":        { "scene": "res://scenes/minigames/types/matching/Matching.tscn",      "question_types": ["matching"] },
-	"timed_challenge": { "scene": "res://scenes/minigames/types/timed/TimedChallenge.tscn", "question_types": ["single_choice", "true_false", "numeric_answer"] },
+	"timed_challenge": { "scene": "res://scenes/minigames/types/timed/TimedChallenge.tscn", "question_types": ["single_choice", "true_false", "numeric"] },
 	# ...
 }
 ```
@@ -122,12 +124,14 @@ sequenceDiagram
   autonumber
   participant H as MiniGameHost
   participant S as MiniGame scene
-  participant API as game-service (gọi learning-service /internal/v1/attempts)
+  participant API as module game (gọi facade attempts của module learning)
   H->>API: lấy config version (ContentCache)
   alt Trong quest
     H->>API: POST /game/quests/{q}/steps/{s}/activities:start
   else Tự chơi / luyện tập
     H->>API: POST /game/minigames/{config_id}:start (Idempotency-Key)
+  else Bài nhà trường giao
+    H->>API: startActivityAttempt của module learning (context assignment)
   end
   API-->>H: { attempt_id, items[render payload], deadline_at, server_time }
   H->>S: setup(config, session) → ready_to_start
@@ -156,7 +160,7 @@ sequenceDiagram
 1. Exercise Engine chấm từng answer theo `scoring_rule` của `question_version` → `AttemptAnswer.is_correct/score`.
 2. Minigame scorer (module `minigame`) tính **game score** từ chuỗi answers: `points_per_correct`, `time_bonus` dựa `answered_at` server − thời điểm item được phát, `streak_bonus`. Không dùng `client_elapsed_ms` để tính điểm.
 3. `completion_rule` đánh giá trên learning score → báo cho quest (nếu có context quest).
-4. Phát event `minigame.completed` (+ `exercise.submitted`, `question.answered`) → Reward Engine áp `reward_rule_id` với cap/diminishing returns.
+4. module learning phát `activity.graded` (gồm phần `minigame`: `learning_score`, `game_score`, `completion_met`); module game tiêu thụ, ghi lượt chơi và phát `minigame.completed` đúng một lần → Reward Engine áp `reward_rule_id` với cap/diminishing returns. module learning **không** tiêu thụ `minigame.completed` (evidence học tập đã có từ `activity.*` của chính nó, tránh trùng).
 5. Anti-cheat: thời gian trả lời nhỏ hơn ngưỡng tối thiểu hợp lý theo loại câu (vd. < 300 ms cho câu cần đọc) bị gắn cờ `suspicious_timing` để phân tích, không tự động phạt học sinh [Proposed] (xem ANTI_CHEAT).
 
 ## 7. Thêm một mini-game mới — checklist

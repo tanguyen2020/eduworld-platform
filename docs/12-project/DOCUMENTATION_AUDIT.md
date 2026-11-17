@@ -1,6 +1,6 @@
 # Documentation Audit — đối chiếu với Master Prompt "Specs & Documentation Re-architecture"
 
-> Trạng thái: Review · Phiên bản: 1.2 · Owner: Principal Architect + Technical Writer · Cập nhật: 2026-11-15
+> Trạng thái: Review · Phiên bản: 1.3 · Owner: Principal Architect + Technical Writer · Cập nhật: 2026-11-15
 > Liên quan: [ADR](../adr/README.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md) · [OPEN_QUESTIONS](OPEN_QUESTIONS.md) · [ROADMAP](ROADMAP.md) · [docs/README](../README.md)
 
 ## 1. Phạm vi và phương pháp
@@ -86,7 +86,7 @@ Ký hiệu: ✅ đáp ứng · 🟡 một phần · ❌ chưa có.
 
 | ID | Quyết định | Ghi nhận |
 |---|---|---|
-| C1 | **Giữ 6 microservice** (ADR-0036…0042). Master Prompt §17 về modular monolith không áp dụng | ADR giữ nguyên |
+| C1 | **Giữ 6 microservice** (ADR-0036…0042). Master Prompt §17 về modular monolith không áp dụng — **đã thay 2026-11-17:** [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) Accepted chọn modular monolith có ranh giới cưỡng chế (ADR-0036 Superseded) | ADR-0074 |
 | C2 | **Giữ chat như nhau cho mọi lớp** (ADR-0020). Khác biệt theo khối chỉ ở UX, nội dung học, ghép trận | ADR-0020, ADR-0054 |
 | C3 | PostgreSQL tiếp tục là mặc định đang dùng (chưa có yêu cầu đổi) | Giữ ADR-0037 |
 | C4 | Giữ cấu trúc tài liệu hiện tại, bổ sung tài liệu còn thiếu | §6 |
@@ -186,7 +186,7 @@ Stakeholder yêu cầu: *"review lại tất cả specs và docs xem đã phù h
 | `docs/05-learning/EXAM_ENGINE.md` | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) | di chuyển |
 | `docs/05-learning/VIDEO_LEARNING.md` | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) | di chuyển |
 | `docs/05-learning/AUDIO_LANGUAGE_LEARNING.md` | [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) | di chuyển |
-| `docs/05-learning/WRITTEN_RESPONSE_RUBRIC.md` | [WRITTEN_RESPONSE_RUBRIC](../02-learning/WRITTEN_RESPONSE_RUBRIC.md) | di chuyển |
+| `docs/05-learning/WRITTEN_RESPONSE_RUBRIC.md` | [WRITTEN_RESPONSE_RUBRIC](../99-deferred/WRITTEN_RESPONSE_RUBRIC.md) | di chuyển |
 | `docs/05-learning/SIMULATION_ENGINE.md` | [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) | di chuyển |
 | `docs/05-learning/LEARNING_ANALYTICS.md` | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) | di chuyển |
 | `docs/07-multiplayer/MULTIPLAYER_DESIGN.md` | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) | di chuyển + đổi tên |
@@ -366,5 +366,17 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
 
 - File ghi âm giọng nói học sinh (`ew-student-submissions/recordings/`) trước đây xóa sau 90 ngày; theo ADR-0070 nay chỉ ẩn khỏi API, file vẫn giữ trong bucket private [TBD: xác nhận hoặc thêm ngoại lệ xóa].
 - Lifecycle tự xóa object ở `ew-media-quarantine` (file tạm 7 ngày) và `ew-exports` (file xuất báo cáo) vẫn giữ như ADR-0044; cần người duyệt xác nhận đây không thuộc phạm vi "không xóa vật lý" của ADR-0070.
-- Bảng kỹ thuật `infra.outbox_events` (EVENT_DESIGN, DATABASE_DESIGN) vẫn mô tả dọn bằng gỡ partition sau 30 ngày; cần xác nhận có được coi là ngoại lệ kỹ thuật (không chứa dữ liệu cá nhân trực tiếp) hay giữ lại vĩnh viễn.
+- Bảng kỹ thuật `infra.outbox_events` (EVENT_DESIGN, DATABASE_DESIGN) vẫn mô tả dọn bằng gỡ partition sau 30 ngày; cần xác nhận có được coi là ngoại lệ kỹ thuật (không chứa dữ liệu cá nhân trực tiếp) hay giữ lại vĩnh viễn. → Đã chốt 2026-11-17: ngoại lệ có giới hạn cho `outbox_events`, `processed_events`, `idempotency_records` (ADR-0089 §5).
 - `erase_student` đổi từ xóa user Keycloak sang vô hiệu hóa + ẩn danh hóa user Keycloak (DATA_PRIVACY).
+
+## 10. Đợt bỏ vai trò giáo viên và review độ phù hợp giáo dục (2026-11-15)
+
+| Mục | Kết quả |
+|---|---|
+| Review độ phù hợp cho game giáo dục | [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md): 6 vấn đề sống còn (K1–K6), phát hiện theo 5 chiều, trạng thái xử lý ở §9 của tài liệu đó |
+| Mô hình vai trò | [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) (Accepted): không có vai trò giáo viên; học sinh tự học, nhà trường quản trị; kiểm duyệt tập trung ở Platform Safety Team (`safety_moderator`); trả lời OQ-07 |
+| Mục §3 bảng trên: 15.1 (written response/essay/rubric/teacher review, audio/speaking, project-based), 15.5 (rubric, teacher review) | Không còn là yêu cầu của Release: các hoạt động cần chấm tay nằm ngoài Release theo ADR-0072 mục 3; thiết kế tham khảo giữ ở [WRITTEN_RESPONSE_RUBRIC](../99-deferred/WRITTEN_RESPONSE_RUBRIC.md) |
+| Mốc dự án | M3 "Teacher Loop" đổi thành **M3 School Loop** ([ROADMAP §3.4](ROADMAP.md)) |
+| Test | TC chấm tay đánh dấu Removed (ADR-0072); thêm TC-LRN-011…018, TC-CNT-010, TC-CHAT-042…043 [Proposed] ([TEST_STRATEGY](TEST_STRATEGY.md)) |
+| Rủi ro, câu hỏi mở | RISK-47…49 ([RISKS](RISKS.md)); OQ-23, OQ-24 ([OPEN_QUESTIONS](OPEN_QUESTIONS.md)) |
+| ADR từ EDU_FIT_REVIEW | 2026-11-17: ADR-0073, 0074, 0075, 0078, 0080 Accepted; 0076, 0079 Rejected; 0077 hoãn (ADR-0082); trạng thái trong [Chỉ mục ADR](../adr/README.md) |

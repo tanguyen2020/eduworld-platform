@@ -12,9 +12,9 @@ Stakeholder yêu cầu phân biệt được học sinh thuộc tenant nào đ�
 ## Quyết định
 
 1. **Mỗi Tenant là một Keycloak Organization** (`platform.tenants.keycloak_org_id`, `keycloak_org_alias` = mã tenant). Tenant loại `unit` có một Organization chung cho mọi trường; IdP của đơn vị/trường gắn vào Organization đó. Tenant `common` cũng là một Organization.
-2. **Membership do dữ liệu EduWorld quyết định.** identity-service đồng bộ membership Keycloak từ dữ liệu SIS/EduWorld: học sinh là member của đúng một tenant (tenant chứa trường có enrollment active); giáo viên/nhân sự là member của mọi tenant có phân công. Chuyển sang trường thuộc tenant khác → gỡ org cũ, thêm org mới, thu hồi session cũ. Chuyển trường trong cùng tenant `unit` không đổi membership.
+2. **Membership do dữ liệu EduWorld quyết định.** identity-service đồng bộ membership Keycloak từ dữ liệu SIS/EduWorld: học sinh là member của đúng một tenant (tenant chứa trường có enrollment active); nhân sự là member của mọi tenant có UserRole. Chuyển sang trường thuộc tenant khác → gỡ org cũ, thêm org mới, thu hồi session cũ. Chuyển trường trong cùng tenant `unit` không đổi membership.
 3. **Xác định tenant khi đăng nhập — học sinh KHÔNG phải chọn trường [Confirmed, người duyệt 2026-11-15]:**
-   - **Mặc định (game):** màn đăng nhập chỉ có nút "Đăng nhập" và các cách đăng nhập nhanh (ADR-0045); không có bước chọn trường. Sau khi xác thực, backend xác định tenant theo membership trong DB (dữ liệu SIS, ADR-0046/0061): đúng 1 tenant → dùng tenant đó; nhiều tenant (hiếm, ví dụ giáo viên dạy nhiều trường) → `403 TENANT_NOT_SELECTED`, client hiển thị danh sách **sau khi đăng nhập** để chọn; không thuộc tenant nào → **tenant chung `common`**.
+   - **Mặc định (game):** màn đăng nhập chỉ có nút "Đăng nhập" và các cách đăng nhập nhanh (ADR-0045); không có bước chọn trường. Sau khi xác thực, backend xác định tenant theo membership trong DB (dữ liệu SIS, ADR-0046/0061): đúng 1 tenant → dùng tenant đó; nhiều tenant (hiếm, ví dụ nhân sự làm việc ở nhiều trường) → `403 TENANT_NOT_SELECTED`, client hiển thị danh sách **sau khi đăng nhập** để chọn; không thuộc tenant nào → **tenant chung `common`**.
    - **Trường dùng SSO riêng (Google/Microsoft của trường):** Keycloak nhận diện tổ chức theo **tên miền email** học sinh nhập ở bước đầu (identity-first login của Keycloak Organizations, mỗi Organization khai báo domain) rồi chuyển sang IdP của trường; học sinh không chọn trường.
    - **Nguồn gợi ý tenant không cần học sinh thao tác:** QR lớp (chứa tenant), thiết bị phòng máy cấu hình sẵn (`device.cfg`). Khi có gợi ý, client gửi scope `organization:{tenant_alias}`.
    - **Lối dự phòng:** "Nhập mã trường" chỉ nằm trong mục "Cách đăng nhập khác" (cho trường hợp SSO riêng mà học sinh không có email trường). Portal vẫn dùng URL `/t/{tenant_alias}` hoặc chọn sau đăng nhập.
@@ -33,7 +33,7 @@ Stakeholder yêu cầu phân biệt được học sinh thuộc tenant nào đ�
 
 ## Phương án đã loại
 
-Realm riêng cho mỗi tenant (vận hành nặng, khó SSO cho giáo viên nhiều tenant); suy ra tenant từ username/email (dễ giả mạo); từ chối học sinh không thuộc tenant (stakeholder thay bằng tenant chung).
+Realm riêng cho mỗi tenant (vận hành nặng, khó SSO cho nhân sự nhiều tenant); suy ra tenant từ username/email (dễ giả mạo); từ chối học sinh không thuộc tenant (stakeholder thay bằng tenant chung).
 
 ## Lịch sử thay đổi
 
@@ -43,3 +43,4 @@ Realm riêng cho mỗi tenant (vận hành nặng, khó SSO cho giáo viên nhi�
 | 2026-11-15 | Đổi sang Tenant (trường/đơn vị/chung) là Organization; thêm tenant chung | Stakeholder |
 | 2026-11-15 | `TENANT_NOT_SELECTED` thống nhất HTTP 403 | Vòng đồng bộ tài liệu |
 | 2026-11-15 | Học sinh không phải chọn trường khi đăng nhập; trường SSO riêng nhận diện theo tên miền email; nhập mã trường chỉ là lối dự phòng | Stakeholder (người duyệt) |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:eduworld:schema:challenge:1",
   "title": "ChallengeVersion",
-  "description": "Cấu hình challenge PvE của Challenge Engine (game-service). Hoạt động học tập tham chiếu qua activity_ref (ADR-0048); chấm điểm luôn ở learning-service. Xem docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md.",
+  "description": "Cấu hình challenge PvE của Challenge Engine (module game). Hoạt động học tập tham chiếu qua activity_ref (ADR-0048); chấm điểm luôn ở module learning. Xem docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -398,8 +398,7 @@
       ],
       "properties": {
         "activity_type": {
-          "type": "string",
-          "maxLength": 64,
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType",
           "description": "Loại hoạt động trong Activity Registry (ADR-0048)"
         },
         "activity_id": {

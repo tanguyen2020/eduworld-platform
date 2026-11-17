@@ -45,7 +45,7 @@ Tên boss chương 3–6 bổ sung khi chốt song ngữ; nội dung chi tiết 
 | NPC (vi · en) | `npc_id` | Vai trò | Vùng |
 |---|---|---|---|
 | **Mây** · *Cloudy* | `npc.cloudy` | Hướng dẫn, tutorial, gợi ý hoạt động tiếp theo, nhắc nghỉ | Mọi nơi (đi theo người chơi khi cần) |
-| **Bưu tá Nhím** · *Postie the Hedgehog* | `npc.postie` | Thông báo, bài giáo viên giao | Thị trấn Trung Tâm |
+| **Bưu tá Nhím** · *Postie the Hedgehog* | `npc.postie` | Thông báo, bài nhà trường giao | Thị trấn Trung Tâm |
 | **Thợ may Bông** · *Cotton the Tailor* | `npc.cotton` | Tủ đồ, Shop Xu | Thị trấn Trung Tâm |
 | **Thủ thư Gió** · *Breeze the Librarian* | `npc.breeze` | Gợi ý luyện tập theo LO yếu | Thư viện Gió (Thị trấn Trung Tâm) |
 | **Chú Ong Kết Nối** · *Buzzy the Connector* | `npc.buzzy` | Hướng dẫn kết bạn an toàn, lập party | Vườn Bạn Bè (Thị trấn Trung Tâm) |
@@ -251,7 +251,7 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 
 ## 12. Dữ liệu, API, event, lỗi
 
-**Dữ liệu (game-service, `eduworld_game`):**
+**Dữ liệu (module game, `eduworld_game`):**
 
 | Bảng | Cột chính |
 |---|---|
@@ -262,7 +262,7 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 
 DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) §2.8a.
 
-**API (game-service):**
+**API (module game):**
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -274,7 +274,7 @@ DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) §2.8a.
 
 Cấu hình (platform-only): `/api/v1/game-admin/{world-areas|story-chapters|events|event-templates}`.
 
-**Event:** `world.area_unlocked`, `world.discovery_found`, `world.area_completed`, `story.chapter_completed` (producer game-service).
+**Event:** `world.area_unlocked`, `world.discovery_found`, `world.area_completed`, `story.chapter_completed` (producer module game).
 
 **Lỗi:** `403 AREA_LOCKED`, `409 DISCOVERY_ALREADY_FOUND`, `422 STEP_PRECONDITION_FAILED` (không ở đúng area/instance).
 

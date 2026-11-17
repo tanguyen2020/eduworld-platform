@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/activity.submitted.v1.schema.json",
+  "title": "Payload activity.submitted v1 (module learning, ADR-0048)",
+  "description": "Học sinh nộp attempt của một learning activity (mọi activity_type trong Release, mọi mode trừ exam). Consumer: module game (quest step, XP theo rule và cap), learning_record, LMS (AssignmentSubmission), RT. Điểm do server chấm; khi chấm/công bố trì hoãn thì status = submitted và activity.graded phát sau.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt_id", "student_id", "activity_type", "mode", "status", "content_version_id", "duration_ms", "submit_reason", "objective_ids"],
+  "properties": {
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "activity_id": { "type": ["string", "null"], "format": "uuid", "description": "null với attempt ad-hoc (question_set/selection/retry_wrong)" },
+    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
+    "content_version_id": { "type": "string", "format": "uuid", "description": "Version đã ghim khi bắt đầu (ADR-0043)" },
+    "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
+    "context_type": { "type": ["string", "null"], "maxLength": 64, "description": "quest_step, assignment, challenge, lesson, free_play, match…" },
+    "context_id": { "type": ["string", "null"], "format": "uuid" },
+    "assignment_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["submitted", "graded"] },
+    "score": { "type": ["number", "null"], "minimum": 0 },
+    "max_score": { "type": ["number", "null"], "minimum": 0 },
+    "correct_count": { "type": ["integer", "null"], "minimum": 0 },
+    "item_count": { "type": "integer", "minimum": 0 },
+    "hints_used": { "type": "integer", "minimum": 0 },
+    "rapid_guess_count": { "type": "integer", "minimum": 0, "description": "Số lần trả lời bị gắn cờ rapid_guess (ACTIVITY_ENGINE §11.1)" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "submit_reason": { "type": "string", "enum": ["manual", "timeout", "auto_complete"] },
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } }
+  }
+}

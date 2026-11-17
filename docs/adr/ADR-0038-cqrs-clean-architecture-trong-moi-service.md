@@ -1,6 +1,9 @@
 # ADR-0038 — CQRS + Clean Architecture trong mỗi service
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0087 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0087](ADR-0087-cqrs-tach-read-write-khong-mediator.md):** không dùng mediator `pkg/mediator`/pipeline behavior; CQRS tách read/write context, cross-cutting qua HTTP middleware và gọi tường minh. **Còn hiệu lực:** Clean Architecture, CQRS, outbox, không event sourcing.
 
 ## Bối cảnh
 
@@ -34,3 +37,4 @@ Stakeholder yêu cầu mô hình CQRS và Clean Architecture.
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
+| 2026-11-16 | Một phần superseded by ADR-0087 | Technical Architect |

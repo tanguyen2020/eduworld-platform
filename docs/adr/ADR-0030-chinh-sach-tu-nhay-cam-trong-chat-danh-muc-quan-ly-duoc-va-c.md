@@ -1,6 +1,9 @@
 # ADR-0030 — Chính sách từ nhạy cảm trong chat: danh mục quản lý được và công tắc bật/tắt kiểm duyệt
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MODERATION](../03-social-multiplayer/MODERATION.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0078 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MODERATION](../03-social-multiplayer/MODERATION.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0078](ADR-0078-mac-dinh-an-toan-cho-tre-nho.md):** bước lọc PII và grooming luôn chạy, không nằm trong công tắc; tắt bước khác cần `expires_at` ≤ 24 giờ và hai người phê duyệt. **Còn hiệu lực:** danh mục từ nhạy cảm và các công tắc còn lại.
 
 ## Bối cảnh
 
@@ -43,3 +46,4 @@ Stakeholder yêu cầu: chat có policy khi gặp từ nhạy cảm; danh mục 
 | 2026-11-15 | Accepted: danh mục + công tắc chỉ cho bước so khớp từ | Stakeholder |
 | 2026-11-15 | Công tắc tắt được toàn bộ pipeline kiểm tra nội dung | Stakeholder |
 | 2026-11-15 | Thực thi trong chat-service; workspace theo portal mới | ADR-0036, ADR-0027 |
+| 2026-11-17 | Một phần superseded by ADR-0078 | Technical Architect |

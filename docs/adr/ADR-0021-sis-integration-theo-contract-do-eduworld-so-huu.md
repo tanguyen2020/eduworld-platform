@@ -1,6 +1,9 @@
 # ADR-0021 — SIS integration theo contract do EduWorld sở hữu
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md), [SIS contract](../../specs/sis/eduworld-sis-contract.v1.yaml) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md), [SIS contract](../../specs/sis/eduworld-sis-contract.v1.yaml) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: DTO `Teacher`, `TeachingAssignment` và dữ liệu giáo viên trong EduWorld SIS Contract v1. **Còn hiệu lực:** contract do EduWorld sở hữu, `contract_v1` + `csv_import`, conformance test kit.
 
 ## Bối cảnh
 
@@ -31,3 +34,4 @@ Adapter riêng cho từng SIS hoặc adapter cấu hình mapping: để DTO củ
 | 2026-11-15 | Tạo ADR (port & adapter cho từng SIS) | Phase 0 |
 | 2026-11-15 | Accepted: contract do EduWorld sở hữu, bỏ adapter theo SIS | Stakeholder |
 | 2026-11-15 | Thuộc identity-service | ADR-0036 |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

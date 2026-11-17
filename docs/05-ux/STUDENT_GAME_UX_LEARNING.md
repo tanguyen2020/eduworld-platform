@@ -1,13 +1,13 @@
 # Student Game UX — Màn học tập
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
-> Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn game) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [WRITTEN_RESPONSE_RUBRIC](../02-learning/WRITTEN_RESPONSE_RUBRIC.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md)
+> Trạng thái: Draft · Phiên bản: 0.2 (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
+> Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn game) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)
 
-**Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Learning activity player (khung chung) · 4. Exercise / question player · 5. Video player · 6. Ghi âm bài nói · 7. Tự luận và dự án · 8. Mô phỏng · 9. Bài kiểm tra có giờ · 10. Kết quả học tập · 11. Khóa dịch đề xuất · 12. Acceptance criteria
+**Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Learning activity player (khung chung) · 4. Exercise / question player · 5. Video player · 6. Bài nghe · 7. Hỗ trợ lớp 1–3 · 8. Mô phỏng · 9. Bài kiểm tra có giờ · 10. Kết quả học tập · 11. Khóa dịch đề xuất · 12. Acceptance criteria
 
 ## 1. Mục đích và phạm vi
 
-Đặc tả **hành động được** (không chỉ mô tả hình ảnh) cho 8 màn học tập học sinh dùng trong game, mỗi màn có **bố cục Web/PC** và **bố cục Mobile**. Tài liệu chỉ quy định UX; luật chấm, số lượt thử, cỡ chữ đề bài, quy tắc hoàn thành… do tài liệu nghiệp vụ sở hữu và được link tới, không chép lại giá trị.
+Đặc tả **hành động được** (không chỉ mô tả hình ảnh) cho các màn học tập học sinh dùng trong game, mỗi màn có **bố cục Web/PC** và **bố cục Mobile**. Mọi hoạt động trong Release do server tự chấm; không có màn ghi âm bài nói, soạn tự luận hay dự án, và không có nhận xét của giáo viên (ngoài Release — ADR-0072). Tài liệu chỉ quy định UX; luật chấm, số lượt thử, cỡ chữ đề bài, quy tắc hoàn thành… do tài liệu nghiệp vụ sở hữu và được link tới, không chép lại giá trị.
 
 Ngoài phạm vi: các màn game (Hub, world map, quest journal, inventory, party, chat, arena…) — xem [STUDENT_GAME_UX](STUDENT_GAME_UX.md); giao diện Admin Portal — xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md).
 
@@ -23,7 +23,7 @@ Quy ước chung (nền tảng, hướng màn hình, vùng chạm, phím tắt, 
 | Vùng chạm | ≥ 48 dp; lớp 1–3 ≥ 64 dp |
 | Cỡ chữ đề bài | Theo [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band) |
 | Song ngữ | Mọi chuỗi UI qua khóa `ui.<screen>.<element>` (gettext, [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md)); nội dung học tập hiển thị theo `content_language` của version; thiếu bản dịch khi học sinh chọn tiếng Anh → hiển thị bản gốc + nhãn `ui.learning.no_translation` ("Chưa có bản tiếng Anh" / "English version not available") |
-| API | Một họ attempt duy nhất ([ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md)): start `POST /api/v1/learning/activities/{activity_id}/attempts`; sau đó `/api/v1/learning/activity-attempts/{attempt_id}` + `/responses`, `/review`, `/progress`, `/written-response`, `/recordings`, `/submissions`, `/simulation-runs`, `:submit`. Bài kiểm tra có giờ dùng API của [EXAM_ENGINE §11](../02-learning/EXAM_ENGINE.md#11-api-tóm-tắt) |
+| API | Một họ attempt duy nhất ([ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md)): start `POST /api/v1/learning/activities/{activity_id}/attempts`; sau đó `/api/v1/learning/activity-attempts/{attempt_id}` + `/responses`, `/items/{position}/hints:next`, `/review`, `/progress`, `/simulation-runs`, `:submit`. Bài kiểm tra có giờ dùng API của [EXAM_ENGINE §11](../02-learning/EXAM_ENGINE.md#11-api-tóm-tắt) |
 | Hiệu năng | Ngân sách theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) và [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md); quy tắc riêng cho màn học tập ở §2.1 |
 
 ### 2.1. Quy tắc hiệu năng chung cho màn học tập (máy tầm trung)
@@ -43,7 +43,7 @@ Quy ước chung (nền tảng, hướng màn hình, vùng chạm, phím tắt, 
 
 **Người dùng & khối.** Mọi học sinh lớp 1–9.
 
-**Điểm vào / ra.** Vào từ: bước quest do NPC giao, phase boss/challenge, mini-game trong khu học tập, Practice Zone, "Ôn câu sai", bài giáo viên giao (quest journal / Bưu tá Nhím). Ra: hoàn thành → màn Kết quả (§10) hoặc quay lại cảnh game với phản hồi NPC; thoát giữa chừng → về cảnh game, attempt `paused` (resume theo [ACTIVITY_ENGINE §6.3](../02-learning/ACTIVITY_ENGINE.md#63-resume)).
+**Điểm vào / ra.** Vào từ: bước quest do NPC giao, phase boss/challenge, mini-game trong khu học tập, Practice Zone, "Ôn câu sai", bài nhà trường giao (quest journal tab "Nhà trường giao" / Bưu tá Nhím). Ra: hoàn thành → màn Kết quả (§10) hoặc quay lại cảnh game với phản hồi NPC; thoát giữa chừng → về cảnh game, attempt `paused` (resume theo [ACTIVITY_ENGINE §6.3](../02-learning/ACTIVITY_ENGINE.md#63-resume)).
 
 ### 3.1. Bố cục Web/PC (1920×1080)
 
@@ -88,7 +88,7 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 |---|---|
 | Header | Nút thoát, tên hoạt động (song ngữ theo nội dung game), chỉ báo tiến độ (chấm/thanh theo khối), đồng hồ (dạng theo [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)), tạm dừng, cài đặt nhanh (âm lượng, đọc to, cỡ chữ) |
 | Vùng nội dung | Scene renderer đăng ký trong registry; nhận render payload, phát tín hiệu `response_ready` |
-| Dải phản hồi | NPC + lời nhắn theo [LEARNING_EXPERIENCE §4.1](../02-learning/LEARNING_EXPERIENCE.md#41-cấu-trúc-phản-hồi); nút gợi ý nhiều cấp, đọc to |
+| Dải phản hồi | NPC + lời nhắn theo [LEARNING_EXPERIENCE §4.1](../02-learning/LEARNING_EXPERIENCE.md#41-cấu-trúc-phản-hồi); sau khi chấm hiển thị **phản hồi theo phương án em đã chọn** (§4.8) và giải thích; nút **Gợi ý** nhiều cấp (§4.7), đọc to |
 | Action bar | Nút chính một hành động duy nhất tại một thời điểm (Kiểm tra → Tiếp → Hoàn thành) |
 | Hộp xác nhận thoát | "Em muốn tạm dừng? Tiến độ được giữ lại." — Tiếp tục / Tạm dừng |
 
@@ -98,7 +98,8 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 |---|---|
 | Bắt đầu / resume | `POST /learning/activities/{activity_id}/attempts` (Idempotency-Key; gọi lại khi đã có attempt `in_progress` → trả attempt cũ) |
 | Trạng thái, thời gian còn lại | `GET /learning/activity-attempts/{attempt_id}` (`server_time`, `deadline_at`) |
-| Gửi phản hồi | `POST /learning/activity-attempts/{attempt_id}/responses` |
+| Gửi phản hồi | `POST /learning/activity-attempts/{attempt_id}/responses` (kết quả chấm kèm `feedback` của phương án khi FeedbackTiming = `immediate`) |
+| Xin gợi ý cấp tiếp theo | `POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next` (§4.7) |
 | Tiến độ (video, mô phỏng) | `POST /learning/activity-attempts/{attempt_id}/progress` |
 | Nộp | `POST /learning/activity-attempts/{attempt_id}:submit` (Idempotency-Key) |
 | Xem lại sau nộp | `GET /learning/activity-attempts/{attempt_id}/review` |
@@ -111,16 +112,15 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 | Lỗi tải nội dung | `ui.activity_player.error_load` + Thử lại / Quay lại; không mất tiến độ |
 | Mất mạng | Banner vàng "Mất kết nối — câu trả lời sẽ được gửi khi có mạng"; nút Kiểm tra chuyển sang chờ; resume tự động khi có mạng (trong resume window) |
 | Hết giờ (mode có deadline) | Khóa nhập, thông báo "Hết giờ rồi! Bài đã được nộp." → Kết quả |
-| Chờ giáo viên chấm | (`pending_review`) Thông báo "Bài đã gửi cho thầy/cô" + phần thưởng hoàn thành (nếu có) → quay lại game |
-| Bị trả lại (`returned`) | Mở lại đúng chỗ, hiển thị nhận xét giáo viên ở dải phản hồi |
+| Đã nộp, kết quả công bố sau | (bài giao/đề có `result_release` ≠ `immediate`) "Bài đã nộp! Kết quả sẽ có khi nhà trường công bố" + phần thưởng hoàn thành (nếu có) → quay lại game |
 | Hoạt động chưa hỗ trợ trên client | (renderer không có) "Cần cập nhật game để làm hoạt động này" + nút cập nhật |
 | Thành công | Hiệu ứng ngắn → §10 hoặc quay lại cảnh game |
 
 ### 3.6. Tương tác & phản hồi
 
-- Phím tắt PC: `Enter` = nút chính, `Esc` = mở hộp thoát, `H` = gợi ý, `R` = đọc to, `1–6` = chọn đáp án (§4), `Tab` duyệt phần tử.
+- Phím tắt PC: `Enter` = nút chính, `Esc` = mở hộp thoát, `H` = gợi ý cấp tiếp theo, `R` = đọc to, `1–6` = chọn đáp án (§4), `Tab` duyệt phần tử.
 - Mobile: nút chính luôn ở vùng ngón cái phải; vuốt xuống trên header không đóng màn (tránh thoát nhầm).
-- Phản hồi đúng/sai, số lượt thử, gợi ý theo [LEARNING_EXPERIENCE §4](../02-learning/LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện) và [ACTIVITY_ENGINE §8](../02-learning/ACTIVITY_ENGINE.md#8-phản-hồi-trong-game). Không bao giờ hiện đáp án trước khi nộp với `exam` hoặc `assignment` có `after_due`.
+- Phản hồi đúng/sai, số lượt thử, gợi ý theo [LEARNING_EXPERIENCE §4](../02-learning/LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện) và [ACTIVITY_ENGINE §8](../02-learning/ACTIVITY_ENGINE.md#8-phản-hồi-trong-game). Không bao giờ hiện đáp án, giải thích hay phản hồi theo phương án trước thời điểm FeedbackTiming cho phép (`after_submit`, `after_close`, `never` với bài giao và đề — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)).
 
 ### 3.7. Khác biệt grade band
 
@@ -128,12 +128,12 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 |---|---|---|---|
 | Tiến độ | Chấm tròn to + nhân vật nhỏ chạy theo | Thanh + số câu | Số câu "3/10" |
 | Đồng hồ | Ẩn hoặc "cát chảy" | Thanh thời gian | Phút / phút:giây |
-| Đọc to | Mặc định bật | Tùy chọn | Tùy chọn |
+| Đọc to / lồng tiếng | Lồng tiếng đề bài tự phát + phụ đề (§7) | Tùy chọn | Tùy chọn |
 | Nút | ≥ 64 dp, có icon + chữ | ≥ 48 dp | ≥ 48 dp |
 
 ### 3.8. Trợ năng & an toàn
 
-- Đọc to đề và lựa chọn (audio ghi sẵn hoặc TTS) cho lớp 1–3; điều chỉnh cỡ chữ +20%; chế độ tương phản cao; không dùng chỉ màu để báo đúng/sai (kèm icon và chữ).
+- Đọc to đề và lựa chọn (lồng tiếng ghi sẵn, TTS khi thiếu) cho lớp 1–3 (§7); điều chỉnh cỡ chữ +20%; chế độ tương phản cao; không dùng chỉ màu để báo đúng/sai (kèm icon và chữ).
 - Không hiển thị tên thật hay điểm của học sinh khác trong màn học tập.
 
 ## 4. Exercise / question player
@@ -187,6 +187,7 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 | Ghép cặp | Hai cột thẻ; kéo thẻ trái sang phải hoặc chạm trái rồi chạm phải; nối bằng đường màu | Hai cột hẹp; chỉ chạm-chạm (kéo dễ nhầm trên màn nhỏ) | Chuột kéo / chạm |
 | Sắp xếp | Danh sách thẻ dọc có tay nắm kéo; phím `↑ ↓` di chuyển thẻ đang chọn | Thẻ dọc; giữ để kéo; nút ▲▼ trên thẻ cho lớp 1–3 | Kéo / nút |
 | Kéo thả (vào vùng/nhãn ảnh) | Ảnh hoặc sơ đồ ở giữa, khay thẻ ở dưới; vùng thả sáng lên khi kéo gần | Ảnh bên trái (phóng to được), khay thẻ cột phải | Kéo; mobile có "chạm thẻ → chạm vùng" thay thế |
+| Trả lời ngắn (`short_answer`) | Một ô nhập một dòng, đếm ký tự theo giới hạn của câu; chấm tự động theo đáp án chấp nhận | Ô nhập ở dưới cùng + bàn phím hệ thống; đề ở trên | Bàn phím |
 | Tương tác (widget riêng) | Widget đầy đủ trong vùng nội dung | Widget cùng logic, bố cục ngang tối giản | Theo widget |
 
 ### 4.4. Công thức
@@ -202,7 +203,26 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 
 ### 4.6. Khác biệt grade band
 
-`g1_3`: tối đa 3–4 lựa chọn có hình, ưu tiên chạm/kéo, không gõ chữ; `g4_5`: thêm điền khuyết, sắp xếp, nhập số với bàn phím số; `g6_9`: đủ 11 dạng, bàn phím đầy đủ ([LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)).
+`g1_3`: tối đa 3–4 lựa chọn có hình, ưu tiên chạm/kéo, không gõ chữ, đề bài có lồng tiếng (§7); `g4_5`: thêm điền khuyết, sắp xếp, nhập số với bàn phím số; `g6_9`: đủ 11 dạng, bàn phím đầy đủ ([LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)).
+
+### 4.7. Gợi ý nhiều cấp (PED-04)
+
+Nghiệp vụ: `hints[]` trong question version ([QUESTION_BANK](../02-learning/QUESTION_BANK.md)), thứ tự gợi ý → thử lại → lời giải theo [LEARNING_EXPERIENCE §4.1](../02-learning/LEARNING_EXPERIENCE.md#41-cấu-trúc-phản-hồi); ảnh hưởng của gợi ý lên mastery (`hints_used`, trọng số) do [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) sở hữu.
+
+| Hạng mục | Hành vi |
+|---|---|
+| Nút | `[💡 Gợi ý]` ở dải phản hồi (PC) hoặc cột công cụ phải (mobile); huy hiệu số cấp còn lại "1/2"; ẩn khi câu không có `hints[]` hoặc mode không cho gợi ý (`exam`, `competition`) |
+| Mở gợi ý | Chạm → `POST …/items/{position}/hints:next` → hiện gợi ý cấp kế tiếp trong khung NPC (có công thức SVG, đọc to); gợi ý đã mở giữ lại khi xem tiếp câu đó |
+| Thông điệp | Trung tính, không phạt: "Mây nhắc em một chút nhé" — không hiển thị "bị trừ điểm"; không cho biết ảnh hưởng mastery |
+| Hết cấp | Nút mờ + "Em đã xem hết gợi ý"; lời giải đầy đủ chỉ hiện sau khi hết lượt thử và FeedbackTiming cho phép |
+| Lỗi/mất mạng | Giữ câu trả lời đang chọn; toast "Chưa lấy được gợi ý, em thử lại nhé" |
+
+### 4.8. Phản hồi theo phương án sau khi chấm (PED-04)
+
+- Khi server trả kết quả chấm (`ActivityResponseResult.feedback`), dải phản hồi hiển thị lời giải thích **gắn với phương án em đã chọn** (ví dụ chọn "9 quả": "Em đã cộng 3 + 6. Đề hỏi 3 túi, mỗi túi 6 quả, nên cần nhân."), kèm giải thích chung của câu. Payload hiển thị câu hỏi **không** chứa phản hồi theo phương án (R6).
+- Thời điểm hiện theo FeedbackTiming: `immediate` ngay sau "Kiểm tra"; `after_submit`/`after_close` trong màn "Xem lại câu sai" (§10); `never` không hiện.
+- Câu có ví dụ mẫu (`worked_example`) hiện nút "Xem ví dụ giải từng bước" mở overlay chỉ đọc.
+- Phản hồi luôn có icon ✓/✗ và chữ, không chỉ dựa vào màu; `g1_3` có lồng tiếng hoặc phụ đề.
 
 ## 5. Video player
 
@@ -269,37 +289,35 @@ Tới mốc `at_ms`: video tạm dừng, khung video mờ, câu hỏi hiện ở
 - Phụ đề vẽ bằng Label theo Theme (cỡ ≥ cỡ chữ cơ sở của khối, nền mờ).
 - Hiệu năng: P-1, P-3; dừng render thế giới 3D khi phát video; giải mã Theora trên thiết bị tầm trung ở 720p@30, 480p cho Web và preset Thấp.
 
-## 6. Ghi âm bài nói
+## 6. Bài nghe (audio_lesson)
 
-**Mục đích.** Học sinh ghi âm bài đọc to, nhắc lại, trả lời bằng lời; **không có nhận dạng giọng nói hay chấm phát âm tự động** trong Release 1.0 ([ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md)); giáo viên nghe và chấm tay theo rubric.
+**Mục đích.** Học sinh nghe đoạn hội thoại/bài đọc (môn Tiếng Anh, Tiếng Việt, âm nhạc…) rồi trả lời câu hỏi nghe hiểu **tự chấm** bằng renderer §4 ([AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md)). Không có ghi âm hay bài nói trong Release (ADR-0072).
 
-**Điểm vào / ra.** Vào từ hoạt động `speaking` (thường ở Rừng Ngôn Ngữ hoặc bài giao). Ra sau khi gửi → trạng thái chờ giáo viên chấm.
+**Điểm vào / ra.** Vào từ bước quest (thường ở Rừng Ngôn Ngữ), bài nhà trường giao, thư viện khu học tập. Ra khi trả lời xong câu cuối (§10) hoặc thoát (resume đúng câu).
 
 ### 6.1. Bố cục Web/PC
 
 ```text
 ┌──────────────────────────── vùng nội dung ───────────────────────────────────────────┐
-│  Đọc to đoạn văn sau:                                                [🔊 Nghe mẫu]   │
+│  Nghe và chọn đáp án đúng:                                     Lượt nghe: 1/3        │
 │  ┌──────────────────────────────────────────────────────────────────────────────┐    │
-│  │ "My name is Lan. I live in Ha Noi. I like reading books."                    │    │
+│  │  [▶/⏸]  ━━━━━━━━━━●━━━━━━━━━━━  00:12 / 00:30   [🐢 0.75×]  [CC vi|en|Tắt]   │    │
 │  └──────────────────────────────────────────────────────────────────────────────┘    │
+│  Phụ đề/transcript (khi được bật): "My name is Mai. I live in Da Nang…"              │
 │                                                                                      │
-│                     ( ● )  Giữ hoặc bấm để ghi   00:12 / 00:30                       │
-│                     ▁▃▅▇▅▃▁  sóng âm khi đang ghi                                     │
-│                                                                                      │
-│  Bản ghi của em:  [▶ Nghe lại]   Lần ghi: 2/3   [↺ Ghi lại]                           │
+│  Câu 1/4: Mai sống ở đâu?            (renderer §4: chọn đáp án, ghép cặp, điền từ…)  │
 └──────────────────────────────────────────────────────────────────────────────────────┘
-                                                         action bar: [ Gửi cho thầy/cô ▶ ]
 ```
 
 ### 6.2. Bố cục Mobile
 
 ```text
 ┌──────────────────────────────────────────────────┬───────────────┐
-│ Đọc to đoạn văn sau:              [🔊 Nghe mẫu]  │               │
-│ "My name is Lan. I live in Ha Noi…"              │    ( ● )      │ nút ghi 96dp
-│ (cuộn nếu dài)                                   │   00:12/00:30 │
-│ Bản ghi: [▶] Lần 2/3 [↺]                         │ [Gửi ▶]       │
+│ [▶] ━━━━━●━━━━━ 0:12/0:30  [🐢] [CC]             │ [💡]          │
+│ Câu 1/4: Mai sống ở đâu?                         │ [🔊]          │
+│ ┌──────────────┐ ┌──────────────┐                │               │
+│ │  Hà Nội      │ │  Đà Nẵng     │                │ [Kiểm tra]    │
+│ └──────────────┘ └──────────────┘                │               │
 └──────────────────────────────────────────────────┴───────────────┘
 ```
 
@@ -307,72 +325,27 @@ Tới mốc `at_ms`: video tạm dừng, khung video mờ, câu hỏi hiện ở
 
 | Trạng thái | Hiển thị / hành vi |
 |---|---|
-| Chưa có quyền micro | Màn giải thích thân thiện "Để ghi giọng đọc, game cần dùng micro" → xin quyền hệ điều hành; từ chối → hướng dẫn bật lại trong cài đặt hoặc lựa chọn thay thế (nếu giáo viên cho phép) |
-| Sẵn sàng | Nút ghi; nghe mẫu (nếu `repeat_after`) |
-| Đang ghi | Biểu tượng đỏ nhấp nháy + chữ "Đang ghi âm" (luôn hiển thị), đếm thời gian, tự dừng ở `max_record_seconds` ([AUDIO_LANGUAGE_LEARNING §3.2](../02-learning/AUDIO_LANGUAGE_LEARNING.md#33-ghi-âm-trên-godot)) |
-| Đã ghi | Nghe lại, Ghi lại (tối đa `max_retakes`, hết lượt → nút mờ), Gửi |
-| Đang tải lên | Thanh tiến độ; mất mạng → giữ bản ghi local, tự thử lại; không cho thoát mà mất bản ghi khi chưa xác nhận |
-| Đã gửi, chờ chấm | "Thầy/cô sẽ nghe và nhận xét" + phần thưởng hoàn thành (nếu quest cho phép) |
-| Có kết quả | Thông báo qua Bưu tá Nhím; mở §10 xem nhận xét + rubric |
+| Sẵn sàng | Nút phát lớn; số lượt nghe còn lại theo cấu hình bài ([AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md)) |
+| Đang phát | Thanh tiến độ, tốc độ 0.75×/1×; nhạc nền game tắt |
+| Hết lượt nghe | Nút phát mờ + "Em đã nghe đủ số lượt"; vẫn trả lời được |
+| Audio chưa sẵn sàng / lỗi tải | "Bài nghe đang được chuẩn bị, em quay lại sau nhé" + Thử lại |
+| Không có tai nghe ở phòng máy | Bật phụ đề/transcript (khi bài cho phép) — §7 |
 
-API: `POST /learning/activities/{id}/attempts` → `POST …/recordings:presign` → upload PUT → `POST …/recordings/{recording_id}:complete` → `POST …:submit`. Không có `speech-feedback`.
+API: `POST /learning/activities/{id}/attempts` (URL audio, transcript nếu được bật, câu hỏi không kèm đáp án) → `POST …/progress` (lượt nghe) → `POST …/responses` → `POST …:submit`. Song ngữ: chỉ dẫn theo ngôn ngữ UI, audio và transcript theo `content_language`. Hiệu năng: audio Ogg Vorbis phát trực tiếp, preload câu hỏi kế tiếp (P-4).
 
-Khác biệt khối: lớp 1–3 dùng "chạm để ghi, chạm để dừng" (không giữ), nút 96 dp, đọc to đề mặc định; lớp 6–9 có thể "giữ để ghi". Song ngữ: chỉ dẫn và nhãn theo ngôn ngữ UI, văn bản cần đọc theo `content_language`. An toàn: chỉ ghi khi học sinh bấm; không ghi nền; tệp lưu bucket riêng, không công khai ([AUDIO_LANGUAGE_LEARNING §4](../02-learning/AUDIO_LANGUAGE_LEARNING.md#4-bảo-vệ-dữ-liệu-giọng-nói-trẻ-em)). Hiệu năng: ghi Ogg Vorbis mono 16 kHz; tắt nhạc nền game khi ghi.
+## 7. Hỗ trợ lớp 1–3: lồng tiếng, phụ đề và icon
 
-## 7. Tự luận và dự án
+**Mục đích.** Học sinh lớp 1–3 chưa đọc thạo vẫn tự học được (PED-07, [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md)). Quy tắc bắt buộc lồng tiếng (điều kiện publish) do tài liệu nội dung sở hữu ([LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band), [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md)); mục này chỉ quy định cách hiển thị.
 
-**Mục đích.** Soạn bài trả lời ngắn/dài/tự luận/lời giải toán bằng văn bản và số, nộp ảnh/tệp khi được bật; xem nhận xét và rubric của giáo viên ([WRITTEN_RESPONSE_RUBRIC](../02-learning/WRITTEN_RESPONSE_RUBRIC.md)). Bài dự án có các bước và nhóm.
-
-### 7.1. Bố cục Web/PC — soạn bài
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│ [◀] Viết đoạn văn tả con vật em yêu · Tiếng Việt 4            Đã lưu 10:42 ✓         │
-├──────────────────────────────┬───────────────────────────────────────────────────────┤
-│ Đề bài (cuộn)                 │ [B] [•] ↵      Số từ: 86 / 80–150                     │
-│ Yêu cầu: …                    │ ┌───────────────────────────────────────────────────┐ │
-│ Tiêu chí chấm (rubric rút gọn)│ │ Nhà em có một chú mèo tên Mướp…                    │ │
-│ • Mở bài đúng ý              │ │                                                     │ │
-│ • Tả đặc điểm (2 ý)           │ │                                                     │ │
-│ • Câu văn đúng chính tả       │ └───────────────────────────────────────────────────┘ │
-│                               │ Đính kèm (nếu được bật): [📷 Ảnh bài làm] [📎 Tệp]    │
-├──────────────────────────────┴───────────────────────────────────────────────────────┤
-│                                                      [Lưu nháp]   [ Nộp bài ▶ ]      │
-└──────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 7.2. Bố cục Mobile — soạn bài
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│[◀] Tả con vật          [📄 Đề bài]   86 từ (80–150)   Đã lưu ✓  [Nộp]│
-│┌────────────────────────────────────────────────────────────────────┐│
-││ Nhà em có một chú mèo tên Mướp…                                    ││ ô soạn toàn màn
-│└────────────────────────────────────────────────────────────────────┘│
-│ [B][•][↵]  [📷]                                                       │ thanh công cụ trên bàn phím
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-Đề bài và rubric mở dạng ngăn kéo trên (nút "Đề bài"). Bàn phím hệ thống chiếm nửa dưới; ô soạn tự co.
-
-### 7.3. Xem kết quả có nhận xét
-
-Web/PC: hai cột — bài làm (có highlight đoạn giáo viên bình luận) | bảng rubric (tiêu chí, mức đạt, điểm) + nhận xét chung (có thể chứa công thức SVG). Mobile: tab "Bài làm" / "Nhận xét" / "Rubric". Trạng thái `returned`: nút "Sửa và nộp lại".
-
-### 7.4. Dự án nhóm
-
-Bảng bước (milestone) dạng dòng thời gian: tên bước, hạn, loại sản phẩm, trạng thái nhóm; phần "Đóng góp của em" (≤ 1.000 ký tự) luôn riêng từng học sinh. Mobile: danh sách bước dọc, chạm để mở bước.
-
-### 7.5. Dữ liệu & API, trạng thái
-
-| Hành động | API |
+| Thành phần | Hành vi `g1_3` |
 |---|---|
-| Lưu nháp tự động (15 s) và thủ công | `PUT …/written-response` |
-| Tải ảnh/tệp | `POST …/submissions:presign` → PUT → xác nhận |
-| Nộp | `POST …:submit` → `pending_review` |
-| Xem nhận xét | `GET …/review` |
+| Lồng tiếng đề bài | Tự phát khi câu hỏi hiện (giọng tiếng Việt ghi sẵn); nút 🔊 lớn để nghe lại; lựa chọn có hình được đọc khi chạm giữ |
+| Lồng tiếng hướng dẫn quest/NPC | Thoại NPC trong bước quest học tập phát kèm hộp thoại |
+| Phụ đề + icon | Khung `VoiceCaption` (DESIGN_SYSTEM §5.1): chữ to theo cỡ đề bài của khối, icon người nói (NPC/loa) và biểu tượng hành động ("chạm", "kéo", "chọn") để làm được khi tắt tiếng hoặc không có tai nghe |
+| Gợi ý | Gợi ý cấp 1 có lồng tiếng và hình minh họa; hiện sau lượt sai đầu tiên theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-proposed) |
+| Thiếu file lồng tiếng (nội dung cũ) | Dùng TTS nếu có, kèm phụ đề; không chặn học sinh làm bài |
 
-Trạng thái riêng: dưới số từ tối thiểu → nút Nộp mờ + "Cần thêm N từ"; vượt tối đa → ngăn gõ thêm; tệp bị từ chối (`SUBMISSION_FILE_REJECTED`) → "Tệp không hợp lệ, em thử ảnh khác"; nội dung có thông tin cá nhân/từ nhạy cảm bị cảnh báo theo [WRITTEN_RESPONSE_RUBRIC §7](../02-learning/WRITTEN_RESPONSE_RUBRIC.md#7-kiểm-duyệt-nội-dung-bài-viết). Khác biệt khối: lớp 1–2 không có tự luận (dùng `speaking`); lớp 3–5 trình soạn tối giản không định dạng. Hiệu năng: lưu nháp chạy nền, không chặn gõ; mobile không vẽ lại thế giới 3D khi bàn phím mở.
+Cài đặt "Tự đọc đề bài" mặc định bật cho `g1_3`, tắt được trong S15. Tắt tiếng thiết bị → phụ đề luôn hiện. Hiệu năng: audio thoại nén Ogg Vorbis, tải trước cùng media câu kế tiếp (P-4).
 
 ## 8. Mô phỏng
 
@@ -443,7 +416,7 @@ Header: đồng hồ + nút "Danh sách" (mở lưới câu dạng ngăn kéo) +
 | Mất mạng | Banner "Đang mất kết nối — câu trả lời được lưu tạm trên máy"; thời gian vẫn chạy; đồng bộ khi có mạng ([EXAM_ENGINE §6](../02-learning/EXAM_ENGINE.md#6-làm-bài--deadline-server)) |
 | Nộp bài | Hộp xác nhận liệt kê câu chưa làm/đánh dấu; `POST /api/v1/exams/attempts/{id}:submit` (Idempotency-Key) |
 | Hết giờ | Khóa nhập, "Hết giờ — bài đã được nộp tự động" → màn chờ kết quả |
-| Kết quả chưa công bố | "Thầy/cô sẽ công bố kết quả sau" |
+| Kết quả chưa công bố | "Nhà trường sẽ công bố kết quả sau" (`result_release` = `after_close`/`manual`) |
 
 Lưu câu trả lời: `PUT /api/v1/exams/attempts/{id}/answers/{position}` mỗi lần đổi đáp án. Đồng hồ tính từ `deadline_at` và `server_time`. Khác biệt khối: lớp 1–3 không có bài kiểm tra có giờ dạng số giây; đồng hồ "cát chảy". Hiệu năng: không hiệu ứng, không NPC, chỉ khung + renderer.
 
@@ -478,7 +451,8 @@ Hai thẻ xếp ngang có thể vuốt (Kết quả học tập | Phần thưở
 - Phần thưởng chỉ lấy từ sự kiện server đã xác nhận (`progression.xp.updated`, phần thưởng quest); XP không hiển thị như điểm học tập.
 - Gợi ý tiếp theo theo thứ tự ưu tiên [LEARNING_EXPERIENCE §6.2](../02-learning/LEARNING_EXPERIENCE.md#62-recommendation-release-10-rule-based).
 - Bài kiểm tra: kết quả chỉ hiện khi được công bố; không có XP theo điểm.
-- Bài chờ chấm (`pending_review`): thẻ học tập ghi "Đang chờ thầy/cô chấm".
+- Bài giao/đề chưa công bố kết quả: thẻ học tập ghi "Kết quả sẽ có khi nhà trường công bố"; vẫn hiện phần thưởng hoàn thành.
+- Không có nhận xét của giáo viên. Phần học tập chỉ gồm kết quả tự chấm, LO cần ôn, phản hồi theo phương án (trong "Xem lại câu sai", khi FeedbackTiming cho phép) và gợi ý ôn tập tự động của Mây.
 - Không so sánh với bạn khác trên màn này.
 
 Hiệu năng: hiệu ứng chúc mừng ≤ 1,5 s, tắt được; thế giới 3D vẫn ở trạng thái P-1 cho đến khi rời màn.
@@ -493,10 +467,17 @@ Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `godot/locale/v
 | `ui.activity_player.pause_confirm` | Em muốn tạm dừng? Tiến độ được giữ lại. | Take a break? Your progress is saved. |
 | `ui.activity_player.check` / `.next` / `.finish` | Kiểm tra / Tiếp / Hoàn thành | Check / Next / Finish |
 | `ui.activity_player.hint` / `.read_aloud` | Gợi ý / Đọc to | Hint / Read aloud |
+| `ui.activity_player.hint_level` | Gợi ý {n}/{total} | Hint {n}/{total} |
+| `ui.activity_player.hint_intro` | Mây nhắc em một chút nhé. | Here's a little hint from Mây. |
+| `ui.activity_player.hints_exhausted` | Em đã xem hết gợi ý. | You've seen all the hints. |
+| `ui.activity_player.hint_error` | Chưa lấy được gợi ý, em thử lại nhé. | Couldn't get a hint. Please try again. |
+| `ui.feedback.worked_example` | Xem ví dụ giải từng bước | See a step-by-step example |
+| `ui.listening.plays_left` / `.no_plays_left` | Lượt nghe: {n}/{total} / Em đã nghe đủ số lượt | Plays: {n}/{total} / No more plays left |
+| `ui.voice.auto_read` | Tự đọc đề bài | Read questions aloud automatically |
 | `ui.activity_player.error_load` | Chưa tải được bài, em thử lại nhé. | Couldn't load the activity. Please try again. |
 | `ui.activity_player.offline` | Mất kết nối — câu trả lời sẽ được gửi khi có mạng. | Offline — your answers will be sent when you're back online. |
 | `ui.activity_player.time_up` | Hết giờ rồi! Bài đã được nộp. | Time's up! Your work has been submitted. |
-| `ui.activity_player.pending_review` | Bài đã gửi cho thầy/cô. | Sent to your teacher. |
+| `ui.activity_player.results_later` | Bài đã nộp! Kết quả sẽ có khi nhà trường công bố. | Submitted! Results will appear when your school releases them. |
 | `ui.activity_player.update_required` | Cần cập nhật game để làm hoạt động này. | Please update the game to play this activity. |
 | `ui.question.select_answer` | Chọn một đáp án | Choose an answer |
 | `ui.question.select_all` | Chọn tất cả đáp án đúng | Choose all correct answers |
@@ -504,19 +485,14 @@ Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `godot/locale/v
 | `ui.video.seek_locked` | Em xem hết phần này trước nhé. | Watch this part first. |
 | `ui.video.not_ready` | Video đang được chuẩn bị, em quay lại sau nhé. | The video is still being prepared. Please come back later. |
 | `ui.video.subtitles` | Phụ đề | Subtitles |
-| `ui.recording.mic_permission` | Để ghi giọng đọc, game cần dùng micro. | The game needs your microphone to record your voice. |
-| `ui.recording.recording` | Đang ghi âm | Recording |
-| `ui.recording.retake` / `.play` / `.send` | Ghi lại / Nghe lại / Gửi cho thầy/cô | Re-record / Play / Send to teacher |
-| `ui.written.saved_at` | Đã lưu lúc {time} | Saved at {time} |
-| `ui.written.need_words` | Cần thêm {n} từ | {n} more words needed |
-| `ui.written.submit` / `.resubmit` | Nộp bài / Sửa và nộp lại | Submit / Edit and resubmit |
+
 | `ui.simulation.goal_reached` | Đạt mục tiêu! | Goal reached! |
 | `ui.simulation.log_invalid` | Thí nghiệm chưa ghi đúng, em làm lại nhé. | The experiment wasn't recorded correctly. Let's try again. |
 | `ui.exam.rules_start` | Bắt đầu làm bài | Start test |
 | `ui.exam.flag` | Đánh dấu | Flag |
 | `ui.exam.time_left` | còn lại | left |
 | `ui.exam.auto_submitted` | Hết giờ — bài đã được nộp tự động. | Time's up — your test was submitted automatically. |
-| `ui.exam.results_pending` | Thầy/cô sẽ công bố kết quả sau. | Your teacher will release the results later. |
+| `ui.exam.results_pending` | Nhà trường sẽ công bố kết quả sau. | Your school will release the results later. |
 | `ui.result.learning` / `.rewards` | Kết quả học tập / Phần thưởng trong game | Learning results / Game rewards |
 | `ui.result.review_wrong` | Xem lại câu sai | Review mistakes |
 | `ui.result.back_to_quest` | Về nhiệm vụ | Back to quest |
@@ -526,16 +502,19 @@ Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `godot/locale/v
 | ID | Tiêu chí |
 |---|---|
 | AC-UX-201 | Mọi `activity_type` mở trong cùng khung §3: có nút thoát, tạm dừng, tiến độ, nút chính duy nhất; thoát giữa chừng giữ tiến độ và resume đúng câu (trong resume window) |
-| AC-UX-202 | Trên điện thoại ngang 2400×1080, mọi màn §3–§10 dùng được hoàn toàn bằng cảm ứng; vùng chạm ≥ 48 dp (lớp 1–3 ≥ 64 dp); không phần tử nào nằm trong vùng không an toàn (safe area) |
+| AC-UX-202 | Trên điện thoại ngang 2400×1080, mọi màn §3–§10 (trừ §7 là quy tắc hiển thị) dùng được hoàn toàn bằng cảm ứng; vùng chạm ≥ 48 dp (lớp 1–3 ≥ 64 dp); không phần tử nào nằm trong vùng không an toàn (safe area) |
 | AC-UX-203 | Trên PC, mọi thao tác chính dùng được bằng bàn phím (`Enter`, `Esc`, `1–6`, `H`, `R`, `Tab`) |
 | AC-UX-204 | 11 dạng câu hỏi hiển thị và trả lời được trên cả Web/PC và Mobile theo §4.3; ghép cặp và kéo thả có phương án chạm-chạm trên mobile |
 | AC-UX-205 | Công thức hiển thị bằng SVG đúng màu Theme ở cả hai ngôn ngữ; không có ô nhập công thức trong game |
 | AC-UX-206 | Đổi ngôn ngữ vi ↔ en trong Cài đặt cập nhật toàn bộ chuỗi UI của các màn này ngay, không khởi động lại; nội dung chưa có bản tiếng Anh hiển thị bản gốc kèm nhãn `ui.learning.no_translation` |
 | AC-UX-207 | Video: không tua được qua phần chưa xem lần đầu; câu chèn bắt buộc tạm dừng video; phụ đề chọn vi/en/tắt; tự hạ 480p khi đệm lặp lại |
-| AC-UX-208 | Ghi âm: chỉ ghi khi học sinh bấm, luôn có chỉ báo "Đang ghi âm"; tối đa `max_retakes` lần ghi lại; không có phản hồi phát âm tự động; sau khi gửi hiển thị trạng thái chờ giáo viên chấm |
-| AC-UX-209 | Tự luận: lưu nháp tự động mỗi 15 giây, mở trên thiết bị khác thấy bản nháp mới nhất; không nộp được khi dưới số từ tối thiểu |
+| AC-UX-208 | (đổi — ADR-0072) Gợi ý: nút Gợi ý mở lần lượt từng cấp qua `hints:next`, hiện số cấp còn lại; ẩn ở `exam`/`competition` và câu không có `hints[]`; không có thông điệp trừ điểm |
+| AC-UX-209 | (đổi — ADR-0072) Phản hồi theo phương án chỉ hiện sau khi server chấm và đúng thời điểm FeedbackTiming; render payload câu hỏi không chứa `options[].feedback` |
 | AC-UX-210 | Mô phỏng: "Đạt mục tiêu" chỉ hiển thị sau khi server kiểm chứng `simulation-runs` |
 | AC-UX-211 | Bài kiểm tra: đồng hồ khớp `deadline_at` của server (sai lệch ≤ 1 s sau khi bù `server_time`); hết giờ tự khóa và nộp; không hiện đúng/sai khi đang làm |
 | AC-UX-212 | Màn Kết quả tách hai vùng "Kết quả học tập" và "Phần thưởng trong game"; mastery hiển thị theo khối ([LEARNING_EXPERIENCE §7](../02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh)) |
 | AC-UX-213 | Trên thiết bị tầm trung tham chiếu ([ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md)), các màn §3–§10 giữ ≥ 30 FPS trên mobile/web và ≥ 60 FPS trên PC (trừ khi phát video: ổn định theo FPS video); mở activity player áp dụng P-1 |
-| AC-UX-214 | Mất mạng giữa chừng ở mọi màn không làm mất câu trả lời/bản ghi/bản nháp đã nhập; giao diện báo rõ trạng thái và tự đồng bộ khi có mạng |
+| AC-UX-214 | Mất mạng giữa chừng ở mọi màn không làm mất câu trả lời đã nhập; giao diện báo rõ trạng thái và tự đồng bộ khi có mạng |
+| AC-UX-215 | `g1_3`: đề bài và hướng dẫn bước quest học tập tự phát lồng tiếng; khi tắt tiếng thiết bị, phụ đề + icon luôn hiện và học sinh vẫn hoàn thành được câu |
+| AC-UX-216 | Bài nghe: tuân thủ số lượt nghe cấu hình; câu hỏi nghe hiểu chấm tự động; không có nút ghi âm ở bất kỳ màn học tập nào |
+| AC-UX-217 | Màn kết quả và mọi màn học tập không có thành phần nhận xét/rubric của giáo viên; bài chưa công bố kết quả hiển thị "Kết quả sẽ có khi nhà trường công bố" |

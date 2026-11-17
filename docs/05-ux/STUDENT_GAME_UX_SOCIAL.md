@@ -95,7 +95,7 @@ Tablet: 6 cột, danh sách slot hiển thị đầy đủ như PC thay cho nút
 
 **Tương tác & phản hồi.** Chạm/nhấp ô → chi tiết; nhấp đúp (PC) hoặc nút Trang bị → trang bị ngay trên xem trước. Kéo trên xem trước để xoay. PC: phím số `1`–`6` gán emote khi đang mở EmoteWheelEditor. Mua luôn có bước xác nhận; không có nút "Mua nhanh". Giá và Xu là số nguyên định dạng theo locale (`1.250` vi / `1,250` en).
 
-**Khác biệt grade band.** `g1_3`: ẩn tab Lịch sử, chỉ 4 bộ lọc bằng icon, xác nhận mua có hình đồng Xu trực quan, không hiển thị độ hiếm bằng chữ (dùng màu khung). `g6_9`: hiện đủ bộ lọc, sắp xếp, lịch sử sổ cái.
+**Khác biệt grade band.** `g1_3`: ẩn tab Lịch sử, chỉ 4 bộ lọc bằng icon, xác nhận mua có hình đồng Xu trực quan, độ hiếm thể hiện bằng **màu khung + biểu tượng** (không cần đọc chữ; trợ năng vẫn có tên độ hiếm cho giọng đọc). `g6_9`: hiện đủ bộ lọc, sắp xếp, lịch sử sổ cái.
 
 **Song ngữ.** `ui.inventory.title` ("Tủ đồ" / "Wardrobe"), `ui.shop.title` ("Cửa hàng" / "Shop"), `ui.shop.confirm_purchase` ("Mua {item} với {price} Xu? Số dư sau mua: {balance} Xu" / "Buy {item} for {price} Coins? Balance after: {balance} Coins"), `ui.inventory.empty_hint`. Tên/mô tả vật phẩm là `i18nText` từ backend. Chuỗi dài nhất cần kiểm: `ui.shop.confirm_purchase` với tên vật phẩm 40 ký tự.
 
@@ -109,7 +109,7 @@ Tablet: 6 cột, danh sách slot hiển thị đầy đủ như PC thay cho nút
 
 **Mục đích.** Xem thành tựu, huy hiệu, danh hiệu, bộ sưu tập (pet, thẻ kiến thức, vật khám phá, sự kiện) và cách nhận. Nghiệp vụ: [INVENTORY_ECONOMY §6–§7](../01-game-design/INVENTORY_ECONOMY.md).
 
-**Điểm vào/ra.** Menu chính → "Thành tựu" (phím `J`) · thông báo mở khóa · hồ sơ của mình. Ra: Đóng/`Esc`.
+**Điểm vào/ra.** Menu chính → "Thành tựu" (không có phím tắt riêng; `J` là Nhật ký nhiệm vụ theo [STUDENT_GAME_UX §4.1](STUDENT_GAME_UX.md#41-webpc--phím-mặc-định-cho-phép-đổi-phím-trong-cài-đặt-proposed)) · thông báo mở khóa · hồ sơ của mình. Ra: Đóng/`Esc`.
 
 **Bố cục Web/PC**
 
@@ -247,7 +247,7 @@ Chat nhóm mở bằng nút `💬` (trượt từ phải, chiếm 45% chiều r�
 └──────────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
-Tab **Tìm bạn** không có ô tìm tự do: ba nhóm "Người chơi gần đây", "Bạn cùng lớp", "Vừa chơi cùng" + khối **Mã bạn bè** ([Tạo mã] hiển thị mã 6 ký tự đếm ngược; [Nhập mã]). Tab **Club**: club của em (tối đa theo SOCIAL_SYSTEM), club đề xuất trong trường, [Tạo club] (cần giáo viên duyệt); trang club gồm thành viên + vai trò, mục tiêu tuần (thanh tiến độ tập thể), sự kiện club, nút chat club.
+Tab **Tìm bạn** không có ô tìm tự do: ba nhóm "Người chơi gần đây", "Bạn cùng lớp", "Vừa chơi cùng" + khối **Mã bạn bè** ([Tạo mã] hiển thị mã 6 ký tự đếm ngược; [Nhập mã]). Tab **Club**: club của em (tối đa theo SOCIAL_SYSTEM), club đề xuất trong trường, [Tạo club] (cần nhà trường duyệt); trang club gồm thành viên + vai trò, mục tiêu tuần (thanh tiến độ tập thể), sự kiện club, nút chat club.
 
 **Bố cục Mobile**
 
@@ -263,7 +263,7 @@ Chạm `›` mở trang hồ sơ bạn toàn màn với các nút hành động 
 
 **Thành phần.** `FriendList` (ảo hóa, nhóm theo presence), `FriendProfilePanel`, `RequestList` (chấp nhận/từ chối), `SuggestionGroups`, `FriendCodeWidget`, `ClubList`, `ClubPage` (`ClubGoalProgress`, `ClubEventList`, `ClubMemberList`), `BlockList`.
 
-**Dữ liệu & API.** `listFriends`, `listFriendRequests`, `sendFriendRequest`, `acceptFriendRequest`, `rejectFriendRequest`, `removeFriend`, `createFriendCode`, `redeemFriendCode`, `blockUser`, `unblockUser`, `listBlocks`, `muteUser`, `unmuteUser`, `listMutes`, `createReport`, `inviteToParty`, `createDuel`, club: `listClubs`, `createClub`, `getClub`, `leaveClub`, `listClubMembers`, `requestJoinClub`, `acceptClubInvitation`, `declineClubInvitation`, `listClubGoals`, `listClubEvents`. Presence realtime: `presence.friend.updated`. "Tham gia bạn": **đề xuất** `POST /api/v1/game/world/friends/{user_id}:join` (dịch chuyển tới instance của bạn) nếu `world/areas/{area_id}:enter` không đủ — cần fork spec xác nhận.
+**Dữ liệu & API.** `listFriends`, `listFriendRequests`, `sendFriendRequest`, `acceptFriendRequest`, `rejectFriendRequest`, `removeFriend`, `createFriendCode`, `redeemFriendCode`, `blockUser`, `unblockUser`, `listBlocks`, `muteUser`, `unmuteUser`, `listMutes`, `createReport`, `inviteToParty`, `createDuel`, club: `listClubs`, `createClub`, `getClub`, `leaveClub`, `listClubMembers`, `requestJoinClub`, `acceptClubInvitation`, `declineClubInvitation`, `listClubGoals`, `listClubEvents`. Presence realtime: `presence.friend.updated`. "Tham gia bạn": lệnh WS `hub.instance.join` có `follow_user_id` (module competition gán instance của bạn nếu còn chỗ và cùng partition — [MULTIPLAYER_GAMEPLAY §6](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#6-gán-instance)); không có REST riêng.
 
 **Trạng thái.**
 
@@ -274,12 +274,12 @@ Chạm `›` mở trang hồ sơ bạn toàn màn với các nút hành động 
 | Ngoài phạm vi | `SOCIAL_SCOPE_VIOLATION` → "Em chỉ kết bạn được với bạn cùng trường" |
 | Đạt giới hạn | `FRIEND_LIMIT_REACHED`; mã sai/hết hạn `FRIEND_CODE_INVALID` |
 | Không tham gia được | Bạn đang trong trận/bài kiểm tra → nút "Tham gia bạn" xám + lý do |
-| Club chờ duyệt | `CLUB_NOT_APPROVED` → "Club đang chờ thầy cô duyệt"; đầy `CLUB_FULL`; đạt giới hạn `CLUB_LIMIT_REACHED` |
+| Club chờ duyệt | `CLUB_NOT_APPROVED` → "Club đang chờ nhà trường duyệt"; đầy `CLUB_FULL`; đạt giới hạn `CLUB_LIMIT_REACHED` |
 | Mất mạng | Danh sách cache, presence hiện "—" |
 
 **Tương tác.** Chặn và Báo cáo luôn có xác nhận một bước, có lựa chọn lý do (icon cho lớp 1–3). Sau khi chặn: bạn đó biến mất khỏi danh sách, không thấy nhau trong chat/party/ghép trận.
 
-**Khác biệt grade band.** `g1_3`: ẩn tab Club (chỉ xem club lớp do giáo viên tạo), Mã bạn bè hiển thị to kèm hình, nút "Tham gia bạn" và "Mời party" là icon lớn. `g6_9`: đủ tab.
+**Khác biệt grade band.** Quyền xã hội như nhau mọi khối (ADR-0020); khác biệt chỉ ở trình bày. `g1_3`: tab Club rút gọn (thẻ hình lớn của club đã tham gia, xin vào/nhận lời mời bằng nút lớn; nút "Tạo club" chỉ hiện khi policy trường và điều kiện tạo club cho phép — [SOCIAL_SYSTEM §6.1](../03-social-multiplayer/SOCIAL_SYSTEM.md#61-loại-club); bị từ chối thì cùng mã `403 PERMISSION_DENIED` như mọi khối), Mã bạn bè hiển thị to kèm hình, nút "Tham gia bạn" và "Mời party" là icon lớn. `g6_9`: đủ tab.
 
 **Song ngữ.** `ui.friends.title`, `ui.friends.join_friend` ("Tham gia bạn" / "Join friend"), `ui.friends.request_pending` ("Đang chờ" / "Pending"), `ui.friends.scope_violation`, `ui.friendcode.instructions` ("Đọc mã này cho bạn ngồi cạnh, mã hết hạn sau {minutes} phút" / "Read this code to the friend next to you; it expires in {minutes} minutes") — chuỗi dài nhất. Tên vùng hiển thị theo ngôn ngữ đã chọn.
 
@@ -300,7 +300,7 @@ Chạm `›` mở trang hồ sơ bạn toàn màn với các nút hành động 
 ```text
 ┌ Chat ───────────────────────────────────────────── [🔍] [‒] ┐
 │ [Khu vực] [Nhóm 2] [Lớp] [@1 Bạn bè ▾]                       │ ← tab kênh, badge chưa đọc
-│ 📌 Thầy Minh: Thứ 6 có thử thách lớp nhé!                     │ ← tin ghim (≤ 3)
+│ 📌 CáHeoVui07: Hẹn 19h vào boss Rừng Phiêu Lưu nhé!           │ ← tin ghim của thành viên (≤ 3)
 │ CáHeoVui07: Ai đi boss không?                    10:21       │
 │   ↳ trả lời MèoXanh42: "Đi thôi!"                             │
 │ MèoXanh42 (em): Tớ đi!                     ✓✓ 10:22 (đã xem) │
@@ -339,12 +339,12 @@ Nhấn giữ tin để mở menu thao tác dạng bảng dưới. Trong **trận
 | Kênh rỗng | "Hãy chào mọi người bằng một tin nhắn nhanh!" + quick message |
 | Đang gửi / chưa gửi được | Biểu tượng đồng hồ; tự gửi lại khi có mạng |
 | Khoảng trống seq | Tự tải bù, không hiển thị gì nếu thành công trong 2 giây; nếu không, "Đang đồng bộ tin nhắn…" |
-| Bị tắt tiếng bởi moderator | Ô nhập khóa + "Em tạm thời không gửi được tin đến {time}" (`chat.sanction.applied`) |
+| Bị tắt tiếng bởi đội an toàn | Ô nhập khóa + "Em tạm thời không gửi được tin đến {time}" (`chat.sanction.applied`) |
 | Ngoài giờ chat của trường | Ô nhập khóa + giờ mở lại |
 | Kênh trận đã đóng | `CHAT_CHANNEL_CLOSED` → "Trận đã kết thúc, tin nhắn chỉ xem được trong {N} ngày" |
 | Mất mạng | "Đang kết nối lại chat…" |
 
-**Tương tác & phản hồi.** `Enter` gửi, `Shift+Enter` xuống dòng (PC); mũi tên lên sửa tin vừa gửi (trong thời hạn). Gõ `@` mở danh sách nickname thành viên kênh. Thu hồi luôn hỏi lại. Báo cáo một bước: chọn lý do → gửi → "Cảm ơn em đã báo, thầy cô sẽ xem xét".
+**Tương tác & phản hồi.** `Enter` gửi, `Shift+Enter` xuống dòng (PC); mũi tên lên sửa tin vừa gửi (trong thời hạn). Gõ `@` mở danh sách nickname thành viên kênh. Thu hồi luôn hỏi lại. Báo cáo một bước: chọn lý do → gửi → "Cảm ơn em đã báo, đội an toàn EduWorld sẽ xem xét".
 
 **Khác biệt grade band.** Quy tắc chat như nhau mọi lớp (ADR-0020). Khác biệt chỉ ở trình bày: `g1_3` quick message to, nằm trên ô nhập và luôn hiện; bảng emoji/sticker mở mặc định thay vì bàn phím; cỡ chữ 24 px.
 
@@ -451,7 +451,7 @@ Chọn chế độ trên mobile: thẻ chế độ cuộn ngang, nút Tìm trậ
 │ ☐ Học: Giải 5 bài phép nhân  → [Đi]    │ Thưởng: Mũ Lá Phong                       │
 │ ☑ Khám phá: Tìm 1 điểm bí mật          │──────────────────────────────────────────│
 │ ☐ Chơi cùng bạn (tùy chọn)  → [Đi]     │ Sự kiện: Lễ hội Trăng Rằm · còn 5 ngày    │
-│ Bài thầy cô giao (ưu tiên)  → [Đi]     │ Mục tiêu cả trường ████████░░ 8.120/10.000│
+│ Nhà trường giao (ưu tiên)   → [Đi]     │ Mục tiêu cả trường ████████░░ 8.120/10.000│
 │                                        │ [Xem chi tiết]                            │
 └───────────────────────────────────────┴──────────────────────────────────────────┘
 ```
@@ -531,7 +531,7 @@ Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
 
 | Nhóm | Thiết lập | Ghi chú |
 |---|---|---|
-| Hồ sơ của em | Chỉ xem: nickname, trường (tên song ngữ), tỉnh/thành, lớp, khối — lấy từ PlayerBootstrap (dữ liệu SIS đồng bộ khi đăng nhập, ADR-0061); nút "Thông tin chưa đúng? Báo thầy cô" (mở hướng dẫn, không sửa được trong game) | Chỉ chính học sinh thấy; người khác không thấy trường/lớp (ADR-0060, [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md)); khóa dịch `ui.settings.profile.*` |
+| Hồ sơ của em | Chỉ xem: nickname, trường (tên song ngữ), tỉnh/thành, lớp, khối — lấy từ PlayerBootstrap (dữ liệu SIS đồng bộ khi đăng nhập, ADR-0061); nút "Thông tin chưa đúng? Báo nhà trường" (mở hướng dẫn, không sửa được trong game) | Chỉ chính học sinh thấy; người khác không thấy trường/lớp (ADR-0060, [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md)); khóa dịch `ui.settings.profile.*` |
 | Ngôn ngữ | Tiếng Việt / English; hiển thị song song tên riêng & từ vựng chủ chốt | Đổi ngay, không khởi động lại; lưu vào hồ sơ (`updateGameProfile`) để đồng bộ thiết bị; mặc định theo tenant |
 | Đồ họa | Preset Thấp / Trung bình / Cao; Tự phát hiện lại (benchmark 5 giây); độ phân giải động; giới hạn FPS (30/60; mobile mặc định 30); số người chơi hiển thị (Ít/Vừa/Nhiều); hiện FPS | Preset và giá trị theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); máy không đủ cho preset đã chọn → gợi ý hạ preset (không tự ép) ; lưu cục bộ theo thiết bị |
 | Âm thanh | Âm lượng tổng, nhạc, hiệu ứng, giọng NPC; giọng đọc (TTS) cho câu hỏi/chat | TTS mặc định bật cho `g1_3` |
@@ -562,7 +562,7 @@ Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
 
 | Đề xuất | Màn | Lý do |
 |---|---|---|
-| `POST /api/v1/game/world/friends/{user_id}:join` | Bạn bè | "Tham gia bạn" dịch chuyển tới instance của bạn, server kiểm tra phạm vi và chỗ trống |
+| WS `hub.instance.join {area_id, follow_user_id}` (module competition, room host hub) | Bạn bè | "Tham gia bạn" dịch chuyển tới instance của bạn; server kiểm tra phạm vi và chỗ trống, `ROOM_FULL` → vào instance thường và báo "Khu vực của bạn đã đầy". Không có REST `joinFriendInWorld` |
 | `GET /api/v1/game/events`, `GET /api/v1/game/events/{event_id}`, `GET /api/v1/game/season/track` | Event center | Theo EVENT_SEASON_SYSTEM |
 | WS `event.progress.updated` | Event center | Cập nhật mục tiêu cộng đồng/tiến độ sự kiện |
 | `POST /api/v1/auth/sessions:revoke-all` | Cài đặt | Đăng xuất mọi thiết bị |

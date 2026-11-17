@@ -17,7 +17,7 @@ Nguyên tắc nền: **client không đáng tin**. Mọi thứ có giá trị (�
 |---|---|---|
 | Câu trả lời | `response` thô + `attempt_item_id` | Chấm bằng answer key server, tính điểm theo scoring rule |
 | Thời gian làm bài | (tham khảo) `client_elapsed_ms` | Dùng `started_at`/`deadline_at`/`answered_at` theo đồng hồ server |
-| Kết quả trận | Input trả lời từng câu | State machine trong `competition-service` (battle room) quyết định thắng/thua, điểm, thời gian |
+| Kết quả trận | Input trả lời từng câu | State machine trong module `competition` (battle room) quyết định thắng/thua, điểm, thời gian |
 | XP/Reward | Không gửi | Reward rule chạy trên event server |
 | Vị trí hub | Trạng thái di chuyển ≤ 10 Hz | Kiểm tra tốc độ tối đa, biên bản đồ, vùng cấm; điều chỉnh (snap back) nếu vượt |
 | Quest step | "Tôi đã đến NPC X" | Kiểm tra vị trí server-side gần trigger (bán kính) + điều kiện bước |
@@ -56,7 +56,7 @@ Theo [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md). Bổ sung riêng an
 
 ## 6. Anomaly detection [Proposed]
 
-Chạy trong worker (consumer event `question.answered`, `match.completed`, `exercise.submitted`), ghi `competition.integrity_signals` / `assessment.integrity_signals` (`student_id`, `signal_type`, `score`, `evidence`, `created_at`). Không tự động phạt; tổng hợp thành **integrity score** theo cửa sổ 7 ngày.
+Chạy trong worker (consumer event `question.answered`, `match.completed`, `activity.graded`), ghi `competition.integrity_signals` / `assessment.integrity_signals` (`student_id`, `signal_type`, `score`, `evidence`, `created_at`). Không tự động phạt; tổng hợp thành **integrity score** theo cửa sổ 7 ngày.
 
 | Tín hiệu | Phát hiện | Trọng số |
 |---|---|---|
@@ -83,13 +83,13 @@ Lưu ý thực tế trường học: nhiều học sinh dùng **chung máy phòn
 
 ## 8. Bảo vệ API thi đấu
 
-- Battle chạy trong `competition-service` (lệnh WS tới qua realtime-gateway → NATS request/reply), câu hỏi và chấm điểm lấy từ `learning-service` qua typed client: câu hỏi chỉ gửi khi bắt đầu lượt, không gửi trước cả bộ đề; đáp án và kết quả công bố sau khi lượt đóng cho mọi người cùng lúc.
+- Battle chạy trong module `competition` (lệnh WS tới qua realtime → NATS request/reply), câu hỏi và chấm điểm lấy từ module `learning` qua facade gọi trong tiến trình `core-api` (room host của module competition chạy trong `core-api`, ADR-0074): câu hỏi chỉ gửi khi bắt đầu lượt, không gửi trước cả bộ đề; đáp án và kết quả công bố sau khi lượt đóng cho mọi người cùng lúc.
 - Không có REST endpoint cho phép client tạo match result; `MatchResult` chỉ được ghi bởi room state machine qua use case `competition.RecordResult` (idempotent theo `match_id`).
 - Matchmaking: client chỉ tạo/hủy ticket; không chọn đối thủ (trừ friend match có xác nhận 2 bên). Ranked friend match không tính rating [Proposed] để tránh win trading.
 - Tournament: kết quả match giải được xác nhận bởi hệ thống; điều chỉnh thủ công cần quyền tổ chức giải + audit + lý do.
 - Reconnect: được vào lại room trong 30s với cùng user (kiểm tra principal), không phải bằng room token chia sẻ được.
 - **Một thiết bị cho mỗi tài khoản (ADR-0031):** chỉ một game session active/học sinh, nên không thể chơi song song hai trận, hai máy cùng tài khoản (vd. một máy tra cứu, một máy thi đấu với cùng danh tính). Takeover giữa trận: thiết bị cũ bị đóng, thiết bị mới vào lại trong grace; mọi takeover ghi audit, tần suất cao bất thường (`GameTakeoverSpike`) là tín hiệu dùng chung tài khoản.
-- **Chỉ học sinh vào game (ADR-0031):** giáo viên/vận hành không thể tham gia trận, xếp hạng hay giải đấu — tránh tài khoản nhân sự làm lệch ranking.
+- **Chỉ học sinh vào game (ADR-0031):** nhân sự nhà trường/vận hành không thể tham gia trận, xếp hạng hay giải đấu — tránh tài khoản nhân sự làm lệch ranking.
 
 ## 9. Xử lý vi phạm (thân thiện với trẻ)
 
@@ -97,11 +97,11 @@ Lưu ý thực tế trường học: nhiều học sinh dùng **chung máy phòn
 |---|---|---|---|
 | 0 — Quan sát | Tín hiệu đơn lẻ | Không hành động; giữ dữ liệu 30 ngày | Tự động |
 | 1 — Nhắc nhở | Integrity score vượt ngưỡng thấp | Thông điệp nhẹ nhàng trong game: "Hãy tự làm bài để biết mình đã giỏi đến đâu nhé!" | Tự động |
-| 2 — Vô hiệu kết quả thi đấu | Bằng chứng mạnh trong competition | Trận bị đánh dấu `voided`, rating hoàn tác; không ảnh hưởng learning record | Tự động + thông báo giáo viên |
-| 3 — Xem xét | Gian lận ở assignment/exam do giáo viên giao | Báo giáo viên kèm bằng chứng (thời gian, pattern); **giáo viên** quyết định với kết quả học tập | Giáo viên |
+| 2 — Vô hiệu kết quả thi đấu | Bằng chứng mạnh trong competition | Trận bị đánh dấu `voided`, rating hoàn tác; không ảnh hưởng learning record | Tự động; ghi nhận vào báo cáo tổng hợp cho nhà trường |
+| 3 — Xem xét | Gian lận ở assignment/exam do nhà trường giao | Báo nhà trường (`academic_manager`/`school_admin`) kèm bằng chứng (thời gian, pattern) trong School Learning Dashboard; **nhà trường** quyết định với kết quả học tập (ví dụ cho làm lại); hệ thống không tự trừ điểm | `academic_manager` / `school_admin` |
 | 4 — Hạn chế | Lặp lại sau nhắc nhở | Tạm loại khỏi ranked/tournament 7 ngày | School Admin |
 
-Không công khai tên học sinh vi phạm; không trừ điểm học tập tự động bởi thuật toán. Học sinh có thể giải trình qua giáo viên; mọi thao tác có audit.
+Không công khai tên học sinh vi phạm; không trừ điểm học tập tự động bởi thuật toán. Học sinh có thể giải trình qua nhà trường; mọi thao tác có audit.
 
 ## 10. Audit & quan sát
 

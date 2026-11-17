@@ -13,7 +13,8 @@ function walk(dir) {
   for (const name of fs.readdirSync(dir)) {
     const p = path.join(dir, name);
     const st = fs.statSync(p);
-    if (st.isDirectory()) { if (!SKIP.has(name)) walk(p); }
+    // .specify/templates: link tương đối chỉ đúng khi template được sao vào specs/<NNN>-<slug>/ (ADR-0082)
+    if (st.isDirectory()) { if (!SKIP.has(name) && !p.endsWith(path.join('.specify', 'templates'))) walk(p); }
     else if (name.endsWith('.md')) mdFiles.push(p);
   }
 }

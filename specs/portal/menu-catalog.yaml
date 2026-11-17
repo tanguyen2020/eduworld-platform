@@ -1,0 +1,2308 @@
+# Danh mục menu/action của Admin Portal — NGUỒN DUY NHẤT (ADR-0090). File viết tay, review như contract.
+# Schema: specs/schemas/portal-menu-catalog.schema.json · Kiểm tra: node scripts/specs/check-portal-catalog.mjs
+# - Sinh menuRegistry/workspaceRegistry cho web/apps/portal (make portal-catalog) và bảng đọc-chỉ platform.portal_menu_catalog
+#   (eduworld_identity, ghi bởi cmd/migrate lúc deploy). Không khai báo menu tay trong TSX.
+# - Khóa: workspace (school_lms, content_studio, game_ops, live_ops, platform_admin) · menu.<workspace>.<menu> ·
+#   action.<workspace>.<menu>.<action>. Đổi/xóa khóa đã phát hành cần migration dữ liệu feature flag (khóa cũ bị soft-delete trong catalog DB).
+# - required_permissions: người dùng cần ÍT NHẤT MỘT permission trong danh sách (any-of); mã lấy từ catalog permission ADMIN_PORTAL §2.2.
+# - operation_ids: operationId của specs/openapi/eduworld-api.v1.yaml; operation dùng chung định tuyến theo tham số ghi dạng
+#   "operationId[param=value]" (khớp x-portal-action: {param, map} trong OpenAPI). Mỗi operation thuộc đúng một action.
+#   Action không có operation (operation_ids: []) chỉ điều khiển hiển thị (màn [TBD], tổng quan).
+# - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
+# - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
+# - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
+catalog_version: "2026.11.17.1"
+workspaces:
+  - key: school_lms
+    label_key: portal.workspace.school_lms
+    title: C. School & Learning Management
+    order: 1
+    path: /school-lms
+    menus:
+      - key: menu.school_lms.overview
+        label_key: portal.menu.school_lms.overview
+        title: Tổng quan
+        path: /school-lms/overview
+        order: 10
+        required_permissions:
+          - lms.class.read
+          - lms.assignment.read
+          - analytics.school.read
+          - tenant.settings.read
+          - school.settings.read
+          - moderation.school_notification.read
+        can_disable: true
+        actions:
+          - key: action.school_lms.overview.view
+            label_key: portal.action.school_lms.overview.view
+            title: Xem việc cần làm
+            required_permissions:
+              - lms.class.read
+              - lms.assignment.read
+              - analytics.school.read
+              - tenant.settings.read
+              - school.settings.read
+              - moderation.school_notification.read
+            operation_ids: []
+            can_disable: true
+      - key: menu.school_lms.schools
+        label_key: portal.menu.school_lms.schools
+        title: Trường (tenant đơn vị)
+        path: /school-lms/schools
+        order: 20
+        required_permissions: [tenant.school.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.schools.view
+            label_key: portal.action.school_lms.schools.view
+            title: Xem trường
+            required_permissions: [tenant.school.read]
+            operation_ids: [listTenantSchools, getTenantSchool]
+            can_disable: true
+          - key: action.school_lms.schools.edit
+            label_key: portal.action.school_lms.schools.edit
+            title: Sửa thông tin hiển thị, duyệt trường chờ duyệt
+            required_permissions: [tenant.school.write]
+            operation_ids: [updateTenantSchool, approveTenantSchool]
+            can_disable: true
+      - key: menu.school_lms.classes
+        label_key: portal.menu.school_lms.classes
+        title: Lớp & học sinh
+        path: /school-lms/classes
+        order: 30
+        required_permissions: [tenant.class.read, lms.class.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.classes.view
+            label_key: portal.action.school_lms.classes.view
+            title: Xem lớp, sĩ số, học sinh, hồ sơ và tiến độ học sinh
+            required_permissions: [tenant.class.read, lms.class.read]
+            operation_ids: [listClasses, listTenantSchoolClasses, listUnassignedStudents, getStudentProfile, getStudentProgress]
+            can_disable: true
+      - key: menu.school_lms.sis_sync
+        label_key: portal.menu.school_lms.sis_sync
+        title: Đồng bộ SIS/CSV
+        path: /school-lms/sis-sync
+        order: 40
+        required_permissions: [tenant.sis.read, tenant.sis.import]
+        can_disable: true
+        actions:
+          - key: action.school_lms.sis_sync.view
+            label_key: portal.action.school_lms.sis_sync.view
+            title: Xem lần import
+            required_permissions: [tenant.sis.read, tenant.sis.import]
+            operation_ids: [getSisImport]
+            can_disable: true
+          - key: action.school_lms.sis_sync.import
+            label_key: portal.action.school_lms.sis_sync.import
+            title: Import SIS/CSV
+            required_permissions: [tenant.sis.import]
+            operation_ids: [createSisImport]
+            can_disable: true
+      - key: menu.school_lms.courses
+        label_key: portal.menu.school_lms.courses
+        title: Khóa học & lộ trình học
+        path: /school-lms/courses
+        order: 50
+        required_permissions: [lms.class.read, lms.course.write, lms.learning_path.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.courses.view
+            label_key: portal.action.school_lms.courses.view
+            title: Xem khóa học và lộ trình
+            required_permissions: [lms.class.read, lms.course.write, lms.learning_path.write]
+            operation_ids: [listCourses, listLearningPaths]
+            can_disable: true
+          - key: action.school_lms.courses.edit
+            label_key: portal.action.school_lms.courses.edit
+            title: Sửa khóa học
+            required_permissions: [lms.course.write]
+            operation_ids: [updateCourse]
+            can_disable: true
+          - key: action.school_lms.courses.edit_paths
+            label_key: portal.action.school_lms.courses.edit_paths
+            title: Tạo/sửa lộ trình học
+            required_permissions: [lms.learning_path.write]
+            operation_ids: [createLearningPath, updateLearningPath]
+            can_disable: true
+          - key: action.school_lms.courses.unlock_node
+            label_key: portal.action.school_lms.courses.unlock_node
+            title: Mở khóa nút lộ trình cho học sinh
+            required_permissions: [lms.learning_path.write]
+            operation_ids: [unlockPathNodeForStudent]
+            can_disable: true
+      - key: menu.school_lms.assignments
+        label_key: portal.menu.school_lms.assignments
+        title: Bài tập / đề / bài chẩn đoán
+        path: /school-lms/assignments
+        order: 60
+        required_permissions: [lms.assignment.read, lms.assignment.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.assignments.view
+            label_key: portal.action.school_lms.assignments.view
+            title: Xem bài giao và bài nộp
+            required_permissions: [lms.assignment.read, lms.assignment.write]
+            operation_ids: [listAssignments, getAssignment, listAssignmentSubmissions, listExamSessions, getExamSession]
+            can_disable: true
+          - key: action.school_lms.assignments.edit
+            label_key: portal.action.school_lms.assignments.edit
+            title: Tạo, sửa, giao, hủy, lưu trữ bài
+            required_permissions: [lms.assignment.write]
+            operation_ids: [createAssignment, updateAssignment, publishAssignment, cancelAssignment, archiveAssignment, createExamSession]
+            can_disable: true
+          - key: action.school_lms.assignments.manage_students
+            label_key: portal.action.school_lms.assignments.manage_students
+            title: Nhắc, gia hạn, miễn cho học sinh
+            required_permissions: [lms.assignment.write]
+            operation_ids: [remindAssignment, extendAssignmentForStudent, excuseAssignmentForStudent]
+            can_disable: true
+          - key: action.school_lms.assignments.release_results
+            label_key: portal.action.school_lms.assignments.release_results
+            title: Công bố kết quả
+            required_permissions: [lms.result.release]
+            operation_ids: [releaseAssignmentResults, releaseExamResults]
+            can_disable: true
+      - key: menu.school_lms.game_activities
+        label_key: portal.menu.school_lms.game_activities
+        title: Hoạt động game được gán (chỉ đọc)
+        path: /school-lms/game-activities
+        order: 70
+        required_permissions: [lms.assignment.read, lms.assignment.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.game_activities.view
+            label_key: portal.action.school_lms.game_activities.view
+            title: Xem quest/mini-game đã publish được gán
+            required_permissions: [lms.assignment.read, lms.assignment.write]
+            operation_ids: [listGameActivities]
+            can_disable: true
+      - key: menu.school_lms.schedules
+        label_key: portal.menu.school_lms.schedules
+        title: Lịch học
+        path: /school-lms/schedules
+        order: 80
+        required_permissions: [lms.assignment.read, lms.schedule.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.schedules.view
+            label_key: portal.action.school_lms.schedules.view
+            title: Xem lịch
+            required_permissions: [lms.assignment.read, lms.schedule.write]
+            operation_ids: [listScheduleItems]
+            can_disable: true
+          - key: action.school_lms.schedules.edit
+            label_key: portal.action.school_lms.schedules.edit
+            title: Tạo/sửa/xóa mục lịch
+            required_permissions: [lms.schedule.write]
+            operation_ids: [createScheduleItem, updateScheduleItem, deleteScheduleItem]
+            can_disable: true
+      - key: menu.school_lms.study_groups
+        label_key: portal.menu.school_lms.study_groups
+        title: Nhóm học tập
+        path: /school-lms/study-groups
+        order: 90
+        required_permissions: [lms.class.read, lms.study_group.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.study_groups.view
+            label_key: portal.action.school_lms.study_groups.view
+            title: Xem nhóm học tập
+            required_permissions: [lms.class.read, lms.study_group.write]
+            operation_ids: [listStudyGroups, getStudyGroup]
+            can_disable: true
+          - key: action.school_lms.study_groups.edit
+            label_key: portal.action.school_lms.study_groups.edit
+            title: Tạo/sửa/xóa nhóm học tập
+            required_permissions: [lms.study_group.write]
+            operation_ids: [createStudyGroup, updateStudyGroup, deleteStudyGroup]
+            can_disable: true
+      - key: menu.school_lms.challenges
+        label_key: portal.menu.school_lms.challenges
+        title: Thử thách lớp / giải trường
+        path: /school-lms/challenges
+        order: 100
+        required_permissions: [lms.challenge.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.challenges.view
+            label_key: portal.action.school_lms.challenges.view
+            title: Xem thử thách và template
+            required_permissions: [lms.challenge.write]
+            operation_ids: [listChallenges, listChallengeTemplates, listTournaments]
+            can_disable: true
+          - key: action.school_lms.challenges.create
+            label_key: portal.action.school_lms.challenges.create
+            title: Tạo thử thách từ template
+            required_permissions: [lms.challenge.write]
+            operation_ids: [createChallenge]
+            can_disable: true
+          - key: action.school_lms.challenges.manage
+            label_key: portal.action.school_lms.challenges.manage
+            title: Mở đăng ký / hủy thử thách, giải trường
+            required_permissions: [lms.challenge.write]
+            operation_ids: []
+            can_disable: true
+      - key: menu.school_lms.clubs
+        label_key: portal.menu.school_lms.clubs
+        title: Club của học sinh (duyệt)
+        path: /school-lms/clubs
+        order: 110
+        required_permissions: [social.club.approve]
+        can_disable: true
+        actions:
+          - key: action.school_lms.clubs.view
+            label_key: portal.action.school_lms.clubs.view
+            title: Xem club chờ duyệt và đang hoạt động
+            required_permissions: [social.club.approve]
+            operation_ids: [listClubs, getClub]
+            can_disable: true
+          - key: action.school_lms.clubs.approve
+            label_key: portal.action.school_lms.clubs.approve
+            title: Duyệt / lưu trữ club
+            required_permissions: [social.club.approve]
+            operation_ids: [approveClub, archiveClub]
+            can_disable: true
+      - key: menu.school_lms.school_events
+        label_key: portal.menu.school_lms.school_events
+        title: Sự kiện trường
+        path: /school-lms/school-events
+        order: 120
+        required_permissions: [lms.school_event.write]
+        can_disable: true
+        actions:
+          - key: action.school_lms.school_events.view
+            label_key: portal.action.school_lms.school_events.view
+            title: Xem template và sự kiện trường
+            required_permissions: [lms.school_event.write]
+            operation_ids: [listEventTemplates, listSchoolEvents, getSchoolEvent]
+            can_disable: true
+          - key: action.school_lms.school_events.edit
+            label_key: portal.action.school_lms.school_events.edit
+            title: Tạo/sửa sự kiện trường từ template
+            required_permissions: [lms.school_event.write]
+            operation_ids: [createSchoolEvent, updateSchoolEvent]
+            can_disable: true
+          - key: action.school_lms.school_events.cancel
+            label_key: portal.action.school_lms.school_events.cancel
+            title: Hủy sự kiện trường
+            required_permissions: [lms.school_event.write]
+            operation_ids: [cancelSchoolEvent]
+            can_disable: true
+      - key: menu.school_lms.school_dashboard
+        label_key: portal.menu.school_lms.school_dashboard
+        title: School Learning Dashboard
+        path: /school-lms/school-dashboard
+        order: 130
+        required_permissions: [analytics.school.read, analytics.class.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.school_dashboard.view
+            label_key: portal.action.school_lms.school_dashboard.view
+            title: Xem dashboard trường → lớp → học sinh
+            required_permissions: [analytics.school.read, analytics.class.read]
+            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries]
+            can_disable: true
+      - key: menu.school_lms.results
+        label_key: portal.menu.school_lms.results
+        title: Kết quả bài/đề
+        path: /school-lms/results
+        order: 140
+        required_permissions: [lms.report.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.results.view
+            label_key: portal.action.school_lms.results.view
+            title: Xem bảng kết quả khóa học
+            required_permissions: [lms.report.read]
+            operation_ids: [getCourseResults]
+            can_disable: true
+      - key: menu.school_lms.reports
+        label_key: portal.menu.school_lms.reports
+        title: Báo cáo & analytics
+        path: /school-lms/reports
+        order: 150
+        required_permissions: [lms.report.read, analytics.tenant.read, report.export]
+        can_disable: true
+        actions:
+          - key: action.school_lms.reports.view
+            label_key: portal.action.school_lms.reports.view
+            title: Xem báo cáo tổng hợp tenant
+            required_permissions: [analytics.tenant.read]
+            operation_ids: [getTenantLearningSummary, getTenantGameSummary]
+            can_disable: true
+          - key: action.school_lms.reports.export
+            label_key: portal.action.school_lms.reports.export
+            title: Xuất báo cáo (job nền)
+            required_permissions: [report.export, lms.report.read]
+            operation_ids: [createLmsReport, getLmsReport, createTenantReport, getTenantReport]
+            can_disable: true
+      - key: menu.school_lms.safety_notifications
+        label_key: portal.menu.school_lms.safety_notifications
+        title: Thông báo an toàn của trường
+        path: /school-lms/safety-notifications
+        order: 160
+        required_permissions: [moderation.school_notification.read]
+        can_disable: false
+        actions:
+          - key: action.school_lms.safety_notifications.view
+            label_key: portal.action.school_lms.safety_notifications.view
+            title: Xem thông báo vụ việc
+            required_permissions: [moderation.school_notification.read]
+            operation_ids: [listSchoolSafetyNotifications]
+            can_disable: false
+          - key: action.school_lms.safety_notifications.acknowledge
+            label_key: portal.action.school_lms.safety_notifications.acknowledge
+            title: Xác nhận đã liên hệ phụ huynh
+            required_permissions: [moderation.school_notification.acknowledge]
+            operation_ids: [acknowledgeSchoolSafetyNotification]
+            can_disable: false
+      - key: menu.school_lms.chat_safety
+        label_key: portal.menu.school_lms.chat_safety
+        title: Chat policy trường · Nhóm từ của tenant (chỉ xem)
+        path: /school-lms/chat-safety
+        order: 170
+        required_permissions: [chat.sensitive_terms.read, school.settings.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.chat_safety.view
+            label_key: portal.action.school_lms.chat_safety.view
+            title: Xem nhóm từ hiệu lực của tenant
+            required_permissions: [chat.sensitive_terms.read]
+            operation_ids: [listTenantSensitiveCategories]
+            can_disable: true
+          - key: action.school_lms.chat_safety.edit
+            label_key: portal.action.school_lms.chat_safety.edit
+            title: Sửa chat policy cấp trường
+            required_permissions: [school.settings.write, tenant.settings.write]
+            operation_ids: []
+            can_disable: true
+      - key: menu.school_lms.student_activity
+        label_key: portal.menu.school_lms.student_activity
+        title: Hoạt động học sinh
+        path: /school-lms/student-activity
+        order: 180
+        required_permissions: [lms.student_activity.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.student_activity.view
+            label_key: portal.action.school_lms.student_activity.view
+            title: Xem lịch sử đăng nhập game
+            required_permissions: [lms.student_activity.read]
+            operation_ids: [listTenantStudentLoginEvents]
+            can_disable: true
+      - key: menu.school_lms.access_control
+        label_key: portal.menu.school_lms.access_control
+        title: Người dùng & phân quyền
+        path: /school-lms/access-control
+        order: 190
+        required_permissions: [tenant.user.read, tenant.role.read, tenant.user_role.write]
+        can_disable: false
+        actions:
+          - key: action.school_lms.access_control.view_users
+            label_key: portal.action.school_lms.access_control.view_users
+            title: Xem người dùng
+            required_permissions: [tenant.user.read]
+            operation_ids: [listTenantUsers]
+            can_disable: false
+          - key: action.school_lms.access_control.edit_users
+            label_key: portal.action.school_lms.access_control.edit_users
+            title: Tạo/sửa nhân sự
+            required_permissions: [tenant.user.write]
+            operation_ids: [createTenantUser, updateTenantUser]
+            can_disable: false
+          - key: action.school_lms.access_control.view_roles
+            label_key: portal.action.school_lms.access_control.view_roles
+            title: Xem role và permission
+            required_permissions: [tenant.role.read]
+            operation_ids: [listTenantPermissions, listTenantRoles, getTenantRole]
+            can_disable: false
+          - key: action.school_lms.access_control.edit_roles
+            label_key: portal.action.school_lms.access_control.edit_roles
+            title: Tạo/sửa/xóa role tùy biến
+            required_permissions: [tenant.role.write]
+            operation_ids: [createTenantRole, updateTenantRole, deleteTenantRole]
+            can_disable: false
+          - key: action.school_lms.access_control.view_user_roles
+            label_key: portal.action.school_lms.access_control.view_user_roles
+            title: Xem UserRole
+            required_permissions: [tenant.user.read, tenant.user_role.write]
+            operation_ids: [listTenantUserRoles, listSchoolUserRoles]
+            can_disable: false
+          - key: action.school_lms.access_control.assign_roles
+            label_key: portal.action.school_lms.access_control.assign_roles
+            title: Gán/thu hồi UserRole
+            required_permissions: [tenant.user_role.write]
+            operation_ids: [grantTenantUserRole, revokeTenantUserRole, grantSchoolUserRole]
+            can_disable: false
+      - key: menu.school_lms.installers
+        label_key: portal.menu.school_lms.installers
+        title: Bộ cài game cho trường
+        path: /school-lms/installers
+        order: 200
+        required_permissions: [school.settings.read, tenant.settings.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.installers.view
+            label_key: portal.action.school_lms.installers.view
+            title: Xem và tải bộ cài game
+            required_permissions: [school.settings.read, tenant.settings.read]
+            operation_ids: []
+            can_disable: true
+      - key: menu.school_lms.settings
+        label_key: portal.menu.school_lms.settings
+        title: Cài đặt tenant / trường
+        path: /school-lms/settings
+        order: 210
+        required_permissions: [tenant.settings.read, school.settings.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.settings.view
+            label_key: portal.action.school_lms.settings.view
+            title: Xem cài đặt
+            required_permissions: [tenant.settings.read, school.settings.read]
+            operation_ids: [getTenantSettings]
+            can_disable: true
+          - key: action.school_lms.settings.edit
+            label_key: portal.action.school_lms.settings.edit
+            title: Sửa cài đặt tenant
+            required_permissions: [tenant.settings.write]
+            operation_ids: [updateTenantSettings]
+            can_disable: true
+          - key: action.school_lms.settings.cleanup_view
+            label_key: portal.action.school_lms.settings.cleanup_view
+            title: Xem danh sách học sinh sắp bị dọn
+            required_permissions: [tenant.student_cleanup.read]
+            operation_ids: [previewTenantStudentCleanup]
+            can_disable: true
+          - key: action.school_lms.settings.cleanup_exclude
+            label_key: portal.action.school_lms.settings.cleanup_exclude
+            title: Loại trừ/gia hạn dọn học sinh
+            required_permissions: [tenant.student_cleanup.exclude]
+            operation_ids: [createStudentCleanupExclusions, deleteStudentCleanupExclusions]
+            can_disable: true
+      - key: menu.school_lms.trash
+        label_key: portal.menu.school_lms.trash
+        title: Thùng rác
+        path: /school-lms/trash
+        order: 220
+        required_permissions: [tenant.trash.read]
+        can_disable: false
+        actions:
+          - key: action.school_lms.trash.view
+            label_key: portal.action.school_lms.trash.view
+            title: Xem dữ liệu đã xóa
+            required_permissions: [tenant.trash.read]
+            operation_ids: [listTenantTrash]
+            can_disable: false
+          - key: action.school_lms.trash.restore
+            label_key: portal.action.school_lms.trash.restore
+            title: Khôi phục
+            required_permissions: [tenant.trash.restore]
+            operation_ids: [restoreTenantTrashItem]
+            can_disable: false
+      - key: menu.school_lms.audit_logs
+        label_key: portal.menu.school_lms.audit_logs
+        title: Nhật ký (audit trong tenant)
+        path: /school-lms/audit-logs
+        order: 230
+        required_permissions: [tenant.audit.read]
+        can_disable: true
+        actions:
+          - key: action.school_lms.audit_logs.view
+            label_key: portal.action.school_lms.audit_logs.view
+            title: Xem nhật ký
+            required_permissions: [tenant.audit.read]
+            operation_ids: [listTenantAuditLogs]
+            can_disable: true
+  - key: content_studio
+    label_key: portal.workspace.content_studio
+    title: B. Learning Content Studio
+    order: 2
+    path: /content-studio
+    menus:
+      - key: menu.content_studio.curriculum
+        label_key: portal.menu.content_studio.curriculum
+        title: Chương trình học (curriculum, khối, môn, chủ đề, LO)
+        path: /content-studio/curriculum
+        order: 10
+        required_permissions: [curriculum.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.curriculum.view
+            label_key: portal.action.content_studio.curriculum.view
+            title: Xem chương trình học
+            required_permissions: [curriculum.read]
+            operation_ids: [listCmsCurricula, getCmsCurriculum, listCmsSubjects, listCmsTopics, listCmsObjectives]
+            can_disable: true
+          - key: action.content_studio.curriculum.edit
+            label_key: portal.action.content_studio.curriculum.edit
+            title: Tạo/sửa chương trình, môn, chủ đề, LO
+            required_permissions: [curriculum.write]
+            operation_ids:
+              - createCurriculum
+              - updateCurriculum
+              - createSubject
+              - updateSubject
+              - createTopic
+              - updateTopic
+              - createObjective
+              - updateObjective
+            can_disable: true
+          - key: action.content_studio.curriculum.publish
+            label_key: portal.action.content_studio.curriculum.publish
+            title: Xuất bản chương trình học của tenant/platform
+            required_permissions: [curriculum.publish]
+            operation_ids: []
+            can_disable: true
+      - key: menu.content_studio.lessons
+        label_key: portal.menu.content_studio.lessons
+        title: Bài học (Lesson Builder) · học liệu
+        path: /content-studio/lessons
+        order: 20
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.lessons.view
+            label_key: portal.action.content_studio.lessons.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - listCmsLessons
+              - getCmsLesson
+              - "listContentVersions[content_type=lesson]"
+              - "diffContentVersions[content_type=lesson]"
+              - "listContentReleases[content_type=lesson]"
+              - "listContentVersions[content_type=learning_material]"
+              - "diffContentVersions[content_type=learning_material]"
+              - "listContentReleases[content_type=learning_material]"
+            can_disable: true
+          - key: action.content_studio.lessons.edit
+            label_key: portal.action.content_studio.lessons.edit
+            title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
+            required_permissions: [learning_content.write]
+            operation_ids: [createCmsLesson, createCmsLessonVersion, updateCmsLessonDraft]
+            can_disable: true
+          - key: action.content_studio.lessons.workflow
+            label_key: portal.action.content_studio.lessons.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=lesson]", "transitionContentVersion[content_type=learning_material]"]
+            can_disable: true
+          - key: action.content_studio.lessons.publish
+            label_key: portal.action.content_studio.lessons.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=lesson]", "publishContentVersion[content_type=learning_material]"]
+            can_disable: true
+          - key: action.content_studio.lessons.rollback
+            label_key: portal.action.content_studio.lessons.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackContent[content_type=lesson]"
+              - "unpublishContent[content_type=lesson]"
+              - "rollbackContent[content_type=learning_material]"
+              - "unpublishContent[content_type=learning_material]"
+            can_disable: true
+      - key: menu.content_studio.activities
+        label_key: portal.menu.content_studio.activities
+        title: Learning Activity Builder (video, audio, mô phỏng, mini-game)
+        path: /content-studio/activities
+        order: 30
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.activities.view
+            label_key: portal.action.content_studio.activities.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - listCmsActivities
+              - getCmsActivity
+              - listActivityTypes
+              - "listContentVersions[content_type=activity]"
+              - "diffContentVersions[content_type=activity]"
+              - "listContentReleases[content_type=activity]"
+            can_disable: true
+          - key: action.content_studio.activities.edit
+            label_key: portal.action.content_studio.activities.edit
+            title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
+            required_permissions: [learning_content.activity.write]
+            operation_ids: [createCmsActivity, updateCmsActivityDraft]
+            can_disable: true
+          - key: action.content_studio.activities.workflow
+            label_key: portal.action.content_studio.activities.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.activity.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=activity]"]
+            can_disable: true
+          - key: action.content_studio.activities.publish
+            label_key: portal.action.content_studio.activities.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=activity]"]
+            can_disable: true
+          - key: action.content_studio.activities.rollback
+            label_key: portal.action.content_studio.activities.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackContent[content_type=activity]", "unpublishContent[content_type=activity]"]
+            can_disable: true
+      - key: menu.content_studio.simulations
+        label_key: portal.menu.content_studio.simulations
+        title: Mô phỏng (template)
+        path: /content-studio/simulations
+        order: 40
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.simulations.view
+            label_key: portal.action.content_studio.simulations.view
+            title: Xem template mô phỏng
+            required_permissions: [learning_content.read]
+            operation_ids: [listSimulationTemplates]
+            can_disable: true
+      - key: menu.content_studio.question_bank
+        label_key: portal.menu.content_studio.question_bank
+        title: Ngân hàng câu hỏi
+        path: /content-studio/question-bank
+        order: 50
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.question_bank.view
+            label_key: portal.action.content_studio.question_bank.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - searchQuestions
+              - getCmsQuestion
+              - "listContentVersions[content_type=question]"
+              - "diffContentVersions[content_type=question]"
+              - "listContentReleases[content_type=question]"
+            can_disable: true
+          - key: action.content_studio.question_bank.edit
+            label_key: portal.action.content_studio.question_bank.edit
+            title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
+            required_permissions: [learning_content.write]
+            operation_ids: [createQuestion, createQuestionVersion, updateQuestionDraft, deleteQuestion]
+            can_disable: true
+          - key: action.content_studio.question_bank.workflow
+            label_key: portal.action.content_studio.question_bank.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=question]"]
+            can_disable: true
+          - key: action.content_studio.question_bank.publish
+            label_key: portal.action.content_studio.question_bank.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=question]"]
+            can_disable: true
+          - key: action.content_studio.question_bank.rollback
+            label_key: portal.action.content_studio.question_bank.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackContent[content_type=question]", "unpublishContent[content_type=question]"]
+            can_disable: true
+          - key: action.content_studio.question_bank.import
+            label_key: portal.action.content_studio.question_bank.import
+            title: Nhập câu hỏi hàng loạt
+            required_permissions: [learning_content.import]
+            operation_ids: [createContentImport, getContentImport]
+            can_disable: true
+      - key: menu.content_studio.question_sets
+        label_key: portal.menu.content_studio.question_sets
+        title: Bộ câu hỏi · Quiz/Exercise
+        path: /content-studio/question-sets
+        order: 60
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.question_sets.view
+            label_key: portal.action.content_studio.question_sets.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - listCmsQuestionSets
+              - getCmsQuestionSet
+              - "listContentVersions[content_type=question_set]"
+              - "diffContentVersions[content_type=question_set]"
+              - "listContentReleases[content_type=question_set]"
+            can_disable: true
+          - key: action.content_studio.question_sets.edit
+            label_key: portal.action.content_studio.question_sets.edit
+            title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
+            required_permissions: [learning_content.write]
+            operation_ids: [createCmsQuestionSet, createCmsQuestionSetVersion, updateCmsQuestionSetDraft]
+            can_disable: true
+          - key: action.content_studio.question_sets.workflow
+            label_key: portal.action.content_studio.question_sets.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=question_set]"]
+            can_disable: true
+          - key: action.content_studio.question_sets.publish
+            label_key: portal.action.content_studio.question_sets.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=question_set]"]
+            can_disable: true
+          - key: action.content_studio.question_sets.rollback
+            label_key: portal.action.content_studio.question_sets.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackContent[content_type=question_set]", "unpublishContent[content_type=question_set]"]
+            can_disable: true
+      - key: menu.content_studio.assessments
+        label_key: portal.menu.content_studio.assessments
+        title: Ma trận đề / Assessment
+        path: /content-studio/assessments
+        order: 70
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.assessments.view
+            label_key: portal.action.content_studio.assessments.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - listCmsAssessmentBlueprints
+              - getCmsAssessmentBlueprint
+              - "listContentVersions[content_type=assessment_blueprint]"
+              - "diffContentVersions[content_type=assessment_blueprint]"
+              - "listContentReleases[content_type=assessment_blueprint]"
+            can_disable: true
+          - key: action.content_studio.assessments.edit
+            label_key: portal.action.content_studio.assessments.edit
+            title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
+            required_permissions: [learning_content.write]
+            operation_ids: [createCmsAssessmentBlueprint, createCmsAssessmentBlueprintVersion, updateCmsAssessmentBlueprintDraft]
+            can_disable: true
+          - key: action.content_studio.assessments.workflow
+            label_key: portal.action.content_studio.assessments.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=assessment_blueprint]"]
+            can_disable: true
+          - key: action.content_studio.assessments.publish
+            label_key: portal.action.content_studio.assessments.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=assessment_blueprint]"]
+            can_disable: true
+          - key: action.content_studio.assessments.rollback
+            label_key: portal.action.content_studio.assessments.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackContent[content_type=assessment_blueprint]", "unpublishContent[content_type=assessment_blueprint]"]
+            can_disable: true
+      - key: menu.content_studio.regrade
+        label_key: portal.menu.content_studio.regrade
+        title: Chấm lại hệ thống
+        path: /content-studio/regrade
+        order: 80
+        required_permissions: [learning_content.re_evaluate]
+        can_disable: true
+        actions:
+          - key: action.content_studio.regrade.request
+            label_key: portal.action.content_studio.regrade.request
+            title: Yêu cầu hệ thống chấm lại
+            required_permissions: [learning_content.re_evaluate]
+            operation_ids: [createRegradeRequest]
+            can_disable: true
+      - key: menu.content_studio.media
+        label_key: portal.menu.content_studio.media
+        title: Video · Audio · Media
+        path: /content-studio/media
+        order: 90
+        required_permissions: [learning_content.read, media.upload]
+        can_disable: true
+        actions:
+          - key: action.content_studio.media.view
+            label_key: portal.action.content_studio.media.view
+            title: Xem thư viện media
+            required_permissions: [learning_content.read, media.upload]
+            operation_ids: [listMediaAssets, getMediaAsset]
+            can_disable: true
+          - key: action.content_studio.media.upload
+            label_key: portal.action.content_studio.media.upload
+            title: Tải media lên
+            required_permissions: [media.upload]
+            operation_ids: [presignMediaUpload]
+            can_disable: true
+      - key: menu.content_studio.learning_paths
+        label_key: portal.menu.content_studio.learning_paths
+        title: Lộ trình học (Learning Path Builder)
+        path: /content-studio/learning-paths
+        order: 100
+        required_permissions: [learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.learning_paths.view
+            label_key: portal.action.content_studio.learning_paths.view
+            title: Xem danh sách, chi tiết, version
+            required_permissions: [learning_content.read]
+            operation_ids:
+              - "listContentVersions[content_type=learning_path]"
+              - "diffContentVersions[content_type=learning_path]"
+              - "listContentReleases[content_type=learning_path]"
+            can_disable: true
+          - key: action.content_studio.learning_paths.workflow
+            label_key: portal.action.content_studio.learning_paths.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [learning_content.write, learning_content.review]
+            operation_ids: ["transitionContentVersion[content_type=learning_path]"]
+            can_disable: true
+          - key: action.content_studio.learning_paths.publish
+            label_key: portal.action.content_studio.learning_paths.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [learning_content.publish]
+            operation_ids: ["publishContentVersion[content_type=learning_path]"]
+            can_disable: true
+          - key: action.content_studio.learning_paths.rollback
+            label_key: portal.action.content_studio.learning_paths.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackContent[content_type=learning_path]", "unpublishContent[content_type=learning_path]"]
+            can_disable: true
+      - key: menu.content_studio.reviews
+        label_key: portal.menu.content_studio.reviews
+        title: Duyệt nội dung · Preview
+        path: /content-studio/reviews
+        order: 110
+        required_permissions: [learning_content.review, learning_content.read]
+        can_disable: true
+        actions:
+          - key: action.content_studio.reviews.view
+            label_key: portal.action.content_studio.reviews.view
+            title: Xem hàng đợi duyệt
+            required_permissions: [learning_content.review]
+            operation_ids: [listContentReviewTasks]
+            can_disable: true
+          - key: action.content_studio.reviews.preview
+            label_key: portal.action.content_studio.reviews.preview
+            title: Preview nội dung
+            required_permissions: [learning_content.read]
+            operation_ids: [createLearningPreviewSession]
+            can_disable: true
+      - key: menu.content_studio.translations
+        label_key: portal.menu.content_studio.translations
+        title: Dịch nội dung
+        path: /content-studio/translations
+        order: 120
+        required_permissions: [learning_content.translate]
+        can_disable: true
+        actions:
+          - key: action.content_studio.translations.translate
+            label_key: portal.action.content_studio.translations.translate
+            title: Xuất/nhập file dịch
+            required_permissions: [learning_content.translate]
+            operation_ids: [exportLearningTranslations, importLearningTranslations, getLearningTranslationJob]
+            can_disable: true
+  - key: game_ops
+    label_key: portal.workspace.game_ops
+    title: A. Game Operations Console
+    order: 3
+    path: /game-ops
+    menus:
+      - key: menu.game_ops.dashboard
+        label_key: portal.menu.game_ops.dashboard
+        title: Game Dashboard [TBD]
+        path: /game-ops/dashboard
+        order: 10
+        required_permissions: [game.liveops.read, game.analytics.read]
+        can_disable: true
+        actions:
+          - key: action.game_ops.dashboard.view
+            label_key: portal.action.game_ops.dashboard.view
+            title: Xem tổng quan
+            required_permissions: [game.liveops.read, game.analytics.read]
+            operation_ids: []
+            can_disable: true
+      - key: menu.game_ops.world
+        label_key: portal.menu.game_ops.world
+        title: Thế giới — World · Zone · Area
+        path: /game-ops/world
+        order: 20
+        required_permissions: [game.world.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.world.view
+            label_key: portal.action.game_ops.world.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.world.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=world-areas]"
+              - "getGameConfigVersion[config_type=world-areas]"
+              - "listGameConfigVersions[config_type=world-areas]"
+              - "diffGameConfigVersions[config_type=world-areas]"
+              - "listGameConfigReleases[config_type=world-areas]"
+            can_disable: true
+          - key: action.game_ops.world.edit
+            label_key: portal.action.game_ops.world.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.world.write]
+            operation_ids: ["createGameConfig[config_type=world-areas]", "updateGameConfigDraft[config_type=world-areas]"]
+            can_disable: true
+          - key: action.game_ops.world.workflow
+            label_key: portal.action.game_ops.world.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.world.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=world-areas]"]
+            can_disable: true
+          - key: action.game_ops.world.publish
+            label_key: portal.action.game_ops.world.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=world-areas]"]
+            can_disable: true
+          - key: action.game_ops.world.rollback
+            label_key: portal.action.game_ops.world.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=world-areas]", "unpublishGameConfig[config_type=world-areas]"]
+            can_disable: true
+      - key: menu.game_ops.npcs
+        label_key: portal.menu.game_ops.npcs
+        title: NPC & hội thoại
+        path: /game-ops/npcs
+        order: 30
+        required_permissions: [game.npc.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.npcs.view
+            label_key: portal.action.game_ops.npcs.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.npc.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=npc-dialogues]"
+              - "getGameConfigVersion[config_type=npc-dialogues]"
+              - "listGameConfigVersions[config_type=npc-dialogues]"
+              - "diffGameConfigVersions[config_type=npc-dialogues]"
+              - "listGameConfigReleases[config_type=npc-dialogues]"
+            can_disable: true
+          - key: action.game_ops.npcs.edit
+            label_key: portal.action.game_ops.npcs.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.npc.write]
+            operation_ids: ["createGameConfig[config_type=npc-dialogues]", "updateGameConfigDraft[config_type=npc-dialogues]"]
+            can_disable: true
+          - key: action.game_ops.npcs.workflow
+            label_key: portal.action.game_ops.npcs.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.npc.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=npc-dialogues]"]
+            can_disable: true
+          - key: action.game_ops.npcs.publish
+            label_key: portal.action.game_ops.npcs.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=npc-dialogues]"]
+            can_disable: true
+          - key: action.game_ops.npcs.rollback
+            label_key: portal.action.game_ops.npcs.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=npc-dialogues]", "unpublishGameConfig[config_type=npc-dialogues]"]
+            can_disable: true
+      - key: menu.game_ops.quests
+        label_key: portal.menu.game_ops.quests
+        title: Quest Builder · Chương truyện
+        path: /game-ops/quests
+        order: 40
+        required_permissions: [game.quest.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.quests.view
+            label_key: portal.action.game_ops.quests.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.quest.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=quests]"
+              - "getGameConfigVersion[config_type=quests]"
+              - "listGameConfigVersions[config_type=quests]"
+              - "diffGameConfigVersions[config_type=quests]"
+              - "listGameConfigReleases[config_type=quests]"
+              - "listGameConfigs[config_type=story-chapters]"
+              - "getGameConfigVersion[config_type=story-chapters]"
+              - "listGameConfigVersions[config_type=story-chapters]"
+              - "diffGameConfigVersions[config_type=story-chapters]"
+              - "listGameConfigReleases[config_type=story-chapters]"
+            can_disable: true
+          - key: action.game_ops.quests.edit
+            label_key: portal.action.game_ops.quests.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.quest.write]
+            operation_ids:
+              - "createGameConfig[config_type=quests]"
+              - "updateGameConfigDraft[config_type=quests]"
+              - "createGameConfig[config_type=story-chapters]"
+              - "updateGameConfigDraft[config_type=story-chapters]"
+            can_disable: true
+          - key: action.game_ops.quests.workflow
+            label_key: portal.action.game_ops.quests.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.quest.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=quests]", "transitionGameConfigVersion[config_type=story-chapters]"]
+            can_disable: true
+          - key: action.game_ops.quests.publish
+            label_key: portal.action.game_ops.quests.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=quests]", "publishGameConfigVersion[config_type=story-chapters]"]
+            can_disable: true
+          - key: action.game_ops.quests.rollback
+            label_key: portal.action.game_ops.quests.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=quests]"
+              - "unpublishGameConfig[config_type=quests]"
+              - "rollbackGameConfig[config_type=story-chapters]"
+              - "unpublishGameConfig[config_type=story-chapters]"
+            can_disable: true
+      - key: menu.game_ops.minigames
+        label_key: portal.menu.game_ops.minigames
+        title: Mini-game
+        path: /game-ops/minigames
+        order: 50
+        required_permissions: [game.minigame.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.minigames.view
+            label_key: portal.action.game_ops.minigames.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.minigame.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=minigame-configs]"
+              - "getGameConfigVersion[config_type=minigame-configs]"
+              - "listGameConfigVersions[config_type=minigame-configs]"
+              - "diffGameConfigVersions[config_type=minigame-configs]"
+              - "listGameConfigReleases[config_type=minigame-configs]"
+            can_disable: true
+          - key: action.game_ops.minigames.edit
+            label_key: portal.action.game_ops.minigames.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.minigame.write]
+            operation_ids: ["createGameConfig[config_type=minigame-configs]", "updateGameConfigDraft[config_type=minigame-configs]"]
+            can_disable: true
+          - key: action.game_ops.minigames.workflow
+            label_key: portal.action.game_ops.minigames.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.minigame.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=minigame-configs]"]
+            can_disable: true
+          - key: action.game_ops.minigames.publish
+            label_key: portal.action.game_ops.minigames.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=minigame-configs]"]
+            can_disable: true
+          - key: action.game_ops.minigames.rollback
+            label_key: portal.action.game_ops.minigames.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=minigame-configs]", "unpublishGameConfig[config_type=minigame-configs]"]
+            can_disable: true
+      - key: menu.game_ops.challenges
+        label_key: portal.menu.game_ops.challenges
+        title: Challenge Builder
+        path: /game-ops/challenges
+        order: 60
+        required_permissions: [game.challenge.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.challenges.view
+            label_key: portal.action.game_ops.challenges.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.challenge.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=challenges]"
+              - "getGameConfigVersion[config_type=challenges]"
+              - "listGameConfigVersions[config_type=challenges]"
+              - "diffGameConfigVersions[config_type=challenges]"
+              - "listGameConfigReleases[config_type=challenges]"
+            can_disable: true
+          - key: action.game_ops.challenges.edit
+            label_key: portal.action.game_ops.challenges.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.challenge.write]
+            operation_ids: ["createGameConfig[config_type=challenges]", "updateGameConfigDraft[config_type=challenges]"]
+            can_disable: true
+          - key: action.game_ops.challenges.workflow
+            label_key: portal.action.game_ops.challenges.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.challenge.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=challenges]"]
+            can_disable: true
+          - key: action.game_ops.challenges.publish
+            label_key: portal.action.game_ops.challenges.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=challenges]"]
+            can_disable: true
+          - key: action.game_ops.challenges.rollback
+            label_key: portal.action.game_ops.challenges.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=challenges]", "unpublishGameConfig[config_type=challenges]"]
+            can_disable: true
+      - key: menu.game_ops.bosses
+        label_key: portal.menu.game_ops.bosses
+        title: Boss Management
+        path: /game-ops/bosses
+        order: 70
+        required_permissions: [game.boss.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.bosses.view
+            label_key: portal.action.game_ops.bosses.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.boss.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=bosses]"
+              - "getGameConfigVersion[config_type=bosses]"
+              - "listGameConfigVersions[config_type=bosses]"
+              - "diffGameConfigVersions[config_type=bosses]"
+              - "listGameConfigReleases[config_type=bosses]"
+            can_disable: true
+          - key: action.game_ops.bosses.edit
+            label_key: portal.action.game_ops.bosses.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.boss.write]
+            operation_ids: ["createGameConfig[config_type=bosses]", "updateGameConfigDraft[config_type=bosses]"]
+            can_disable: true
+          - key: action.game_ops.bosses.workflow
+            label_key: portal.action.game_ops.bosses.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.boss.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=bosses]"]
+            can_disable: true
+          - key: action.game_ops.bosses.publish
+            label_key: portal.action.game_ops.bosses.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=bosses]"]
+            can_disable: true
+          - key: action.game_ops.bosses.rollback
+            label_key: portal.action.game_ops.bosses.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=bosses]", "unpublishGameConfig[config_type=bosses]"]
+            can_disable: true
+      - key: menu.game_ops.progression
+        label_key: portal.menu.game_ops.progression
+        title: Level & XP
+        path: /game-ops/progression
+        order: 80
+        required_permissions: [game.progression.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.progression.view
+            label_key: portal.action.game_ops.progression.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.progression.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=levels]"
+              - "getGameConfigVersion[config_type=levels]"
+              - "listGameConfigVersions[config_type=levels]"
+              - "diffGameConfigVersions[config_type=levels]"
+              - "listGameConfigReleases[config_type=levels]"
+              - "listGameConfigs[config_type=progression-curves]"
+              - "getGameConfigVersion[config_type=progression-curves]"
+              - "listGameConfigVersions[config_type=progression-curves]"
+              - "diffGameConfigVersions[config_type=progression-curves]"
+              - "listGameConfigReleases[config_type=progression-curves]"
+            can_disable: true
+          - key: action.game_ops.progression.edit
+            label_key: portal.action.game_ops.progression.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.progression.write]
+            operation_ids:
+              - "createGameConfig[config_type=levels]"
+              - "updateGameConfigDraft[config_type=levels]"
+              - "createGameConfig[config_type=progression-curves]"
+              - "updateGameConfigDraft[config_type=progression-curves]"
+            can_disable: true
+          - key: action.game_ops.progression.workflow
+            label_key: portal.action.game_ops.progression.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.progression.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=levels]", "transitionGameConfigVersion[config_type=progression-curves]"]
+            can_disable: true
+          - key: action.game_ops.progression.publish
+            label_key: portal.action.game_ops.progression.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=levels]", "publishGameConfigVersion[config_type=progression-curves]"]
+            can_disable: true
+          - key: action.game_ops.progression.rollback
+            label_key: portal.action.game_ops.progression.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=levels]"
+              - "unpublishGameConfig[config_type=levels]"
+              - "rollbackGameConfig[config_type=progression-curves]"
+              - "unpublishGameConfig[config_type=progression-curves]"
+            can_disable: true
+      - key: menu.game_ops.achievements
+        label_key: portal.menu.game_ops.achievements
+        title: Achievement
+        path: /game-ops/achievements
+        order: 90
+        required_permissions: [game.achievement.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.achievements.view
+            label_key: portal.action.game_ops.achievements.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.achievement.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=achievements]"
+              - "getGameConfigVersion[config_type=achievements]"
+              - "listGameConfigVersions[config_type=achievements]"
+              - "diffGameConfigVersions[config_type=achievements]"
+              - "listGameConfigReleases[config_type=achievements]"
+            can_disable: true
+          - key: action.game_ops.achievements.edit
+            label_key: portal.action.game_ops.achievements.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.achievement.write]
+            operation_ids: ["createGameConfig[config_type=achievements]", "updateGameConfigDraft[config_type=achievements]"]
+            can_disable: true
+          - key: action.game_ops.achievements.workflow
+            label_key: portal.action.game_ops.achievements.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.achievement.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=achievements]"]
+            can_disable: true
+          - key: action.game_ops.achievements.publish
+            label_key: portal.action.game_ops.achievements.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=achievements]"]
+            can_disable: true
+          - key: action.game_ops.achievements.rollback
+            label_key: portal.action.game_ops.achievements.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=achievements]", "unpublishGameConfig[config_type=achievements]"]
+            can_disable: true
+      - key: menu.game_ops.items
+        label_key: portal.menu.game_ops.items
+        title: Item · Bộ sưu tập
+        path: /game-ops/items
+        order: 100
+        required_permissions: [game.item.write, game.collection.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.items.view
+            label_key: portal.action.game_ops.items.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.item.write, game.collection.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=items]"
+              - "getGameConfigVersion[config_type=items]"
+              - "listGameConfigVersions[config_type=items]"
+              - "diffGameConfigVersions[config_type=items]"
+              - "listGameConfigReleases[config_type=items]"
+              - "listGameConfigs[config_type=collections]"
+              - "getGameConfigVersion[config_type=collections]"
+              - "listGameConfigVersions[config_type=collections]"
+              - "diffGameConfigVersions[config_type=collections]"
+              - "listGameConfigReleases[config_type=collections]"
+            can_disable: true
+          - key: action.game_ops.items.edit
+            label_key: portal.action.game_ops.items.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.item.write, game.collection.write]
+            operation_ids:
+              - "createGameConfig[config_type=items]"
+              - "updateGameConfigDraft[config_type=items]"
+              - "createGameConfig[config_type=collections]"
+              - "updateGameConfigDraft[config_type=collections]"
+            can_disable: true
+          - key: action.game_ops.items.workflow
+            label_key: portal.action.game_ops.items.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.item.write, game.collection.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=items]", "transitionGameConfigVersion[config_type=collections]"]
+            can_disable: true
+          - key: action.game_ops.items.publish
+            label_key: portal.action.game_ops.items.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=items]", "publishGameConfigVersion[config_type=collections]"]
+            can_disable: true
+          - key: action.game_ops.items.rollback
+            label_key: portal.action.game_ops.items.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=items]"
+              - "unpublishGameConfig[config_type=items]"
+              - "rollbackGameConfig[config_type=collections]"
+              - "unpublishGameConfig[config_type=collections]"
+            can_disable: true
+      - key: menu.game_ops.shop
+        label_key: portal.menu.game_ops.shop
+        title: Shop · Tiền tệ
+        path: /game-ops/shop
+        order: 110
+        required_permissions: [game.shop.write, game.economy.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.shop.view
+            label_key: portal.action.game_ops.shop.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.shop.write, game.economy.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=shop-items]"
+              - "getGameConfigVersion[config_type=shop-items]"
+              - "listGameConfigVersions[config_type=shop-items]"
+              - "diffGameConfigVersions[config_type=shop-items]"
+              - "listGameConfigReleases[config_type=shop-items]"
+              - "listGameConfigs[config_type=currencies]"
+              - "getGameConfigVersion[config_type=currencies]"
+              - "listGameConfigVersions[config_type=currencies]"
+              - "diffGameConfigVersions[config_type=currencies]"
+              - "listGameConfigReleases[config_type=currencies]"
+            can_disable: true
+          - key: action.game_ops.shop.edit
+            label_key: portal.action.game_ops.shop.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.shop.write, game.economy.write]
+            operation_ids:
+              - "createGameConfig[config_type=shop-items]"
+              - "updateGameConfigDraft[config_type=shop-items]"
+              - "createGameConfig[config_type=currencies]"
+              - "updateGameConfigDraft[config_type=currencies]"
+            can_disable: true
+          - key: action.game_ops.shop.workflow
+            label_key: portal.action.game_ops.shop.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.shop.write, game.economy.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=shop-items]", "transitionGameConfigVersion[config_type=currencies]"]
+            can_disable: true
+          - key: action.game_ops.shop.publish
+            label_key: portal.action.game_ops.shop.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=shop-items]", "publishGameConfigVersion[config_type=currencies]"]
+            can_disable: true
+          - key: action.game_ops.shop.rollback
+            label_key: portal.action.game_ops.shop.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=shop-items]"
+              - "unpublishGameConfig[config_type=shop-items]"
+              - "rollbackGameConfig[config_type=currencies]"
+              - "unpublishGameConfig[config_type=currencies]"
+            can_disable: true
+          - key: action.game_ops.shop.adjust
+            label_key: portal.action.game_ops.shop.adjust
+            title: Bút toán bù kinh tế (hai người duyệt)
+            required_permissions: [game.economy.adjust]
+            operation_ids: [createEconomyAdjustment, approveEconomyAdjustment]
+            can_disable: true
+      - key: menu.game_ops.rewards
+        label_key: portal.menu.game_ops.rewards
+        title: Phần thưởng
+        path: /game-ops/rewards
+        order: 120
+        required_permissions: [game.reward_rule.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.rewards.view
+            label_key: portal.action.game_ops.rewards.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.reward_rule.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=reward-rules]"
+              - "getGameConfigVersion[config_type=reward-rules]"
+              - "listGameConfigVersions[config_type=reward-rules]"
+              - "diffGameConfigVersions[config_type=reward-rules]"
+              - "listGameConfigReleases[config_type=reward-rules]"
+            can_disable: true
+          - key: action.game_ops.rewards.edit
+            label_key: portal.action.game_ops.rewards.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.reward_rule.write]
+            operation_ids: ["createGameConfig[config_type=reward-rules]", "updateGameConfigDraft[config_type=reward-rules]"]
+            can_disable: true
+          - key: action.game_ops.rewards.workflow
+            label_key: portal.action.game_ops.rewards.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.reward_rule.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=reward-rules]"]
+            can_disable: true
+          - key: action.game_ops.rewards.publish
+            label_key: portal.action.game_ops.rewards.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=reward-rules]"]
+            can_disable: true
+          - key: action.game_ops.rewards.rollback
+            label_key: portal.action.game_ops.rewards.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids: ["rollbackGameConfig[config_type=reward-rules]", "unpublishGameConfig[config_type=reward-rules]"]
+            can_disable: true
+      - key: menu.game_ops.events
+        label_key: portal.menu.game_ops.events
+        title: Sự kiện & mùa
+        path: /game-ops/events
+        order: 130
+        required_permissions: [game.event.write, game.season_track.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.events.view
+            label_key: portal.action.game_ops.events.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.event.write, game.season_track.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=events]"
+              - "getGameConfigVersion[config_type=events]"
+              - "listGameConfigVersions[config_type=events]"
+              - "diffGameConfigVersions[config_type=events]"
+              - "listGameConfigReleases[config_type=events]"
+              - "listGameConfigs[config_type=event-templates]"
+              - "getGameConfigVersion[config_type=event-templates]"
+              - "listGameConfigVersions[config_type=event-templates]"
+              - "diffGameConfigVersions[config_type=event-templates]"
+              - "listGameConfigReleases[config_type=event-templates]"
+              - "listGameConfigs[config_type=season-tracks]"
+              - "getGameConfigVersion[config_type=season-tracks]"
+              - "listGameConfigVersions[config_type=season-tracks]"
+              - "diffGameConfigVersions[config_type=season-tracks]"
+              - "listGameConfigReleases[config_type=season-tracks]"
+            can_disable: true
+          - key: action.game_ops.events.edit
+            label_key: portal.action.game_ops.events.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.event.write, game.season_track.write]
+            operation_ids:
+              - "createGameConfig[config_type=events]"
+              - "updateGameConfigDraft[config_type=events]"
+              - "createGameConfig[config_type=event-templates]"
+              - "updateGameConfigDraft[config_type=event-templates]"
+              - "createGameConfig[config_type=season-tracks]"
+              - "updateGameConfigDraft[config_type=season-tracks]"
+            can_disable: true
+          - key: action.game_ops.events.workflow
+            label_key: portal.action.game_ops.events.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.event.write, game.season_track.write, game.content.review]
+            operation_ids:
+              - "transitionGameConfigVersion[config_type=events]"
+              - "transitionGameConfigVersion[config_type=event-templates]"
+              - "transitionGameConfigVersion[config_type=season-tracks]"
+            can_disable: true
+          - key: action.game_ops.events.publish
+            label_key: portal.action.game_ops.events.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids:
+              - "publishGameConfigVersion[config_type=events]"
+              - "publishGameConfigVersion[config_type=event-templates]"
+              - "publishGameConfigVersion[config_type=season-tracks]"
+            can_disable: true
+          - key: action.game_ops.events.rollback
+            label_key: portal.action.game_ops.events.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=events]"
+              - "unpublishGameConfig[config_type=events]"
+              - "rollbackGameConfig[config_type=event-templates]"
+              - "unpublishGameConfig[config_type=event-templates]"
+              - "rollbackGameConfig[config_type=season-tracks]"
+              - "unpublishGameConfig[config_type=season-tracks]"
+            can_disable: true
+          - key: action.game_ops.events.operate
+            label_key: portal.action.game_ops.events.operate
+            title: Dừng / tiếp tục / hủy sự kiện đang chạy
+            required_permissions: [game.event.operate]
+            operation_ids: [suspendEventRun, resumeEventRun, cancelEventRun]
+            can_disable: true
+          - key: action.game_ops.events.stats
+            label_key: portal.action.game_ops.events.stats
+            title: Xem số liệu lượt chạy sự kiện
+            required_permissions: [game.liveops.read]
+            operation_ids: [getEventRunStats]
+            can_disable: true
+      - key: menu.game_ops.competition
+        label_key: portal.menu.game_ops.competition
+        title: Thi đấu (matchmaking, ranking, mùa giải, template, leaderboard)
+        path: /game-ops/competition
+        order: 140
+        required_permissions:
+          - competition.config.matchmaking.write
+          - competition.config.ranking.write
+          - competition.config.season.write
+          - competition.config.tournament_template.write
+          - competition.config.leaderboard.write
+          - game.content.review
+          - game.content.publish
+        can_disable: true
+        actions:
+          - key: action.game_ops.competition.view
+            label_key: portal.action.game_ops.competition.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions:
+              - competition.config.matchmaking.write
+              - competition.config.ranking.write
+              - competition.config.season.write
+              - competition.config.tournament_template.write
+              - competition.config.leaderboard.write
+              - game.content.review
+              - game.content.publish
+            operation_ids:
+              - "listGameConfigs[config_type=matchmaking-configs]"
+              - "getGameConfigVersion[config_type=matchmaking-configs]"
+              - "listGameConfigVersions[config_type=matchmaking-configs]"
+              - "diffGameConfigVersions[config_type=matchmaking-configs]"
+              - "listGameConfigReleases[config_type=matchmaking-configs]"
+              - "listGameConfigs[config_type=ranking-rules]"
+              - "getGameConfigVersion[config_type=ranking-rules]"
+              - "listGameConfigVersions[config_type=ranking-rules]"
+              - "diffGameConfigVersions[config_type=ranking-rules]"
+              - "listGameConfigReleases[config_type=ranking-rules]"
+              - "listGameConfigs[config_type=seasons]"
+              - "getGameConfigVersion[config_type=seasons]"
+              - "listGameConfigVersions[config_type=seasons]"
+              - "diffGameConfigVersions[config_type=seasons]"
+              - "listGameConfigReleases[config_type=seasons]"
+              - "listGameConfigs[config_type=tournament-templates]"
+              - "getGameConfigVersion[config_type=tournament-templates]"
+              - "listGameConfigVersions[config_type=tournament-templates]"
+              - "diffGameConfigVersions[config_type=tournament-templates]"
+              - "listGameConfigReleases[config_type=tournament-templates]"
+              - "listGameConfigs[config_type=challenge-templates]"
+              - "getGameConfigVersion[config_type=challenge-templates]"
+              - "listGameConfigVersions[config_type=challenge-templates]"
+              - "diffGameConfigVersions[config_type=challenge-templates]"
+              - "listGameConfigReleases[config_type=challenge-templates]"
+              - "listGameConfigs[config_type=leaderboard-definitions]"
+              - "getGameConfigVersion[config_type=leaderboard-definitions]"
+              - "listGameConfigVersions[config_type=leaderboard-definitions]"
+              - "diffGameConfigVersions[config_type=leaderboard-definitions]"
+              - "listGameConfigReleases[config_type=leaderboard-definitions]"
+            can_disable: true
+          - key: action.game_ops.competition.edit
+            label_key: portal.action.game_ops.competition.edit
+            title: Tạo và sửa bản nháp
+            required_permissions:
+              - competition.config.matchmaking.write
+              - competition.config.ranking.write
+              - competition.config.season.write
+              - competition.config.tournament_template.write
+              - competition.config.leaderboard.write
+            operation_ids:
+              - "createGameConfig[config_type=matchmaking-configs]"
+              - "updateGameConfigDraft[config_type=matchmaking-configs]"
+              - "createGameConfig[config_type=ranking-rules]"
+              - "updateGameConfigDraft[config_type=ranking-rules]"
+              - "createGameConfig[config_type=seasons]"
+              - "updateGameConfigDraft[config_type=seasons]"
+              - "createGameConfig[config_type=tournament-templates]"
+              - "updateGameConfigDraft[config_type=tournament-templates]"
+              - "createGameConfig[config_type=challenge-templates]"
+              - "updateGameConfigDraft[config_type=challenge-templates]"
+              - "createGameConfig[config_type=leaderboard-definitions]"
+              - "updateGameConfigDraft[config_type=leaderboard-definitions]"
+            can_disable: true
+          - key: action.game_ops.competition.workflow
+            label_key: portal.action.game_ops.competition.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions:
+              - competition.config.matchmaking.write
+              - competition.config.ranking.write
+              - competition.config.season.write
+              - competition.config.tournament_template.write
+              - competition.config.leaderboard.write
+              - game.content.review
+            operation_ids:
+              - "transitionGameConfigVersion[config_type=matchmaking-configs]"
+              - "transitionGameConfigVersion[config_type=ranking-rules]"
+              - "transitionGameConfigVersion[config_type=seasons]"
+              - "transitionGameConfigVersion[config_type=tournament-templates]"
+              - "transitionGameConfigVersion[config_type=challenge-templates]"
+              - "transitionGameConfigVersion[config_type=leaderboard-definitions]"
+            can_disable: true
+          - key: action.game_ops.competition.publish
+            label_key: portal.action.game_ops.competition.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids:
+              - "publishGameConfigVersion[config_type=matchmaking-configs]"
+              - "publishGameConfigVersion[config_type=ranking-rules]"
+              - "publishGameConfigVersion[config_type=seasons]"
+              - "publishGameConfigVersion[config_type=tournament-templates]"
+              - "publishGameConfigVersion[config_type=challenge-templates]"
+              - "publishGameConfigVersion[config_type=leaderboard-definitions]"
+            can_disable: true
+          - key: action.game_ops.competition.rollback
+            label_key: portal.action.game_ops.competition.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=matchmaking-configs]"
+              - "unpublishGameConfig[config_type=matchmaking-configs]"
+              - "rollbackGameConfig[config_type=ranking-rules]"
+              - "unpublishGameConfig[config_type=ranking-rules]"
+              - "rollbackGameConfig[config_type=seasons]"
+              - "unpublishGameConfig[config_type=seasons]"
+              - "rollbackGameConfig[config_type=tournament-templates]"
+              - "unpublishGameConfig[config_type=tournament-templates]"
+              - "rollbackGameConfig[config_type=challenge-templates]"
+              - "unpublishGameConfig[config_type=challenge-templates]"
+              - "rollbackGameConfig[config_type=leaderboard-definitions]"
+              - "unpublishGameConfig[config_type=leaderboard-definitions]"
+            can_disable: true
+      - key: menu.game_ops.chat_assets
+        label_key: portal.menu.game_ops.chat_assets
+        title: Tài nguyên chat — Sticker pack · Thư viện GIF
+        path: /game-ops/chat-assets
+        order: 150
+        required_permissions: [game.chat_assets.write, game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.chat_assets.view
+            label_key: portal.action.game_ops.chat_assets.view
+            title: Xem danh sách, version, lịch sử phát hành
+            required_permissions: [game.chat_assets.write, game.content.review, game.content.publish]
+            operation_ids:
+              - "listGameConfigs[config_type=sticker-packs]"
+              - "getGameConfigVersion[config_type=sticker-packs]"
+              - "listGameConfigVersions[config_type=sticker-packs]"
+              - "diffGameConfigVersions[config_type=sticker-packs]"
+              - "listGameConfigReleases[config_type=sticker-packs]"
+              - "listGameConfigs[config_type=gifs]"
+              - "getGameConfigVersion[config_type=gifs]"
+              - "listGameConfigVersions[config_type=gifs]"
+              - "diffGameConfigVersions[config_type=gifs]"
+              - "listGameConfigReleases[config_type=gifs]"
+            can_disable: true
+          - key: action.game_ops.chat_assets.edit
+            label_key: portal.action.game_ops.chat_assets.edit
+            title: Tạo và sửa bản nháp
+            required_permissions: [game.chat_assets.write]
+            operation_ids:
+              - "createGameConfig[config_type=sticker-packs]"
+              - "updateGameConfigDraft[config_type=sticker-packs]"
+              - "createGameConfig[config_type=gifs]"
+              - "updateGameConfigDraft[config_type=gifs]"
+            can_disable: true
+          - key: action.game_ops.chat_assets.workflow
+            label_key: portal.action.game_ops.chat_assets.workflow
+            title: Gửi duyệt / duyệt / từ chối
+            required_permissions: [game.chat_assets.write, game.content.review]
+            operation_ids: ["transitionGameConfigVersion[config_type=sticker-packs]", "transitionGameConfigVersion[config_type=gifs]"]
+            can_disable: true
+          - key: action.game_ops.chat_assets.publish
+            label_key: portal.action.game_ops.chat_assets.publish
+            title: Xuất bản (ngay hoặc hẹn giờ)
+            required_permissions: [game.content.publish]
+            operation_ids: ["publishGameConfigVersion[config_type=sticker-packs]", "publishGameConfigVersion[config_type=gifs]"]
+            can_disable: true
+          - key: action.game_ops.chat_assets.rollback
+            label_key: portal.action.game_ops.chat_assets.rollback
+            title: Rollback / gỡ xuất bản
+            required_permissions: [content.release.rollback]
+            operation_ids:
+              - "rollbackGameConfig[config_type=sticker-packs]"
+              - "unpublishGameConfig[config_type=sticker-packs]"
+              - "rollbackGameConfig[config_type=gifs]"
+              - "unpublishGameConfig[config_type=gifs]"
+            can_disable: true
+      - key: menu.game_ops.media
+        label_key: portal.menu.game_ops.media
+        title: Media nội dung game
+        path: /game-ops/media
+        order: 160
+        required_permissions: [game.content.review, game.quest.write, game.item.write, game.chat_assets.write]
+        can_disable: true
+        actions:
+          - key: action.game_ops.media.view
+            label_key: portal.action.game_ops.media.view
+            title: Xem media game
+            required_permissions: [game.content.review, game.quest.write, game.item.write, game.chat_assets.write]
+            operation_ids: [getGameMediaAsset]
+            can_disable: true
+          - key: action.game_ops.media.upload
+            label_key: portal.action.game_ops.media.upload
+            title: Tải media game lên
+            required_permissions: [game.quest.write, game.item.write, game.npc.write, game.world.write, game.chat_assets.write]
+            operation_ids: [presignGameMediaUpload]
+            can_disable: true
+      - key: menu.game_ops.translations
+        label_key: portal.menu.game_ops.translations
+        title: Dịch nội dung game
+        path: /game-ops/translations
+        order: 170
+        required_permissions: [game.content.translate]
+        can_disable: true
+        actions:
+          - key: action.game_ops.translations.translate
+            label_key: portal.action.game_ops.translations.translate
+            title: Xuất/nhập file dịch
+            required_permissions: [game.content.translate]
+            operation_ids: [exportGameTranslations, importGameTranslations, getGameTranslationJob]
+            can_disable: true
+      - key: menu.game_ops.players
+        label_key: portal.menu.game_ops.players
+        title: Người chơi [TBD]
+        path: /game-ops/players
+        order: 180
+        required_permissions: [game.liveops.read]
+        can_disable: true
+        actions:
+          - key: action.game_ops.players.view
+            label_key: portal.action.game_ops.players.view
+            title: Xem người chơi
+            required_permissions: [game.liveops.read]
+            operation_ids: []
+            can_disable: true
+      - key: menu.game_ops.parties
+        label_key: portal.menu.game_ops.parties
+        title: Party & nhóm [TBD]
+        path: /game-ops/parties
+        order: 190
+        required_permissions: [game.liveops.read]
+        can_disable: true
+        actions:
+          - key: action.game_ops.parties.view
+            label_key: portal.action.game_ops.parties.view
+            title: Xem party
+            required_permissions: [game.liveops.read]
+            operation_ids: []
+            can_disable: true
+      - key: menu.game_ops.review
+        label_key: portal.menu.game_ops.review
+        title: Duyệt & publish · Preview Godot Web
+        path: /game-ops/review
+        order: 200
+        required_permissions: [game.content.review, game.content.publish]
+        can_disable: true
+        actions:
+          - key: action.game_ops.review.view
+            label_key: portal.action.game_ops.review.view
+            title: Xem hàng đợi duyệt lane platform_game
+            required_permissions: [game.content.review, game.content.publish]
+            operation_ids: []
+            can_disable: true
+          - key: action.game_ops.review.preview
+            label_key: portal.action.game_ops.review.preview
+            title: Preview bản nháp trong Godot Web
+            required_permissions: [game.content.review, game.quest.write, game.minigame.write, game.npc.write, game.world.write]
+            operation_ids: [createGamePreviewSession]
+            can_disable: true
+  - key: live_ops
+    label_key: portal.workspace.live_ops
+    title: E. Game Live Operations
+    order: 4
+    path: /live-ops
+    menus:
+      - key: menu.live_ops.live_dashboard
+        label_key: portal.menu.live_ops.live_dashboard
+        title: Live dashboard
+        path: /live-ops/live-dashboard
+        order: 10
+        required_permissions: [game.liveops.read]
+        can_disable: true
+        actions:
+          - key: action.live_ops.live_dashboard.view
+            label_key: portal.action.live_ops.live_dashboard.view
+            title: Xem CCU, phiên, hàng chờ, sức khỏe
+            required_permissions: [game.liveops.read]
+            operation_ids: []
+            can_disable: true
+      - key: menu.live_ops.game_analytics
+        label_key: portal.menu.live_ops.game_analytics
+        title: Game Analytics
+        path: /live-ops/game-analytics
+        order: 20
+        required_permissions: [game.analytics.read]
+        can_disable: true
+        actions:
+          - key: action.live_ops.game_analytics.view
+            label_key: portal.action.live_ops.game_analytics.view
+            title: Xem các panel Game Analytics
+            required_permissions: [game.analytics.read]
+            operation_ids: [getGameMetrics, getGameRetention, getGameFunnel, getGameContentStats, getGamePerformance]
+            can_disable: true
+          - key: action.live_ops.game_analytics.export
+            label_key: portal.action.live_ops.game_analytics.export
+            title: Xuất dữ liệu analytics
+            required_permissions: [game.analytics.read]
+            operation_ids: [createGameAnalyticsExport]
+            can_disable: true
+      - key: menu.live_ops.moderation_cases
+        label_key: portal.menu.live_ops.moderation_cases
+        title: Kiểm duyệt — hàng đợi case
+        path: /live-ops/moderation-cases
+        order: 30
+        required_permissions: [moderation.case.read]
+        can_disable: false
+        actions:
+          - key: action.live_ops.moderation_cases.view
+            label_key: portal.action.live_ops.moderation_cases.view
+            title: Xem case, bằng chứng, tin nhắn liên quan, thông báo nhà trường
+            required_permissions: [moderation.case.read, moderation.case.messages.read]
+            operation_ids: [listModerationCases, getModerationCase, listModerationCaseMessages, listSchoolSafetyNotificationsPlatform]
+            can_disable: false
+          - key: action.live_ops.moderation_cases.act
+            label_key: portal.action.live_ops.moderation_cases.act
+            title: Nhận và xử lý case
+            required_permissions: [moderation.case.act]
+            operation_ids: [assignModerationCase, actOnModerationCase]
+            can_disable: false
+          - key: action.live_ops.moderation_cases.notify_school
+            label_key: portal.action.live_ops.moderation_cases.notify_school
+            title: Gửi thông báo nhà trường
+            required_permissions: [moderation.school_notification.send]
+            operation_ids: [notifySchoolForCase]
+            can_disable: false
+      - key: menu.live_ops.sanctions
+        label_key: portal.menu.live_ops.sanctions
+        title: Kiểm duyệt — sanction
+        path: /live-ops/sanctions
+        order: 40
+        required_permissions: [moderation.sanction.read]
+        can_disable: false
+        actions:
+          - key: action.live_ops.sanctions.view
+            label_key: portal.action.live_ops.sanctions.view
+            title: Xem sanction
+            required_permissions: [moderation.sanction.read]
+            operation_ids: [listSanctions]
+            can_disable: false
+          - key: action.live_ops.sanctions.write
+            label_key: portal.action.live_ops.sanctions.write
+            title: Áp/thu hồi sanction
+            required_permissions: [moderation.sanction.write]
+            operation_ids: [createSanction, revokeSanction]
+            can_disable: false
+      - key: menu.live_ops.tenant_terms
+        label_key: portal.menu.live_ops.tenant_terms
+        title: Từ bổ sung / nhóm từ của tenant
+        path: /live-ops/tenant-terms
+        order: 50
+        required_permissions: [chat.tenant_terms.write, chat.tenant_category.toggle]
+        can_disable: true
+        actions:
+          - key: action.live_ops.tenant_terms.view
+            label_key: portal.action.live_ops.tenant_terms.view
+            title: Xem từ bổ sung của tenant
+            required_permissions: [chat.tenant_terms.write]
+            operation_ids: [listTenantSensitiveTerms]
+            can_disable: true
+          - key: action.live_ops.tenant_terms.edit
+            label_key: portal.action.live_ops.tenant_terms.edit
+            title: Thêm/sửa/xóa và publish từ bổ sung
+            required_permissions: [chat.tenant_terms.write]
+            operation_ids: [createTenantSensitiveTerm, updateTenantSensitiveTerm, deleteTenantSensitiveTerm, publishTenantSensitiveCatalog]
+            can_disable: true
+          - key: action.live_ops.tenant_terms.toggle_category
+            label_key: portal.action.live_ops.tenant_terms.toggle_category
+            title: Bật/tắt nhóm từ của tenant
+            required_permissions: [chat.tenant_category.toggle]
+            operation_ids: [toggleTenantSensitiveCategory]
+            can_disable: true
+      - key: menu.live_ops.oncall
+        label_key: portal.menu.live_ops.oncall
+        title: Lịch trực on-call · báo cáo khẩn
+        path: /live-ops/oncall
+        order: 60
+        required_permissions: [moderation.case.lead]
+        can_disable: true
+        actions:
+          - key: action.live_ops.oncall.view
+            label_key: portal.action.live_ops.oncall.view
+            title: Xem lịch trực
+            required_permissions: [moderation.case.lead]
+            operation_ids: []
+            can_disable: true
+      - key: menu.live_ops.incidents
+        label_key: portal.menu.live_ops.incidents
+        title: Sự cố (incident) [TBD]
+        path: /live-ops/incidents
+        order: 70
+        required_permissions: [game.liveops.read]
+        can_disable: true
+        actions:
+          - key: action.live_ops.incidents.view
+            label_key: portal.action.live_ops.incidents.view
+            title: Xem sự cố
+            required_permissions: [game.liveops.read]
+            operation_ids: []
+            can_disable: true
+  - key: platform_admin
+    label_key: portal.workspace.platform_admin
+    title: D. Platform Administration
+    order: 5
+    path: /platform-admin
+    menus:
+      - key: menu.platform_admin.tenants
+        label_key: portal.menu.platform_admin.tenants
+        title: Tenant · SIS connection
+        path: /platform-admin/tenants
+        order: 10
+        required_permissions: [platform.tenant.manage, platform.cross_tenant.read]
+        can_disable: false
+        actions:
+          - key: action.platform_admin.tenants.view
+            label_key: portal.action.platform_admin.tenants.view
+            title: Xem tenant
+            required_permissions: [platform.tenant.manage, platform.cross_tenant.read]
+            operation_ids: [listTenants]
+            can_disable: false
+          - key: action.platform_admin.tenants.edit
+            label_key: portal.action.platform_admin.tenants.edit
+            title: Tạo/sửa/kích hoạt tenant và trường thuộc tenant
+            required_permissions: [platform.tenant.manage]
+            operation_ids: []
+            can_disable: false
+          - key: action.platform_admin.tenants.sis_connections
+            label_key: portal.action.platform_admin.tenants.sis_connections
+            title: Gán trường cho SIS connection, đồng bộ ngay
+            required_permissions: [platform.sis_connection.manage]
+            operation_ids: [listSisConnectionSchools, setSisConnectionSchools, triggerSisSync]
+            can_disable: false
+      - key: menu.platform_admin.access_control
+        label_key: portal.menu.platform_admin.access_control
+        title: Người dùng & phân quyền (platform)
+        path: /platform-admin/access-control
+        order: 20
+        required_permissions: [platform.role.read, platform.user_role.write, platform.user.manage]
+        can_disable: false
+        actions:
+          - key: action.platform_admin.access_control.view_users
+            label_key: portal.action.platform_admin.access_control.view_users
+            title: Xem người dùng mọi tenant
+            required_permissions: [platform.user.manage]
+            operation_ids: []
+            can_disable: false
+          - key: action.platform_admin.access_control.edit_users
+            label_key: portal.action.platform_admin.access_control.edit_users
+            title: Tạo/sửa nhân sự platform, mở khóa
+            required_permissions: [platform.user.manage]
+            operation_ids: []
+            can_disable: false
+          - key: action.platform_admin.access_control.view_roles
+            label_key: portal.action.platform_admin.access_control.view_roles
+            title: Xem role và permission catalog
+            required_permissions: [platform.role.read]
+            operation_ids: [listPlatformRoles, getPlatformRole, listAllPermissions]
+            can_disable: false
+          - key: action.platform_admin.access_control.edit_roles
+            label_key: portal.action.platform_admin.access_control.edit_roles
+            title: Tạo/sửa/xóa role platform và role dùng chung
+            required_permissions: [platform.role.write]
+            operation_ids: [createPlatformRole, updatePlatformRole, deletePlatformRole]
+            can_disable: false
+          - key: action.platform_admin.access_control.view_user_roles
+            label_key: portal.action.platform_admin.access_control.view_user_roles
+            title: Xem UserRole mọi tenant
+            required_permissions: [platform.role.read, platform.user_role.write]
+            operation_ids: [listAllUserRoles]
+            can_disable: false
+          - key: action.platform_admin.access_control.assign_roles
+            label_key: portal.action.platform_admin.access_control.assign_roles
+            title: Gán/thu hồi UserRole platform và tenant đích
+            required_permissions: [platform.user_role.write]
+            operation_ids: [grantPlatformUserRole, revokePlatformUserRole]
+            can_disable: false
+          - key: action.platform_admin.access_control.lock_user
+            label_key: portal.action.platform_admin.access_control.lock_user
+            title: Khóa tài khoản
+            required_permissions: [platform.user.manage]
+            operation_ids: [lockUser]
+            can_disable: false
+      - key: menu.platform_admin.tenant_data
+        label_key: portal.menu.platform_admin.tenant_data
+        title: Gán cho tenant · Clone giữa tenant
+        path: /platform-admin/tenant-data
+        order: 30
+        required_permissions: [platform.tenant_data.assign, platform.tenant_data.clone]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.tenant_data.view
+            label_key: portal.action.platform_admin.tenant_data.view
+            title: Xem gán dữ liệu
+            required_permissions: [platform.tenant_data.assign]
+            operation_ids: [listTenantAssignments]
+            can_disable: true
+          - key: action.platform_admin.tenant_data.assign
+            label_key: portal.action.platform_admin.tenant_data.assign
+            title: Gán/gỡ gán dữ liệu platform
+            required_permissions: [platform.tenant_data.assign]
+            operation_ids: [assignToTenants, unassignFromTenants]
+            can_disable: true
+          - key: action.platform_admin.tenant_data.clone
+            label_key: portal.action.platform_admin.tenant_data.clone
+            title: Clone dữ liệu giữa tenant
+            required_permissions: [platform.tenant_data.clone]
+            operation_ids: [createTenantClone, getTenantClone]
+            can_disable: true
+      - key: menu.platform_admin.catalog
+        label_key: portal.menu.platform_admin.catalog
+        title: Danh mục quốc gia, tỉnh/thành, trường
+        path: /platform-admin/catalog
+        order: 40
+        required_permissions: [platform.catalog.write]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.catalog.edit
+            label_key: portal.action.platform_admin.catalog.edit
+            title: Sửa quốc gia, tỉnh/thành, kế thừa tỉnh
+            required_permissions: [platform.catalog.write]
+            operation_ids: [createCountry, updateCountry, createProvince, updateProvince, createProvinceSuccession]
+            can_disable: true
+          - key: action.platform_admin.catalog.import_schools
+            label_key: portal.action.platform_admin.catalog.import_schools
+            title: Import danh mục trường
+            required_permissions: [platform.catalog.write]
+            operation_ids: [importSchools, getSchoolImport]
+            can_disable: true
+      - key: menu.platform_admin.school_policies
+        label_key: portal.menu.platform_admin.school_policies
+        title: Chính sách trường
+        path: /platform-admin/school-policies
+        order: 50
+        required_permissions: [platform.settings.write]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.school_policies.view
+            label_key: portal.action.platform_admin.school_policies.view
+            title: Xem chính sách trường
+            required_permissions: [platform.settings.write]
+            operation_ids: []
+            can_disable: true
+      - key: menu.platform_admin.chat_safety
+        label_key: portal.menu.platform_admin.chat_safety
+        title: An toàn chat — Danh mục từ nhạy cảm
+        path: /platform-admin/chat-safety
+        order: 60
+        required_permissions: [chat.sensitive_terms.write]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.chat_safety.view
+            label_key: portal.action.platform_admin.chat_safety.view
+            title: Xem danh mục và lịch sử version
+            required_permissions: [chat.sensitive_terms.write]
+            operation_ids: [listSensitiveCategories, listSensitiveTerms, listSensitiveAllowlist, listSensitiveCatalogVersions]
+            can_disable: true
+          - key: action.platform_admin.chat_safety.edit
+            label_key: portal.action.platform_admin.chat_safety.edit
+            title: Sửa category, term, allowlist
+            required_permissions: [chat.sensitive_terms.write]
+            operation_ids:
+              - createSensitiveCategory
+              - updateSensitiveCategory
+              - deleteSensitiveCategory
+              - createSensitiveTerm
+              - updateSensitiveTerm
+              - deleteSensitiveTerm
+              - createSensitiveAllowlistEntry
+              - deleteSensitiveAllowlistEntry
+            can_disable: true
+          - key: action.platform_admin.chat_safety.test
+            label_key: portal.action.platform_admin.chat_safety.test
+            title: Thử chuỗi
+            required_permissions: [chat.sensitive_terms.write]
+            operation_ids: [testSensitiveTerms]
+            can_disable: true
+          - key: action.platform_admin.chat_safety.publish
+            label_key: portal.action.platform_admin.chat_safety.publish
+            title: Publish danh mục
+            required_permissions: [chat.sensitive_terms.write]
+            operation_ids: [publishSensitiveCatalog]
+            can_disable: true
+      - key: menu.platform_admin.moderation_switches
+        label_key: portal.menu.platform_admin.moderation_switches
+        title: Công tắc kiểm duyệt
+        path: /platform-admin/moderation-switches
+        order: 70
+        required_permissions: [chat.policy.toggle]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.moderation_switches.view
+            label_key: portal.action.platform_admin.moderation_switches.view
+            title: Xem công tắc và lịch sử
+            required_permissions: [chat.policy.toggle]
+            operation_ids: [listModerationSwitches, listModerationSwitchHistory]
+            can_disable: true
+          - key: action.platform_admin.moderation_switches.toggle
+            label_key: portal.action.platform_admin.moderation_switches.toggle
+            title: Bật/tắt công tắc kiểm duyệt
+            required_permissions: [chat.policy.toggle]
+            operation_ids: [setModerationSwitches]
+            can_disable: true
+      - key: menu.platform_admin.break_glass
+        label_key: portal.menu.platform_admin.break_glass
+        title: Break-glass
+        path: /platform-admin/break-glass
+        order: 80
+        required_permissions: [platform.break_glass.request, platform.break_glass.approve]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.break_glass.view
+            label_key: portal.action.platform_admin.break_glass.view
+            title: Xem yêu cầu break-glass
+            required_permissions: [platform.break_glass.request, platform.break_glass.approve]
+            operation_ids: []
+            can_disable: true
+      - key: menu.platform_admin.system_settings
+        label_key: portal.menu.platform_admin.system_settings
+        title: Cấu hình hệ thống — dọn học sinh · thời hạn chat gameplay · retention
+        path: /platform-admin/system-settings
+        order: 90
+        required_permissions: [platform.settings.write]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.system_settings.view
+            label_key: portal.action.platform_admin.system_settings.view
+            title: Xem cấu hình và lịch sử dọn học sinh
+            required_permissions: [platform.settings.write]
+            operation_ids: [getStudentCleanupSettings, getChatRetentionSettings, listStudentCleanupRuns]
+            can_disable: true
+          - key: action.platform_admin.system_settings.edit
+            label_key: portal.action.platform_admin.system_settings.edit
+            title: Sửa cấu hình
+            required_permissions: [platform.settings.write]
+            operation_ids: [putStudentCleanupSettings, putChatRetentionSettings]
+            can_disable: true
+          - key: action.platform_admin.system_settings.approve_cleanup
+            label_key: portal.action.platform_admin.system_settings.approve_cleanup
+            title: Xác nhận lần dọn vượt ngưỡng
+            required_permissions: [platform.student_cleanup.approve]
+            operation_ids: [approveStudentCleanupRun]
+            can_disable: true
+      - key: menu.platform_admin.feature_toggles
+        label_key: portal.menu.platform_admin.feature_toggles
+        title: Feature flag · Bật/tắt menu & action
+        path: /platform-admin/feature-toggles
+        order: 100
+        required_permissions: [platform.feature_flag.write]
+        can_disable: false
+        actions:
+          - key: action.platform_admin.feature_toggles.view
+            label_key: portal.action.platform_admin.feature_toggles.view
+            title: Xem feature flag và danh mục menu/action
+            required_permissions: [platform.feature_flag.write]
+            operation_ids: [listFeatureFlags, listPortalMenuCatalog]
+            can_disable: false
+          - key: action.platform_admin.feature_toggles.update
+            label_key: portal.action.platform_admin.feature_toggles.update
+            title: Đặt mặc định platform / ghi đè theo tenant
+            required_permissions: [platform.feature_flag.write]
+            operation_ids: [putFeatureFlag]
+            can_disable: false
+      - key: menu.platform_admin.student_activity
+        label_key: portal.menu.platform_admin.student_activity
+        title: Hoạt động đăng nhập game (mọi tenant)
+        path: /platform-admin/student-activity
+        order: 110
+        required_permissions: [platform.cross_tenant.read]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.student_activity.view
+            label_key: portal.action.platform_admin.student_activity.view
+            title: Xem lịch sử đăng nhập game liên tenant
+            required_permissions: [platform.cross_tenant.read]
+            operation_ids: [listLoginEventsCrossTenant]
+            can_disable: true
+      - key: menu.platform_admin.reports
+        label_key: portal.menu.platform_admin.reports
+        title: Báo cáo học tập toàn platform
+        path: /platform-admin/reports
+        order: 120
+        required_permissions: [platform.cross_tenant.read, report.export]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.reports.view
+            label_key: portal.action.platform_admin.reports.view
+            title: Xem tổng hợp học tập
+            required_permissions: [platform.cross_tenant.read]
+            operation_ids: [getPlatformLearningSummary]
+            can_disable: true
+          - key: action.platform_admin.reports.export
+            label_key: portal.action.platform_admin.reports.export
+            title: Xuất báo cáo
+            required_permissions: [report.export]
+            operation_ids: [createPlatformReport, getPlatformReport]
+            can_disable: true
+      - key: menu.platform_admin.data_requests
+        label_key: portal.menu.platform_admin.data_requests
+        title: Yêu cầu về dữ liệu cá nhân
+        path: /platform-admin/data-requests
+        order: 130
+        required_permissions: [platform.data_request.write]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.data_requests.view
+            label_key: portal.action.platform_admin.data_requests.view
+            title: Xem yêu cầu
+            required_permissions: [platform.data_request.write]
+            operation_ids: [listDataRequests, getDataRequest]
+            can_disable: true
+          - key: action.platform_admin.data_requests.create
+            label_key: portal.action.platform_admin.data_requests.create
+            title: Tiếp nhận yêu cầu
+            required_permissions: [platform.data_request.write]
+            operation_ids: [createDataRequest]
+            can_disable: true
+      - key: menu.platform_admin.integrations
+        label_key: portal.menu.platform_admin.integrations
+        title: Tích hợp — Keycloak · SIS · APISIX (tham chiếu) [TBD]
+        path: /platform-admin/integrations
+        order: 140
+        required_permissions: [platform.sis_connection.manage, platform.tenant.manage]
+        can_disable: true
+        actions:
+          - key: action.platform_admin.integrations.view
+            label_key: portal.action.platform_admin.integrations.view
+            title: Xem cấu hình tham chiếu
+            required_permissions: [platform.sis_connection.manage, platform.tenant.manage]
+            operation_ids: []
+            can_disable: true
+      - key: menu.platform_admin.trash
+        label_key: portal.menu.platform_admin.trash
+        title: Thùng rác (mọi tenant + platform)
+        path: /platform-admin/trash
+        order: 150
+        required_permissions: [platform.trash.read]
+        can_disable: false
+        actions:
+          - key: action.platform_admin.trash.view
+            label_key: portal.action.platform_admin.trash.view
+            title: Xem dữ liệu đã xóa
+            required_permissions: [platform.trash.read]
+            operation_ids: [listTrash]
+            can_disable: false
+          - key: action.platform_admin.trash.restore
+            label_key: portal.action.platform_admin.trash.restore
+            title: Khôi phục
+            required_permissions: [platform.trash.restore]
+            operation_ids: [restoreTrashItem]
+            can_disable: false
+      - key: menu.platform_admin.audit_logs
+        label_key: portal.menu.platform_admin.audit_logs
+        title: Nhật ký toàn hệ thống
+        path: /platform-admin/audit-logs
+        order: 160
+        required_permissions: [platform.audit.read]
+        can_disable: false
+        actions:
+          - key: action.platform_admin.audit_logs.view
+            label_key: portal.action.platform_admin.audit_logs.view
+            title: Xem nhật ký mọi tenant
+            required_permissions: [platform.audit.read]
+            operation_ids: [listPlatformAuditLogs]
+            can_disable: false

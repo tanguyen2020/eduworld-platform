@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/identity/user_role.changed.v1.schema.json",
-  "title": "Payload user_role.changed v1 (identity-service, ADR-0066)",
+  "title": "Payload user_role.changed v1 (module identity, ADR-0066)",
   "description": "Gán/thu hồi/hết hạn/sửa một UserRole. Consumer: audit, vô hiệu cache Principal và menu portal, đồng bộ membership Keycloak Organization + realm role tenant_staff/platform_staff. Thay role_assignment.changed. Không PII.",
   "type": "object",
   "additionalProperties": false,

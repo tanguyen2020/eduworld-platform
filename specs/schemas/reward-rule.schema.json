@@ -31,7 +31,7 @@
         },
         "attempt_modes": {
           "type": "array", "uniqueItems": true,
-          "items": { "enum": ["practice", "assignment", "quest", "exam", "competition", "retry_wrong"] },
+          "items": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
           "description": "Giới hạn theo Attempt.mode. Mặc định đề xuất không gồm exam chính thức."
         }
       }

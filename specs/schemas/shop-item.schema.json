@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:eduworld:schema:shop-item:1",
   "title": "ShopItemVersion",
-  "description": "Mặt hàng trong Shop (game-service). Chỉ cosmetic, giá bằng tiền trong game (Xu), vật phẩm xác định — không mua bằng tiền thật, không hộp ngẫu nhiên (ADR-0049). Xem docs/01-game-design/INVENTORY_ECONOMY.md §5.",
+  "description": "Mặt hàng trong Shop (module game). Chỉ cosmetic, giá bằng tiền trong game (Xu), vật phẩm xác định — không mua bằng tiền thật, không hộp ngẫu nhiên (ADR-0049). Xem docs/01-game-design/INVENTORY_ECONOMY.md §5.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "shop_item_id", "shop_item_version_id", "version", "status", "owner_scope", "item_id", "item_kind", "price", "purchase_limit"],

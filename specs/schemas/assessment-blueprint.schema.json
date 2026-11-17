@@ -48,7 +48,16 @@
       "required": ["strategy"],
       "properties": {
         "strategy": { "enum": ["fixed", "independent_draw", "per_student"] },
-        "count": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 }
+        "count": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 },
+        "balance": {
+          "type": "object",
+          "description": "Cân bằng độ khó giữa các biến thể khi independent_draw (EXAM_ENGINE §4.1, EDU_FIT_REVIEW PED-11) [Proposed].",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "max_mean_p_diff": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.05, "description": "Chênh lệch tối đa giữa tỉ lệ điểm kỳ vọng P_v của các biến thể (tính từ p_value hoặc difficulty)." }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -58,7 +67,8 @@
       "type": "object",
       "required": ["mode"],
       "properties": {
-        "mode": { "enum": ["immediate", "after_window_close", "manual"] },
+        "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease", "description": "immediate; after_close (sau khi cửa sổ thi đóng); manual (school_admin/academic_manager công bố)." },
+        "feedback_timing": { "allOf": [{ "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming" }, { "not": { "const": "immediate" } }], "default": "after_close", "description": "Thời điểm hiện đúng/sai và giải thích từng câu; đề không dùng immediate (EXAM_ENGINE §3, ACTIVITY_ENGINE §8.1)." },
         "show_correct_answers": { "type": "boolean", "default": true },
         "show_explanations": { "type": "boolean", "default": true },
         "show_objective_analysis": { "type": "boolean", "default": true }
@@ -123,7 +133,7 @@
           },
           "additionalProperties": false
         },
-        "types": { "type": "array", "items": { "$ref": "question.schema.json#/$defs/questionType" } },
+        "types": { "type": "array", "items": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType" } },
         "fixed_question_version_ids": {
           "type": "array",
           "description": "Nếu có: dùng đúng các câu này thay vì rút ngẫu nhiên; độ dài phải bằng count.",

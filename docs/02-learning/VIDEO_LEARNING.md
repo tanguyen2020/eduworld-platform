@@ -1,6 +1,6 @@
 # Video Learning
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: EdTech Specialist + Senior Godot Developer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: EdTech Specialist + Senior Godot Developer · Cập nhật: 2026-11-16
 > Liên quan: [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [ADR-0044](../adr/ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · Schema: [`video-lesson.schema.json`](../../specs/schemas/activities/video-lesson.schema.json)
 
 ## 1. Mục đích và phạm vi
@@ -58,7 +58,7 @@
 ```mermaid
 sequenceDiagram
   participant G as Godot
-  participant L as learning-service
+  participant L as module learning
   G->>L: POST attempts (activity video_lesson) - ghim version
   L-->>G: render payload (video URL, chapters, cue list KHÔNG có đáp án)
   G->>G: phát video
@@ -87,22 +87,23 @@ sequenceDiagram
 |---|---|---|
 | `min_watched_ratio` | 0,9 | Theo khoảng **đã xem thật**, tua qua không tính |
 | `require_required_cues` | true | Mọi câu chèn `required` đã được trả lời |
-| `min_cue_score_ratio` | 0 | Có thể đặt 0,6 nếu muốn "đạt" chứ không chỉ "hoàn thành" |
+| `min_score_ratio` | 0 | Tỉ lệ điểm câu chèn tối thiểu (trường `completion_rule.min_score_ratio` của [`activity-base.schema.json`](../../specs/schemas/activities/activity-base.schema.json)); có thể đặt 0,6 nếu muốn "đạt" chứ không chỉ "hoàn thành" |
 | `allow_seek` | `watched_only` | Chỉ tua trong phần đã xem; lần xem lại sau khi hoàn thành thì tua tự do |
 
 "Hoàn thành" khác "đạt": hoàn thành mở khóa bước quest/assignment; điểm câu chèn là evidence cho mastery.
 
-## 8. Dữ liệu (learning-service)
+## 8. Dữ liệu (module learning)
 
 | Bảng | Cột chính |
 |---|---|
-| `learning.video_progress` | `attempt_id` PK, `tenant_id`, `student_id`, `position_ms`, `watched_ranges` jsonb (≤ 64 khoảng), `watched_ratio` numeric(5,4), `last_heartbeat_at`, `client_seq` |
-| `learning.activity_attempt_responses` | dùng chung cho câu chèn (`cue_id` varchar(64)) — xem [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) |
-| `learning.video_branch_choices` | `attempt_id`, `branch_point_id` varchar(64), `option_id` varchar(64), `chosen_at` |
+| `assessment.video_progress` | `attempt_id` PK, `tenant_id`, `student_id`, `position_ms`, `watched_ranges` jsonb (≤ 64 khoảng), `watched_ratio` numeric(5,4), `last_heartbeat_at`, `client_seq` |
+| `assessment.attempt_items` / `assessment.attempt_answers` | Mỗi câu chèn là một item của attempt (`position` theo thứ tự `at_ms`, `cue_id` lưu trong `presentation`); câu trả lời ghi `attempt_answers` như câu hỏi thường nên dùng chung scorer, gợi ý (`hints:next` theo `position`), `hints_used`, `rapid_guess` ([ACTIVITY_ENGINE §6.4](ACTIVITY_ENGINE.md#64-dữ-liệu-lưu-trữ-confirmed)) |
+| `assessment.video_branch_choices` | `attempt_id`, `branch_point_id` varchar(64), `option_id` varchar(64), `chosen_at` |
+| `assessment.integrity_signals` | Tiến độ tăng nhanh hơn thời gian thực × tốc độ phát tối đa bị cắt và ghi `signal_type = video_progress_implausible` |
 
 Chi tiết DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md).
 
-## 9. API (learning-service)
+## 9. API (module learning)
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -134,6 +135,8 @@ Thời lượng xem, tỷ lệ hoàn thành theo chapter, đoạn bị xem lại
 | `CUE_ANSWER_REQUIRED` | Submit khi còn câu chèn bắt buộc |
 
 ## 13. Nghiệm thu
+
+Yêu cầu (mã PRD): FR-CNT-014 (video bài học), FR-EXR-004 (resume, §4), FR-CNT-011 (version pinning); AC-CNT-006 của PRD áp dụng nguyên văn.
 
 | AC | Kịch bản |
 |---|---|

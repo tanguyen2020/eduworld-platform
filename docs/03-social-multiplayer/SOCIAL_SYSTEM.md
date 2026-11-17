@@ -1,6 +1,6 @@
 # Social System — Bạn bè, Club/Guild, quan hệ xã hội
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + UX/UI Designer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + UX/UI Designer · Cập nhật: 2026-11-17 (ADR-0078: tenant `common` tắt kết bạn, DM, World chat; 2026-11-16 ADR-0084: study group không còn là loại club)
 > Liên quan: [ADR-0050 Party vs Guild/Club](../adr/ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) · [ADR-0054 Liên trường](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [MODERATION](MODERATION.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)
 
 ## 1. Mục đích & phạm vi
@@ -15,7 +15,7 @@ Tài liệu **sở hữu** các quan hệ xã hội bền vững giữa người
 | Instance, presence, gặp nhau trong thế giới, mất kết nối | [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) |
 | Emote 3D (danh sách, emote wheel, mở khóa) | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) |
 
-Domain thuộc **chat-service** (Social & Chat, ADR-0036), database `eduworld_chat`.
+Domain thuộc **module chat** (Social & Chat, ADR-0036), database `eduworld_chat`.
 
 ## 2. Mục tiêu trải nghiệm (game-first)
 
@@ -43,11 +43,11 @@ Mọi học sinh dùng được tất cả; khác nhau ở rủi ro và cách ki
 
 | Hành động | Quy tắc mặc định | Nhãn |
 |---|---|---|
-| Gửi lời mời kết bạn | Tới học sinh **cùng trường**; khác trường trong cùng tenant `unit` khi tenant bật (ADR-0054); không bao giờ khác tenant | [Proposed] |
+| Gửi lời mời kết bạn | Tới học sinh **cùng trường**; khác trường trong cùng tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054); không bao giờ khác tenant; hai người đã chặn nhau (một trong hai chiều) không gửi được. **Tenant `common`: tắt mặc định** (`common_tenant_social_defaults`, [CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)) — API trả `SOCIAL_SCOPE_VIOLATION`, UI ẩn nút kết bạn và mã bạn bè | [Proposed] · tenant `common` [Confirmed — Technical Architect 2026-11-17] (ADR-0078) |
 | Tìm bạn | **Không** có tìm kiếm tự do theo tên/ID. Chỉ chọn từ: người chơi gần (cùng instance), bạn cùng lớp, thành viên party/trận/club vừa chơi cùng (trong phạm vi được phép) | [Proposed] |
-| Mã bạn bè | Mã ngắn hết hạn 10 phút do một người tạo để bạn ngồi cạnh nhập (phòng máy), vẫn kiểm tra phạm vi trường | [Proposed] |
-| Giới hạn | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn | [Proposed] |
-| Hết hạn lời mời | 7 ngày | [Proposed] |
+| Mã bạn bè | Mã ngắn hết hạn sau `friend_code_ttl` (10 phút; mỗi người một mã hiệu lực) do một người tạo để bạn ngồi cạnh nhập (phòng máy), vẫn kiểm tra phạm vi trường | [Proposed] |
+| Giới hạn (`friend_limits`) | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn. Đây là giới hạn duy nhất cho lời mời kết bạn (rate limit API áp theo cùng tham số) | [Proposed] |
+| Hết hạn lời mời (`friend_request_ttl`) | 7 ngày | [Proposed] |
 | Từ chối | Lặng lẽ: người gửi chỉ thấy "đang chờ" đến khi hết hạn, tránh tổn thương | [Proposed] |
 | Hủy kết bạn | Một chạm, không thông báo cho người kia | [Proposed] |
 | Hiển thị trong danh sách | Nickname, avatar, level, trạng thái presence ([MULTIPLAYER_GAMEPLAY §4](MULTIPLAYER_GAMEPLAY.md#5-presence)); tên thật chỉ hiện với bạn cùng lớp | [Proposed] |
@@ -64,72 +64,73 @@ Mọi học sinh dùng được tất cả; khác nhau ở rủi ro và cách ki
 
 ### 4.3. Dữ liệu & API
 
-- Bảng (`eduworld_chat`, schema `social`): `friend_requests`, `friendships` (cặp đối xứng), `blocks`, `mutes` — đều có `tenant_id`, soft-delete (ADR-0028).
-- API (đã có trong OpenAPI): `GET/POST /api/v1/social/friends`, `/social/friend-requests` (+ `:accept`), `/social/blocks/{user_id}`.
+- Bảng (`eduworld_chat`, schema `social`): `friend_requests`, `friendships` (cặp đối xứng), `blocks`, `mutes` — đều có `tenant_id`, soft-delete (ADR-0028), khóa chính UUID và unique partial `WHERE deleted_at IS NULL` trên cặp người dùng, để kết bạn/chặn lại sau khi đã hủy vẫn tạo được dòng mới ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)).
+- API (đã có trong OpenAPI): `GET/POST /api/v1/social/friends`, `/social/friend-requests` (+ `:accept`), `/social/blocks/{user_id}`. Mọi route `/social/*` phía người chơi qua middleware `game_player` (chỉ học sinh — AGENTS R23, ADR-0031).
 - Event (catalog: [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md)): `friend.added`, `friend.removed`, `user.blocked`, `user.unblocked`, `user.muted`, `user.unmuted` (consumer: chat, competition — tránh ghép trận/instance).
 
 ## 5. Block, mute, report (điểm vào)
 
 | Hành động | Hiệu lực | Nơi xử lý |
 |---|---|---|
-| **Block** | Ẩn tin hai chiều trong channel chung (trừ channel lớp: tin hiển thị thu gọn), chặn DM, lời mời party/kết bạn, thách đấu; không ghép cùng trận; cố gắng không cùng hub instance; người bị block không được thông báo | Quan hệ: tài liệu này. Hiệu lực trong chat: [CHAT_SYSTEM §9](CHAT_SYSTEM.md#9-mute-block-report-phía-chat). Ghép trận: [MATCHMAKING](MATCHMAKING.md) |
+| **Block** | **Kết thúc tình bạn** nếu đang là bạn (phát `friend.removed`, không thông báo cho người kia) và hủy lời mời kết bạn/party đang chờ giữa hai người; ẩn tin hai chiều trong channel chung (trừ channel lớp: tin hiển thị thu gọn), chặn DM, lời mời party/kết bạn, thách đấu; không ghép cùng trận; cố gắng không cùng hub instance; người bị block không được thông báo | Quan hệ: tài liệu này. Hiệu lực trong chat: [CHAT_SYSTEM §9](CHAT_SYSTEM.md#9-mute-block-report-phía-chat). Ghép trận: [MATCHMAKING](MATCHMAKING.md) |
 | **Mute** người chơi | Ẩn tin/emote của người đó với mình | [CHAT_SYSTEM §9](CHAT_SYSTEM.md#9-mute-block-report-phía-chat) |
 | **Report** | Tạo report + moderation case | [MODERATION §5](MODERATION.md#5-report-flow) |
 
 - Mọi nickname/tin nhắn/avatar có menu **Báo cáo · Chặn · Tắt tiếng**, ≤ 2 chạm trong trận.
-- Không chặn được giáo viên trong channel lớp **[Proposed]**.
+- Report được Platform Safety Team xử lý tập trung ([MODERATION §6](MODERATION.md#6-moderation-queue--quyền-moderator), ADR-0072).
 
 ## 6. Club / Guild (nhóm bền vững) — ADR-0050 [Proposed]
 
-Club là nhóm **bền vững** (khác Party là nhóm chơi tạm thời). Team cố định và Study Group là **loại club**, không phải khái niệm riêng.
+Club là nhóm **bền vững** (khác Party là nhóm chơi tạm thời). Team cố định là **loại club**, không phải khái niệm riêng. **Study group không phải club** ([ADR-0084](../adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md)): là nhóm LMS do module learning sở hữu ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)); module chat chỉ tạo channel `study_group` theo event của module learning ([CHAT_SYSTEM §2](CHAT_SYSTEM.md#2-channel-types)). Mục này chỉ áp dụng cho club.
 
 ### 6.1. Loại club
 
 | `club_type` | Mục đích | Ai tạo | Duyệt |
 |---|---|---|---|
-| `study_group` | Nhóm học tập theo môn/chủ đề | Giáo viên; học sinh đề xuất | Giáo viên lớp/bộ môn duyệt khi học sinh tạo |
-| `school_club` | Câu lạc bộ trường (Toán, Khoa học, Tiếng Anh…) | Giáo viên, School Admin | Không cần |
-| `subject_club` | Câu lạc bộ theo môn, có thể liên lớp | Giáo viên | Không cần |
-| `competition_team` | Đội thi đấu bền vững (giải trường/lớp, mùa) | Học sinh, giáo viên | Giáo viên duyệt khi học sinh tạo |
-| `interest_group` | Nhóm sở thích trong game (khám phá, sưu tầm) | Học sinh | Giáo viên duyệt |
+| `school_club` | Câu lạc bộ trường (Toán, Khoa học, Tiếng Anh…) | `school_admin` | Không cần |
+| `subject_club` | Câu lạc bộ theo môn, có thể liên lớp | `school_admin`, `academic_manager` (môn trong phạm vi) | Không cần |
+| `competition_team` | Đội thi đấu bền vững (giải trường/lớp, mùa) | `school_admin`; học sinh lớp 4–9 khi policy trường cho phép | Theo `student_club_creation` |
+| `interest_group` | Nhóm sở thích trong game (khám phá, sưu tầm) | Học sinh lớp 4–9 khi policy trường cho phép | Theo `student_club_creation` |
+
+Policy trường `student_club_creation` (do `school_admin` đặt, như nhau cho mọi học sinh của trường) **[Confirmed — Technical Architect 2026-11-15]**: `disabled` (mặc định) · `requires_approval` (club ở `pending_approval` đến khi `school_admin` duyệt trong portal) · `auto` (club hoạt động ngay sau khi tên/mô tả qua kiểm duyệt). Giới hạn lớp 4–9 là điều kiện tạo nhóm, không phải điều kiện chat (chat club theo ChatPolicy chung, R15).
 
 ### 6.2. Thành viên & vai trò
 
 | Vai trò | Quyền |
 |---|---|
-| `owner` (giáo viên hoặc học sinh tạo) | Sửa thông tin, duyệt yêu cầu tham gia, mời, xóa thành viên, bổ nhiệm officer, tạo sự kiện club, ghim tin |
-| `officer` | Duyệt yêu cầu tham gia, mời, ghim tin |
-| `member` | Tham gia hoạt động, chat club, rời club |
-| `teacher_supervisor` | Giáo viên giám sát mọi club do học sinh tạo trong lớp/trường: xem, khóa chat, giải tán, gỡ thành viên |
+| `owner` (nhân sự tạo trong portal, hoặc học sinh tạo) | Sửa thông tin, duyệt yêu cầu tham gia, mời, xóa thành viên, bổ nhiệm officer, tạo sự kiện club. Owner là nhân sự quản lý club trong portal, **không** là thành viên chat |
+| `officer` (học sinh) | Duyệt yêu cầu tham gia, mời |
+| `member` (học sinh) | Tham gia hoạt động, chat club, rời club |
 
-- Tham gia: **yêu cầu tham gia** (owner/officer duyệt) hoặc **lời mời**. Club do giáo viên tạo cho lớp có thể tự thêm cả lớp.
+- Tham gia: **yêu cầu tham gia** (owner/officer duyệt) hoặc **lời mời**. Club do nhà trường tạo có thể tự thêm cả lớp hoặc danh sách học sinh.
+- `school_admin` quản lý mọi club của trường trong portal: khóa (`locked`), lưu trữ, gỡ thành viên; **không** đọc nội dung chat club (vi phạm chat do Safety Team xử lý, [MODERATION](MODERATION.md)).
 - Kích thước tối đa: 50 (cấu hình theo loại, platform-only) **[Proposed]**.
 - Mỗi học sinh tối đa 5 club **[Proposed]**.
-- Phạm vi: **một tenant**; mặc định cùng trường, liên trường trong tenant `unit` khi tenant bật (ADR-0054).
+- Phạm vi: **một tenant**; mặc định cùng trường, liên trường trong tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054).
 
 ### 6.3. Nội dung club
 
 | Thành phần | Mô tả |
 |---|---|
 | Thông tin | Tên (qua kiểm duyệt [MODERATION §2](MODERATION.md#2-phạm-vi-áp-dụng)), biểu tượng chọn từ thư viện, mô tả ngắn (qua kiểm duyệt), loại, môn |
-| Chat club | Channel bền vững (`study_group` hoặc `team` cố định — [CHAT_SYSTEM §2](CHAT_SYSTEM.md#2-channel-types)); **không** purge, theo retention chung |
+| Chat club | Channel bền vững (`team` cố định — [CHAT_SYSTEM §2](CHAT_SYSTEM.md#2-channel-types)); **không** purge, theo retention chung |
 | Mục tiêu club | Mục tiêu tập thể theo tuần (ví dụ "cả club hoàn thành 30 bài Toán"); đếm đóng góp từng người từ event học tập, không chia sẻ điểm/mastery cá nhân |
 | Hoạt động | Rủ party từ thành viên club (Party có `club_id` tham chiếu), co-op quest, boss nhóm, luyện tập chung |
 | Thành tích club | Huy hiệu club khi đạt mục tiêu; thành tích cá nhân nhận riêng theo [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
-| Sự kiện club | Lịch hoạt động (buổi luyện tập, giải nội bộ từ template — [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)) do owner/giáo viên tạo |
+| Sự kiện club | Lịch hoạt động (buổi luyện tập, giải nội bộ từ template — [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)) do owner tạo |
 
 ### 6.4. Quan hệ Party ↔ Club
 
 - Party có thể được tạo **từ** club (`parties.club_id`): chỉ mời thành viên club; party vẫn tạm thời, chat `party` vẫn purge (ADR-0033); chat club không bị ảnh hưởng.
-- `party_type = study_group` của PARTY_SYSTEM là **phiên học nhóm tạm thời**; khi tạo từ club `study_group` thì gắn `club_id`.
+- `party_type = study_group` của PARTY_SYSTEM là **phiên học nhóm tạm thời** do học sinh lập, không gắn `club_id` và không phải nhóm học tập LMS (ADR-0084).
 - `competition_team` dạng party (theo giải/mùa) có thể liên kết club `competition_team` để giữ đội qua nhiều giải.
 
 ### 6.5. Dữ liệu, API, event
 
 - Bảng (`eduworld_chat`, schema `social`): `clubs` (`club_id`, `tenant_id`, `school_id?`, `club_type`, `name` varchar(64), `description` varchar(500), `icon_id`, `owner_id`, `status` `pending_approval|active|locked|archived`, `max_members`, audit cột chuẩn), `club_members` (`club_id`, `user_id`, `role`, `joined_at`, `left_at`; unique active), `club_join_requests`, `club_invitations`, `club_goals`, `club_goal_progress`, `club_events`.
-- API (chi tiết trong [OpenAPI](../../specs/openapi/eduworld-api.v1.yaml) và [API_DESIGN §9.10](../07-backend/API_DESIGN.md)): `GET/POST /api/v1/social/clubs`, `GET/PATCH /social/clubs/{club_id}`, `POST /social/clubs/{club_id}:approve` (giáo viên), `:leave`, `:archive`; `GET /social/clubs/{club_id}/members`, `PATCH/DELETE /social/clubs/{club_id}/members/{user_id}`; `POST /social/clubs/{club_id}/join-requests`, `POST /social/club-join-requests/{request_id}:accept|:reject`; `POST /social/clubs/{club_id}/invitations`, `POST /social/club-invitations/{invitation_id}:accept|:decline`; `GET/POST /social/clubs/{club_id}/goals`, `GET/POST /social/clubs/{club_id}/events`.
+- API (chi tiết trong [OpenAPI](../../specs/openapi/eduworld-api.v1.yaml) và [API_DESIGN §9.10](../07-backend/API_DESIGN.md)): `GET/POST /api/v1/social/clubs`, `GET/PATCH /social/clubs/{club_id}`, `POST /social/clubs/{club_id}:approve` (`school_admin`), `:leave`, `:archive`; `GET /social/clubs/{club_id}/members`, `PATCH/DELETE /social/clubs/{club_id}/members/{user_id}`; `POST /social/clubs/{club_id}/join-requests`, `POST /social/club-join-requests/{request_id}:accept|:reject`; `POST /social/clubs/{club_id}/invitations`, `POST /social/club-invitations/{invitation_id}:accept|:decline`; `GET/POST /social/clubs/{club_id}/goals`, `GET/POST /social/clubs/{club_id}/events`.
 - Event (catalog: [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md)): `club.created`, `club.approved`, `club.archived`, `club.member_joined`, `club.member_left`, `club.goal_completed`.
-- Lỗi: `CLUB_FULL`, `CLUB_LIMIT_REACHED`, `CLUB_NOT_APPROVED`, `SOCIAL_SCOPE_VIOLATION` (dùng chung cho mọi vi phạm phạm vi xã hội).
+- Lỗi: `CLUB_FULL`, `CLUB_LIMIT_REACHED`, `CLUB_NOT_APPROVED`, `SOCIAL_SCOPE_VIOLATION` (dùng chung cho mọi vi phạm phạm vi xã hội: khác trường khi tenant chưa bật, khác tenant, đã chặn); policy trường không cho học sinh tạo club → `403 PERMISSION_DENIED`.
 
 ## 7. Quy tắc liên trường — ADR-0054
 
@@ -141,7 +142,9 @@ Club là nhóm **bền vững** (khác Party là nhóm chơi tạm thời). Team
 | Ghép trận, chat `match` | Có (mặc định) | Khi tenant bật | Chỉ giải đấu/sự kiện liên tenant do platform tổ chức |
 | Leaderboard | Có | Có | Chỉ bảng toàn platform, nickname |
 
-Hoạt động liên tenant chỉ tồn tại trong ngữ cảnh do platform tạo; khi kết thúc, kênh liên lạc đóng.
+**Tenant `common`** (ADR-0078, [Confirmed — Technical Architect 2026-11-17]): không có khái niệm "cùng trường" có ý nghĩa an toàn, nên kết bạn, DM và World chat **tắt mặc định**; chỉ System Admin bật lại có lý do + audit ([CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)).
+
+"Khi tenant bật" là cài đặt tenant `cross_school_social_enabled` (`platform.tenants.settings`, chỉ có nghĩa với tenant `unit`; chưa đặt = tắt) **[Confirmed — Technical Architect 2026-11-16]**; Tenant Admin bật/tắt có audit; module khác đọc qua projection `ref.tenants.settings_subset` ([MULTITENANCY §7](../06-architecture/MULTITENANCY.md#7-các-tình-huống-đặc-biệt)). Hoạt động liên tenant chỉ tồn tại trong ngữ cảnh do platform tạo; khi kết thúc, kênh liên lạc đóng.
 
 ## 8. Thông báo xã hội
 
@@ -149,10 +152,10 @@ Hoạt động liên tenant chỉ tồn tại trong ngữ cảnh do platform t�
 |---|---|---|
 | Lời mời party / kết bạn / club | Popup trong game (tắt được) + hộp thông báo | |
 | Tin nhắn mới, mention | Badge unread trên HUD ([CHAT_SYSTEM §8.2](CHAT_SYSTEM.md#82-unread-count)) | Âm thanh tắt mặc định |
-| Thông báo giáo viên, bài được giao | Bảng tin lớp ở Main Hub + hộp thông báo | Ưu tiên cao |
+| Thông báo trường: **chỉ** bài được giao và kết quả bài giao đã công bố | Bảng tin lớp ở Main Hub + hộp thông báo (tab "Nhà trường giao") | Ưu tiên cao; không có thông báo tự do của nhân sự nhà trường tới học sinh |
 | Kết quả xử lý báo cáo | Hộp thông báo ("Báo cáo của em đã được xử lý") | Không nêu chi tiết hình phạt |
 
-**Không có push notification ngoài game cho học sinh trong Release 1.0** [Proposed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; giáo viên nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications`.
+**Không có push notification ngoài game cho học sinh trong Release 1.0** [Proposed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; nhân sự nhà trường nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications`; đẩy realtime qua `notification.item.created`. Loại thông báo dùng **một enum `kind`** chung cho REST và WS (contract ở `specs/openapi`, `specs/asyncapi`).
 
 ## 9. Acceptance criteria
 
@@ -161,10 +164,11 @@ Hoạt động liên tenant chỉ tồn tại trong ngữ cảnh do platform t�
 | AC-SOC-001 | Học sinh gửi lời mời kết bạn tới học sinh khác trường (tenant chưa bật liên trường) → bị từ chối `SOCIAL_SCOPE_VIOLATION` |
 | AC-SOC-002 | Không có API tìm người chơi theo tên/username tự do |
 | AC-SOC-003 | Từ chối lời mời kết bạn không gửi thông báo cho người gửi; lời mời hết hạn sau 7 ngày |
-| AC-SOC-004 | A block B → B không mời A vào party/club, không DM, không thách đấu, không cùng proposal ghép trận |
+| AC-SOC-004 | A block B → tình bạn A–B (nếu có) kết thúc; B không mời A vào party/club, không kết bạn lại, không DM, không thách đấu, không cùng proposal ghép trận |
 | AC-SOC-005 | "Tham gia bạn" chỉ thành công khi bạn ở hub/zone công khai và instance còn chỗ; không vào được instance riêng/trận/bài kiểm tra |
-| AC-SOC-006 | Học sinh tạo club `interest_group` → `pending_approval`, chỉ hoạt động sau khi giáo viên duyệt |
+| AC-SOC-006 | Trường đặt `student_club_creation = requires_approval`: học sinh tạo club `interest_group` → `pending_approval`, chỉ hoạt động sau khi `school_admin` duyệt; `disabled` → `403 PERMISSION_DENIED` (cùng mã cho mọi khối lớp; khác biệt theo khối chỉ ở UX); học sinh không tạo được `study_group` |
 | AC-SOC-007 | Club đạt 50 thành viên → yêu cầu tham gia mới bị từ chối `CLUB_FULL` |
 | AC-SOC-008 | Mục tiêu club chỉ hiển thị số đóng góp, không hiển thị điểm/mastery cá nhân của thành viên khác |
 | AC-SOC-009 | Party tạo từ club chỉ mời được thành viên club; party giải tán không ảnh hưởng chat club |
 | AC-SOC-010 | Hồ sơ bạn bè không hiển thị điểm học tập, mastery, kết quả kiểm tra |
+| AC-SOC-011 | Học sinh tenant `common` gửi lời mời kết bạn, tạo mã bạn bè hoặc mở DM → bị từ chối `SOCIAL_SCOPE_VIOLATION`; UI không hiện các nút này (ADR-0078) |

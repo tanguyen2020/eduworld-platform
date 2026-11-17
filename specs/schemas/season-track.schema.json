@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:eduworld:schema:season-track:1",
   "title": "SeasonTrackVersion",
-  "description": "Season track miễn phí (game-service). Lịch mùa thuộc competition-service; track tham chiếu season_id. Không có track trả phí. Xem docs/01-game-design/EVENT_SEASON_SYSTEM.md §7.",
+  "description": "Season track miễn phí (module game). Lịch mùa thuộc module competition; track tham chiếu season_id. Không có track trả phí. Xem docs/01-game-design/EVENT_SEASON_SYSTEM.md §7.",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,6 +1,9 @@
 # ADR-0062 — Kiến trúc dữ liệu dashboard: không truy vấn dữ liệu thô, chỉ đọc bảng tổng hợp
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: dashboard "giáo viên/lớp" trong phạm vi áp dụng — nay là School Learning Dashboard (trường → lớp → học sinh). **Còn hiệu lực:** toàn bộ kiến trúc dữ liệu dashboard.
 
 ## Bối cảnh
 
@@ -33,3 +36,4 @@ Stakeholder yêu cầu: phải có trang dashboard; dữ liệu rất lớn vì 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Compile mọi JSON Schema trong specs/schemas và specs/events ở Ajv full strict (allowMatchingProperties)
 // và validate các ví dụ trong specs/examples theo bảng ánh xạ bên dưới. Exit 1 nếu có lỗi.
+// Không quét specs/_deferred (ADR-0082): nội dung deferred không thuộc phạm vi lint/codegen.
 // Chạy:  npm ci --prefix scripts && node scripts/specs/validate-schemas.mjs
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -26,8 +27,6 @@ const EXAMPLES = {
   'event.mid-autumn-festival.json': 'schemas/event.schema.json',
   'season-track.season-1.json': 'schemas/season-track.schema.json',
   'activity.video-lesson.science-g4-water-cycle.json': 'schemas/activities/video-lesson.schema.json',
-  'activity.written-response.math-g7-equation.json': 'schemas/activities/written-response.schema.json',
-  'rubric.literature-g7-essay.json': 'schemas/activities/rubric.schema.json',
 };
 
 const warnings = [];

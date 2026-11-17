@@ -12,7 +12,7 @@ Stakeholder làm rõ: CMS/LMS **không** theo giao diện game mà dùng UI/CSS 
 
    | | Game design system | Admin/Ops design system |
    |---|---|---|
-   | Người dùng | Học sinh 6–15 tuổi | Vận hành tenant, giáo viên, System Admin, game designer/live-ops |
+   | Người dùng | Học sinh 6–15 tuổi | Vận hành tenant (nhà trường), System Admin, game designer/live-ops |
    | Nền tảng | Godot 4, thế giới 3D + UI Control | Admin Portal React (`web/apps/portal`, ADR-0027) |
    | Phong cách | Stylized/cartoon, chữ to, nút to, nhiều màu, chuyển động | Gọn, trung tính, **dày dữ liệu**, thao tác nhanh |
    | Nguồn token | `design/game-tokens/` | `design/admin-tokens/` |
@@ -34,3 +34,4 @@ Stakeholder làm rõ: CMS/LMS **không** theo giao diện game mà dùng UI/CSS 
 | 2026-11-15 | Bổ sung token 3D | Stakeholder (game Godot 3D) |
 | 2026-11-15 | Đổi thành hai design system; CMS theo UI vận hành (Ant Design 5) | Stakeholder |
 | 2026-11-15 | Nền tảng web là một Admin Portal (thay 2 bundle) | ADR-0027 |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |

@@ -1,6 +1,9 @@
 # ADR-0059 — Hợp nhất API attempt và chưa làm AI giọng nói trong Release 1.0
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-22 · **Tài liệu:** [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-22 · **Tài liệu:** [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: hoạt động `speaking` do giáo viên chấm tay (mục 2) — `speaking` nằm ngoài Release. **Còn hiệu lực:** một họ API attempt; không AI giọng nói trong Release 1.0.
 
 ## Bối cảnh
 
@@ -26,3 +29,4 @@
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

@@ -1,7 +1,7 @@
 # Godot Client Architecture
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer · Cập nhật: 2026-11-15
-> Liên quan: [ADR-0007, ADR-0011, ADR-0013, ADR-0014, ADR-0016](../adr/README.md) · [GAME_NETWORKING](GAME_NETWORKING.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [MINIGAME_ENGINE](MINIGAME_ENGINE.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Senior Godot Developer · Cập nhật: 2026-11-17 (Windows mặc định máy dùng chung, màn "Tiếp tục là…" khi Resume, giờ giới nghiêm ADR-0078, CI GitHub Actions, 4 nền tảng từ pilot theo ADR-0013/ADR-0073) · 2026-11-16 (ADR-0083: tạo game session sau đăng nhập; gỡ dấu vết OIDC game theo ADR-0068; ADR-0086: lưu refresh token bằng SecureStorage, tự vào lại khi phiên còn hạn)
+> Liên quan: [ADR-0007, ADR-0011, ADR-0013, ADR-0014, ADR-0016](../adr/README.md) · [ADR-0068](../adr/ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [GAME_NETWORKING](GAME_NETWORKING.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [MINIGAME_ENGINE](MINIGAME_ENGINE.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Điểm vào kiến trúc client Godot: cấu trúc dự án, autoload, vòng đời ứng dụng, tách UI/gameplay/service, renderer hoạt động học tập, nạp nội dung theo manifest, xử lý lỗi, build/export, kiểm thử. Mạng ở GAME_NETWORKING; thế giới 3D ở WORLD_RENDERING; mini-game ở MINIGAME_ENGINE.
 
@@ -58,18 +58,25 @@ godot/
 ├── export_presets.cfg              # không chứa keystore password (inject từ CI)
 ├── addons/
 │   ├── gdUnit4/                    # test framework
-│   └── eduworld_platform/          # plugin native (tùy chọn): certificate pinning, thông tin thiết bị; không lưu token (ADR-0064); không còn deep link/Custom Tabs cho đăng nhập (ADR-0068)
+│   └── eduworld_platform/          # plugin native: SecureStorage theo nền tảng (Windows DPAPI, Android Keystore, iOS Keychain — ADR-0086), certificate pinning, thông tin thiết bị; không còn deep link/Custom Tabs cho đăng nhập (ADR-0068)
 ├── scenes/
 │   ├── bootstrap/   Boot.tscn, Splash.tscn, VersionCheck.tscn
 │   ├── auth/        Login.tscn, LoginWaiting.tscn, TenantChoice.tscn, AccountNotProvisioned.tscn
 │   ├── world/       zones/{main_hub,learning_zone_math,...}/Zone.tscn, WorldRoot.tscn, AreaPortal.tscn
 │   ├── character/   Player.tscn, RemotePlayer.tscn, AvatarRig.tscn, CustomizationStudio.tscn
 │   ├── npc/         NPC.tscn, DialogueBubble.tscn
-│   ├── quest/       QuestTracker.tscn, QuestJournal.tscn, QuestMarker3D.tscn
+│   ├── quest/       QuestTracker.tscn, QuestJournal.tscn, QuestMarker3D.tscn, AssignmentRow.tscn,
+│   │                co-op: SharedClueBoard.tscn, ClueCard.tscn, RoleAssignDialog.tscn, PartyProgressStrip.tscn, InterdependentStepPanel.tscn
+│   ├── progression/ JourneyScreen.tscn, LevelUpModal.tscn
+│   ├── inventory/   InventoryShopScreen.tscn (tab Túi đồ/Cửa hàng/Lịch sử), VirtualItemGrid.tscn, ItemDetailBar.tscn, PurchaseConfirmDialog.tscn
+│   ├── achievement/ màn thành tựu, sưu tầm
+│   ├── challenge/   ChallengeBoard.tscn, ChallengeHud.tscn, ChallengeResult.tscn, DifficultySelector.tscn, boss/ (BossArena, BossHud)
+│   ├── liveops/     EventCenter, SeasonTrack (sự kiện, community goal)
 │   ├── learning/    LessonViewer.tscn, ExerciseHost.tscn, ActivityHost.tscn, questions/{SingleChoice,FillBlank,...}.tscn,
-│   │                activity_renderers/{quiz,interactive_exercise,written_response,video_lesson,audio_lesson,speaking,simulation,project}/<Type>Renderer.tscn,
+│   │                activity_renderers/{quiz,interactive_exercise,minigame,video_lesson,audio_lesson,simulation}/<Type>Renderer.tscn,
+│   │                HintPanel.tscn (nút "Gợi ý" nhiều cấp), VoiceOverPlayer.tscn (lồng tiếng đề bài g1_3 + phụ đề/icon),
 │   │                video/VideoLessonPlayer.tscn (VideoStreamPlayer Theora + SubtitleLayer + CueOverlay),
-│   │                audio/AudioLessonPlayer.tscn, audio/SpeakingRecorder.tscn (AudioEffectRecord),
+│   │                audio/AudioLessonPlayer.tscn,
 │   │                simulation/SimulationHost.tscn (nạp template PCK đã ký), math/MathInline.tscn
 │   ├── practice/    PracticeBoard.tscn
 │   ├── exam/        ExamLobby.tscn, ExamRunner.tscn, ExamResult.tscn
@@ -78,22 +85,31 @@ godot/
 │   ├── chat/        ChatPanel.tscn, MessageList.tscn, MessageBubble.tscn, MessageActionMenu.tscn,
 │   │                Composer.tscn, EmojiStickerGifPicker.tscn, MentionAutocomplete.tscn,
 │   │                PinnedBar.tscn, TypingIndicator.tscn, ReceiptBadge.tscn, ChatSearch.tscn, QuickMessageWheel.tscn
-│   ├── social/      FriendList.tscn, PartyLobby.tscn, InvitationToast.tscn
-│   └── ui/          components/{Button,Card,Dialog,Toast,ProgressBar,...}.tscn, debug/UiGallery.tscn
+│   ├── social/      FriendList.tscn, FriendProfilePanel.tscn, FindFriendsTab.tscn, JoinFriendButton.tscn, ClubInvitePicker.tscn, ClubRequestsTab.tscn,
+│   │                PartyLobby.tscn, PartyMemberCard.tscn, ActivitySelector.tscn, InviteFriendPicker.tscn, InvitationToast.tscn
+│   └── ui/          components/{Button,Card,Dialog,Toast,ProgressBar,...}.tscn, hud/{MainHud,XpBar,CurrencyChip,PartyHud,NetworkBanner,BreakReminderDialog}.tscn,
+│                    settings/, debug/UiGallery.tscn
 ├── scripts/
-│   ├── core/            app_state.gd, event_bus.gd, scene_router.gd, config.gd, logger.gd, result.gd,
+│   ├── core/            app_state.gd, event_bus.gd, scene_router.gd, service_locator.gd, config.gd, logger.gd, result.gd, play_time_service.gd,
 │   │                    ui_tokens.gd (class_name UiTokens — SINH TỪ design/game-tokens)
 │   ├── networking/      api_client.gd, http_request_pool.gd, realtime_client.gd, ws_envelope.gd, backoff.gd
-│   ├── authentication/  auth_service.gd, login_form.gd, memory_token_store.gd (chỉ RAM)
+│   ├── authentication/  auth_service.gd, session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd
+│   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{dpapi,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086)
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
 │   ├── learning/        learning_service.gd, question_renderer_registry.gd, activity_renderer_registry.gd,
 │   │                    answer_models/*.gd, video_progress_reporter.gd, vtt_parser.gd, recording_uploader.gd,
 │   │                    simulation_action_log.gd, math_svg_cache.gd
-│   ├── multiplayer/     party_service.gd, presence_service.gd, matchmaking_service.gd, battle_client.gd
+│   ├── quest/           quest_service.gd (QuestService: quest.* từ REST và realtime), quest_tracker.gd, coop_quest_service.gd
+│   ├── progression/     progression_service.gd, progression_store.gd, level_up_queue.gd
+│   ├── achievement/     achievement_service.gd
+│   ├── challenge/       challenge_client.gd, challenge_store.gd, boss_client.gd, boss_store.gd
+│   ├── liveops/         live_event_service.gd, season_track_service.gd
+│   ├── social/          social_service.gd (bạn bè, chặn, tắt tiếng — tạo ở F110, dùng lại ở chat/club), friends_store.gd, club_service.gd
+│   ├── multiplayer/     party_service.gd, party_store.gd, presence_service.gd, hub_sync.gd, matchmaking_service.gd, battle_client.gd
 │   ├── competition/     leaderboard_service.gd
 │   ├── chat/            chat_service.gd, chat_store.gd (seq/gap/unread), chat_asset_cache.gd (sticker/GIF)
-│   ├── inventory/       inventory_service.gd
+│   ├── inventory/       inventory_service.gd, wallet_store.gd
 │   └── notifications/   notification_service.gd
 ├── resources/
 │   ├── ui/theme/     eduworld_theme.tres + biến thể density g1_3/g4_5/g6_7/g8_9 — SINH TỪ design/game-tokens, không sửa tay
@@ -118,11 +134,11 @@ Thứ tự khai báo trong `project.godot` (phụ thuộc từ trên xuống):
 
 | # | Autoload | Loại | Trách nhiệm | Không làm |
 |---|---|---|---|---|
-| 1 | `Config` | Node | Đọc cấu hình môi trường từ `res://config/<env>.json` + override `user://` (debug build): `api_base_url`, `realtime_url`, `oidc_issuer`, `oidc_client_id`, `cdn_base_url`, feature flag mặc định; **cấu hình thiết bị** `device.cfg` (`shared_device` cho máy phòng tin học: không nhớ username, tự đăng xuất — xem §5.1) | Chứa secret (không có secret nào trong client) |
+| 1 | `Config` | Node | Đọc cấu hình môi trường từ `res://config/env/<env>.json` (đường dẫn duy nhất, sinh lúc build) + override `user://` (debug build): `api_base_url`, `realtime_url`, `cdn_base_url`, feature flag mặc định (không có cấu hình OIDC/issuer/client id — game không gọi Keycloak, ADR-0068); **cấu hình thiết bị** `device.cfg` (`shared_device` cho máy phòng tin học: không lưu refresh token, không nhớ username, tự đăng xuất — xem §5.2) | Chứa secret (không có secret nào trong client) |
 | 2 | `Log` | Node | Structured log, ring buffer 500 dòng gửi kèm crash report, lọc PII | Gửi log liên tục lên server |
 | 3 | `EventBus` | Node | Signal toàn cục cho sự kiện cắt ngang (`session_expired`, `network_state_changed`, `notification_received`, `zone_changed`) | Truyền dữ liệu lớn, thay thế signal cục bộ |
 | 4 | `AppState` | Node | Store trạng thái phiên: `player` (bootstrap), `school_policies`, `feature_flags`, `party`, `current_zone`, `connectivity` | Gọi mạng |
-| 5 | `AuthService` | Node | Đăng nhập username/password bằng form trong game, gọi `POST /auth/game/login` của identity-service (ADR-0068; không trình duyệt, không PKCE/loopback), không chọn trường (ADR-0063); chọn tenant bằng `login_ticket` khi thuộc nhiều tenant; refresh qua `/auth/game/token:refresh`, logout qua `/auth/game/logout`; lưu `tenant_id` của phiên cho `ApiClient` gắn `X-Tenant-Id` (ADR-0065); mỗi lần mở game nhập mật khẩu, chỉ nhớ username (ADR-0064); giữ access/refresh token **chỉ trong RAM**; refresh, reconnect, logout + revoke khi thoát; sau `TENANT_NOT_SELECTED` xin token mới với scope `organization:{tenant_alias}` (SSO); cung cấp access token hợp lệ cho `ApiClient` | Lưu mật khẩu hoặc token xuống đĩa/`user://`/Keychain/Keystore, tự đăng nhập, dùng embedded WebView |
+| 5 | `AuthService` | Node | Đăng nhập username/password bằng form trong game, gọi `POST /auth/game/login` của module identity (ADR-0068; không trình duyệt, không PKCE/loopback), không chọn trường (ADR-0063); chọn tenant bằng `login_ticket` khi thuộc nhiều tenant; refresh qua `/auth/game/token:refresh`, logout qua `/auth/game/logout`; lưu `tenant_id` của phiên cho `ApiClient` gắn `X-Tenant-Id` (ADR-0065); khi khởi động, nếu `SecureStorage` có refresh token thì tự vào lại bằng `token:refresh` `mode=resume` (ADR-0086); access token chỉ trong RAM, refresh token + `tenant_id` lưu qua `SecureStorage` (thiết bị cá nhân) hoặc chỉ RAM (Web, `shared_device`); refresh single-flight (rotation, ghi đè token đã lưu), reconnect, Đăng xuất + revoke; đọc token từ `GameLoginResponse.tokens` hoặc trực tiếp từ `GameTokenRefreshResponse` (cùng trường `GameTokenSet`, thêm `bootstrap` khi `resume`); cung cấp access token hợp lệ cho `ApiClient`. Game session do `SessionService` tạo sau đăng nhập (§5, ADR-0083) | Lưu mật khẩu hoặc access token xuống đĩa; lưu refresh token ngoài `SecureStorage` (file rõ, `user://`, localStorage); dùng embedded WebView, tạo game session, giữ mật khẩu sau lời gọi login |
 | 6 | `ApiClient` | Node | HTTP REST: pool `HTTPRequest`, header chuẩn (`Authorization`, **`X-Tenant-Id`** — tenant của phiên từ bootstrap, gửi ở mọi request trừ `client-config` và `/auth/game/login`, `tenant:select` (ADR-0065), `Idempotency-Key`, `X-Client-Version`, `X-Device-Id` — UUID sinh lần đầu cài, lưu `user://device_id`, ADR-0031, `traceparent`), parse Problem Details, retry/backoff | Logic nghiệp vụ |
 | 7 | `RealtimeClient` | Node | WebSocket `/realtime/v1`, ticket, heartbeat, reconnect/resume, phân phối message theo `type` | Quyết định kết quả trận |
 | 8 | `ContentCache` | Node | Cache nội dung data-driven (quest/minigame/dialogue/catalog) theo `version`, tải asset PCK từ CDN, kiểm tra checksum | Cache câu hỏi chấm điểm hay answer key (không tồn tại phía client) |
@@ -135,24 +151,31 @@ Service theo domain (`QuestService`, `LearningService`, `PartyService`, `ChatSer
 
 ## 5. Vòng đời ứng dụng
 
-Học sinh đăng nhập **username + password**, **không chọn trường** (ADR-0063) và **mỗi lần mở game đều phải đăng nhập** — không có trạng thái "tự vào bằng refresh token" (ADR-0064). Backend xác định tenant sau khi xác thực; bước chọn tenant chỉ xuất hiện **sau** đăng nhập khi người dùng thuộc nhiều tenant.
+Học sinh đăng nhập **username + password**, **không chọn trường** (ADR-0063). Trên thiết bị cá nhân, refresh token được lưu trong kho bảo mật của hệ điều hành; **mở lại game khi phiên còn hạn thì hiện màn "Tiếp tục là <nickname>?" rồi vào game, không hiện form** (trạng thái `Resume` → `ResumeConfirm`, [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md), thay ADR-0064 mục 1, 2, 4, 5); Web và máy dùng chung (`shared_device`; **Windows mặc định là máy dùng chung**) vẫn phải đăng nhập mỗi lần mở [Confirmed — Technical Architect 2026-11-17]. Backend xác định tenant sau khi xác thực; bước chọn tenant chỉ xuất hiện **sau** đăng nhập khi người dùng thuộc nhiều tenant. Đăng nhập (module identity) và tạo game session (module game) là **hai lời gọi riêng** ([ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)): `/auth/game/login` không tạo game session, không trả `game_session_id`; client gọi `POST /game/sessions` ngay sau khi có token.
 
 ```mermaid
 stateDiagram-v2
   [*] --> Boot
   Boot --> VersionCheck: Config loaded
   VersionCheck --> ForceUpdate: client_version < min_supported
-  VersionCheck --> Login: phiên bản hợp lệ (luôn đăng nhập, không dùng token cũ)
+  VersionCheck --> Resume: có refresh token trong SecureStorage (thiết bị cá nhân, ADR-0086)
+  VersionCheck --> Login: không có token / shared_device / Web
+  Resume --> ResumeConfirm: token#58;refresh mode=resume OK (lưu token mới, bỏ qua form)
+  ResumeConfirm --> Bootstrap: Tiếp tục là nickname? → Tiếp tục
+  ResumeConfirm --> Login: Không phải tôi → logout, xóa SecureStorage
+  Resume --> Curfew: 403 giờ giới nghiêm → giữ token, báo giờ mở lại
+  Resume --> Login: 401 REFRESH_TOKEN_* hoặc 403 → xóa SecureStorage, thông báo phiên hết
+  Resume --> Resume: lỗi mạng / 5xx / 429 → giữ token, thử lại có backoff
   Login --> Bootstrap: POST /auth/game/login thành công (form trong game, ADR-0068)
   Login --> Login: 401 INVALID_CREDENTIALS / 429 (hàng chờ, thử lại)
   Bootstrap --> TenantChoice: 403 TENANT_NOT_SELECTED + login_ticket (nhiều tenant)
   TenantChoice --> Bootstrap: POST /auth/game/tenant#58;select (không nhập lại mật khẩu)
   TenantChoice --> Login: 401 LOGIN_TICKET_INVALID (quá 2 phút)
   Bootstrap --> NotProvisioned: 403 ACCOUNT_NOT_PROVISIONED (không thuộc tenant chung lẫn tenant SIS)
-  NotProvisioned --> Login: xóa token trong RAM (phiên Keycloak đã bị thu hồi)
+  NotProvisioned --> Login: xóa token RAM + SecureStorage (phiên Keycloak đã bị thu hồi)
   Bootstrap --> Login: 403 TENANT_MISMATCH (header X-Tenant-Id không còn khớp membership) → đăng nhập lại
   Bootstrap --> AccountBlocked: 403 ACCOUNT_LOCKED / NO_ACTIVE_ENROLLMENT / TENANT_ACCESS_DISABLED
-  Bootstrap --> NotStudent: 403 GAME_ACCESS_STUDENT_ONLY (giáo viên/vận hành)
+  Bootstrap --> NotStudent: 403 GAME_ACCESS_STUDENT_ONLY (nhân sự/vận hành)
   NotStudent --> Login: đăng xuất, hướng dẫn dùng trang quản trị
   Bootstrap --> FirstTimeSetup: chưa có game_profile (chọn nickname/avatar)
   Bootstrap --> SessionStart
@@ -162,41 +185,62 @@ stateDiagram-v2
   ConfirmTakeover --> Login: học sinh từ chối → đăng xuất
   SessionStart --> InWorld: game_session + realtime ticket + zone
   InWorld --> ReplacedNotice: session.session.replaced / close 4409
-  ReplacedNotice --> Login: xóa token, về màn hình đăng nhập
+  ReplacedNotice --> Login: xóa token RAM + SecureStorage, về màn hình đăng nhập
   InWorld --> InWorld: chuyển zone / mini-game / exam
-  InWorld --> Login: session_expired (refresh lỗi) / mobile ở nền quá 30 phút
-  InWorld --> [*]: logout / thoát (POST /game/sessions/#123;id#125;#58;end)
+  InWorld --> Curfew: tới giờ giới nghiêm (cảnh báo trước 10 phút, lưu tiến độ, #58;end)
+  InWorld --> Login: session_expired (refresh lỗi) → xóa SecureStorage
+  InWorld --> Login: Đăng xuất (#58;end, logout, xóa SecureStorage)
+  InWorld --> [*]: thoát game (#58;end; thiết bị cá nhân giữ refresh token, shared_device đăng xuất)
 ```
 
 | Bước | API |
 |---|---|
 | VersionCheck | `GET /api/v1/game/client-config?platform=&version=` (public, cache được, không `X-Tenant-Id`) — trả `min_supported_version`, `content_manifest_version`, maintenance flag, URL API đăng nhập |
+| Resume (ADR-0086) | Chỉ khi `SecureStorage` có bản ghi `eduworld.game.session`: `POST /api/v1/auth/game/token:refresh` `{refresh_token, device_id, client_version, mode: "resume"}` + `X-Tenant-Id` = `tenant_id` đã lưu → `GameTokenRefreshResponse` (token mới + `bootstrap`); ghi đè refresh token mới vào `SecureStorage` ngay, rồi hiện **ResumeConfirm** (S01b "Tiếp tục là <nickname>?", nickname từ `bootstrap`, `resume_confirm_screen`, [Confirmed — Technical Architect 2026-11-17]): "Tiếp tục" → Bootstrap/SessionStart, không hiện S01; "Không phải tôi" → `POST /auth/game/logout`, xóa `SecureStorage` + RAM, S01. Lỗi giờ giới nghiêm (`platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) → màn "giờ mở lại", giữ token. `401 REFRESH_TOKEN_INVALID`/`REFRESH_TOKEN_REUSED`/`REFRESH_TOKEN_DEVICE_MISMATCH` hoặc `403` tài khoản/tenant → xóa bản ghi, S01 kèm thông điệp; lỗi mạng/5xx/`429` → giữ token, màn "Đang kết nối…" thử lại; `426` → ForceUpdate |
 | Login | Form Godot (S01) → `POST /api/v1/auth/game/login` `{username, password, device_id, client_version, locale}` ([KEYCLOAK_SSO §6](../09-identity/KEYCLOAK_SSO.md#6-luồng-đăng-nhập-game--form-trong-godot-qua-backend-adr-0068), ADR-0068); không trình duyệt, không PKCE; lỗi `401 INVALID_CREDENTIALS`, `426 CLIENT_VERSION_UNSUPPORTED`, `429 RATE_LIMITED`/`LOGIN_QUEUE_BUSY` |
-| Bootstrap | Trả cùng response `/auth/game/login` (hoặc `/auth/game/tenant:select`): token + player bootstrap (`tenant_id`, `tenant_type`, `is_common_tenant`, profile, school, class, grade, policies, flags); `ApiClient` lưu `tenant_id` để gắn `X-Tenant-Id`. Lỗi `TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket`, `ACCOUNT_NOT_PROVISIONED` (phiên Keycloak đã bị backend thu hồi) |
-| SessionStart | `POST /api/v1/game/sessions` (header `X-Device-Id`, `X-Tenant-Id`) → `game_session_id`; 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → `ConfirmTakeover`; `POST /api/v1/game/sessions/{id}/realtime-tickets` → ticket |
-| Đăng xuất / thoát | Nút "Đăng xuất" luôn có trong menu; đóng cửa sổ (`NOTIFICATION_WM_CLOSE_REQUEST`) → `POST /game/sessions/{id}:end` (best effort) + `POST /auth/game/logout` (identity-service thu hồi refresh token + phiên Keycloak) + xóa token trong RAM — **mọi thiết bị** (ADR-0064); mobile: app vào nền quá 5 phút → kết thúc game session (best effort), quay lại trong 30 phút → reconnect bằng refresh token trong RAM, quá 30 phút hoặc bị hệ điều hành đóng → đăng nhập lại; máy phòng tin học (`device.cfg` có `shared_device: true`) không nhớ username, 30 phút không hoạt động → đăng xuất |
+| Bootstrap | Trả cùng response `/auth/game/login` (hoặc `/auth/game/tenant:select`) — `GameLoginResponse {tokens, bootstrap}`, không có `game_session_id`: `tokens.access_token`/`tokens.refresh_token`/`tokens.expires_in` + player bootstrap (`tenant_id`, `tenant_type`, `is_common_tenant`, profile, school, class, grade, policies, flags); `ApiClient` lưu `tenant_id` để gắn `X-Tenant-Id`. Lỗi `TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket`, `ACCOUNT_NOT_PROVISIONED` (phiên Keycloak đã bị backend thu hồi) |
+| SessionStart | `SessionService.start()` → `POST /api/v1/game/sessions` (`createGameSession`; header `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key`) → `game_session_id`; 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → `ConfirmTakeover` → đồng ý thì gọi lại với `takeover: true` và `Idempotency-Key` mới, không nhập lại mật khẩu (ADR-0083); `POST /api/v1/game/sessions/{id}/realtime-tickets` → ticket |
+| Đăng xuất / thoát | **Đăng xuất** (nút trong menu Cài đặt của hub, STUDENT_GAME_UX_CORE): `POST /game/sessions/{id}:end` (best effort, gọi trước) → `POST /auth/game/logout` (module identity chỉ thu hồi refresh token + phiên Keycloak, không đóng game session — ADR-0083) → xóa `SecureStorage` + RAM → S01. **Thoát game** (`NOTIFICATION_WM_CLOSE_REQUEST`) trên thiết bị cá nhân: chỉ `:end` game session (best effort), **giữ** refresh token đã lưu để lần sau tự vào (ADR-0086); máy `shared_device: true`: thoát = Đăng xuất. Không gọi được `:end` → module game đóng phiên theo heartbeat timeout. Mobile: app vào nền quá 5 phút → kết thúc game session (best effort); quay lại → refresh (`renew`) + tạo game session mới, không hỏi mật khẩu khi phiên Keycloak còn hạn; bị hệ điều hành đóng → mở lại đi đường Resume. Máy phòng tin học không nhớ username, 30 phút không hoạt động → đăng xuất (`shared_device_idle_logout`) |
 | Thế giới | `GET /api/v1/game/world/areas`, `GET /api/v1/game/profile`, `GET /api/v1/game/quests?status=active` |
 
 ### 5.1. Đăng nhập và xác định tenant (ADR-0063, ADR-0064, ADR-0065, ADR-0068)
 
-Màn đăng nhập (UX: [STUDENT_GAME_UX_CORE S01](../05-ux/STUDENT_GAME_UX_CORE.md#s01--đăng-nhập)) là **một form vẽ bằng Godot**: logo, chọn ngôn ngữ, ô username, ô password (`LineEdit.secret`, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", "Quên mật khẩu? Nhờ thầy cô đặt lại". `AuthService` gửi tới `POST /auth/game/login` (ADR-0068); **không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView; không TCPServer loopback, không PKCE, không `prompt=login`/`login_hint`; game không biết client secret hay endpoint Keycloak. **Không có bước chọn trường, không có ô mã trường, không có cách đăng nhập nhanh** trong Release 1.0 (ADR-0063; thiết kế mở rộng ở [KEYCLOAK_SSO §8.1](../09-identity/KEYCLOAK_SSO.md#81-mở-rộng-sau--ngoài-release-10-adr-0063)).
+Màn đăng nhập (UX: [STUDENT_GAME_UX_CORE S01](../05-ux/STUDENT_GAME_UX_CORE.md#s01--đăng-nhập)) là **một form vẽ bằng Godot**: logo, chọn ngôn ngữ, ô username, ô password (`LineEdit.secret`, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", "Quên mật khẩu? Liên hệ nhà trường để đặt lại". `AuthService` gửi tới `POST /auth/game/login` (ADR-0068); **không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView; không TCPServer loopback, không PKCE, không `prompt=login`/`login_hint`; game không biết client secret hay endpoint Keycloak. **Không có bước chọn trường, không có ô mã trường, không có cách đăng nhập nhanh** trong Release 1.0 (ADR-0063; thiết kế mở rộng ở [KEYCLOAK_SSO §8.1](../09-identity/KEYCLOAK_SSO.md#81-mở-rộng-sau--ngoài-release-10-adr-0063)).
 
-Trong cùng lời gọi đăng nhập, identity-service xác định tenant theo membership trong DB (ADR-0063 mục 3):
+Trong cùng lời gọi đăng nhập, module identity xác định tenant theo membership trong DB (ADR-0063 mục 3):
 
 | Membership | Client |
 |---|---|
 | Đúng 1 tenant (tenant SIS hoặc tenant chung do platform tạo) | Bootstrap thành công, vào game (`is_common_tenant` cho biết tenant chung) |
 | Nhiều tenant (hiếm) | `403 TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket` → `TenantChoice` **sau** đăng nhập → `AuthService.select_tenant(ticket, tenant_id)` gọi `POST /auth/game/tenant:select` (không nhập lại mật khẩu, ticket 2 phút) → Bootstrap |
-| Không thuộc tenant chung và không thuộc tenant SIS nào | `403 ACCOUNT_NOT_PROVISIONED` → màn "chưa được kích hoạt", xóa token trong RAM; backend đã ghi audit và thu hồi phiên Keycloak |
+| Không thuộc tenant chung và không thuộc tenant SIS nào | `403 ACCOUNT_NOT_PROVISIONED` → màn "chưa được kích hoạt", xóa token (RAM + `SecureStorage`); backend đã ghi audit và thu hồi phiên Keycloak |
 
-Quy tắc token và phiên (ADR-0064):
+Quy tắc token và phiên (ADR-0064 mục 3, 6, 7 còn hiệu lực; ADR-0086):
 
-- Mỗi lần khởi động game: luôn vào `Login` với ô mật khẩu trống → học sinh nhập mật khẩu; không có cookie/phiên nào được dùng lại.
-- Access/refresh token **chỉ trong RAM** của `AuthService`; không ghi xuống `user://`, file, Keychain/Keystore, localStorage. Trong lúc game mở, refresh token dùng để gia hạn access token (5 phút) và reconnect, không hỏi mật khẩu.
-- Mật khẩu chỉ nằm trong `LineEdit` và body request; xóa ô và biến ngay sau khi nhận phản hồi; không log, không telemetry, không crash report chứa body đăng nhập (ADR-0068). Certificate pinning cho tên miền API [Proposed].
-- Chỉ được nhớ **username** (`user://settings.cfg` → `last_username`, tùy chọn, mặc định bật) để điền sẵn ô tên đăng nhập; máy `device.cfg` có `shared_device: true` thì ẩn tùy chọn và không lưu username.
-- Thoát game bình thường → `:end` game session + `POST /auth/game/logout`; tắt đột ngột → phiên Keycloak tự hết sau idle 30 phút.
-- **Header `X-Tenant-Id` bắt buộc** (ADR-0065): sau bootstrap, `ApiClient` gắn `X-Tenant-Id = bootstrap.tenant_id` vào mọi request REST (trừ `client-config`, `/auth/game/login`, `/auth/game/tenant:select`); backend kiểm tra header khớp membership và game session. Tenant chỉ giữ trong RAM của phiên; không còn `user://tenant.cfg`, không gợi ý tenant trước đăng nhập. Không đổi tenant giữa phiên (muốn đổi → đăng xuất, đăng nhập lại). Nhận `400 TENANT_HEADER_REQUIRED` là lỗi lập trình (báo telemetry, về `Login`).
+- **Máy dùng chung mặc định trên Windows** (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17], ADR-0078, ADR-0086): bộ cài Windows (installer ký số) có lựa chọn "Máy dùng chung (phòng máy, máy gia đình nhiều người)" — **mặc định** — và "Máy cá nhân"; bộ cài ghi `shared_device: true|false` vào `device.cfg` (thư mục cài đặt, quyền ghi chỉ cho admin, đọc bởi `Config`). Thiếu `device.cfg` trên Windows → coi là `true`. Android/iOS mặc định `false` (thiết bị cá nhân); MDM của trường có thể đặt `true`. Web luôn `MemoryOnly`.
+- Khởi động game: có refresh token trong `SecureStorage` → `Resume` (§5.2) → `ResumeConfirm`; không có (lần đầu, đã đăng xuất, phiên hết, Web, `shared_device`) → `Login` với ô mật khẩu trống.
+- Access token **chỉ trong RAM** của `AuthService`. Refresh token: RAM + `SecureStorage` trên thiết bị cá nhân; chỉ RAM trên Web và `shared_device`. Không ghi token vào `user://` dạng rõ, file cấu hình, localStorage, log, telemetry hay crash report. Trong lúc game mở, refresh token gia hạn access token (5 phút) và reconnect, không hỏi mật khẩu.
+- Mật khẩu chỉ nằm trong `LineEdit` và body request; xóa ô và biến ngay sau khi nhận phản hồi; không bao giờ lưu mật khẩu; không log, không telemetry, không crash report chứa body đăng nhập (ADR-0068). Certificate pinning cho tên miền API [Proposed].
+- Nhớ **username** (`user://settings.cfg` → `last_username`, tùy chọn, mặc định bật) để điền sẵn ô tên đăng nhập khi phải đăng nhập lại; máy `device.cfg` có `shared_device: true` thì ẩn tùy chọn và không lưu username.
+- Thoát game trên thiết bị cá nhân → `:end` game session, giữ refresh token; Đăng xuất → `:end`, `POST /auth/game/logout`, xóa `SecureStorage`; tắt đột ngột → module game đóng game session theo heartbeat timeout, phiên Keycloak còn hiệu lực tới idle 7 ngày/tối đa 30 ngày (`game_session_sso`).
+- **Header `X-Tenant-Id` bắt buộc** (ADR-0065): sau bootstrap, `ApiClient` gắn `X-Tenant-Id = bootstrap.tenant_id` vào mọi request REST (trừ `client-config`, `/auth/game/login`, `/auth/game/tenant:select`); backend kiểm tra header khớp membership và game session. `tenant_id` của phiên được lưu cùng refresh token trong `SecureStorage` (để gửi khi Resume), không còn `user://tenant.cfg`, không gợi ý tenant trước đăng nhập. Không đổi tenant giữa phiên (muốn đổi → đăng xuất, đăng nhập lại). Nhận `400 TENANT_HEADER_REQUIRED` là lỗi lập trình (báo telemetry, về `Login`).
+
+### 5.2. Lưu phiên bằng SecureStorage (ADR-0086)
+
+`SecureStorage` là interface (`scripts/platform/secure_storage.gd`: `is_available() -> bool`, `save(key, bytes) -> Error`, `load(key) -> PackedByteArray`, `erase(key) -> Error`) với adapter theo nền tảng, chọn một lần lúc khởi động bởi `SecureStorageFactory` (adapter native trong plugin `addons/eduworld_platform`):
+
+| Nền tảng | Adapter | Cơ chế |
+|---|---|---|
+| Windows | `DpapiSecureStorage` | `CryptProtectData` scope CurrentUser (không `LOCAL_MACHINE`), ciphertext ghi `user://secure/session.bin`; user Windows khác không giải mã được; không cần quyền admin |
+| Android | `AndroidKeystoreSecureStorage` | Khóa AES-GCM 256 sinh trong Android Keystore (không xuất được), ciphertext trong bộ nhớ riêng của app; file loại khỏi Auto Backup (`dataExtractionRules`/`allowBackup=false`, F133) |
+| iOS | `IosKeychainSecureStorage` | Keychain `kSecClassGenericPassword`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, không đồng bộ iCloud |
+| Web, `shared_device: true` (mặc định trên Windows nếu bộ cài không chọn "máy cá nhân"), nền tảng khác (macOS/Linux — không phát hành trong Release 1.0), kho lỗi/không khả dụng | `MemoryOnlySecureStorage` | Chỉ RAM; mở lại game phải đăng nhập |
+
+- Bản ghi khóa `eduworld.game.session` (JSON mã hóa bởi kho): `refresh_token`, `tenant_id`, `saved_at`. **Không** lưu access token, mật khẩu, bootstrap. `device_id` vẫn ở `user://device_id` (không phải credential).
+- Ghi sau mỗi lần nhận token mới (login, tenant:select, refresh `resume`/`renew`) — ghi đè nguyên tử (ghi file tạm rồi đổi tên với adapter dùng file). Ghi thất bại → log `secure_storage_write_failed` (không kèm token), tiếp tục với RAM; lần mở sau phải đăng nhập.
+- Xóa khi: Đăng xuất, `401 REFRESH_TOKEN_*`, `403` tài khoản/tenant khi Resume/refresh, close 4409 (takeover), `ACCOUNT_NOT_PROVISIONED`. Bản ghi không đọc được (hỏng, khóa Keystore bị xóa) → xóa và hiện S01.
+- Refresh **single-flight** trong `AuthService` (một `Promise` dùng chung): hai lời gọi song song với cùng refresh token bị server coi là dùng lại và thu hồi cả phiên (`REFRESH_TOKEN_REUSED`).
+- Thông điệp khi Resume thất bại do phiên hết/thu hồi: "Phiên đăng nhập đã hết, em đăng nhập lại nhé." (khóa dịch `auth.session_expired`); các mã `403` dùng thông điệp ở §9.
 
 ## 6. Phân tách UI / Gameplay / Service
 
@@ -221,7 +265,7 @@ Quy tắc review code:
 | `ChatStore` (`RefCounted`, test được) | Danh sách tin theo `channel_id` sắp theo `seq`; trạng thái tin của mình: *pending* (đồng hồ) → *sent* (`chat.message.acked`) → *delivered/read* (`chat.receipt.updated`); **phát hiện seq gap** (seq nhận > last_seq + 1) → gọi `chat.sync`, nếu > 200 tin → REST lịch sử; unread + mention count | Gap do tin bị lỗi gửi được đánh dấu "đã kiểm tra" sau một lần sync để không lặp vô hạn |
 | `MessageList` / `MessageBubble` | Render text, emoji, sticker, GIF (AnimatedTexture từ cache), quick message, khung reply/quote (bản đã che), nhãn "Đã chuyển tiếp", "đã chỉnh sửa", placeholder thu hồi, reaction | Virtualized list (chỉ instance bubble trong viewport) để giữ FPS |
 | `MessageActionMenu` | Long-press (mobile) / chuột phải hoặc nút ⋯ (desktop): Trả lời, Trích dẫn, Chuyển tiếp, Sao chép, Ghim, Sửa, Thu hồi, Thả cảm xúc, Báo cáo — hiển thị theo `Channel.features` và quyền | Sao chép dùng `DisplayServer.clipboard_set(text_hien_thi)` (bản đã che) |
-| `Composer` | Ô nhập + nút emoji/sticker/GIF + quick message; gửi `chat.typing.start` khi gõ (throttle 3 s), `stop` khi gửi/xóa; giữ `client_msg_id` để gửi lại khi mất mạng | Giới hạn độ dài theo policy |
+| `Composer` | Ô nhập + nút emoji/sticker/GIF + quick message; gửi `chat.typing.start` khi gõ (throttle 3 s), `stop` khi gửi/xóa; giữ `client_message_id` để gửi lại khi mất mạng | Giới hạn độ dài theo policy |
 | `EmojiStickerGifPicker` | 3 tab; sticker theo pack (`GET /chat/stickers`, pack khóa có ổ khóa); GIF theo tag (`GET /chat/gifs?tag=`) | Asset tải từ CDN EduWorld, cache theo version |
 | `MentionAutocomplete` | Gõ `@` → gợi ý nickname thành viên channel; trả `mentions[]` (user_id) | Không hiển thị username đăng nhập |
 | `PinnedBar`, `TypingIndicator`, `ReceiptBadge`, `ChatSearch` | Thanh ghim (≤ 3), "An đang soạn tin…", ✓/✓✓/✓✓ xanh, tìm kiếm (`GET /chat/search`) | Ẩn theo `features` của channel (World/Area không có typing/receipts/pin) |
@@ -239,19 +283,28 @@ Quy tắc review code:
 | `quiz` / `interactive_exercise` | Renderer theo 11 dạng câu hỏi (`scenes/learning/questions/`, chọn qua `question_renderer_registry.gd`), gửi câu trả lời thô, hiển thị phản hồi server ([QUESTION_BANK](../02-learning/QUESTION_BANK.md)) |
 | `minigame` | Chọn scene theo `minigame_type` qua `MiniGameRegistry` ([MINIGAME_ENGINE](MINIGAME_ENGINE.md)) |
 | `video_lesson` | `VideoStreamPlayer` (Ogg Theora), phụ đề WebVTT tự parse và vẽ theo Theme, dừng tại cue để hiện câu hỏi chèn, heartbeat tiến độ 10 s ([VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md)) |
-| `audio_lesson` / `speaking` | `AudioStreamPlayer` (Ogg Vorbis); ghi âm bằng bus có `AudioEffectRecord`, chỉ khi học sinh bấm, hiển thị biểu tượng đang ghi, upload presigned ([AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md)) |
-| `written_response` | Panel nhập văn bản lớn, lưu nháp 15 s, nhập đáp số (bàn phím số); **không có ô nhập công thức** ([WRITTEN_RESPONSE_RUBRIC](../02-learning/WRITTEN_RESPONSE_RUBRIC.md)) |
+| `audio_lesson` | `AudioStreamPlayer` (Ogg Vorbis), nghe hiểu với câu hỏi tự chấm; không ghi âm ([AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md)) |
 | `simulation` | Nạp template PCK đã ký, áp tham số + seed từ server, ghi action log, gửi server kiểm chứng ([SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md)) |
-| `project` | Bảng bước, nộp văn bản/ghi âm/ảnh theo cấu hình |
 
-Loại chưa có renderer trên client cũ → màn "Cần cập nhật game", gửi telemetry, không crash.
+Release 1.0 không có renderer cho loại activity ngoài version này (ADR-0082); client không xin quyền micro. Loại chưa có renderer (nếu server trả về do lỗi cấu hình) → màn "Cần cập nhật game", gửi telemetry, không crash.
+
+**Thành phần dùng chung của mọi renderer câu hỏi** [Proposed]:
+
+| Thành phần | Hành vi |
+|---|---|
+| `HintPanel` — nút "Gợi ý" | Hiện khi câu có `hint_count > 0` trong render payload; mỗi lần bấm gọi `LearningService.request_next_hint(attempt_id, position)` → `POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next`, hiển thị gợi ý cấp tiếp theo; hết cấp thì nút mờ. Client không biết trước nội dung gợi ý, không tự đếm `hints_used` (server ghi) ([ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)) |
+| Phản hồi sau khi chấm | Hiển thị `ActivityResponseResult.feedback` (phản hồi theo phương án đã chọn) và liên kết `worked_example` nếu có; render payload không bao giờ chứa feedback hay đáp án |
+| `VoiceOverPlayer` — lồng tiếng g1_3 | Với `grade_band = g1_3`, tự phát lồng tiếng đề bài/hướng dẫn quest (asset audio theo version nội dung), nút nghe lại; khi không có tai nghe hoặc tắt tiếng → phụ đề + icon minh họa ([CONTENT_MODEL](../02-learning/CONTENT_MODEL.md)) |
+| Trả lời quá nhanh | Client không tự gắn cờ đoán bừa; server tính `rapid_guess` từ thời gian server ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) |
+
+**Tab "Nhà trường giao"** trong `QuestJournal`: liệt kê bài/đề do `school_admin`/`academic_manager` giao (assignment `open`, hạn, trạng thái nộp) lấy từ API learning, mở thẳng activity host; không có nhận xét của giáo viên trong màn kết quả, kết quả/đáp án hiển thị theo `ResultRelease` của bài giao (ADR-0072, [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)). UX chi tiết: [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md).
 
 ### 6.3. Hiển thị công thức Toán, Lý, Hóa (ADR-0055)
 
 - Game **chỉ hiển thị** công thức, **không nhập** (không có bàn phím toán).
 - Render payload chứa khối `math` với `math_ref` (`math/<sha256>.svg`, SVG đã render bằng MathJax 4 trên portal và sanitize ở server) và `speech_text`.
 - `MathInline` tải SVG qua CDN, cache bất biến `user://cache/math/<sha256>.svg` (`math_svg_cache.gd`), tạo texture bằng `Image.load_svg_from_string()` với **scale theo DPI màn hình và cỡ chữ** (density theo grade band), tô màu theo Theme game, chèn vào `RichTextLabel` bằng `add_image()` (inline) hoặc khối riêng (block). Texture được cache theo `(sha256, scale, màu)`.
-- Trợ năng: `speech_text` dùng cho TTS và mô tả thay thế; giữ `latex` làm fallback hiển thị chữ khi SVG lỗi.
+- Trợ năng: `speech_text` dùng cho TTS và mô tả thay thế; khi SVG lỗi, hiển thị `speech_text` dạng chữ làm fallback (`MathAssetRef` không chứa `latex`).
 - Lựa chọn đáp án, thẻ kéo thả, cặp ghép có thể chứa công thức (đều là SVG đã render).
 
 
@@ -313,7 +366,7 @@ Client tải **content manifest** của tenant `GET /api/v1/game/content-manifes
 ```mermaid
 sequenceDiagram
   participant G as Godot (SceneRouter + ContentCache)
-  participant API as game-service
+  participant API as module game
   participant CDN
   G->>API: GET /game/content-manifest (If-None-Match)
   API-->>G: 200 manifest mới | 304
@@ -340,29 +393,33 @@ sequenceDiagram
 | Mất mạng ngắn (< 30s) | Banner "Đang kết nối lại…", RealtimeClient reconnect, chặn thao tác ghi; avatar đứng yên |
 | Mất mạng dài | Màn hình chờ kết nối; không cho làm bài offline [Proposed] (server-authoritative) |
 | Đang làm bài khi mất mạng | Câu trả lời đã gửi được server lưu; câu chưa gửi giữ trong hàng đợi bộ nhớ, gửi lại cùng `Idempotency-Key` khi có mạng; attempt resume theo policy (§4.4 Master Prompt) qua `GET /api/v1/learning/activity-attempts/{id}` |
-| 401 | `AuthService.refresh()` (refresh token trong RAM) một lần, lặp lại request; thất bại → `EventBus.session_expired` → Login (nhập mật khẩu) |
-| 403 `ACCOUNT_NOT_PROVISIONED` | Không thuộc tenant chung và không thuộc tenant SIS nào (ADR-0063): "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy nhờ thầy cô kiểm tra nhé."; xóa token trong RAM (backend đã thu hồi phiên Keycloak), về `Login` |
-| 403 `ACCOUNT_LOCKED` | "Tài khoản đang tạm khóa. Em hãy liên hệ thầy cô." |
+| 401 | `AuthService.refresh()` (single-flight) một lần, lặp lại request; thất bại → xóa token (RAM + `SecureStorage`), `EventBus.session_expired` → Login (nhập mật khẩu) |
+| 401 `REFRESH_TOKEN_INVALID` (Resume hoặc refresh) | "Phiên đăng nhập đã hết, em đăng nhập lại nhé." → xóa `SecureStorage` + RAM, về `Login` (điền sẵn username nếu nhớ) (ADR-0086) |
+| 401 `REFRESH_TOKEN_REUSED` | Như `REFRESH_TOKEN_INVALID` (server đã thu hồi cả phiên); thêm telemetry `auth_refresh_reused` (không kèm token) |
+| 401 `REFRESH_TOKEN_DEVICE_MISMATCH` | Như `REFRESH_TOKEN_INVALID`; xảy ra khi bản ghi `SecureStorage` không thuộc `device_id` hiện tại (ví dụ `user://device_id` bị xóa) |
+| 403 `ACCOUNT_NOT_PROVISIONED` | Không thuộc tenant chung và không thuộc tenant SIS nào (ADR-0063): "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy nhờ nhà trường kiểm tra nhé."; xóa token (RAM + `SecureStorage`; backend đã thu hồi phiên Keycloak), về `Login` |
+| 403 `ACCOUNT_LOCKED` | "Tài khoản đang tạm khóa. Em hãy liên hệ nhà trường." |
 | 403 `ACCOUNT_DEACTIVATED` | "Tài khoản không còn hoạt động." |
 | 403 `NO_ACTIVE_ENROLLMENT` | "Em chưa được xếp lớp trong năm học này." (không áp dụng tenant chung) |
 | 403 `TENANT_ACCESS_DISABLED` | "Trường của em hiện chưa mở EduWorld." |
 | 403 `ACCESS_OUTSIDE_ALLOWED_HOURS` | "Bây giờ chưa đến giờ chơi EduWorld." |
 | 401 `INVALID_CREDENTIALS` | "Tên đăng nhập hoặc mật khẩu chưa đúng" (+ gợi ý đợi vài phút từ lần sai thứ 3); xóa ô mật khẩu (ADR-0068) |
 | 401 `LOGIN_TICKET_INVALID` | "Phiên chọn trường đã hết, em đăng nhập lại nhé" → `Login` |
-| 426 `CLIENT_VERSION_UNSUPPORTED` | Màn `ForceUpdate` với `store_url` |
+| 426 `CLIENT_VERSION_UNSUPPORTED` | Màn `ForceUpdate` với `store_url`; giữ refresh token đã lưu (Resume sau khi cập nhật) |
+| Resume gặp lỗi mạng / 5xx / 429 | "Đang kết nối…", giữ token, thử lại theo backoff; nút "Đăng nhập bằng tài khoản khác" (= Đăng xuất best effort rồi S01) |
 | 429 `LOGIN_QUEUE_BUSY` | "Đang vào lớp…", tự thử lại theo `Retry-After` + jitter |
 | 400 `TENANT_HEADER_REQUIRED` | Lỗi lập trình (thiếu header): gửi telemetry `client_bug`, xóa token, về `Login` "Em hãy đăng nhập lại" |
 | 403 `TENANT_NOT_SELECTED` | Hiển thị `TenantChoice` từ `choices[]` trong response; chọn xong gọi `/auth/game/tenant:select` với `login_ticket` (không nhập lại mật khẩu) |
 | 403 `TENANT_MISMATCH` | Hiếm (tenant của phiên vừa bị gỡ membership, hoặc header sai): xóa token, về `Login` với thông điệp chung "Em hãy đăng nhập lại"; không tiết lộ tài khoản thuộc trường nào |
-| 403 `GAME_ACCESS_STUDENT_ONLY` | Màn hình "Tài khoản này dùng cho giáo viên/cán bộ, không dùng để vào game. Vui lòng dùng trang quản trị EduWorld."; đăng xuất, xóa token |
-| 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` | Hộp thoại xác nhận (scene `ui/dialogs/TakeoverConfirm.tscn`): "Tài khoản của em đang được dùng trên {device_label} (hoạt động lúc {last_seen_at}). Nếu tiếp tục ở đây, thiết bị kia sẽ bị đăng xuất." — nút **Tiếp tục ở thiết bị này** / **Hủy**. Lớp 1–5: thêm biểu tượng và câu ngắn. Đồng ý → gọi lại với `takeover: true` (cùng `Idempotency-Key` mới) |
-| `session.session.replaced` / close 4409 | Dừng gameplay, hộp thoại không tự đóng: "Em đã được đăng xuất vì tài khoản vừa đăng nhập trên thiết bị khác. Nếu không phải em, hãy báo thầy cô." → xóa token, không tự reconnect, về `Login` |
+| 403 `GAME_ACCESS_STUDENT_ONLY` | Màn hình "Tài khoản này dùng cho cán bộ quản lý, không dùng để vào game. Vui lòng dùng trang quản trị EduWorld."; đăng xuất, xóa token |
+| 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` | Hộp thoại xác nhận (scene `ui/dialogs/TakeoverConfirm.tscn`): "Tài khoản của em đang được dùng trên {device_label} (hoạt động lúc {last_seen_at}). Nếu tiếp tục ở đây, thiết bị kia sẽ bị đăng xuất." — nút **Tiếp tục ở thiết bị này** / **Hủy**. Lớp 1–5: thêm biểu tượng và câu ngắn. Đồng ý → gọi lại `POST /game/sessions` với `takeover: true` và `Idempotency-Key` **mới** (body khác lần gọi bị 409; dùng lại key cũ → `409 IDEMPOTENCY_KEY_REUSED`); không hỏi lại mật khẩu (ADR-0083). Hủy → `AuthService.logout()` |
+| `session.session.replaced` / close 4409 | Dừng gameplay, hộp thoại không tự đóng: "Em đã được đăng xuất vì tài khoản vừa đăng nhập trên thiết bị khác. Nếu không phải em, hãy báo nhà trường hoặc bố mẹ." → xóa token (RAM + `SecureStorage`), không tự reconnect, về `Login` |
 | 409 `ATTEMPT_ALREADY_SUBMITTED` | Coi như thành công, tải kết quả |
 | 429 | Tôn trọng `Retry-After`; UI làm mờ nút |
 | 5xx | Retry theo [GAME_NETWORKING](GAME_NETWORKING.md) §2.3; thông báo chung không lộ chi tiết |
 | `maintenance` trong client-config | Màn hình bảo trì, kiểm tra lại mỗi 60s |
 
-Thông điệp lỗi cho lớp 1–5 dùng ngôn ngữ đơn giản + biểu tượng; mã lỗi `code` chỉ hiện trong màn hình "Chi tiết" cho giáo viên hỗ trợ.
+Thông điệp lỗi cho lớp 1–5 dùng ngôn ngữ đơn giản + biểu tượng; mã lỗi `code` chỉ hiện trong màn hình "Chi tiết" để nhân sự nhà trường hỗ trợ.
 
 ## 10. Settings, i18n & accessibility
 
@@ -373,7 +430,7 @@ Thông điệp lỗi cho lớp 1–5 dùng ngôn ngữ đơn giản + biểu tư
 - Font: font tiêu đề tròn thân thiện + font nội dung dễ đọc, hỗ trợ đầy đủ tiếng Việt có dấu, license OFL (vd. Baloo 2 + Be Vietnam Pro) [Proposed, Game Director chọn], fallback font trong `Theme`.
 - Theme theo grade band (density token): `g1_3` chữ cơ sở 24px, nút ≥ 64px; `g4_5` 22px/56px; `g6_7` 18px/48px; `g8_9` 18px/44px; icon kèm chữ ở lớp nhỏ. Biến thể chọn từ `AppState.player.grade_band`.
 - Tùy chọn: cỡ chữ (3 mức), chế độ tương phản cao, giảm chuyển động (tắt camera shake/particle), phụ đề cho mọi audio có lời, âm lượng riêng nhạc/SFX/giọng.
-- Nhắc nghỉ giải lao theo policy trường (OQ-17) do server gửi qua notification; client chỉ hiển thị.
+- Nhắc nghỉ giải lao (`break_reminder`, CHILD_SAFETY): ngưỡng do server gửi trong `PlayerBootstrap.policies.play_time.break_reminder_minutes`; `PlayTimeService` chỉ đếm thời gian phiên liên tục để hiện hộp nhắc (`BreakReminderDialog`), không chặn chơi; chặn ngoài khung giờ do server (`403 ACCESS_OUTSIDE_ALLOWED_HOURS`).
 
 ### 10.1. Quốc tế hóa i18n
 
@@ -414,12 +471,12 @@ Theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md). Quy tắc ngôn ng�
 
 | Nền tảng | Trạng thái | Template | Ghi chú |
 |---|---|---|---|
-| Windows 10+ x86_64 | Release 1.0, phát triển từ Phase 1 [Proposed] ADR-0013 | Mobile renderer mặc định, tự chuyển Compatibility; Forward+ chỉ preset Cao ([PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4) | Ký code (Authenticode) ở Phase 6; installer + auto-update qua manifest |
-| Android 9+ arm64-v8a | Release 1.0, phát triển từ Phase 1 [Proposed] | Mobile renderer (Vulkan), dự phòng Compatibility; ETC2/ASTC | Keystore inject từ CI secret; intent filter cho `vn.eduworld.game:/oauth2/callback`; AAB cho store, APK cho MDM trường |
-| Web | Release 1.0; build CI từ Phase 2, hoàn thiện Phase 6 [Proposed] OQ-04 | Compatibility renderer, single-threaded export, preset tối đa Trung bình | Kích thước tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §11, §14; zone tải lười; redirect OIDC cùng tab; hosting qua CDN |
-| iOS 15+ arm64 | Release 1.0; pipeline từ Phase 4, hoàn thiện Phase 6 [Proposed] OQ-04 | Mobile renderer, ASTC | Đăng nhập bằng form trong game (ADR-0068, không `ASWebAuthenticationSession`); không lưu token vào Keychain (ADR-0064); ký + TestFlight từ CI (runner macOS); phát hành App Store |
+| Windows 10+ x86_64 | Pilot trở đi, phát triển từ Phase 1 (ADR-0013 [Confirmed — Technical Architect 2026-11-17]) | Mobile renderer mặc định, tự chuyển Compatibility; Forward+ chỉ preset Cao ([PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4) | Ký code (Authenticode) trước pilot; installer có bước chọn **Máy dùng chung (mặc định) / Máy cá nhân** ghi `device.cfg` + auto-update qua manifest; adapter DPAPI (CurrentUser) đóng gói trong plugin, không cần quyền admin (ADR-0086) |
+| Android 9+ arm64-v8a | Pilot trở đi, phát triển từ Phase 1 (ADR-0013) | Mobile renderer (Vulkan), dự phòng Compatibility; ETC2/ASTC | Keystore ký app inject từ CI secret; plugin `AndroidKeystoreSecureStorage` (ADR-0086, không cần permission runtime); file phiên loại khỏi Auto Backup (`dataExtractionRules`/`allowBackup=false`); không có intent filter/deep link đăng nhập (đăng nhập bằng form trong game, ADR-0068); AAB cho store, APK cho MDM trường |
+| Web | Pilot trở đi (ADR-0013, ADR-0079 Rejected); build CI từ Phase 2, phát hành cùng pilot | Compatibility renderer, single-threaded export, preset tối đa Trung bình | Kích thước tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §11, §14; zone tải lười; đăng nhập bằng form trong game qua `fetch` (không redirect OIDC, ADR-0068); refresh token chỉ trong RAM (`MemoryOnly`, ADR-0086) — tải lại tab phải đăng nhập lại; hosting qua CDN |
+| iOS 15+ arm64 | Pilot trở đi (ADR-0013, ADR-0079 Rejected); pipeline ký + TestFlight trước pilot | Mobile renderer, ASTC | Đăng nhập bằng form trong game (ADR-0068, không `ASWebAuthenticationSession`); refresh token trong Keychain `AfterFirstUnlockThisDeviceOnly`, không iCloud Keychain sharing, không cần entitlement thêm (ADR-0086); ký + TestFlight từ CI (runner macOS); phát hành App Store |
 
-Pipeline CI (GitLab CI [Proposed], job path-based `godot/**`):
+Pipeline CI (GitHub Actions, workflow `godot.yml` lọc path `godot/**`, `design/**` — [DEPLOYMENT §10](../11-operations/DEPLOYMENT.md)):
 
 ```mermaid
 flowchart LR
@@ -433,17 +490,18 @@ flowchart LR
 ```
 
 - Chạy Godot headless trong container có phiên bản Godot + export templates khóa cứng.
-- `client_version` = SemVer, nhúng vào `Config` lúc build; build number = pipeline id.
+- `client_version` = SemVer, nhúng vào `Config` lúc build; build number = `github.run_number`.
 - `export_presets.cfg` không chứa mật khẩu; CI ghi đè qua biến môi trường.
+- Mỗi target export kiểm tra có adapter `SecureStorage` đúng nền tảng (Windows/Android/iOS native; Web `MemoryOnly`) — thiếu thì build fail (F133, ADR-0086).
 
 ## 12. Testing
 
 | Loại | Công cụ | Phạm vi |
 |---|---|---|
-| Unit | GdUnit4 | `login_form.gd` (xóa mật khẩu sau gửi, map lỗi), `backoff.gd`, `ws_envelope.gd`, answer models, `QuestService` với `FakeApiClient`, interpolation buffer |
+| Unit | GdUnit4 | `login_form.gd` (xóa mật khẩu sau gửi, map lỗi), `auth_service.gd` với `FakeSecureStorage` (Resume OK/401/lỗi mạng, ghi đè token sau rotation, xóa khi Đăng xuất, `shared_device` → `MemoryOnly`, refresh single-flight), `backoff.gd`, `ws_envelope.gd`, answer models, `QuestService` với `FakeApiClient`, interpolation buffer |
 | Scene test | GdUnit4 scene runner | Question renderer nhận render payload → tạo response đúng định dạng; mini-game lifecycle |
 | Contract | Fixture JSON sinh từ `specs/` | Parse mọi response mẫu OpenAPI/AsyncAPI không lỗi; validate quest/minigame example theo JSON Schema trong CI |
-| Integration | Headless client + backend docker compose | Login qua `/auth/game/login` (Keycloak test realm, user test) → bootstrap → mọi request có `X-Tenant-Id` → vào hub → làm 1 quest; kiểm tra log client không chứa mật khẩu |
+| Integration | Headless client + backend docker compose | Login qua `/auth/game/login` (Keycloak test realm, user test) → bootstrap → mọi request có `X-Tenant-Id` → vào hub → làm 1 quest; kiểm tra log client không chứa mật khẩu/token; thoát rồi mở lại → tự vào hub qua Resume (TC-AUTH-082) |
 | Performance | Kiểm tra import asset + cảnh benchmark headless trong CI (frame time CPU, draw call, tam giác qua `RenderingServer`); thiết bị lab thật mỗi milestone | Không vượt ngân sách [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §7–§8 quá 5%; AC-PERF-001…011 |
 | Theme / UI | `UiGallery.tscn` chụp ảnh từng density + lint override | Không màu/font hardcode trong `.tscn`; ảnh UI Gallery so với baseline (DESIGN_SYSTEM §9) |
 | Renderer parity | Chụp ảnh zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | Sai khác vượt ngưỡng SSIM → cảnh báo cho Art/Game Director [Proposed] |
@@ -520,12 +578,33 @@ func request_json(method: HTTPClient.Method, path: String, body: Variant = null,
 
 ```gdscript
 # scripts/authentication/auth_service.gd (trích)
-var tenant_id := ""                                     # tenant của phiên, chỉ trong RAM (ADR-0065)
-var _access_token := ""
-var _refresh_token := ""                                # CHỈ trong RAM, không ghi đĩa/Keychain/Keystore (ADR-0064)
+const SESSION_KEY := "eduworld.game.session"
+var tenant_id := ""                                     # tenant của phiên (ADR-0065), lưu cùng refresh token
+var _access_token := ""                                 # access token CHỈ trong RAM
+var _refresh_token := ""                                # RAM + SecureStorage (thiết bị cá nhân) — ADR-0086
 var _access_expires_at := 0.0
+var _is_refreshing := false                             # single-flight
+@onready var _store: SecureStorage = SecureStorageFactory.create(Config.shared_device)  # MemoryOnly khi shared_device/Web
 
-## Trả { ok, code, choices, login_ticket, retry_after }
+## Khởi động: Resume bằng token đã lưu (ADR-0086). Trả { ok, code }; ok=false + code rỗng → không có token, hiện S01.
+func resume() -> Dictionary:
+	var saved: Dictionary = _load_saved()
+	if saved.is_empty():
+		return { "ok": false, "code": "" }
+	var res: Dictionary = await Api.post_public("/api/v1/auth/game/token:refresh",
+		{ "refresh_token": saved["refresh_token"], "device_id": Device.id,
+		  "client_version": Config.client_version, "mode": "resume" },
+		{ "X-Tenant-Id": saved["tenant_id"] })
+	if res.ok:
+		_apply_tokens(res.data, res.data["bootstrap"]["tenant_id"])
+		AppState.apply_bootstrap(res.data["bootstrap"])
+		return { "ok": true }
+	var code: String = res.problem.get("code", "NETWORK_ERROR")
+	if res.status in [401, 403]:
+		_clear()                                          # REFRESH_TOKEN_* / tài khoản / tenant → xóa, hiện S01
+	return { "ok": false, "code": code }              # lỗi mạng/5xx/429/426: giữ token
+
+## Trả { ok, code, choices, login_ticket, retry_after }. Không tạo game session (ADR-0083) — gọi SessionService.start() sau khi ok.
 func login(username: String, password: String) -> Dictionary:
 	var body := {
 		"username": username.strip_edges(),
@@ -546,29 +625,81 @@ func select_tenant(login_ticket: String, chosen_tenant_id: String) -> Dictionary
 func _handle_login_response(res: Dictionary) -> Dictionary:
 	if res.ok:
 		var d: Dictionary = res.data
-		_access_token = d["access_token"]
-		_refresh_token = d["refresh_token"]
-		_access_expires_at = Time.get_unix_time_from_system() + float(d["expires_in"]) - 30.0
-		tenant_id = d["bootstrap"]["tenant_id"]          # ApiClient gắn X-Tenant-Id từ đây
+		# GameLoginResponse {tokens, bootstrap}, không có game_session_id
+		_apply_tokens(d["tokens"], d["bootstrap"]["tenant_id"])  # ApiClient gắn X-Tenant-Id từ tenant_id
 		AppState.apply_bootstrap(d["bootstrap"])
 		return { "ok": true }
 	var p: Dictionary = res.problem
 	return { "ok": false, "code": p.get("code", "NETWORK_ERROR"), "choices": p.get("choices", []),
 		"login_ticket": p.get("login_ticket", ""), "retry_after": res.get("retry_after", 0) }
 
-func refresh() -> bool:                                 # gọi qua backend vì client là confidential
-	var res: Dictionary = await Api.post_public("/api/v1/auth/game/token:refresh",
-		{ "refresh_token": _refresh_token }, { "X-Tenant-Id": tenant_id })
-	if not res.ok:
-		return false
-	_access_token = res.data["access_token"]
-	_refresh_token = res.data["refresh_token"]
-	_access_expires_at = Time.get_unix_time_from_system() + float(res.data["expires_in"]) - 30.0
-	return true
+signal _refresh_done(ok: bool)
 
-func logout() -> void:
+func refresh() -> bool:                                 # single-flight; gọi qua backend vì client là confidential
+	if _is_refreshing:
+		return await _refresh_done                      # dùng chung kết quả, không gửi token cũ lần hai (tránh REFRESH_TOKEN_REUSED)
+	_is_refreshing = true
+	var res: Dictionary = await Api.post_public("/api/v1/auth/game/token:refresh",
+		{ "refresh_token": _refresh_token, "device_id": Device.id, "mode": "renew" }, { "X-Tenant-Id": tenant_id })
+	var ok: bool = res.ok
+	if ok:
+		_apply_tokens(res.data, tenant_id)              # rotation: token mới ghi đè SecureStorage
+	elif res.status == 401:
+		_clear()
+	_is_refreshing = false
+	_refresh_done.emit(ok)
+	return ok
+
+func logout() -> void:                                  # nút Đăng xuất; thoát game trên thiết bị cá nhân KHÔNG gọi hàm này
+	await _session_service.end()                        # SessionService (RefCounted, §4): :end game session trước (best effort); logout không đóng game session
 	await Api.post_public("/api/v1/auth/game/logout", { "refresh_token": _refresh_token })  # best effort
+	_clear()
+
+func _apply_tokens(t: Dictionary, tid: String) -> void:
+	_access_token = t["access_token"]
+	_refresh_token = t["refresh_token"]
+	_access_expires_at = Time.get_unix_time_from_system() + float(t["expires_in"]) - 30.0
+	tenant_id = tid
+	var rec := JSON.stringify({ "refresh_token": _refresh_token, "tenant_id": tid,
+		"saved_at": Time.get_datetime_string_from_system(true) })
+	if _store.save(SESSION_KEY, rec.to_utf8_buffer()) != OK:
+		Log.warn("secure_storage_write_failed")           # không kèm token; tiếp tục với RAM
+
+func _load_saved() -> Dictionary:
+	var raw: PackedByteArray = _store.load(SESSION_KEY)
+	var v: Variant = JSON.parse_string(raw.get_string_from_utf8()) if raw.size() > 0 else null
+	if v is Dictionary and v.has("refresh_token") and v.has("tenant_id"):
+		return v
+	if raw.size() > 0:
+		_store.erase(SESSION_KEY)                         # bản ghi hỏng → xóa
+	return {}
+
+func _clear() -> void:
 	_access_token = ""; _refresh_token = ""; tenant_id = ""
+	_store.erase(SESSION_KEY)
+```
+
+```gdscript
+# scripts/authentication/session_service.gd (trích) — POST /game/sessions sau đăng nhập (ADR-0031, ADR-0083)
+signal takeover_required(other_device: Dictionary)
+var game_session_id := ""
+
+## Trả { ok, code }; code = ACTIVE_SESSION_ON_OTHER_DEVICE → UI hỏi rồi gọi start(true)
+func start(takeover: bool = false) -> Dictionary:
+	var body := { "client_platform": Device.platform, "client_version": Config.client_version, "takeover": takeover }
+	# Idempotency-Key mới cho mỗi lần gọi: lần takeover có body khác lần bị 409
+	var res: Dictionary = await Api.request_json(HTTPClient.METHOD_POST, "/api/v1/game/sessions", body, Uuid.v7())
+	if res.ok:
+		game_session_id = res.data["game_session_id"]
+		return { "ok": true }
+	if res.status == 409 and res.problem.get("code", "") == "ACTIVE_SESSION_ON_OTHER_DEVICE":
+		takeover_required.emit(res.problem.get("other_device", {}))  # không hỏi lại mật khẩu
+	return { "ok": false, "code": res.problem.get("code", "NETWORK_ERROR") }
+
+func end() -> void:
+	if game_session_id != "":
+		await Api.request_json(HTTPClient.METHOD_POST, "/api/v1/game/sessions/%s:end" % game_session_id)
+		game_session_id = ""
 ```
 
 Ghi chú: game không xác thực chữ ký token; **xác thực có thẩm quyền do backend thực hiện** khi nhận access token (ADR-0008). `Api.post_public` dùng cùng pool `HTTPRequest`, tắt ghi body vào log debug cho mọi path `/auth/game/*`.
@@ -578,3 +709,4 @@ Ghi chú: game không xác thực chữ ký token; **xác thực có thẩm quy�
 - Certificate pinning trong Godot (desktop/mobile) cho tên miền API [Proposed, ADR-0068] — chọn cơ chế (`TLSOptions.client` với chứng chỉ CA riêng hoặc pin public key) và quy trình xoay chứng chỉ.
 - Danh sách GPU/SoC cần ép Compatibility hoặc preset Thấp (`client-config.device_profiles`) — lập sau khảo sát thiết bị trường (OQ-04) và benchmark Phase 1.
 - Device Authorization Grant cho máy dùng chung: ngoài Release 1.0 (ADR-0063), mở rộng sau.
+- `SecureStorage` cho macOS/Linux (Keychain/Secret Service) nếu sau này phát hành hai nền tảng này; Web lưu bền refresh token (hiện chỉ RAM, ADR-0086 mục 1) [Proposed].

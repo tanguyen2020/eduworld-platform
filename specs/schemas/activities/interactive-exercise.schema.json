@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/interactive-exercise.schema.json",
+  "title": "InteractiveExerciseActivityVersion",
+  "description": "activity_type = interactive_exercise: điền khuyết, trả lời ngắn (tập đáp án đóng), kéo thả, nối, sắp xếp, nhập số, puzzle/tính toán tương tác (widget interactive có validator Go). Server tự chấm (auto, accepted_answers, rule, numeric_tolerance). Xem docs/02-learning/ACTIVITY_ENGINE.md §3 và docs/02-learning/QUESTION_BANK.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "interactive_exercise" },
+    "content": {
+      "type": "object",
+      "required": ["question_source"],
+      "properties": {
+        "question_source": { "$ref": "activity-base.schema.json#/$defs/questionSource" },
+        "allowed_question_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Loại câu hợp lệ cho bài tập tương tác; câu ngoài danh sách → ACTIVITY_CONFIG_INVALID khi lưu/publish.",
+          "items": { "type": "string", "enum": ["fill_in_blank", "short_answer", "numeric", "matching", "ordering", "drag_drop", "image_based", "interactive"] },
+          "default": ["fill_in_blank", "short_answer", "numeric", "matching", "ordering", "drag_drop", "image_based", "interactive"]
+        },
+        "worked_example_ref": {
+          "$ref": "activity-base.schema.json#/$defs/uuid",
+          "description": "Khối worked_example (lesson/learning material cùng LO) gợi ý xem sau khi trả lời sai (CONTENT_MODEL §9.2) [Proposed]."
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": { "$ref": "activity-base.schema.json#/$defs/questionInteraction" }
+  },
+  "unevaluatedProperties": false
+}

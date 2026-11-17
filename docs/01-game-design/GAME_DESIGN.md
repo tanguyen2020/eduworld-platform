@@ -1,7 +1,7 @@
 # Game Design Document (GDD) — EduWorld
 
 > Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director · Cập nhật: 2026-11-15
-> Liên quan: [WORLD_DESIGN](WORLD_DESIGN.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · OQ-14, OQ-17
+> Liên quan: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · OQ-14, OQ-17
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Bản sắc sản phẩm · 3. Core fantasy · 4. Design pillars · 5. Động lực người chơi · 6. Học tập lồng trong gameplay · 7. Các tầng loop · 8. Loop theo khối lớp · 9. Loop co-op · 10. Ví dụ phiên chơi · 11. Bản đồ hệ thống game · 12. Nguyên tắc gamification · 13. Chống gây nghiện và dark pattern · 14. Data-driven content · 15. Không thuộc Release 1.0 · 16. Chỉ số thành công · 17. Acceptance criteria
 
@@ -67,10 +67,12 @@ Quy tắc bắt buộc để EduWorld không thành "chuỗi quiz có giao diệ
 |---|---|---|
 | L-1 | Hoạt động học tập luôn có **ngữ cảnh game** (NPC cần giúp, boss, cửa cần mở) và **kết quả game** (cầu được sửa, vùng đổi màu, boss mất năng lượng) | [Proposed] |
 | L-2 | Một khối học tập liên tục có số câu tối đa theo grade band (giá trị do [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) sở hữu), rồi xen tương tác thế giới (di chuyển, hội thoại, thu thập) | [Proposed] |
-| L-3 | Đa dạng định dạng: quiz, bài tập tương tác, mini-game, video có câu hỏi chèn, mô phỏng, tự luận, nói ([ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)); một quest không chỉ dùng một dạng câu hỏi | [Proposed] |
+| L-3 | Đa dạng định dạng server tự chấm: quiz, bài tập tương tác, mini-game, video/audio có câu hỏi chèn, mô phỏng ([ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md); hoạt động cần chấm tay nằm ngoài Release theo ADR-0072); một quest không chỉ dùng một dạng câu hỏi | [Proposed] |
 | L-4 | Kết quả học tập luôn cá nhân, server chấm; phần thưởng game không ảnh hưởng điểm/mastery | [Confirmed] |
 | L-5 | Nội dung học tập không bao giờ bị khóa sau level, tiền tệ hay thi đấu | [Confirmed] |
 | L-6 | Sai → phản hồi thân thiện, gợi ý, thử lại với câu mới; không làm xấu hổ, không hiển thị ai trong nhóm sai | [Proposed] |
+| L-7 | **Hành động chính = khái niệm học.** Ở mọi nơi có thể, thao tác cốt lõi của người chơi chính là khái niệm đang học (di chuyển trên trục số, cân phương trình để sửa cầu, ghép âm tiết để mở cửa), không phải câu hỏi bật lên rồi mới được chơi tiếp. Catalog cơ chế theo môn, cách gắn vào quest/mini-game/mô phỏng và tiêu chí review: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) | [Proposed] |
+| L-8 | Co-op cần **phụ thuộc lẫn nhau** thật (mỗi bạn giữ một phần dữ kiện), không chỉ là quiz cá nhân chạy song song: bước `interdependent` ([QUEST_SYSTEM §3.2](QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-proposed)) | [Proposed] |
 
 ## 7. Các tầng loop
 
@@ -78,7 +80,7 @@ Quy tắc bắt buộc để EduWorld không thành "chuỗi quiz có giao diệ
 |---|---|---|---|
 | Micro loop | 10–60 giây | Giải câu đố/hành động trong thế giới | Luyện một kỹ năng, phản hồi tức thì |
 | Core loop (phiên) | 15–30 phút | Hoàn thành 1–2 quest/thử thách, khám phá, nhận phần thưởng | Tiến bộ 1–3 LO |
-| Daily loop | Ngày | Daily quest, bài giáo viên giao | Luyện tập đều đặn ngắn |
+| Daily loop | Ngày | Daily quest, bài nhà trường giao, gợi ý ôn tập của Mây | Luyện tập đều đặn ngắn |
 | Weekly loop | Tuần | Weekly quest, mục tiêu tuần, thử thách lớp | Ôn chủ đề tuần, lấp LO yếu |
 | Season loop | 8 tuần | Season track, giải đấu, bộ sưu tập mùa | Ôn tập theo chương/học kỳ |
 
@@ -191,21 +193,21 @@ Quy tắc [Confirmed — Addendum §4]: tiến trình quest chia sẻ theo `shar
 
 ## 11. Bản đồ hệ thống game
 
-| Hệ thống | Mô tả ngắn | Tài liệu sở hữu | Service |
+| Hệ thống | Mô tả ngắn | Tài liệu sở hữu | Module |
 |---|---|---|---|
-| Thế giới & khám phá | Vùng đất, chương truyện, NPC, cổng, mở khóa vùng, khám phá, instance | [WORLD_DESIGN](WORLD_DESIGN.md), kỹ thuật: [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) | game-service |
-| Nhân vật | Avatar, tạo nhân vật, customization, emote, controller, camera | [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) | game-service + Godot |
-| Progression | XP, level, đường cong XP, danh hiệu, phần thưởng lên cấp | [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) | game-service |
-| Quest | 12 loại quest, bước, shared progress, daily/weekly | [QUEST_SYSTEM](QUEST_SYSTEM.md) | game-service |
-| Challenge & Boss | 11 loại challenge, 5 mức độ khó, boss nhiều phase | [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) | game-service |
-| Inventory & Economy | Item, trang bị, Xu + sổ cái, Shop, collection, achievement | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) | game-service |
-| Mini-game | Plugin trong Godot, câu hỏi từ Learning Engine | [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) | Godot + learning-service |
-| Hoạt động học tập | Activity Registry, chấm điểm, mastery | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | learning-service |
-| Thi đấu | Mode PvP, rating, lịch mùa, leaderboard, tournament | [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) | competition-service |
-| Sự kiện & mùa (live-ops) | Lễ hội, sự kiện trường, community goal, season track miễn phí | [EVENT_SEASON_SYSTEM](EVENT_SEASON_SYSTEM.md) | game-service |
-| Multiplayer gameplay | Room, presence, reconnect, đồng bộ | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | competition-service, realtime-gateway |
-| Party | Nhóm chơi tạm thời, lobby, co-op | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | competition-service |
-| Social & chat | Bạn bè, guild/club, chat, kiểm duyệt | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../03-social-multiplayer/MODERATION.md) | chat-service |
+| Thế giới & khám phá | Vùng đất, chương truyện, NPC, cổng, mở khóa vùng, khám phá, instance | [WORLD_DESIGN](WORLD_DESIGN.md), kỹ thuật: [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) | module game |
+| Nhân vật | Avatar, tạo nhân vật, customization, emote, controller, camera | [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) | module game + Godot |
+| Progression | XP, level, đường cong XP, danh hiệu, phần thưởng lên cấp | [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) | module game |
+| Quest | 12 loại quest, bước, shared progress, daily/weekly | [QUEST_SYSTEM](QUEST_SYSTEM.md) | module game |
+| Challenge & Boss | 11 loại challenge, 5 mức độ khó, boss nhiều phase | [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) | module game |
+| Inventory & Economy | Item, trang bị, Xu + sổ cái, Shop, collection, achievement | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) | module game |
+| Mini-game | Plugin trong Godot, câu hỏi từ Learning Engine | [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) | Godot + module learning |
+| Hoạt động học tập | Activity Registry, chấm điểm, mastery | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | module learning |
+| Thi đấu | Mode PvP, rating, lịch mùa, leaderboard, tournament | [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) | module competition |
+| Sự kiện & mùa (live-ops) | Lễ hội, sự kiện trường, community goal, season track miễn phí | [EVENT_SEASON_SYSTEM](EVENT_SEASON_SYSTEM.md) | module game |
+| Multiplayer gameplay | Room, presence, reconnect, đồng bộ | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | module competition, realtime |
+| Party | Nhóm chơi tạm thời, lobby, co-op | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | module competition |
+| Social & chat | Bạn bè, guild/club, chat, kiểm duyệt | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../03-social-multiplayer/MODERATION.md) | module chat |
 | Giao diện & art | Theme Godot, token 3D, font, density theo khối | [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) | — |
 
 ```mermaid
@@ -214,7 +216,7 @@ flowchart LR
   Q --> ACT[Hoạt động học tập]
   CH[Challenge & Boss] --> ACT
   CMP[Thi đấu] --> ACT
-  ACT -->|"exercise.submitted"| PRG[Progression XP/level]
+  ACT -->|"activity.graded"| PRG[Progression XP/level]
   Q -->|"quest.completed"| PRG
   CH -->|"challenge.completed / boss"| PRG
   CMP -->|"match.completed"| PRG
@@ -252,10 +254,11 @@ Số liệu cụ thể nằm ở tài liệu sở hữu; GDD chỉ giữ nguyên
 | Streak mất khi bỏ một ngày | Mục tiêu tuần (4/7 ngày), có ngày nghỉ không mất gì |
 | Loot box, gacha, phần thưởng ngẫu nhiên có giá trị | Phần thưởng xác định, nhìn thấy trước |
 | Đếm ngược tạo FOMO | Sự kiện lặp lại; vật phẩm sự kiện quay lại mùa sau |
-| Thông báo đẩy kéo trẻ vào game | Thông báo trong game hoặc từ giáo viên; không push marketing |
+| Thông báo đẩy kéo trẻ vào game | Thông báo trong game (bài nhà trường giao, gợi ý ôn tập); không push marketing |
 | Thưởng phiên dài | Cap XP/ngày ([PROGRESSION_SYSTEM §3.2](PROGRESSION_SYSTEM.md)); nhắc nghỉ theo ngưỡng của [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) (OQ-17) |
 | Xếp hạng công khai thứ hạng thấp | Top N + vị trí của mình; tier thay số; lớp 1–3 không thứ hạng cá nhân |
-| So sánh điểm học tập công khai | Leaderboard chỉ dùng Competition Points/XP/quest |
+| So sánh điểm học tập công khai | Leaderboard chỉ dùng Competition Points, điểm nỗ lực, quest; bảng của lớp không xếp theo XP ([COMPETITION_SYSTEM §9](COMPETITION_SYSTEM.md#9-leaderboard)) |
+| Thưởng làm nhanh hơn suy nghĩ | Không XP cho tốc độ/chuỗi đúng; lớp 1–5 không có bonus tốc độ trong trận ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md), [COMPETITION_SYSTEM §3.1](COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-proposed)) |
 
 Chi tiết an toàn: [CHILD_SAFETY](../10-security/CHILD_SAFETY.md).
 
@@ -274,16 +277,7 @@ Release 1.0 là game hoàn chỉnh theo Master Prompt [Confirmed — stakeholder
 
 ## 16. Chỉ số thành công
 
-| Chỉ số | Loại | Mục tiêu pilot | Nhãn |
-|---|---|---|---|
-| Tỷ lệ phiên có ≥ 1 hoạt động học tập hoàn thành | Học tập | ≥ 80% | [Proposed] |
-| Số LO đạt `proficient` trở lên / học sinh / tháng | Học tập | ≥ 4 | [Proposed] |
-| W1 retention | Game | ≥ 50% | [Proposed] |
-| Tỷ lệ học sinh hoàn thành chương truyện đầu tiên trong 2 tuần | Game | ≥ 60% | [Proposed] |
-| Tỷ lệ phiên có hoạt động co-op/xã hội tích cực | Game | ≥ 30% | [Proposed] |
-| Thời lượng phiên trung vị | Sức khỏe | 15–30 phút | [Proposed] |
-| Tỷ lệ phiên > 90 phút | Sức khỏe | < 5% | [Proposed] |
-| Báo cáo vi phạm chat xử lý trong 24 giờ | An toàn | ≥ 95% | [Proposed] |
+KPI và mục tiêu pilot chỉ định nghĩa ở **[PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md#7-mục-tiêu-đo-lường-kpi-đề-xuất)** (R33); định nghĩa chỉ số game và sức khỏe chơi ở [GAME_ANALYTICS §4](../11-operations/GAME_ANALYTICS.md#4-định-nghĩa-chỉ-số). GDD không đặt thêm ngưỡng riêng.
 
 Thời gian chơi **không** là thước đo chính của thành công giáo dục [Confirmed — Master Prompt re-architecture §23].
 

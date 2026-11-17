@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/study_group.member_changed.v1.schema.json",
+  "title": "Payload study_group.member_changed v1 (module learning, ADR-0084)",
+  "description": "Thêm/bớt thành viên nhóm học tập (lms.study_group_members). Consumer: module chat (cập nhật bản chiếu thành viên → quyền vào channel study_group), LMS read model, AUD. Bài giao đã gửi cho nhóm giữ snapshot đối tượng (SCHOOL_LMS §4.3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["study_group_id", "school_id", "added_member_ids", "removed_member_ids", "member_count", "version", "changed_by"],
+  "properties": {
+    "study_group_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "added_member_ids": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "removed_member_ids": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "member_count": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "version": { "type": "integer", "minimum": 1 },
+    "changed_by": { "type": "string", "format": "uuid" }
+  }
+}

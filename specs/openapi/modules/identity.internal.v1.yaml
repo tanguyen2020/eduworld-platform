@@ -1,0 +1,253 @@
+openapi: 3.1.0
+info:
+  title: EduWorld module identity — Internal API
+  version: 1.0.0
+  description: |
+    Hợp đồng facade của module `identity` cho module khác gọi đồng bộ **trong tiến trình** (ADR-0074, ADR-0040).
+    `make gen` sinh kiểu DTO + interface strict-server vào `modules/identity/api/`; path `/internal/v1/...` chỉ là
+    định danh operation, không có HTTP nội bộ hay token. Ngữ cảnh (TenantScope, Principal gốc, Idempotency-Key,
+    deadline, trace) đi qua `context.Context` bằng `pkg/modcall` (xem `common/internal-common.v1.yaml`).
+    Dữ liệu dùng thường xuyên nên lấy từ projection `ref_*` (ADR-0037); gọi facade này khi cần dữ liệu mới nhất
+    (bootstrap phiên, kiểm tra quyền nhạy cảm) và cache ngắn hạn.
+  license:
+    name: Proprietary — EduWorld
+    identifier: LicenseRef-EduWorld-Proprietary
+tags:
+  - name: principals
+    description: Ngữ cảnh quyền của người dùng trong một tenant
+  - name: tenants
+    description: Thông tin tenant và trường
+  - name: memberships
+    description: Kiểm tra thành viên tenant/trường/lớp
+
+paths:
+  /internal/v1/principals:resolve:
+    post:
+      tags: [principals]
+      operationId: resolvePrincipal
+      summary: Resolve Principal (role, permission, scope) của người dùng trong một tenant — endpoint CHUẨN
+      description: |
+        Operation chuẩn để module khác lấy ngữ cảnh quyền (ACCOUNT_PROVISIONING §7b, ADR-0074). Middleware `principal`
+        dùng chung của `core-api` gọi một lần mỗi request.
+        Bên gọi cache kết quả **60 giây** theo `(user_id, tenant_id, version)` và vô hiệu cache khi nhận event
+        `user_role.changed`/`role.updated`/`tenant_membership.changed`/`user.access_revoked` (ADR-0066). Khi database của module identity lỗi
+        hoặc lời gọi vượt deadline, bên gọi trả `503 UNAVAILABLE` — **không fail-open** (không cấp quyền mặc định).
+      x-allowed-callers: [learning, game, competition, chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PrincipalResolveRequest' }
+      responses:
+        '200':
+          description: Principal hiệu lực
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Principal' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+
+  /internal/v1/principals/{user_id}:
+    get:
+      tags: [principals]
+      operationId: getPrincipal
+      deprecated: true
+      summary: (Alias, deprecated) Lấy Principal theo user_id + tenant_id — dùng resolvePrincipal
+      description: Giữ để tương thích; hành vi và cache giống `principals:resolve`. Bên gọi mới phải dùng `resolvePrincipal`.
+      x-allowed-callers: [learning, game, competition, chat]
+      parameters:
+        - $ref: 'common/internal-common.v1.yaml#/components/parameters/UserIdPath'
+        - name: tenant_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Principal hiệu lực
+          headers:
+            Cache-Control:
+              description: '`max-age` gợi ý thời gian cache phía bên gọi (mặc định 60 s).'
+              schema: { type: string, maxLength: 64 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Principal' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+
+  /internal/v1/tenants/{tenant_id}:
+    get:
+      tags: [tenants]
+      operationId: getTenant
+      summary: Lấy thông tin tenant, danh sách trường và cài đặt hiệu lực
+      x-allowed-callers: [learning, game, competition, chat]
+      parameters:
+        - $ref: 'common/internal-common.v1.yaml#/components/parameters/TenantIdPath'
+      responses:
+        '200':
+          description: Tenant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantInfo' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+
+  /internal/v1/memberships:check:
+    post:
+      tags: [memberships]
+      operationId: checkMemberships
+      summary: Kiểm tra hàng loạt người dùng có thuộc tenant/trường/lớp hay không
+      description: |
+        Dùng khi tạo party, mời bạn, mở channel lớp, giao bài… để xác nhận thành viên theo dữ liệu
+        mới nhất. Tối đa 100 user mỗi lần. Không trả thông tin cá nhân ngoài kết quả kiểm tra.
+      x-allowed-callers: [learning, game, competition, chat]
+      x-context-required: [tenant_scope]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MembershipCheckRequest' }
+      responses:
+        '200':
+          description: Kết quả kiểm tra
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MembershipCheckResult' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+
+components:
+  schemas:
+    TenantType:
+      type: string
+      enum: [school, unit, common]
+
+    PrincipalResolveRequest:
+      type: object
+      required: [user_id, tenant_id]
+      properties:
+        user_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        client_id:
+          type: [string, 'null']
+          maxLength: 64
+          description: '`azp` của token người dùng gốc (`eduworld-game-backend` cho game — ADR-0068, `eduworld-portal` cho portal — ADR-0066) để áp quy tắc ADR-0027/0031/0066 (game chỉ cho học sinh, portal chỉ cho nhân sự, permission platform chỉ với eduworld-portal + MFA)'
+
+    Scope:
+      type: object
+      required: [scope_type]
+      properties:
+        scope_type: { type: string, enum: [platform, tenant, school, subject], description: 'subject: phạm vi môn của academic_manager (ADR-0072)' }
+        scope_id: { type: [string, 'null'], format: uuid }
+        subject_code: { type: [string, 'null'], maxLength: 64 }
+
+    Principal:
+      type: object
+      required: [user_id, tenant_id, tenant_type, user_type, status, roles, permissions, scopes, version]
+      properties:
+        user_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        tenant_type: { $ref: '#/components/schemas/TenantType' }
+        user_type: { type: string, enum: [student, staff], description: 'ADR-0081: nhân sự platform = staff có primary_tenant_id null' }
+        status: { type: string, enum: [active, locked, deactivated, pending, anonymized] }
+        school_ids:
+          type: array
+          maxItems: 500
+          items: { type: string, format: uuid }
+        class_ids:
+          type: array
+          maxItems: 500
+          description: Lớp học sinh đang theo học (enrollment SIS); rỗng với nhân sự
+          items: { type: string, format: uuid }
+        grade_level: { type: [integer, 'null'], minimum: 1, maximum: 9 }
+        sis_connection_id:
+          type: [string, 'null']
+          format: uuid
+          description: SIS connection đã dùng để verify học sinh (ADR-0046); null với tenant chung hoặc người không phải học sinh. Bên gọi ghi vào login_events.
+        student_external_id:
+          type: [string, 'null']
+          maxLength: 64
+          description: Mã học sinh trong SIS nguồn (chỉ duy nhất trong phạm vi sis_connection_id)
+        roles:
+          type: array
+          maxItems: 50
+          items: { type: string, maxLength: 64 }
+        permissions:
+          type: array
+          maxItems: 500
+          items: { type: string, maxLength: 128 }
+        scopes:
+          type: array
+          maxItems: 1000
+          items: { $ref: '#/components/schemas/Scope' }
+        version:
+          type: integer
+          minimum: 0
+          description: Tăng khi role/membership/trạng thái đổi; bên gọi dùng để vô hiệu cache.
+
+    SchoolRef:
+      type: object
+      required: [school_id, code, name]
+      properties:
+        school_id: { type: string, format: uuid }
+        code: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 255 }
+        is_virtual: { type: boolean, description: 'true với School ảo "EduWorld chung" của tenant common' }
+
+    TenantInfo:
+      type: object
+      required: [tenant_id, code, name, tenant_type, status, schools]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        code: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 255 }
+        tenant_type: { $ref: '#/components/schemas/TenantType' }
+        status: { type: string, enum: [active, suspended, disabled] }
+        keycloak_org_alias: { type: string, maxLength: 64 }
+        schools:
+          type: array
+          maxItems: 2000
+          items: { $ref: '#/components/schemas/SchoolRef' }
+        settings:
+          type: object
+          description: Cài đặt hiệu lực (platform + tenant) cần cho các module khác.
+          properties:
+            inactive_student_cleanup_days: { type: [integer, 'null'], minimum: 0, maximum: 3650 }
+            gameplay_chat_retention_days: { type: integer, minimum: 3, maximum: 365 }
+            allowed_hours_tz: { type: string, maxLength: 64 }
+        version: { type: integer, minimum: 0 }
+
+    MembershipCheckRequest:
+      type: object
+      required: [user_ids]
+      properties:
+        user_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { type: string, format: uuid }
+        school_id: { type: [string, 'null'], format: uuid }
+        class_id: { type: [string, 'null'], format: uuid }
+        require_user_type: { type: [string, 'null'], enum: [student, staff, null] }
+
+    MembershipCheckResult:
+      type: object
+      required: [tenant_id, results]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        results:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [user_id, is_member]
+            properties:
+              user_id: { type: string, format: uuid }
+              is_member: { type: boolean }
+              user_type: { type: [string, 'null'], enum: [student, staff, null] }
+              status: { type: [string, 'null'], enum: [active, locked, deactivated, pending, anonymized, null] }
+              grade_level: { type: [integer, 'null'], minimum: 1, maximum: 9 }

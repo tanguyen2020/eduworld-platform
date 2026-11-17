@@ -311,7 +311,6 @@
         "spam": "block",
         "bullying_suspected": "hold_for_review"
       },
-      "teacher_only_posting": false,
       "retention_days": 180,
       "features": {
         "edit": true,
@@ -421,9 +420,6 @@
         "unknown_link": "block",
         "spam": "block",
         "bullying_suspected": "hold_for_review"
-      },
-      "dm": {
-        "teacher_student": "disabled"
       },
       "retention_days": 180,
       "sensitive_term_policy": {

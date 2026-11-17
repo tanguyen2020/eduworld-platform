@@ -1,6 +1,9 @@
 # ADR-0034 — Bộ tính năng chat đầy đủ
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: quyền của giáo viên trong chat (gỡ tin qua moderation, `@all` và ghim tin ở channel lớp); gỡ tin do Platform Safety Team, `@all`/ghim ở channel lớp không còn vai trò giáo viên. **Còn hiệu lực:** toàn bộ bộ tính năng chat.
 
 ## Bối cảnh
 
@@ -39,3 +42,4 @@ Stakeholder yêu cầu chat có: gửi, nhận, sửa, thu hồi; reply, quote, 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

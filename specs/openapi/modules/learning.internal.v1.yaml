@@ -1,0 +1,700 @@
+openapi: 3.1.0
+info:
+  title: EduWorld module learning — Internal API
+  version: 1.0.0
+  description: |
+    Hợp đồng facade của module `learning`, gọi **trong tiến trình** (ADR-0074, ADR-0040); `make gen` sinh kiểu DTO +
+    interface strict-server vào `modules/learning/api/`, path `/internal/v1/...` chỉ là định danh operation.
+    Module learning giữ answer key và là nơi **duy nhất** chấm điểm (ADR-0016): module game mở attempt cho bước quest/mini-game; module competition
+    lấy bộ câu hỏi cho trận và gửi câu trả lời để chấm. Không endpoint nào trả answer key hay scoring rule.
+    Ngoài ra triển khai interface platform ops chuẩn (Thùng rác, clone, dọn/khôi phục học sinh) cho
+    module identity điều phối.
+  license:
+    name: Proprietary — EduWorld
+    identifier: LicenseRef-EduWorld-Proprietary
+tags:
+  - name: attempts
+    description: Attempt cho hoạt động học tập trong game (quest, mini-game)
+  - name: question-plans
+    description: Bộ câu hỏi và chấm điểm cho trận thi đấu
+  - name: platform-ops
+    description: Interface platform ops chuẩn (module identity điều phối Thùng rác, clone tenant, dọn/khôi phục học sinh, gộp/ẩn danh hóa user)
+
+paths:
+  /internal/v1/attempts:
+    post:
+      tags: [attempts]
+      operationId: createAttempt
+      summary: Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game)
+      description: |
+        Module game gọi khi học sinh bắt đầu bước `activity`/`minigame`. Module learning chọn câu hỏi
+        theo nội dung đã publish, tạo attempt `mode = quest|minigame`, trả `attempt_id`. Godot sau đó
+        dùng API public `/api/v1/learning/activity-attempts/{attempt_id}` để lấy render payload và nộp câu trả lời (ADR-0059).
+        Kết quả cuối được phát qua event `activity.submitted`/`activity.graded` (ADR-0042); module game
+        có thể gọi `GET` bên dưới khi cần đối soát.
+      x-allowed-callers: [game]
+      x-context-required: [tenant_scope, idempotency_key]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttemptCreateRequest' }
+      responses:
+        '201':
+          description: Attempt đã tạo (hoặc attempt cũ khi gọi lại cùng Idempotency-Key)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptCreated' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+        '409': { $ref: 'common/internal-common.v1.yaml#/components/responses/Conflict' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+
+  /internal/v1/attempts/{attempt_id}:
+    get:
+      tags: [attempts]
+      operationId: getAttemptResult
+      summary: Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
+      x-allowed-callers: [game]
+      x-context-required: [tenant_scope]
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Kết quả attempt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptResult' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+
+  /internal/v1/question-plans:
+    post:
+      tags: [question-plans]
+      operationId: createQuestionPlan
+      summary: Tạo bộ câu hỏi cho một trận thi đấu (chỉ render payload, không đáp án)
+      description: |
+        Module competition gọi khi trận chuyển sang `countdown`. Câu hỏi chọn theo khối lớp, môn, chủ đề,
+        độ khó, loại trừ câu người chơi vừa gặp. Plan hết hạn sau `expires_at`; chấm điểm chỉ chấp nhận
+        câu thuộc plan và trong thời hạn.
+      x-allowed-callers: [competition]
+      x-context-required: [tenant_scope, idempotency_key]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuestionPlanRequest' }
+      responses:
+        '201':
+          description: Plan đã tạo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionPlan' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '409': { $ref: 'common/internal-common.v1.yaml#/components/responses/Conflict' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+
+  /internal/v1/question-plans/{plan_id}/answers:score:
+    post:
+      tags: [question-plans]
+      operationId: scorePlanAnswer
+      summary: Chấm một câu trả lời trong trận (server-authoritative) và ghi bằng chứng học tập
+      description: |
+        Module competition chuyển câu trả lời thô của người chơi kèm thời điểm nhận phía server.
+        Module learning chấm bằng answer key, lưu `attempt_answer` với `mode = competition`
+        (trọng số mastery 0.4, ADR-0017) và trả kết quả. Điểm trận (bonus tốc độ…) do
+        module competition tính từ kết quả này. Idempotent theo `(plan_id, index, student_id)`.
+      x-allowed-callers: [competition]
+      x-context-required: [tenant_scope, idempotency_key]
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanAnswerScoreRequest' }
+      responses:
+        '200':
+          description: Kết quả chấm
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanAnswerScore' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+        '409': { $ref: 'common/internal-common.v1.yaml#/components/responses/Conflict' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+
+  # BEGIN platform-ops (generated by scripts/openapi/sync-platform-ops.mjs — do not edit)
+  /internal/v1/platform/tenant-clones/{job_id}/steps:
+    post:
+      tags:
+        - platform-ops
+      operationId: executeTenantCloneStep
+      summary: Thực thi bước clone thuộc module này trong một job clone tenant (saga do module identity điều phối)
+      description: |
+        Clone sâu các tài nguyên thuộc module này từ tenant nguồn sang tenant đích (ADR-0029).
+        Idempotent theo `(job_id, resource_type)`: gọi lại trả kết quả lần trước. Không bao giờ clone
+        dữ liệu cá nhân/học tập của học sinh. Bản sao có `cloned_from_id`, `cloned_from_tenant_id`.
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/JobIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/TenantCloneStepRequest
+      responses:
+        '200':
+          description: Kết quả bước clone
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/TenantCloneStepResult
+        '400':
+          $ref: common/internal-common.v1.yaml#/components/responses/BadRequest
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '409':
+          $ref: common/internal-common.v1.yaml#/components/responses/Conflict
+        '422':
+          $ref: common/internal-common.v1.yaml#/components/responses/ValidationFailed
+        '503':
+          $ref: common/internal-common.v1.yaml#/components/responses/DependencyUnavailable
+  /internal/v1/platform/trash:
+    get:
+      tags:
+        - platform-ops
+      operationId: listTrash
+      summary: Liệt kê bản ghi đã soft-delete của module này (Thùng rác, ADR-0028)
+      description: Module identity gộp kết quả từ mọi module để trả cho `/api/v1/admin/trash` và `/api/v1/tenant/trash`.
+      x-allowed-callers:
+        - identity
+      parameters:
+        - name: tenant_ids
+          in: query
+          required: false
+          description: Lọc tenant. Vắng mặt = mọi tenant (chỉ hợp lệ khi người gọi gốc là System Admin, kiểm tra bởi module identity).
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 100
+            items:
+              type: string
+              format: uuid
+        - name: resource_type
+          in: query
+          required: false
+          schema:
+            $ref: common/internal-common.v1.yaml#/components/schemas/ResourceType
+        - $ref: common/internal-common.v1.yaml#/components/parameters/Cursor
+        - $ref: common/internal-common.v1.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Một trang bản ghi đã xóa
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/TrashPage
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '422':
+          $ref: common/internal-common.v1.yaml#/components/responses/ValidationFailed
+  /internal/v1/platform/trash/{resource_type}/{resource_id}:restore:
+    post:
+      tags:
+        - platform-ops
+      operationId: restoreTrashItem
+      summary: Khôi phục một bản ghi đã soft-delete (đặt lại deleted_at = NULL)
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - tenant_scope
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/ResourceTypePath
+        - $ref: common/internal-common.v1.yaml#/components/parameters/ResourceIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/RestoreRequest
+      responses:
+        '200':
+          description: Đã khôi phục
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/RestoreResult
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '404':
+          $ref: common/internal-common.v1.yaml#/components/responses/NotFound
+        '409':
+          $ref: common/internal-common.v1.yaml#/components/responses/Conflict
+  /internal/v1/platform/students/{student_id}:cleanup:
+    post:
+      tags:
+        - platform-ops
+      operationId: cleanupStudentData
+      summary: Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
+      description: |
+        Bước của saga dọn học sinh do module identity điều phối. Chỉ soft-delete (ADR-0028), đặt
+        `delete_reason = inactive_cleanup`. Module trả `blocked` nếu học sinh đang có hoạt động không
+        được dọn (trận đang chạy, bài kiểm tra chưa nộp, moderation case mở) để saga hủy và bù trừ.
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - tenant_scope
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/StudentIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/StudentCleanupRequest
+      responses:
+        '200':
+          description: Kết quả bước dọn
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/StudentLifecycleResult
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '404':
+          $ref: common/internal-common.v1.yaml#/components/responses/NotFound
+  /internal/v1/platform/students/{student_id}:restore:
+    post:
+      tags:
+        - platform-ops
+      operationId: restoreStudentData
+      summary: Khôi phục dữ liệu học sinh đã bị dọn khi học sinh đăng nhập lại (ADR-0032 mục 5)
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - tenant_scope
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/StudentIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/StudentRestoreRequest
+      responses:
+        '200':
+          description: Kết quả bước khôi phục
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/StudentLifecycleResult
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '404':
+          $ref: common/internal-common.v1.yaml#/components/responses/NotFound
+  /internal/v1/platform/users/{user_id}:merge-into:
+    post:
+      tags:
+        - platform-ops
+      operationId: mergeUserData
+      summary: Chuyển dữ liệu của một user sang user đích khi gộp tài khoản trùng (module identity điều phối)
+      description: |
+        Bước của saga gộp tài khoản (ACCOUNT_PROVISIONING §7b, IDENTITY_MAPPING). Module cập nhật mọi tham chiếu
+        `user_id` nguồn sang `target_user_id` trong cùng tenant; bản ghi nguồn bị soft-delete (ADR-0028).
+        Idempotent theo `merge_id`. Trả `blocked` nếu có xung đột không tự gộp được (vd. hai attempt cùng lúc).
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - tenant_scope
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/UserIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/UserMergeRequest
+      responses:
+        '200':
+          description: Kết quả bước gộp
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/UserLifecycleResult
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '404':
+          $ref: common/internal-common.v1.yaml#/components/responses/NotFound
+        '409':
+          $ref: common/internal-common.v1.yaml#/components/responses/Conflict
+  /internal/v1/platform/users/{user_id}:anonymize:
+    post:
+      tags:
+        - platform-ops
+      operationId: anonymizeUserData
+      summary: Ẩn danh hóa dữ liệu cá nhân của user trong module này (yêu cầu xóa dữ liệu = ẩn danh hóa, ADR-0028 mục 8)
+      description: |
+        Ghi đè trường PII (tên hiển thị, nội dung tự do do user tạo, metadata thiết bị…) bằng giá trị ẩn danh,
+        giữ bản ghi để thống kê và tính toàn vẹn. Không xóa dòng. Idempotent theo `erasure_request_id`.
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - tenant_scope
+        - idempotency_key
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/UserIdPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/UserAnonymizeRequest
+      responses:
+        '200':
+          description: Kết quả bước ẩn danh hóa
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/UserLifecycleResult
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '404':
+          $ref: common/internal-common.v1.yaml#/components/responses/NotFound
+  # END platform-ops
+
+components:
+  schemas:
+    ActivityRef:
+      type: object
+      required: [content_type, content_id]
+      properties:
+        content_type: { type: string, enum: [question_set, assessment_blueprint, minigame_question_source] }
+        content_id: { type: string, format: uuid }
+        content_version_id: { type: [string, 'null'], format: uuid, description: Bỏ trống = version published hiện hành }
+        question_count: { type: [integer, 'null'], minimum: 1, maximum: 50 }
+        time_limit_seconds: { type: [integer, 'null'], minimum: 10, maximum: 7200 }
+
+    AttemptCreateRequest:
+      type: object
+      required: [student_id, mode, activity, context]
+      properties:
+        student_id: { type: string, format: uuid }
+        mode:
+          $ref: '#/components/schemas/AttemptMode'
+          description: module game chỉ được mở `quest` hoặc `minigame` (giá trị khác → 422)
+        activity: { $ref: '#/components/schemas/ActivityRef' }
+        context:
+          type: object
+          required: [context_type, context_id]
+          properties:
+            context_type: { type: string, enum: [quest_step, minigame_session] }
+            context_id: { type: string, format: uuid }
+            quest_version_id: { type: [string, 'null'], format: uuid }
+            step_id: { type: [string, 'null'], maxLength: 64 }
+            game_session_id: { type: [string, 'null'], format: uuid }
+            party_id: { type: [string, 'null'], format: uuid }
+
+    AttemptCreated:
+      type: object
+      required: [attempt_id, status, question_count, started_at]
+      properties:
+        attempt_id: { type: string, format: uuid }
+        status: { type: string, enum: [in_progress] }
+        question_count: { type: integer, minimum: 1 }
+        started_at: { type: string, format: date-time }
+        deadline_at: { type: [string, 'null'], format: date-time }
+        content_version_id: { type: string, format: uuid }
+
+    AttemptResult:
+      type: object
+      required: [attempt_id, student_id, status, question_count]
+      properties:
+        attempt_id: { type: string, format: uuid }
+        student_id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/AttemptStatus' }
+        score: { type: [number, 'null'], minimum: 0 }
+        max_score: { type: [number, 'null'], minimum: 0 }
+        correct_count: { type: [integer, 'null'], minimum: 0 }
+        question_count: { type: integer, minimum: 0 }
+        submitted_at: { type: [string, 'null'], format: date-time }
+        graded_at: { type: [string, 'null'], format: date-time }
+        content_version_id: { type: string, format: uuid }
+        objective_ids:
+          type: array
+          maxItems: 100
+          items: { type: string, format: uuid }
+
+    QuestionPlanRequest:
+      type: object
+      required: [match_id, mode, grade_level, subject_code, question_count, participants]
+      properties:
+        match_id: { type: string, format: uuid }
+        mode: { type: string, enum: [battle_1v1, team_battle, coop_challenge, timed_quiz, tournament] }
+        grade_level: { type: integer, minimum: 1, maximum: 9 }
+        subject_code: { type: string, maxLength: 64 }
+        topic_ids:
+          type: array
+          maxItems: 50
+          items: { type: string, format: uuid }
+        difficulty_min: { type: integer, minimum: 1, maximum: 5, default: 1 }
+        difficulty_max: { type: integer, minimum: 1, maximum: 5, default: 5 }
+        question_count: { type: integer, minimum: 1, maximum: 30 }
+        time_per_question_seconds: { type: integer, minimum: 5, maximum: 120 }
+        participants:
+          type: array
+          minItems: 1
+          maxItems: 16
+          items: { type: string, format: uuid }
+        challenge_template_id: { type: [string, 'null'], format: uuid }
+
+    QuestionType:
+      type: string
+      description: Đồng bộ với specs/schemas/common/enums.schema.json#/$defs/QuestionType.
+      enum: [single_choice, multiple_choice, true_false, fill_in_blank, short_answer, numeric, matching, ordering, drag_drop, image_based, interactive]
+    AttemptMode:
+      type: string
+      description: Đồng bộ với specs/schemas/common/enums.schema.json#/$defs/AttemptMode.
+      enum: [practice, assignment, quest, minigame, challenge, exam, competition, retry_wrong, diagnostic]
+    AttemptStatus:
+      type: string
+      description: Đồng bộ với specs/schemas/common/enums.schema.json#/$defs/AttemptStatus.
+      enum: [in_progress, submitted, graded, expired, abandoned]
+    ItemId: { type: string, maxLength: 64, pattern: '^[a-z]_[a-z0-9_]{1,24}$' }
+    QuestionResponse:
+      description: |
+        Câu trả lời thô theo loại câu hỏi — shape y hệt specs/schemas/question.schema.json#/$defs/response và
+        AsyncAPI `AnswerResponse`, OpenAPI public `QuestionResponse`. Module learning biết loại câu từ plan item; client không gửi điểm (ADR-0016).
+      oneOf:
+        - title: single_choice
+          type: object
+          required: [option_id]
+          additionalProperties: false
+          properties:
+            option_id: { $ref: '#/components/schemas/ItemId' }
+        - title: multiple_choice
+          type: object
+          required: [option_ids]
+          additionalProperties: false
+          properties:
+            option_ids:
+              type: array
+              minItems: 1
+              maxItems: 10
+              uniqueItems: true
+              items: { $ref: '#/components/schemas/ItemId' }
+        - title: true_false
+          type: object
+          required: [value]
+          additionalProperties: false
+          properties:
+            value: { type: boolean }
+        - title: true_false_statements
+          type: object
+          required: [statement_values]
+          additionalProperties: false
+          properties:
+            statement_values:
+              type: object
+              minProperties: 1
+              maxProperties: 8
+              propertyNames: { $ref: '#/components/schemas/ItemId' }
+              additionalProperties: { type: boolean }
+        - title: fill_in_blank
+          type: object
+          required: [blanks]
+          additionalProperties: false
+          properties:
+            blanks:
+              type: object
+              minProperties: 1
+              maxProperties: 10
+              propertyNames: { $ref: '#/components/schemas/ItemId' }
+              additionalProperties: { type: string, maxLength: 200 }
+        - title: short_answer
+          type: object
+          required: [text]
+          additionalProperties: false
+          properties:
+            text: { type: string, minLength: 1, maxLength: 500 }
+        - title: numeric
+          type: object
+          required: [value]
+          additionalProperties: false
+          properties:
+            value: { type: string, maxLength: 64, description: 'Chuỗi số học sinh nhập (dấu thập phân theo decimal_separator; a/b khi allow_fraction_input).' }
+        - title: matching
+          type: object
+          required: [pairs]
+          additionalProperties: false
+          properties:
+            pairs:
+              type: array
+              minItems: 1
+              maxItems: 10
+              items:
+                type: array
+                minItems: 2
+                maxItems: 2
+                prefixItems:
+                  - { $ref: '#/components/schemas/ItemId' }
+                  - { $ref: '#/components/schemas/ItemId' }
+                items: false
+        - title: ordering
+          type: object
+          required: [order]
+          additionalProperties: false
+          properties:
+            order:
+              type: array
+              minItems: 3
+              maxItems: 10
+              uniqueItems: true
+              items: { $ref: '#/components/schemas/ItemId' }
+        - title: drag_drop
+          type: object
+          required: [placements]
+          additionalProperties: false
+          properties:
+            placements:
+              type: object
+              minProperties: 1
+              maxProperties: 16
+              propertyNames: { $ref: '#/components/schemas/ItemId' }
+              additionalProperties: { $ref: '#/components/schemas/ItemId' }
+        - title: image_based_hotspot
+          type: object
+          required: [points]
+          additionalProperties: false
+          properties:
+            points:
+              type: array
+              minItems: 1
+              maxItems: 10
+              items:
+                type: object
+                required: [x, y]
+                additionalProperties: false
+                properties:
+                  x: { type: number }
+                  y: { type: number }
+        - title: image_based_label
+          type: object
+          required: [label_placements]
+          additionalProperties: false
+          properties:
+            label_placements:
+              type: object
+              minProperties: 1
+              maxProperties: 16
+              propertyNames: { $ref: '#/components/schemas/ItemId' }
+              additionalProperties: { $ref: '#/components/schemas/ItemId' }
+        - title: interactive
+          type: object
+          required: [state]
+          additionalProperties: false
+          properties:
+            state: { type: object, maxProperties: 50 }
+            action_log:
+              type: array
+              maxItems: 500
+              items:
+                type: object
+                required: [t_ms, action]
+                additionalProperties: false
+                properties:
+                  t_ms: { type: integer, minimum: 0 }
+                  action: { type: string, maxLength: 64 }
+                  args: { type: object, maxProperties: 20 }
+
+    PlanItem:
+      type: object
+      required: [index, question_version_id, question_type, render_payload, time_limit_seconds]
+      properties:
+        index: { type: integer, minimum: 0 }
+        question_version_id: { type: string, format: uuid }
+        question_type: { $ref: '#/components/schemas/QuestionType' }
+        render_payload:
+          type: object
+          description: Theo phần render của specs/schemas/question.schema.json — KHÔNG có đáp án, scoring rule, giải thích, phản hồi hay gợi ý (ADR-0016, R6).
+          additionalProperties: true
+          not:
+            anyOf:
+              - required: [answer_key]
+              - required: [scoring_rule]
+              - required: [accepted_answers]
+              - required: [correct_option_id]
+              - required: [correct_option_ids]
+              - required: [explanation]
+              - required: [feedback]
+              - required: [option_feedback]
+              - required: [hints]
+        time_limit_seconds: { type: integer, minimum: 5, maximum: 120 }
+
+    QuestionPlan:
+      type: object
+      required: [plan_id, match_id, items, expires_at]
+      properties:
+        plan_id: { type: string, format: uuid }
+        match_id: { type: string, format: uuid }
+        items:
+          type: array
+          minItems: 1
+          maxItems: 30
+          items: { $ref: '#/components/schemas/PlanItem' }
+        expires_at: { type: string, format: date-time }
+
+    PlanAnswerScoreRequest:
+      type: object
+      required: [index, student_id, response, received_at]
+      properties:
+        index: { type: integer, minimum: 0 }
+        student_id: { type: string, format: uuid }
+        response: { $ref: '#/components/schemas/QuestionResponse' }
+        received_at: { type: string, format: date-time, description: Thời điểm server nhận (module competition đóng dấu) }
+        client_elapsed_ms: { type: [integer, 'null'], minimum: 0, maximum: 600000 }
+
+    PlanAnswerScore:
+      type: object
+      required: [plan_id, index, student_id, is_correct, score_fraction]
+      properties:
+        plan_id: { type: string, format: uuid }
+        index: { type: integer, minimum: 0 }
+        student_id: { type: string, format: uuid }
+        is_correct: { type: boolean }
+        score_fraction: { type: number, minimum: 0, maximum: 1 }
+        attempt_answer_id: { type: string, format: uuid }
+        late: { type: boolean, description: true nếu nhận sau hạn câu hỏi (không tính điểm) }

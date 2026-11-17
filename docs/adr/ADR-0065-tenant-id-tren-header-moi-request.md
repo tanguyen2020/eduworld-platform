@@ -27,3 +27,4 @@ Người duyệt yêu cầu: dữ liệu theo học sinh **phải phân biệt t
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR; thay quy tắc "cấm X-Tenant từ client" trong BACKEND_DESIGN | Stakeholder (người duyệt) |
+| 2026-11-16 | Đọc mục 1 và 4 theo ADR-0068/ADR-0083: với game, `bootstrap.tenant_id` lấy từ `POST /auth/game/login` hoặc `POST /auth/game/tenant:select` (hai endpoint này không gửi header); `POST /auth/session` chỉ còn là bootstrap của portal. Đóng CODE_PLAN D16 | Technical Architect |

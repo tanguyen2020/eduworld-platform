@@ -3,6 +3,9 @@
 > **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-10, OQ-12, OQ-21 · **Tài liệu:** [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md), [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
+> **Không áp dụng ở version này ([ADR-0082](ADR-0082-spec-driven-development-va-noi-dung-deferred.md)):** bucket `ew-student-submissions` và ngoại lệ cho học sinh upload (ghi âm speaking, sản phẩm dự án, ảnh bài làm) — các hoạt động cần người chấm đã ngoài phạm vi (ADR-0072). **Còn hiệu lực:** toàn bộ phần còn lại.
+
+> [!WARNING]
 > **Mục 1 (staging/production) đã được thay bởi [ADR-0071](ADR-0071-object-storage-production-dung-floci.md)** (2026-11-15): floci là object storage ở mọi môi trường, kể cả staging/production; câu "floci không dùng cho staging/production" không còn hiệu lực. Các mục còn lại vẫn hiệu lực.
 
 ## Bối cảnh
@@ -45,3 +48,4 @@ Stakeholder hỏi nội dung có hình ảnh, media thì lưu ở đâu; sau đ�
 | 2026-11-15 | Accepted (local dev dùng MinIO) | Stakeholder |
 | 2026-11-15 | floci cho local/dev/CI; production object storage chờ OQ-21 | Stakeholder |
 | 2026-11-15 | Ngoại lệ upload của học sinh, bucket `ew-student-submissions` | ADR-0048, ADR-0055 |
+| 2026-11-16 | Ghi chú phần không áp dụng theo ADR-0082 | Technical Architect |

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/speaking.schema.json",
+  "title": "SpeakingActivityVersion",
+  "$comment": "Deferred (ADR-0072, ADR-0082) — không triển khai",
+  "description": "activity_type = speaking. Điểm phát âm tự động chỉ là gợi ý luyện tập (ADR-0053). Xem docs/99-deferred/SPEAKING_ASSESSMENT.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-deferred-common.schema.json#/$defs/deferredActivityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "speaking" },
+    "content": {
+      "type": "object",
+      "required": ["speaking_mode", "language", "prompt"],
+      "properties": {
+        "speaking_mode": { "type": "string", "enum": ["read_aloud", "repeat_after", "free_response", "pronunciation_drill"] },
+        "language": { "type": "string", "enum": ["vi", "en"] },
+        "prompt": { "$ref": "activity-base.schema.json#/$defs/i18nMedium" },
+        "reference_text": { "type": "string", "maxLength": 2000 },
+        "model_audio_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "speech_feedback": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "counts_toward_mastery": { "type": "boolean", "default": false }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "max_record_seconds": { "type": "integer", "minimum": 5, "maximum": 300 },
+        "max_retakes": { "type": "integer", "minimum": 1, "maximum": 10 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false
+}

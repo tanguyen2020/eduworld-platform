@@ -1,6 +1,9 @@
 # ADR-0071 — Object storage cho staging/production dùng floci
 
-> **Trạng thái:** Accepted (rủi ro đã được người duyệt chấp nhận) · **Ngày:** 2026-11-15 · **OQ:** OQ-21 · **Thay thế một phần:** ADR-0044 mục 1 (staging/production; câu "floci không dùng cho staging/production") · **Tài liệu:** [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted (rủi ro đã được người duyệt chấp nhận) · Superseded by ADR-0075 · **Ngày:** 2026-11-15 · **OQ:** OQ-21 · **Thay thế một phần:** ADR-0044 mục 1 (staging/production; câu "floci không dùng cho staging/production") · **Tài liệu:** [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Đã được thay bởi [ADR-0075](ADR-0075-object-storage-production-khong-dung-floci.md):** staging/production không dùng floci; floci chỉ dùng ở local và CI.
 
 ## Bối cảnh
 
@@ -31,3 +34,4 @@ Theo tài liệu của dự án floci, đây là trình giả lập AWS hướng
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR; đóng OQ-21 | Stakeholder (người duyệt) |
+| 2026-11-17 | Superseded by ADR-0075 | Technical Architect |

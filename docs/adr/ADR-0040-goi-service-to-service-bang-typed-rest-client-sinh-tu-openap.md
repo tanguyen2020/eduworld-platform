@@ -1,6 +1,9 @@
 # ADR-0040 — Gọi service-to-service bằng typed REST client sinh từ OpenAPI (tương đương Refit)
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần được thay bởi ADR-0074.** Không còn hiệu lực: HTTP nội bộ `/internal/v1`, client `oapi-codegen` gọi qua mạng, token `svc-*` (trừ `svc-identity` gọi Keycloak Admin), resilience và contract test HTTP giữa module. **Còn hiệu lực:** spec internal là hợp đồng facade (đổi thư mục sang `specs/openapi/modules/`), `x-allowed-callers`, sinh code có kiểu, adapter sau port, chỉ gọi đồng bộ khi cần kết quả ngay, phản ứng phụ qua event.
 
 ## Bối cảnh
 
@@ -26,3 +29,4 @@ Stakeholder yêu cầu dùng Refit khi gọi service to service; vì giữ Golan
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
 | 2026-11-15 | Thêm `x-allowed-callers`, audience/scope token | API_DESIGN, KEYCLOAK_SSO |
+| 2026-11-17 | Một phần superseded by ADR-0074: gọi trong tiến trình qua facade sinh từ spec internal | Technical Architect |

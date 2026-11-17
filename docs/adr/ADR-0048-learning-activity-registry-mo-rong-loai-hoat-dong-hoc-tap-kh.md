@@ -14,7 +14,7 @@ EduWorld cần nhiều định dạng học tập: quiz, bài tập tương tác
 
 ## Quyết định (đề xuất phương án 2)
 
-- learning-service có **Activity Registry**; mỗi `activity_type` (`quiz`, `interactive_exercise`, `written_response`, `video_lesson`, `audio_lesson`, `speaking`, `simulation`, `minigame`, `project`) đăng ký một plugin Go triển khai interface chung: `ConfigSchema()` (JSON Schema trong `specs/schemas/activities/`), `BuildRenderPayload()` (không chứa đáp án, ADR-0016), `Respond()`, `Progress()`, `Evaluate()` (`auto | rule | rubric | teacher_review | external`; AI theo ADR-0053), `CompletionRule()`, `EmitEvidence()`.
+- learning-service có **Activity Registry**; mỗi `activity_type` trong Release (`quiz`, `interactive_exercise`, `minigame`, `video_lesson`, `audio_lesson`, `simulation`; `written_response`, `speaking`, `project` ngoài Release theo ADR-0072) đăng ký một plugin Go triển khai interface chung: `ConfigSchema()` (JSON Schema trong `specs/schemas/activities/`), `BuildRenderPayload()` (không chứa đáp án, ADR-0016), `Respond()`, `Progress()`, `Evaluate()` (`auto | rule | external` trong Release; `rubric`/chấm tay ngoài Release theo ADR-0072; AI theo ADR-0053), `CompletionRule()`, `EmitEvidence()`.
 - Quest, assignment, exam, challenge, analytics **chỉ tham chiếu `activity_id` + version**, xử lý qua interface chung.
 - Godot có renderer registry theo `activity_type`; portal có editor registry. Client cũ không có renderer → hiển thị "cần cập nhật game", không crash.
 - Thêm loại mới = plugin backend + schema + renderer Godot + editor portal; không sửa quest/assignment/exam.
@@ -29,3 +29,4 @@ EduWorld cần nhiều định dạng học tập: quiz, bài tập tương tác
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Audit theo Master Prompt mới |
 | 2026-11-15 | Interface thêm `Respond()` | ACTIVITY_ENGINE |
+| 2026-11-15 | Điều chỉnh theo ADR-0072 (bỏ vai trò giáo viên, bỏ hoạt động chấm tay khỏi Release) | Technical Architect |

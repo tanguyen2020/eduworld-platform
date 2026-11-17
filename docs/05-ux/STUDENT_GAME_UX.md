@@ -84,6 +84,7 @@ Mobile — điện thoại ngang (2400×1080, trong safe area)
 | Tương tác | E (hoặc nhấp chuột trái vào đối tượng) | Bạn bè | F |
 | Xoay camera | Giữ chuột phải + kéo; cuộn chuột để zoom | Party | P |
 | Chat | Enter (mở/gửi), Esc (đóng) | Vòng emote | T |
+| Thi đấu | K | Cửa hàng | B |
 | Đóng màn/menu | Esc | Chụp ảnh màn hình (cục bộ) | F12 |
 
 Chuột: mọi chức năng đều bấm được bằng chuột (học sinh nhỏ có thể không dùng phím). Lớp 1–3 bật mặc định **bấm-để-đi** (click-to-move).
@@ -143,13 +144,14 @@ Ngân sách tổng thể của game nằm trong [PERFORMANCE_BUDGET](../08-game-
 | Mất mạng | Banner trên-giữa "Đang kết nối lại…"; khóa nút gửi/ghi; dữ liệu đã có vẫn xem được | `ui.common.reconnecting` |
 | Khóa / chưa đủ điều kiện | Biểu tượng khóa + điều kiện còn thiếu bằng lời ("Hoàn thành chương 0 để mở"); không dùng màu đỏ | `ui.<screen>.locked_reason` |
 | Thành công | Toast 2–3 s hoặc hiệu ứng ngắn; không chặn thao tác | `ui.common.success` |
-| Ngoài giờ cho phép / nhắc nghỉ | Hộp thoại nhẹ theo [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) | `ui.common.break_reminder` |
+| Ngoài khung giờ truy cập của trường / nhắc nghỉ | Hộp thoại nhẹ nêu giờ mở lại (khung giờ do School Admin đặt cho cả trường, áp như nhau cho mọi khu vực trong game) hoặc lời nhắc nghỉ, theo [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) | `ui.common.outside_access_window`, `ui.common.break_reminder` |
 
 Không dùng chữ "Thất bại" đỏ toàn màn, không đếm ngược gây áp lực ngoài hoạt động có giới hạn thời gian.
 
 ## 8. Trợ năng
 
 - Tùy chọn: 3 mức cỡ chữ, tương phản cao, giảm chuyển động, phụ đề cho mọi âm thanh có lời, đọc to (TTS hai ngôn ngữ, [Proposed]), bấm-để-đi.
+- Lớp 1–3 (`g1_3`): đề bài và hướng dẫn quest có **lồng tiếng tiếng Việt** phát tự động (PED-07, điều kiện publish do tài liệu nội dung sở hữu — [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)); luôn kèm phụ đề và icon minh họa để học sinh không có tai nghe vẫn làm được ([STUDENT_GAME_UX_LEARNING §7](STUDENT_GAME_UX_LEARNING.md#7-hỗ-trợ-lớp-13-lồng-tiếng-phụ-đề-và-icon)).
 - Điều hướng bàn phím trên PC: mọi nút có thể focus (Tab/Shift+Tab), focus hiển thị rõ; Enter/Space kích hoạt.
 - Không truyền thông tin chỉ bằng màu (đúng/sai kèm icon ✓/✗ và chữ).
 - Thời gian đọc thông báo tối thiểu 3 s; thông báo quan trọng không tự đóng.

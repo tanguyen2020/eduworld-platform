@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
   title: EduWorld SIS Contract
-  version: 1.1.0
+  version: 1.2.0
   summary: Contract do EduWorld định nghĩa mà hệ thống SIS của trường phải triển khai.
   description: |
     **EduWorld sở hữu toàn bộ DTO trong contract này** (ADR-0021). SIS của trường (hoặc lớp facade
     do trường/nhà cung cấp SIS tự xây) phải expose các endpoint dưới đây đúng shape đã định nghĩa.
     EduWorld **không** viết adapter ánh xạ theo DTO riêng của từng SIS.
 
-    - Phần `paths`: endpoint **trường triển khai**, worker của `identity-service` gọi (pull).
+    - Phần `paths`: endpoint **trường triển khai**, worker của module `identity` gọi (pull).
     - Phần `webhooks`: payload **SIS gửi tới EduWorld** (push, tùy chọn) tại
       `POST /internal/sis/webhooks/{connection_id}` (chỉ gateway nội bộ / IP allowlist).
     - File CSV (`csv_import`) dùng đúng tên trường của các DTO này.
@@ -16,6 +16,9 @@ info:
     Quy tắc version: path `/v1`; trong v1 chỉ thêm trường **tùy chọn** hoặc giá trị enum mới
     kèm thông báo trước tối thiểu 1 học kỳ. Breaking change → `/v2` chạy song song.
     Tài liệu: docs/09-identity/SIS_INTEGRATION.md.
+
+    Phiên bản 1.2.0 (ADR-0072): contract chỉ gồm trường, năm học, lớp, học sinh và enrollment. EduWorld không nhập
+    nhân sự hay phân công giảng dạy từ SIS (contract vẫn ở trạng thái Draft, chưa có trường nào triển khai).
   license:
     name: Proprietary — EduWorld
     identifier: LicenseRef-EduWorld-Proprietary
@@ -36,9 +39,9 @@ tags:
   - name: organization
     description: Trường, năm học, lớp
   - name: people
-    description: Học sinh, giáo viên
+    description: Học sinh
   - name: membership
-    description: Enrollment và phân công giảng dạy
+    description: Enrollment (học sinh thuộc lớp)
   - name: changes
     description: Delta sync theo cursor
 
@@ -160,26 +163,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
-  /schools/{school_external_id}/teachers:
-    get:
-      tags: [people]
-      operationId: listTeachers
-      summary: Danh sách giáo viên của trường
-      parameters:
-        - $ref: '#/components/parameters/SchoolExternalId'
-        - $ref: '#/components/parameters/Cursor'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: Một trang giáo viên
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TeacherPage' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
-
   /schools/{school_external_id}/enrollments:
     get:
       tags: [membership]
@@ -196,27 +179,6 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EnrollmentPage' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
-
-  /schools/{school_external_id}/teaching-assignments:
-    get:
-      tags: [membership]
-      operationId: listTeachingAssignments
-      summary: Danh sách phân công giảng dạy trong một năm học
-      parameters:
-        - $ref: '#/components/parameters/SchoolExternalId'
-        - $ref: '#/components/parameters/AcademicYearCode'
-        - $ref: '#/components/parameters/Cursor'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: Một trang phân công
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TeachingAssignmentPage' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -294,7 +256,7 @@ components:
         clientCredentials:
           tokenUrl: https://sis.school.example/oauth2/token
           scopes:
-            eduworld.sis.read: Đọc dữ liệu tổ chức, học sinh, giáo viên cho EduWorld
+            eduworld.sis.read: Đọc dữ liệu tổ chức, lớp, học sinh cho EduWorld
     apiKeyHeader:
       type: apiKey
       in: header
@@ -394,7 +356,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: [full_sync, delta, webhook, student_lookup, teaching_assignments]
+            enum: [full_sync, delta, webhook, student_lookup]
         server_time: { type: string, format: date-time }
 
     School:
@@ -442,7 +404,6 @@ components:
         academic_year: { type: string, maxLength: 32, pattern: '^[0-9]{4}-[0-9]{4}$' }
         grade_level: { type: integer, minimum: 1, maximum: 9 }
         name: { type: string, maxLength: 32 }
-        homeroom_teacher_external_id: { $ref: '#/components/schemas/ExternalId' }
         updated_at: { type: string, format: date-time }
 
     Login:
@@ -477,20 +438,6 @@ components:
         login: { $ref: '#/components/schemas/Login' }
         updated_at: { type: string, format: date-time }
 
-    Teacher:
-      type: object
-      required: [teacher_external_id, school_external_id, staff_code, full_name, status, updated_at]
-      additionalProperties: false
-      properties:
-        teacher_external_id: { $ref: '#/components/schemas/ExternalId' }
-        school_external_id: { $ref: '#/components/schemas/ExternalId' }
-        staff_code: { type: string, maxLength: 32 }
-        full_name: { type: string, maxLength: 128 }
-        work_email: { type: string, format: email, maxLength: 254 }
-        status: { type: string, enum: [active, inactive, suspended] }
-        login: { $ref: '#/components/schemas/Login' }
-        updated_at: { type: string, format: date-time }
-
     Enrollment:
       type: object
       required: [student_external_id, class_external_id, start_date, status, updated_at]
@@ -503,32 +450,18 @@ components:
         status: { type: string, enum: [active, transferred, ended] }
         updated_at: { type: string, format: date-time }
 
-    TeachingAssignment:
-      type: object
-      required: [teacher_external_id, class_external_id, subject_code, role, updated_at]
-      additionalProperties: false
-      properties:
-        teacher_external_id: { $ref: '#/components/schemas/ExternalId' }
-        class_external_id: { $ref: '#/components/schemas/ExternalId' }
-        subject_code:
-          type: string
-          description: Mã môn theo danh mục của EduWorld (math, vietnamese, english, science…), không phải mã môn nội bộ của SIS.
-          maxLength: 32
-        role: { type: string, enum: [homeroom, subject] }
-        updated_at: { type: string, format: date-time }
-
     Change:
       type: object
       required: [sequence, entity_kind, operation, external_id, occurred_at]
       additionalProperties: false
       properties:
         sequence: { type: integer, minimum: 0, description: Tăng dần đơn điệu theo connection }
-        entity_kind: { type: string, enum: [school, class, student, teacher, enrollment, teaching_assignment] }
+        entity_kind: { type: string, enum: [school, class, student, enrollment] }
         operation: { type: string, enum: [upsert, delete] }
         external_id:
           type: string
           maxLength: 200
-          description: Với enrollment/teaching_assignment là khóa ghép "<student|teacher>_external_id|class_external_id[|subject_code]".
+          description: Với enrollment là khóa ghép "student_external_id|class_external_id".
         occurred_at: { type: string, format: date-time }
         record:
           description: Bản ghi đầy đủ theo DTO của entity_kind; bắt buộc khi operation = upsert.
@@ -536,9 +469,7 @@ components:
             - $ref: '#/components/schemas/School'
             - $ref: '#/components/schemas/Class'
             - $ref: '#/components/schemas/Student'
-            - $ref: '#/components/schemas/Teacher'
             - $ref: '#/components/schemas/Enrollment'
-            - $ref: '#/components/schemas/TeachingAssignment'
 
     ChangeBatch:
       type: object
@@ -574,26 +505,12 @@ components:
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Student' } }
         page: { $ref: '#/components/schemas/PageInfo' }
-    TeacherPage:
-      type: object
-      required: [data, page]
-      additionalProperties: false
-      properties:
-        data: { type: array, items: { $ref: '#/components/schemas/Teacher' } }
-        page: { $ref: '#/components/schemas/PageInfo' }
     EnrollmentPage:
       type: object
       required: [data, page]
       additionalProperties: false
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Enrollment' } }
-        page: { $ref: '#/components/schemas/PageInfo' }
-    TeachingAssignmentPage:
-      type: object
-      required: [data, page]
-      additionalProperties: false
-      properties:
-        data: { type: array, items: { $ref: '#/components/schemas/TeachingAssignment' } }
         page: { $ref: '#/components/schemas/PageInfo' }
     ChangePage:
       type: object

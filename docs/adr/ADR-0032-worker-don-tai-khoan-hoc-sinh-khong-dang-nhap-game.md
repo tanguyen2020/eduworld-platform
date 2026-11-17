@@ -1,6 +1,9 @@
 # ADR-0032 — Worker dọn tài khoản học sinh không đăng nhập game
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md), [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0085 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md), [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0085](ADR-0085-don-hoc-sinh-giu-user-keycloak.md):** không vô hiệu hóa user Keycloak khi dọn (mục 3); chỉ gỡ membership, thu hồi phiên, soft-delete hồ sơ. **Còn hiệu lực:** toàn bộ phần còn lại.
 
 ## Bối cảnh
 
@@ -25,3 +28,4 @@ Stakeholder yêu cầu worker dọn học sinh không login vào game, số ngà
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
 | 2026-11-15 | Thực thi bằng saga qua internal platform API | ADR-0036 |
+| 2026-11-16 | Một phần superseded by ADR-0085 | Technical Architect |

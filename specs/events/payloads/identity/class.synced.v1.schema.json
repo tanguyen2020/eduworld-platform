@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/identity/class.synced.v1.schema.json",
-  "title": "Payload class.synced v1 (identity-service, ADR-0060, ADR-0061)",
+  "title": "Payload class.synced v1 (module identity, ADR-0060, ADR-0061)",
   "description": "Lớp được tạo/cập nhật/đóng từ đồng bộ SIS (đồng bộ định kỳ hoặc khi học sinh đăng nhập). Consumer: projection ref.classes (learning, game, chat), cache Principal, dashboard (sĩ số). Không chứa danh sách học sinh.",
   "type": "object",
   "additionalProperties": false,

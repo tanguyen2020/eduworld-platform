@@ -1,6 +1,9 @@
 # ADR-0027 — Admin Portal: một portal 5 workspace; tenant chỉ thao tác Learning Management, cấu hình game chỉ thuộc platform
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: giáo viên và moderator tenant trong workspace School & Learning Management (mục 1), giáo viên chọn quest/mini-game để giao bài (mục 5) — nay do `school_admin`/`academic_manager`; kiểm duyệt chuyển sang Platform Safety Team. **Còn hiệu lực:** một portal 5 workspace, tenant chỉ thao tác Learning Management, cấu hình game chỉ thuộc platform.
 
 ## Bối cảnh
 
@@ -39,3 +42,4 @@ Stakeholder yêu cầu: vận hành của mỗi tenant vào Admin Portal thao t�
 | 2026-11-15 | Accepted: tách vùng Learning Management / Game Studio & Platform, 2 bundle `cms`/`admin` | Stakeholder |
 | 2026-11-15 | Thêm chế độ liên tenant cho System Admin (dropdown tenant) | Stakeholder |
 | 2026-11-15 | Một portal duy nhất 5 workspace; client `eduworld-portal`; lớp (d) đổi thành lazy chunk; bảo vệ bằng MFA + gateway nội bộ | Stakeholder (audit C6) |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

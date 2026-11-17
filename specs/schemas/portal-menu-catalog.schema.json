@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/portal/portal-menu-catalog.schema.json",
+  "title": "PortalMenuCatalog",
+  "description": "Danh mục workspace → menu → action của Admin Portal (ADR-0090). Nguồn duy nhất: specs/portal/menu-catalog.yaml; sinh menuRegistry/workspaceRegistry của web/apps/portal và bảng đọc-chỉ platform.portal_menu_catalog (eduworld_identity, ghi bởi cmd/migrate). Kiểm tra liên file (operationId, x-portal-action, permission, khóa cha) bằng scripts/specs/check-portal-catalog.mjs. required_permissions là any-of: người dùng cần ít nhất một permission. can_disable = false: mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE).",
+  "type": "object",
+  "required": ["catalog_version", "workspaces"],
+  "additionalProperties": false,
+  "properties": {
+    "catalog_version": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}\\.[0-9]{1,4}$",
+      "description": "YYYY.MM.DD.N — tăng mỗi lần đổi file; cmd/migrate ghi vào platform.portal_menu_catalog"
+    },
+    "workspaces": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/workspace" }
+    }
+  },
+  "$defs": {
+    "permissionList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": { "type": "string", "maxLength": 64, "pattern": "^[a-z_]+(\\.[a-z_]+)+$" }
+    },
+    "labelKey": { "type": "string", "maxLength": 128, "pattern": "^portal\\.[a-z0-9_.]+$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "workspace": {
+      "type": "object",
+      "required": ["key", "label_key", "title", "order", "path", "menus"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "enum": ["school_lms", "content_studio", "game_ops", "live_ops", "platform_admin"] },
+        "label_key": { "$ref": "#/$defs/labelKey" },
+        "title": { "$ref": "#/$defs/title" },
+        "order": { "type": "integer", "minimum": 1, "maximum": 99 },
+        "path": { "type": "string", "maxLength": 64, "pattern": "^/[a-z0-9-]+$" },
+        "menus": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "$ref": "#/$defs/menu" } }
+      }
+    },
+    "menu": {
+      "type": "object",
+      "required": ["key", "label_key", "title", "path", "order", "required_permissions", "can_disable", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "maxLength": 128, "pattern": "^menu\\.[a-z0-9_]+\\.[a-z0-9_]+$" },
+        "label_key": { "$ref": "#/$defs/labelKey" },
+        "title": { "$ref": "#/$defs/title" },
+        "path": { "type": "string", "maxLength": 256, "pattern": "^/[a-z0-9-]+(/[a-z0-9-]+)+$" },
+        "order": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "required_permissions": { "$ref": "#/$defs/permissionList" },
+        "can_disable": { "type": "boolean" },
+        "actions": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/action" } }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["key", "label_key", "title", "required_permissions", "operation_ids", "can_disable"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "maxLength": 128, "pattern": "^action\\.[a-z0-9_]+\\.[a-z0-9_]+\\.[a-z0-9_]+$" },
+        "label_key": { "$ref": "#/$defs/labelKey" },
+        "title": { "$ref": "#/$defs/title" },
+        "required_permissions": { "$ref": "#/$defs/permissionList" },
+        "operation_ids": {
+          "type": "array",
+          "maxItems": 200,
+          "uniqueItems": true,
+          "description": "operationId của OpenAPI gộp; operation dùng chung định tuyến theo tham số: operationId[param=value]",
+          "items": { "type": "string", "maxLength": 128, "pattern": "^[a-z][A-Za-z0-9]*(\\[[a-z_]+=[a-z0-9_-]+\\])?$" }
+        },
+        "can_disable": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # Design System — Game (Godot 3D) và Admin/Ops (CMS/LMS)
 
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
-> Liên quan: [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-teacher-dashboard)
+> Liên quan: [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-school-learning-dashboard)
 
 ## 1. Tổng quan
 
@@ -9,7 +9,7 @@ EduWorld có **hai hệ thống giao diện tách biệt**, mỗi hệ thống p
 
 | | Game design system | Admin/Ops design system |
 |---|---|---|
-| Người dùng | Học sinh lớp 1–9 (6–15 tuổi) | Vận hành tenant, giáo viên, tổ chuyên môn, moderator, System Admin, game designer, live-ops |
+| Người dùng | Học sinh lớp 1–9 (6–15 tuổi) | Vận hành tenant và nhà trường (Tenant Admin, School Admin, tổ chuyên môn), biên tập nội dung, System Admin, Safety Team, game designer, live-ops |
 | Nền tảng | Godot 4: thế giới 3D + UI `Control` | React SPA: **một Admin Portal** `web/apps/portal` với 5 workspace (ADR-0027 mục 7) |
 | Mục tiêu | Hấp dẫn, dễ hiểu, an toàn, chữ và nút lớn | Thao tác nhanh, xem nhiều dữ liệu, ít lỗi, đọc số liệu chính xác |
 | Phong cách | Stylized low-poly, toon shading, màu tươi, chuyển động | Trung tính, gọn, dày dữ liệu, ít trang trí |
@@ -97,7 +97,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 - **ProLayout** với menu sinh từ `GET /api/v1/me/permissions` (ẩn menu chỉ là tiện ích, backend vẫn quyết định).
 - **Header:** bộ chọn tenant dạng Select có tìm kiếm (chỉ System Admin, mặc định "Tất cả tenant", chọn nhiều; ADR-0027 §6); chỉ báo trạng thái hệ thống (lấy từ endpoint health tổng hợp); thông báo; menu tài khoản (đổi sáng/tối, ngôn ngữ, đăng xuất).
 - **Banner cảnh báo hệ thống** dùng `Alert` banner cố định đầu vùng nội dung: tắt kiểm duyệt (ADR-0030), bảo trì, sự cố SIS sync, purge tồn đọng.
-- Một Admin Portal duy nhất (`web/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
+- Một Admin Portal duy nhất (`web/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; mã mỗi workspace nằm trong `web/apps/portal/src/workspaces/` theo tên thư mục ở [ADMIN_PORTAL §1.2](../04-admin-portal/ADMIN_PORTAL.md#12-admin-portal-5-workspace-adr-0027-mục-7-master-prompt-tái-cấu-trúc-16); topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
 
 ### 4.3. Mẫu màn hình
 
@@ -107,26 +107,26 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 | **Chi tiết** | Header thông tin + **Tabs** (Thông tin, Phiên bản, Phát hành, Sử dụng, Audit) + **Timeline** audit/version | Tab Phiên bản: danh sách version, xem chỉ đọc, diff, preview (ADR-0043) |
 | **Form** | **ProForm** (StepsForm cho nội dung nhiều bước), autosave Draft | Validation sinh từ OpenAPI: `maxLength`, `required`, `pattern` (ADR-0041); hiển thị bộ đếm ký tự; lỗi `VALIDATION_FAILED` map về từng trường |
 | **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Proposed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
-| **Trình soạn đặc thù** | Trong `web/packages/ops-ui` | Trình soạn 11 dạng câu hỏi, sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D |
+| **Trình soạn đặc thù** | Trong `web/packages/ops-ui` | Trình soạn 11 dạng câu hỏi (gồm gợi ý nhiều cấp và phản hồi theo phương án), sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D, `MasteryHeatmap` (heatmap LO có ký hiệu mức, dùng ở School Learning Dashboard) |
 
 **KPI dashboard live-ops (workspace Game Live Operations; phiên bản giới hạn theo tenant trong School & Learning Management):**
 
 | KPI | Nguồn | Cảnh báo |
 |---|---|---|
-| CCU hiện tại / đỉnh hôm nay | realtime-gateway metrics | > 90% năng lực kế hoạch |
-| Trận đang diễn ra, hàng chờ ghép trận theo mode | competition-service | Thời gian chờ p95 > 60 s |
-| Đăng nhập/phút, hàng chờ đăng nhập | Keycloak + identity-service | Waiting room hoạt động |
-| Tin nhắn/phút, tin bị chặn/che, báo cáo chờ xử lý | chat-service | Báo cáo P1 quá SLA |
-| Lỗi 5xx theo service, circuit breaker mở | Prometheus | Theo MONITORING |
-| Publish gần đây, rollback gần đây | learning/game-service | Rollback trong 24 h |
-| Trạng thái SIS sync theo tenant | identity-service | Lần thành công cuối > 26 h |
+| CCU hiện tại / đỉnh hôm nay | realtime metrics | > 90% năng lực kế hoạch |
+| Trận đang diễn ra, hàng chờ ghép trận theo mode | module competition | Thời gian chờ p95 > 60 s |
+| Đăng nhập/phút, hàng chờ đăng nhập | Keycloak + module identity | Waiting room hoạt động |
+| Tin nhắn/phút, tin bị chặn/che, báo cáo chờ xử lý | module chat | Báo cáo P1 quá SLA |
+| Lỗi 5xx theo module, circuit breaker tích hợp ngoài mở | Prometheus | Theo MONITORING |
+| Publish gần đây, rollback gần đây | learning/module game | Rollback trong 24 h |
+| Trạng thái SIS sync theo tenant | module identity | Lần thành công cuối > 26 h |
 
 ### 4.4. Quy tắc trực quan hóa dữ liệu
 
 - Một thư viện chart thống nhất; palette categorical lấy từ `admin-tokens/semantic.json` (tối đa 8 màu, đã kiểm tra phân biệt được với người mù màu); màu môn học dùng mã màu nghiệp vụ (§6).
 - Trục bắt đầu từ 0 cho cột/thanh; số liệu định dạng `vi-VN`; luôn có đơn vị và thời điểm dữ liệu.
 - Không dùng màu là kênh thông tin duy nhất (thêm nhãn/biểu tượng); tooltip có giá trị chính xác.
-- Báo cáo nhóm < 5 học sinh ẩn số liệu theo LEARNING_ANALYTICS.
+- Báo cáo nhóm < 5 học sinh ẩn số liệu theo LEARNING_ANALYTICS. Mọi màn (School Learning Dashboard, báo cáo tenant/platform, Game Analytics) hiển thị ô bị ẩn bằng **một** component dùng chung `SuppressedCell` (`web/packages/ops-ui/src/dashboard/`): chữ "< 5" kèm tooltip giải thích, không hiện số thật, không tạo component riêng theo workspace.
 
 ### 4.5. Accessibility
 
@@ -138,8 +138,8 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 
 | Hạng mục | Quy định |
 |---|---|
-| Hiển thị | **MathJax 4**, output SVG (hoặc CHTML cho văn bản dài), extension `ams`, `mhchem` (`\ce{}`, `\pu{}`), font mặc định của MathJax 4. Dùng trong preview, danh sách (cột nội dung rút gọn), Teacher Dashboard, xem bài làm, màn chấm tự luận |
-| Nhập | **MathLive** `<math-field>` trong mọi editor có công thức (Question/Lesson/Activity Builder, đáp án, giải thích, rubric, màn chấm). Bàn phím ảo với tab Toán, Lý, Hóa; xuất LaTeX để lưu. MathLive chỉ dùng trong editor của portal (game không nhập công thức) |
+| Hiển thị | **MathJax 4**, output SVG (hoặc CHTML cho văn bản dài), extension `ams`, `mhchem` (`\ce{}`, `\pu{}`), font mặc định của MathJax 4. Dùng trong preview, danh sách (cột nội dung rút gọn), School Learning Dashboard, xem lại bài làm |
+| Nhập | **MathLive** `<math-field>` trong mọi editor có công thức (Question/Lesson/Activity Builder, đáp án, giải thích, gợi ý, phản hồi theo phương án). Bàn phím ảo với tab Toán, Lý, Hóa; xuất LaTeX để lưu. MathLive chỉ dùng trong editor của portal (game không nhập công thức) |
 | Kích thước và màu | Cỡ công thức theo token `math.font-scale` (mặc định 1.0 × cỡ chữ đoạn văn, 1.15 × với công thức block); màu theo `color.text` của theme sáng/tối, không màu hardcode; công thức lỗi hiển thị khung `color.danger` kèm thông báo vị trí lỗi |
 | Trợ năng | Bật speech/braille của MathJax 4 (menu ngữ cảnh, `aria-label` sinh tự động); MathLive hỗ trợ điều hướng bàn phím và đọc công thức |
 | Component | `MathText` (render chuỗi rich text có delimiter `\( \)`/`\[ \]`), `MathInput` (bọc `<math-field>`) trong `web/packages/ops-ui`; có story trong Storybook (Toán/Lý/Hóa, sáng/tối, compact) |
@@ -150,7 +150,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 
 ### 5.1. Token UI
 
-- `semantic.json`: nền panel, chữ, nhấn, phản hồi đúng/sai, cảnh báo nhẹ; `component.json`: nút chính/phụ, panel nhiệm vụ, thẻ câu hỏi, badge XP/cấp độ, thanh tiến độ, toast, HUD.
+- `semantic.json`: nền panel, chữ, nhấn, phản hồi đúng/sai, cảnh báo nhẹ; `component.json`: nút chính/phụ, panel nhiệm vụ, thẻ câu hỏi, dải phản hồi + nút gợi ý (`HintButton`, đếm cấp gợi ý), khung phụ đề lời thoại có icon người nói (`VoiceCaption`, dùng cho `g1_3` — PED-07), badge XP/cấp độ, thanh tiến độ, toast, HUD.
 - Sinh `Theme` Godot (`godot/resources/ui/theme/eduworld_theme.tres`) và lớp hằng `UiTokens` (`godot/scripts/core/ui_tokens.gd`) để code dùng khi cần giá trị (khoảng cách, thời lượng tween).
 - Mọi `Control` lấy style từ Theme; component tái sử dụng trong `godot/scenes/ui/components/`.
 
@@ -158,7 +158,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 
 | Grade band | Cỡ chữ cơ sở | Chiều cao nút tối thiểu | Ghi chú |
 |---|---|---|---|
-| `g1_3` | 24 px | 64 px | Icon kèm chữ, ít chữ, giọng đọc tùy chọn |
+| `g1_3` | 24 px | 64 px | Icon kèm chữ, ít chữ; đề bài và hướng dẫn quest có lồng tiếng tiếng Việt, kèm phụ đề + icon khi không có tai nghe ([LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)) |
 | `g4_5` | 22 px | 56 px | |
 | `g6_7` | 18 px | 48 px | Mật độ thông tin cao hơn |
 | `g8_9` | 18 px | 44 px | |
@@ -206,7 +206,7 @@ Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Pro
 | Tạo avatar lần đầu | Chọn ngoại hình, trang phục, nickname tự sinh | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s02--tạo-avatar-lần-đầu) |
 | Main Hub HUD | Mini-map, nhiệm vụ đang theo dõi, XP/level, thông báo, chat, party | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s03--main-hub-hud) |
 | World map | Khu vực, khu đã mở/khóa, điểm khám phá, dịch chuyển | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s04--world-map) |
-| Quest journal | Quest đang làm/hoàn thành, bước, phần thưởng, bài giáo viên giao | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s05--quest-journal) |
+| Quest journal | Quest đang làm/hoàn thành, bước, phần thưởng, bài nhà trường giao | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s05--quest-journal) |
 | Challenge / Boss | Chọn độ khó, thanh tiến độ boss, phase, đóng góp đội | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s06--challenge--boss) |
 | Level-up | Hiệu ứng lên cấp, danh hiệu, phần thưởng | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s07--level-up) |
 | Inventory / Shop | Trang bị, tủ đồ, ví Xu, mua vật phẩm trang trí | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn [TBD] |
@@ -214,9 +214,9 @@ Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Pro
 | Party lobby | Thành viên, sẵn sàng, chọn hoạt động, chat party | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
 | Bạn bè | Danh sách, lời mời, chặn, báo cáo | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
 | Chat | Kênh, tin nhắn, menu nhấn giữ, quick message, sticker/GIF | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) | Nghiệp vụ có; UX màn một phần |
-| Learning activity player | Khung chung chạy mọi `activity_type` (renderer registry) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | Nghiệp vụ có; UX màn [TBD] |
-| Video / exercise player | Phát video có câu chèn; bảng câu hỏi 11 dạng; công thức SVG | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md), [QUESTION_BANK](../02-learning/QUESTION_BANK.md) | Nghiệp vụ có; UX màn [TBD] |
-| Kết quả học tập | Tổng kết, LO cần ôn, gợi ý tiếp theo, hiển thị mastery theo khối | [LEARNING_EXPERIENCE §7](../02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh) | Nghiệp vụ có; UX màn [TBD] |
+| Learning activity player | Khung chung chạy mọi `activity_type` trong Release (renderer registry), nút gợi ý | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
+| Video / exercise player | Phát video có câu chèn; bảng câu hỏi 11 dạng; gợi ý nhiều cấp; phản hồi theo phương án sai; công thức SVG | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md), [QUESTION_BANK](../02-learning/QUESTION_BANK.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
+| Kết quả học tập | Tổng kết, LO cần ôn, gợi ý tiếp theo, hiển thị mastery theo khối | [LEARNING_EXPERIENCE §7](../02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
 | Competition Arena | Chọn mode, hàng chờ, ready check, trận, kết quả, tier | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | Nghiệp vụ có; UX màn [TBD] |
 | Event center | Sự kiện đang diễn ra, nhiệm vụ ngày/tuần, mùa | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) | Nghiệp vụ một phần (Event & Season [TBD]); UX màn [TBD] |
 
@@ -233,7 +233,7 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 
 ## 7. Tài sản 3D hiển thị trong CMS (thumbnail/turntable)
 
-- Job **render headless Godot** (`godot --headless --render-thumbnails`, chạy trong worker của game-service/CI): với mỗi version đã publish của nhân vật, item, NPC, khu vực, quest marker → render ảnh tĩnh 512×512 và turntable 24 khung (WebP động hoặc sprite sheet), dùng đúng model, material và Environment của game.
+- Job **render headless Godot** (`godot --headless --render-thumbnails`, chạy trong worker của module game/CI): với mỗi version đã publish của nhân vật, item, NPC, khu vực, quest marker → render ảnh tĩnh 512×512 và turntable 24 khung (WebP động hoặc sprite sheet), dùng đúng model, material và Environment của game.
 - Kết quả lưu object storage (ADR-0044) theo `media/<sha256>/...`, đăng ký `media_assets` với `kind = render_thumbnail|render_turntable` và gắn vào version tương ứng (ADR-0043).
 - CMS hiển thị thumbnail trong danh sách, form chọn item/phần thưởng, thư viện; đây là **dữ liệu nhận diện nội dung**, không phải phong cách UI của CMS.
 - **Preview tương tác**: khung `GamePreviewFrame` (trong `ops-ui`) nhúng Godot Web export (renderer Compatibility/WebGL 2) ở iframe riêng; chỉ bên trong khung mang giao diện game.

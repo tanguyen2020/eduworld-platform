@@ -15,44 +15,44 @@ const OUT = 'docs/12-project/TRACEABILITY_MATRIX.md';
 const SPEC = 'specs/openapi/eduworld-api.v1.yaml';
 const CHECK = process.argv.includes('--check');
 
-// Domain → service sở hữu (ADR-0036, AGENTS.md §6), tài liệu sở hữu, mẫu path OpenAPI, tiền tố TC.
+// Domain → module sở hữu (ADR-0036, AGENTS.md §6), tài liệu sở hữu, mẫu path OpenAPI, tiền tố TC.
 const DOMAINS = {
-  AUTH: { svc: 'identity-service', docs: ['09-identity/KEYCLOAK_SSO.md', '09-identity/IDENTITY_MAPPING.md'], ops: /^\/(auth|me)\//, tc: ['AUTH'] },
-  ORG: { svc: 'identity-service', docs: ['06-architecture/MULTITENANCY.md', '09-identity/IDENTITY_MAPPING.md'], ops: /^\/(tenant\/(settings|schools|students|users)|admin\/(tenants|tenant-|catalog|schools|school-imports)|catalog\/|schools\/|students\/)/, tc: ['ORG', 'TEN'] },
-  SIS: { svc: 'identity-service', docs: ['09-identity/SIS_INTEGRATION.md', '09-identity/ACCOUNT_PROVISIONING.md'], ops: /sis/, tc: ['SIS'] },
-  CUR: { svc: 'learning-service', docs: ['02-learning/CURRICULUM_MODEL.md'], ops: /^\/learning\/(curricula|subjects|topics|objectives|lessons)/, tc: ['LRN'] },
-  CNT: { svc: 'learning-service', docs: ['02-learning/CONTENT_MODEL.md'], ops: /^\/cms\/(learning\/(content|translations)|media)/, tc: ['CNT'] },
-  QB: { svc: 'learning-service', docs: ['02-learning/QUESTION_BANK.md'], ops: /question/, tc: ['LRN'] },
-  EXR: { svc: 'learning-service', docs: ['02-learning/ACTIVITY_ENGINE.md'], ops: /activit|attempt|rubric|simulation/, tc: ['ACT', 'LRN', 'VID', 'WR', 'SIM', 'MATH'] },
-  EXM: { svc: 'learning-service', docs: ['02-learning/EXAM_ENGINE.md'], ops: /^\/exams\//, tc: ['EXM'] },
-  PRG: { svc: 'learning-service', docs: ['02-learning/LEARNING_ANALYTICS.md'], ops: /progress|recommendation|wrong-questions/, tc: ['LRN'] },
-  ANL: { svc: 'learning-service · game-service', docs: ['02-learning/LEARNING_ANALYTICS.md', '11-operations/GAME_ANALYTICS.md', '07-backend/DASHBOARD_DATA.md'], ops: /analytics|dashboard|telemetry|\/reports/, tc: ['ANL', 'DASH'] },
-  GAME: { svc: 'game-service', docs: ['01-game-design/WORLD_DESIGN.md', '01-game-design/CHARACTER_SYSTEM.md'], ops: /^\/game\/(profile|avatar|world|sessions|client-config|content-manifest|levels|level-sessions)/, tc: ['WLD', 'GAM'] },
-  QST: { svc: 'game-service', docs: ['01-game-design/QUEST_SYSTEM.md'], ops: /quest/, tc: ['GAM'] },
-  MG: { svc: 'learning-service · game client', docs: ['08-game-client/MINIGAME_ENGINE.md'], ops: /minigame/, tc: ['ACT'] },
-  MP: { svc: 'competition-service · realtime-gateway', docs: ['03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md', '06-architecture/REALTIME_ARCHITECTURE.md'], ops: /^\/multiplayer\/rooms|realtime-tickets|world\/friends/, tc: ['PTY', 'CMP'] },
-  PTY: { svc: 'competition-service', docs: ['03-social-multiplayer/PARTY_SYSTEM.md'], ops: /^\/multiplayer\/(parties|invitations)/, tc: ['PTY'] },
-  MM: { svc: 'competition-service', docs: ['03-social-multiplayer/MATCHMAKING.md'], ops: /matchmaking/, tc: ['MM'] },
-  CMP: { svc: 'competition-service', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /^\/competition\/(duels|matches)/, tc: ['CMP'] },
-  RNK: { svc: 'competition-service', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /ratings/, tc: ['CMP'] },
-  LDB: { svc: 'competition-service', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /^\/leaderboards/, tc: ['CMP'] },
-  TRN: { svc: 'competition-service', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /tournament/, tc: ['CMP'] },
-  SOC: { svc: 'chat-service', docs: ['03-social-multiplayer/SOCIAL_SYSTEM.md'], ops: /^\/social\//, tc: ['SOC'] },
-  CHAT: { svc: 'chat-service', docs: ['03-social-multiplayer/CHAT_SYSTEM.md'], ops: /^\/chat\//, tc: ['CHAT'] },
-  MOD: { svc: 'chat-service', docs: ['03-social-multiplayer/MODERATION.md', '10-security/CHILD_SAFETY.md'], ops: /sensitive|moderation|\/chat\/reports|\/social\/(blocks|mutes)|chat\/categories/, tc: ['CHAT'] },
-  NTF: { svc: 'chat-service', docs: ['03-social-multiplayer/SOCIAL_SYSTEM.md'], ops: /^\/notifications/, tc: ['SOC'] },
-  GAM: { svc: 'game-service', docs: ['01-game-design/PROGRESSION_SYSTEM.md'], ops: /^\/game\/(xp|progression|achievements)/, tc: ['GAM'] },
-  RWD: { svc: 'game-service', docs: ['01-game-design/PROGRESSION_SYSTEM.md', '01-game-design/INVENTORY_ECONOMY.md'], ops: /^\/game\/(xp|progression|wallet|inventory)|economy/, tc: ['GAM', 'ECO'] },
-  ECO: { svc: 'game-service', docs: ['01-game-design/INVENTORY_ECONOMY.md'], ops: /^\/game\/(inventory|wallet|shop|collections|achievements)|economy/, tc: ['ECO'] },
-  CHL: { svc: 'game-service', docs: ['01-game-design/CHALLENGE_BOSS_SYSTEM.md'], ops: /challenge|boss/, tc: ['CHL'] },
-  EVT: { svc: 'game-service', docs: ['01-game-design/EVENT_SEASON_SYSTEM.md'], ops: /^\/game\/(events|community-goals|season-track)|^\/game-admin\/events|school-events|event-templates/, tc: ['EVT'] },
-  CMS: { svc: 'learning-service · game-service (game-admin)', docs: ['04-admin-portal/ADMIN_PORTAL.md'], ops: /^\/(cms|game-admin|game-media)/, tc: ['CMS'] },
-  LMS: { svc: 'learning-service', docs: ['04-admin-portal/SCHOOL_LMS.md'], ops: /^\/lms\//, tc: ['LMS', 'DASH'] },
-  AUD: { svc: 'identity-service', docs: ['10-security/SECURITY_ARCHITECTURE.md'], ops: /trash|login-events|roles|permissions|user-roles/, tc: ['AUD'] },
+  AUTH: { svc: 'module identity', docs: ['09-identity/KEYCLOAK_SSO.md', '09-identity/IDENTITY_MAPPING.md'], ops: /^\/(auth|me)\//, tc: ['AUTH'] },
+  ORG: { svc: 'module identity', docs: ['06-architecture/MULTITENANCY.md', '09-identity/IDENTITY_MAPPING.md'], ops: /^\/(tenant\/(settings|schools|students|users)|admin\/(tenants|tenant-|catalog|schools|school-imports)|catalog\/|schools\/|students\/)/, tc: ['ORG', 'TEN'] },
+  SIS: { svc: 'module identity', docs: ['09-identity/SIS_INTEGRATION.md', '09-identity/ACCOUNT_PROVISIONING.md'], ops: /sis/, tc: ['SIS'] },
+  CUR: { svc: 'module learning', docs: ['02-learning/CURRICULUM_MODEL.md'], ops: /^\/learning\/(curricula|subjects|topics|objectives|lessons)/, tc: ['LRN'] },
+  CNT: { svc: 'module learning', docs: ['02-learning/CONTENT_MODEL.md'], ops: /^\/cms\/(learning\/(content|translations)|media)/, tc: ['CNT'] },
+  QB: { svc: 'module learning', docs: ['02-learning/QUESTION_BANK.md'], ops: /question/, tc: ['LRN'] },
+  EXR: { svc: 'module learning', docs: ['02-learning/ACTIVITY_ENGINE.md'], ops: /activit|attempt|simulation|hint|regrade/, tc: ['ACT', 'LRN', 'VID', 'SIM', 'MATH'] },
+  EXM: { svc: 'module learning', docs: ['02-learning/EXAM_ENGINE.md'], ops: /^\/exams\//, tc: ['EXM'] },
+  PRG: { svc: 'module learning', docs: ['02-learning/LEARNING_ANALYTICS.md'], ops: /progress|recommendation|wrong-questions/, tc: ['LRN'] },
+  ANL: { svc: 'module learning · module game', docs: ['02-learning/LEARNING_ANALYTICS.md', '11-operations/GAME_ANALYTICS.md', '07-backend/DASHBOARD_DATA.md'], ops: /analytics|dashboard|telemetry|\/reports/, tc: ['ANL', 'DASH'] },
+  GAME: { svc: 'module game', docs: ['01-game-design/WORLD_DESIGN.md', '01-game-design/CHARACTER_SYSTEM.md'], ops: /^\/game\/(profile|avatar|world|sessions|client-config|content-manifest|levels|level-sessions)/, tc: ['WLD', 'GAM'] },
+  QST: { svc: 'module game', docs: ['01-game-design/QUEST_SYSTEM.md'], ops: /quest/, tc: ['GAM'] },
+  MG: { svc: 'module learning · game client', docs: ['08-game-client/MINIGAME_ENGINE.md'], ops: /minigame/, tc: ['ACT'] },
+  MP: { svc: 'module competition · realtime', docs: ['03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md', '06-architecture/REALTIME_ARCHITECTURE.md'], ops: /^\/multiplayer\/rooms|realtime-tickets|world\/friends/, tc: ['PTY', 'CMP'] },
+  PTY: { svc: 'module competition', docs: ['03-social-multiplayer/PARTY_SYSTEM.md'], ops: /^\/multiplayer\/(parties|invitations)/, tc: ['PTY'] },
+  MM: { svc: 'module competition', docs: ['03-social-multiplayer/MATCHMAKING.md'], ops: /matchmaking/, tc: ['MM'] },
+  CMP: { svc: 'module competition', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /^\/competition\/(duels|matches)/, tc: ['CMP'] },
+  RNK: { svc: 'module competition', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /ratings/, tc: ['CMP'] },
+  LDB: { svc: 'module competition', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /^\/leaderboards/, tc: ['CMP'] },
+  TRN: { svc: 'module competition', docs: ['01-game-design/COMPETITION_SYSTEM.md'], ops: /tournament/, tc: ['CMP'] },
+  SOC: { svc: 'module chat', docs: ['03-social-multiplayer/SOCIAL_SYSTEM.md'], ops: /^\/social\//, tc: ['SOC'] },
+  CHAT: { svc: 'module chat', docs: ['03-social-multiplayer/CHAT_SYSTEM.md'], ops: /^\/chat\//, tc: ['CHAT'] },
+  MOD: { svc: 'module chat', docs: ['03-social-multiplayer/MODERATION.md', '10-security/CHILD_SAFETY.md'], ops: /sensitive|moderation|\/chat\/reports|\/social\/(blocks|mutes)|chat\/categories/, tc: ['CHAT'] },
+  NTF: { svc: 'module chat', docs: ['03-social-multiplayer/SOCIAL_SYSTEM.md'], ops: /^\/notifications/, tc: ['SOC'] },
+  GAM: { svc: 'module game', docs: ['01-game-design/PROGRESSION_SYSTEM.md'], ops: /^\/game\/(xp|progression|achievements)/, tc: ['GAM'] },
+  RWD: { svc: 'module game', docs: ['01-game-design/PROGRESSION_SYSTEM.md', '01-game-design/INVENTORY_ECONOMY.md'], ops: /^\/game\/(xp|progression|wallet|inventory)|economy/, tc: ['GAM', 'ECO'] },
+  ECO: { svc: 'module game', docs: ['01-game-design/INVENTORY_ECONOMY.md'], ops: /^\/game\/(inventory|wallet|shop|collections|achievements)|economy/, tc: ['ECO'] },
+  CHL: { svc: 'module game', docs: ['01-game-design/CHALLENGE_BOSS_SYSTEM.md'], ops: /challenge|boss/, tc: ['CHL'] },
+  EVT: { svc: 'module game', docs: ['01-game-design/EVENT_SEASON_SYSTEM.md'], ops: /^\/game\/(events|community-goals|season-track)|^\/game-admin\/events|school-events|event-templates/, tc: ['EVT'] },
+  CMS: { svc: 'module learning · module game (game-admin)', docs: ['04-admin-portal/ADMIN_PORTAL.md'], ops: /^\/(cms|game-admin|game-media)/, tc: ['CMS'] },
+  LMS: { svc: 'module learning', docs: ['04-admin-portal/SCHOOL_LMS.md'], ops: /^\/lms\//, tc: ['LMS', 'DASH'] },
+  AUD: { svc: 'module identity', docs: ['10-security/SECURITY_ARCHITECTURE.md'], ops: /trash|login-events|roles|permissions|user-roles/, tc: ['AUD'] },
   OPS: { svc: 'pkg/ (platform kit) · mọi service', docs: ['11-operations/DEPLOYMENT.md', '11-operations/MONITORING.md'], ops: /settings|student-cleanup|chat-retention|users\/\{user_id\}:lock/, tc: ['SVC', 'PERF'] },
 };
 // Mã domain chỉ dùng cho AC/US/TC, ánh xạ về domain FR.
-const ALIAS = { GDD: 'GAME', WLD: 'GAME', TEN: 'ORG', LRN: 'EXR', ACT: 'EXR', SIM: 'EXR', VID: 'EXR', WR: 'EXR', MATH: 'EXR', DASH: 'ANL' };
+const ALIAS = { GDD: 'GAME', WLD: 'GAME', TEN: 'ORG', LRN: 'EXR', ACT: 'EXR', SIM: 'EXR', VID: 'EXR', MATH: 'EXR', DASH: 'ANL' };
 // Tên domain khi PRD gộp nhiều mã dưới một heading.
 const NAMES = { CHL: 'Challenge & Boss', ECO: 'Kinh tế, vật phẩm, sưu tầm', GAM: 'XP, level, tiến trình', RWD: 'Phần thưởng', AUD: 'Audit', OPS: 'Vận hành' };
 const dname = (d) => NAMES[d] ?? domainName[d] ?? '';
@@ -215,13 +215,13 @@ const ids = (arr) => arr.map((r) => r.id);
 const L = [];
 L.push('# Ma trận truy vết yêu cầu (RTM)', '');
 L.push('> Trạng thái: Draft · Owner: Product Manager + QA Lead · **File sinh tự động** bởi `scripts/docs/build-rtm.mjs`: không sửa tay; sửa nguồn rồi chạy `node scripts/docs/build-rtm.mjs` (CI chạy `--check`).');
-L.push(`> Nguồn: [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) (FR/US/AC) · [TEST_STRATEGY](TEST_STRATEGY.md) và bảng \`TC-*\` trong tài liệu domain · \`${SPEC}\` · [AGENTS.md §6](../../AGENTS.md#6-domain--tài-liệu--service) (service sở hữu)`, '');
+L.push(`> Nguồn: [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) (FR/US/AC) · [TEST_STRATEGY](TEST_STRATEGY.md) và bảng \`TC-*\` trong tài liệu domain · \`${SPEC}\` · [AGENTS.md §6](../../AGENTS.md#6-domain--tài-liệu--module) (module sở hữu)`, '');
 L.push('## 1. Cách đọc', '');
 L.push('- **Tường minh**: tài liệu/operation/TC có nhắc đúng mã FR (hoặc FR nhắc đúng path/operationId). **Suy luận**: ghép theo domain của mã (tài liệu sở hữu, mẫu path, tiền tố TC) — cần rà khi review, không coi là bằng chứng.');
 L.push('- FR có phase `—` (mở rộng sau, ngoài Release 1.0) vẫn liệt kê nhưng không tính vào báo cáo mồ côi.');
 L.push('- AC/US gắn với FR theo domain (PRD chưa ghi FR cho từng AC). Muốn liên kết tường minh: ghi mã FR/AC trong cột kịch bản của bảng TC, hoặc trong `description` của operation OpenAPI.', '');
 L.push('## 2. Tổng hợp theo domain', '');
-L.push('| Domain | Service sở hữu | FR | FR có tài liệu tường minh | FR có operation tường minh | Operation suy luận | FR có TC tường minh | TC suy luận | US | AC | FR / AC mở rộng ở tài liệu sở hữu |');
+L.push('| Domain | Module sở hữu | FR | FR có tài liệu tường minh | FR có operation tường minh | Operation suy luận | FR có TC tường minh | TC suy luận | US | AC | FR / AC mở rộng ở tài liệu sở hữu |');
 L.push('|---|---|---|---|---|---|---|---|---|---|---|');
 for (const d of domOrder) {
   const rs = byDom.get(d); const cfg = DOMAINS[d];

@@ -9,7 +9,7 @@ Không được dùng điểm thi đấu để đánh giá năng lực học t�
 ## Quyết định
 
 - Rating thi đấu dùng **Glicko-2** theo `(student, mode, subject, season)`; chỉ dùng cho ghép trận và xếp hạng thi đấu.
-- Rating **không** hiển thị cho giáo viên như chỉ số năng lực, **không** ảnh hưởng mastery/điểm.
+- Rating **không** hiển thị cho nhà trường như chỉ số năng lực, **không** ảnh hưởng mastery/điểm.
 - Năm loại số liệu tách biệt: **Learning Score**, **Learning Mastery**, **Game Rating**, **Game XP/Level**, **Competition Points**.
 
 ## Hệ quả
@@ -21,3 +21,4 @@ Không được dùng điểm thi đấu để đánh giá năng lực học t�
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |

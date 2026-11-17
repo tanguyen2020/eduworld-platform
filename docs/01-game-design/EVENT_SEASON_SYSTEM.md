@@ -17,7 +17,7 @@ Tài liệu này là **nguồn duy nhất** cho: loại sự kiện live-ops, m�
 | Event Builder (đặc tả nghiệp vụ) | Màn hình Event Builder → [ADMIN_PORTAL §3.14](../04-admin-portal/ADMIN_PORTAL.md) |
 | Quy tắc lành mạnh của live-ops | Nhắc nghỉ, giờ truy cập → [CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17) |
 
-**Service sở hữu:** `game-service` (DB `eduworld_game`). Lịch mùa do `competition-service` sở hữu; game-service nhận projection `ref.seasons` qua event `season.started`/`season.ended`.
+**Module sở hữu:** module `game` (DB `eduworld_game`). Lịch mùa do module `competition` sở hữu; module game nhận projection `ref.seasons` qua event `season.started`/`season.ended`.
 
 ## 2. Nguyên tắc
 
@@ -92,7 +92,7 @@ stateDiagram-v2
 
 | Trạng thái | Học sinh thấy | Hành vi hệ thống |
 |---|---|---|
-| `Scheduled` | "Sắp diễn ra" trong Event Center (tối đa 7 ngày trước) | Scheduler (worker game-service, khóa singleton) chuẩn bị snapshot/bundle trang trí lên CDN trước 24 giờ |
+| `Scheduled` | "Sắp diễn ra" trong Event Center (tối đa 7 ngày trước) | Scheduler (worker module game, khóa singleton) chuẩn bị snapshot/bundle trang trí lên CDN trước 24 giờ |
 | `Live` | Quest/challenge/boss/shop của sự kiện; trang trí vùng; tiến độ community goal | Phát `event.started`; content manifest các tenant liên quan thêm thành phần sự kiện |
 | `Suspended` (dừng khẩn cấp) | Ẩn thành phần sự kiện; thông báo nhẹ "Sự kiện tạm dừng" | Lượt chơi đang dở **vẫn kết thúc bình thường** theo version đã ghim (ADR-0043); không cấp thưởng mới từ sự kiện; audit + lý do bắt buộc |
 | `Ended` | Không nhận quest/hoạt động sự kiện mới; quest đã nhận vẫn hoàn thành được và **nhận thưởng đã đạt** trong `claim_grace_hours` | Phần thưởng mốc chưa nhận được **tự cấp** khi chuyển sang `Archived` (không mất) |
@@ -112,7 +112,7 @@ stateDiagram-v2
 | `metric` | `correct_answers` (theo môn/LO), `activities_completed`, `quests_completed`, `discoveries_found`, `boss_phases_cleared`, `coop_sessions` | [Proposed] |
 | `scope` | `school` (mặc định), `tenant`, `platform` (khi platform tổ chức; mỗi tenant xem tiến độ chung + đóng góp tenant mình) | [Proposed] |
 | `target` | Ngưỡng tổng; mốc 25/50/75/100% | [Proposed] |
-| Nguồn đóng góp | **Chỉ domain event server đã kiểm chứng** (`exercise.submitted` qua attempt hợp lệ, `quest.completed`, `world.discovery_found`…); client không gửi số đóng góp | [Confirmed — server-authoritative] |
+| Nguồn đóng góp | **Chỉ domain event server đã kiểm chứng** (`activity.graded` qua attempt hợp lệ, `quest.completed`, `world.discovery_found`…); client không gửi số đóng góp | [Confirmed — server-authoritative] |
 | Chống gian lận | Khử trùng theo `source_event_id`; trần đóng góp mỗi học sinh mỗi ngày; bỏ đóng góp từ tài khoản đang bị cờ gian lận ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)); câu trả lời đúng chỉ tính khi attempt không bị đánh dấu `suspicious_speed` | [Proposed] |
 | Tổng hợp | Đếm nhanh bằng Valkey (`ew:game:cgoal:<goal_id>:<scope_id>`), ghi bền vững bảng đóng góp append-only; tổng chính thức tính lại từ PostgreSQL định kỳ, mất Valkey thì dựng lại | [Proposed] |
 | Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; trường có thể xem đóng góp theo lớp (lớp 4–9) | [Proposed] |
@@ -126,6 +126,8 @@ stateDiagram-v2
 |---|---|
 | Lịch mùa 8 tuần, chủ đề học kỳ, soft reset rating, Competition Points, thưởng cuối mùa theo tier | [COMPETITION_SYSTEM §8](COMPETITION_SYSTEM.md#8-season-tier-competition-points) |
 | **Season track** (đường phần thưởng mùa), **điểm mùa**, chủ đề trang trí mùa trong thế giới | Tài liệu này |
+
+Season track (mốc M3) đọc lịch mùa của module competition qua projection `ref.seasons` (event `season.*`); trước khi lịch mùa có ở M4b, module game dùng **lịch mùa fixture** do platform cấu hình (cùng cấu trúc, thay bằng dữ liệu thật khi module competition phát `season.*`) [Confirmed — Technical Architect 2026-11-16].
 
 ### 7.2. Season track miễn phí
 
@@ -165,7 +167,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 ## 10. Sự kiện của trường (tenant)
 
 - Platform tạo **template sự kiện** (`event-templates`) với `allowed_params` và gán cho tenant (ADR-0029).
-- Giáo viên/School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (lớp/khối trong tenant), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
+- School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (lớp/khối trong tenant), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
 - Văn bản do tenant nhập đi qua kiểm tra từ nhạy cảm (ADR-0030) trước khi lưu [Proposed].
 - Tenant không đổi được luật chơi, cách tính điểm, phần thưởng ngoài template (ADR-0027).
 - Tối đa `school_events_concurrent_per_tenant` sự kiện đang chạy mỗi tenant.
@@ -183,13 +185,13 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 - Mỗi vùng tối đa **một** bộ trang trí sự kiện hoạt động cùng lúc [Proposed].
 - Community goal hiển thị bằng một đối tượng 3D đơn giản + UI; cập nhật tiến độ tối đa mỗi `community_goal_progress_flush_seconds`, không đẩy realtime theo từng đóng góp.
 
-## 13. Dữ liệu (game-service, `eduworld_game`)
+## 13. Dữ liệu (module game, `eduworld_game`)
 
 | Bảng | Loại | Mô tả |
 |---|---|---|
 | `events`, `event_versions` | G (platform) / T (tenant) | Định nghĩa + version (payload theo `event.schema.json`), con trỏ `current_version_id` |
 | `event_templates`, `event_template_versions` | G | Template cho tenant, `allowed_params` |
-| `event_runs` | G/T | Một lần chạy: `event_version_id`, `status` (`scheduled/live/suspended/ended/cancelled/archived`), `starts_at`, `ends_at`, `suspended_reason` |
+| `event_runs` | G/T | Một lần chạy: `event_version_id`, `status` (`scheduled/live/suspended/ended/cancelled/archived`), `starts_at`, `ends_at`, `suspended_reason` (`varchar(1000)`) |
 | `event_participation` | T | `(event_run_id, student_id)` unique; `event_points`, `joined_at` |
 | `event_point_ledger` | T, append-only | Bút toán điểm sự kiện, idempotent theo `source_event_id` |
 | `community_goals` | G/T | Định nghĩa goal theo run, `metric`, `scope`, `target`, mốc |
@@ -198,13 +200,13 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 | `season_tracks`, `season_track_versions` | G | Track theo `season_id` (payload theo `season-track.schema.json`) |
 | `season_point_ledger` | T, append-only | Bút toán điểm mùa, `source_code`, `capped` |
 | `season_track_progress` | T | `(season_id, student_id)` unique; `points`, `tier`, `claimed_tiers[]` |
-| `ref.seasons` | projection | Lịch mùa từ competition-service |
+| `ref.seasons` | projection | Lịch mùa từ module competition |
 
 Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [DATABASE_DESIGN §2.8c](../07-backend/DATABASE_DESIGN.md). Phần thưởng cấp qua `RewardGrant` + sổ cái của [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) (ADR-0049).
 
 ## 14. API (đề xuất)
 
-**Người chơi (game-service):**
+**Người chơi (module game):**
 
 | Method | Path | Mô tả |
 |---|---|---|
@@ -217,9 +219,9 @@ Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [
 | POST | `/api/v1/game/season-track/tiers/{tier}:claim` | Nhận thưởng cấp (`Idempotency-Key`) |
 | GET | `/api/v1/game/season-track/history` | Các mùa trước |
 
-**Tenant (workspace C, route ngoại lệ tới game-service):** `GET /api/v1/lms/event-templates`, `GET/POST /api/v1/lms/school-events`, `GET/PATCH /api/v1/lms/school-events/{event_id}`, `POST /api/v1/lms/school-events/{event_id}:cancel`.
+**Tenant (workspace C, route ngoại lệ tới module game):** `GET /api/v1/lms/event-templates`, `GET/POST /api/v1/lms/school-events`, `GET/PATCH /api/v1/lms/school-events/{event_id}`, `POST /api/v1/lms/school-events/{event_id}:cancel`.
 
-**Game Studio (`/api/v1/game-admin/{config_type}`, gateway nội bộ + MFA):** `events` (thay `world-events`), `event-templates`, `season-tracks` (game-service); `seasons` giữ ở competition-service. Vận hành: `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` (lý do bắt buộc), `GET .../runs/{run_id}/stats`.
+**Game Studio (`/api/v1/game-admin/{config_type}`, gateway nội bộ + MFA):** `events` (thay `world-events`), `event-templates`, `season-tracks` (module game); `seasons` giữ ở module competition. Vận hành: `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` (lý do bắt buộc), `GET .../runs/{run_id}/stats`.
 
 ## 15. Event NATS
 
@@ -230,7 +232,7 @@ Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [
 | `event.milestone_claimed` | reward, analytics | `event_run_id`, `milestone_id`, `student_id` |
 | `community_goal.milestone_reached`, `community_goal.completed` | reward (cấp thưởng cho người có đóng góp), RT, WLD (đổi trang trí) | `goal_id`, `scope_id`, `milestone_pct` |
 | `season_track.tier_reached`, `season_track.reward_claimed` | reward, RT, analytics | `season_id`, `student_id`, `tier` |
-| `season.started` / `season.ended` | game-service (projection, mở/đóng track, tự cấp thưởng chưa nhận) | Do competition-service phát |
+| `season.started` / `season.ended` | module game (projection, mở/đóng track, tự cấp thưởng chưa nhận) | Do module competition phát |
 
 Catalog chuẩn: [EVENT_DESIGN §4.5](../07-backend/EVENT_DESIGN.md).
 

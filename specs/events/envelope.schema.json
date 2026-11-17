@@ -12,14 +12,14 @@
     "schema_version": { "type": "integer", "minimum": 1, "maximum": 1000 },
     "occurred_at": { "type": "string", "format": "date-time" },
     "recorded_at": { "type": "string", "format": "date-time" },
-    "producer": { "type": "string", "maxLength": 64, "pattern": "^(identity|learning|game|competition|chat|realtime)-service/[a-z0-9_]+$", "description": "<service>/<module>" },
+    "producer": { "type": "string", "maxLength": 64, "pattern": "^(identity|learning|game|competition|chat|realtime)/[a-z0-9_]+$", "description": "<module>/<thành phần> (ADR-0074)" },
     "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null chỉ cho event phạm vi platform (vd. publish cấu hình Game Studio)" },
     "actor": {
       "type": "object",
       "required": ["type"],
       "additionalProperties": false,
       "properties": {
-        "type": { "type": "string", "enum": ["student", "teacher", "staff", "admin", "system", "service"] },
+        "type": { "type": "string", "enum": ["student", "staff", "system", "service"], "description": "staff: nhân sự trường hoặc platform (ADR-0081, phân biệt bằng tenant/role); service: service account" },
         "id": { "type": ["string", "null"], "maxLength": 64, "description": "user_id (UUID) hoặc mã job/service" }
       }
     },

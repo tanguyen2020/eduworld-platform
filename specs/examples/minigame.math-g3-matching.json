@@ -64,7 +64,7 @@
     "game_score": "points_plus_bonus"
   },
   "feedback_policy": {
-    "mode": "immediate",
+    "timing": "immediate",
     "show_explanation": true,
     "show_correct_answer": true
   },

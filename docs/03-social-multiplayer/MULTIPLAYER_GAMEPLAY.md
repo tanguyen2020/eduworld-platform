@@ -31,7 +31,7 @@ Yêu cầu nguồn **[Confirmed]** (Master Prompt §13.4, §19, Party Addendum):
 
 1. **Server-authoritative** cho mọi trạng thái có giá trị: kết quả, tiến độ quest chung, điểm trận, trạng thái boss (ADR-0016) **[Confirmed]**.
 2. **Không phải persistent MMO**: thế giới Hybrid gồm hub instance, private instance và match/boss room (ADR-0012) **[Proposed]**.
-3. **Một kênh WebSocket** tới `realtime-gateway`; logic room/party/matchmaking/battle chạy trong **competition-service**, boss/challenge PvE chạy trong **game-service** (dùng chung `pkg/roomhost`) **[Proposed]**.
+3. **Một kênh WebSocket** tới `realtime`; logic room/party/matchmaking/battle chạy trong **module competition**, boss/challenge PvE chạy trong **module game** (dùng chung `pkg/roomhost`) **[Proposed]**.
 4. **An toàn trẻ em trước hết:** chỉ gặp người trong phạm vi policy cho phép (cùng trường mặc định, ADR-0054), không ghép lớp nhỏ với lớp lớn ở không gian chung; hiển thị nickname, không tên thật **[Confirmed]**.
 5. Valkey giữ trạng thái tạm (presence, room registry, lobby); PostgreSQL giữ bản ghi bền vững (room tóm tắt, `session_memberships`, party, match, encounter) (ADR-0004) **[Confirmed]**.
 
@@ -58,14 +58,14 @@ flowchart TB
   end
 ```
 
-| `room_type` | Trải nghiệm | Sức chứa | Vòng đời | Service | Nhãn |
+| `room_type` | Trải nghiệm | Sức chứa | Vòng đời | Module | Nhãn |
 |---|---|---|---|---|---|
-| `hub_instance` | Bản sao một khu chung (Main Hub, các khu học tập, Arena sảnh, Social Zone, Quest Zone — [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)) | 40 (theo `world_area.capacity`) | Tạo khi cần, đóng sau 5 phút rỗng | competition-service | [Proposed] |
-| `private_instance` | Khu riêng cho party làm quest/khám phá | = số thành viên party (≤ 8) | Tạo khi party bắt đầu activity, đóng khi activity kết thúc hoặc 10 phút rỗng | competition-service | [Proposed] |
-| `lobby` | Phòng chờ trước trận (ready check, chia đội) | Theo mode | 30–120 s | competition-service | [Proposed] |
-| `battle` | Knowledge Battle 1v1, Team Battle, Timed Quiz, trận giải | 2–10 | Một trận | competition-service | [Proposed] |
-| `coop` | Co-op Challenge, puzzle nhiều người | 2–8 | Một thử thách | competition-service | [Proposed] |
-| `boss` | Boss encounter solo hoặc party | 1–8 (theo `party_size` của boss) | Một encounter | game-service | [Proposed] |
+| `hub_instance` | Bản sao một khu chung (Main Hub, các khu học tập, Arena sảnh, Social Zone, Quest Zone — [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)) | 40 (theo `world_area.capacity`) | Tạo khi cần, đóng sau 5 phút rỗng | module competition | [Proposed] |
+| `private_instance` | Khu riêng cho party làm quest/khám phá | = số thành viên party (≤ 8) | Tạo khi party bắt đầu activity, đóng khi activity kết thúc hoặc 10 phút rỗng | module competition | [Proposed] |
+| `lobby` | Phòng chờ trước trận (ready check, chia đội) | Theo mode | 30–120 s | module competition | [Proposed] |
+| `battle` | Knowledge Battle 1v1, Team Battle, Timed Quiz, trận giải | 2–10 | Một trận | module competition | [Proposed] |
+| `coop` | Co-op Challenge, puzzle nhiều người | 2–8 | Một thử thách | module competition | [Proposed] |
+| `boss` | Boss encounter solo hoặc party | 1–8 (theo `party_size` của boss) | Một encounter | module game | [Proposed] |
 
 - **Chat đi kèm (luôn có):** `lobby`/`battle`/`coop` dùng channel `match` (+ `team` mỗi đội); party dùng channel `party` suốt vòng đời, kể cả trong `private_instance` và `boss` ([CHAT_SYSTEM §4.1](CHAT_SYSTEM.md#41-vòng-đời-channel-gameplay-always-on)).
 - **Party Lobby** không phải room riêng: là trạng thái của party ([PARTY_SYSTEM §5](PARTY_SYSTEM.md#5-party-lobby)); khi bắt đầu activity mới sinh `private_instance` / `coop` / `boss` / ticket ghép trận.
@@ -81,8 +81,9 @@ flowchart TB
 | `in_match` | Đang thi đấu hoặc đánh boss | Bạn bè, party |
 | `away` | Không có input > 5 phút | Bạn bè, party |
 
+- Năm giá trị trên là **enum presence duy nhất** của hệ thống, dùng chung cho realtime (AsyncAPI), `PlayerCard` và REST; không module hay client nào định nghĩa enum presence khác. Người bật "Ẩn trạng thái" hiển thị là `offline` với người không được thấy.
 - Presence chỉ là trạng thái tạm (Valkey, TTL theo heartbeat — [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)), không lưu bền vững; thống kê thời gian chơi lấy từ `game.game_sessions`.
-- Học sinh có thể bật **"Ẩn trạng thái"** với bạn bè (không áp dụng với party đang tham gia và giáo viên lớp) **[Proposed]**.
+- Học sinh có thể bật **"Ẩn trạng thái"** với bạn bè (không áp dụng với party đang tham gia) **[Proposed]**.
 
 ## 6. Gán instance
 
@@ -115,7 +116,7 @@ flowchart TD
 | Cùng khám phá | Discovery point tìm được bởi một thành viên ở instance party tính cho cả nhóm nếu quest/khu cho phép; mỗi người vẫn có tiến độ khám phá riêng | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | Co-op quest | `shared_progress_policy`: bước gameplay chia sẻ, bước học tập mỗi người tự làm | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [PARTY_SYSTEM §7.1](PARTY_SYSTEM.md#71-shared-quest-progress) |
 | Puzzle / thử thách nhóm | Room `coop`; mỗi đóng góp là câu trả lời của **một** học sinh, ghi vào attempt của người đó | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
-| Boss nhóm | Room `boss` (game-service); đóng góp cá nhân + tiến độ nhóm; sai không bị phạt hay làm xấu hổ | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| Boss nhóm | Room `boss` (module game); đóng góp cá nhân + tiến độ nhóm; sai không bị phạt hay làm xấu hổ | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 | Emote cùng nhau | Emote đồng bộ cho người cùng instance; rate limit 1 emote/2 s | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) |
 
 Bất biến **[Confirmed]**: kết quả học tập (attempt, điểm, mastery) luôn **riêng từng học sinh**; tiến độ nhóm chỉ dùng cho tiến độ game và phần thưởng.
@@ -144,7 +145,7 @@ Tần suất, interest grid, envelope: [REALTIME_ARCHITECTURE](../06-architectur
 | Chế độ / room | Grace | Trong lúc mất kết nối | Hết grace | Nhãn |
 |---|---|---|---|---|
 | `hub_instance` | 30 s | Avatar đứng yên, mờ | Rời instance; quay lại → ưu tiên instance cũ | [Proposed] |
-| `private_instance` (quest co-op) | 120 s | Thành viên khác tiếp tục nếu quest `allow_continue_on_disconnect=true` | Rời activity; tiến độ cá nhân giữ nguyên, vào lại được khi activity còn mở | [Proposed] |
+| `private_instance` (quest co-op) | 120 s | Thành viên khác tiếp tục theo quy tắc disconnect của [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress) (`party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`) | Rời activity; tiến độ cá nhân giữ nguyên, vào lại được khi activity còn mở | [Proposed] |
 | `boss` | 120 s | Encounter tiếp tục nếu số người còn lại ≥ `party_size.min` | Rời encounter; đóng góp đã có được giữ | [Proposed] |
 | `lobby` (ready check) | 10 s | — | Coi như `not_ready`, proposal hủy, người còn lại quay lại hàng chờ với ưu tiên | [Proposed] |
 | `battle_1v1` | 30 s | Câu hiện tại chạy tiếp; không trả lời = sai | Thua do `abandon`, tính rating, đối thủ thắng | [Proposed] |
@@ -155,7 +156,7 @@ Tần suất, interest grid, envelope: [REALTIME_ARCHITECTURE](../06-architectur
 
 ## 10. Session membership
 
-`session_memberships` ghi ai ở room nào, khi nào, để điều tra báo cáo hành vi và thống kê co-op: `room_id`, `room_type`, `tenant_id`, `school_id`, `student_id`, `game_session_id`, `party_id?`, `match_id?`, `encounter_id?`, `joined_at`, `left_at`, `leave_reason` (`left`, `disconnected`, `kicked`, `timeout`, `room_closed`, `transferred`, `replaced_by_other_device`). Ghi cho `private_instance`, `lobby`, `battle`, `coop`, `boss`; hub chỉ ghi khi bật `audit_hub_membership` (mặc định bật cho pilot, giữ 90 ngày) **[Proposed]**.
+`session_memberships` ghi ai ở room nào, khi nào, để điều tra báo cáo hành vi và thống kê co-op: `room_id`, `room_type`, `tenant_id`, `school_id`, `student_id`, `game_session_id`, `party_id?`, `match_id?`, `encounter_id?`, `joined_at`, `left_at`, `leave_reason` (`left`, `disconnected`, `kicked`, `timeout`, `room_closed`, `transferred`, `replaced_by_other_device`). Ghi cho `private_instance`, `lobby`, `battle`, `coop`, `boss`; hub chỉ ghi khi bật `audit_hub_membership` (mặc định bật cho pilot, giữ 90 ngày) **[Confirmed — Technical Architect 2026-11-16]**.
 
 ## 11. Anti-cheat liên quan
 

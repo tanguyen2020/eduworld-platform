@@ -33,7 +33,23 @@
       "$ref": "#/$defs/richContent"
     },
     "render_payload": {
-      "type": "object"
+      "type": "object",
+      "description": "Phần gửi cho client (cấu trúc theo loại câu ở $defs). Không bao giờ chứa answer_key, scoring_rule, accepted_answers, correct_option_id, correct_option_ids, explanation, feedback, hints (ADR-0016); DTO render loại bỏ options[].feedback và options[].misconception_tag.",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "answer_key",
+            "scoring_rule",
+            "accepted_answers",
+            "correct_option_id",
+            "correct_option_ids",
+            "explanation",
+            "feedback",
+            "hints",
+            "min_response_ms"
+          ]
+        }
+      }
     },
     "answer_key": {
       "type": "object"
@@ -49,7 +65,18 @@
       "items": {
         "$ref": "#/$defs/richContent"
       },
-      "maxItems": 5
+      "maxItems": 5,
+      "description": "Gợi ý theo cấp (tối đa 5), CHỈ phía server; client lấy từng cấp qua POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next. Số gợi ý đã dùng ghi vào learning event (hints_used)."
+    },
+    "worked_example_ref": {
+      "$ref": "#/$defs/uuid",
+      "description": "Tham chiếu khối worked_example trong lesson/learning material cùng LO (CONTENT_MODEL §9.2); client hiện nút \"Xem ví dụ mẫu\" sau khi trả lời sai [Proposed]."
+    },
+    "min_response_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 600000,
+      "description": "CHỈ phía server. Ngưỡng thời gian tối thiểu để lần trả lời không bị gắn rapid_guess; vắng mặt = mặc định theo loại câu (ACTIVITY_ENGINE §11.1) [Proposed]."
     },
     "max_score": {
       "type": "number",
@@ -146,20 +173,7 @@
       "description": "ID ngắn, ổn định trong version, không tiết lộ thứ tự (vd. o_7f3a, b_1, z_even)."
     },
     "questionType": {
-      "type": "string",
-      "enum": [
-        "single_choice",
-        "multiple_choice",
-        "true_false",
-        "fill_blank",
-        "short_answer",
-        "numeric",
-        "matching",
-        "ordering",
-        "drag_drop",
-        "image_based",
-        "interactive"
-      ]
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
     },
     "i18nText": {
       "description": "Văn bản nội dung học tập. Chuỗi thuần = viết bằng content_language; object = có bản dịch (ADR-0056 mục 3).",
@@ -182,6 +196,33 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 1000
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "i18nShortFeedback": {
+      "description": "Văn bản ngắn (≤ 500 ký tự) theo content_language, có thể kèm bản dịch (ADR-0056).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "vi": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
             }
           },
           "additionalProperties": false
@@ -328,6 +369,10 @@
           "type": "string",
           "maxLength": 64,
           "description": "Chỉ lưu server; bị loại khỏi DTO gửi client."
+        },
+        "feedback": {
+          "$ref": "#/$defs/i18nShortFeedback",
+          "description": "Phản hồi riêng cho phương án này (EDU_FIT_REVIEW PED-04) [Proposed]. Thuộc phần đáp án: bị loại khỏi DTO render như misconception_tag; chỉ trả trong ActivityResponseResult.feedback sau khi chấm, theo FeedbackTiming (QUESTION_BANK §2, ACTIVITY_ENGINE §8.2)."
         }
       },
       "additionalProperties": false
@@ -799,7 +844,7 @@
       "type": "object",
       "properties": {
         "type": {
-          "const": "fill_blank"
+          "const": "fill_in_blank"
         },
         "render_payload": {
           "type": "object",
@@ -1423,6 +1468,329 @@
           "additionalProperties": false
         }
       }
+    },
+    "response": {
+      "description": "Câu trả lời thô của học sinh theo loại câu (EDU_FIT_REVIEW SPC-01). Server biết loại từ question_version_id của item và validate đúng nhánh; sai cấu trúc → 422 INVALID_RESPONSE. OpenAPI QuestionResponse và AsyncAPI AnswerResponse giữ cấu trúc y hệt.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/singleChoiceResponse"
+        },
+        {
+          "$ref": "#/$defs/multipleChoiceResponse"
+        },
+        {
+          "$ref": "#/$defs/trueFalseResponse"
+        },
+        {
+          "$ref": "#/$defs/fillInBlankResponse"
+        },
+        {
+          "$ref": "#/$defs/shortAnswerResponse"
+        },
+        {
+          "$ref": "#/$defs/numericResponse"
+        },
+        {
+          "$ref": "#/$defs/matchingResponse"
+        },
+        {
+          "$ref": "#/$defs/orderingResponse"
+        },
+        {
+          "$ref": "#/$defs/dragDropResponse"
+        },
+        {
+          "$ref": "#/$defs/imageBasedResponse"
+        },
+        {
+          "$ref": "#/$defs/interactiveResponse"
+        }
+      ]
+    },
+    "singleChoiceResponse": {
+      "type": "object",
+      "description": "single_choice",
+      "required": [
+        "option_id"
+      ],
+      "properties": {
+        "option_id": {
+          "$ref": "#/$defs/itemId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "multipleChoiceResponse": {
+      "type": "object",
+      "description": "multiple_choice",
+      "required": [
+        "option_ids"
+      ],
+      "properties": {
+        "option_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "trueFalseResponse": {
+      "description": "true_false: một mệnh đề (value) hoặc nhiều mệnh đề (statement_values)",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "statement_values"
+          ],
+          "properties": {
+            "statement_values": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 8,
+              "propertyNames": {
+                "$ref": "#/$defs/itemId"
+              },
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "fillInBlankResponse": {
+      "type": "object",
+      "description": "fill_in_blank: blank id → chuỗi học sinh nhập/chọn",
+      "required": [
+        "blanks"
+      ],
+      "properties": {
+        "blanks": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 10,
+          "propertyNames": {
+            "$ref": "#/$defs/itemId"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "shortAnswerResponse": {
+      "type": "object",
+      "description": "short_answer (chấm tự động theo đáp án chấp nhận + chuẩn hóa)",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    "numericResponse": {
+      "type": "object",
+      "description": "numeric: chuỗi học sinh nhập; dấu thập phân theo decimal_separator, dạng a/b khi allow_fraction_input. Không có biểu thức toán (ADR-0055).",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    "matchingResponse": {
+      "type": "object",
+      "description": "matching: cặp [left id, right id]",
+      "required": [
+        "pairs"
+      ],
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/itemId"
+              },
+              {
+                "$ref": "#/$defs/itemId"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2,
+            "items": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "orderingResponse": {
+      "type": "object",
+      "description": "ordering: thứ tự item id",
+      "required": [
+        "order"
+      ],
+      "properties": {
+        "order": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "dragDropResponse": {
+      "type": "object",
+      "description": "drag_drop: draggable id → zone id",
+      "required": [
+        "placements"
+      ],
+      "properties": {
+        "placements": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {
+            "$ref": "#/$defs/itemId"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "imageBasedResponse": {
+      "description": "image_based: hotspot (points theo tọa độ image_size gốc) hoặc label (label id → drop point id)",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "points"
+          ],
+          "properties": {
+            "points": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "label_placements"
+          ],
+          "properties": {
+            "label_placements": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 16,
+              "propertyNames": {
+                "$ref": "#/$defs/itemId"
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "interactiveResponse": {
+      "type": "object",
+      "description": "interactive: trạng thái widget + action log; validator Go chấm",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "type": "object",
+          "maxProperties": 50
+        },
+        "action_log": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "required": [
+              "t_ms",
+              "action"
+            ],
+            "properties": {
+              "t_ms": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "action": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "args": {
+                "type": "object",
+                "maxProperties": 20
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

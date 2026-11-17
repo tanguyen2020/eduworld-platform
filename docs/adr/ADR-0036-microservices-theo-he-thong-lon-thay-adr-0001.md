@@ -1,6 +1,9 @@
 # ADR-0036 — Microservices theo hệ thống lớn
 
-> **Trạng thái:** Accepted · supersedes [ADR-0001](ADR-0001-go-modular-monolith-voi-3-tien-trinh-trien-khai.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md), [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md), [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Superseded by [ADR-0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · trước đó supersedes [ADR-0001](ADR-0001-go-modular-monolith-voi-3-tien-trinh-trien-khai.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md), [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md), [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Đã được thay bởi ADR-0074.** Không còn hiệu lực: 6 service build/triển khai độc lập, binary `api`/`worker` theo service. **Còn hiệu lực (chuyển sang ADR-0074):** ranh giới bounded context của 5 module domain và vai trò của realtime.
 
 ## Bối cảnh
 
@@ -13,7 +16,7 @@ Backend gồm **6 service Go**, mỗi service build, triển khai, scale độc 
 | Service | Bounded context | Database |
 |---|---|---|
 | `identity-service` (Platform) | Identity, Tenant, Authorization/permission catalog, SIS sync & provisioning, membership Keycloak, student cleanup, platform settings, audit store, điều phối Thùng rác/gán/clone | `eduworld_identity` |
-| `learning-service` (CMS/Learning/LMS) | Curriculum, Content, Question Bank, Activity Engine, Exam, Learning Record & Mastery, Learning Analytics, LMS, Teacher Dashboard; giữ answer key (ADR-0016) | `eduworld_learning` |
+| `learning-service` (CMS/Learning/LMS) | Curriculum, Content, Question Bank, Activity Engine, Exam, Learning Record & Mastery, Learning Analytics, LMS, School Learning Dashboard; giữ answer key (ADR-0016) | `eduworld_learning` |
 | `game-service` | Game profile, World/Area, Quest, Mini-game config, Progression/XP, Challenge/Boss, Inventory/Economy, Achievement/Collection, Game session, login events, Game Operations config | `eduworld_game` |
 | `competition-service` (Multiplayer & Competition) | Party, Room, Matchmaking, Battle/Co-op state, Rating, Leaderboard, Tournament, Season | `eduworld_competition` |
 | `chat-service` (Social & Chat) | Friend, Block, Guild/Club (Team, Study Group), Chat (mọi channel), Moderation, Sensitive terms, Notification, sticker/GIF | `eduworld_chat` |
@@ -38,3 +41,5 @@ Backend gồm **6 service Go**, mỗi service build, triển khai, scale độc 
 | 2026-11-15 | Bổ sung định tuyến realtime qua NATS request/reply + Valkey Pub/Sub | Thiết kế realtime |
 | 2026-11-15 | Nguồn sự thật spec: spec gộp, spec theo service sinh tự động | API_DESIGN |
 | 2026-11-15 | Giữ microservices khi audit theo Master Prompt mới | DOCUMENTATION_AUDIT §4.1 |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-17 | Superseded by ADR-0074 (modular monolith) | Technical Architect |

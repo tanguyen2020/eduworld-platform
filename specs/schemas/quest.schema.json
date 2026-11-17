@@ -238,7 +238,7 @@
     },
     "learning_requirements": {
       "type": "array",
-      "description": "Yêu cầu học tập để nhận quest (đọc projection mastery từ learning-service). Không dùng để khóa nội dung học tập bắt buộc.",
+      "description": "Yêu cầu học tập để nhận quest (đọc projection mastery từ module learning). Không dùng để khóa nội dung học tập bắt buộc.",
       "maxItems": 10,
       "items": {
         "type": "object",
@@ -574,6 +574,29 @@
         }
       }
     },
+    "clue_content_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "description": "Dữ kiện riêng của một role (learning material/thẻ dữ kiện đã publish); không chứa đáp án (ADR-0016).",
+      "properties": {
+        "kind": {
+          "enum": [
+            "learning_material"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "pass_rule": {
       "type": "object",
       "additionalProperties": false,
@@ -626,6 +649,7 @@
             "activity",
             "minigame",
             "party_activity",
+            "interdependent",
             "challenge",
             "boss"
           ]
@@ -646,6 +670,12 @@
         "optional": {
           "type": "boolean",
           "default": false
+        },
+        "assignee": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(each_member|any_member|role:[a-z][a-z0-9_]{1,31})$",
+          "description": "Chỉ có nghĩa khi quest chơi theo party (QUEST_SYSTEM §3.2): each_member (mặc định cho bước học tập), any_member (một người làm tính cho cả nhóm, chỉ cho bước khung), role:<role> (chỉ người giữ role đó)."
         },
         "area_id": {
           "type": "string",
@@ -728,6 +758,71 @@
               "minimum": 1
             }
           }
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "description": "Bước interdependent: mỗi role giữ một phần dữ kiện (QUEST_SYSTEM §3.2) [Proposed].",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "title",
+              "clue_content_ref"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "maxLength": 32,
+                "pattern": "^[a-z][a-z0-9_]{1,31}$"
+              },
+              "title": {
+                "$ref": "#/$defs/localized_text"
+              },
+              "clue_content_ref": {
+                "$ref": "#/$defs/clue_content_ref"
+              },
+              "icon_key": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        },
+        "role_assignment": {
+          "enum": [
+            "auto",
+            "leader_assigns"
+          ],
+          "default": "auto",
+          "description": "auto: server chia đều theo thứ tự vào phòng; leader_assigns: trưởng nhóm gán."
+        },
+        "allow_multi_role": {
+          "type": "boolean",
+          "default": true,
+          "description": "Một người giữ nhiều role khi số thành viên online ít hơn số role (kể cả chơi solo)."
+        },
+        "share_mode": {
+          "enum": [
+            "clue_card",
+            "clue_card_and_chat"
+          ],
+          "default": "clue_card",
+          "description": "clue_card_and_chat thêm trao đổi qua channel party (cùng ChatPolicy và pipeline kiểm duyệt, ADR-0020)."
+        },
+        "completion": {
+          "enum": [
+            "all_members",
+            "min_members"
+          ],
+          "default": "all_members"
+        },
+        "min_members_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
         }
       },
       "allOf": [
@@ -914,6 +1009,47 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "interdependent"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "roles",
+              "content_ref",
+              "pass_rule"
+            ],
+            "properties": {
+              "roles": true,
+              "content_ref": true,
+              "pass_rule": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "completion": {
+                "const": "min_members"
+              }
+            },
+            "required": [
+              "completion"
+            ]
+          },
+          "then": {
+            "required": [
+              "min_members_count"
+            ],
+            "properties": {
+              "min_members_count": true
+            }
           }
         }
       ]

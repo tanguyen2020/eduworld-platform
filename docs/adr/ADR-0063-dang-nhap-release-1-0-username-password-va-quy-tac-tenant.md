@@ -21,14 +21,15 @@ Người duyệt chốt: học sinh **không chọn trường** khi đăng nhậ
    | Không thuộc tenant chung và không thuộc tenant SIS nào | **Không cho đăng nhập**: `403 ACCOUNT_NOT_PROVISIONED`, ghi audit, thu hồi phiên Keycloak vừa tạo |
 
 4. Các kiểm tra khác giữ nguyên: chỉ học sinh vào game (ADR-0031), trạng thái tài khoản, tenant bị tắt, học sinh tenant SIS phải có enrollment active (ADR-0060), login sync (ADR-0061), một thiết bị (ADR-0031).
-5. Portal (giáo viên, vận hành) vẫn đăng nhập username/password + MFA theo role (ADR-0027); chọn tenant sau đăng nhập khi thuộc nhiều tenant.
+5. Portal (nhân sự nhà trường, vận hành) vẫn đăng nhập username/password + MFA theo role (ADR-0027); chọn tenant sau đăng nhập khi thuộc nhiều tenant.
 
 ## Hệ quả
 
-(+) Luồng đăng nhập đơn giản, dễ hiểu cho học sinh và dễ kiểm thử; không có tài khoản "lạc" vào tenant chung. (−) Học sinh nhỏ tuổi phải nhớ username/password (giáo viên hỗ trợ đặt lại mật khẩu qua portal); các phương thức nhanh hơn phải chờ phiên bản sau. Đăng nhập ở giờ cao điểm dựa hoàn toàn vào băm mật khẩu Keycloak và phiên dài/refresh token (ADR-0045 mục 3, 5, 6 vẫn áp dụng).
+(+) Luồng đăng nhập đơn giản, dễ hiểu cho học sinh và dễ kiểm thử; không có tài khoản "lạc" vào tenant chung. (−) Học sinh nhỏ tuổi phải nhớ username/password (nhà trường hỗ trợ đặt lại mật khẩu qua portal); các phương thức nhanh hơn phải chờ phiên bản sau. Đăng nhập ở giờ cao điểm dựa hoàn toàn vào băm mật khẩu Keycloak và phiên dài/refresh token (ADR-0045 mục 3, 5, 6 vẫn áp dụng).
 
 ## Lịch sử thay đổi
 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |

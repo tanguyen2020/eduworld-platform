@@ -1,7 +1,7 @@
 # UX màn hình học sinh — Core (S01–S07)
 
-> Trạng thái: Draft · Phiên bản: 1.0 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
-> Liên quan: [STUDENT_GAME_UX (quy ước chung)](STUDENT_GAME_UX.md) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)
+> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-17 (S01: màn "Tiếp tục là <nickname>?" khi tự vào lại, Windows mặc định máy dùng chung, màn giờ giới nghiêm ADR-0078; bỏ đăng nhập QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
+> Liên quan: [STUDENT_GAME_UX (quy ước chung)](STUDENT_GAME_UX.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)
 
 ## Mục đích và phạm vi
 
@@ -13,21 +13,45 @@ Ký hiệu grade band: `g1_3`, `g4_5`, `g6_9` (`g6_7`, `g8_9` dùng chung bố c
 
 ## S01 — Đăng nhập
 
-**1. Mục đích.** Đưa học sinh vào game bằng **username + password** do EduWorld cấp (ADR-0063), chọn ngôn ngữ (ADR-0056), xác nhận khi tài khoản đang dùng trên thiết bị khác (ADR-0031). **Mỗi lần mở game đều nhập mật khẩu** — không "Ghi nhớ đăng nhập", không tự đăng nhập; chỉ được nhớ tên đăng nhập (ADR-0064). **Học sinh không chọn trường**: sau khi đăng nhập thành công, backend tự xác định tenant theo membership (ADR-0063 mục 3) — 1 tenant → vào thẳng; nhiều tenant → chọn **sau** đăng nhập; không thuộc tenant chung và không thuộc tenant SIS nào → không cho đăng nhập (`ACCOUNT_NOT_PROVISIONED`).
+**1. Mục đích.** Đưa học sinh vào game bằng **username + password** do EduWorld cấp (ADR-0063), chọn ngôn ngữ (ADR-0056), xác nhận khi tài khoản đang dùng trên thiết bị khác (ADR-0031). **Trên thiết bị cá nhân, phiên đăng nhập được giữ** (refresh token trong kho bảo mật của hệ điều hành, [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md)): mở lại game khi phiên còn hạn (idle 7 ngày, tối đa 30 ngày) thì hiện màn **"Tiếp tục là <nickname>?"** rồi vào game, **không hiện form** (mọi nền tảng, [Confirmed — Technical Architect 2026-11-17]); phiên hết hạn/bị thu hồi, học sinh đã bấm Đăng xuất hoặc "Không phải tôi", bản Web hoặc máy dùng chung (`shared_device`) → hiện form và nhập mật khẩu. **Trên Windows, game mặc định coi là máy dùng chung** (không lưu phiên) trừ khi bộ cài được chọn "Máy cá nhân" (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17]). Không có checkbox "Ghi nhớ đăng nhập" — việc giữ phiên do loại thiết bị quyết định; vẫn có "Nhớ tên đăng nhập". **Học sinh không chọn trường**: sau khi đăng nhập thành công, backend tự xác định tenant theo membership (ADR-0063 mục 3) — 1 tenant → vào thẳng; nhiều tenant → chọn **sau** đăng nhập; không thuộc tenant chung và không thuộc tenant SIS nào → không cho đăng nhập (`ACCOUNT_NOT_PROVISIONED`).
 
-Các cách đăng nhập nhanh (QR lớp + PIN, thẻ QR, mật khẩu hình ảnh, mã thiết bị, SSO Google/Microsoft qua email trường) và ô "Nhập mã trường" **không thuộc Release 1.0** (ADR-0063 mục 1) — không hiển thị trên UI; thiết kế giữ ở mục "Mở rộng sau" của [KEYCLOAK_SSO §8](../09-identity/KEYCLOAK_SSO.md).
+QR lớp + PIN, thẻ QR, mật khẩu hình ảnh **không làm** (ADR-0076 Rejected 2026-11-17); học sinh lớp 1–3 dùng username/mật khẩu ngắn do trường in phát và màn "Tiếp tục là…" trên thiết bị cá nhân để giảm số lần gõ. Mã thiết bị, SSO Google/Microsoft qua email trường và ô "Nhập mã trường" ngoài Release 1.0 (ADR-0063 mục 1) — không hiển thị trên UI; thiết kế giữ ở mục "Mở rộng sau" của [KEYCLOAK_SSO §8](../09-identity/KEYCLOAK_SSO.md).
 
-**2. Người dùng & khối.** Mọi học sinh; giáo viên/vận hành bị chặn bằng thông điệp `GAME_ACCESS_STUDENT_ONLY`.
+**2. Người dùng & khối.** Mọi học sinh; nhân sự nhà trường và vận hành bị chặn bằng thông điệp `GAME_ACCESS_STUDENT_ONLY`.
 
-**3. Điểm vào / ra.** Vào: mở ứng dụng (luôn qua màn này, ADR-0064), đăng xuất, phiên hết hạn, bị đăng xuất do thiết bị khác, mobile ở nền quá 30 phút. Ra: S02 (chưa có avatar) hoặc S03.
+**3. Điểm vào / ra.** Vào: mở ứng dụng khi không có phiên đã lưu (lần đầu, Web, máy dùng chung), sau khi bấm **Đăng xuất** (Cài đặt → Tài khoản, [STUDENT_GAME_UX_SOCIAL §10](STUDENT_GAME_UX_SOCIAL.md#10-cài-đặt)), phiên hết hạn/bị thu hồi (kể cả khi tự vào lại thất bại), bị đăng xuất do thiết bị khác. Mở ứng dụng khi còn phiên đã lưu → màn chờ "Đang vào lớp…" → màn **S01b "Tiếp tục là <nickname>?"** → S02/S03, không qua form. Ra: S02 (chưa có avatar) hoặc S03.
 
-Màn là **một form vẽ bằng Godot** (ADR-0068): logo, chọn ngôn ngữ, ô tên đăng nhập, ô mật khẩu (ẩn ký tự, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", dòng "Quên mật khẩu? Nhờ thầy cô đặt lại". Game gửi username/password tới `POST /api/v1/auth/game/login` của identity-service (TLS); identity-service xác thực với Keycloak. **Không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView hay chuyển ứng dụng; không có trang Keycloak cho học sinh.
+Màn là **một form vẽ bằng Godot** (ADR-0068): logo, chọn ngôn ngữ, ô tên đăng nhập, ô mật khẩu (ẩn ký tự, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", dòng "Quên mật khẩu? Liên hệ nhà trường để đặt lại". Game gửi username/password tới `POST /api/v1/auth/game/login` của module identity (TLS); module identity xác thực với Keycloak. **Không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView hay chuyển ứng dụng; không có trang Keycloak cho học sinh.
 
-Trạng thái con (khớp [GODOT_ARCHITECTURE §5](../08-game-client/GODOT_ARCHITECTURE.md#5-vòng-đời-ứng-dụng)): `CheckVersion` → `LoginForm` → `SigningIn` (đang gọi `/auth/game/login`, có thể xếp hàng) → `TenantChoice` (**chỉ khi** `TENANT_NOT_SELECTED`) → `ConfirmTakeover` (nếu có phiên khác) → vào game.
+Trạng thái con (khớp [GODOT_ARCHITECTURE §5](../08-game-client/GODOT_ARCHITECTURE.md#5-vòng-đời-ứng-dụng)): `CheckVersion` → `ResumingSession` (**chỉ khi** có phiên đã lưu: splash "Đang vào lớp…", gọi `refreshGameToken` `mode=resume`; thành công → `ResumeConfirm` (S01b "Tiếp tục là <nickname>?": "Tiếp tục" → `CreatingSession`; "Không phải tôi" → đăng xuất, xóa phiên đã lưu → `LoginForm`), thất bại xác định → `LoginForm` kèm thông báo, giờ giới nghiêm → `Curfew`) → `LoginForm` → `SigningIn` (đang gọi `/auth/game/login`, có thể xếp hàng) → `TenantChoice` (**chỉ khi** `TENANT_NOT_SELECTED`) → `CreatingSession` (gọi `createGameSession` ngay sau khi có token — đăng nhập không tự tạo phiên chơi, [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)) → `ConfirmTakeover` (chỉ khi `createGameSession` trả 409) → vào game.
 
 **4. Bố cục Web/PC**
 
 ```text
+Tự vào lại khi còn phiên (thiết bị cá nhân, không có form)
+┌───────────────────────────────────────────────────────────────────────────┐
+│ (Ảnh minh họa Quảng trường Tia Sáng)                                      │
+│                         [Logo EduWorld]                                   │
+│                      Đang vào lớp… ◌                                      │
+│                                                                           │
+│          (sau 5 s chưa xong) [Đăng nhập bằng tài khoản khác]              │
+└───────────────────────────────────────────────────────────────────────────┘
+
+S01b — Tiếp tục là <nickname>? (sau khi tự vào lại thành công, mọi nền tảng)
+┌───────────────────────────────────────────────────────────────────────────┐
+│ (Ảnh minh họa Quảng trường Tia Sáng)                                      │
+│                    [Avatar 3D nhỏ của học sinh]                           │
+│                  Tiếp tục là MèoXanh42?                                   │
+│        [      Tiếp tục      ] (chính)     [ Không phải tôi ]              │
+└───────────────────────────────────────────────────────────────────────────┘
+
+Giờ giới nghiêm (21:30–06:30 hoặc khung chặt hơn của trường)
+┌───────────────────────────────────────────────────────────────────────────┐
+│                [Mây ngủ dưới trăng]                                       │
+│      Đã đến giờ nghỉ rồi! EduWorld mở lại lúc 06:30.                     │
+│                         [ Đóng ]                                          │
+└───────────────────────────────────────────────────────────────────────────┘
+
 Form đăng nhập trong game (một màn duy nhất)
 ┌───────────────────────────────────────────────────────────────────────────┐
 │ (Ảnh minh họa Quảng trường Tia Sáng, tĩnh, có lớp parallax nhẹ)    [VI|EN] │
@@ -39,10 +63,14 @@ Form đăng nhập trong game (một màn duy nhất)
 │                  │ [ ••••••••                     👁 ]   │                │
 │                  │ [          Đăng nhập          ] (chính)│               │
 │                  │ [✓] Nhớ tên đăng nhập trên máy này    │                │
-│                  │ Quên mật khẩu? Nhờ thầy cô đặt lại    │                │
+│                  │ Quên mật khẩu? Liên hệ nhà trường     │                │
+│                  │ để đặt lại                            │                │
 │                  └───────────────────────────────────────┘                │
 │ Phiên bản 1.0.3 · Trợ giúp                                   Mây (NPC) 👋 │
 └───────────────────────────────────────────────────────────────────────────┘
+
+Phiên đã hết (sau khi tự vào lại thất bại) — thông báo trên form
+│ ⓘ Phiên đăng nhập đã hết, em đăng nhập lại nhé.                        │
 
 Lỗi (ngay dưới ô mật khẩu, ô mật khẩu được xóa)
 │ ⚠ Tên đăng nhập hoặc mật khẩu chưa đúng. Nếu nhập sai nhiều lần,      │
@@ -73,57 +101,69 @@ Khi bàn phím ảo mở: form cuộn lên, ẩn minh họa và Mây, nút Đăn
 
 Ô nhập cao ≥ 48 dp (lớp 1–3 ≥ 64 dp); ô mật khẩu dùng `LineEdit` với `secret = true`, bàn phím ảo kiểu mật khẩu (không gợi ý, không tự sửa), tắt sao chép từ ô mật khẩu. Hộp chọn trường sau đăng nhập dùng danh sách thẻ lớn.
 
-**6. Thành phần.** `LoginCard`, `TextField` (username), `PasswordField` (nút hiện/ẩn), `PrimaryButton`, `Checkbox` (nhớ tên), `LanguageToggle`, `InlineError`, `QueueIndicator` ("Đang vào lớp…"), `TenantChoiceList` (sau đăng nhập), `SchoolBadge` (chỉ trong `TenantChoiceList`), `ModalDialog` (takeover, lỗi), `NpcHint` (Mây). Tất cả là UI Godot ([GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)).
+**6. Thành phần.** `ResumeSplash` ("Đang vào lớp…", nút phụ "Đăng nhập bằng tài khoản khác"), `ResumeConfirmCard` (avatar, "Tiếp tục là <nickname>?", nút "Tiếp tục" và "Không phải tôi"), `CurfewNotice` (giờ mở lại), `InfoBanner` (phiên hết), `LoginCard`, `TextField` (username), `PasswordField` (nút hiện/ẩn), `PrimaryButton`, `Checkbox` (nhớ tên), `LanguageToggle`, `InlineError`, `QueueIndicator` ("Đang vào lớp…"), `TenantChoiceList` (sau đăng nhập), `SchoolBadge` (chỉ trong `TenantChoiceList`), `ModalDialog` (takeover, lỗi), `NpcHint` (Mây). Tất cả là UI Godot ([GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)).
 
-**7. Dữ liệu & API.** `getClientConfig` (phiên bản, bảo trì); `POST /auth/game/login` `{username, password, device_id, client_version, locale}` → `200` token + `PlayerBootstrap` (`tenant_id` → header `X-Tenant-Id` cho mọi request sau, ADR-0065) / `403 TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket` → `TenantChoice` → `POST /auth/game/tenant:select` (không nhập lại mật khẩu, ticket 2 phút) / `401 INVALID_CREDENTIALS` / `403 ACCOUNT_NOT_PROVISIONED` / `403 GAME_ACCESS_STUDENT_ONLY` / `426 CLIENT_VERSION_UNSUPPORTED` / `429 RATE_LIMITED` hoặc `LOGIN_QUEUE_BUSY` (`Retry-After`); `createGameSession` (header `X-Device-Id`, `X-Tenant-Id`, 409 `ACTIVE_SESSION_ON_OTHER_DEVICE`, gọi lại với `takeover=true`); `createRealtimeTicket`; `POST /auth/game/logout` khi thoát. Message WS `session.session.replaced` dẫn về màn này với thông báo. Chi tiết: [API_DESIGN §9.1](../07-backend/API_DESIGN.md#91-auth--profile--apiv1auth-apiv1students).
+**7. Dữ liệu & API.** `getClientConfig` (phiên bản, bảo trì); khi có phiên đã lưu: `refreshGameToken` (`POST /auth/game/token:refresh` `{refresh_token, device_id, client_version, mode: "resume"}`, `X-Tenant-Id` đã lưu) → `200` token mới + `bootstrap` / `401 REFRESH_TOKEN_INVALID` · `REFRESH_TOKEN_REUSED` · `REFRESH_TOKEN_DEVICE_MISMATCH` hoặc `403` tài khoản/tenant → xóa phiên đã lưu, hiện form (ADR-0086); `200` → S01b, "Không phải tôi" gọi `POST /auth/game/logout` và xóa phiên đã lưu; lỗi giờ giới nghiêm → `CurfewNotice`, giữ phiên đã lưu ([CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); `POST /auth/game/login` `{username, password, device_id, client_version, locale}` → `200` `tokens.*` + `bootstrap` (`PlayerBootstrap`; `tenant_id` → header `X-Tenant-Id` cho mọi request sau, ADR-0065; không có `game_session_id`) / `403 TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket` → `TenantChoice` → `POST /auth/game/tenant:select` (không nhập lại mật khẩu, ticket 2 phút) / `401 INVALID_CREDENTIALS` / `403 ACCOUNT_NOT_PROVISIONED` / `403 GAME_ACCESS_STUDENT_ONLY` / `426 CLIENT_VERSION_UNSUPPORTED` / `429 RATE_LIMITED` hoặc `LOGIN_QUEUE_BUSY` (`Retry-After`); `createGameSession` gọi ngay sau đăng nhập/chọn trường (header `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key`; 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` kèm `other_device` → hộp takeover → gọi lại với `takeover=true` và `Idempotency-Key` mới, **không** nhập lại mật khẩu — ADR-0083); `createRealtimeTicket`; thoát game trên thiết bị cá nhân: `endGameSession` (`:end`), giữ phiên đã lưu; **Đăng xuất** (và thoát game trên máy dùng chung): `endGameSession` rồi `POST /auth/game/logout` rồi xóa phiên đã lưu. Message WS `session.session.replaced` dẫn về màn này với thông báo. Chi tiết: [API_DESIGN §9.1](../07-backend/API_DESIGN.md#91-auth--profile--apiv1auth-apiv1students).
 
 **8. Trạng thái.**
 
 | Trạng thái | Hiển thị |
 |---|---|
-| Đang kiểm tra phiên bản | Logo + thanh tiến độ mảnh rồi luôn hiện form — không tự đăng nhập, không dùng token cũ (ADR-0064) |
+| Đang kiểm tra phiên bản | Logo + thanh tiến độ mảnh; có phiên đã lưu → `ResumeSplash`, không có → form |
+| Đang tự vào lại (`ResumingSession`, ADR-0086) | `ResumeSplash` "Đang vào lớp…"; không hiện form; sau 5 s hiện nút phụ "Đăng nhập bằng tài khoản khác" (= Đăng xuất rồi về form) |
+| Tự vào lại thành công (S01b) | "Tiếp tục là <nickname>?" với avatar; focus mặc định ở "Tiếp tục"; không tự chuyển sau thời gian chờ; "Không phải tôi" → đăng xuất, xóa phiên đã lưu, về form trống (không điền sẵn tên của người trước) |
+| Giờ giới nghiêm (đăng nhập hoặc tự vào lại) | `CurfewNotice` "Đã đến giờ nghỉ rồi! EduWorld mở lại lúc {giờ}."; không hiện form; phiên đã lưu được giữ. Đang chơi: cảnh báo trước 10 phút "Còn 10 phút nữa là giờ nghỉ", tới giờ lưu tiến độ và về màn này |
+| Tự vào lại thất bại do phiên hết/bị thu hồi (`401 REFRESH_TOKEN_*`) | Form với `InfoBanner` "Phiên đăng nhập đã hết, em đăng nhập lại nhé."; tên đăng nhập điền sẵn nếu đã bật nhớ |
+| Tự vào lại gặp lỗi tài khoản (`403 ACCOUNT_LOCKED`, `NO_ACTIVE_ENROLLMENT`, `TENANT_ACCESS_DISABLED`…) | Thông điệp theo mã như khi đăng nhập, rồi về form |
+| Tự vào lại mất mạng/máy chủ bận | Giữ `ResumeSplash` với "Đang kết nối…", tự thử lại; không xóa phiên đã lưu |
 | Form trống / điền sẵn tên | Ô mật khẩu luôn trống; nút Đăng nhập tắt khi một trong hai ô trống |
 | Đang đăng nhập | Nút chuyển "Đang vào…" + spinner, khóa form; hủy được sau 10 s |
 | Hàng chờ (`429 LOGIN_QUEUE_BUSY`) | `QueueIndicator` "Đang vào lớp… nhiều bạn đang vào cùng lúc", tự thử lại theo `Retry-After` + jitter, nút "Hủy" |
 | Thử quá nhiều (`429 RATE_LIMITED`) | "Em thử nhiều lần quá. Hãy đợi 1 phút rồi thử lại nhé." + đếm ngược |
 | Sai username/password hoặc khóa tạm (`401 INVALID_CREDENTIALS`) | `InlineError` "Tên đăng nhập hoặc mật khẩu chưa đúng" (+ "Nếu nhập sai nhiều lần, hãy đợi vài phút" từ lần sai thứ 3 trên thiết bị); không tiết lộ tài khoản có tồn tại hay đang bị khóa; xóa ô mật khẩu, focus về ô mật khẩu |
 | Đang xác định trường | "Đang vào thế giới…", không có bước chọn trường |
-| Thuộc nhiều trường | `TenantChoiceList`; nhớ lựa chọn trên thiết bị để chọn sẵn lần sau; quá 2 phút (`401 LOGIN_TICKET_INVALID`) → "Phiên chọn trường đã hết, em đăng nhập lại nhé" và về form |
-| Tài khoản chưa được cấp (`ACCOUNT_NOT_PROVISIONED`) | "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy nhờ thầy cô kiểm tra nhé." + nút "Đăng nhập tài khoản khác"; không vào game |
-| Tài khoản nhân sự (`GAME_ACCESS_STUDENT_ONLY`) | "Tài khoản này không dùng để vào game. Thầy cô và cán bộ vui lòng dùng trang quản trị." |
+| Đang tạo phiên chơi (`createGameSession`) | Vẫn "Đang vào thế giới…"; lỗi mạng → "Thử lại" (gọi lại `createGameSession`, không đăng nhập lại) |
+| Thuộc nhiều trường | `TenantChoiceList`; **không** chọn sẵn lựa chọn của lần trước, không lưu lựa chọn xuống `user://`; khi tự vào lại bằng phiên đã lưu, game dùng trường của phiên đó (đăng xuất để đổi trường) (ADR-0086); quá 2 phút (`401 LOGIN_TICKET_INVALID`) → "Phiên chọn trường đã hết, em đăng nhập lại nhé" và về form |
+| Tài khoản chưa được cấp (`ACCOUNT_NOT_PROVISIONED`) | "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy báo nhà trường kiểm tra nhé." + nút "Đăng nhập tài khoản khác"; không vào game |
+| Tài khoản nhân sự (`GAME_ACCESS_STUDENT_ONLY`) | "Tài khoản này không dùng để vào game. Cán bộ nhà trường vui lòng dùng trang quản trị." |
 | Cần cập nhật (`426 CLIENT_VERSION_UNSUPPORTED` hoặc client-config) | Hộp "Có phiên bản mới" + nút cập nhật; không cho vào game |
 | Bảo trì | Minh họa + giờ dự kiến; tự kiểm tra lại mỗi 60 s |
 | Lỗi tài khoản khác | Thông điệp theo `ProblemCode` ([GODOT_ARCHITECTURE §9](../08-game-client/GODOT_ARCHITECTURE.md#9-error-handling--offline)): `ACCOUNT_LOCKED`, `NO_ACTIVE_ENROLLMENT`, `TENANT_ACCESS_DISABLED` |
 | Mất mạng | "Chưa có kết nối Internet" + "Thử lại" |
 | Đăng nhập thành công | Chuyển cảnh mờ sang S02/S03 (≤ 1 s) |
 
-**9. Tương tác & phản hồi.** Enter ở ô tên đăng nhập → chuyển sang ô mật khẩu; Enter ở ô mật khẩu = Đăng nhập. Tab/D-pad đi theo thứ tự: tên → mật khẩu → nút hiện/ẩn → Đăng nhập → Nhớ tên → Quên mật khẩu. Hộp takeover không tự đóng, nút an toàn ("Ở lại máy kia") đặt bên trái. Ô "Nhớ tên đăng nhập trên máy này" mặc định bật; khi bật, tên đăng nhập lần trước được điền sẵn (chỉ lưu tên đăng nhập trong `user://`), mật khẩu luôn phải nhập. Không có "Ghi nhớ đăng nhập". Bấm "Quên mật khẩu?" mở hộp hướng dẫn trong game (không mở web). Thoát game → `POST /auth/game/logout` (ADR-0064). Máy phòng tin học (`device.cfg` `shared_device: true`): ẩn ô nhớ tên, không nhớ tên đăng nhập, tự đăng xuất sau 30 phút không hoạt động.
+**9. Tương tác & phản hồi.** Enter ở ô tên đăng nhập → chuyển sang ô mật khẩu; Enter ở ô mật khẩu = Đăng nhập. Tab/D-pad đi theo thứ tự: tên → mật khẩu → nút hiện/ẩn → Đăng nhập → Nhớ tên → Quên mật khẩu. Hộp takeover không tự đóng, nút an toàn ("Ở lại máy kia") đặt bên trái. Ô "Nhớ tên đăng nhập trên máy này" mặc định bật; khi bật, tên đăng nhập lần trước được điền sẵn (chỉ lưu tên đăng nhập trong `user://`), mật khẩu luôn phải nhập khi form hiện. Không có checkbox "Ghi nhớ đăng nhập". Bấm "Quên mật khẩu?" mở hộp hướng dẫn trong game (không mở web). Hộp takeover (cả khi tự vào lại): "Tiếp tục ở đây" gọi lại `createGameSession` với `takeover=true`, không hỏi lại mật khẩu; "Ở lại máy kia" → đăng xuất (`/auth/game/logout`, xóa phiên đã lưu), về form. **Thoát game** trên thiết bị cá nhân → `:end` game session, giữ phiên để lần sau tự vào. **Đăng xuất** ở Cài đặt → Tài khoản ([STUDENT_GAME_UX_SOCIAL §10](STUDENT_GAME_UX_SOCIAL.md#10-cài-đặt)), hỏi xác nhận "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu." → `:end`, `POST /auth/game/logout`, xóa phiên đã lưu, về form (ADR-0083, ADR-0086). Máy dùng chung (`device.cfg` `shared_device: true`; **mặc định trên Windows** trừ khi bộ cài chọn "Máy cá nhân"): không lưu phiên, ẩn ô nhớ tên, không nhớ tên đăng nhập, thoát game = đăng xuất, tự đăng xuất sau 30 phút không hoạt động; mở lại luôn hiện form.
 
-**10. Khác biệt theo grade band.** `g1_3`: chữ và nút lớn, có nút loa đọc hướng dẫn "Em nhập tên đăng nhập và mật khẩu thầy cô đưa", cho phép hiện mật khẩu mặc định; `g4_5`, `g6_9`: như mặc định. Cùng một phương thức đăng nhập cho mọi khối (ADR-0063).
+**10. Khác biệt theo grade band.** `g1_3`: chữ và nút lớn, có nút loa đọc hướng dẫn "Em nhập tên đăng nhập và mật khẩu nhà trường đưa", cho phép hiện mật khẩu mặc định; `g4_5`, `g6_9`: như mặc định. Cùng một phương thức đăng nhập cho mọi khối (ADR-0063).
 
-**11. Song ngữ.** Khóa trong game: `ui.login.title`, `ui.login.username_label`, `ui.login.password_label`, `ui.login.show_password`, `ui.login.button_sign_in`, `ui.login.signing_in`, `ui.login.forgot_password_hint`, `ui.login.forgot_password_dialog`, `ui.login.remember_username`, `ui.login.invalid_credentials`, `ui.login.wait_hint`, `ui.login.rate_limited`, `ui.login.queue_busy`, `ui.login.staff_account`, `ui.login.ticket_expired`, `ui.login.resolving_tenant`, `ui.login.not_provisioned`, `ui.login.tenant_choice.title`, `ui.login.tenant_choice.enter`, `ui.login.takeover.title`, `ui.login.takeover.body`, `ui.login.takeover.stay`, `ui.login.takeover.continue`, `ui.login.update_required`, `ui.login.maintenance`. Thông điệp lỗi chọn theo `code` của Problem, không hiển thị `detail` từ server.
-Ví dụ: `ui.login.forgot_password_hint` — vi "Quên mật khẩu? Nhờ thầy cô đặt lại" / en "Forgot your password? Ask your teacher to reset it"; `ui.login.invalid_credentials` — vi "Tên đăng nhập hoặc mật khẩu chưa đúng" / en "Username or password is not correct"; `ui.login.tenant_choice.title` — vi "Em muốn vào trường nào hôm nay?" / en "Which school are you playing in today?". Chuỗi dài nhất để kiểm: `ui.login.takeover.body` (vi ~120 ký tự).
+**11. Song ngữ.** Khóa trong game: `ui.login.title`, `ui.login.username_label`, `ui.login.password_label`, `ui.login.show_password`, `ui.login.button_sign_in`, `ui.login.signing_in`, `ui.login.forgot_password_hint`, `ui.login.forgot_password_dialog`, `ui.login.remember_username`, `ui.login.invalid_credentials`, `ui.login.wait_hint`, `ui.login.rate_limited`, `ui.login.queue_busy`, `ui.login.staff_account`, `ui.login.ticket_expired`, `ui.login.resolving_tenant`, `ui.login.not_provisioned`, `ui.login.tenant_choice.title`, `ui.login.tenant_choice.enter`, `ui.login.takeover.title`, `ui.login.takeover.body`, `ui.login.takeover.stay`, `ui.login.takeover.continue`, `ui.login.update_required`, `ui.login.maintenance`, `ui.login.resuming`, `ui.login.use_other_account`, `ui.login.session_expired`, `ui.login.resume_confirm.title` (vi "Tiếp tục là {nickname}?" / en "Continue as {nickname}?"), `ui.login.resume_confirm.continue`, `ui.login.resume_confirm.not_me` (vi "Không phải tôi" / en "Not me"), `ui.login.curfew` (vi "Đã đến giờ nghỉ rồi! EduWorld mở lại lúc {time}."), `ui.login.curfew_warning`, `ui.settings.logout_confirm`. Thông điệp lỗi chọn theo `code` của Problem, không hiển thị `detail` từ server.
+Ví dụ: `ui.login.forgot_password_hint` — vi "Quên mật khẩu? Liên hệ nhà trường để đặt lại" / en "Forgot your password? Contact your school to reset it"; `ui.login.invalid_credentials` — vi "Tên đăng nhập hoặc mật khẩu chưa đúng" / en "Username or password is not correct"; `ui.login.tenant_choice.title` — vi "Em muốn vào trường nào hôm nay?" / en "Which school are you playing in today?". Chuỗi dài nhất để kiểm: `ui.login.takeover.body` (vi ~120 ký tự).
 
 **12. Trợ năng.** Focus mặc định ở ô tên đăng nhập (hoặc ô mật khẩu nếu tên đã điền sẵn); mọi ô có nhãn hiển thị (không chỉ placeholder) và nhãn cho trình đọc màn hình; lỗi được đọc ngay khi xuất hiện; nút hiện/ẩn có nhãn; hỗ trợ phóng chữ theo cài đặt game; danh sách chọn trường đọc được bằng trình đọc màn hình.
 
 **13. Hiệu năng máy tầm trung.** Form là ảnh 2D tĩnh + Control; tải trước gói Hub trong nền khi người dùng đang nhập. Mục tiêu: từ mở app tới form ≤ 3 s; từ bấm Đăng nhập tới phản hồi p95 ≤ 1 s khi không xếp hàng; từ đăng nhập xong tới S03 theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md).
 
-**14. An toàn/riêng tư.** Mật khẩu chỉ nằm trong ô nhập và bộ nhớ request; sau khi gửi (thành công hay lỗi) ô mật khẩu bị xóa, không ghi mật khẩu vào log/telemetry/crash report, không lưu `user://` (ADR-0068). Chỉ gửi qua HTTPS tới tên miền API (certificate pinning [Proposed]); không bao giờ gửi tới Keycloak trực tiếp. Token chỉ nằm trong RAM, không ghi xuống đĩa/Keychain/Keystore (ADR-0064); không hiển thị tên học sinh trước khi đăng nhập xong; thông điệp lỗi không tiết lộ tài khoản tồn tại, bị khóa hay thuộc trường nào; danh sách chọn trường chỉ hiển thị sau xác thực và chỉ gồm trường của chính người dùng; quên mật khẩu không reset qua email — giáo viên/School Admin đặt lại trên Admin Portal.
+**14. An toàn/riêng tư.** Mật khẩu chỉ nằm trong ô nhập và bộ nhớ request; sau khi gửi (thành công hay lỗi) ô mật khẩu bị xóa, không ghi mật khẩu vào log/telemetry/crash report, không lưu `user://` (ADR-0068). Chỉ gửi qua HTTPS tới tên miền API (certificate pinning [Proposed]); không bao giờ gửi tới Keycloak trực tiếp. Access token chỉ nằm trong RAM; refresh token (kèm trường của phiên) chỉ lưu trong kho bảo mật của hệ điều hành trên thiết bị cá nhân (Windows DPAPI, Android Keystore, iOS Keychain), chỉ RAM trên Web và máy dùng chung — Windows mặc định là máy dùng chung (ADR-0086); màn S01b chỉ hiện nickname + avatar (không tên thật) để bạn khác dùng chung máy nhận ra không phải tài khoản của mình; mật khẩu không bao giờ được lưu; không hiển thị tên học sinh trước khi đăng nhập xong; thông điệp lỗi không tiết lộ tài khoản tồn tại, bị khóa hay thuộc trường nào; danh sách chọn trường chỉ hiển thị sau xác thực và chỉ gồm trường của chính người dùng; quên mật khẩu không reset qua email — School Admin đặt lại trên Admin Portal.
 
 **15. AC.**
 
 | Mã | Tiêu chí |
 |---|---|
-| AC-UX-0101 | Thoát game rồi mở lại (kể cả ngay sau đó): luôn hiện form và phải nhập mật khẩu; tên đăng nhập điền sẵn nếu đã bật nhớ; không có "Ghi nhớ đăng nhập" (ADR-0064) |
+| AC-UX-0101 | Thiết bị cá nhân: thoát game rồi mở lại khi phiên còn hạn → "Đang vào lớp…" → S01b "Tiếp tục là <nickname>?" → "Tiếp tục" vào S02/S03, không hiện form; phiên hết hạn/bị thu hồi → form với thông báo "Phiên đăng nhập đã hết", tên đăng nhập điền sẵn nếu đã bật nhớ; Web và máy dùng chung luôn hiện form (ADR-0086) |
 | AC-UX-0102 | Form đăng nhập là UI trong game, chỉ có username/password + Đăng nhập (+ chọn ngôn ngữ, nhớ tên, hướng dẫn quên mật khẩu); **không** mở trình duyệt/WebView, **không** có bước chọn trường, ô mã trường hay nút đăng nhập nhanh (ADR-0068) |
-| AC-UX-0103 | Nhận 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → hộp xác nhận; chọn "Tiếp tục ở đây" vào game; chọn "Ở lại máy kia" về form |
+| AC-UX-0103 | `createGameSession` trả 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → hộp xác nhận; chọn "Tiếp tục ở đây" vào game mà không nhập lại mật khẩu; chọn "Ở lại máy kia" về form |
 | AC-UX-0104 | Đổi ngôn ngữ trên form áp dụng ngay cho form, thông điệp lỗi và toàn bộ màn sau khi vào game |
-| AC-UX-0105 | Tài khoản giáo viên đăng nhập game → thông điệp hướng dẫn dùng Admin Portal, không vào game |
-| AC-UX-0106 | Học sinh thuộc đúng 1 tenant (SIS hoặc tenant chung) vào thẳng game; thuộc nhiều tenant thấy `TenantChoiceList` chỉ sau xác thực, chọn xong vào game không nhập lại mật khẩu |
+| AC-UX-0105 | Tài khoản nhân sự (School Admin, Academic Manager, vận hành) đăng nhập game → thông điệp hướng dẫn dùng Admin Portal, không vào game |
+| AC-UX-0106 | Học sinh thuộc đúng 1 tenant (SIS hoặc tenant chung) vào thẳng game; thuộc nhiều tenant thấy `TenantChoiceList` chỉ sau xác thực, không có lựa chọn nào được chọn sẵn từ lần mở game trước, chọn xong vào game không nhập lại mật khẩu |
 | AC-UX-0107 | Tài khoản không thuộc tenant chung và không thuộc tenant SIS nào → thông điệp "chưa được kích hoạt", không vào game, không tự đưa vào tenant chung |
 | AC-UX-0108 | Sai mật khẩu, tài khoản không tồn tại, tài khoản khóa tạm: cùng một thông điệp; ô mật khẩu bị xóa sau mỗi lần gửi |
 | AC-UX-0109 | Quá tải đăng nhập → "Đang vào lớp…" và tự vào khi đến lượt, không cần bấm lại |
 | AC-UX-0110 | Để màn chọn trường quá 2 phút rồi chọn → thông báo hết phiên chọn trường, quay về form |
+| AC-UX-0111 | Bấm Đăng xuất (Cài đặt → Tài khoản), xác nhận → về form; mở lại game → form, không tự vào (ADR-0086) |
+| AC-UX-0112 | Tự vào lại khi mất mạng → giữ màn "Đang kết nối…" và tự thử lại, không xóa phiên; nút "Đăng nhập bằng tài khoản khác" đưa về form |
+| AC-UX-0113 | S01b: bấm "Không phải tôi" → phiên Keycloak bị thu hồi, phiên đã lưu bị xóa, form trống không điền sẵn tên; mở lại game → form (TC-AUTH-091) |
+| AC-UX-0114 | Game Windows cài mặc định: đăng nhập, thoát, mở lại → luôn hiện form (không tự vào); cài với "Máy cá nhân" → S01b (TC-AUTH-090) |
+| AC-UX-0115 | Mở game trong giờ giới nghiêm → `CurfewNotice` với giờ mở lại, không hiện form; đang chơi lúc 21:20 → cảnh báo, 21:30 lưu tiến độ và về `CurfewNotice` (TC-AUTH-092) |
 
 ---
 
@@ -222,7 +262,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 ││★ Sửa cây cầu (Chương 1)  │                                 │ ·  ▲   │     │
 ││  ○ Gặp Ông Số            │                                 │   ◎    │     │
 ││  ○ Giải 5 câu đo độ dài  │                                 └────────┘     │
-││☐ Bài thầy cô giao (2)    │                                                │
+││☐ Nhà trường giao (2)     │                                                │
 │└──────────────[J] Tất cả┘                                                │
 │                                (thế giới 3D)                              │
 │                                    [E] Nói chuyện ▸ Ông Số                │
@@ -250,7 +290,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 
 **6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast).
 
-**7. Dữ liệu & API.** Khi vào: `getGameProfile`, `getProgression`, `listQuests?status=active`, `listWorldAreas`, `getWorldExploration`, ví Xu (`getWallet`). Cập nhật realtime (không polling): `progression.xp.updated`, `progression.level.reached` (mở S07), `quest.progress.updated`, `world.area.unlocked`, `notification.item.created`, `hub.instance.assigned`, chat theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md). Vào vùng: `enterWorldArea`. Bài thầy cô giao: **đề xuất** `listMyAssignments` (`GET /api/v1/lms/my-assignments`) hoặc quest nguồn `assignment` trong `listQuests` (xác nhận khi viết spec).
+**7. Dữ liệu & API.** Khi vào: `getGameProfile`, `getProgression`, `listQuests?status=active`, `listWorldAreas`, `getWorldExploration`, ví Xu (`getWallet`). Cập nhật realtime (không polling): `progression.xp.updated`, `progression.level.reached` (mở S07), `quest.progress.updated`, `world.area.unlocked`, `notification.item.created`, `hub.instance.assigned`, chat theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md). Vào vùng: `enterWorldArea`. Bài nhà trường giao: `listMyAssignments` (`GET /api/v1/learning/my-assignments`, đã có trong OpenAPI; [SCHOOL_LMS §11](../04-admin-portal/SCHOOL_LMS.md#11-api)) hoặc quest nguồn `assignment` trong `listQuests` [Proposed].
 
 **8. Trạng thái.**
 
@@ -357,7 +397,7 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 
 ## S05 — Quest journal
 
-**1. Mục đích.** Nơi học sinh xem và quản lý mọi nhiệm vụ: chính (theo chương), phụ, ngày/tuần, học tập, khám phá, party, thử thách, sự kiện — và **bài thầy cô giao** — với bước tiếp theo rõ ràng ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) FR-LMS-010).
+**1. Mục đích.** Nơi học sinh xem và quản lý mọi nhiệm vụ: chính (theo chương), phụ, ngày/tuần, học tập, khám phá, party, thử thách, sự kiện — và **bài nhà trường giao** — với bước tiếp theo rõ ràng ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) FR-LMS-006).
 
 **2. Người dùng & khối.** Mọi học sinh.
 
@@ -370,7 +410,7 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 │ Nhật ký nhiệm vụ                                                 [✕ Esc]   │
 ├───────────────┬───────────────────────────────┬───────────────────────────┤
 │ Đang làm (5)  │ ★ Sửa cây cầu        Chương 1 │ Sửa cây cầu                │
-│ Thầy cô giao 2│ ☐ Bài: Phép nhân bảng 3  Hạn T6│ Vương quốc Số · Ông Số     │
+│ Nhà trường(2) │ ☐ Bài: Phép nhân bảng 3  Hạn T6│ Vương quốc Số · Ông Số     │
 │ Ngày (3)  ⟳4h │ ○ Daily: 3 bài Toán    1/3    │ "Cây cầu đá bị gãy…"       │
 │ Tuần (3)      │ ○ Khám phá bờ biển     2/5    │ Bước:                      │
 │ Sự kiện       │ ○ Party: Rồng Phân Số  (nhóm) │ ✓ 1 Gặp Ông Số             │
@@ -385,7 +425,7 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ Nhiệm vụ [Đang làm][Thầy cô giao 2][Ngày][Tuần][Sự kiện][Xong] [✕]│
+│ Nhiệm vụ [Đang làm][Nhà trường giao 2][Ngày][Tuần][Sự kiện][Xong] [✕]│
 ├──────────────────────────┬───────────────────────────────────┤
 │ ★ Sửa cây cầu      C.1   │ Sửa cây cầu · Ông Số               │
 │ ☐ Phép nhân bảng 3 T6    │ ✓ Gặp Ông Số                       │
@@ -397,15 +437,15 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 
 **6. Thành phần.** `FilterTabs`, `QuestList` (ảo hóa), `QuestRow` (loại, tên, tiến độ, hạn), `QuestDetail` (NPC, mô tả, danh sách bước, phần thưởng), `StepList`, `RewardChips`, `DeadlineBadge`, `ResetCountdown` (ngày/tuần), `ActionBar`.
 
-**7. Dữ liệu & API.** `listQuests` (lọc trạng thái/loại), `getQuest`, `acceptQuest`, `abandonQuest`, `startQuestActivity` (bước học tập → S16), `reportQuestStep` (bước không học tập, do server xác nhận), WS `quest.progress.updated`. Bài thầy cô giao: **đề xuất** `listMyAssignments` (xem S03). Phiên bản nội dung đã ghim theo quest đang làm ([CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), ADR-0043): journal hiển thị theo version đã ghim.
+**7. Dữ liệu & API.** `listQuests` (lọc trạng thái/loại), `getQuest`, `acceptQuest`, `abandonQuest`, `startQuestActivity` (bước học tập → S16), `reportQuestStep` (bước không học tập, do server xác nhận), WS `quest.progress.updated`. Bài nhà trường giao: `listMyAssignments` (xem S03). Phiên bản nội dung đã ghim theo quest đang làm ([CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), ADR-0043): journal hiển thị theo version đã ghim.
 
-**8. Trạng thái.** Rỗng (tab Đang làm): "Hãy tìm NPC có dấu ! để nhận nhiệm vụ" + nút "Hỏi Mây". Bài giao quá hạn: nhãn "Đã quá hạn — vẫn có thể làm nếu thầy cô cho phép" (màu trung tính). Quest thất bại (theo điều kiện thất bại): "Thử lại" không phạt, không mất phần đã xong. Hết hạn daily/weekly: mờ và chuyển vào "Đã xong/hết hạn". Đang tải: skeleton 5 hàng.
+**8. Trạng thái.** Rỗng (tab Đang làm): "Hãy tìm NPC có dấu ! để nhận nhiệm vụ" + nút "Hỏi Mây". Bài giao quá hạn: nhãn "Đã quá hạn — vẫn làm được nếu bài cho phép nộp muộn" (`late_policy`) (màu trung tính). Quest thất bại (theo điều kiện thất bại): "Thử lại" không phạt, không mất phần đã xong. Hết hạn daily/weekly: mờ và chuyển vào "Đã xong/hết hạn". Đang tải: skeleton 5 hàng.
 
 **9. Tương tác & phản hồi.** "Theo dõi" ghim lên HUD (tối đa theo grade band). "Đi tới": đặt điểm đến + đường dẫn sáng trên mặt đất trong vùng hiện tại; khác vùng thì đề xuất dịch chuyển. Hủy quest có hộp xác nhận. Hoàn thành quest: hộp phần thưởng ngắn rồi về danh sách.
 
-**10. Khác biệt theo grade band.** `g1_3`: chỉ 3 tab (Đang làm, Thầy cô giao, Đã xong), mỗi quest một thẻ lớn có hình NPC, bước hiển thị bằng biểu tượng; `g4_5`: đủ tab, ẩn bộ lọc môn; `g6_9`: đủ tab + lọc môn + sắp xếp theo hạn.
+**10. Khác biệt theo grade band.** `g1_3`: chỉ 3 tab (Đang làm, Nhà trường giao, Đã xong); thẻ quest và hướng dẫn bước có lồng tiếng + phụ đề kèm icon, mỗi quest một thẻ lớn có hình NPC, bước hiển thị bằng biểu tượng; `g4_5`: đủ tab, ẩn bộ lọc môn; `g6_9`: đủ tab + lọc môn + sắp xếp theo hạn.
 
-**11. Song ngữ.** Khóa: `ui.quest.title`, `ui.quest.tab.active|assigned|daily|weekly|event|done`, `ui.quest.track`, `ui.quest.untrack`, `ui.quest.go_to`, `ui.quest.start`, `ui.quest.abandon`, `ui.quest.abandon_confirm`, `ui.quest.reward`, `ui.quest.due`, `ui.quest.overdue`, `ui.quest.resets_in`, `ui.quest.empty`. Tên/mô tả/bước quest là `i18nText`; bài giao do giáo viên đặt tên chỉ có ngôn ngữ giáo viên nhập (hiển thị nguyên văn). Chuỗi dài nhất: mô tả quest (cuộn trong panel).
+**11. Song ngữ.** Khóa: `ui.quest.title`, `ui.quest.tab.active|assigned|daily|weekly|event|done`, `ui.quest.track`, `ui.quest.untrack`, `ui.quest.go_to`, `ui.quest.start`, `ui.quest.abandon`, `ui.quest.abandon_confirm`, `ui.quest.reward`, `ui.quest.due`, `ui.quest.overdue`, `ui.quest.resets_in`, `ui.quest.empty`. Tên/mô tả/bước quest là `i18nText`; bài giao do nhà trường đặt tên chỉ có ngôn ngữ người tạo nhập (hiển thị nguyên văn). Chuỗi dài nhất: mô tả quest (cuộn trong panel).
 
 **12. Trợ năng.** Danh sách đọc theo thứ tự hàng; trạng thái bước bằng biểu tượng + chữ; bàn phím ↑/↓ chọn quest, Enter mở hành động chính.
 
@@ -417,7 +457,7 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 
 | Mã | Tiêu chí |
 |---|---|
-| AC-UX-0501 | Bài giáo viên vừa publish xuất hiện ở tab "Thầy cô giao" và có thông báo 🔔 mà không cần khởi động lại game |
+| AC-UX-0501 | Bài nhà trường vừa publish xuất hiện ở tab "Nhà trường giao" và có thông báo 🔔 mà không cần khởi động lại game |
 | AC-UX-0502 | "Bắt đầu" ở bước học tập mở S16 đúng hoạt động và version đã ghim |
 | AC-UX-0503 | Quest thất bại/hết giờ không hiển thị thông điệp tiêu cực và giữ phần tiến độ hợp lệ theo QUEST_SYSTEM |
 | AC-UX-0504 | Danh sách 100 quest cuộn mượt ≥ 30 FPS trên điện thoại tầm trung |
@@ -452,7 +492,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 (b) Đang chơi — HUD boss
 ┌───────────────────────────────────────────────────────────────────────────┐
 │ Rồng Phân Số  [██████████░░░░░░░░░ năng lượng 52%]   Phase 2/3  ⏱ 01:45    │
-│ Party: Cú(✓4) Mèo(✓3) Rồng(✓2) · cần mỗi bạn ≥ 2 câu đúng   [Rời]           │
+│ Party: Cú ✓ · Mèo ✓ · Rồng … · cần mỗi bạn đạt phần đóng góp [Rời]          │
 │                         (thế giới 3D: boss + nhân vật)                     │
 │         ┌──────────── Câu hỏi (S16/S17, panel giữa-dưới) ─────────┐        │
 │         │ 3/4 + 1/8 = ?    (A) 7/8   (B) 4/12   (C) 1   (D) 5/8   │        │
@@ -468,7 +508,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 (b) Đang chơi
 ┌──────────────────────────────────────────────────────────────┐
 │ Rồng Phân Số [███████░░░░ 52%] P2/3 ⏱01:45            [Rời]  │
-│ Cú✓4 Mèo✓3 Rồng✓2                                            │
+│ Cú ✓  Mèo ✓  Rồng ✓ (đã đạt phần đóng góp)                    │
 │               (boss 3D, camera cố định)                       │
 │ ┌──────────────────────────────────────────────────────────┐ │
 │ │ 3/4 + 1/8 = ?                                             │ │
@@ -506,7 +546,7 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 
 **13. Hiệu năng máy tầm trung.** Cảnh boss là arena riêng nhẹ (ngân sách cảnh trong [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)); tối đa 8 nhân vật; hiệu ứng tấn công dùng particle ≤ 200 hạt (preset Trung bình), tắt ở preset Thấp; camera cố định trên mobile; panel câu hỏi là Control 2D (không SubViewport 3D).
 
-**14. An toàn/riêng tư.** Danh sách đóng góp chỉ hiện ✓ số câu của từng bạn cho chính party, không công khai ra ngoài; kết quả học tập riêng từng người.
+**14. An toàn/riêng tư.** Danh sách đóng góp chỉ hiện dấu ✓ khi từng bạn đã đạt phần đóng góp tối thiểu (`contribution_met` từ server — [CHALLENGE_BOSS_SYSTEM §3.5](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)), **không** hiện số câu đúng của bạn khác; kết quả học tập riêng từng người.
 
 **15. AC.**
 
@@ -590,7 +630,7 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 | Loại | Nội dung | Nhãn |
 |---|---|---|
 | Endpoint | `GET /api/v1/game/profile/nickname-suggestions` (`suggestNicknames`) — gợi ý nickname duy nhất trong tenant theo ngôn ngữ | [Proposed] |
-| Endpoint | `GET /api/v1/lms/my-assignments` (`listMyAssignments`) — bài giao của học sinh hiện hành, hoặc gộp vào `listQuests` nguồn `assignment` | [Proposed] |
+| Endpoint | `GET /api/v1/learning/my-assignments` (`listMyAssignments`, đã có trong OpenAPI) — bài nhà trường giao cho học sinh hiện hành; gộp vào `listQuests` nguồn `assignment` | [Proposed] |
 | Quy ước | Ảnh minh họa bản đồ/nền không chứa chữ (để dịch) | [Proposed] |
 | Quy ước | Level-up hoãn khi đang trong hoạt động có giới hạn thời gian | [Proposed] |
 | Giới hạn | Nickname tối đa 24 ký tự | [Proposed] |

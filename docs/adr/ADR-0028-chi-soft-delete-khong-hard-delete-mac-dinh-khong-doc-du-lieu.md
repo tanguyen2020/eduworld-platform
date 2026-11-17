@@ -1,9 +1,12 @@
 # ADR-0028 — Chỉ soft-delete, không hard-delete; mặc định không đọc dữ liệu đã xóa
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-20 · **Tài liệu:** [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md), [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0089](ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-20 · **Tài liệu:** [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md), [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [Chỉ mục ADR](README.md)
 
 > [!NOTE]
 > **Mục 8 được chốt bởi [ADR-0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md)** (2026-11-15): Release 1.0 không có quy trình xóa vật lý hay gỡ partition; nghĩa vụ xóa đáp ứng bằng ẩn danh hóa; ngoại lệ duy nhất vẫn là ADR-0033. OQ-20 đã đóng.
+
+> [!WARNING]
+> **Một phần được thay bởi ADR-0089.** Không còn hiệu lực: điều kiện `deleted_at IS NULL` trong policy RLS SELECT. **Còn hiệu lực:** chỉ soft-delete, mặc định không đọc dữ liệu đã xóa (do ent interceptor và view `_live` bảo đảm), Thùng rác.
 
 ## Bối cảnh
 
@@ -32,3 +35,4 @@ Stakeholder yêu cầu: ứng dụng chỉ soft-delete, không hard-delete; khi 
 | 2026-11-15 | Accepted | Stakeholder |
 | 2026-11-15 | Thêm ngoại lệ purge chat gameplay | ADR-0033 |
 | 2026-11-15 | Role DB theo service; hook ent | ADR-0037, ADR-0039 |
+| 2026-11-17 | Một phần superseded by ADR-0089 (RLS chỉ lọc tenant) | Technical Architect |

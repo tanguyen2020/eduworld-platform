@@ -12,9 +12,9 @@
 | Học sinh | Thử thách hấp dẫn, độ khó vừa sức, sai không bị chê bai |
 | Game Designer | Cấu hình loại, độ khó, phase, phần thưởng trong Game Studio |
 | EdTech | Mỗi thử thách gắn LO, kết quả học tập ghi riêng từng học sinh |
-| Giáo viên | Chọn thử thách đã publish để giao cho lớp (không sửa luật chơi, ADR-0027) |
+| Nhà trường (`school_admin`, `academic_manager`) | Chọn thử thách đã publish để giao cho lớp qua LMS (không sửa luật chơi, ADR-0027) |
 
-**Phân biệt với competition:** challenge/boss là **PvE** (người chơi đấu với nội dung) thuộc `game-service`; trận **PvP** xếp hạng (1v1, Team Battle, giải đấu) thuộc `competition-service` ([COMPETITION_SYSTEM](COMPETITION_SYSTEM.md)). `challenge-templates` trong `competition-service` là mẫu **thi đấu lớp/trường** của giáo viên, khác `challenges` ở tài liệu này.
+**Phân biệt với competition:** challenge/boss là **PvE** (người chơi đấu với nội dung) thuộc module `game`; trận **PvP** xếp hạng (1v1, Team Battle, giải đấu) thuộc module `competition` ([COMPETITION_SYSTEM](COMPETITION_SYSTEM.md)). `challenge-templates` trong module `competition` là mẫu **thi đấu lớp/trường** do `school_admin` dùng để tạo thử thách lớp và giải trường (ADR-0072), khác `challenges` ở tài liệu này.
 
 ## 2. Challenge Engine
 
@@ -32,7 +32,7 @@
 | `party` | Như `coop` nhưng tính điểm nhóm để mở phần thưởng nhóm | Như trên |
 | `weekly` | Challenge xoay vòng theo tuần (`period_key`) | Hết tuần |
 | `seasonal` | Gắn mùa/sự kiện, có thời gian mở/đóng | Hết mùa |
-| `tournament` | Vòng PvE dùng trong sự kiện/giải; xếp hạng (nếu có) do competition-service | Theo cấu hình giải |
+| `tournament` | Vòng PvE dùng trong sự kiện/giải; xếp hạng (nếu có) do module competition | Theo cấu hình giải |
 
 ### 2.2. Độ khó
 
@@ -76,7 +76,7 @@ stateDiagram-v2
 ```
 
 - `ChallengeAttempt` ghim `challenge_version` và các `activity_version` (ADR-0043).
-- Mỗi câu/hoạt động trong challenge tạo **Attempt học tập cá nhân** ở learning-service (mode `challenge` [Proposed], ADR-0048) qua internal API `POST /internal/v1/attempts`. Chấm điểm luôn ở learning-service (ADR-0016).
+- Mỗi câu/hoạt động trong challenge tạo **Attempt học tập cá nhân** ở module learning (mode `challenge` [Proposed], ADR-0048) qua facade `attempts` của module learning (gọi trong tiến trình, ADR-0074). Chấm điểm luôn ở module learning (ADR-0016).
 - Thời gian dùng giờ server (`started_at`, `deadline_at`).
 
 ### 2.4. Thử lại và giới hạn
@@ -142,14 +142,14 @@ Boss có `grade_levels[]`; mỗi khối có bộ yêu cầu riêng (cùng boss, 
 
 ## 4. Multiplayer boss: chạy ở đâu
 
-**Quyết định [Proposed]:** encounter (solo và party) chạy **server-authoritative trong `game-service`**, dùng chung thư viện room host (`pkg/roomhost`) với `competition-service`.
+**Quyết định [Proposed]:** encounter (solo và party) chạy **server-authoritative trong module `game`**, dùng chung thư viện room host (`pkg/roomhost`) với module `competition`.
 
 Lý do:
-- Boss là nội dung PvE gắn quest, progression và phần thưởng (dữ liệu đều ở game-service); không có rating nên không cần competition-service.
-- Tránh để competition-service phụ thuộc cấu hình game (quest, reward).
-- Dùng lại cơ chế room host (owner node, checkpoint, reconnect grace) đã đặc tả ở [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md): lệnh WS `boss.*` đi qua `realtime-gateway` → NATS request `ew.cmd.game.boss.*`; trạng thái phát qua Valkey Pub/Sub `ew:rt:room:<encounter_id>`.
+- Boss là nội dung PvE gắn quest, progression và phần thưởng (dữ liệu đều ở module game); không có rating nên không cần module competition.
+- Tránh để module competition phụ thuộc cấu hình game (quest, reward).
+- Dùng lại cơ chế room host (owner node, checkpoint, reconnect grace) đã đặc tả ở [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md): lệnh WS `boss.*` đi qua `realtime` → NATS request `ew.cmd.game.boss.*`; trạng thái phát qua Valkey Pub/Sub `ew:rt:room:<encounter_id>`.
 
-Party vào boss: leader chọn hoạt động "Boss" trong Party Lobby ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)), game-service tạo encounter cho các thành viên đủ điều kiện; chat `party` tiếp tục dùng trong encounter.
+Party vào boss **chỉ** qua Party Lobby: leader chọn hoạt động `boss` ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)), module competition kiểm tra điều kiện qua `checkPartyActivityEligibility` rồi gọi `startPartyActivity` của module game, module game tạo encounter cho các thành viên đủ điều kiện và trả `encounter_id`; lệnh WS `boss.*` định tuyến tới module game ([REALTIME_ARCHITECTURE §4.1](../06-architecture/REALTIME_ARCHITECTURE.md#41-dịch-lệnh-ws--nats)); chat `party` tiếp tục dùng trong encounter.
 
 Mất kết nối: grace 120 s như quest co-op; encounter tiếp tục nếu số người còn lại ≥ `party_size.min`; người quay lại (kể cả từ thiết bị khác, ADR-0031) nhận lại trạng thái từ checkpoint.
 
@@ -157,13 +157,13 @@ Mất kết nối: grace 120 s như quest co-op; encounter tiếp tục nếu s�
 
 | Rủi ro | Biện pháp |
 |---|---|
-| Client tự báo hạ boss/hoàn thành challenge | Chỉ server đổi trạng thái, dựa trên kết quả chấm của learning-service |
+| Client tự báo hạ boss/hoàn thành challenge | Chỉ server đổi trạng thái, dựa trên kết quả chấm của module learning |
 | Trả lời quá nhanh/đoán | Ngưỡng thời gian tối thiểu mỗi câu (ANTI_CHEAT); không tính đóng góp, gắn `integrity_signals` |
 | Lặp challenge dễ để farm | `max_attempts_per_day`, reward giảm dần, cap XP/ngày ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.2) |
 | Một người làm hộ cả party | `min_contribution` mỗi người, attempt gắn đúng `student_id` của phiên |
 | Gửi lặp kết quả | Idempotency-Key cho mọi lệnh ghi; phần thưởng idempotent theo `(encounter_id, student_id)` |
 
-## 6. Dữ liệu (game-service, `eduworld_game`)
+## 6. Dữ liệu (module game, `eduworld_game`)
 
 | Bảng | Loại | Cột chính |
 |---|---|---|
@@ -187,11 +187,11 @@ Chi tiết: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 | POST | `/game/challenge-attempts/{challenge_attempt_id}:abandon` | Bỏ | B |
 | GET | `/game/challenge-attempts/{challenge_attempt_id}` | Trạng thái, điểm, sức bền | T |
 | GET | `/game/bosses?area_id=` | Boss khả dụng | T |
-| POST | `/game/bosses/{boss_id}/encounters` | Tạo encounter solo hoặc cho party (leader) | B |
+| POST | `/game/bosses/{boss_id}/encounters` | Tạo encounter **solo**. Encounter party **không** tạo bằng endpoint này: leader chọn `boss` trong Party Lobby, module competition gọi `startPartyActivity` (internal, `Idempotency-Key = party_activity_id`) của module game ([PARTY_SYSTEM §6](../03-social-multiplayer/PARTY_SYSTEM.md#6-party-session)) | B |
 | GET | `/game/boss-encounters/{encounter_id}` | Trạng thái (dự phòng khi mất WS) | T |
 | POST | `/game/boss-encounters/{encounter_id}:leave` | Rời encounter | B |
 
-Câu trả lời trong challenge/boss nộp qua API attempt hiện có (`POST /learning/activity-attempts/{attempt_id}/responses`, ADR-0059) hoặc lệnh WS `boss.answer.submit` (gateway chuyển tới game-service, game-service gọi learning-service chấm).
+Câu trả lời trong challenge/boss nộp qua API attempt hiện có (`POST /learning/activity-attempts/{attempt_id}/responses`, ADR-0059) hoặc lệnh WS `boss.answer.submit` (gateway chuyển tới module game, module game gọi module learning chấm).
 
 WS (đề xuất cho AsyncAPI): lệnh `boss.encounter.ready`, `boss.answer.submit`; sự kiện `boss.encounter.updated`, `boss.phase.started`, `boss.phase.completed`, `boss.encounter.ended`, `challenge.attempt.updated`.
 
@@ -201,11 +201,11 @@ Cấu hình (Game Studio): `/api/v1/game-admin/challenges`, `/api/v1/game-admin/
 
 | Event | Producer | Consumers | Payload chính |
 |---|---|---|---|
-| `challenge.started` | game-service | LA | `challenge_attempt_id`, `challenge_version_id`, `difficulty` |
-| `challenge.completed` | game-service | reward (XP), achievement, LA | `status` (succeeded/failed/abandoned), `score`, `difficulty`, `objective_ids[]` |
-| `boss.encounter_started` | game-service | RT, LA | `encounter_id`, `boss_version_id`, `member_ids[]` |
-| `boss.phase_completed` | game-service | RT | `encounter_id`, `phase_id` |
-| `boss.encounter_completed` | game-service | reward, achievement, LA | `encounter_id`, `result` (defeated/ended), `contributions[]` (`student_id`, `eligible`) |
+| `challenge.started` | module game | LA | `challenge_attempt_id`, `challenge_version_id`, `difficulty` |
+| `challenge.completed` | module game | reward (XP), achievement, LA | `status` (succeeded/failed/abandoned), `score`, `difficulty`, `objective_ids[]` |
+| `boss.encounter_started` | module game | RT, LA | `encounter_id`, `boss_version_id`, `member_ids[]` |
+| `boss.phase_completed` | module game | RT | `encounter_id`, `phase_id` |
+| `boss.encounter_completed` | module game | reward, achievement, LA | `encounter_id`, `result` (defeated/ended), `contributions[]` (`student_id`, `eligible`) |
 
 ## 9. Lỗi
 

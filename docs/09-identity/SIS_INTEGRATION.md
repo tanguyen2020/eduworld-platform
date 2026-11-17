@@ -1,6 +1,6 @@
 # SIS Integration
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Backend Architect + Identity & Security Engineer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Backend Architect + Identity & Security Engineer · Cập nhật: 2026-11-15
 > Liên quan: [ADR-0021](../adr/ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) · [EduWorld SIS Contract v1](../../specs/sis/eduworld-sis-contract.v1.yaml) · [ACCOUNT_PROVISIONING](ACCOUNT_PROVISIONING.md) · [IDENTITY_MAPPING](IDENTITY_MAPPING.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · OQ-01, OQ-12
 
 **Mục đích & phạm vi.** Nguồn chuẩn cho tích hợp SIS: contract do EduWorld sở hữu, hai cách nhận dữ liệu, chế độ đồng bộ, staging/reconciliation, lỗi, audit. Cách dùng dữ liệu SIS khi đăng nhập ở IDENTITY_MAPPING §3.2.
@@ -11,8 +11,8 @@
 |---|---|---|
 | 1 | **EduWorld sở hữu contract tích hợp (DTO + API).** Mỗi trường cung cấp endpoint triển khai đúng [EduWorld SIS Contract v1](../../specs/sis/eduworld-sis-contract.v1.yaml). EduWorld **không** nhận DTO riêng của từng SIS và **không** viết adapter ánh xạ theo cấu trúc SIS, vì làm vậy sẽ phá vỡ cấu trúc domain | [Confirmed] |
 | 2 | Không giả định SIS cụ thể. Trường dùng SIS nào thì trường (hoặc nhà cung cấp SIS) tự dựng lớp facade theo contract; phần này nằm ngoài EduWorld | [Confirmed] |
-| 3 | Godot và CMS SPA **không bao giờ** gọi SIS. Chỉ `identity-worker` (identity-service, ADR-0036) gọi | [Confirmed] |
-| 4 | SIS là nguồn sự thật cho học sinh, giáo viên, trường, lớp, enrollment và trạng thái tài khoản (các trường dữ liệu có trong contract) | [Proposed] |
+| 3 | Godot và CMS SPA **không bao giờ** gọi SIS. Chỉ adapter SIS của module identity gọi (job `sis-sync` trong profile `worker-jobs`, lookup lúc đăng nhập trong `core-api`; ADR-0074) | [Confirmed] |
+| 4 | SIS là nguồn sự thật cho học sinh, trường, lớp, enrollment và trạng thái tài khoản học sinh (các trường dữ liệu có trong contract). SIS **không** cung cấp giáo viên hay phân công giảng dạy; nhân sự nhà trường được tạo thủ công trên Admin Portal kèm UserRole (ADR-0072) | [Proposed] / [Confirmed] ADR-0072 |
 | 5 | Contract chỉ chứa trường dữ liệu EduWorld cần (data minimization): không địa chỉ, số điện thoại, phụ huynh, ảnh, điểm SIS | [Confirmed] |
 | 6 | Mọi dữ liệu từ SIS đi qua validate contract → staging → reconciliation → apply, có audit | [Proposed] |
 | 7 | Credential SIS nằm trong secret manager, không lưu plaintext trong DB, không đi qua public gateway | [Confirmed] |
@@ -24,7 +24,7 @@
 
 | Thành phần | Ai triển khai | Ai gọi | Đặc tả |
 |---|---|---|---|
-| **Pull API** (`/eduworld/v1/...` trên hạ tầng của trường) | Trường / nhà cung cấp SIS | `identity-worker` | `paths` trong `specs/sis/eduworld-sis-contract.v1.yaml` |
+| **Pull API** (`/eduworld/v1/...` trên hạ tầng của trường) | Trường / nhà cung cấp SIS | Module identity (binary `worker`) | `paths` trong `specs/sis/eduworld-sis-contract.v1.yaml` |
 | **Push webhook** (tùy chọn) | EduWorld (`POST /internal/sis/webhooks/{connection_id}`) | SIS của trường | `webhooks.sisChanges` trong cùng file |
 | **CSV import** | EduWorld (upload qua CMS) | School Admin | §4.2, cột = tên trường DTO |
 
@@ -37,9 +37,7 @@
 | `GET /schools/{school_external_id}/academic-years` | Có | `full_sync` |
 | `GET /schools/{id}/classes?academic_year=` | Có | `full_sync` |
 | `GET /schools/{id}/students` | Có | `full_sync` |
-| `GET /schools/{id}/teachers` | Có | `full_sync` |
 | `GET /schools/{id}/enrollments?academic_year=` | Có | `full_sync` |
-| `GET /schools/{id}/teaching-assignments?academic_year=` | Khuyến nghị | `teaching_assignments` |
 | `GET /changes?since=` | Tùy chọn | `delta` |
 | `GET /schools/{id}/students/lookup?login_username=` | Tùy chọn | `student_lookup` |
 | Gửi `POST` webhook tới EduWorld | Tùy chọn | `webhook` |
@@ -52,12 +50,12 @@ Quy ước chung: JSON `snake_case`, phân trang cursor (`data` + `page.next_cur
 |---|---|---|
 | `School` | `school_external_id`, `school_code`, `name`, `status`, `updated_at` | `organization_external_id` |
 | `AcademicYear` | `academic_year` (YYYY-YYYY), `start_date`, `end_date`, `is_current` | — |
-| `Class` | `class_external_id`, `school_external_id`, `academic_year`, `grade_level` (1–9), `name`, `updated_at` | `homeroom_teacher_external_id` |
+| `Class` | `class_external_id`, `school_external_id`, `academic_year`, `grade_level` (1–9), `name`, `updated_at` | — |
 | `Student` | `student_external_id`, `school_external_id`, `student_code`, `full_name`, `grade_level`, `status`, `updated_at` | `date_of_birth`, `national_student_id` (EduWorld chỉ lưu hash), `login{username, idp_alias, idp_subject}` |
-| `Teacher` | `teacher_external_id`, `school_external_id`, `staff_code`, `full_name`, `status`, `updated_at` | `work_email` (**cần cho đăng nhập portal** — nhân sự bắt buộc có email, ADR-0067; thiếu → issue `missing_email` [Proposed: fork spec cân nhắc chuyển thành bắt buộc]), `login` |
 | `Enrollment` | `student_external_id`, `class_external_id`, `start_date`, `status`, `updated_at` | `end_date` |
-| `TeachingAssignment` | `teacher_external_id`, `class_external_id`, `subject_code` (**mã môn của EduWorld**), `role`, `updated_at` | — |
 | `Change` / `ChangeBatch` | `sequence`, `entity_kind`, `operation` (upsert/delete), `external_id`, `occurred_at` (+ `record` khi upsert) | — |
+
+EduWorld SIS Contract v1 **không có** thực thể `Teacher`, `TeachingAssignment` và trường `Class.homeroom_teacher_external_id` (ADR-0072). Facade gửi kèm các trường/thực thể này bị bỏ qua, không lỗi.
 
 `School.organization_external_id` là **mã đơn vị** phía SIS. EduWorld **không** suy ra tenant từ trường này: System Admin cấu hình mỗi `sis_connection` thuộc một tenant và ánh xạ `school_external_id` → trường trong tenant đó. Trường lạ (chưa ánh xạ) xuất hiện trong dữ liệu → reconciliation issue `unmapped_school`, không tự tạo tenant/trường. Học sinh không thuộc trường nào đã ánh xạ sẽ không được đồng bộ (khi đăng nhập sẽ vào tenant chung, ADR-0026).
 
@@ -75,12 +73,12 @@ Enum (`status`, `role`, `subject_code`…) dùng **giá trị của EduWorld**. 
 |---|---|
 | Bản ghi thiếu trường bắt buộc, sai kiểu, sai enum | Từ chối bản ghi, ghi `sis.sync_record_errors` với mã `SIS_CONTRACT_VIOLATION`, tiếp tục bản ghi khác |
 | Có trường lạ ngoài contract | Bỏ qua, **không lưu**; tăng metric `eduworld_sis_contract_unknown_fields_total` để báo trường sửa facade |
-| > 10% bản ghi của một run vi phạm contract | Dừng run, connection chuyển `status=contract_error`, cảnh báo School Admin + ops |
+| > 10% bản ghi của một run vi phạm contract (`sis_contract_violation_threshold`) | Dừng run, connection chuyển `status=contract_error`, cảnh báo School Admin + ops |
 | `contract_version` major không khớp | Không chạy, `status=contract_error` |
 
 ### 2.6. Onboarding một trường
 
-1. EduWorld cung cấp cho trường: file spec, tài liệu này, **bộ conformance test** và mock server sinh từ spec (Postman collection chạy bằng Postman CLI hoặc tương đương, kế hoạch Phase 1 trong `specs/postman/`).
+1. EduWorld cung cấp cho trường: file spec, tài liệu này, **bộ conformance test** và mock server sinh từ spec (Postman collection chạy bằng Postman CLI hoặc tương đương, ở `specs/postman/sis-conformance/`).
 2. Trường/nhà cung cấp SIS dựng facade theo contract trên môi trường test, chạy conformance test đến khi pass.
 3. Platform Admin tạo `sis_connection` (base URL, phương thức auth, `secret_ref`, `contract_version`, lịch sync), chạy `HealthCheck` + full sync **dry-run**, rồi School Admin duyệt diff.
 4. Bật lịch đồng bộ. Chưa có facade thì dùng `csv_import` song song.
@@ -92,7 +90,7 @@ flowchart LR
   subgraph school[Hạ tầng của trường — ngoài EduWorld]
     sis[(SIS bất kỳ)] --> facade[Facade theo\nEduWorld SIS Contract v1]
   end
-  subgraph worker[identity-service: identity-worker / sis]
+  subgraph worker[module identity: worker / sis]
     sch[Scheduler] --> run[SyncRun orchestrator]
     wh[Webhook receiver\n/internal/sis/webhooks/:conn] --> q[(NATS JetStream work-queue\nIDENTITY_SIS_JOBS)]
     q --> run
@@ -104,9 +102,9 @@ flowchart LR
     stg --> rec[Reconciler]
     rec --> apply[Apply via ports:\norganization / identity]
     rec --> iss[(sis.reconciliation_issues)]
-    apply --> ob[(outbox_events → NATS EVT_IDENTITY\nprojection ở service khác)]
+    apply --> ob[(outbox_events → NATS EVT_IDENTITY\nprojection ở module khác)]
   end
-  cms[CMS: upload CSV / xem lỗi đồng bộ] --> api[identity-service api]
+  cms[CMS: upload CSV / xem lỗi đồng bộ] --> api[module identity api]
   api --> obj[(Object storage)]
   api --> q
   csv --> obj
@@ -124,7 +122,7 @@ Port dùng trực tiếp DTO của contract (sinh từ `specs/sis/eduworld-sis-c
 ```go
 package sis
 
-import contract "eduworld/services/identity-service/internal/infrastructure/sis/contractv1" // sinh từ specs/sis
+import contract "eduworld/modules/identity/internal/infrastructure/sis/contractv1" // sinh từ specs/sis
 
 type Capability string
 
@@ -133,7 +131,6 @@ const (
     CapDelta               Capability = "delta"
     CapWebhook             Capability = "webhook"
     CapStudentLookup       Capability = "student_lookup"
-    CapTeachingAssignments Capability = "teaching_assignments"
 )
 
 type Cursor string
@@ -152,9 +149,7 @@ type SISProvider interface {
     ListAcademicYears(ctx context.Context, schoolExtID string) ([]contract.AcademicYear, error)
     ListClasses(ctx context.Context, schoolExtID, year string, cur Cursor) (Page[contract.Class], error)
     ListStudents(ctx context.Context, schoolExtID string, cur Cursor) (Page[contract.Student], error)
-    ListTeachers(ctx context.Context, schoolExtID string, cur Cursor) (Page[contract.Teacher], error)
     ListEnrollments(ctx context.Context, schoolExtID, year string, cur Cursor) (Page[contract.Enrollment], error)
-    ListTeachingAssignments(ctx context.Context, schoolExtID, year string, cur Cursor) (Page[contract.TeachingAssignment], error)
 
     // Tùy chọn theo capability; không hỗ trợ trả ErrUnsupported.
     ListChanges(ctx context.Context, since Cursor) (Page[contract.Change], error)
@@ -170,7 +165,7 @@ Bước `mapping` chỉ chuyển DTO contract → entity domain (`org`, `identit
 ### 4.2. `contract_v1`: pull qua HTTP [Proposed, Phase 1]
 
 - Cấu hình connection: `base_url`, `auth_type` (`oauth2_client_credentials` | `api_key` | `mtls`), `token_url` (nếu OAuth2), `secret_ref`, `contract_version`, `schools[]` (danh sách `school_external_id` thuộc connection).
-- Client giới hạn tốc độ mặc định 10 req/s/connection [Proposed], timeout 15s/request, tôn trọng `Retry-After`.
+- Client giới hạn tốc độ `sis_client_rate`: 10 req/s mỗi connection, timeout 15 s/request, tôn trọng `Retry-After` [Confirmed — Technical Architect 2026-11-16].
 - Mỗi response được validate theo JSON Schema trích từ spec trước khi vào staging (§2.5).
 
 ### 4.3. `csv_import`: cho trường chưa có API [Proposed, Phase 1]
@@ -185,8 +180,8 @@ TH-DEMO-001,THDEMO,Trường Tiểu học Demo,ORG-DEMO,active
 
 `classes.csv`
 ```csv
-class_external_id,school_external_id,academic_year,grade_level,name,homeroom_teacher_external_id
-C-2026-3A,TH-DEMO-001,2026-2027,3,3A,GV-0012
+class_external_id,school_external_id,academic_year,grade_level,name
+C-2026-3A,TH-DEMO-001,2026-2027,3,3A
 ```
 
 `students.csv`
@@ -195,22 +190,10 @@ student_external_id,school_external_id,student_code,full_name,date_of_birth,grad
 HS-000123,TH-DEMO-001,2026000123,Nguyễn Văn An,2018-03-14,3,active,hs.thdemo.000123
 ```
 
-`teachers.csv`
-```csv
-teacher_external_id,school_external_id,staff_code,full_name,work_email,status,login_username
-GV-0012,TH-DEMO-001,GV0012,Trần Thị Bình,gv0012@thdemo.edu.vn,active,gv.thdemo.0012
-```
-
 `enrollments.csv`
 ```csv
 student_external_id,class_external_id,start_date,end_date,status
 HS-000123,C-2026-3A,2026-09-05,,active
-```
-
-`teaching_assignments.csv`
-```csv
-teacher_external_id,class_external_id,subject_code,role
-GV-0012,C-2026-3A,math,homeroom
 ```
 
 Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng ghi `sis.sync_record_errors` (số dòng, cột, mã lỗi). Import theo chế độ **all-or-nothing theo file** [Proposed] để tránh trạng thái nửa vời. Có **dry-run** hiển thị diff trước khi áp dụng.
@@ -227,7 +210,7 @@ Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng
 
 Mục tiêu: học sinh thuộc SIS luôn có trong database EduWorld đủ dữ liệu game cần hiển thị (trường, lớp, khối, thông tin theo DTO contract) ngay khi vào game, mà không biến SIS thành điểm nghẽn ở giờ cao điểm (ADR-0045). Login sync **bổ sung** cho full/delta/webhook (§5), không thay thế.
 
-| Nhánh | Điều kiện (tại `POST /api/v1/auth/session`) | Hành vi | Đăng nhập |
+| Nhánh | Điều kiện (tại `POST /api/v1/auth/game/login`, sau khi Keycloak xác thực) | Hành vi | Đăng nhập |
 |---|---|---|---|
 | **A. Đủ & mới** | Có `synced_students` + enrollment active + trường + lớp; `last_synced_at` trong `sis_login_refresh_after_hours` (mặc định 24 giờ) | Không gọi SIS | Tiếp tục ngay |
 | **B. Thiếu dữ liệu bắt buộc** | Lần đầu đăng nhập, hoặc chưa có trường/lớp/enrollment | **Blocking lookup**: `GET /schools/{school_external_id}/students/lookup` của đúng connection (ADR-0046), timeout `sis_login_sync_timeout_ms` (3.000 ms) → contract validator → reconciliation → apply (cùng pipeline §6) | Có lớp → tiếp tục; vẫn thiếu lớp → `NO_ACTIVE_ENROLLMENT` + `reconciliation_issue` `missing_class`; SIS lỗi/timeout/không có capability `student_lookup` → dùng dữ liệu đồng bộ gần nhất, nếu vẫn thiếu → `NO_ACTIVE_ENROLLMENT` |
@@ -237,12 +220,12 @@ Mục tiêu: học sinh thuộc SIS luôn có trong database EduWorld đủ dữ
 sequenceDiagram
   autonumber
   participant G as Godot
-  participant ID as identity-service
+  participant ID as module identity
   participant DB as eduworld_identity
   participant Q as NATS IDENTITY_SIS_JOBS
   participant SIS as SIS của trường
   participant SVC as game/learning/competition/chat
-  G->>ID: POST /auth/session (token)
+  G->>ID: POST /auth/game/login
   ID->>DB: synced_students + enrollment + school + class
   alt A. Đủ và mới
     ID-->>G: bootstrap (trường, lớp, khối)
@@ -266,7 +249,7 @@ sequenceDiagram
   DB-->>SVC: student.synced / enrollment.changed / school.synced qua NATS → ref.*
 ```
 
-- **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ identity-service**, nên lần đăng nhập đầu hiển thị đúng ngay; các service khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
+- **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ module identity**, nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 - **Bảo vệ khi tải cao:** tối đa `sis_login_sync_concurrency` (20) lookup đồng thời mỗi connection; vượt giới hạn hoặc circuit breaker connection đang mở → nhánh B dùng dữ liệu đồng bộ gần nhất (nếu đủ) hoặc trả `NO_ACTIVE_ENROLLMENT` kèm thông điệp "thử lại sau ít phút"; nhánh C chỉ xếp job. Không có retry đồng bộ trên đường đăng nhập.
 - **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_class`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).
 - `login_events.sis_connection_id` và kết quả sync được ghi lại (ADR-0046 mục 8).
@@ -300,7 +283,7 @@ Một connection chỉ có một SyncRun chạy tại một thời điểm (Valk
 | Bảng (schema `sis`) | Mục đích |
 |---|---|
 | `sis_connections` | `connection_id`, `tenant_id` (connection thuộc một tenant; tenant `unit` có thể dùng một connection cho nhiều trường, hoặc mỗi trường một SIS khác nhau), danh sách trường ở bảng `sis_connection_schools` (không dùng mảng), `provider_kind` (`contract_v1` | `csv_import`), `contract_version`, `config` (base_url, auth_type, token_url, schools[] — không secret, không field-mapping), `secret_ref`, `status` (active/auth_error/contract_error/paused), `delta_watermark`, `schedule` |
-| `sync_runs` | `run_id`, `connection_id`, `mode`, `status` (running/succeeded/partially_failed/failed), `started_at`, `finished_at`, `stats` (jsonb: fetched/created/updated/unchanged/errors) |
+| `sync_runs` | `run_id`, `connection_id`, `mode` (`full`/`delta`/`webhook`/`csv_import`), `status` (`queued`/`running`/`succeeded`/`partially_failed`/`failed`), `started_at`, `finished_at`, `stats` (jsonb: fetched/created/updated/unchanged/errors) |
 | `staging_records` | `run_id`, `entity_kind`, `external_id`, `payload` (jsonb, đã chuẩn hóa), `raw_hash`, `action` (create/update/noop/deactivate), `status` |
 | `sis_connection_schools` | `(sis_connection_id, school_id)`, `active_from`, `active_to`; **một trường chỉ có một connection active** (unique partial index `school_id WHERE active_to IS NULL AND deleted_at IS NULL`) — ADR-0046 |
 | `sis_links` | Ánh xạ bản ghi SIS ↔ entity nội bộ. **Khóa nguồn học sinh `(sis_connection_id, student_external_id)`** là unique; `student_external_id` chỉ duy nhất trong một SIS (hai SIS trùng mã không bị nhầm); `last_hash` |
@@ -308,7 +291,7 @@ Một connection chỉ có một SyncRun chạy tại một thời điểm (Valk
 | `sync_record_errors` | Lỗi validate/apply theo bản ghi |
 | `reconciliation_issues` | Xung đột cần người xử lý: `issue_type`, `entity refs`, `suggested_action`, `status`, `resolved_by` |
 
-Staging giữ 30 ngày rồi **ẩn danh hóa** payload (chứa PII) và bị loại khỏi truy vấn; ứng dụng không hard-delete (ADR-0028), partition cũ giữ lại, không gỡ trong Release 1.0 (ADR-0070).
+Staging giữ `sis_staging_retention` (30 ngày) rồi **ẩn danh hóa** payload (chứa PII) và bị loại khỏi truy vấn; ứng dụng không hard-delete (ADR-0028), partition cũ giữ lại, không gỡ trong Release 1.0 (ADR-0070).
 
 ### 6.2. Luồng
 
@@ -327,7 +310,7 @@ sequenceDiagram
   C->>C: So sánh với sis_links.last_hash → create/update/noop
   C->>C: Áp quy tắc xung đột (§6.3)
   alt Không xung đột
-    C->>O: Apply theo thứ tự: school → class → teacher → student → enrollment → teaching_assignment
+    C->>O: Apply theo thứ tự: school → class → student → enrollment
     O-->>C: ok (+ outbox events)
   else Xung đột
     C->>C: Tạo reconciliation_issue, bỏ qua bản ghi
@@ -335,11 +318,11 @@ sequenceDiagram
   C->>R: stats
 ```
 
-Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa trên `raw_hash`). Event sinh ra: `student.synced`, `enrollment.changed`, `user.status_changed`, `teaching_assignment.changed`, `user_role.changed`, `school.synced`.
+Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa trên `raw_hash`). Event sinh ra: `student.synced`, `enrollment.changed`, `user.status_changed`, `class.synced`, `school.synced`.
 
-**UserRole từ SIS (ADR-0066):** giáo viên/nhân sự trong SIS nhận UserRole `source = sis` (role `teacher` scope trường; phạm vi lớp × môn suy ra từ TeachingAssignment, không tạo UserRole kép). UserRole `source = sis` do sync quản lý: bản ghi biến mất/hết hạn → `valid_to` + `user_role.changed`; Tenant Admin không xóa tay được (chỉ thêm UserRole `manual` bổ sung) [Proposed]. Học sinh không bao giờ nhận role portal.
+**UserRole không đến từ SIS (ADR-0066, ADR-0072):** Release 1.0 SIS không đồng bộ nhân sự, nên mọi UserRole của nhân sự nhà trường là `source = manual` do Tenant Admin/School Admin gán trên Admin Portal; enum `source` không có giá trị `sis`. Học sinh không bao giờ nhận role portal.
 
-**SIS quyết định tenant của người dùng (ADR-0026).** Các event trên được consumer `keycloak-membership` dùng để đồng bộ membership Keycloak Organization (mỗi **Tenant** là một Organization, ADR-0026): học sinh là member đúng tenant chứa trường có enrollment active; giáo viên là member các tenant có phân công; chuyển sang trường thuộc tenant khác → gỡ org cũ, thêm org mới, thu hồi phiên cũ; chuyển trường trong cùng tenant `unit` không đổi membership ([ACCOUNT_PROVISIONING §2.1](ACCOUNT_PROVISIONING.md)). Vì vậy dữ liệu SIS sai trường có thể khiến học sinh vào sai tenant hoặc rơi vào tenant chung: lỗi `school_external_id` của học sinh/enrollment phải được xử lý ở reconciliation trước khi apply.
+**SIS quyết định tenant của người dùng (ADR-0026).** Các event trên được consumer `keycloak-membership` dùng để đồng bộ membership Keycloak Organization (mỗi **Tenant** là một Organization, ADR-0026): học sinh là member đúng tenant chứa trường có enrollment active (membership nhân sự theo UserRole, không theo SIS); chuyển sang trường thuộc tenant khác → gỡ org cũ, thêm org mới, thu hồi phiên cũ; chuyển trường trong cùng tenant `unit` không đổi membership ([ACCOUNT_PROVISIONING §2.1](ACCOUNT_PROVISIONING.md)). Vì vậy dữ liệu SIS sai trường có thể khiến học sinh vào sai tenant hoặc rơi vào tenant chung: lỗi `school_external_id` của học sinh/enrollment phải được xử lý ở reconciliation trước khi apply.
 
 ### 6.3. Conflict matrix
 
@@ -372,14 +355,14 @@ Quyền sở hữu trường: SIS sở hữu `full_name`, `student_code`, `date_
 
 | Lỗi | Phân loại | Xử lý |
 |---|---|---|
-| Timeout, 5xx, network | Transient | Retry exponential backoff + jitter: 1s, 2s, 4s… tối đa 6 lần; tôn trọng `Retry-After` |
+| Timeout, 5xx, network | Transient | Retry theo `sis_retry_backoff`: exponential backoff + jitter 1 s, 2 s, 4 s… tối đa 6 lần; tôn trọng `Retry-After` |
 | 429 | Rate limit | Backoff theo header; giảm concurrency của client `contract_v1` |
 | 401/403 | Credential | Dừng run, `status=failed`, cảnh báo ops + School Admin; connection `status=auth_error` |
 | Payload sai schema | Data | Ghi `sync_record_errors`, tiếp tục bản ghi khác |
-| Lỗi apply DB | Bug/ràng buộc | Rollback lô, ghi lỗi, tiếp tục lô sau; > 10% lô lỗi → dừng run |
+| Lỗi apply DB | Bug/ràng buộc | Rollback lô, ghi lỗi, tiếp tục lô sau; > 10% lô lỗi → dừng run (`sis_contract_violation_threshold`) |
 | Webhook xử lý lỗi | — | Giữ trong JetStream work-queue `IDENTITY_SIS_JOBS` (ack sau khi xử lý xong), redeliver sau 5 phút, tối đa 5 lần → `DLQ_IDENTITY` |
 
-Circuit breaker cho mỗi connection: 5 run liên tiếp thất bại → tạm dừng lịch, chỉ chạy khi admin kích hoạt lại.
+Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp thất bại → tạm dừng lịch, chỉ chạy khi admin kích hoạt lại. Các giá trị trong mục này [Confirmed — Technical Architect 2026-11-16].
 
 ## 8. Audit & quan sát
 
@@ -405,10 +388,12 @@ Circuit breaker cho mỗi connection: 5 run liên tiếp thất bại → tạm 
 | Method | Path | Quyền |
 |---|---|---|
 | GET | `/api/v1/sis/connections` | school_admin (scope), system_admin |
-| POST | `/api/v1/sis/imports` (+ `?dry_run=true`) | school_admin |
-| GET | `/api/v1/sis/imports/{import_id}` | school_admin |
-| POST | `/api/v1/sis/connections/{id}/runs` | school_admin, system_admin (Idempotency-Key) |
-| GET | `/api/v1/sis/runs/{run_id}` · `/errors` | school_admin |
+| POST | `/api/v1/schools/{school_id}/sis-imports` (+ `dry_run`) | school_admin (scope trường) |
+| GET | `/api/v1/schools/{school_id}/sis-imports/{import_id}` | school_admin |
+| POST | `/api/v1/sis/imports` | system_admin (`X-Tenant-Id` tenant đích) |
+| POST | `/api/v1/sis/connections/{connection_id}/sync-runs` | school_admin (scope trường), system_admin (Idempotency-Key) |
+| GET | `/api/v1/sis/connections/{connection_id}/sync-runs` · `/api/v1/sis/runs/{run_id}` · `/errors` | school_admin |
+| PUT | `/api/v1/admin/sis/connections/{connection_id}/schools` | system_admin (bảng nối `sis_connection_schools`) |
 | GET | `/api/v1/sis/reconciliation-issues` | school_admin |
 | POST | `/api/v1/sis/reconciliation-issues/{id}:resolve` | school_admin (audit) |
 | POST | `/internal/sis/webhooks/{connection_id}` | SIS (HMAC), chỉ mạng nội bộ/allowlist |

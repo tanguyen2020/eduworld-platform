@@ -1,11 +1,13 @@
 # User Personas
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Product Manager + UX/UI Designer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Product Manager + UX/UI Designer · Cập nhật: 2026-11-16 (ADR-0086: không nhập mật khẩu mỗi lần mở game)
 > Liên quan: [PRODUCT_VISION](PRODUCT_VISION.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md)
 
 Personas dưới đây là **giả thuyết [Proposed]** dựa trên Master Prompt và hiểu biết chung về trường phổ thông Việt Nam. Cần kiểm chứng bằng phỏng vấn/khảo sát tại trường pilot trong Phase 0–1 (liên quan OQ-04, OQ-07, OQ-09, OQ-17). Tên nhân vật là hư cấu.
 
-Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết (school/class/subject) nằm ở `UserRole` trong backend (Role/UserRole lưu DB, permission trong code — ADR-0066). Học sinh chỉ đăng nhập game (form trong game, ADR-0068); nhân sự chỉ đăng nhập Admin Portal (màn đăng nhập riêng, không chọn tenant trước, ADR-0066/0067).
+EduWorld là môi trường **học sinh tự học**: hệ thống tự chấm, tự gợi ý ôn tập; nhà trường (`school_admin`, `academic_manager`) quản trị ở cấp trường; kiểm duyệt chat do Platform Safety Team đảm nhận ([ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)). Không có persona giáo viên.
+
+Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết (school/subject) nằm ở `UserRole` trong backend (Role/UserRole lưu DB, permission trong code — ADR-0066). Học sinh chỉ đăng nhập game (form trong game, ADR-0068); nhân sự chỉ đăng nhập Admin Portal (màn đăng nhập riêng, không chọn tenant trước, ADR-0066/0067).
 
 ## 1. Tổng quan
 
@@ -15,14 +17,15 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | P-02 | Học sinh lớp 4–5 ("Minh") | `g4_5` | `student` | Godot | P2 |
 | P-03 | Học sinh lớp 6–7 ("Lan") | `g6_7` | `student` | Godot (điện thoại cá nhân/PC nhà) | P2–P5 |
 | P-04 | Học sinh lớp 8–9 ("Huy") | `g8_9` | `student` | Godot | P3–P5 |
-| P-05 | Giáo viên chủ nhiệm ("Cô Hạnh") | — | `teacher` | CMS/LMS web | P3 |
-| P-06 | Giáo viên bộ môn ("Thầy Sơn") | — | `teacher` | CMS/LMS web | P3 |
-| P-07 | Quản trị trường ("Anh Tuấn") | — | `school_admin` | Admin Portal (workspace C, B) | P1 |
+| P-07 | Quản trị trường ("Anh Tuấn") | — | `tenant_staff` + UserRole `school_admin` | Admin Portal (workspace C, B), School Learning Dashboard | P1 |
 | P-11 | Quản trị tenant / đơn vị ("Chị Hoa") | — | `tenant_admin` | Admin Portal (workspace C, B) | P1 |
 | P-12 | Game Designer / Live-ops ("Khoa") | — | `game_designer`, `liveops`, `competition_admin` | Admin Portal (workspace A Game Operations Console, E Game Live Operations) | P2–P4 |
 | P-08 | Quản trị nội dung / Reviewer ("Chị Mai") | — | `content_admin`, `content_reviewer` | CMS web | P2–P3 |
-| P-09 | Academic Manager ("Bà Thu") | — | `academic_manager` | CMS web, báo cáo | P3 |
+| P-09 | Academic Manager ("Bà Thu") | — | `tenant_staff` + UserRole `academic_manager` | Admin Portal (workspace C, B), School Learning Dashboard | P3 |
 | P-10 | System Admin ("Đạt") | — | `system_admin` | Admin Portal (mọi workspace, D Platform Administration), Keycloak, Grafana | P1 |
+| P-13 | Safety Moderator ("Ngọc") | — | `safety_moderator` | Admin Portal (module moderation, MFA) | P5 |
+
+Mã P-05, P-06 (giáo viên chủ nhiệm, giáo viên bộ môn) không còn dùng theo ADR-0072 và không tái sử dụng; nhu cầu của họ được phân lại ở [§3](#3-nhu-cầu-từng-thuộc-về-giáo-viên).
 
 ## 2. Học sinh
 
@@ -31,16 +34,16 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Mục | Mô tả |
 |---|---|
 | Bối cảnh | Bé Na, lớp 2. Đọc còn chậm, quen chơi game đơn giản trên tablet của bố mẹ. Học EduWorld chủ yếu ở phòng máy hoặc tablet dùng chung của lớp, đôi khi ở nhà dưới sự giám sát |
-| Mục tiêu | Có nhân vật dễ thương, đi khám phá, giúp NPC, nhận quà; hoàn thành bài cô giao |
+| Mục tiêu | Có nhân vật dễ thương, đi khám phá, giúp NPC, nhận quà; hoàn thành nhiệm vụ "Nhà trường giao" |
 | Động lực chơi | Khám phá và câu chuyện cùng Mây; sưu tầm (pet, sticker, vật phẩm); thấy vùng đất đổi màu khi mình học giỏi lên; được khen ngay khi làm đúng. Không cần xếp hạng ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md)) |
 | Pain points | Đọc hướng dẫn dài khó; gõ phím chậm; dễ nản khi sai nhiều; không tự đăng nhập được bằng mật khẩu phức tạp |
 | Thiết bị | Tablet Android dùng chung, máy tính phòng tin học Windows; tai nghe không phải lúc nào cũng có |
-| Ngữ cảnh | Phiên 15–25 phút trong tiết học hoặc ở nhà; giáo viên hướng dẫn tại lớp |
-| Nhu cầu UX | Icon lớn, ít chữ, chữ ≥ 24 px, đọc to câu hỏi bằng audio, thao tác chạm/kéo thả, phản hồi bằng hình ảnh & âm thanh vui, không giới hạn thời gian ở practice, điều hướng tối đa 2 cấp |
+| Ngữ cảnh | Phiên 15–25 phút ở phòng máy hoặc ở nhà; tự làm theo hướng dẫn lồng tiếng trong game, không có người kèm từng bước |
+| Nhu cầu UX | Icon lớn, ít chữ, chữ ≥ 24 px, đề bài và hướng dẫn quest được lồng tiếng tiếng Việt (phụ đề + icon khi không có tai nghe), nút "Gợi ý" nhiều cấp, thao tác chạm/kéo thả, phản hồi bằng hình ảnh & âm thanh vui, không giới hạn thời gian ở practice, điều hướng tối đa 2 cấp |
 | Nhu cầu an toàn | Chat theo quy tắc chung (ADR-0020), mọi tin được kiểm tra hợp lệ; quick message giúp giao tiếp khi chưa gõ nhanh; không thấy tên thật người khác; leaderboard công khai có thể tắt; nhắc nghỉ |
-| Đăng nhập | Release 1.0: username + password ngắn do giáo viên in phát, nhập mỗi lần mở game; ô tên đăng nhập có thể điền sẵn trên thiết bị riêng; quên mật khẩu thì nhờ thầy cô đặt lại ([ADR-0063](../adr/ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md), [ADR-0064](../adr/ADR-0064-khong-tu-dang-nhap-khi-mo-lai-game.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md)). QR lớp + PIN, thẻ QR, mật khẩu hình ảnh: mở rộng sau |
+| Đăng nhập | Release 1.0: username + password ngắn do nhà trường in phát; trên thiết bị riêng chỉ nhập khi đăng nhập lần đầu hoặc phiên hết hạn (tối đa 30 ngày) — mở lại game tự vào khi phiên còn hạn ([ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md)); máy phòng tin học dùng chung luôn nhập lại; ô tên đăng nhập có thể điền sẵn trên thiết bị riêng; quên mật khẩu thì nhờ nhà trường đặt lại ([ADR-0063](../adr/ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md), [ADR-0064](../adr/ADR-0064-khong-tu-dang-nhap-khi-mo-lai-game.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md)). QR lớp + PIN, thẻ QR, mật khẩu hình ảnh: mở rộng sau |
 | Quyền hạn | Chơi, làm bài, xem tiến độ bản thân, tùy biến nhân vật, chat (text, emoji, quick message) theo policy chung |
-| Thành công khi | Tự hoàn thành một quest học tập không cần giáo viên giúp sau 2 buổi làm quen |
+| Thành công khi | Tự hoàn thành một quest học tập không cần người lớn giúp sau 2 buổi làm quen |
 
 ### P-02 — Học sinh lớp 4–5 (9–11 tuổi)
 
@@ -55,7 +58,7 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Nhu cầu UX | Mục tiêu rõ (daily quest), tiến trình trực quan (thanh XP, sao), mini-game đa dạng, party đơn giản bằng lời mời từ danh sách bạn |
 | Nhu cầu an toàn | Chat theo quy tắc chung, mọi tin được kiểm tra hợp lệ; chống farm XP tự nhiên (cap) |
 | Quyền hạn | Như P-01 + tạo/tham gia party, đấu 1v1 cùng khối, chat theo policy |
-| Thành công khi | Có thói quen làm daily quest ≥ 3 ngày/tuần mà không do giáo viên ép |
+| Thành công khi | Có thói quen làm daily quest ≥ 3 ngày/tuần mà không bị ép buộc |
 
 ### P-03 — Học sinh lớp 6–7 (11–13 tuổi)
 
@@ -87,33 +90,19 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Quyền hạn | Như P-03 + tournament, mock exam |
 | Thành công khi | Làm ≥ 1 đề thi thử/tuần và đọc phân tích lỗi sai |
 
-## 3. Giáo viên
+## 3. Nhu cầu từng thuộc về giáo viên
 
-### P-05 — Giáo viên chủ nhiệm
+Release 1.0 không có vai trò giáo viên (ADR-0072). Bảng dưới phân lại các nhu cầu mà baseline trước đây gán cho giáo viên chủ nhiệm/bộ môn.
 
-| Mục | Mô tả |
+| Nhu cầu | Ai/cái gì đáp ứng |
 |---|---|
-| Bối cảnh | Cô Hạnh, chủ nhiệm lớp 3A, dạy nhiều môn ở tiểu học; kỹ năng công nghệ cơ bản |
-| Mục tiêu | Giao bài nhanh, biết em nào tụt lại, giữ lớp an toàn khi dùng game |
-| Pain points | Ít thời gian; lo học sinh chơi thay vì học; không muốn đọc toàn bộ tin nhắn của học sinh nhưng phải xử lý khi có chuyện |
-| Thiết bị | Laptop cá nhân, máy chiếu lớp học; đôi khi điện thoại |
-| Ngữ cảnh | Soạn bài buổi tối, theo dõi trong giờ học |
-| Nhu cầu UX | Giao bài trong ≤ 3 bước từ bộ đề có sẵn; dashboard lớp một màn hình (ai chưa làm, LO yếu); thông báo report trong lớp; nút mute/khóa chat lớp |
-| Nhu cầu an toàn & quyền riêng tư | Chỉ thấy học sinh lớp mình; xem nội dung chat chỉ khi có report/theo policy, mọi truy cập được audit |
-| Quyền hạn | `UserRole(teacher, class)`: quản lý lớp chủ nhiệm, giao bài, xem kết quả, moderation channel lớp, tạo nhóm học tập, tổ chức thử thách lớp |
-| Thành công khi | Giao ≥ 1 bài/tuần và mở dashboard ≥ 1 lần/tuần |
-
-### P-06 — Giáo viên bộ môn
-
-| Mục | Mô tả |
-|---|---|
-| Bối cảnh | Thầy Sơn, dạy Toán cho 5 lớp khối 8–9 |
-| Mục tiêu | Tạo đề ôn tập theo ma trận, so sánh kết quả giữa các lớp, phát hiện LO yếu theo khối |
-| Pain points | Ra đề tốn thời gian; câu hỏi tự soạn khó tái sử dụng |
-| Thiết bị | Laptop |
-| Nhu cầu UX | Tạo đề từ Assessment Blueprint, chọn câu từ Question Bank có lọc theo LO/độ khó, soạn câu hỏi riêng (phạm vi trường, cần duyệt — OQ-07), báo cáo theo LO × lớp |
-| Quyền hạn | `UserRole(teacher, class, subject)` cho các lớp được phân công; tạo nội dung `owner_scope = school` ở trạng thái Draft |
-| Thành công khi | Tạo được đề thi thử 40 câu từ ngân hàng trong ≤ 10 phút |
+| Chỉ định học sinh ôn kỹ năng yếu | Hệ thống: gợi ý ôn tập tự động có giải thích theo mastery và LO tiên quyết ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)); gợi ý nhiều cấp và phản hồi theo phương án sai trong từng câu |
+| Giao bài/đề cho lớp, đặt hạn | P-09 Academic Manager (theo môn) hoặc P-07 School Admin, giao cho lớp, nhóm học tập hoặc danh sách học sinh ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) |
+| Biết em nào tụt lại, LO nào lớp còn yếu | School Learning Dashboard (trường → lớp → học sinh) cho P-07, P-09; cờ "làm quá nhanh" khi học sinh đoán bừa |
+| Chấm tự luận, bài nói, project | Ngoài version này (ADR-0082); chỉ dùng hoạt động server tự chấm |
+| Tạo nhóm học tập, thử thách lớp | Nhóm học tập: P-07/P-09; thử thách lớp và giải trường từ template: chỉ P-07 |
+| Giữ lớp an toàn khi chat | P-13 Safety Moderator xử lý report tập trung; P-07 đặt chat policy và khung giờ truy cập cấp trường, nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh |
+| Soạn câu hỏi riêng của trường | `tenant_content_editor` soạn, `tenant_content_reviewer` duyệt (phạm vi tenant) |
 
 ## 4. Quản trị
 
@@ -122,12 +111,12 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Mục | Mô tả |
 |---|---|
 | Bối cảnh | Anh Tuấn, phụ trách CNTT của trường THCS |
-| Mục tiêu | Đồng bộ học sinh/lớp từ SIS, quản lý tài khoản, cấu hình chính sách trường |
-| Pain points | Dữ liệu SIS không sạch (trùng, thiếu); học sinh chuyển lớp giữa năm; phụ huynh hỏi về an toàn |
+| Mục tiêu | Đồng bộ học sinh/lớp từ SIS, quản lý tài khoản, cấu hình chính sách trường; giao bài, tổ chức thử thách lớp/giải trường; theo dõi kết quả học tập của trường |
+| Pain points | Dữ liệu SIS không sạch (trùng, thiếu); học sinh chuyển lớp giữa năm; phụ huynh hỏi về an toàn; không có thời gian xem từng học sinh |
 | Thiết bị | PC văn phòng |
-| Nhu cầu UX | Màn hình SyncRun và ReconciliationIssue rõ ràng; khóa/mở khóa tài khoản; cấu hình chat policy theo khối, giờ truy cập, leaderboard; xuất báo cáo |
-| Quyền hạn | `UserRole(school_admin, school)`: toàn quyền Learning Management trong phạm vi một trường của tenant, không thấy tenant khác; **không** thấy menu/cấu hình game (ADR-0027); không đọc chat tự do nếu không có case |
-| Thành công khi | Onboard một trường 1.000 học sinh trong ≤ 1 ngày làm việc |
+| Nhu cầu UX | Màn hình SyncRun và ReconciliationIssue rõ ràng; khóa/mở khóa tài khoản; chat policy cấp trường (như nhau cho mọi lớp), khung giờ truy cập, leaderboard; giao bài trong ≤ 3 bước; School Learning Dashboard một màn hình (lớp nào chậm, LO yếu, ai chưa làm); hộp thông báo vụ việc an toàn; xuất báo cáo |
+| Quyền hạn | `UserRole(school_admin, school)`: toàn quyền Learning Management trong phạm vi một trường của tenant (giao bài, thử thách lớp/giải trường, nhóm học tập, School Learning Dashboard), không thấy tenant khác; **không** thấy menu/cấu hình game (ADR-0027); không đọc chat, chỉ nhận tóm tắt vụ việc nghiêm trọng (ADR-0072) |
+| Thành công khi | Onboard một trường 1.000 học sinh trong ≤ 1 ngày làm việc; mở School Learning Dashboard ≥ 1 lần/tuần |
 
 ### P-08 — Quản trị nội dung / Reviewer
 
@@ -145,18 +134,18 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Mục | Mô tả |
 |---|---|
 | Bối cảnh | Bà Thu, quản lý chuyên môn của một tenant (tổ chuyên môn trường, hoặc Phòng GD / hệ thống trường là tenant `unit`) |
-| Mục tiêu | Quản lý khung chương trình, LO, ma trận đề chuẩn; theo dõi chất lượng học tập tổng hợp |
-| Pain points | Khó so sánh giữa trường; dữ liệu không theo LO |
-| Nhu cầu UX | Curriculum editor, báo cáo tổng hợp theo trường/khối/LO (dữ liệu tổng hợp, không danh tính khi không cần) |
-| Quyền hạn | `UserRole(academic_manager, tenant)` (tổ chuyên môn của trường hoặc đơn vị): curriculum riêng & blueprint của tenant, báo cáo tổng hợp trong tenant; không truy cập chat, không thấy cấu hình game |
-| Thành công khi | Ban hành blueprint chung cho kỳ thi thử toàn tổ chức |
+| Mục tiêu | Quản lý khung chương trình, LO, ma trận đề chuẩn; giao bài/đề theo môn cho các lớp; theo dõi chất lượng học tập theo trường → lớp → học sinh |
+| Pain points | Khó so sánh giữa trường/lớp; dữ liệu không theo LO; ra đề tốn thời gian |
+| Nhu cầu UX | Curriculum editor, tạo đề từ Assessment Blueprint (đề 40 câu trong ≤ 10 phút), giao bài cho nhiều lớp một lần, School Learning Dashboard và báo cáo tham khảo TT27/TT22 (tổng hợp, không danh tính khi không cần), kích hoạt re-evaluate khi nội dung có lỗi |
+| Quyền hạn | `UserRole(academic_manager, school hoặc tenant, subject tùy chọn)`: curriculum riêng & blueprint của tenant, giao bài/đề, nhóm học tập, School Learning Dashboard trong phạm vi; không truy cập chat, không thấy cấu hình game |
+| Thành công khi | Ban hành blueprint chung cho kỳ thi thử toàn tổ chức; mỗi lớp có ≥ 1 bài giao/tuần |
 
 ### P-11 — Quản trị tenant / đơn vị (Tenant Admin)
 
 | Mục | Mô tả |
 |---|---|
 | Bối cảnh | Chị Hoa, chuyên viên Phòng GD quản lý 25 trường tiểu học là một tenant `unit`; hoặc hiệu phó một trường độc lập (tenant `school`) |
-| Mục tiêu | Vận hành Learning Management cho cả tenant: cài đặt tenant, phân quyền School Admin/giáo viên, đồng bộ SIS, nội dung học tập của tenant, báo cáo theo trường |
+| Mục tiêu | Vận hành Learning Management cho cả tenant: cài đặt tenant, phân quyền School Admin/Academic Manager, đồng bộ SIS, nội dung học tập của tenant, báo cáo theo trường |
 | Pain points | Phải làm việc trên nhiều trường; sợ thao tác nhầm làm mất dữ liệu; muốn dùng lại bộ câu hỏi chuẩn |
 | Thiết bị | PC văn phòng |
 | Nhu cầu UX | Chọn trường trong đơn vị; dùng nội dung "Từ EduWorld" được gán (chỉ đọc); Thùng rác để khôi phục khi xóa nhầm [Proposed]; không có dropdown tenant (luôn một tenant) |
@@ -187,23 +176,39 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | Quyền hạn | `system_admin`: **người duy nhất xem dữ liệu liên tenant** (dropdown tìm kiếm tenant, mặc định "Tất cả tenant", chọn nhiều; cột Tenant; ghi luôn chọn một tenant đích), quản lý tenant, gán dữ liệu platform cho tenant và clone giữa tenant (ADR-0029), Thùng rác mọi tenant (ADR-0028), Game Studio; mọi truy cập dữ liệu tenant có audit. Truy cập dữ liệu học sinh cần lý do và được audit (break-glass) |
 | Thành công khi | Onboard tổ chức mới không cần sửa code; MTTR sự cố P1 ≤ 1 giờ |
 
+### P-13 — Safety Moderator (Platform Safety Team)
+
+| Mục | Mô tả |
+|---|---|
+| Bối cảnh | Ngọc, thành viên Platform Safety Team của EduWorld, xử lý báo cáo chat của mọi tenant theo ca |
+| Mục tiêu | Xử lý case nhanh và nhất quán giữa các trường; ưu tiên case grooming/tự hại |
+| Pain points | Khối lượng report lớn vào giờ cao điểm; cần đủ ngữ cảnh mà không xem chat ngoài phạm vi case |
+| Thiết bị | Laptop, VPN + MFA |
+| Nhu cầu UX | Hàng đợi case theo mức ưu tiên và SLA, bằng chứng và tin nhắn liên quan case, sanction một chạm, gửi thông báo tóm tắt cho nhà trường và theo dõi xác nhận đã liên hệ phụ huynh; quản lý danh mục từ nhạy cảm cấp tenant theo yêu cầu |
+| Quyền hạn | `safety_moderator` (role platform, MFA): `moderation.case.*`, `moderation.sanction.*`, đọc chat trong phạm vi case qua `tenancy.Bypass(ctx, "moderation_case")` có audit; không đọc dữ liệu học tập, không thấy cấu hình game ([MODERATION](../03-social-multiplayer/MODERATION.md)) |
+| Thành công khi | Case p1 được phản hồi trong SLA; thông báo trường gửi đủ cho mọi vụ việc nghiêm trọng |
+
 ## 5. Ma trận quyền tóm tắt
 
 Chi tiết ở [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) và [MULTITENANCY](../06-architecture/MULTITENANCY.md).
 
-| Hành động | HS | GV chủ nhiệm | GV bộ môn | School Admin | Content Admin | Reviewer | Academic Mgr | System Admin |
-|---|---|---|---|---|---|---|---|---|
-| Xem dữ liệu nhiều tenant | — | — | — | — | — | — | — | ✔ (duy nhất, audit) |
-| Cấu hình game / thi đấu (Game Studio) | — | — | — | ✘ | — | — | ✘ | ✔ (+ Game Designer/Live-ops/Competition Admin) |
-| Gán dữ liệu cho tenant / clone giữa tenant | — | — | — | ✘ | — | — | ✘ | ✔ |
-| Thùng rác | — | — | — | ✘ (Tenant Admin: tenant mình [Proposed]) | — | — | ✘ | ✔ mọi tenant |
-| Chơi game, làm bài | ✔ | — | — | — | — | — | — | — |
-| Xem kết quả bản thân | ✔ | — | — | — | — | — | — | — |
-| Xem kết quả học sinh | — | Lớp mình | Lớp × môn được phân | Trường | — | — | Tổng hợp tenant | Theo policy + audit |
-| Giao bài | — | ✔ | ✔ | ✔ | — | — | — | — |
-| Soạn nội dung | — | Phạm vi trường [Proposed] | Phạm vi trường [Proposed] | Trường (trong tenant) | Platform | — | Tenant | ✔ |
-| Duyệt nội dung | — | — | — | Phạm vi trường [Proposed] | — | ✔ (không tự duyệt) | Tenant | ✔ |
-| Cấu hình chat policy | — | Lớp (siết chặt hơn) | — | Trường | — | — | — | Platform |
-| Xử lý report chat | — | Lớp mình | Lớp dạy [Proposed] | Trường | — | — | — | Escalation |
-| Đồng bộ SIS / khóa tài khoản | — | — | — | Trường | — | — | — | ✔ |
-| Cấu hình Keycloak/IdP | — | — | — | — | — | — | — | ✔ (system_admin) |
+| Hành động | HS | School Admin | Academic Mgr | Content Admin | Reviewer | Safety Moderator | System Admin |
+|---|---|---|---|---|---|---|---|
+| Xem dữ liệu nhiều tenant | — | — | — | — | — | Chỉ case moderation (audit) | ✔ (đầy đủ, duy nhất, audit) |
+| Cấu hình game / thi đấu (Game Studio) | — | ✘ | ✘ | — | — | ✘ | ✔ (+ Game Designer/Live-ops/Competition Admin) |
+| Gán dữ liệu cho tenant / clone giữa tenant | — | ✘ | ✘ | — | — | ✘ | ✔ |
+| Thùng rác | — | ✘ (Tenant Admin: tenant mình [Proposed]) | ✘ | — | — | ✘ | ✔ mọi tenant |
+| Chơi game, làm bài | ✔ | — | — | — | — | — | — |
+| Xem kết quả bản thân | ✔ | — | — | — | — | — | — |
+| Xem kết quả học sinh (School Learning Dashboard) | — | Trường | Trường/tenant theo môn | — | — | — | Theo policy + audit |
+| Giao bài/đề, nhóm học tập | — | ✔ | ✔ | — | — | — | — |
+| Thử thách lớp / giải trường từ template | — | ✔ | — | — | — | — | — |
+| Soạn nội dung | — | — | Curriculum/blueprint tenant | Platform | — | — | ✔ |
+| Duyệt nội dung | — | — | Tenant | — | ✔ (không tự duyệt) | — | ✔ |
+| Cấu hình chat policy, khung giờ truy cập | — | Trường (trong giới hạn platform) | — | — | — | — | Platform |
+| Xử lý report chat, sanction | — | Nhận tóm tắt vụ việc nghiêm trọng | — | — | — | ✔ mọi tenant | Escalation |
+| Danh mục từ nhạy cảm cấp tenant | — | Gửi yêu cầu | — | — | — | ✔ ghi | ✔ |
+| Đồng bộ SIS / khóa tài khoản | — | Trường | — | — | — | — | ✔ |
+| Cấu hình Keycloak/IdP | — | — | — | — | — | — | ✔ (system_admin) |
+
+Nội dung phạm vi tenant do `tenant_content_editor` soạn và `tenant_content_reviewer` duyệt (không có cột riêng trong bảng).

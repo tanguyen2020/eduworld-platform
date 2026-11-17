@@ -1,9 +1,12 @@
 # ADR-0067 — Portal đăng nhập không chọn tenant; username và email là định danh duy nhất
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Bổ sung:** ADR-0063, ADR-0065, ADR-0066 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Bổ sung:** ADR-0063, ADR-0065, ADR-0066 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Mục 2–3 được làm rõ bởi ADR-0069** (2026-11-15): một người một tài khoản SSO (username/email duy nhất trên Keycloak); identity-service có thêm ràng buộc duy nhất theo `tenant_id` trên dữ liệu theo tenant; đăng nhập xác thực SSO trước rồi kiểm tra tenant; trùng với tenant khác mà là cùng một người thì thêm membership. Toàn bộ ADR này vẫn còn hiệu lực.
+
+> [!WARNING]
+> **Một phần được thay bởi ADR-0091.** Không còn hiệu lực: chọn/đổi tenant của portal bằng token mới với scope `organization:{alias}` (nay dùng `X-Tenant-Id` + membership). **Còn hiệu lực:** quy tắc username/email, chọn tenant sau đăng nhập.
 
 ## Bối cảnh
 
@@ -40,3 +43,4 @@ Khi đăng nhập không chọn tenant, hệ thống chỉ nhận username (ho�
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-17 | Một phần superseded by ADR-0091 (portal đăng nhập bằng form riêng qua backend) | Technical Architect |

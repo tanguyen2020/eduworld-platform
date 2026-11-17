@@ -92,7 +92,7 @@ Mọi vật thể tương tác kế thừa `Interactable` (Area3D):
 
 | Thuộc tính | Ví dụ |
 |---|---|
-| `interactable_id` | `npc.math_teacher_owl`, `board.daily_quests`, `portal.to_arena` |
+| `interactable_id` | `npc.math_owl_sage`, `board.daily_quests`, `portal.to_arena` |
 | `kind` | `npc`, `quest_board`, `portal`, `quest_object`, `discovery`, `collectible`, `info_sign`, `minigame_station`, `seat` |
 | `prompt_key` | khóa i18n hiển thị "Nhấn E / chạm để nói chuyện" |
 | `requires` | điều kiện hiển thị phía client (gợi ý UI) — **server vẫn kiểm tra lại** |
@@ -167,7 +167,7 @@ flowchart LR
 - Khi một version của nhân vật, item, NPC, zone hoặc quest marker được publish (ADR-0043), job **render headless Godot** chạy cùng model, material và Environment của game để tạo: ảnh tĩnh 512×512 (WebP) và turntable 24 khung (WebP động hoặc sprite sheet); zone có ảnh toàn cảnh 1280×720.
 - Kết quả lưu object storage (ADR-0044) theo khóa `media/<sha256>/...`, đăng ký `media_assets` với `kind = render_thumbnail | render_turntable`, gắn vào version tương ứng. Version cũ giữ thumbnail cũ.
 - CMS dùng các ảnh này như **dữ liệu nhận diện** trong danh sách, form chọn item/phần thưởng và thư viện (DESIGN_SYSTEM §7); giao diện CMS vẫn theo Admin/Ops UI.
-- Job chạy trong worker của game-service (container có Godot headless + export template khóa phiên bản) và trong CI cho asset mới; render dùng renderer Forward+ với preset chất lượng cao cố định để ảnh nhất quán.
+- Job chạy trong worker của module game (container có Godot headless + export template khóa phiên bản) và trong CI cho asset mới; render dùng renderer Forward+ với preset chất lượng cao cố định để ảnh nhất quán.
 
 ## 9. NPC
 

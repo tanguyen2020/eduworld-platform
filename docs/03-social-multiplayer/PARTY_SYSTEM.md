@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Game Director · Cập nhật: 2026-11-15
 > Liên quan: [ADR-0050 Party vs Club](../adr/ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [MATCHMAKING](MATCHMAKING.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [DOMAIN_MODEL §6](../06-architecture/DOMAIN_MODEL.md#6-multiplayer-party--competition) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [OpenAPI](../../specs/openapi) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
-Tài liệu này hiện thực hóa **toàn bộ Party Addendum** (nguồn [Confirmed]) và **sở hữu** mọi luật về Party (nhóm chơi **tạm thời**): thao tác, loại party, Party Lobby, co-op session, leader/member disconnect, rate limit lời mời. Nhóm **bền vững** (Club/Guild, Study Group, Team cố định) thuộc [SOCIAL_SYSTEM §6](SOCIAL_SYSTEM.md#6-club--guild-nhóm-bền-vững--adr-0050-proposed) (ADR-0050). Domain chạy trong **competition-service**, database `eduworld_competition`. Mọi tham số số học chưa có trong addendum mang nhãn [Proposed].
+Tài liệu này hiện thực hóa **toàn bộ Party Addendum** (nguồn [Confirmed]) và **sở hữu** mọi luật về Party (nhóm chơi **tạm thời**): thao tác, loại party, Party Lobby, co-op session, leader/member disconnect, rate limit lời mời. Nhóm **bền vững** (Club/Guild, Study Group, Team cố định) thuộc [SOCIAL_SYSTEM §6](SOCIAL_SYSTEM.md#6-club--guild-nhóm-bền-vững--adr-0050-proposed) (ADR-0050). Domain chạy trong **module competition**, database `eduworld_competition`. Mọi tham số số học chưa có trong addendum mang nhãn [Proposed].
 
 ## 1. Mục tiêu
 
@@ -15,8 +15,8 @@ Tài liệu này hiện thực hóa **toàn bộ Party Addendum** (nguồn [Conf
 
 | Thao tác | REST | Lệnh WS (client→server) | Ai được làm | Ghi chú |
 |---|---|---|---|---|
-| Create Party | `POST /api/v1/multiplayer/parties` | — | Học sinh không có active party; giáo viên (Class Group) | `Idempotency-Key` bắt buộc |
-| Get Party | `GET /api/v1/multiplayer/parties/{party_id}` | — | Member, giáo viên lớp (Class Group) | |
+| Create Party | `POST /api/v1/multiplayer/parties` | — | Học sinh không có active party | `Idempotency-Key` bắt buộc |
+| Get Party | `GET /api/v1/multiplayer/parties/{party_id}` | — | Member | |
 | Get my Party | `GET /api/v1/multiplayer/parties/me` | — | Học sinh | |
 | Update Settings | `PATCH /api/v1/multiplayer/parties/{party_id}` | — | Leader | name, visibility, invitation_policy, max_members (≥ số member hiện tại) |
 | Invite Friend | `POST /api/v1/multiplayer/parties/{party_id}/invitations` | — (invitee nhận `party.invitation.received`) | Leader; member nếu `invitation_policy=members` | Rate limit §10 |
@@ -24,17 +24,17 @@ Tài liệu này hiện thực hóa **toàn bộ Party Addendum** (nguồn [Conf
 | Accept Invitation | `POST /api/v1/multiplayer/invitations/{invitation_id}:accept` | — | Invitee | Kiểm tra lại toàn bộ rule tại thời điểm accept |
 | Reject Invitation | `POST /api/v1/multiplayer/invitations/{invitation_id}:reject` | — | Invitee | |
 | Cancel Invitation | `POST /api/v1/multiplayer/invitations/{invitation_id}:cancel` | — | Inviter, leader | |
-| Join Party | `POST /api/v1/multiplayer/parties/{party_id}:join` | — | Chỉ khi `visibility=class` hoặc `friends` và thỏa rule; party `private` bắt buộc có invitation | `join_code` cho Class Group do giáo viên phát [Proposed] |
+| Join Party | `POST /api/v1/multiplayer/parties/{party_id}:join` | — | Chỉ khi `visibility=class` hoặc `friends` và thỏa rule; party `private` bắt buộc có invitation | |
 | Leave Party | `POST /api/v1/multiplayer/parties/{party_id}:leave` | — | Member | Leader rời → chuyển leader tự động §9 |
-| Kick Member | `POST /api/v1/multiplayer/parties/{party_id}/members/{student_id}:kick` | — | Leader | Người bị kick không được mời lại vào party đó trong 10 phút [Proposed] |
+| Kick Member | `POST /api/v1/multiplayer/parties/{party_id}/members/{student_id}:kick` | — | Leader | Người bị kick không được mời lại vào party đó trong `party_kick_reinvite_block` (10 phút) [Proposed] |
 | Transfer Leader | `POST /api/v1/multiplayer/parties/{party_id}:transfer-leader` | — | Leader | Đích phải là member `online` |
-| Disband Party | `POST /api/v1/multiplayer/parties/{party_id}:disband` | — | Leader; giáo viên (Class Group); moderator | Kết thúc activity đang chạy theo §6.3 |
+| Disband Party | `POST /api/v1/multiplayer/parties/{party_id}:disband` | — | Leader; `safety_moderator` (khi xử lý vụ việc, có audit) | Kết thúc activity đang chạy theo §6.3 |
 | Set Ready | `PUT /api/v1/multiplayer/parties/{party_id}/members/me/ready` | `party.member.ready_set` | Member | Chỉ ở Party Lobby |
 | Select Activity / Mode | `PUT /api/v1/multiplayer/parties/{party_id}/activity` | `party.activity.select` | Leader | |
 | Start Session | `POST /api/v1/multiplayer/parties/{party_id}:start` | `party.session.start` | Leader | §6 |
-| Party Chat (**always-on**, ADR-0020 mục 6) | Channel `party` — [CHAT_SYSTEM](CHAT_SYSTEM.md) §4.1 | `chat.message.send` | Member | Tự tạo cùng transaction với tạo party, member tự join; không tắt được bằng cài đặt trường/lớp; đóng (read-only) khi disband, purge sau `gameplay_chat_retention_days` (ADR-0033) |
+| Party Chat (**always-on**, ADR-0020 mục 6; văn bản tự do có từ P4 theo FR-CHAT-009) | Channel `party` — [CHAT_SYSTEM](CHAT_SYSTEM.md) §4.1 | `chat.message.send` | Member | module competition ghi outbox `party.created`/`party.member_joined` cùng transaction tạo party/thêm member; module chat tiêu thụ event để tạo channel và thêm member (idempotent, thường < 1 s — hai database khác nhau nên không thể cùng transaction, ADR-0036/0042); không tắt được bằng cài đặt trường/lớp; đóng (read-only) khi disband, purge sau `gameplay_chat_retention_days` (ADR-0033) |
 
-Thao tác ghi đi qua REST (có `Idempotency-Key`); WS chỉ dùng cho ready, chọn activity và start session. Mọi thay đổi trạng thái sinh domain event theo [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) (`party.created`, `party.invitation_sent|_accepted|_rejected|_expired`, `party.member_joined`, `party.member_left`, `party.member_kicked`, `party.leader_transferred`, `party.activity_started`, `party.activity_ended`, `party.disbanded`) qua outbox → NATS JetStream (ADR-0042). competition-service phát message WS qua realtime-gateway theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml): `party.invitation.received`, `party.invitation.updated`, `party.member.joined`, `party.member.left`, `party.member.status_changed`, `party.member.ready_changed`, `party.leader.transferred`, `party.activity.selected`, `party.session.started`, `party.session.ended`, `party.party.disbanded`, `party.state.snapshot`. Lỗi theo Problem Details với `code` ổn định: `PARTY_ALREADY_IN_PARTY`, `PARTY_FULL`, `PARTY_NOT_LEADER`, `PARTY_INVITE_NOT_ALLOWED`, `PARTY_INVITE_RATE_LIMITED`, `PARTY_POLICY_VIOLATION`, `PARTY_NOT_FOUND`, `PARTY_INVITATION_EXPIRED`, `PARTY_MEMBER_NOT_ONLINE`, `PARTY_ACTIVITY_NOT_ELIGIBLE`.
+Thao tác ghi đi qua REST (có `Idempotency-Key`); WS chỉ dùng cho ready, chọn activity và start session. Mọi thay đổi trạng thái sinh domain event theo [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) (`party.created`, `party.invitation_sent|_accepted|_rejected|_expired`, `party.member_joined`, `party.member_left`, `party.member_kicked`, `party.leader_transferred`, `party.activity_started`, `party.activity_ended`, `party.disbanded`) qua outbox → NATS JetStream (ADR-0042). module competition phát message WS qua realtime theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml): `party.invitation.received`, `party.invitation.updated`, `party.member.joined`, `party.member.left`, `party.member.status_changed`, `party.member.ready_changed`, `party.leader.transferred`, `party.activity.selected`, `party.session.started`, `party.session.ended`, `party.party.disbanded`, `party.state.snapshot`. Lỗi theo Problem Details với `code` ổn định: `PARTY_ALREADY_IN_PARTY`, `PARTY_FULL`, `PARTY_NOT_LEADER`, `PARTY_INVITE_NOT_ALLOWED` (mọi lời mời/tham gia vi phạm policy: block, khác phạm vi trường/khối, sanction — mã duy nhất, không dùng mã policy riêng), `PARTY_INVITE_RATE_LIMITED`, `PARTY_NOT_FOUND`, `PARTY_INVITATION_EXPIRED`, `PARTY_MEMBER_NOT_ONLINE`, `409 PARTY_ACTIVITY_NOT_ELIGIBLE`.
 
 ## 3. Thuộc tính Party
 
@@ -61,11 +61,12 @@ Thao tác ghi đi qua REST (có `Idempotency-Key`); WS chỉ dùng cho ready, ch
 | `party_type` | Ai tạo | Thời hạn | Đặc thù | Nhãn |
 |---|---|---|---|---|
 | `friend` | Học sinh | Tạm thời — tự giải tán sau 30 phút không có member online | Chỉ mời bạn bè | [Proposed] |
-| `study_group` | Học sinh (lớp 6–9) hoặc giáo viên | Tạm thời — **phiên học nhóm**; gắn `club_id` khi tạo từ club `study_group` (nhóm học bền vững là club, không phải party) | Mặc định chọn activity học tập | [Proposed] |
+| `study_group` | Học sinh (lớp 6–9) | Tạm thời — **phiên học nhóm** do học sinh lập; không gắn `club_id` và không phải nhóm học tập LMS (study group LMS do module learning sở hữu — ADR-0084) | Mặc định chọn activity học tập | [Proposed] |
 | `quest` | Học sinh khi nhận cooperative quest | Đến khi quest kết thúc | `current_activity` cố định là quest | [Proposed] |
 | `competition_team` | Học sinh | Theo mùa/giải | Dùng cho team matchmaking/tournament; size = size đội của mode | [Proposed] |
-| `class_group` | Giáo viên | Theo tiết học/buổi | Member chỉ trong lớp; giáo viên là "owner" quản trị nhưng không bắt buộc là member chơi; join bằng `join_code` | [Proposed] |
-| `custom` | Học sinh lớp 6–9 / giáo viên | Tạm thời | Cấu hình tự do trong khuôn khổ policy | [Proposed] |
+| `custom` | Học sinh lớp 6–9 | Tạm thời | Cấu hình tự do trong khuôn khổ policy | [Proposed] |
+
+Party chỉ do học sinh tạo và chơi; nhân sự nhà trường không tạo hay quản trị party (không vào game, ADR-0031, ADR-0072). Nhóm học cả lớp dùng party `friend`/`quest` với `visibility = class`; nhóm học bền vững do nhà trường lập là study group của LMS ([ADR-0084](../adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md)), không phải party hay club.
 
 ## 5. Party Lobby
 
@@ -88,16 +89,16 @@ Trải nghiệm: tạo party từ Social Zone/menu/danh sách bạn bè/club; m�
 | Chức năng | Mô tả | Nguồn dữ liệu |
 |---|---|---|
 | Danh sách thành viên | nickname, avatar, level, vai trò leader | PG + cache |
-| Avatar & trạng thái online | `online`, `away`, `disconnected`, `in_activity` | Valkey presence |
-| Ready / Not Ready | Từng member toggle; reset khi đổi activity | Valkey `party:{id}:lobby` |
+| Avatar & trạng thái online | Enum presence chung ([MULTIPLAYER_GAMEPLAY §5](MULTIPLAYER_GAMEPLAY.md#5-presence)); thành viên đang trong grace mất kết nối hiển thị nhãn "đang kết nối lại" | Valkey presence |
+| Ready / Not Ready | Từng member toggle; reset khi đổi activity | Valkey `ew:party:<party_id>:members` |
 | Leader Controls | Kick, transfer, đổi settings, chọn activity/mode, start | WS/REST |
 | Activity Selection | Danh sách activity **mà mọi member đều đủ điều kiện** (grade, quyền, quest prerequisite); activity mà chỉ một số member đủ điều kiện hiển thị kèm cảnh báo, không thể start | REST `GET /api/v1/multiplayer/parties/{id}/eligible-activities` |
-| Game Mode Selection | Với competition: `team_battle`, `coop_challenge`, `timed_quiz`...; với PvE: boss nhóm ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md), encounter do game-service tạo) | |
+| Activity Type | Một enum `PartyActivityType` dùng chung cho REST, realtime và DB: `explore`, `quest`, `boss`, `learning_challenge`, `coop_challenge`, `team_battle`. Boss nhóm chỉ bắt đầu từ Party Lobby (leader chọn `boss`, start theo §6; encounter do module game tạo qua event/API của luồng này — [CHALLENGE_BOSS_SYSTEM §7](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) | |
 | Invitation | Mời bạn bè online/offline (offline nhận notification) | |
 | Group Chat | Channel `party` nhúng, **luôn có** (thu gọn được, không tắt được); quick message + text; menu Tắt tiếng / Chặn / Báo cáo trên từng tin | CHAT (ADR-0020 mục 6) |
 | Start Session | Nút Start chỉ active khi: leader, ≥ `min_members` của activity, tất cả member online đều `ready` | |
 
-Lobby state trong Valkey (key định nghĩa ở VALKEY_DESIGN; khuyến nghị `ew:pty:party:{party_id}:lobby` hash: `activity_id`, `mode`, `ready:{student_id}`, `version`). Mỗi thay đổi tăng `version`; client gửi `expected_version` cho lệnh leader để tránh race.
+Lobby state trong Valkey (key do [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) sở hữu: `ew:party:<party_id>` hash có `activity_type`, `activity_ref`, `game_mode`, `state_version`; `ew:party:<party_id>:members` giữ `ready`). Mỗi thay đổi tăng `version`; client gửi `expected_version` cho lệnh leader để tránh race.
 
 ## 6. Party Session
 
@@ -108,15 +109,15 @@ sequenceDiagram
   autonumber
   participant L as Leader (Godot)
   participant M as Members (Godot)
-  participant RT as realtime-gateway
-  participant API as competition-service (party)
-  participant AZ as identity-service (principal / membership)
+  participant RT as realtime
+  participant API as module competition (party)
+  participant AZ as module identity (principal / membership)
   participant GS as game_session / room
   participant VK as Valkey
   participant PG as PostgreSQL
 
   L->>API: POST /multiplayer/parties/{id}:start (Idempotency-Key, activity_id, expected_version)
-  API->>VK: Đọc lobby state (lock ew:pty:party:{id}:lock 5s)
+  API->>VK: Đọc lobby state (lock ew:party:<id>:lock 5s)
   API->>API: (1) Xác nhận caller là leader hiện tại
   API->>API: (2) Kiểm tra thành viên: online, ready, ≥ min_members, ≤ max của activity
   API->>AZ: (3) Kiểm tra lớp/grade/quyền tham gia từng member với activity
@@ -127,7 +128,7 @@ sequenceDiagram
   API->>PG: (5) Gán thành viên: session_memberships, quest_progress riêng từng HS (+ shared progress record nếu quest cho phép)
   API->>PG: Outbox party.activity_started
   API-->>L: 201 {party_activity_id, room_id, join_info}
-  PG-->>RT: Event party.activity_started (outbox → NATS → Valkey Pub/Sub)
+  PG-->>RT: Event party.activity_started (outbox → NATS → PUBLISH ew:rt:user:<member_id>)
   RT-->>L: (6) party.session.started {room_id, area, spawn}
   RT-->>M: (6) party.session.started
   L->>RT: hub.instance.join (private_instance)
@@ -148,7 +149,7 @@ sequenceDiagram
 
 | Điều kiện | Mặc định | Nhãn |
 |---|---|---|
-| Cùng `school_id` | Bắt buộc; khác trường cùng tenant `unit` khi tenant bật; không bao giờ khác tenant (ADR-0054) | [Proposed] |
+| Cùng `school_id` | Bắt buộc; khác trường cùng tenant `unit` khi tenant bật `cross_school_social_enabled`; không bao giờ khác tenant (ADR-0054) | [Proposed] |
 | Grade band | Mọi member trong cùng grade band, hoặc chênh tối đa 1 band liền kề nếu activity khai báo `allow_mixed_grade_band=true` (không bao giờ `g1_3` với `g8_9`) | [Proposed] |
 | Activity grade | `activity.grade_levels` chứa `grade_level` của từng member | [Confirmed] (kiểm tra lớp học) |
 | Trạng thái tài khoản | `active`, không bị sanction `restrict_multiplayer` | [Proposed] |
@@ -173,18 +174,11 @@ sequenceDiagram
 | Cùng giải Educational Puzzle | Room `coop`: state machine server-authoritative; mỗi đóng góp là một câu trả lời của **một** học sinh → ghi vào attempt của học sinh đó |
 | Learning Challenge | Mỗi member làm attempt riêng, kết quả nhóm = hàm tổng hợp (tổng/trung bình/ngưỡng) chỉ dùng cho tiến độ game & reward |
 | Team Competition | Party `competition_team` vào team matchmaking ([MATCHMAKING](MATCHMAKING.md)) |
-| Nhiệm vụ nhiều bước | Step gán cho `any_member`, `each_member`, `role:<x>` (vai trò trong nhóm) |
+| Nhiệm vụ nhiều bước | Step gán cho `any_member`, `each_member`, `role:<x>` (vai trò trong nhóm); bước `interdependent` mỗi người giữ một phần dữ kiện ([QUEST_SYSTEM §3.2](../01-game-design/QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-proposed)) |
 
 ### 7.1. Shared Quest Progress
 
-`shared_progress_policy` cấu hình theo quest version **[Confirmed]** (giá trị [Proposed]):
-
-| Policy | Ý nghĩa |
-|---|---|
-| `none` | Mỗi member có tiến độ riêng, chỉ ở chung instance |
-| `shared_steps` | Bước gameplay (đi tới, nhặt, kích hoạt) hoàn thành bởi một member tính cho cả nhóm |
-| `shared_steps_individual_learning` (mặc định cho cooperative quest) | Bước gameplay chia sẻ; **bước `activity` (học tập) mỗi member tự làm** |
-| `team_goal` | Mục tiêu tổng (vd. nhóm đúng 20 câu); mỗi câu trả lời vẫn ghi vào attempt riêng của người trả lời |
+`shared_progress_policy` cấu hình theo quest version **[Confirmed]**. Enum và ngữ nghĩa do [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress) sở hữu (khớp `quest.schema.json`): `individual` (mặc định) · `shared_steps` (bước khung chia sẻ, **bước học tập mỗi member tự làm** — mặc định cho cooperative quest) · `collective_count` (mục tiêu tổng của nhóm, mỗi câu trả lời vẫn ghi vào attempt riêng). PARTY_SYSTEM chỉ thực thi trong session co-op.
 
 Bất biến **[Confirmed]**: không bao giờ copy `attempt`, `score`, `objective_mastery` từ member này sang member khác. Reward game của bước chia sẻ áp riêng cho từng member theo `reward_rule` (có cap, chống farm — [DOMAIN_MODEL §8](../06-architecture/DOMAIN_MODEL.md#8-gamification)).
 
@@ -198,12 +192,12 @@ Bất biến **[Confirmed]**: không bao giờ copy `attempt`, `score`, `objecti
 | R4 | Chuyển Leader | Thủ công + tự động §9 | [Confirmed] |
 | R5 | Xử lý Leader disconnect | §9 | [Confirmed] |
 | R6 | Party riêng tư cần lời mời/quyền | `visibility=private` chỉ vào qua invitation `accepted` còn hạn | [Confirmed] |
-| R7 | Giới hạn theo school, class, grade, activity | `party_policies` cấp platform/school/class: `allowed_party_types`, `cross_class`, `cross_grade_band`, `max_members_cap` | [Confirmed] |
+| R7 | Giới hạn theo school, class, grade, activity | `party_policies` cấp platform/school/class (cấp school và class do `school_admin` đặt): `allowed_party_types`, `cross_class`, `cross_grade_band`, `max_members_cap` | [Confirmed] |
 | R8 | Không vượt qua điều kiện bảo vệ học sinh | Mọi kiểm tra chat policy, block, sanction, grade (ghép hoạt động) áp dụng y nguyên trong party; party chat dùng **cùng ChatPolicy cho mọi thành viên** (không phân biệt lớp, ADR-0020) và mọi tin phải qua kiểm tra hợp lệ | [Confirmed] / cơ chế [Proposed] |
 | R9 | Chống spam lời mời | §10 | [Confirmed] |
 | R10 | Chống duplicate membership | Unique index R1 + unique `(party_id, student_id) WHERE left_at IS NULL`; accept invitation idempotent | [Confirmed] |
 | R11 | Rate limiting & audit log | §10, §11 | [Confirmed] |
-| R12 | Party lớp 1–3 | Chỉ tạo `friend`/`class_group`, chỉ mời bạn cùng lớp (giới hạn ghép nhóm, **không** giới hạn chat — party chat như mọi lớp theo ADR-0020) | [Proposed] |
+| R12 | Party lớp 1–3 | Chỉ tạo `friend`/`quest`, chỉ mời bạn bè cùng lớp (giới hạn ghép nhóm, **không** giới hạn chat — party chat như mọi lớp theo ADR-0020) | [Proposed] |
 
 ## 9. Leader disconnect & member disconnect
 
@@ -221,38 +215,38 @@ stateDiagram-v2
 
 | Tình huống | Hành vi | Nhãn |
 |---|---|---|
-| Leader mất kết nối | Grace **60 s**; trong grace member vẫn chơi activity, lệnh leader tạm khóa; Party Lobby hiển thị "Trưởng nhóm đang kết nối lại" | [Proposed] |
+| Leader mất kết nối | Grace `party_leader_grace` (**60 s**); trong grace member vẫn chơi activity, lệnh leader tạm khóa; Party Lobby hiển thị "Trưởng nhóm đang kết nối lại" | [Proposed] |
 | Hết grace | Auto-transfer cho member **online gia nhập lâu nhất** (`joined_at` nhỏ nhất); domain event `party.leader_transferred` (WS `party.leader.transferred`) reason `leader_disconnected` | [Proposed] |
 | Leader cũ quay lại | Là member thường; leader mới có thể transfer lại | [Proposed] |
-| `class_group` | Giáo viên (owner) luôn giữ quyền quản trị; auto-transfer chỉ áp cho quyền leader-in-game | [Proposed] |
-| Member mất kết nối trong activity | Grace theo mode ([MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị)); người còn lại tiếp tục nếu activity `allow_continue_on_disconnect` [Confirmed]; nếu số member online < `min_members` quá 120 s → activity kết thúc `timeout` | [Proposed] |
-| Member mất kết nối ở Party Lobby | Hiện `disconnected`; ready reset; vẫn là member đến khi party dormant/disband | [Proposed] |
+| Member mất kết nối trong activity | Grace theo mode ([MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị)); người còn lại tiếp tục theo quy tắc disconnect của activity (quest: [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress); boss: [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) [Confirmed]; nếu số member online < `min_members` quá `party_activity_min_members_timeout` (120 s) → activity kết thúc `timeout` | [Proposed] |
+| Member mất kết nối ở Party Lobby | Hiện "đang kết nối lại"; ready reset; vẫn là member đến khi party dormant/disband | [Proposed] |
 
-Grace timer do competition-service quản lý (không phụ thuộc node gateway giữ kết nối leader); dùng Valkey key TTL (`ew:pty:party:{id}:leader_grace`) + keyspace-independent sweeper trong worker (quét mỗi 5 s) để không phụ thuộc node.
+Grace timer do module competition quản lý (không phụ thuộc node gateway giữ kết nối leader); dùng Valkey key TTL (`ew:party:<party_id>:leader_grace`) + keyspace-independent sweeper trong worker (quét mỗi 5 s) để không phụ thuộc node.
 
 ## 10. Rate limit & chống spam
 
 | Hành động | Giới hạn | Nhãn |
 |---|---|---|
-| Gửi lời mời | 10/phút, 50/giờ mỗi học sinh | [Proposed] |
-| Lời mời tới cùng một người | 1 pending; sau khi bị reject: chờ 5 phút; 3 lần reject/ngày → chặn mời người đó đến hết ngày | [Proposed] |
-| Lời mời tồn tại | Hết hạn sau 5 phút (`expires_at`) | [Proposed] |
-| Pending invitations tối đa nhận | 20; vượt → lời mời cũ nhất hết hạn | [Proposed] |
-| Create/disband party | 10 lần/giờ | [Proposed] |
-| Kick | 10/giờ mỗi leader | [Proposed] |
-| Lệnh lobby (ready, select activity) | 5/giây | [Proposed] |
+| Gửi lời mời (`party_invite_rate`) | 10/phút, **50/ngày** mỗi học sinh | [Confirmed — Technical Architect 2026-11-16] |
+| Lời mời tới cùng một người (`party_invite_repeat_rules`) | 1 pending; sau khi bị reject: chờ 5 phút; 3 lần reject/ngày → chặn mời người đó đến hết ngày | [Confirmed — Technical Architect 2026-11-16] |
+| Lời mời tồn tại (`party_invite_ttl`) | Hết hạn sau 5 phút (`expires_at`) | [Proposed] |
+| Pending invitations tối đa nhận (`party_pending_invites_max`) | 20; vượt → lời mời cũ nhất hết hạn | [Confirmed — Technical Architect 2026-11-16] |
+| Create/disband party (`party_create_rate`) | 10 lần/giờ | [Confirmed — Technical Architect 2026-11-16] |
+| Kick (`party_kick_rate`) | 10/giờ mỗi leader | [Confirmed — Technical Architect 2026-11-16] |
+| Lệnh lobby: ready, chọn activity (`party_lobby_cmd_rate`) | 5/giây | [Confirmed — Technical Architect 2026-11-16] |
+| Hoạt động thiếu người (`party_activity_min_members_timeout`) | Số thành viên online < `min_members` quá 120 s → activity kết thúc `timeout` (§9) | [Confirmed — Technical Architect 2026-11-16] |
 
 Giới hạn hiện thực bằng Valkey sliding window (`ew:rl:...` — VALKEY_DESIGN). Vượt ngưỡng nhiều lần → ghi `audit` và tăng điểm nghi spam cho [MODERATION](MODERATION.md).
 
 ## 11. Audit log
 
-Ghi `audit.audit_logs` (qua event) cho: `party.created`, `party.disbanded` (ai, lý do), `party.member_kicked`, `party.leader_transferred` (thủ công/tự động), invitation bị từ chối do policy (`PARTY_POLICY_VIOLATION`), vượt rate limit, giáo viên/moderator can thiệp party. Không ghi nội dung chat vào audit (chat có lưu trữ riêng).
+Ghi `audit.audit_logs` (qua event) cho: `party.created`, `party.disbanded` (ai, lý do), `party.member_kicked`, `party.leader_transferred` (thủ công/tự động), invitation bị từ chối do policy (`PARTY_INVITE_NOT_ALLOWED`), vượt rate limit, `safety_moderator` can thiệp party (giải tán, gỡ thành viên khi xử lý case). Không ghi nội dung chat vào audit (chat có lưu trữ riêng).
 
 ## 12. Thành phần kỹ thuật
 
-### 12.1. Golang (competition-service, bounded context `party`)
+### 12.1. Golang (module competition, bounded context `party`)
 
-| Service [Confirmed] | Trách nhiệm | Tiến trình |
+| Module [Confirmed] | Trách nhiệm | Tiến trình |
 |---|---|---|
 | `PartyService` | Create, update settings, disband, transfer leader, get | api |
 | `PartyMemberService` | Join, leave, kick, membership invariant R1/R10, eligibility | api |
@@ -260,19 +254,19 @@ Ghi `audit.audit_logs` (qua event) cho: `party.created`, `party.disbanded` (ai, 
 | `PartyLobbyService` | Lobby state (ready, activity, mode), fan-out WS, version | realtime |
 | `CooperativeSessionService` | 9 bước session, tạo `party_activity`/room/ticket, kết thúc, leader grace | api + realtime + worker |
 
-Phụ thuộc (ADR-0036, ADR-0040): projection `ref_*` học sinh/lớp/khối và friend/block (nhận qua event từ identity-service và chat-service), `principals:resolve` của identity-service, eligibility quest/boss của game-service (typed client), `room.Allocator` và `matchmaking.Tickets` nội bộ, event `party.created`/`party.disbanded` để chat-service tạo/đóng channel `party`, `audit.recorded`.
+Phụ thuộc (ADR-0036, ADR-0040): projection `ref_*` học sinh/lớp/khối và friend/block (nhận qua event từ module identity và module chat), `principals:resolve` của module identity, eligibility quest/boss của module game (facade, gọi trong tiến trình), `room.Allocator` và `matchmaking.Tickets` nội bộ, event `party.created`/`party.disbanded` để module chat tạo/đóng channel `party`, `audit.recorded`.
 
 ### 12.2. Valkey [Confirmed] (tên key cuối cùng theo VALKEY_DESIGN)
 
 | Mục đích | Key đề xuất | Kiểu | TTL |
 |---|---|---|---|
-| Party Presence | `ew:pty:party:{party_id}:presence` | hash `student_id → status` | refresh theo heartbeat |
-| Realtime Party State | `ew:pty:party:{party_id}:state` | hash (leader, status, version) | 24 h, tái tạo từ PG |
-| Lobby State | `ew:pty:party:{party_id}:lobby` | hash | 24 h |
-| Invitation Cache | `ew:pty:inv:{invitee_id}` | sorted set theo `expires_at` | 5 phút |
-| Lock thao tác leader | `ew:pty:party:{party_id}:lock` | string NX | 5 s |
-| Leader grace | `ew:pty:party:{party_id}:leader_grace` | string | 60 s |
-| Realtime Event Distribution | Valkey pub/sub channel `ew:rt:party:{party_id}` | pub/sub | — |
+| Realtime Party State + lobby | `ew:party:<party_id>` | hash (leader, status, `state_version`, activity, mode) | 24 h, tái tạo từ PG |
+| Thành viên, ready, trạng thái | `ew:party:<party_id>:members` | hash `user_id → {role, ready, status, joined_at}` | 24 h |
+| Party của học sinh | `ew:party:user:<user_id>` | string | 24 h |
+| Invitation Cache | `ew:party:invite:<invitation_id>`, `ew:party:invites:user:<user_id>` | hash / sorted set theo `expires_at` | `party_invite_ttl` |
+| Lock thao tác leader | `ew:party:<party_id>:lock` | string NX | 5 s |
+| Leader grace | `ew:party:<party_id>:leader_grace` | string | `party_leader_grace` |
+| Realtime Event Distribution | Không có topic party: fan-out tới `ew:rt:user:<member_id>` của từng thành viên ([REALTIME_ARCHITECTURE §5](../06-architecture/REALTIME_ARCHITECTURE.md#5-routing-sự-kiện-và-room)) | pub/sub | — |
 
 ### 12.3. PostgreSQL — database `eduworld_competition`, schema `multiplayer` [Confirmed]
 
@@ -280,11 +274,11 @@ Mọi bảng có `tenant_id`, soft-delete và RLS theo tenant (ADR-0005, ADR-002
 
 | Bảng | Cột chính | Ràng buộc |
 |---|---|---|
-| `parties` | `party_id`, `tenant_id`, `school_id`, `club_id?`, `name`, `leader_id`, `party_type`, `visibility`, `invitation_policy`, `max_members`, `grade_band`, `status`, `current_activity_id`, `current_game_session_ref`, `created_at`, `updated_at`, `disbanded_at` | RLS theo `school_id` |
+| `parties` | `party_id`, `tenant_id`, `school_id`, `club_id?` (chỉ khi tạo từ club), `name`, `leader_id`, `party_type`, `visibility`, `invitation_policy`, `max_members`, `grade_band`, `status`, `current_activity_id`, `current_game_session_ref`, `created_at`, `updated_at`, `disbanded_at` | RLS theo `school_id` |
 | `party_members` | `party_id`, `student_id`, `role`, `joined_at`, `left_at`, `left_reason` | unique `(student_id) WHERE left_at IS NULL` |
 | `party_invitations` | `invitation_id`, `party_id`, `inviter_id`, `invitee_id`, `status`, `created_at`, `expires_at`, `responded_at` | unique `(party_id, invitee_id) WHERE status='pending'` |
 | `party_histories` | `party_id`, `event_type`, `actor_id`, `data`, `occurred_at` | append-only (Party History) |
-| `party_activities` | `party_activity_id`, `party_id`, `activity_type` (quest/coop_challenge/learning_challenge/team_match/exploration), `activity_ref`, `room_id`, `match_id?`, `status`, `started_at`, `ended_at`, `end_reason` | (Party Activity) |
+| `party_activities` | `party_activity_id`, `party_id`, `activity_type` (`PartyActivityType`: `explore`/`quest`/`boss`/`learning_challenge`/`coop_challenge`/`team_battle`), `activity_ref`, `room_id`, `match_id?`, `status`, `started_at`, `ended_at`, `end_reason` | (Party Activity) |
 | `session_memberships` | xem [MULTIPLAYER_GAMEPLAY §10](MULTIPLAYER_GAMEPLAY.md#10-session-membership) | (Session Membership) |
 | `party_policies` | `scope_type`, `scope_id`, `rules` (JSONB) | |
 
@@ -292,10 +286,10 @@ Mọi bảng có `tenant_id`, soft-delete và RLS theo tenant (ADR-0005, ADR-002
 
 | Thành phần | Scene/script đề xuất | Ghi chú |
 |---|---|---|
-| Party UI (HUD mini) | `scenes/social/party_hud.tscn` | Avatar nhỏ + trạng thái các member |
-| Party Lobby | `scenes/social/party_lobby.tscn` | Danh sách member, ready, activity, start |
-| Friend Invitation UI | `scenes/social/invite_dialog.tscn` | Chỉ hiện bạn bè đủ điều kiện; popup nhận lời mời có countdown |
-| Member Status | `scripts/multiplayer/party_store.gd` | State store `RefCounted`, nhận event WS, phát signal |
+| Party UI (HUD mini) | `scenes/ui/hud/PartyHud.tscn` | Avatar nhỏ + trạng thái các member |
+| Party Lobby | `scenes/social/PartyLobby.tscn`, `PartyMemberCard.tscn`, `ActivitySelector.tscn` | Danh sách member, ready, activity, start |
+| Friend Invitation UI | `scenes/social/InviteFriendPicker.tscn`, `InvitationToast.tscn` | Chỉ hiện bạn bè đủ điều kiện; popup nhận lời mời có countdown |
+| Member Status | `scripts/multiplayer/party_service.gd`, `party_store.gd` | State store `RefCounted`, nhận event WS, phát signal |
 | Leader Controls | Trong party_lobby | Ẩn với member thường (backend vẫn kiểm tra) |
 | Group Chat | Nhúng `chat_panel` channel `party` — luôn hiển thị trong lobby và khi chơi cùng (thu gọn được) | ADR-0020 mục 6 |
 | Cooperative Gameplay | `scripts/multiplayer/coop_room_client.gd` | Hiển thị đóng góp của member, không hiển thị điểm học tập của người khác |
@@ -335,18 +329,20 @@ Accept khi invitee đang ở party khác: trả `PARTY_ALREADY_IN_PARTY` kèm l�
 
 ## 14. Acceptance criteria (Addendum §8) và test case
 
-| ID | Tiêu chí [Confirmed] | Test case (tóm tắt) | Loại test |
+Mã `AC-PTY-NNN` do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) cấp (ADR-0082); bảng dưới chi tiết hóa từng AC của PRD thành test case, tài liệu này không cấp mã AC riêng.
+
+| AC (PRD) | Tiêu chí [Confirmed] | Test case (tóm tắt) | Loại test |
 |---|---|---|---|
 | AC-PTY-001 | Học sinh A có thể tạo Party | A (không có party) `POST /parties` → 201, A là leader, `party.created` phát; gọi lại cùng `Idempotency-Key` → cùng party; A tạo party thứ hai → 409 `PARTY_ALREADY_IN_PARTY` | API, integration |
 | AC-PTY-002 | A có thể mời B, C, D | A mời B, C, D (bạn bè cùng trường, cùng band) → 3 invitation `pending`, B/C/D nhận `party.invitation.received` qua WS hoặc notification nếu offline; mời E đã block A → 403 `PARTY_INVITE_NOT_ALLOWED` | API, WS |
-| AC-PTY-003 | B, C, D chấp nhận lời mời | B, C, D accept → member count 4; accept trùng (retry) không tạo member trùng; với `max_members=3`, D accept → 409 `PARTY_FULL`; invitation quá 5 phút → `PARTY_INVITATION_EXPIRED` | API, concurrency test (B/C/D accept đồng thời) |
-| AC-PTY-004 | Các thành viên nhìn thấy nhau trong Party Lobby | Sau accept, cả 4 client nhận `party.member.joined` và snapshot lobby với 4 avatar, trạng thái online trong ≤ 1 s (p95) | WS e2e, Godot integration |
-| AC-PTY-005 | Leader có thể chọn hoạt động | A `party.activity.select` (quest co-op lớp 3) → mọi member nhận `party.activity.selected`, ready reset; B (không phải leader) select → `PARTY_NOT_LEADER` | WS |
-| AC-PTY-006 | Mọi thành viên đủ điều kiện có thể tham gia cùng Game Session | Tất cả ready → A start → 9 bước, cả 4 nhận `party.session.started` cùng `room_id`, vào cùng `private_instance`; nếu D không đủ grade → 409 với lý do, không ai bị đưa vào session | API + WS e2e |
-| AC-PTY-007 | Các thành viên có thể cùng thực hiện nhiệm vụ | Quest `shared_steps_individual_learning`: B kích hoạt cổng → bước tính cho cả nhóm; bước activity mỗi HS làm attempt riêng; quest hoàn thành khi điều kiện nhóm đạt | Integration (quest + exercise) |
-| AC-PTY-008 | Một thành viên mất kết nối, những người còn lại tiếp tục nếu chế độ cho phép | Kill kết nối C: A, B, D tiếp tục, thấy C `disconnected`; C reconnect trong 120 s → về đúng instance, tiến độ giữ nguyên; với activity `allow_continue_on_disconnect=false` → activity tạm dừng/kết thúc theo cấu hình | Chaos/WS e2e |
-| AC-PTY-009 | Leader mất kết nối có chính sách chuyển leader/phục hồi | Kill kết nối A: trong 60 s lệnh leader bị khóa; A quay lại trong 60 s → vẫn leader; nếu không → leader = member online gia nhập sớm nhất, `party.leader.transferred` reason `leader_disconnected`, audit ghi | WS e2e với clock giả lập |
-| AC-PTY-010 | Kết quả học tập từng thành viên ghi nhận riêng | Sau quest: 4 `attempt` riêng với `student_id` riêng; điểm/mastery của B không đổi khi A trả lời; query DB xác nhận không có attempt nào có `student_id` khác người trả lời | Integration, data assertion |
-| AC-PTY-011 | Không có thành viên trái phép tham gia Party riêng | E (không có invitation) `:join` party private → 403; E dùng invitation của B (sai invitee) → 403; học sinh trường khác dùng `party_id` → 404 (tenant isolation); E sửa client gửi `room.join` vào room party → `ROOM_NOT_MEMBER` | Security test, API, WS |
+| AC-PTY-002 | B, C, D chấp nhận lời mời | B, C, D accept → member count 4; accept trùng (retry) không tạo member trùng; với `max_members=3`, D accept → 409 `PARTY_FULL`; invitation quá 5 phút → `PARTY_INVITATION_EXPIRED` | API, concurrency test (B/C/D accept đồng thời) |
+| AC-PTY-003 | Các thành viên nhìn thấy nhau trong Party Lobby | Sau accept, cả 4 client nhận `party.member.joined` và snapshot lobby với 4 avatar, trạng thái online trong ≤ 1 s (p95) | WS e2e, Godot integration |
+| AC-PTY-004 | Leader có thể chọn hoạt động | A `party.activity.select` (quest co-op lớp 3) → mọi member nhận `party.activity.selected`, ready reset; B (không phải leader) select → `PARTY_NOT_LEADER` | WS |
+| AC-PTY-005 | Mọi thành viên đủ điều kiện có thể tham gia cùng Game Session | Tất cả ready → A start → 9 bước, cả 4 nhận `party.session.started` cùng `room_id`, vào cùng `private_instance`; nếu D không đủ grade → 409 với lý do, không ai bị đưa vào session | API + WS e2e |
+| AC-PTY-006 | Các thành viên có thể cùng thực hiện nhiệm vụ | Quest `shared_steps`: B kích hoạt cổng → bước tính cho cả nhóm; bước activity mỗi HS làm attempt riêng; quest hoàn thành khi điều kiện nhóm đạt | Integration (quest + exercise) |
+| AC-PTY-007 | Một thành viên mất kết nối, những người còn lại tiếp tục nếu chế độ cho phép | Kill kết nối C: A, B, D tiếp tục, thấy C "đang kết nối lại"; C reconnect trong 120 s → về đúng instance, tiến độ giữ nguyên; activity `party_required` còn dưới `party_size.min` người → kết thúc `timeout` sau `party_activity_min_members_timeout` | Chaos/WS e2e |
+| AC-PTY-008 | Leader mất kết nối có chính sách chuyển leader/phục hồi | Kill kết nối A: trong 60 s lệnh leader bị khóa; A quay lại trong 60 s → vẫn leader; nếu không → leader = member online gia nhập sớm nhất, `party.leader.transferred` reason `leader_disconnected`, audit ghi | WS e2e với clock giả lập |
+| AC-PTY-009 | Kết quả học tập từng thành viên ghi nhận riêng | Sau quest: 4 `attempt` riêng với `student_id` riêng; điểm/mastery của B không đổi khi A trả lời; query DB xác nhận không có attempt nào có `student_id` khác người trả lời | Integration, data assertion |
+| AC-PTY-010 | Không có thành viên trái phép tham gia Party riêng | E (không có invitation) `:join` party private → 403; E dùng invitation của B (sai invitee) → 403; học sinh trường khác dùng `party_id` → 404 (tenant isolation); E sửa client gửi `room.join` vào room party → `ROOM_NOT_MEMBER` | Security test, API, WS |
 
-Kiểm thử bổ sung: rate limit lời mời (AC-PTY-012: lời mời thứ 11 trong 1 phút → 429 `PARTY_INVITE_RATE_LIMITED`), duplicate membership khi accept 2 invitation đồng thời từ 2 party khác nhau (AC-PTY-013: chỉ 1 thành công). Chat party always-on (AC-PTY-014: A tạo party → channel `party` có ngay; B, C, D accept → tự là member và chat được; policy trường đặt `party.enabled=false` bị từ chối `CHAT_POLICY_ALWAYS_ON`). Party giải tán (AC-PTY-015: channel `party` read-only ngay, bị purge sau `gameplay_chat_retention_days`, tin có report được giữ làm bằng chứng — ADR-0033).
+Kiểm thử bổ sung: rate limit lời mời (AC-PTY-011: lời mời thứ 11 trong 1 phút → 429 `PARTY_INVITE_RATE_LIMITED`), duplicate membership khi accept 2 invitation đồng thời từ 2 party khác nhau (AC-PTY-012: chỉ 1 thành công). Chat party always-on (AC-PTY-013: A tạo party → channel `party` được module chat tạo từ event `party.created` trong ≤ 1 s; B, C, D accept → tự là member và chat được; policy trường đặt `party.enabled=false` bị từ chối `CHAT_POLICY_ALWAYS_ON`). Party giải tán (thuộc AC-CHAT-010: channel `party` read-only ngay, bị purge sau `gameplay_chat_retention_days`, tin có report được giữ làm bằng chứng — ADR-0033).

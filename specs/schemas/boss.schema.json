@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:eduworld:schema:boss:1",
   "title": "BossVersion",
-  "description": "Boss nhiều phase (game-service, PvE, server-authoritative). Yêu cầu mỗi phase tham chiếu hoạt động học tập qua activity_ref (ADR-0048). Xem docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md §3.",
+  "description": "Boss nhiều phase (module game, PvE, server-authoritative). Yêu cầu mỗi phase tham chiếu hoạt động học tập qua activity_ref (ADR-0048). Xem docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md §3.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -218,8 +218,8 @@
       ],
       "properties": {
         "activity_type": {
-          "type": "string",
-          "maxLength": 64
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType",
+          "description": "Loại hoạt động trong Activity Registry (ADR-0048)"
         },
         "activity_id": {
           "$ref": "#/$defs/uuid"

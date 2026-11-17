@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/study_group.updated.v1.schema.json",
+  "title": "Payload study_group.updated v1 (module learning, ADR-0084)",
+  "description": "Đổi tên, lớp hoặc khối của nhóm học tập. Thay đổi thành viên phát study_group.member_changed. Consumer: module chat (đổi tên channel study_group), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["study_group_id", "school_id", "class_id", "grade_level", "name", "version", "updated_by"],
+  "properties": {
+    "study_group_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "class_id": { "type": ["string", "null"], "format": "uuid", "description": "null = nhóm theo khối" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "version": { "type": "integer", "minimum": 1 },
+    "updated_by": { "type": "string", "format": "uuid" }
+  }
+}

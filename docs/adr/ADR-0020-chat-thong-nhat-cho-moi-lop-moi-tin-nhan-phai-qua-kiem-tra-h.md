@@ -1,6 +1,9 @@
 # ADR-0020 — Chat thống nhất cho mọi lớp, mọi tin nhắn phải qua kiểm tra hợp lệ
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../03-social-multiplayer/MODERATION.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../03-social-multiplayer/MODERATION.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: giáo viên là thành viên channel Class (mục 3) và quyền giáo viên mute/khóa channel lớp (mục 4); channel Class chỉ gồm học sinh của lớp, kiểm duyệt do Platform Safety Team. **Còn hiệu lực:** toàn bộ phần còn lại, gồm một bộ quy tắc cho mọi lớp và chat gameplay luôn có.
 
 ## Bối cảnh
 
@@ -38,3 +41,4 @@ Policy theo grade band (quick message cho lớp 1–3, DM chỉ lớp 6–9): st
 | 2026-11-15 | Pipeline có thể tắt theo ADR-0030 | Stakeholder |
 | 2026-11-15 | Thêm channel `match`; chat gameplay luôn có | Stakeholder |
 | 2026-11-15 | Giữ quyết định khi audit theo Master Prompt mới | DOCUMENTATION_AUDIT §4.1 |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

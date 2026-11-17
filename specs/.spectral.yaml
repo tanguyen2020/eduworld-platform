@@ -1,6 +1,6 @@
-# Spectral ruleset cho mọi file OpenAPI trong specs/ (public gộp, public theo service, internal, SIS contract).
+# Spectral ruleset cho mọi file OpenAPI trong specs/ (public gộp, public theo module, internal = hợp đồng facade, SIS contract).
 # Chạy: npx @stoplight/spectral-cli@6.11.1 lint -r specs/.spectral.yaml "specs/openapi/**/*.v1.yaml" specs/sis/*.yaml
-# (file thư viện specs/openapi/services/common/* không lint độc lập — được kiểm tra qua file tham chiếu nó).
+# (file thư viện specs/openapi/modules/common/* không lint độc lập — được kiểm tra qua file tham chiếu nó).
 extends:
   - spectral:oas
 functionsDir: ./spectral-functions
@@ -15,25 +15,77 @@ rules:
     given: "$..[?(@ && @.type)]"
     then:
       function: stringMaxLength
-  # ADR-0036 — operation của spec public (gộp và theo service) phải khai báo service sở hữu; bật qua overrides.
+  # ADR-0074 — operation của spec public (gộp và theo module) phải khai báo module sở hữu; bật qua overrides.
   operation-must-declare-service:
-    description: Operation trong spec public phải có x-service (ADR-0036).
+    description: Operation trong spec public phải có x-service (tên module sở hữu, ADR-0074).
     severity: "off"
     formats: [oas3_1]
     given: "$.paths[*][get,put,post,patch,delete]"
     then:
       field: x-service
       function: truthy
+  # ADR-0074 — spec internal là hợp đồng facade gọi trong tiến trình: mỗi operation khai báo module được gọi
+  # (tên module, không phải client svc-*), ngữ cảnh bắt buộc chỉ lấy từ danh sách đóng; bật qua overrides.
+  internal-operation-must-declare-callers:
+    description: Operation trong spec internal phải có x-allowed-callers là danh sách tên module (ADR-0074).
+    message: '{{error}}'
+    severity: "off"
+    formats: [oas3_1]
+    given: "$.paths[*][get,put,post,patch,delete]"
+    then:
+      - field: x-allowed-callers
+        function: truthy
+      - field: x-allowed-callers
+        function: schema
+        functionOptions:
+          schema:
+            type: array
+            minItems: 1
+            uniqueItems: true
+            items: { enum: [identity, learning, game, competition, chat] }
+  internal-context-required-values:
+    description: x-context-required chỉ gồm tenant_scope, idempotency_key (ngữ cảnh do pkg/modcall truyền, ADR-0074).
+    message: '{{error}}'
+    severity: "off"
+    formats: [oas3_1]
+    given: "$.paths[*][get,put,post,patch,delete][?(@property === 'x-context-required')]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { enum: [tenant_scope, idempotency_key] }
+  internal-no-transport-security:
+    description: Facade gọi trong tiến trình — không có security scheme, token svc-* hay servers (ADR-0074).
+    severity: "off"
+    formats: [oas3_1]
+    given: "$"
+    then:
+      - field: security
+        function: falsy
+      - field: servers
+        function: falsy
+      - field: components.securitySchemes
+        function: falsy
   # Nới các rule chỉ mang tính trình bày (đã có summary + description ở mức tài liệu).
   operation-description: off
   info-contact: off
 overrides:
   - files:
       - "openapi/eduworld-api.v1.yaml"
-      - "openapi/services/identity.v1.yaml"
-      - "openapi/services/learning.v1.yaml"
-      - "openapi/services/game.v1.yaml"
-      - "openapi/services/competition.v1.yaml"
-      - "openapi/services/chat.v1.yaml"
+      - "openapi/modules/identity.v1.yaml"
+      - "openapi/modules/learning.v1.yaml"
+      - "openapi/modules/game.v1.yaml"
+      - "openapi/modules/competition.v1.yaml"
+      - "openapi/modules/chat.v1.yaml"
     rules:
       operation-must-declare-service: error
+  - files:
+      - "openapi/modules/*.internal.v1.yaml"
+    rules:
+      internal-operation-must-declare-callers: error
+      internal-context-required-values: error
+      internal-no-transport-security: error
+      oas3-api-servers: off

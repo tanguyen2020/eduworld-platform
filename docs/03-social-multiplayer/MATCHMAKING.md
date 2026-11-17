@@ -5,7 +5,7 @@
 
 ## 0. Mục đích & phạm vi
 
-Tài liệu **sở hữu cơ chế ghép trận PvP**: hard constraints, queue, ticket, matchmaker, proposal/ready check, lobby, chia đội, friend duel, bot luyện tập. Luật chơi từng mode, scoring, Glicko-2, Competition Points, mùa và giải đấu thuộc [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) (và RANKING/TOURNAMENT liên quan); mất kết nối trong trận thuộc [MULTIPLAYER_GAMEPLAY §9](MULTIPLAYER_GAMEPLAY.md#9-mất-kết-nối-kết-nối-lại-đổi-thiết-bị). Challenge/boss **PvE** không qua matchmaking ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)). Chạy trong **competition-service**.
+Tài liệu **sở hữu cơ chế ghép trận PvP**: hard constraints, queue, ticket, matchmaker, proposal/ready check, lobby, chia đội, friend duel, bot luyện tập. Luật chơi từng mode, scoring, Glicko-2, Competition Points, mùa và giải đấu thuộc [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) (và RANKING/TOURNAMENT liên quan); mất kết nối trong trận thuộc [MULTIPLAYER_GAMEPLAY §9](MULTIPLAYER_GAMEPLAY.md#9-mất-kết-nối-kết-nối-lại-đổi-thiết-bị). Challenge/boss **PvE** không qua matchmaking ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)). Chạy trong **module competition**.
 
 ## 1. Yêu cầu nguồn
 
@@ -34,7 +34,7 @@ flowchart LR
 |---|---|---|---|
 | H1 | **Grade**: lớp 1–5 cùng `grade_level`; lớp 6–9 cùng `grade_level` hoặc ±1 trong cùng `grade_band` (`g6_7`, `g8_9`) | Queue partition theo `grade_level` (1–5) hoặc `grade_band` (6–9) | [Confirmed] nguyên tắc / giá trị [Proposed] |
 | H2 | **Nội dung phù hợp**: `subject_id` + (tùy mode) `topic_id`; câu hỏi chọn từ grade thấp nhất trong trận | Bắt buộc | [Confirmed] |
-| H3 | **Phạm vi**: cùng `school_id` (mặc định); toàn tenant `unit` khi tenant bật liên trường; `platform` chỉ cho giải/sự kiện liên tenant do platform tổ chức (ADR-0054) | `school` | [Proposed] |
+| H3 | **Phạm vi**: cùng `school_id` (mặc định); toàn tenant `unit` khi tenant bật `cross_school_social_enabled`; `platform` chỉ cho giải/sự kiện liên tenant do platform tổ chức (ADR-0054) | `school` | [Proposed] |
 | H4 | **Mode** & ruleset version | Bắt buộc | [Confirmed] |
 | H5 | **Trạng thái**: tài khoản active, không bị sanction `restrict_competition`, trong khung giờ cho phép | Kiểm tra lúc tạo ticket và lúc tạo proposal | [Proposed] |
 | H6 | **Block**: hai người block nhau không ghép cùng trận | Kiểm tra ở bước tạo proposal (pairwise) | [Proposed] |
@@ -85,7 +85,7 @@ Hard constraints **không bao giờ** nới, kể cả khi chờ lâu.
 | Tạo ticket | `POST /api/v1/competition/matchmaking/tickets` (`Idempotency-Key`) | Body: `mode`, `subject_id`, `topic_id?`, `party_id?`; server tự lấy grade, school, rating |
 | Xem ticket | `GET /api/v1/competition/matchmaking/tickets/{ticket_id}` | Trạng thái, thời gian chờ ước tính |
 | Hủy ticket | `DELETE /api/v1/competition/matchmaking/tickets/{ticket_id}` hoặc WS `matchmaking.ticket.cancel` | |
-| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode. Đề xuất, **chưa có trong OpenAPI**; dùng tên `duels` để không trùng "challenge" PvE của game-service [Proposed] |
+| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode. Đề xuất, **chưa có trong OpenAPI**; dùng tên `duels` để không trùng "challenge" PvE của module game [Proposed] |
 | Ready check | WS `matchmaking.proposal.accept` / `matchmaking.proposal.decline` | |
 
 Sự kiện WS gửi client (tên theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)): `matchmaking.ticket.updated` (status `queued`/`searching`/`cancelled`/`expired`, window mở rộng, ước tính chờ), `matchmaking.proposal.created`, `matchmaking.proposal.updated`, `matchmaking.proposal.cancelled`, `matchmaking.match.assigned` (kèm `room_id` lobby/battle).
@@ -121,10 +121,10 @@ Tên key cuối cùng theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md); đ�
 |---|---|---|
 | `ew:mm:queue:{mode}:{scope}:{grade_key}:{subject}[:{topic}]` | sorted set | member = `ticket_id`, score = `enqueued_at` (ms) |
 | `ew:mm:ticket:{ticket_id}` | hash | `student_ids`, `party_id`, `rating`, `rd`, `school_id`, `class_id`, `grade_level`, `enqueued_at`, `status`, `proposal_id` · TTL 10 phút |
-| `ew:mm:player:{student_id}` | string | `ticket_id` (NX) · TTL 10 phút |
+| `ew:mm:user:{user_id}` | string | `ticket_id` (NX) · TTL 10 phút |
 | `ew:mm:proposal:{proposal_id}` | hash | ticket ids, deadline, accept flags · TTL 30 s |
 | `ew:mm:queues` | set | danh sách queue key đang có ticket (để matchmaker quét) |
-| `ew:mm:lock:{queue_key}` | string NX | lock matchmaker per queue · TTL 2 s |
+| `ew:mm:lock:{queue_key}` | string NX | lock matchmaker per queue · TTL 5 s (gia hạn) |
 
 `{scope}` = `s:{school_id}` | `t:{tenant_id}` | `p`. `{grade_key}` = `g3` (lớp 1–5) hoặc `b6_7` (lớp 6–9).
 
@@ -138,10 +138,10 @@ Queue, mode, grade band, cửa sổ rating nới dần, timeout ready check là 
 
 ```mermaid
 sequenceDiagram
-  participant W as competition-service worker (matchmaker loop)
+  participant W as module competition worker (matchmaker loop)
   participant VK as Valkey
-  participant API as competition-service api
-  participant RT as realtime-gateway
+  participant API as module competition api
+  participant RT as realtime
   loop mỗi 1s
     W->>VK: SMEMBERS ew:mm:queues
     loop từng queue key (phân shard theo hash)
@@ -173,10 +173,11 @@ sequenceDiagram
 | Lobby | Room `lobby`: hiển thị nickname + avatar + tier đối thủ, đội, đếm ngược | 10 s (1v1), 20 s (team) | [Proposed] |
 | Team Assignment | Party giữ nguyên đội. Ticket lẻ trong team mode: snake draft theo rating (A1,B1,B2,A2…) để cân tổng rating; ưu tiên đặt bạn cùng lớp chung đội | — | [Proposed] |
 | Chat trận (always-on) | Khi tạo room `lobby`: tạo channel `match` (và `team` mỗi đội ở team mode), mọi người chơi tự join — chat có ngay từ lobby, không tắt được bằng cài đặt trường/lớp (ADR-0020 mục 6, [CHAT_SYSTEM §4.1](CHAT_SYSTEM.md#41-vòng-đời-channel-gameplay-always-on)) | — | [Confirmed] |
-| Match Start | Room `battle` chuyển `running`; `question_plan` sinh server-side (learning-service `POST /internal/v1/question-plans`) từ Question Bank theo grade thấp nhất + subject/topic, cùng đề cho mọi người; plan **ghim** `question_version_id` theo con trỏ release lúc match start (`matches.question_plan_version`, ADR-0043) — publish/rollback câu hỏi giữa trận không đổi đề | — | [Confirmed] (server-authoritative) |
+| Tạo trận (CreateMatch) | Khi mọi người accept: tạo `Match` (idempotent theo `proposal_id`) và **tạo luôn** `question_plan` server-side (facade `question-plans` của module learning, gọi trong tiến trình, [REALTIME_ARCHITECTURE §7.1](../06-architecture/REALTIME_ARCHITECTURE.md#71-state-machine-knowledge-battle)) từ Question Bank theo grade thấp nhất + subject/topic, cùng đề cho mọi người; plan **ghim** `question_version_id` theo con trỏ release lúc tạo trận (`matches.question_plan_version`, ADR-0043) — publish/rollback câu hỏi giữa trận không đổi đề; tạo plan thất bại → trận hủy trước lobby | — | [Confirmed] (server-authoritative) |
+| Match Start | Room `battle` chuyển `running` với plan đã tạo | — | [Confirmed] |
 | Match End | State machine kết thúc; `MatchResult` ghi một lần (unique `match_id`) | — | [Confirmed] |
 | Reconnect | Theo [MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) | 30–60 s | [Proposed] |
-| Đóng chat | `match.ended`/`match.aborted` → channel `match`/`team` read-only, purge sau `gameplay_chat_retention_days` (ADR-0033) | — | [Confirmed] |
+| Đóng chat | `match.completed`/`match.aborted` → channel `match`/`team` read-only, purge sau `gameplay_chat_retention_days` (ADR-0033) | — | [Confirmed] |
 | Match Result | `match.completed` → ranking, competition points, reward, learning evidence (`context=competition`) theo [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) | — | [Confirmed] |
 
 ## 8. Party queue & Friend duel

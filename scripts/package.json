@@ -10,6 +10,8 @@
     "specs:validate-schemas": "node specs/validate-schemas.mjs",
     "specs:validate-reference-data": "node specs/validate-reference-data.mjs",
     "specs:check-problem-codes": "node specs/check-problem-codes.mjs",
+    "specs:check-portal-catalog": "node specs/check-portal-catalog.mjs",
+    "specs:check-cross-features": "node specs/check-cross-features.mjs",
     "openapi:sync-platform-ops": "node openapi/sync-platform-ops.mjs",
     "docs:check-mermaid": "node docs/check-mermaid.mjs",
     "docs:check-links": "node docs/check-links.mjs",

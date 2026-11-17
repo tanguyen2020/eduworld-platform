@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/content/activities/activity-base.schema.json",
   "title": "LearningActivityVersion (base)",
-  "description": "Phần chung của mọi Learning Activity version trong Activity Registry (ADR-0048, docs/02-learning/ACTIVITY_ENGINE.md). Schema theo loại (video-lesson, speaking, ...) kế thừa $defs/activityCommon. Đây là cấu hình phía server: có thể chứa đáp án/tham số chấm, KHÔNG gửi nguyên văn xuống client (ADR-0016).",
+  "description": "Phần chung của mọi Learning Activity version trong Activity Registry (ADR-0048, docs/02-learning/ACTIVITY_ENGINE.md). Schema theo loại (quiz, interactive-exercise, minigame, video-lesson, audio-lesson, simulation) kế thừa $defs/activityCommon. Đây là cấu hình phía server: có thể chứa đáp án/tham số chấm, KHÔNG gửi nguyên văn xuống client (ADR-0016).",
   "type": "object",
   "allOf": [
     {
@@ -157,19 +157,187 @@
       },
       "additionalProperties": false
     },
+    "questionSource": {
+      "type": "object",
+      "description": "Nguồn câu hỏi của activity dạng câu hỏi (quiz, interactive_exercise): danh sách câu cố định, question set (ghim version khi bắt đầu attempt, ADR-0043) hoặc quy tắc chọn từ Question Bank.",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "questions",
+            "question_set",
+            "selection"
+          ]
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/questionRef"
+          }
+        },
+        "question_set_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "question_set_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "null = version hiện hành khi bắt đầu attempt"
+        },
+        "selection": {
+          "type": "object",
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "topic_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "objective_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "difficulty_min": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "difficulty_max": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "question_types": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
+              }
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "questions"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "questions"
+            ],
+            "properties": {
+              "questions": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "question_set"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_set_id"
+            ],
+            "properties": {
+              "question_set_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "selection"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "selection"
+            ],
+            "properties": {
+              "selection": true
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "questionInteraction": {
+      "type": "object",
+      "description": "Cách làm bài dạng câu hỏi. Số lượt thử theo khối lớp: LEARNING_EXPERIENCE §4.2; gợi ý: ACTIVITY_ENGINE §8.3.",
+      "properties": {
+        "shuffle_items": {
+          "type": "boolean",
+          "default": true
+        },
+        "shuffle_options": {
+          "type": "boolean",
+          "default": true
+        },
+        "per_item_time_limit_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 5,
+          "maximum": 600
+        },
+        "allow_unscored_retry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cho thử lại câu sai không tính điểm (is_scored=false) khi FeedbackTiming = immediate."
+        },
+        "hints_enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cho xin gợi ý (hints:next) khi FeedbackTiming = immediate và mode cho phép."
+        },
+        "navigation": {
+          "type": "string",
+          "enum": [
+            "free",
+            "sequential"
+          ],
+          "default": "sequential"
+        }
+      },
+      "additionalProperties": false
+    },
     "activityType": {
-      "type": "string",
-      "enum": [
-        "quiz",
-        "interactive_exercise",
-        "written_response",
-        "video_lesson",
-        "audio_lesson",
-        "speaking",
-        "simulation",
-        "minigame",
-        "project"
-      ]
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType"
     },
     "evaluation": {
       "type": "object",
@@ -190,11 +358,8 @@
               "accepted_answers",
               "rule",
               "numeric_tolerance",
-              "rubric",
-              "teacher_review",
               "completion",
-              "deterministic_check",
-              "ai_suggestion"
+              "deterministic_check"
             ]
           }
         },
@@ -207,35 +372,10 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
-        },
-        "rubric_ref": {
-          "type": "object",
-          "required": [
-            "rubric_id",
-            "version"
-          ],
-          "properties": {
-            "rubric_id": {
-              "$ref": "#/$defs/uuid"
-            },
-            "version": {
-              "type": "integer",
-              "minimum": 1
-            }
-          },
-          "additionalProperties": false
-        },
-        "requires_teacher_review": {
-          "type": "boolean",
-          "default": false
-        },
-        "ai_suggestion_enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "ADR-0053: chỉ gợi ý, tắt mặc định, chỉ có hiệu lực khi tenant bật"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Mọi hoạt động do server tự chấm (ADR-0016, ADR-0072, ADR-0082)."
     },
     "feedback": {
       "type": "object",
@@ -244,13 +384,7 @@
       ],
       "properties": {
         "timing": {
-          "type": "string",
-          "enum": [
-            "immediate",
-            "after_submit",
-            "after_review",
-            "never"
-          ]
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming"
         },
         "show_explanation": {
           "type": "boolean",
@@ -261,7 +395,8 @@
           "default": true
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Phản hồi từng câu theo enum chuẩn FeedbackTiming (EDU_FIT_REVIEW SPC-03). Phản hồi theo phương án nhiễu (option_feedback) và gợi ý (hints) nằm trong câu hỏi, chỉ trả trong kết quả chấm."
     },
     "completionRule": {
       "type": "object",
@@ -275,7 +410,6 @@
             "submit",
             "min_watched_ratio",
             "goals_met",
-            "all_milestones",
             "graded"
           ]
         },

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.example/learning-event.v1.schema.json",
   "title": "EduWorld Learning Event",
-  "description": "Envelope + payload cho learning event (LRS nội bộ, xAPI-like). Xem docs/07-backend/EVENT_DESIGN.md §2, §5. Lưu trong learning.learning_events; không chứa PII (tên, email, ngày sinh).",
+  "description": "Envelope + payload cho learning event (LRS nội bộ, xAPI-like). Xem docs/07-backend/EVENT_DESIGN.md §2, §5. Lưu trong learning.learning_events; không chứa PII (tên, email, ngày sinh). Enum dùng chung lấy từ specs/schemas/common/enums.schema.json.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -32,24 +32,31 @@
       "type": "string",
       "enum": [
         "activity.started",
+        "activity.submitted",
+        "activity.graded",
         "activity.completed",
         "lesson.completed",
         "question.viewed",
         "question.answered",
+        "video.progressed",
+        "video.cue_answered",
+        "simulation.goal_met",
         "exercise.started",
         "exercise.submitted",
         "exam.started",
         "exam.submitted",
+        "exam.graded",
+        "attempt.re_evaluated",
         "quest.completed",
         "learning_objective.progressed",
         "learning_objective.mastered"
       ],
-      "description": "question.correct / question.incorrect là view dẫn xuất từ question.answered (is_correct), không ghi bản ghi riêng."
+      "description": "question.correct / question.incorrect là view dẫn xuất từ question.answered (is_correct), không ghi bản ghi riêng. attempt.re_evaluated là event bù trừ khi hệ thống chấm lại (không xóa event cũ, ADR-0072)."
     },
     "schema_version": { "type": "integer", "const": 1 },
     "occurred_at": { "type": "string", "format": "date-time", "description": "Thời điểm nghiệp vụ, server time, UTC." },
     "recorded_at": { "type": "string", "format": "date-time" },
-    "producer": { "type": "string", "maxLength": 64, "pattern": "^(identity|learning|game|competition|chat|realtime)-service/[a-z0-9_]+$", "description": "<service>/<module> (ADR-0036)" },
+    "producer": { "type": "string", "maxLength": 64, "pattern": "^(identity|learning|game|competition|chat|realtime)/[a-z0-9_]+$", "description": "<module>/<thành phần> (ADR-0074)" },
     "tenant_id": { "$ref": "#/$defs/uuid", "description": "Tenant (khóa cô lập, ADR-0005) của học sinh tại thời điểm xảy ra." },
     "school_id": { "$ref": "#/$defs/uuid", "description": "Trường bên trong tenant của học sinh tại thời điểm xảy ra (tenant chung dùng School ảo)." },
     "student_id": { "$ref": "#/$defs/uuid" },
@@ -58,7 +65,11 @@
       "additionalProperties": false,
       "required": ["type", "id"],
       "properties": {
-        "type": { "type": "string", "enum": ["student", "system"] },
+        "type": {
+          "type": "string",
+          "enum": ["student", "system", "staff"],
+          "description": "student: học sinh tự thực hiện; system: server/worker tự sinh (chấm, mastery); staff: nhân sự kích hoạt thao tác (vd. content_admin/academic_manager kích hoạt re-evaluate)."
+        },
         "id": { "$ref": "#/$defs/uuid" }
       }
     },
@@ -76,7 +87,7 @@
     },
     "session_id": {
       "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }],
-      "description": "game_session_id; null cho event do hệ thống sinh (vd. mastery tính lại trong worker)."
+      "description": "game_session_id; null cho event do hệ thống sinh (vd. mastery tính lại trong worker, re-evaluate)."
     },
     "activity_id": {
       "type": ["string", "null"],
@@ -86,7 +97,7 @@
     "content_id": { "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
     "content_version_id": {
       "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }],
-      "description": "Bắt buộc khác null với question.*, lesson.*, exercise.*, exam.* (ADR-0015)."
+      "description": "Bắt buộc khác null với question.*, lesson.*, exercise.*, exam.*, activity.submitted/graded (ADR-0015)."
     },
     "context": { "$ref": "#/$defs/context" },
     "objective_ids": {
@@ -99,7 +110,7 @@
       "type": "string",
       "minLength": 3,
       "maxLength": 200,
-      "description": "Khóa tất định, unique trong learning.learning_events (vd. qa:<attempt_id>:<position>:<answer_seq>)."
+      "description": "Khóa tất định, unique trong learning.learning_events (vd. qa:<attempt_id>:<position>:<answer_seq>, reeval:<attempt_id>:<new_evaluation_id>)."
     },
     "trace_id": { "type": "string", "maxLength": 64, "pattern": "^[0-9a-f]{32}$" },
     "payload": { "type": "object" }
@@ -108,6 +119,35 @@
     {
       "if": { "properties": { "event_type": { "const": "activity.started" } } },
       "then": { "properties": { "payload": { "$ref": "#/$defs/payload_activity_started" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "activity.submitted" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "#/$defs/payload_activity_submitted" },
+          "content_version_id": { "$ref": "#/$defs/uuid" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "enum": ["activity.graded", "exam.graded"] } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "#/$defs/payload_graded" },
+          "content_version_id": { "$ref": "#/$defs/uuid" },
+          "actor": { "type": "object", "properties": { "type": { "const": "system" } } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "attempt.re_evaluated" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "#/$defs/payload_attempt_re_evaluated" },
+          "content_version_id": { "$ref": "#/$defs/uuid" },
+          "actor": { "type": "object", "properties": { "type": { "enum": ["staff", "system"] } } }
+        }
+      }
     },
     {
       "if": { "properties": { "event_type": { "const": "activity.completed" } } },
@@ -141,6 +181,18 @@
       }
     },
     {
+      "if": { "properties": { "event_type": { "const": "video.progressed" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_video_progressed" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "video.cue_answered" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_video_cue_answered" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "simulation.goal_met" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_simulation_goal_met" } } }
+    },
+    {
       "if": { "properties": { "event_type": { "enum": ["exercise.started", "exam.started"] } } },
       "then": {
         "properties": {
@@ -164,11 +216,11 @@
     },
     {
       "if": { "properties": { "event_type": { "const": "learning_objective.progressed" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_objective_progressed" } } }
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_objective_progressed" }, "actor": { "type": "object", "properties": { "type": { "const": "system" } } } } }
     },
     {
       "if": { "properties": { "event_type": { "const": "learning_objective.mastered" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_objective_mastered" } } }
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_objective_mastered" }, "actor": { "type": "object", "properties": { "type": { "const": "system" } } } } }
     }
   ],
   "$defs": {
@@ -176,23 +228,23 @@
       "type": "string", "maxLength": 64,
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
-    "mode": {
-      "type": "string",
-      "enum": ["practice", "assignment", "quest", "exam", "competition", "retry_wrong", "lesson"]
-    },
     "context": {
       "type": "object",
       "additionalProperties": false,
       "required": ["mode"],
       "properties": {
-        "mode": { "$ref": "#/$defs/mode" },
+        "mode": {
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode",
+          "description": "AttemptMode của attempt sinh ra event. Event không gắn attempt (lesson.completed, quest.completed) dùng mode của ngữ cảnh: practice (tự học), assignment (nhà trường giao), quest."
+        },
         "assignment_id": { "$ref": "#/$defs/uuid" },
         "exam_session_id": { "$ref": "#/$defs/uuid" },
         "quest_version_id": { "$ref": "#/$defs/uuid" },
         "minigame_version_id": { "$ref": "#/$defs/uuid" },
+        "challenge_attempt_id": { "$ref": "#/$defs/uuid" },
         "match_id": { "$ref": "#/$defs/uuid" },
         "party_id": { "$ref": "#/$defs/uuid" },
-        "is_official": { "type": "boolean", "description": "true chỉ với kiểm tra chính thức do giáo viên/trường tổ chức." },
+        "is_official": { "type": "boolean", "description": "true chỉ với bài kiểm tra chính thức do nhà trường tổ chức (EXAM_ENGINE)." },
         "client_platform": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] },
         "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 }
       }
@@ -207,23 +259,100 @@
         "scaled": { "type": "number", "minimum": 0, "maximum": 1 }
       }
     },
+    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
+    "question_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType" },
+    "exam_type": { "type": "string", "enum": ["practice_test", "mock", "chapter", "semester", "subject", "custom"] },
     "payload_activity_started": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["activity_type"],
+      "required": ["source_kind"],
       "properties": {
-        "activity_type": {
+        "source_kind": {
           "type": "string",
-          "enum": ["lesson", "question_set", "minigame", "assessment", "quest_step", "learning_challenge"]
+          "enum": ["learning_activity", "lesson", "question_set", "assessment", "quest_step", "challenge"],
+          "description": "Nguồn của hoạt động; learning_activity thì có activity_type."
+        },
+        "activity_type": { "$ref": "#/$defs/activity_type" },
+        "attempt_id": { "$ref": "#/$defs/uuid" }
+      }
+    },
+    "payload_activity_submitted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "activity_type", "status", "duration_ms"],
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "activity_id": { "$ref": "#/$defs/uuid" },
+        "activity_version_id": { "$ref": "#/$defs/uuid" },
+        "activity_type": { "$ref": "#/$defs/activity_type" },
+        "status": {
+          "type": "string",
+          "enum": ["submitted", "graded"],
+          "description": "graded khi server chấm xong ngay lúc nộp; submitted khi chấm/công bố trì hoãn (sẽ có activity.graded)."
+        },
+        "score": { "$ref": "#/$defs/score" },
+        "correct_count": { "type": "integer", "minimum": 0 },
+        "item_count": { "type": "integer", "minimum": 0 },
+        "hints_used": { "type": "integer", "minimum": 0, "description": "Tổng số gợi ý đã mở trong attempt." },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "submit_reason": { "type": "string", "enum": ["manual", "timeout", "auto_complete"] }
+      }
+    },
+    "payload_graded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "evaluation_id", "score"],
+      "description": "activity.graded / exam.graded: evaluation có hiệu lực do server tự chấm (source = system, ADR-0016, ADR-0072). Với exam, mastery lấy evidence từ exam.graded.",
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "evaluation_id": { "$ref": "#/$defs/uuid" },
+        "activity_type": { "$ref": "#/$defs/activity_type" },
+        "exam_session_id": { "$ref": "#/$defs/uuid" },
+        "score": { "$ref": "#/$defs/score" },
+        "passed": { "type": "boolean" },
+        "correct_count": { "type": "integer", "minimum": 0 },
+        "item_count": { "type": "integer", "minimum": 0 },
+        "is_official": { "type": "boolean" },
+        "result_release": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease" }
+      }
+    },
+    "payload_attempt_re_evaluated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "previous_evaluation_id", "new_evaluation_id", "previous_score", "new_score", "reason", "trigger"],
+      "description": "Event bù trừ khi hệ thống chấm lại do nội dung lỗi (ADR-0072 mục 3). learning_record ghi bút toán điều chỉnh evidence, không xóa event cũ.",
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "previous_evaluation_id": { "$ref": "#/$defs/uuid" },
+        "new_evaluation_id": { "$ref": "#/$defs/uuid" },
+        "previous_score": { "$ref": "#/$defs/score" },
+        "new_score": { "$ref": "#/$defs/score" },
+        "question_version_ids": {
+          "type": "array",
+          "maxItems": 200,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/uuid" },
+          "description": "Câu hỏi có lỗi dẫn đến chấm lại."
+        },
+        "reason": { "type": "string", "minLength": 5, "maxLength": 1000 },
+        "trigger": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["role_code"],
+          "properties": {
+            "role_code": { "type": "string", "enum": ["content_admin", "academic_manager"] },
+            "re_evaluation_id": { "$ref": "#/$defs/uuid", "description": "Lệnh re-evaluate (một lệnh có thể ảnh hưởng nhiều attempt)." }
+          }
         }
       }
     },
     "payload_activity_completed": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["activity_type", "duration_ms", "completion"],
+      "required": ["source_kind", "duration_ms", "completion"],
       "properties": {
-        "activity_type": { "$ref": "#/$defs/payload_activity_started/properties/activity_type" },
+        "source_kind": { "$ref": "#/$defs/payload_activity_started/properties/source_kind" },
+        "activity_type": { "$ref": "#/$defs/activity_type" },
         "duration_ms": { "type": "integer", "minimum": 0 },
         "completion": { "type": "boolean" },
         "score": { "$ref": "#/$defs/score" }
@@ -249,55 +378,79 @@
       "required": ["attempt_id", "position", "question_type"],
       "properties": {
         "attempt_id": { "$ref": "#/$defs/uuid" },
-        "position": { "type": "integer", "minimum": 0 },
+        "position": { "type": "integer", "minimum": 1 },
         "question_type": { "$ref": "#/$defs/question_type" },
         "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 }
       }
     },
-    "question_type": {
-      "type": "string",
-      "enum": [
-        "single_choice",
-        "multiple_choice",
-        "true_false",
-        "fill_in_blank",
-        "short_answer",
-        "numeric",
-        "matching",
-        "ordering",
-        "drag_and_drop",
-        "image_based",
-        "interactive"
-      ]
-    },
     "payload_question_answered": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["attempt_id", "position", "question_type", "is_correct", "score", "response_ms", "attempt_no"],
+      "required": ["attempt_id", "position", "question_type", "is_correct", "score", "response_ms", "attempt_no", "hints_used", "rapid_guess"],
       "properties": {
         "attempt_id": { "$ref": "#/$defs/uuid" },
-        "position": { "type": "integer", "minimum": 0 },
+        "position": { "type": "integer", "minimum": 1 },
+        "question_version_id": { "$ref": "#/$defs/uuid" },
         "question_type": { "$ref": "#/$defs/question_type" },
         "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
         "is_correct": { "type": "boolean" },
+        "is_scored": { "type": "boolean", "default": true, "description": "false với lần thử lại không tính điểm (ACTIVITY_ENGINE §8.1); chỉ lần is_scored = true và rapid_guess = false là evidence mastery." },
         "partial_credit": { "type": "boolean", "default": false },
         "score": { "$ref": "#/$defs/score" },
         "response": {
-          "description": "Câu trả lời thô (đã kiểm tra PII nếu là văn bản; tối đa 500 ký tự cho short_answer).",
-          "type": ["object", "null"]
+          "description": "Câu trả lời thô theo loại câu (question.schema.json#/$defs/response); short_answer đã qua PII detector, tối đa 500 ký tự. null khi không lưu.",
+          "oneOf": [
+            { "$ref": "https://schemas.eduworld.vn/content/question.schema.json#/$defs/response" },
+            { "type": "null" }
+          ]
         },
         "response_ms": {
           "type": "integer",
           "minimum": 0,
-          "description": "Thời gian trả lời tính bằng server time từ question.viewed."
+          "description": "min(client_elapsed_ms, khoảng server đo) theo ACTIVITY_ENGINE §11.1."
         },
         "attempt_no": { "type": "integer", "minimum": 1, "description": "Lần thử thứ mấy với câu này trong attempt (practice cho phép thử lại)." },
+        "hints_used": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Số cấp gợi ý đã mở trước lần trả lời này (ACTIVITY_ENGINE §8.3); mastery nhân trọng số w_hint." },
+        "rapid_guess": { "type": "boolean", "description": "true khi response_ms < min_response_ms của item (ACTIVITY_ENGINE §11.1); loại khỏi mastery, điểm attempt giữ nguyên." },
         "error_tags": {
           "type": "array",
           "items": { "type": "string", "maxLength": 50 },
           "maxItems": 10,
-          "description": "Nhãn lỗi sai suy ra từ distractor/scoring rule để phân tích lỗi."
+          "description": "Nhãn lỗi sai suy ra từ distractor (misconception_tag)/scoring rule để phân tích lỗi."
         }
+      }
+    },
+    "payload_video_progressed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "watched_ratio"],
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "watched_ratio": { "type": "number", "minimum": 0, "maximum": 1, "description": "Phát khi vượt mốc 25/50/75/100% (VIDEO_LEARNING)." },
+        "chapter_id": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "payload_video_cue_answered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "cue_id", "question_version_id", "is_correct"],
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "cue_id": { "type": "string", "maxLength": 64 },
+        "question_version_id": { "$ref": "#/$defs/uuid" },
+        "is_correct": { "type": "boolean" },
+        "hints_used": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "rapid_guess": { "type": "boolean" }
+      }
+    },
+    "payload_simulation_goal_met": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "goal_id"],
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "run_id": { "$ref": "#/$defs/uuid" },
+        "goal_id": { "type": "string", "maxLength": 64 }
       }
     },
     "payload_attempt_started": {
@@ -308,10 +461,7 @@
         "attempt_id": { "$ref": "#/$defs/uuid" },
         "item_count": { "type": "integer", "minimum": 0 },
         "deadline_at": { "type": ["string", "null"], "format": "date-time" },
-        "exam_type": {
-          "type": "string",
-          "enum": ["practice_test", "mock_exam", "chapter_test", "semester_test", "subject_test", "custom", "timed_exam"]
-        }
+        "exam_type": { "$ref": "#/$defs/exam_type" }
       }
     },
     "payload_attempt_submitted": {
@@ -325,7 +475,7 @@
         "item_count": { "type": "integer", "minimum": 0 },
         "duration_ms": { "type": "integer", "minimum": 0 },
         "submit_reason": { "type": "string", "enum": ["manual", "timeout", "auto_complete"] },
-        "graded": { "type": "boolean", "description": "false nếu còn câu cần chấm tay (short_answer theo cấu hình)." }
+        "graded": { "type": "boolean", "description": "true khi server chấm xong ngay lúc nộp; false khi chấm trì hoãn theo cấu hình đề (sẽ phát exam.graded / activity.graded)." }
       }
     },
     "payload_quest_completed": {
@@ -354,15 +504,17 @@
         "previous_level": { "$ref": "#/$defs/mastery_level" },
         "evidence_count": { "type": "integer", "minimum": 0 },
         "model_version": { "type": "string", "maxLength": 64, "description": "Phiên bản MasteryModel + tham số (ADR-0017)." },
-        "source_event_id": { "$ref": "#/$defs/uuid", "description": "Learning event gây ra thay đổi." }
+        "source_event_id": { "$ref": "#/$defs/uuid", "description": "Learning event gây ra thay đổi (kể cả attempt.re_evaluated)." }
       }
     },
     "payload_objective_mastered": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["objective_id", "value", "evidence_count", "distinct_days", "model_version"],
+      "required": ["objective_id", "value", "evidence_count", "distinct_days", "model_version", "new_level"],
       "properties": {
         "objective_id": { "$ref": "#/$defs/uuid" },
+        "previous_level": { "$ref": "#/$defs/mastery_level" },
+        "new_level": { "$ref": "#/$defs/mastery_level", "description": "Mức sau khi đạt ngưỡng (mastered); module game cấp XP nguồn mastery.objective_mastered một lần mỗi học sinh × LO." },
         "value": { "type": "number", "minimum": 0.8, "maximum": 1 },
         "evidence_count": { "type": "integer", "minimum": 5 },
         "distinct_days": { "type": "integer", "minimum": 2 },
@@ -381,7 +533,7 @@
       "schema_version": 1,
       "occurred_at": "2026-11-15T07:30:12.345Z",
       "recorded_at": "2026-11-15T07:30:12.360Z",
-      "producer": "learning-service/exercise",
+      "producer": "learning/exercise",
       "tenant_id": "0192f0a0-0000-7000-8000-000000000000",
       "school_id": "0192f0a1-1111-7000-8000-000000000001",
       "student_id": "0192e0b2-2222-7000-8000-000000000002",
@@ -406,10 +558,13 @@
         "question_type": "numeric",
         "difficulty": 2,
         "is_correct": true,
+        "is_scored": true,
         "score": { "raw": 1, "max": 1, "scaled": 1 },
         "response": { "value": "56" },
         "response_ms": 8420,
-        "attempt_no": 1
+        "attempt_no": 1,
+        "hints_used": 1,
+        "rapid_guess": false
       }
     }
   ]

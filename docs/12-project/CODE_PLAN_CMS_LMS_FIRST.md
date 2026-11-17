@@ -1,0 +1,321 @@
+# Code Plan — Lộ trình SDD, CMS/LMS trước
+
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Solution Architect + Tech Lead · Cập nhật: 2026-11-17 (§4.1 đã chốt và áp vào spec: thứ tự F041 → F042, tách báo cáo game của F081 sang F080, F013/F014 kiểm consumer bằng fixture, AC mặc định an toàn ADR-0078; modular monolith ADR-0074: cột Module, ghi chú cấu trúc backend; CI GitHub Actions ADR-0088; mốc M-P1/M-P2 theo ADR-0073, ADR-0080, RB-811; phụ thuộc ẩn §4.1) · 2026-11-16
+> Liên quan: [Constitution](../../.specify/memory/constitution.md) · [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0088](../adr/ADR-0088-ci-cd-bang-github-actions.md) · [ROADMAP](ROADMAP.md) · [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) · [TEST_STRATEGY](TEST_STRATEGY.md) · [AGENTS.md](../../AGENTS.md)
+
+## 1. Mục đích và phạm vi
+
+Kế hoạch code của EduWorld theo **Spec-Driven Development** (chuẩn GitHub Spec Kit + EARS, [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md)), **làm CMS/LMS trước**. Tài liệu này **sở hữu danh mục feature, thứ tự triển khai và trạng thái** (§4–§6). Nội dung từng feature (yêu cầu EARS, thiết kế, task) nằm trong `specs/<NNN>-<slug>/`; không lặp lại ở đây.
+
+Ba làn chạy song song trong mỗi mốc: **Backend** (`pkg/`, `modules/`, `cmd/`, `deploy/`), **Frontend** (`web/` Admin Portal), **Game client** (`godot/`).
+
+Đây là đề xuất đổi thứ tự so với [ROADMAP](ROADMAP.md) [Proposed]; ROADMAP cập nhật khi stakeholder duyệt (liên quan [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), Proposed).
+
+### 1.1. Lý do đổi thứ tự
+
+- Learning Engine là lõi (ROADMAP §1): mọi gameplay Phase 2+ phải dùng nội dung thật từ backend. Có CMS trước thì content team bắt đầu nhập liệu sớm (dòng sản xuất nội dung chạy song song từ Phase 2).
+- Vòng lặp **School Loop** (M3) có giá trị demo cho trường sớm hơn vòng lặp gameplay.
+- Game client có contract ổn định (attempt API, render payload) để build activity player trước khi làm thế giới 3D đầy đủ.
+
+### 1.2. Rủi ro của việc đổi thứ tự
+
+| Rủi ro | Giảm thiểu |
+|---|---|
+| Đội web chỉ 1 người (ROADMAP §1 giả định) không đủ cho CMS-first | Tăng lên 2–3 web dev trong giai đoạn này, hoặc chuyển 1 Godot dev sang web ở giai đoạn F/M-C1 [Proposed] |
+| Godot dev ít việc lúc đầu | Luồng C build trên **Prism mock** sinh từ `specs/openapi` (gắn nhãn MOCK, R17) cho tới khi backend thật sẵn sàng |
+| Cổng hiệu năng M1 (Main Hub 40 avatar) bị lùi | Giữ benchmark headless + `QualityManager` trong luồng C từ đầu; hub đông người làm khi có realtime |
+| CMS cần module game cho một số màn (GamePreviewFrame, catalog game activity, thumbnail 3D) | Ẩn các màn này sau permission/feature flag tới khi module game có `/game-admin/*` |
+
+## 2. Cách làm việc theo SDD
+
+| Thành phần | Vị trí | Vai trò |
+|---|---|---|
+| Constitution | [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) | 9 điều khoản + câu hỏi gate; chi tiết ở AGENTS.md §2 |
+| Template | [`.specify/templates/`](../../.specify/templates/spec-template.md) | spec, plan, tasks, checklist, data-model, contracts, quickstart |
+| Feature spec | `specs/<NNN>-<slug>/` | `spec.md` · `plan.md` · `research.md` (tùy chọn) · `data-model.md` · `contracts/README.md` · `quickstart.md` · `checklists/requirements.md` · `tasks.md` |
+| Lệnh cho AI agent | `.claude/commands/speckit.*.md` | `/speckit.specify` → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.analyze` → `/speckit.implement` |
+| Kiểm tra | `node scripts/specs/check-features.mjs` | Cấu trúc, mã FR/TC/ADR, EARS, định dạng task, độ phủ FR, danh mục |
+
+**Trạng thái feature (cột Trạng thái ở §4):** `Chưa viết` → `Draft` (đang viết spec, còn câu hỏi) → `Ready` (đủ bộ file, `check-features` 0 lỗi, checklist đạt) → `In progress` → `Done` (Definition of Done đạt, quickstart có bằng chứng).
+
+**Cấu trúc backend (modular monolith, [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md)):** một `go.mod` ở gốc; sáu module `identity`, `learning`, `game`, `competition`, `chat`, `realtime` trong `modules/<module>/` (`api/` = facade công khai sinh từ `specs/openapi/modules/<module>.internal.v1.yaml`, `internal/{domain,application,infrastructure,presentation}`, `ent/`, `migrations/`, `module.go` với `Register`/`Wire`); ba binary `cmd/core-api` (REST `/api/v1/*`, route gateway nội bộ, handler NATS cho lệnh từ realtime), `cmd/realtime` (WebSocket, không DB) và `cmd/worker --profile=events|chat|jobs` (Swarm service `worker-events`, `worker-chat`, `worker-jobs`). Mỗi module một database trên một cụm PostgreSQL. Gọi module khác chỉ qua facade trong tiến trình (`pkg/modcall`, không HTTP/token), phản ứng phụ qua outbox → NATS; ranh giới do Go `internal/` + `make arch-check` (`x-allowed-callers`) cưỡng chế. Cột "Module / phạm vi" ở §4 ghi module sở hữu; mọi module domain chạy trong `core-api` và `worker`, nên "module X" trong feature spec không còn nghĩa là một service hay image riêng.
+
+**CI/CD:** GitHub Actions ([ADR-0088](../adr/ADR-0088-ci-cd-bang-github-actions.md)) — mỗi lane một workflow trong `.github/workflows/` chạy theo path filter (`go.yml` matrix theo module, `specs.yml`, `docs.yml`, `web.yml`, `design.yml`, `godot.yml` có runner macOS cho iOS, `security.yml`, `release.yml`, `deploy-config.yml`), image trên `ghcr.io`, GitHub Environments `staging`/`production`, runner self-hosted chỉ cho bước triển khai. F001 dựng khung CI này (không còn GitLab CI).
+
+**Cấu trúc code trong module:** theo [ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md) — `application/command` + `port/write` + `persistence/write` (write context) và `application/query` + `port/read` + `persistence/read` (read context), không mediator. Cây thư mục trong `plan.md` của feature là gợi ý; khi `port/` hoặc `persistence/` ghi chung thì đặt file vào nhánh `write`/`read` tương ứng.
+
+**Quy tắc chọn việc:** chỉ code feature `Ready` có mọi phụ thuộc `Done`. Ngoại lệ: game client được bắt đầu trên Prism mock sinh từ `specs/` khi backend chưa Done; mock gắn nhãn rõ (R17) và feature chỉ `Done` khi chạy với backend thật.
+
+## 3. Bước 0 — Chốt mâu thuẫn tài liệu/spec trước khi code (1 sprint)
+
+> **Đã chốt (Technical Architect, 2026-11-16):** mọi cột "Đề xuất" trong bảng D1–D18 là quyết định; việc còn lại là sửa tài liệu/spec cho khớp (theo dõi ở [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md)).
+
+Rà soát cho thấy một số điểm docs và specs chưa khớp. Phải chốt trước khi sinh code, vì đổi sau sẽ phải migrate. Mỗi dòng: sửa tài liệu sở hữu + spec, ghi CHANGELOG; điểm nào là quyết định kiến trúc thì viết ADR.
+
+| # | Mâu thuẫn | Nơi xung đột | Đề xuất [Proposed] |
+|---|---|---|---|
+| D1 | Tên thư mục service: `services/learning/` vs `modules/learning/` | BACKEND_DESIGN §3, SYSTEM_ARCHITECTURE §8 vs LOCAL_DEVELOPMENT §3.2 | `modules/<name>/` (khớp tên image, compose) — **Thay bởi ADR-0074 (2026-11-17):** `modules/<module>/` trong một `go.mod`, ba binary `cmd/core-api`, `cmd/realtime`, `cmd/worker` |
+| D2 | Tên biến môi trường (`EW_DB_URL_FILE`/`EW_DB_DSN`, `EW_CLIENT_*`/`EW_SVC_*`, `EW_OBJECT_STORAGE_*`/`EW_S3_*`, `EW_ADMIN_ADDR`…) | BACKEND_DESIGN §12 vs LOCAL_DEVELOPMENT §4 | Một bảng duy nhất ở LOCAL_DEVELOPMENT §4, BACKEND_DESIGN chỉ link; giữ `EW_S3_*`, `OTEL_*` chuẩn — **ADR-0074:** bỏ `EW_SVC_*` (không gọi HTTP giữa module); kết nối DB theo module `EW_DB_<MODULE>_*`, Keycloak Admin `EW_KC_ADMIN_CLIENT_*` |
+| D3 | Cổng internal API (`:8080` vs 81xx) | API_DESIGN §12.1 vs LOCAL_DEVELOPMENT §3.2 | Thêm cột cổng internal (ví dụ 82xx) vào LOCAL_DEVELOPMENT — **ADR-0074:** không còn cổng internal API; chỉ cổng public `core-api`/`realtime` và cổng quản trị theo binary (LOCAL_DEVELOPMENT §3.2) |
+| D4 | Vị trí permission catalog (`internal/authorization` vs `pkg/authz`) | DATABASE_DESIGN §2.1 vs BACKEND_DESIGN §2 | `pkg/authz/catalog.go` (khớp AGENTS R20) |
+| D5 | Soft-delete hook/interceptor ở `pkg/tenancy` hay `pkg/entx` | MULTITENANCY §4.1 vs BACKEND_DESIGN §2 | Hook/interceptor ở `pkg/entx`, `Bypass`/`TenantScope` ở `pkg/tenancy` |
+| D6 | Schema bảng `idempotency_records`, `tenant_resource_assignments` (`platform.` vs `infra.`) | API_DESIGN §6, CONTENT_MODEL §4 vs DATABASE_DESIGN §3.10 | Theo DATABASE_DESIGN (`infra.`) |
+| D7 | Principal endpoint/cache key | MULTITENANCY §1, §4.3 vs BACKEND_DESIGN §6 | `POST /internal/v1/principals:resolve`, key `ew:identity:principal:` — **ADR-0074:** operation facade `resolvePrincipal` của module identity (path chỉ là định danh operation), gọi trong tiến trình qua `pkg/modcall` |
+| D8 | `owner_scope`: platform/organization/school vs platform/tenant | API_DESIGN §9.13, CURRICULUM_MODEL §3.1 vs DATABASE_DESIGN, CONTENT_MODEL §4 | platform/tenant (ADR-0005: tenant là đơn vị) |
+| D9 | Danh sách `content_type`/`item_type` | API_DESIGN §9.13 vs spec `LearningContentType` vs DATABASE_DESIGN §3.13 | Một enum ở spec, các tài liệu link về spec |
+| D10 | Tên loại câu hỏi `fill_blank`/`fill_in_blank`, `numeric`/`numeric_answer`, `drag_drop`/`drag_and_drop` | `question.schema.json`, QUESTION_BANK, MINIGAME_ENGINE §2 vs OpenAPI `QuestionType`, DATABASE_DESIGN §3.3 | Theo OpenAPI `QuestionType` |
+| D11 | Tên event nội dung `content.review_requested` vs `content.version_submitted` | CONTENT_MODEL §6 vs EVENT_DESIGN §4.2 | Theo EVENT_DESIGN; thêm payload schema vào `specs/events/payloads/learning/` |
+| D12 | `feedback_policy`: `on_submit/after_close` vs `after_submit/after_review` | spec `Attempt` vs ACTIVITY_ENGINE §4 | Theo spec |
+| D13 | Body start attempt: `assignment_id` vs `context_type/context_id` | ACTIVITY_ENGINE §9 vs `learning.v1.yaml` | Theo spec |
+| D14 | Endpoint bài được giao: `/lms/my-assignments` vs `/learning/my-assignments` | STUDENT_GAME_UX vs spec | Theo spec (`/learning/*` là route người chơi) |
+| D15 | Đăng nhập game tạo session luôn hay gọi `POST /game/sessions` riêng; token ở `tokens.access_token` | `GameLoginResponse` (identity.v1.yaml) vs GODOT_ARCHITECTURE §5, §13.2 | Theo spec: login trả `game_session_id`; sửa GODOT_ARCHITECTURE | **Đã chốt — [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md): gọi riêng `POST /game/sessions`** |
+| D16 | Dấu vết đăng nhập OIDC cũ của game (`oidc_issuer`, intent filter `oauth2/callback`, `/auth/session` trong ADR-0065) | GODOT_ARCHITECTURE §4, §11; ADR-0065 | Gỡ theo ADR-0068, ghi Lịch sử thay đổi ADR-0065 | **Đã chốt — gỡ `oidc_*`, intent filter OAuth, redirect Web OIDC khỏi GODOT_ARCHITECTURE; ADR-0065 ghi Lịch sử thay đổi (game lấy tenant từ `/auth/game/*`, ADR-0068, ADR-0083)** |
+| D17 | Đường dẫn presign media (`/cms/learning/media:presign` vs `/cms/media:presign-upload`), `license` varchar(255) vs (64) | API_DESIGN §8, ADR-0044 vs spec, DATABASE_DESIGN | Theo spec; `license` 255 |
+| D18 | Dấu vết vai trò giáo viên trong spec: role `teacher`, `user_type = teacher`, `teaching_assignment`, `/lms/reviews*`, `pending_review`/`returned`, `actor.type = teacher` | identity/learning OpenAPI, SIS contract, `learning-event.schema.json` vs ADR-0072 | Gỡ theo ADR-0072; thêm role `safety_moderator`; `actor.type` = `student, system, staff` |
+
+**Mục SPC từ [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) §4.4 phải chốt trong Bước 0** [Proposed]:
+
+| # | Việc | Nguồn | TC |
+|---|---|---|---|
+| S1 | Response schema theo loại câu: `$defs.<type>.response` trong `question.schema.json` cho đủ 11 `QuestionType`; OpenAPI và AsyncAPI `$ref` tới đó | SPC-01 | TC-LRN-016 |
+| S2 | Enum chung trong `specs/schemas/common` (`QuestionType`, `ActivityType`, `FeedbackTiming`, `ResultRelease`, `AttemptMode`, `AttemptStatus`, `LearningContentType`, `actor.type`, assignment `target_type`/`status`); mọi spec `$ref`; script kiểm tra enum trong `make specs-lint` (bổ sung cho D9, D10, D12) | SPC-02, SPC-03, SPC-06 | TC-LRN-017 |
+| S3 | Hints API `POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next`; `hints_used` trong learning event; `options[].feedback` chỉ trong `ActivityResponseResult.feedback` | PED-04 | TC-LRN-011, TC-LRN-012 |
+| S4 | Đóng chặt `render_payload` bằng `$ref` tới phần render của `question.schema.json` | SPC-04 | TC-LRN-007 |
+| S5 | `AssignmentCreate` theo SCHOOL_LMS (`course_id`, `late_policy`, `follow_latest`, `content_type = activity`, `result_release`); event `activity.graded`, `exam.graded`, `attempt.re_evaluated`; `context.mode` đủ `AttemptMode` | SPC-05, SPC-06 | TC-LMS-001, TC-LRN-015 |
+| S6 | Endpoint quản trị CMS/LMS/Exam còn thiếu (danh sách bên dưới) | SPC-07 | — |
+
+**Bổ sung spec còn thiếu** (contract-first, R4 của §3 AGENTS):
+
+- `learning.v1.yaml`: CMS curricula/subjects/topics/objectives, question-sets, assessment-blueprints, lessons, `POST questions/{id}/versions`, `GET questions/{id}`, preview sessions, imports, review-tasks; LMS courses, learning-paths, schedules, `assignments/{id}` + sub-actions (`:publish`, `:cancel`, `:release-results`, `:extend`, `:excuse`, `/submissions`), gradebook, reports, `GET /lms/dashboards/school`; `hints:next`; `GET /exams/sessions/{id}`.
+- `identity.v1.yaml`: `POST/PATCH /admin/tenants`, `/admin/tenants/{id}/schools`, `/admin/users:unlock|:deactivate`, `/admin/audit-logs`, `/admin/feature-flags`, `/sis/connections`, `/sis/imports`, `/sis/reconciliation-issues`, `/schools` list/detail/students.
+- JSON Schema cho activity `quiz`, `interactive_exercise`, `minigame` trong `specs/schemas/activities/`.
+- Event payload schema cho content/LMS/assessment.
+- `specs/postman/` (đang được tham chiếu nhưng chưa có).
+
+**Exit Bước 0:** `make specs-lint` sạch (gồm rule `maxLength` và kiểm tra enum chung), `make docs-check` sạch, bảng D1–D18 và S1–S6 đã đóng.
+
+## 4. Danh mục feature
+
+| Mã | Feature | Module / phạm vi | Mốc | Phụ thuộc | FR chính | Trạng thái |
+|---|---|---|---|---|---|---|
+| [F001](../../specs/001-monorepo-compose-ci-skeleton/spec.md) | Monorepo, Docker Compose local, CI GitHub Actions theo path, khung modular monolith | Hạ tầng (`go.mod` gốc, `cmd/`, `modules/`, `Makefile`, `deploy/compose`, `.github/workflows`) | M-C0 | — | FR-OPS-001, FR-OPS-002, FR-OPS-004, FR-OPS-005, NFR-DEPL-001, NFR-DEPL-002, NFR-SEC-005 | Ready |
+| [F002](../../specs/002-platform-kit-core/spec.md) | Platform kit lõi: config, observability, problem, httpx, authz, tenancy | `pkg/` | M-C0 | F001 | FR-AUTH-004, FR-ORG-006, FR-CMS-012, FR-OPS-003, NFR-OBS-002, NFR-SEC-006, NFR-MAINT-001 | Ready |
+| [F003](../../specs/003-platform-kit-data/spec.md) | Platform kit dữ liệu: entx + UnitOfWork, khung CQRS read/write (không mediator), idempotency, outbox, modcall, testkit | `pkg/` | M-C0 | F002 | FR-ORG-011, NFR-MAINT-002, NFR-MAINT-004…006, NFR-SEC-004, NFR-AVAIL-004, NFR-AVAIL-005 | Ready |
+| [F004](../../specs/004-keycloak-realm-apisix-gateway/spec.md) | Keycloak realm as code và APISIX gateway (route, `tenant-header`, gateway nội bộ) | Hạ tầng (`deploy/keycloak`, `deploy/apisix`) | M-C0 | F001 | FR-AUTH-003, FR-AUTH-012, FR-AUTH-013, FR-AUTH-018, FR-SIS-007, NFR-SEC-002, NFR-SEC-003 | Ready |
+| [F005](../../specs/005-design-tokens/spec.md) | Design tokens game/admin/shared và pipeline sinh theme | `design/` | M-C0 | F001 | NFR-MAINT-007, NFR-A11Y-001, NFR-A11Y-003 | Ready |
+| [F010](../../specs/010-tenant-org-structure/spec.md) | Tenant, danh mục quốc gia/tỉnh/trường, tổ chức trường–lớp–enrollment | module `identity` | M-C1 | F003, F004 | FR-ORG-001…003, FR-ORG-005, FR-ORG-009, FR-ORG-010, FR-ORG-015…017, FR-AUTH-001, FR-AUTH-021 | Ready |
+| [F011](../../specs/011-sis-sync-provisioning/spec.md) | Đồng bộ SIS bằng CSV và provisioning tài khoản | module `identity` | M-C1 | F010 | FR-SIS-002, FR-SIS-003 (phần `csv_import`), FR-SIS-005…008, FR-ORG-018, FR-AUTH-005, FR-AUTH-014, FR-AUTH-031 | Ready |
+| [F012](../../specs/012-authz-portal-session/spec.md) | Phân quyền Permission/Role/UserRole và phiên portal (`/me/*`, `principals:resolve`) | module `identity` | M-C1 | F010 | FR-AUTH-016, FR-AUTH-019, FR-AUTH-029, FR-AUTH-030, FR-AUTH-032, FR-CMS-001, FR-CMS-012, FR-LMS-005, FR-ORG-008 | Ready |
+| [F013](../../specs/013-game-login-backend/spec.md) | Đăng nhập game qua backend: login, chọn tenant, refresh, logout, bảo vệ đăng nhập, hàng chờ | module `identity` | M-C1 | F011, F012 | FR-AUTH-002, FR-AUTH-003, FR-AUTH-007…009, FR-AUTH-017, FR-AUTH-018, FR-AUTH-022, FR-AUTH-027, FR-AUTH-028 | Ready |
+| [F014](../../specs/014-game-session-thin/spec.md) | Game session lát mỏng: một thiết bị, login events, client-config, manifest tối thiểu | module `game` | M-C1 | F013 | FR-AUTH-023, FR-GAME-007, FR-GAME-008, FR-GAME-013, FR-GAME-014 | Ready |
+| [F015](../../specs/015-audit-settings/spec.md) | Audit log tập trung và cài đặt platform/tenant/trường | module `identity` | M-C1 | F012 | FR-AUD-001, FR-AUD-002, FR-ORG-007, NFR-SCAL-004 | Ready |
+| [F016](../../specs/016-account-lifecycle/spec.md) | Vòng đời tài khoản: khóa, thu hồi truy cập, dọn học sinh không đăng nhập, ẩn danh hóa | module `identity` | M-C3 | F011, F014, F015 | FR-AUTH-010, FR-AUTH-024, FR-SIS-008, FR-ORG-014, NFR-PRIV-002, NFR-PRIV-003 | Ready |
+| [F017](../../specs/017-sis-contract-v1/spec.md) | SIS `contract_v1`: provider API theo EduWorld SIS Contract, webhook, conformance kit, `sis-mock` (tách từ F011) | module `identity` | M2 | F011 | FR-SIS-001, FR-SIS-003 (phần `contract_v1`), FR-SIS-004, FR-SIS-009 | Ready |
+| [F020](../../specs/020-learning-foundation/spec.md) | Nền module learning: projection, mô hình nội dung, gán platform→tenant, thùng rác tenant | module `learning` | M-C2 | F003, F010 | FR-CNT-001, FR-CNT-002, FR-CNT-005, FR-CMS-014, FR-CMS-015 | Ready |
+| [F021](../../specs/021-curriculum/spec.md) | Curriculum: cấu trúc, LO, DAG tiên quyết, version, mapping, import/export, seed GDPT | module `learning` | M-C2 | F020 | FR-CUR-001…012, FR-CMS-002 | Ready |
+| [F022](../../specs/022-question-bank-core/spec.md) | Question Bank 8 loại cơ bản: validator, scorer server-side, render payload không đáp án | module `learning` | M-C2 | F021 | FR-QB-001…004, FR-QB-006, FR-QB-007, FR-QB-013, FR-QB-015 | Ready |
+| [F023](../../specs/023-question-bank-advanced/spec.md) | Question Bank nâng cao: short_answer, image_based, interactive, câu tham số hóa | module `learning` | M-C2 | F022 | FR-QB-001, FR-QB-006, FR-QB-008, FR-QB-009 | Ready |
+| [F024](../../specs/024-question-set-lesson-blueprint/spec.md) | Question set, lesson, assessment blueprint, worked example, import hàng loạt, tìm kiếm | module `learning` | M-C2 | F022 | FR-CNT-001, FR-CNT-007, FR-CNT-020, FR-CNT-021, FR-QB-004, FR-QB-005, FR-QB-011, FR-CMS-003 | Ready |
+| [F025](../../specs/025-content-review-workflow/spec.md) | Workflow duyệt nội dung, song ngữ, lồng tiếng `g1_3` | module `learning` | M-C2 | F022, F027 | FR-CNT-003, FR-CNT-018, FR-CNT-019, FR-CMS-006…008, NFR-I18N-002 | Ready |
+| [F026](../../specs/026-content-release/spec.md) | Phát hành nội dung: publish/rollback/unpublish, snapshot, manifest, ghim version, nơi sử dụng | module `learning` | M-C2 | F025, F014 | FR-CNT-004, FR-CNT-008…012, FR-EXR-015 | Ready |
+| [F027](../../specs/027-media-math-preview/spec.md) | Media pipeline, công thức SVG, preview session | module `learning` | M-C2 | F020, F022 | FR-CNT-006, FR-CNT-010, FR-CNT-017, FR-CMS-003, FR-CMS-006 | Ready |
+| [F030](../../specs/030-activity-attempt-api/spec.md) | Activity Registry và Attempt API (`quiz`, `interactive_exercise`) | module `learning` | M-C2 | F026 | FR-CNT-013, FR-EXR-002, FR-EXR-004…007, FR-EXR-016, FR-QB-003 | Ready |
+| [F031](../../specs/031-learning-events-mastery/spec.md) | Learning events, mastery v1, evaluation và re-evaluate | module `learning` | M-C2 | F030 | FR-ANL-001, FR-ANL-002, FR-ANL-004, FR-PRG-001…003, FR-PRG-009, FR-EXR-008, NFR-AVAIL-003 | Ready |
+| [F032](../../specs/032-self-study-practice/spec.md) | Chế độ luyện tập, hỗ trợ tự học (gợi ý, chẩn đoán, `rapid_guess`), gợi ý ôn tập tự động | module `learning` | M-C3 | F031 | FR-EXR-001, FR-EXR-003, FR-EXR-012…014, FR-PRG-004…008, NFR-A11Y-002 | Ready |
+| [F035](../../specs/035-learning-efficacy-study/spec.md) | Nghiên cứu hiệu quả học tập: bài kiểm tra độc lập trước/sau, lớp so sánh, A/B cấu hình mastery, xuất dữ liệu định danh giả (ADR-0080) | module `learning` + `web/apps/portal` | M-C3 | F031, F032, F042 | FR-ANL-017…023, FR-ANL-001, FR-ANL-016, NFR-PRIV-002 | Ready |
+| [F040](../../specs/040-lms-course-path-schedule/spec.md) | Course, learning path, lịch, nhóm học tập | module `learning` (LMS) | M-C3 | F031 | FR-LMS-001, FR-LMS-004, FR-SOC-004, FR-CUR-008 | Ready |
+| [F041](../../specs/041-school-assignments/spec.md) | Giao bài của nhà trường: assignment, `ResultRelease`, gia hạn/miễn, `my-assignments` | module `learning` (LMS) | M-C3 | F032, F040 | FR-LMS-002, FR-LMS-006, FR-LMS-007, FR-LMS-012, FR-EXR-001 | Ready |
+| [F042](../../specs/042-exam-engine/spec.md) | Exam Engine: 7 hình thức đề, random theo blueprint, thi có giờ, chấm lại đề | module `learning` | M-C3 | F024, F041 | FR-EXM-001…006, FR-EXM-008, FR-EXM-009, FR-QB-005 | Ready |
+| [F043](../../specs/043-school-learning-dashboard/spec.md) | Rollup analytics và School Learning Dashboard API | module `learning` | M-C3 | F031, F041 | FR-ANL-003, FR-ANL-005, FR-ANL-012, FR-ANL-013, FR-ANL-016, FR-LMS-003, FR-LMS-011, FR-PRG-001, NFR-PERF-017, NFR-PERF-018 | Ready |
+| [F044](../../specs/044-reports-item-analysis/spec.md) | Báo cáo, xuất dữ liệu bất đồng bộ, item analysis, chất lượng đề | module `learning` | M-C3 | F042, F043 | FR-ANL-014, FR-ANL-015, FR-LMS-013, FR-QB-010, FR-QB-014, FR-EXM-010 | Ready |
+| [F045](../../specs/045-platform-administration/spec.md) | Platform Administration backend: saga gán/clone, thùng rác mọi tenant, đọc liên tenant | module `identity` | M-C3 | F015, F020 | FR-ORG-008, FR-ORG-012, FR-ORG-013, FR-CMS-013…015 | Ready |
+| [F050](../../specs/050-web-foundation-ops-ui/spec.md) | Khung web: pnpm workspace, `ops-ui`, theme từ token, `apiClient`, Storybook | `web/` (`packages/ops-ui`) | M-C0 | F005 | FR-CMS-009, NFR-MAINT-007, NFR-A11Y-003 | Ready |
+| [F051](../../specs/051-portal-shell/spec.md) | Portal shell: đăng nhập, chọn tenant sau đăng nhập, menu theo quyền, bộ lọc tenant | `web/apps/portal` | M-C1 | F012, F050 | FR-AUTH-029, FR-AUTH-030, FR-CMS-009…012, FR-ORG-008 | Ready |
+| [F052](../../specs/052-school-admin-workspace/spec.md) | Workspace C — quản trị trường: trường/lớp/học sinh, SIS, người dùng và phân quyền, cài đặt, audit | `web/apps/portal` | M-C3 | F011, F015, F016, F051 | FR-AUTH-024, FR-AUTH-032, FR-ORG-007, FR-ORG-016, FR-SIS-005, FR-AUD-001, FR-GAME-013 | Ready |
+| [F053](../../specs/053-content-studio-editor/spec.md) | Workspace B — cây curriculum, editor nội dung, công thức, song ngữ, trình soạn câu hỏi | `web/apps/portal` | M-C2 | F021, F022, F027, F051 | FR-CMS-002, FR-CMS-003, FR-CNT-017, FR-CNT-018, FR-CNT-020, FR-QB-001, FR-QB-013 | Ready |
+| [F054](../../specs/054-content-studio-publishing/spec.md) | Workspace B — media, bộ câu hỏi/lesson/blueprint, version và rollback, hàng đợi duyệt, preview, import, thùng rác | `web/apps/portal` | M-C3 | F024, F025, F026, F053 | FR-CMS-006, FR-CMS-007, FR-CMS-014, FR-CNT-008…010, FR-CNT-021, FR-QB-011 | Ready |
+| [F055](../../specs/055-portal-lms-assignments/spec.md) | Workspace C — LMS: course, learning path, wizard giao bài, theo dõi nộp bài, lịch, nhóm học tập | `web/apps/portal` | M-C3 | F040, F041, F042, F052, F058 | FR-LMS-001, FR-LMS-002, FR-LMS-004, FR-LMS-012, FR-EXM-009 | Ready |
+| [F056](../../specs/056-portal-school-dashboard/spec.md) | Workspace C — School Learning Dashboard và báo cáo | `web/apps/portal` | M-C3 | F043, F044, F052 | FR-LMS-003, FR-LMS-011, FR-LMS-013, FR-ANL-012…015 | Ready |
+| [F057](../../specs/057-portal-platform-admin/spec.md) | Workspace D — Platform Administration: tenant, gán/clone, thùng rác, danh mục, cấu hình hệ thống | `web/apps/portal` | M-C3 | F045, F051 | FR-AUTH-024, FR-CMS-013, FR-CMS-015, FR-ORG-012, FR-ORG-013, FR-ORG-015 | Ready |
+| [F058](../../specs/058-portal-activity-builder/spec.md) | Workspace B — Learning Activity Builder (quiz, interactive_exercise, video_lesson), UI re-evaluate | `web/apps/portal` | M-C3 | F030, F031, F053, F065 | FR-CNT-013, FR-EXR-008 (+ FR soạn activity liên quan, ghi khi viết spec) | Ready |
+| [F059](../../specs/059-portal-platform-users-audit/spec.md) | Workspace D — người dùng/role platform, catalog permission, audit toàn hệ thống, login events liên tenant, feature flags, màn tích hợp | `web/apps/portal` | M-C3 | F012, F015, F057 | FR-AUD-001, FR-AUTH-032 (+ FR quản trị platform liên quan, ghi khi viết spec) | Ready |
+| [F060](../../specs/060-godot-project-foundation/spec.md) | Khung project Godot: autoload, theme sinh từ token, i18n vi/en, CI, Prism mock | `godot/` | M-C0 | F005 | NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-MAINT-007 | Ready |
+| [F061](../../specs/061-godot-api-client-login/spec.md) | `ApiClient`, đăng nhập game trong form, chọn tenant, takeover, buộc cập nhật, đăng xuất | `godot/` | M-C1 | F013, F014, F060 | FR-AUTH-002, FR-AUTH-003, FR-AUTH-008, FR-AUTH-009, FR-AUTH-017, FR-AUTH-023, FR-AUTH-027, FR-GAME-008, FR-GAME-014 | Ready |
+| [F062](../../specs/062-main-hub-greybox/spec.md) | Main Hub greybox, character controller, `QualityManager`, tab "Nhà trường giao" | `godot/` | M-C2 | F041, F061 | FR-GAME-003, FR-GAME-009, FR-GAME-010, FR-GAME-012, FR-LMS-006, NFR-COMP-001, NFR-PERF-005 | Ready |
+| [F063](../../specs/063-activity-player/spec.md) | Activity player: renderer registry, renderer 11 loại câu hỏi, gợi ý, kết quả, công thức SVG | `godot/` | M-C2 | F030, F032, F062 | FR-EXR-003, FR-EXR-004, FR-EXR-012, FR-EXR-015, FR-CNT-017, FR-QB-007, FR-GAME-018 | Ready |
+| [F064](../../specs/064-exam-zone/spec.md) | Exam Zone: thi có giờ theo server, tự nộp, resume, thông báo bài mới | `godot/` | M-C3 | F042, F063 | FR-EXM-003, FR-EXM-005, FR-NTF-001 | Ready |
+| [F065](../../specs/065-video-lesson/spec.md) | Bài học video: plugin `video_lesson` và renderer Godot | module `learning` + `godot/` | M-C3 | F063 | FR-CNT-014 | Ready |
+| [F066](../../specs/066-audio-simulation-lessons/spec.md) | Bài nghe và mô phỏng: plugin `audio_lesson`, `simulation` + checker Go, template Godot | module `learning` + `godot/` | M4a | F063 | FR-CNT-015, FR-CNT-016 | Ready |
+| [F069](../../specs/069-godot-progression-economy-challenge/spec.md) | Godot — tiến trình, kho đồ, shop, bộ sưu tập, thành tựu, challenge solo | `godot/` | M3 | F062, F074, F075, F076 | FR-GAM-001, FR-GAM-006…008, FR-ECO-001…005, FR-RWD-001…003, FR-CHL-001, FR-CHL-003, FR-GAME-004 | Ready |
+| [F070](../../specs/070-player-profile-avatar/spec.md) | Hồ sơ người chơi, nickname, tạo avatar lần đầu, trang phục, emote | module `game` (+ Godot) | M2 | F014, F062 | FR-GAME-004, FR-GAME-005, FR-GAME-015 | Ready |
+| [F071](../../specs/071-world-areas-npc-story/spec.md) | Thế giới: 8 vùng đất, zone, world map, cổng, mở khóa, mạch truyện, NPC và hội thoại | module `game` (+ Godot) | M2 | F026, F070 | FR-GAME-001…003, FR-GAME-006, FR-GAME-016…018, FR-GAM-009 | Ready |
+| [F072](../../specs/072-quest-engine/spec.md) | Quest Engine: 12 loại quest, bước, tiến độ qua event, lọc theo khối | module `game` (+ Godot) | M2 | F030, F071 | FR-QST-001…006, FR-QST-008 | Ready |
+| [F073](../../specs/073-minigame-engine/spec.md) | Mini-game Engine: `MiniGameConfig`, plugin `minigame`, scene Godot 11 loại | module `game` + module `learning` + Godot | M2 | F022, F072 | FR-MG-001…004, FR-CNT-013 | Ready |
+| [F074](../../specs/074-xp-level-reward-engine/spec.md) | XP ledger, level, đường cong XP, danh hiệu, Reward Engine có cap | module `game` | M2 | F072 | FR-GAM-001…008, FR-GAM-010, FR-GAM-011, FR-RWD-003, NFR-SAFE-003 | Ready |
+| [F075](../../specs/075-economy-shop-collection-achievement/spec.md) | Kinh tế Xu, Shop cosmetic, inventory, collection, achievement, badge | module `game` (+ Godot) | M2 | F074 | FR-ECO-001…005, FR-RWD-001, FR-RWD-002 | Ready |
+| [F076](../../specs/076-challenge-engine-solo/spec.md) | Challenge Engine solo, 5 mức khó, room host dùng chung | module `game` | M3 | F072, F074 | FR-CHL-001, FR-CHL-003 | Ready |
+| [F077](../../specs/077-event-season-liveops/spec.md) | Event & Season live-ops: vòng đời sự kiện, community goal, season track, sự kiện trường | module `game` | M3 | F075 | FR-EVT-001…008 | Ready |
+| [F078](../../specs/078-game-ops-console-backend/spec.md) | Game Operations Console backend: workflow nội dung game, thumbnail 3D, catalog cho nhà trường | module `game` | M3 | F071, F072, F073, F074, F075 | FR-CMS-004, FR-CMS-006, FR-CMS-017, FR-LMS-007 | Ready |
+| [F079](../../specs/079-game-ops-console-ui/spec.md) | Workspace A — Game Operations Console UI (world, NPC, quest builder, reward, item, event, season) | `web/apps/portal` | M3 | F051, F077, F078 | FR-CMS-004, FR-CMS-017, FR-EVT-002, FR-GAM-007 | Ready |
+| [F080](../../specs/080-game-analytics-liveops/spec.md) | Game Analytics và Live Ops dashboard (workspace E); báo cáo game cho nhà trường (workspace C, tách từ F081) | module `game` + `web/apps/portal` | M4b | F078, F079, F052, F056 | FR-ANL-006…013, FR-CMS-016, FR-GAME-011, FR-OPS-003, NFR-OBS-003 | Ready |
+| [F081](../../specs/081-school-events-game-report/spec.md) | Workspace C — sự kiện trường từ template và tiến độ sự kiện (báo cáo game cho nhà trường đã tách sang F080) | `web/apps/portal` + module `game` | M3 | F052, F077 | FR-EVT-004, FR-EVT-006, FR-LMS-007, FR-CMS-010, FR-CMS-013 | Ready |
+| [F082](../../specs/082-game-studio-chat-assets-translations/spec.md) | Game Studio — quản lý sticker/GIF và dịch nội dung game (`/game-admin/translations*`) | `web/apps/portal` + module `game` | M4b | F079, F118 | FR-CHAT-014, FR-CNT-018, NFR-I18N-002, FR-CMS-006, FR-CMS-011 | Ready |
+| [F090](../../specs/090-realtime-gateway/spec.md) | realtime: ticket, WebSocket, heartbeat/reconnect, định tuyến lệnh, cắt kết nối khi thu hồi | `realtime` | M2 | F003, F013 | FR-AUTH-010, FR-AUTH-011, FR-AUTH-019, FR-MP-005, NFR-AVAIL-004, NFR-SCAL-003 | Ready |
+| [F091](../../specs/091-hub-instance-presence/spec.md) | Hub instance, presence, đồng bộ vị trí | `realtime` + module `competition` | M2 | F070, F090 | FR-MP-001…004, FR-MP-006, NFR-PERF-008 | Ready |
+| [F092](../../specs/092-realtime-client-hub-multiplayer/spec.md) | `RealtimeClient` Godot và Main Hub nhiều người chơi | `godot/` | M2 | F091 | FR-MP-004, FR-MP-005, FR-GAME-004, NFR-PERF-008 | Ready |
+| [F095](../../specs/095-friends-block-mute/spec.md) | Bạn bè, block, mute (module social) | module `chat` | M4a | F090 | FR-SOC-001…003 | Ready |
+| [F100](../../specs/100-party-management/spec.md) | Party: tạo/tham gia/mời/kick/chuyển leader/giải tán, một party active, giới hạn | module `competition` | M4a | F095 | FR-PTY-001…005, FR-PTY-009…011, FR-PTY-014 | Ready |
+| [F101](../../specs/101-party-lobby-session/spec.md) | Party Lobby, Start Session, leader/thành viên mất kết nối | module `competition` | M4a | F014, F100 | FR-PTY-006…008, FR-PTY-012, FR-PTY-013 | Ready |
+| [F102](../../specs/102-godot-party-ui/spec.md) | Giao diện party trong Godot: panel, lời mời, lobby, ready | `godot/` | M4a | F092, F101 | FR-PTY-001, FR-PTY-006, FR-PTY-008, FR-PTY-012 | Ready |
+| [F103](../../specs/103-boss-coop-quest/spec.md) | Boss battle nhiều phase và quest co-op (shared progress, bước `interdependent`) | module `game` | M4a | F076, F101 | FR-CHL-002, FR-CHL-003, FR-QST-002, FR-QST-007, FR-QST-009, FR-PTY-013 | Ready |
+| [F104](../../specs/104-matchmaking/spec.md) | Matchmaking 8 chế độ: queue, ticket, proposal, ready check, ràng buộc khối | module `competition` | M4b | F090, F100 | FR-MM-001…006, NFR-PERF-007 | Ready |
+| [F105](../../specs/105-battle-engine/spec.md) | Battle engine server-authoritative và 8 chế độ thi đấu | module `competition` | M4b | F030, F104 | FR-CMP-001…006, FR-MP-001, FR-LMS-004 | Ready |
+| [F106](../../specs/106-ranking-leaderboard/spec.md) | Ranking Glicko-2, tier, season và 13 bảng xếp hạng | module `competition` | M4b | F105 | FR-RNK-001…004, FR-LDB-001…005 | Ready |
+| [F107](../../specs/107-tournament-challenges/spec.md) | Tournament: 6 format, bracket, lịch, thử thách lớp/giải trường từ template | module `competition` | M4b | F105, F106 | FR-TRN-001…003, FR-LMS-004 | Ready |
+| [F108](../../specs/108-competition-config-portal/spec.md) | Cấu hình thi đấu `/game-admin/*` và UI workspace A | module `competition` + `web/apps/portal` | M4b | F079, F107 | FR-CMS-005, FR-LMS-004 | Ready |
+| [F109](../../specs/109-godot-arena-competition-ui/spec.md) | Giao diện Arena, trận đấu, bảng xếp hạng, giải đấu trong Godot | `godot/` | M4b | F102, F105, F106, F107 | FR-CMP-001, FR-CMP-006, FR-RNK-003, FR-LDB-003, FR-LDB-004 | Ready |
+| [F110](../../specs/110-godot-boss-coop-friends/spec.md) | Godot — màn boss co-op, thẻ dữ kiện bước `interdependent`, danh sách bạn bè | `godot/` | M4a | F095, F102, F103 | FR-CHL-002, FR-CHL-003, FR-QST-002, FR-QST-007, FR-QST-009, FR-PTY-013, FR-SOC-001…003, FR-MP-003 | Ready |
+| [F111](../../specs/111-godot-clubs-events-social/spec.md) | Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn" | `godot/` | M5 | F077, F110, F120 | FR-SOC-001…004, FR-MP-002, FR-MP-003, FR-EVT-001, FR-EVT-003…008, FR-GAM-001, FR-GAME-010 | Ready |
+| F112 | Godot — channel chat bền vững (khu vực, lớp, DM) và công cụ chủ club (sửa club, phó nhóm, mục tiêu/sự kiện club) | `godot/` | M5 | F111, F119, F120 | (FR CHAT/SOC phía client — ghi khi viết spec) | Chưa viết |
+| [F115](../../specs/115-chat-core/spec.md) | module chat lõi: channel, policy deny-by-default, JetStream, `chat-persister`, gửi/nhận | module `chat` | M4a | F090, F095 | FR-CHAT-002, FR-CHAT-008, FR-CHAT-017, NFR-SAFE-001 | Ready |
+| [F116](../../specs/116-chat-moderation-pipeline/spec.md) | Pipeline kiểm tra tin nhắn, danh mục từ nhạy cảm, công tắc kiểm duyệt | module `chat` | M4a | F115 | FR-CHAT-005, FR-MOD-001, FR-MOD-009…015, NFR-SAFE-002, NFR-I18N-004 | Ready |
+| [F117](../../specs/117-gameplay-chat-purge/spec.md) | Chat gameplay luôn có (`match`/`team`/`party`) và purge chat gameplay | module `chat` | M4b | F101, F105, F116 | FR-CHAT-001, FR-CHAT-003, FR-CHAT-009, FR-CHAT-011, FR-PTY-001 | Ready |
+| [F118](../../specs/118-chat-messaging-features/spec.md) | Bộ tính năng nhắn tin đầy đủ (sửa/thu hồi, reply/forward, mention, receipts) và sticker/GIF | module `chat` | M4b | F117 | FR-CHAT-012…016 | Ready |
+| [F119](../../specs/119-godot-chat-ui/spec.md) | Giao diện chat trong Godot: panel, quick message, tab, tắt tiếng, báo cáo | `godot/` | M4b | F092, F117 | FR-CHAT-003, FR-CHAT-010, FR-CHAT-014 | Ready |
+| [F120](../../specs/120-persistent-channels-clubs/spec.md) | Channel bền vững (world, area, class, study group, team, DM), club, chính sách theo cấp, tìm kiếm, retention | module `chat` | M5 | F118 | FR-CHAT-001, FR-CHAT-004, FR-CHAT-006, FR-CHAT-007, FR-CHAT-016, FR-MOD-004, FR-SOC-004 | Ready |
+| [F121](../../specs/121-moderation-safety-team/spec.md) | Moderation: báo cáo, sanction, hàng đợi Safety Team liên tenant, thông báo vụ việc cho trường | module `chat` | M5 | F116 | FR-MOD-002, FR-MOD-003, FR-MOD-005, FR-MOD-006, FR-MOD-008, FR-MOD-016…018 | Ready |
+| [F122](../../specs/122-portal-chat-safety/spec.md) | Portal an toàn chat: kiểm duyệt (E), danh mục và công tắc (D), chính sách chat trường (C) | `web/apps/portal` | M5 | F051, F120, F121 | FR-MOD-003, FR-MOD-004, FR-MOD-009, FR-MOD-011, FR-MOD-017 | Ready |
+| [F123](../../specs/123-in-game-notifications/spec.md) | Thông báo trong game: realtime, lưu bền vững, không push | module `chat` + `godot/` | M5 | F090, F115 | FR-NTF-001…003 | Ready |
+| [F124](../../specs/124-safety-enforcement-oncall/spec.md) | Thực thi xử phạt và vận hành Safety Team: consumer `sanction.applied` (khóa tài khoản), email thông báo vụ việc cho trường, vòng trực, break-glass | module `identity` + module `chat` | M5 | F015, F016, F121 | FR-MOD-005, FR-MOD-006, FR-MOD-017, FR-MOD-018, FR-AUTH-010, FR-AUD-001 | Ready |
+| [F130](../../specs/130-swarm-secrets-backup-dr/spec.md) | Staging/production Docker Swarm, secret, backup PITR và DR drill | Hạ tầng (`deploy/swarm`) | M6 | F001 | FR-OPS-002, FR-OPS-004, NFR-DEPL-001 | Ready |
+| [F131](../../specs/131-observability-alerting-runbooks/spec.md) | Monitoring, alerting, dashboard vận hành, runbook | Hạ tầng (observability) | M6 | F002, F130 | FR-OPS-003, NFR-OBS-002 | Ready |
+| [F132](../../specs/132-load-chaos-pentest-anticheat/spec.md) | Load test 10.000 CCU, chaos test liên module, pentest và anti-cheat | Hạ tầng + toàn hệ thống | M6 | F130, F131 | FR-AUTH-027, NFR-SCAL-003, NFR-AVAIL-003, NFR-AVAIL-005, NFR-SEC-005, NFR-SEC-006 | Ready |
+| [F133](../../specs/133-client-build-release/spec.md) | Build và phát hành client Windows, Android, iOS, Web | `godot/` + hạ tầng CI (`godot.yml`, runner macOS cho iOS) | M6 (lát cắt M-P1, §5.1) | F062, F130 | FR-GAME-009, NFR-COMP-001…004, NFR-PERF-006, NFR-PERF-019 | Ready |
+| [F134](../../specs/134-ops-reconcile-qa-installer/spec.md) | Công cụ vận hành bổ sung: lệnh `reconcile-<module>`, loại tenant QA khỏi analytics, trang tải bộ cài cho trường | Hạ tầng + module `identity` + module `learning` + module `game` + `web/apps/portal` | M6 | F010, F043, F044, F057, F080, F131, F133 | FR-OPS-002, FR-OPS-003, FR-ANL-009, FR-ANL-012, FR-GAME-009, NFR-DEPL-002, NFR-PERF-019 | Ready |
+
+**FR không thuộc danh mục** (ngoài phạm vi Release theo PRD, không viết feature): Removed/Deferred — FR-ORG-004, FR-EXR-009, FR-EXR-010, FR-EXR-011, FR-MOD-007; mở rộng sau hoặc đã được thay thế/gộp (ADR-0063, ADR-0086) — FR-AUTH-006, FR-AUTH-015, FR-AUTH-020, FR-AUTH-025, FR-AUTH-026 (gộp vào FR-AUTH-008, làm ở F013/F061); chỉ làm khi có quyết định (OQ-18) — FR-EXM-007. FR-CHAT-007 (không có voice chat) là ràng buộc, gắn vào F120. FR-CNT-015 chỉ gồm phần bài nghe (bài nói Deferred).
+
+Mốc `M-C0`…`M-C3` theo §5 (M-C3 trùng mốc School Loop của ROADMAP); `M-P1`, `M-P2` (pilot) theo §5.1 và [ROADMAP §3.4–§3.5](ROADMAP.md#34-pilot-slice--m-p1-pilot-start); `M2`…`M6` theo [ROADMAP §2](ROADMAP.md), làm sau M-C3. Cột Mốc ghi mốc hoàn thành **đầy đủ** feature; feature có lát cắt pilot được liệt kê thêm ở §5.1. Mã FR viết dạng dải (`A…B`) gồm mọi mã trong dải.
+
+### 4.1. Phụ thuộc ẩn và đề xuất xử lý
+
+Rà soát feature spec (2026-11-17) tìm thấy phụ thuộc chưa phản ánh đúng trong cột Phụ thuộc/Mốc ở trên. **Đã chốt (Technical Architect, 2026-11-17)** và đã áp vào feature spec; cột "Đề xuất xử lý" ghi quyết định và nơi đã sửa:
+
+| Feature | Phụ thuộc ẩn | Vấn đề | Đề xuất xử lý |
+|---|---|---|---|
+| F013, F014 (M-C1) | F016 (M-C3) | F013-AC-29 và F014 (Edge Cases, kết thúc session `account_locked`/`cleanup`) tiêu thụ `user.access_revoked`, `user.status_changed`, `student.cleaned_up` do F016 phát; F016 lại phụ thuộc F014 (`last_login_at`). Thêm F016 vào cột Phụ thuộc của F013/F014 sẽ tạo vòng | Consumer-first bằng fixture: F013 T045 tạo event fixture theo payload của EVENT_DESIGN §4.1, không tạo schema của producer (owner F011 cho `user.*`, F016 cho `student.cleaned_up`; một feature sở hữu mỗi schema, kiểm bằng `scripts/specs/check-cross-features.mjs`). F013/F014 hiện thực consumer và test bằng fixture → `Done` ở M-C1. Kiểm thử end-to-end (khóa/dọn thật → thu hồi phiên game, kết thúc session) chuyển vào quickstart/AC của F016 (M-C3). Không thêm F016 vào cột Phụ thuộc. **Đã áp:** fixture ở F013 T045 (schema `student.cleaned_up` ở F016 T004, `user.*` ở F011 T005 — 2026-11-17); F013-AC-29 + T037 (fixture); F014-AC-24 + T038/T039 (consumer kết thúc session chuyển từ F016 T013); F016-AC-03 sửa, F016-AC-24 + T036 (end-to-end) |
+| F081 (M3) | F080 (M4b) | Cột Phụ thuộc đã ghi F080 nhưng Mốc F081 (M3) sớm hơn F080 (M4b); F081 dùng `getTenantGameSummary`, rollup, `suppression.go` của F080 | **Đã chốt: tách.** F081 giữ sự kiện trường từ template + tiến độ (M3, phụ thuộc F052, F077). Phần “báo cáo game cho nhà trường” (US4 cũ, tiêu chí 13–18 của F081, mở rộng `TenantGameSummary`, màn "Hoạt động game") chuyển vào F080 US5 thành F080-AC-27…32, task F080 T055–T061 (M4b; F080 phụ thuộc thêm F052, F056; FR-ANL-012, FR-ANL-013 thêm vào F080). Không tạo feature mới (thay đổi nhỏ nhất, F080 đã sở hữu `getTenantGameSummary`) |
+| F041 ↔ F042 (M-C3) | vòng | F042 ghi phụ thuộc F041 (assignment `graded` gọi `CreateExamSession`/`CancelExamSession`), còn F041-AC-09 (publish bài `graded` + `assessment_blueprint` tạo ExamSession) và task T014 cần command `CreateExamSession` của F042 | **F041 làm trước.** F041 sở hữu port `ExamSessionCreator` (application, cùng module learning) và giữ hành vi chờ: trước khi F042 `Done`, bài `graded` + `assessment_blueprint` bị từ chối `422 VALIDATION_FAILED` (Assumptions của F041). **Chuyển sang F042:** phần sau của F041-AC-09 (tạo ExamSession ghim blueprint version, lưu `exam_session_id`), adapter `ExamSessionCreator` → `CreateExamSession`/`CancelExamSession`, và integration test “publish graded + blueprint → ExamSession” (F041 T012 nửa sau). F041 giữ AC về 422 và mọi phần assignment khác. Kết quả: thứ tự F040 → F041 → F042, không vòng; F055 vẫn chờ cả hai. **Đã chốt và áp:** F041-AC-09 viết lại (tạo/sửa bài `graded` + blueprint → `422 VALIDATION_FAILED`, `errors[].field = content_ref`, mã có sẵn), F041 T012/T014; F042-AC-31 + T051 (integration test) + T052 (adapter) |
+| Lát cắt pilot (M-P1) | ADR-0078 | Mặc định an toàn cho trẻ nhỏ (giờ giới nghiêm platform cho đăng nhập/game session/chat, preset `quick_message_emote_only`, công tắc kiểm duyệt có `expires_at` ≤ 24 giờ + hai người duyệt, tenant `common` tắt kết bạn/DM/World chat) chưa có tiêu chí `F<NNN>-AC-*` ở feature nào (chỉ F116, F119 nhắc preset) | **Đã bổ sung (2026-11-17):** giờ giới nghiêm → F015-AC-21/22 (tham số `platform_curfew`, khung trường), F013-AC-32 (đăng nhập, resume), F014-AC-25/26 (tạo session, kết thúc phiên đúng giờ), F090-AC-31 (realtime ticket), F115-AC-22 (gửi tin), F120-AC-27 (`allowed_hours`), F061-AC-36 (client); preset → F115-AC-23, F117-AC-24, F120-AC-26, F122-AC-28 (UI); công tắc có thời hạn + hai người duyệt, PII/grooming luôn chạy → F116-AC-30…32, F122-AC-27 (UI); tenant `common` → F095-AC-23, F120-AC-28; Windows máy dùng chung + "Tiếp tục là…" → F060-AC-27, F133-AC-27, F061-AC-35. Mã lỗi mới: `CURFEW_ACTIVE`, `MODERATION_SWITCH_STEP_NOT_ALLOWED`, `MODERATION_SWITCH_EXPIRY_REQUIRED`, `MODERATION_SWITCH_SELF_APPROVAL` (API_DESIGN §4.1). Còn lại: UI cài đặt giờ giới nghiêm ở F052/F057 (RB-803) |
+
+## 5. Lộ trình theo mốc (CMS/LMS trước)
+
+| Mốc | Kết quả | Backend | Frontend | Game client |
+|---|---|---|---|---|
+| Bước 0 | Contract và mâu thuẫn đã chốt (§3) | — | — | — |
+| **M-C0 Foundation** | Monorepo, platform kit, gateway, token chạy được | F001, F002, F003, F004 | F005, F050 | F060 |
+| **M-C1 Đăng nhập** | Nhân sự đăng nhập portal, học sinh đăng nhập game | F010, F011, F012, F013, F014, F015 | F051 | F061 |
+| **M-C2 Content Loop** | Soạn → duyệt → publish → học sinh làm trong game → server chấm | F020, F021, F022, F023, F024, F025, F026, F027, F030, F031 | F053 | F062 (\*), F063 (\*) |
+| **M-C3 School Loop** | Nhà trường giao bài/đề → học sinh làm → nhà trường xem kết quả, LO yếu | F016, F032, F040, F041, F042, F043, F044, F045 | F052, F054, F055, F056, F057, F058, F059 | F064, F065 |
+| M2 Core gameplay | Avatar, thế giới, quest, mini-game, XP, kinh tế, hub nhiều người | F017, F070, F071, F072, F073, F074, F075, F090, F091 | — | F092 |
+| M3 Game ops | Challenge, sự kiện, Game Operations Console | F076, F077, F078 | F079, F081 | F069 |
+| M4a Party Co-op | Bạn bè, party, boss co-op, chat core + pipeline, bài nghe/mô phỏng | F066, F095, F100, F101, F103, F115, F116 | — | F102, F110 |
+| M4b Thi đấu | Matchmaking, battle, ranking, tournament, chat gameplay | F104, F105, F106, F107, F117, F118 | F080, F082, F108 | F109, F119 |
+| M5 Safe Social | Channel bền vững, moderation, thông báo | F120, F121, F123, F124 | F122 | F111, F112 |
+| **M-P1 Pilot Start** | Lát cắt gameplay pilot + mặc định an toàn + 4 nền tảng + production quy mô pilot + công cụ nghiên cứu (ROADMAP §3.4) | Lát cắt §5.1 | Lát cắt §5.1 | Lát cắt §5.1 |
+| **M-P2 Pilot Exit** | Báo cáo hiệu quả học tập ≥ 8 tuần đạt cổng ADR-0080 (ROADMAP §3.5) | F035 (vận hành nghiên cứu), sửa lỗi pilot | — | — |
+| M6 Phát hành | Swarm production, giám sát, load/chaos test, build các nền tảng | F130, F131, F132, F134 | — | F133 |
+
+(\*) F062, F063 bắt đầu ở M-C2 với mock có nhãn cho phần phụ thuộc F041/F032; chỉ chuyển `Done` khi F041, F032 `Done` (M-C3).
+
+M-P1 không chờ M2…M4a xong: lát cắt pilot chạy song song từ giữa Phase 1 ở làn Godot/module game ([ROADMAP §2](ROADMAP.md)); chức năng Mở rộng (M2…M4b) được phát triển song song từ sau M-P1 nhưng chỉ phát hành tới trường sau M-P2.
+
+### 5.1. Lát cắt pilot (M-P1) theo feature
+
+Nguồn phạm vi: [ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start), ADR-0073 mục 1, RB-811 của [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md). "Toàn bộ" = mọi tiêu chí của feature phải `Done` trước M-P1; "Lát cắt" = chỉ phần ghi trong cột, phần còn lại giữ ở mốc của §4. Feature có lát cắt được đánh dấu trạng thái `Pilot slice done` trong báo cáo M-P1 (không đổi trạng thái `Done` của §2 cho tới khi xong toàn bộ) [Proposed].
+
+| Nhóm | Feature | Phạm vi pilot |
+|---|---|---|
+| Nền (M-C0…M-C3) | F001–F005, F010–F016, F020–F027, F030–F032, F035, F040–F045, F050–F059, F060–F065 | Toàn bộ (mọi exit criterion M-C2, M-C3 là điều kiện M-P1); F035 phải `Done` và chạy bài kiểm tra trước ở lớp pilot + lớp so sánh |
+| Nhân vật, thế giới | F070 | Toàn bộ (tạo avatar preset, emote mặc định) |
+| | F071 | Lát cắt: chương mở đầu, Main Hub, vùng Toán và Tiếng Việt, NPC + hội thoại data-driven |
+| Quest, mini-game | F072 | Lát cắt: quest `main`, `learning`, `daily`, `weekly` (12 loại ở M2) |
+| | F073 | Lát cắt: 4–5 mini-game, ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md)) |
+| | F078 | Lát cắt: workflow nội dung game đủ để publish quest/mini-game/NPC mẫu qua backend (thumbnail 3D, catalog cho nhà trường ở M3) |
+| Tiến trình, kinh tế | F074 | Toàn bộ (XP ledger có cap và giảm dần, level) |
+| | F075 | Lát cắt: Xu, Shop cosmetic, inventory, sổ cái (collection, achievement, badge ở M2) |
+| Boss, co-op | F076 | Lát cắt: `pkg/roomhost` dùng cho boss/co-op (challenge solo 7 loại ở M3) |
+| | F103 | Lát cắt: boss solo và quest co-op có bước `interdependent`, kết quả học tập riêng từng người (boss party nhiều phase ở M4a) |
+| Realtime, party | F090 | Toàn bộ |
+| | F091 | Lát cắt: presence (hub nhiều người, đồng bộ vị trí ở M2) |
+| | F095 | Lát cắt: block/mute; tenant `common` tắt kết bạn (ADR-0078) |
+| | F100, F101 | Lát cắt: party nhỏ (tạo, mời bạn cùng lớp, rời), lobby + Start Session cho quest co-op (đầy đủ Addendum ở M4a) |
+| Chat, an toàn | F115 | Toàn bộ cho channel `party` |
+| | F116 | Toàn bộ (PII/grooming luôn chạy, công tắc kiểm duyệt có thời hạn) |
+| | F117 | Lát cắt: channel `party` luôn có với preset quick message + emote, purge chat gameplay (`match`/`team` ở M4b) |
+| | F121, F122 | Lát cắt: báo cáo → case ≤ 5 s, hàng đợi Safety Team tối thiểu (workspace E) |
+| | F124 | Lát cắt: vòng trực Safety Team cho `p1` |
+| Game client | F069 | Lát cắt: tiến trình, kho đồ, shop cosmetic (challenge solo ở M3) |
+| | F092, F102, F110, F119 | Lát cắt: `RealtimeClient`; panel party, lời mời, lobby; màn boss + thẻ dữ kiện `interdependent`; chat quick message + emote, báo cáo |
+| Vận hành, phát hành | F130 | Lát cắt: production quy mô pilot ([DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--proposed)), PITR + diễn tập khôi phục, object storage theo ADR-0075 |
+| | F131 | Lát cắt: alert chính, dashboard vận hành, runbook sự cố pilot |
+| | F132 | Lát cắt: load test ở NFR-SCAL-001, pen-test đăng nhập game và refresh token (10.000 CCU, chaos đầy đủ ở M6) |
+| | F133 | Toàn bộ cho 4 nền tảng Windows, Android, iOS (ký + TestFlight/MDM, runner macOS), Web (RB-811) |
+| | F134 | Lát cắt: trang tải bộ cài cho trường, loại tenant QA khỏi analytics |
+| Bổ sung trước M-P1 | ADR-0078 | Các AC mặc định an toàn đã bổ sung (§4.1, dòng ADR-0078) thuộc lát cắt pilot của feature tương ứng: F013, F014, F015, F060, F061, F090, F095, F115, F116, F117, F120 (preset + tenant `common`), F122, F133 |
+
+M-P2 không thêm feature mới: vận hành pilot ≥ 8 tuần, F035 xuất dữ liệu nghiên cứu, hiệu chỉnh tham số mastery (ADR-0017) qua cấu hình có version, sửa lỗi pilot.
+
+```mermaid
+flowchart LR
+  B0[Bước 0] --> C0[M-C0 Foundation] --> C1[M-C1 Đăng nhập] --> C2[M-C2 Content Loop] --> C3[M-C3 School Loop]
+  C3 --> P1[M-P1 Pilot Start] --> P2[M-P2 Pilot Exit]
+  PS[Lát cắt pilot §5.1] --> P1
+  P1 --> M2[M2 Core gameplay] --> M3[M3 Game ops] --> M4a[M4a Party Co-op] --> M4b[M4b Thi đấu] --> M5[M5 Safe Social] --> M6[M6 Phát hành]
+  P2 -. cổng phát hành Mở rộng .-> M2
+```
+
+## 6. Exit criteria của mốc
+
+Một mốc đạt khi **mọi feature của mốc ở trạng thái `Done`** (mọi tiêu chí `F<NNN>-AC-*` có test pass, quickstart có bằng chứng) và kịch bản demo dưới đây chạy trên backend thật.
+
+| Mốc | Kịch bản demo |
+|---|---|
+| M-C0 | `docker compose up` + `make seed` dựng local; trace xuyên APISIX → `core-api` → PostgreSQL và NATS xem được; PR mẫu chạy đúng lane GitHub Actions theo path; import chéo module bị `make arch-check` chặn; theme Godot/web sinh từ `design/` |
+| M-C1 | `ad.truong.a` đăng nhập portal thấy đúng workspace; học sinh đăng nhập game Windows/Android bằng form; nhân sự bị chặn vào game; takeover giữa hai thiết bị; nhập CSV trường demo |
+| M-C2 | Biên tập viên soạn câu hỏi có công thức + ảnh → reviewer duyệt → publish → học sinh làm trong Godot → server chấm; sửa câu đã publish tạo version mới, attempt cũ giữ version cũ; render payload không có đáp án |
+| M-C3 | `qlcm.truong.a` tạo đề "Phép nhân" 15 phút từ blueprint → giao cho 3A → 3 học sinh làm trong Godot (1 nộp muộn, 1 rớt mạng và resume) → nhà trường xem kết quả, câu sai phổ biến, LO yếu; học sinh nhận gợi ý ôn tập tự động |
+| M-P1 | Theo exit criteria và demo script của [ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start); mọi lát cắt §5.1 có test pass trên production pilot |
+| M-P2 | Theo exit criteria của [ROADMAP §3.5](ROADMAP.md#35-vận-hành-pilot-và-cổng-hiệu-quả--m-p2-pilot-exit) (cổng hiệu quả ADR-0080) |
+| M2–M6 | Theo exit criteria của [ROADMAP](ROADMAP.md) §3 cho mốc tương ứng |
+
+## 7. Ước lượng và năng lực
+
+Ước lượng (sprint 2 tuần) của từng feature ghi trong `plan.md` của feature; tổng hợp lại ở đây khi các feature chuyển `Ready`. Giả định đội và rủi ro năng lực: §1.2.
+
+## 8. Phân nhóm viết feature spec
+
+Mỗi nhóm do một agent viết bộ file Spec Kit cho các feature trong nhóm; nhóm gom theo domain và tài liệu nguồn.
+
+| Nhóm | Feature | Tài liệu nguồn chính |
+|---|---|---|
+| A | F001, F002, F003, F004, F005, F130, F131, F132, F133, F134 | [BACKEND_DESIGN](../../docs/07-backend/BACKEND_DESIGN.md), [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md), [DEPLOYMENT](../../docs/11-operations/DEPLOYMENT.md), [MONITORING](../../docs/11-operations/MONITORING.md), [BACKUP_RECOVERY](../../docs/11-operations/BACKUP_RECOVERY.md), [DESIGN_SYSTEM](../../docs/05-ux/DESIGN_SYSTEM.md), [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md), [SECURITY_ARCHITECTURE](../../docs/10-security/SECURITY_ARCHITECTURE.md) |
+| B | F010, F011, F012, F013, F014, F015, F016, F017, F045 | [KEYCLOAK_SSO](../../docs/09-identity/KEYCLOAK_SSO.md), [IDENTITY_MAPPING](../../docs/09-identity/IDENTITY_MAPPING.md), [ACCOUNT_PROVISIONING](../../docs/09-identity/ACCOUNT_PROVISIONING.md), [SIS_INTEGRATION](../../docs/09-identity/SIS_INTEGRATION.md), [MULTITENANCY](../../docs/06-architecture/MULTITENANCY.md), [ADMIN_PORTAL](../../docs/04-admin-portal/ADMIN_PORTAL.md) §2, §3.7–§3.10, §3.16–§3.17 |
+| C | F020, F021, F022, F023, F024, F025, F026, F027 | [CURRICULUM_MODEL](../../docs/02-learning/CURRICULUM_MODEL.md), [CONTENT_MODEL](../../docs/02-learning/CONTENT_MODEL.md), [QUESTION_BANK](../../docs/02-learning/QUESTION_BANK.md), [ADMIN_PORTAL](../../docs/04-admin-portal/ADMIN_PORTAL.md) §3–§6 |
+| D | F030, F031, F032, F040, F041, F042, F043, F044, F065 | [ACTIVITY_ENGINE](../../docs/02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../../docs/02-learning/LEARNING_EXPERIENCE.md), [EXAM_ENGINE](../../docs/02-learning/EXAM_ENGINE.md), [SCHOOL_LMS](../../docs/04-admin-portal/SCHOOL_LMS.md), [LEARNING_ANALYTICS](../../docs/02-learning/LEARNING_ANALYTICS.md), [DASHBOARD_DATA](../../docs/07-backend/DASHBOARD_DATA.md), [VIDEO_LEARNING](../../docs/02-learning/VIDEO_LEARNING.md) |
+| E | F050, F051, F052, F053, F054, F055, F056, F057, F058, F059, F079, F080, F081, F082 | [ADMIN_PORTAL](../../docs/04-admin-portal/ADMIN_PORTAL.md), [DESIGN_SYSTEM](../../docs/05-ux/DESIGN_SYSTEM.md), [SCHOOL_LMS](../../docs/04-admin-portal/SCHOOL_LMS.md), [GAME_ANALYTICS](../../docs/11-operations/GAME_ANALYTICS.md), [DASHBOARD_DATA](../../docs/07-backend/DASHBOARD_DATA.md) |
+| F | F060, F061, F062, F063, F064, F066, F092, F102, F109, F119, F069, F110, F111, F112 | [GODOT_ARCHITECTURE](../../docs/08-game-client/GODOT_ARCHITECTURE.md), [GAME_NETWORKING](../../docs/08-game-client/GAME_NETWORKING.md), [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md), [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md), [AUDIO_LANGUAGE_LEARNING](../../docs/02-learning/AUDIO_LANGUAGE_LEARNING.md), [SIMULATION_ENGINE](../../docs/02-learning/SIMULATION_ENGINE.md) |
+| G | F070, F071, F072, F073, F074, F075, F076, F077, F078, F103 | [GAME_DESIGN](../../docs/01-game-design/GAME_DESIGN.md), [WORLD_DESIGN](../../docs/01-game-design/WORLD_DESIGN.md), [CHARACTER_SYSTEM](../../docs/01-game-design/CHARACTER_SYSTEM.md), [QUEST_SYSTEM](../../docs/01-game-design/QUEST_SYSTEM.md), [MINIGAME_ENGINE](../../docs/08-game-client/MINIGAME_ENGINE.md), [PROGRESSION_SYSTEM](../../docs/01-game-design/PROGRESSION_SYSTEM.md), [INVENTORY_ECONOMY](../../docs/01-game-design/INVENTORY_ECONOMY.md), [CHALLENGE_BOSS_SYSTEM](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md), [EVENT_SEASON_SYSTEM](../../docs/01-game-design/EVENT_SEASON_SYSTEM.md) |
+| H | F090, F091, F100, F101, F104, F105, F106, F107, F108 | [REALTIME_ARCHITECTURE](../../docs/06-architecture/REALTIME_ARCHITECTURE.md), [MULTIPLAYER_GAMEPLAY](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md), [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md), [MATCHMAKING](../../docs/03-social-multiplayer/MATCHMAKING.md), [COMPETITION_SYSTEM](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
+| I | F095, F115, F116, F117, F118, F120, F121, F122, F123, F124 | [SOCIAL_SYSTEM](../../docs/03-social-multiplayer/SOCIAL_SYSTEM.md), [CHAT_SYSTEM](../../docs/03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../../docs/03-social-multiplayer/MODERATION.md), [CHILD_SAFETY](../../docs/10-security/CHILD_SAFETY.md) |
+
+Nhóm F (Godot) viết sau khi nhóm sở hữu backend tương ứng (B, D, G, H, I) chốt contract. Feature có hai phạm vi (F065, F066, F073, F080, F108, F123) do nhóm ghi trong bảng viết cả hai phần.
+
+## 9. Câu hỏi mở liên quan
+
+- **OQ-07** (mô hình quản trị CMS): đã trả lời bởi ADR-0072, role theo A1.
+- **OQ-08** (chương trình, bộ sách): seed GDPT 2018 Toán lớp 1–5 [Proposed].
+- **OQ-18** (thi chính thức): chỉ luyện/thi thử + kiểm tra nhà trường giao [Proposed].
+- **OQ-23** (nhu cầu đặc biệt, dân tộc thiểu số): lồng tiếng `g1_3` + phụ đề [Proposed].
+- **OQ-01** (SIS API): giai đoạn này chỉ `csv_import`; `contract_v1` + `sis-mock` làm sau M-C3.
+- Quyết định đổi thứ tự roadmap (tài liệu này) cần PM + Architect duyệt trước khi bắt đầu sprint 1.

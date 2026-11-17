@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Kiểm tra ADR-0041: mọi schema kiểu string trong specs/ phải có `maxLength`.
 // Ngoại lệ: có `enum` hoặc `const`; `format` ∈ {uuid, date, date-time, time, duration, binary, byte}.
-// Bỏ qua dữ liệu ví dụ (`example`, `examples`, `default`, `const`, `enum`, khóa `x-*`) và thư mục specs/examples.
+// Bỏ qua dữ liệu ví dụ (`example`, `examples`, `default`, `const`, `enum`, khóa `x-*`), thư mục specs/examples,
+// specs/_deferred (ADR-0082, không thuộc phạm vi lint) và thư mục feature spec specs/NNN-* (Markdown, ADR-0082).
 // Phạm vi: OpenAPI (public, services, internal), AsyncAPI, SIS contract, JSON Schema (schemas/, events/).
 //
 // Chạy:  npm ci --prefix scripts && node scripts/specs/check-maxlength.mjs
@@ -23,7 +24,7 @@ function listFiles(dir) {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) { if (e.name !== 'examples' && e.name !== 'node_modules') out.push(...listFiles(p)); }
+    if (e.isDirectory()) { if (!["examples", "node_modules", "_deferred"].includes(e.name) && !/^d{3}-/.test(e.name)) out.push(...listFiles(p)); }
     else if (/\.(ya?ml|json)$/.test(e.name) && !e.name.startsWith('.')) out.push(p);
   }
   return out;

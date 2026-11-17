@@ -1,6 +1,9 @@
 # ADR-0064 — Không tự đăng nhập khi mở lại game
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0045 (mục 3: phiên dài + refresh token lưu trên thiết bị), ADR-0007 (lưu refresh token trong secure storage) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0086 · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0045 (mục 3: phiên dài + refresh token lưu trên thiết bị), ADR-0007 (lưu refresh token trong secure storage) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0086](ADR-0086-giu-phien-game-bang-refresh-token.md):** không còn bắt nhập mật khẩu mỗi lần mở game; refresh token được lưu trong kho bảo mật của thiết bị cá nhân (mục 1, 2, 4, 5). **Còn hiệu lực:** mục 3, 6, 7; máy dùng chung vẫn chỉ giữ token trong RAM.
 
 ## Bối cảnh
 
@@ -14,14 +17,16 @@ Người duyệt yêu cầu: **mở game lần sau phải nhập lại mật kh�
 4. **Phiên Keycloak của client `eduworld-game` [Proposed]:** SSO session idle 30 phút, tối đa 10 giờ; không bật "Remember me"; không dùng offline token. Khi game thoát bình thường → logout (end-session + revoke). Game bị tắt đột ngột → phiên tự hết hạn theo idle; vì token không lưu xuống đĩa nên lần mở sau vẫn phải nhập mật khẩu.
 5. **Mobile:** ứng dụng chuyển nền quá 30 phút hoặc bị hệ điều hành đóng → mở lại phải đăng nhập lại [Proposed].
 6. **Năng lực đăng nhập (thay ADR-0045 mục 3):** mọi lượt vào game đều băm mật khẩu ở Keycloak. Mục tiêu tải nâng lên **đỉnh 100 lượt đăng nhập mật khẩu/giây**, bão đăng nhập 5.000 lượt trong 10 phút [Proposed]. Sizing Keycloak tính lại trong DEPLOYMENT (ADR-0045 mục 5–6 vẫn áp dụng: tham số băm được benchmark, hàng chờ đăng nhập, rate limit theo tenant/thiết bị, scale theo lịch học).
-7. Portal (giáo viên, vận hành) giữ chính sách phiên của ADR-0027/KEYCLOAK_SSO (idle 30 phút, tối đa 10 giờ, MFA theo role).
+7. Portal (nhân sự nhà trường, vận hành) giữ chính sách phiên của ADR-0027/KEYCLOAK_SSO (idle 30 phút, tối đa 10 giờ, MFA theo role).
 
 ## Hệ quả
 
-(+) Không ai mở máy dùng chung mà vào được tài khoản của học sinh khác; giảm rủi ro lộ token trên thiết bị. (−) Học sinh phải nhập mật khẩu mỗi lần chơi; tải Keycloak giờ cao điểm tăng (cần thêm CPU); giáo viên cần hỗ trợ đặt lại mật khẩu nhiều hơn.
+(+) Không ai mở máy dùng chung mà vào được tài khoản của học sinh khác; giảm rủi ro lộ token trên thiết bị. (−) Học sinh phải nhập mật khẩu mỗi lần chơi; tải Keycloak giờ cao điểm tăng (cần thêm CPU); nhà trường cần hỗ trợ đặt lại mật khẩu nhiều hơn.
 
 ## Lịch sử thay đổi
 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-16 | Một phần superseded by ADR-0086 | Technical Architect |

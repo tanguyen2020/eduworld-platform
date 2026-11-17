@@ -23,7 +23,7 @@
         "properties": {
           "question_version_id": { "$ref": "#/$defs/uuid" },
           "max_score": { "type": "number", "exclusiveMinimum": 0 },
-          "position": { "type": "integer", "minimum": 0 }
+          "position": { "type": "integer", "minimum": 1 }
         },
         "additionalProperties": false
       }
@@ -35,7 +35,7 @@
     },
     "shuffle_items": { "type": "boolean", "default": true },
     "shuffle_options": { "type": "boolean", "default": true },
-    "default_feedback_policy": { "enum": ["immediate", "after_submit", "after_due", "manual_release"], "default": "immediate" },
+    "default_feedback_timing": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming", "default": "immediate", "description": "FeedbackTiming mặc định khi set dùng ngoài bài giao/đề; bài giao và đề ghi đè bằng cấu hình riêng (feedback_timing, result_release)." },
     "meta": {
       "type": "object",
       "required": ["grade_levels", "subject_id", "status", "author_id", "owner_scope", "curriculum_version_id"],
@@ -63,7 +63,7 @@
   ],
   "$defs": {
     "uuid": { "type": "string", "format": "uuid" },
-    "questionType": { "$ref": "question.schema.json#/$defs/questionType" },
+    "questionType": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType" },
     "selectionRule": {
       "type": "object",
       "required": ["filters", "count"],

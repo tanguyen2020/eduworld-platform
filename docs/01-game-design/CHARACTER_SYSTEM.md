@@ -110,7 +110,7 @@ Server đánh dấu `game_profiles.avatar_created_at`; event `avatar.created` (d
 
 ### 5.1. Data model (khớp DOMAIN_MODEL §5)
 
-`GameProfile.avatar_config` (JSON lưu server, kiểm tra quyền sở hữu khi lưu):
+`GameProfile.avatar_config` (JSON lưu server, kiểm tra quyền sở hữu khi lưu). Mục này là **nguồn duy nhất** của cấu trúc `AvatarConfig`: tham chiếu vật phẩm bằng **mã** `item_id` (chuỗi `varchar(64)`, không phải UUID), phụ kiện theo **slot**, tối đa `emote_wheel_slots` (6) emote; contract OpenAPI/AsyncAPI theo cấu trúc này:
 
 ```json
 {
@@ -129,7 +129,7 @@ Server đánh dấu `game_profiles.avatar_created_at`; event `avatar.created` (d
 | `body_type`, `skin_tone`, màu tóc | Thuộc danh mục miễn phí (mọi học sinh) |
 | `hair.item_id`, `outfit.item_id`, `accessories[].item_id`, `emote_slots[]` | Phải có `InventoryItem(student_id, item_id)` hoặc là item mặc định |
 | `accessories[].slot` | `head`, `face`, `back`, `hand` — tối đa 1 item/slot (danh sách slot chuẩn: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §2) |
-| `emote_slots` | Tối đa 6 (wheel 6 ô) [Proposed] |
+| `emote_slots` | Tối đa `emote_wheel_slots` (6 ô wheel) [Proposed]; mỗi phần tử là mã emote đã sở hữu |
 | `pet` | 1 pet trang trí đi theo nhân vật (không chỉ số), item `kind = pet` |
 | `title`, `frame`, `badge_showcase[]` | Danh hiệu, khung avatar, tối đa 3 huy hiệu trưng bày trên thẻ hồ sơ |
 
@@ -146,10 +146,10 @@ API: `GET /api/v1/game/profile` · `PUT /api/v1/game/profile/avatar` (body = `av
 | Người xem | Thấy |
 |---|---|
 | Chính học sinh | Trường, tỉnh/thành, lớp, khối (mục "Hồ sơ của em" trong [Cài đặt](../05-ux/STUDENT_GAME_UX_SOCIAL.md)) |
-| Bạn cùng lớp, giáo viên của lớp | Lớp (và trường) theo policy trường; không có tên thật nếu trường không bật |
+| Bạn cùng lớp | Lớp (và trường) theo policy trường; không có tên thật nếu trường không bật |
 | Người khác (kể cả cùng trường khác lớp, liên trường) | Không thấy trường/lớp/tỉnh — chỉ nickname và thông tin game (R16, ADR-0054) |
 
-Học sinh không sửa được trường/lớp trong game (dữ liệu do SIS sở hữu); thông tin sai thì báo giáo viên để sửa ở SIS. Học sinh tenant chung thấy "EduWorld chung · Khối n".
+Học sinh không sửa được trường/lớp trong game (dữ liệu do SIS sở hữu); thông tin sai thì báo nhà trường (văn phòng trường) để sửa ở SIS. Học sinh tenant chung thấy "EduWorld chung · Khối n".
 
 ### 5.2. Item definitions & hiển thị
 
@@ -163,8 +163,9 @@ Học sinh không sửa được trường/lớp trong game (dữ liệu do SIS 
 
 ### 5.3. Nickname
 
-- Lần đầu vào game, học sinh chọn nickname từ **danh sách sinh tự động** (tính từ + con vật + số, vd. "Cú Mèo Chăm Chỉ 27") [Proposed]; không nhập tự do để tránh lộ tên thật/ngôn từ xấu.
-- Đổi nickname: theo policy trường, giới hạn số lần/tháng; giáo viên/quản trị có thể reset.
+- Lần đầu vào game, học sinh chọn nickname từ **danh sách sinh tự động** (tính từ + con vật + số, vd. "Cú Mèo Chăm Chỉ 27") [Proposed]; không nhập tự do để tránh lộ tên thật/ngôn từ xấu. Mỗi lựa chọn trong danh sách (`nickname_option_id`) còn hiệu lực `nickname_suggestion_ttl` = **10 phút** **[Confirmed — Technical Architect 2026-11-16]**; hết hạn → client xin danh sách mới.
+- Nickname tối đa **32 ký tự** ở mọi nơi (DB `varchar(32)`, OpenAPI/AsyncAPI `maxLength: 32`) và **duy nhất trong tenant** (unique partial `(tenant_id, nickname) WHERE deleted_at IS NULL`), không phải duy nhất theo trường **[Confirmed — Technical Architect 2026-11-16]**.
+- Đổi nickname: tối đa `nickname_change_monthly_limit` = **1 lần/tháng** **[Confirmed — Technical Architect 2026-11-16]** (policy trường chỉ siết chặt hơn); `school_admin` có thể reset; Platform Safety Team (`safety_moderator`) reset khi xử lý vi phạm ([MODERATION](../03-social-multiplayer/MODERATION.md)).
 - Tên thật không bao giờ hiển thị trên đầu nhân vật trong khu công cộng ([CHILD_SAFETY](../10-security/CHILD_SAFETY.md)).
 
 ### 5.4. Nguồn mở khóa
@@ -184,7 +185,7 @@ API: `GET /api/v1/game/inventory?kind=&cursor=` · `GET /api/v1/game/inventory/c
 
 ## 7. Emotes
 
-- Kích hoạt: phím `emote_wheel` / nút cảm ứng → chọn emote → gửi lệnh `hub.player.emote` qua realtime (server rate limit 1 emote/2 s, kiểm tra emote đã trang bị) → server broadcast `hub.player.emoted` tới người trong interest area → `RemotePlayer` phát clip. (Tên message theo quy ước REALTIME_ARCHITECTURE §4; định nghĩa chuẩn ở AsyncAPI.)
+- Kích hoạt: phím `emote_wheel` / nút cảm ứng → chọn emote → gửi lệnh `hub.player.emote` qua realtime (server rate limit `emote_rate` 1 emote/2 s, kiểm tra emote đã trang bị) → server broadcast `hub.player.emoted` tới người trong interest area → `RemotePlayer` phát clip. (Tên message theo quy ước REALTIME_ARCHITECTURE §4; định nghĩa chuẩn ở AsyncAPI.)
 - Emote là cách giao tiếp an toàn mặc định cho mọi lứa tuổi (kết hợp Quick Message — xem CHAT_SYSTEM).
 - **Bộ emote 3D mặc định miễn phí** [Confirmed theo Master Prompt mới §13.5]: `emote_wave` (vẫy tay), `emote_clap` (vỗ tay), `emote_dance` (nhảy), `emote_celebrate` (ăn mừng), `emote_thank` (cảm ơn), `emote_apologize` (xin lỗi). Emote thêm mở khóa qua phần thưởng/Shop.
 - Emote dùng được trong hub, trận đấu, party lobby và boss encounter (phát trên nhân vật, cùng rate limit). Trong khung chat dùng emoji/sticker theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md); không thêm loại tin nhắn mới.

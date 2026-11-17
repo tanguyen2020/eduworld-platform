@@ -18,7 +18,7 @@ OQ-02 (một hay nhiều realm) chưa được trả lời; cần mặc định 
 
 ## Hệ quả
 
-(+) Một realm, SSO dễ cho giáo viên nhiều tenant. (−) Số Organization lớn cần kiểm thử tải.
+(+) Một realm, SSO dễ cho nhân sự làm việc ở nhiều tenant. (−) Số Organization lớn cần kiểm thử tải.
 
 **Khi nào chuyển sang multi-realm:** nếu một tổ chức yêu cầu cô lập hoàn toàn cấu hình đăng nhập/brand/chính sách mật khẩu mà Organizations không đáp ứng → ADR mới; backend đã hỗ trợ nhiều issuer vì định danh là `(issuer, subject)` (ADR-0008).
 
@@ -29,3 +29,4 @@ OQ-02 (một hay nhiều realm) chưa được trả lời; cần mặc định 
 | 2026-11-15 | Tạo ADR (Organization theo Sở/Phòng) | Phase 0 |
 | 2026-11-15 | Ánh xạ Organization đổi sang mỗi Tenant | ADR-0026 |
 | 2026-11-15 | Client portal hợp nhất `eduworld-portal`; thêm `svc-*` | ADR-0027, ADR-0040 |
+| 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |

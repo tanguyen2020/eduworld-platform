@@ -17,7 +17,7 @@ Thi đấu là **động lực luyện tập và chơi cùng nhau** — không p
 | XP và level | [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) |
 | Chat trong trận | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) |
 
-Kiến trúc: state machine trận trong **competition-service** (room host), câu hỏi và chấm điểm ở **learning-service** (`/internal/v1/question-plans`), kết nối WebSocket qua **realtime-gateway** (ADR-0011, ADR-0036).
+Kiến trúc: state machine trận trong **module competition** (room host), câu hỏi và chấm điểm ở **module learning** (facade `question-plans`, gọi trong tiến trình `core-api`), kết nối WebSocket qua binary **realtime** (ADR-0011, ADR-0074).
 
 ## 2. Các mode thi đấu [Confirmed — Master Prompt §5.3]
 
@@ -42,9 +42,9 @@ Thi đấu luôn **tùy chọn**: không quest học tập bắt buộc nào yê
 | Cấu trúc | 7 câu; mỗi câu 20 s (lớp 1–3: 30 s); câu cuối x2 điểm |
 | Nguồn câu | `question_plan` do server tạo khi trận bắt đầu (subject × grade × topic tùy chọn × độ khó theo trung bình mastery hai bên), ghim version (ADR-0043); không dùng câu đã gặp với một trong hai người trong 7 ngày |
 | Trả lời | Mỗi người 1 lượt/câu; đáp án lộ cho cả hai sau khi cả hai trả lời hoặc hết giờ |
-| Điểm/câu | Đúng: 100 + bonus tốc độ tối đa 50 (tuyến tính theo thời gian còn lại, đo bằng thời gian server nhận); sai/không trả lời: 0 |
+| Điểm/câu | Đúng: 100; sai/không trả lời: 0. **Lớp 6–9** cộng thêm bonus tốc độ tối đa 50 (tuyến tính theo thời gian còn lại, đo bằng thời gian server nhận). **Lớp 1–5 không có bonus tốc độ**: trận của trẻ nhỏ thưởng suy nghĩ đúng, không thưởng bấm nhanh [Confirmed — Technical Architect 2026-11-15] (`speed_bonus_min_grade` = 6) |
 | Thắng | Tổng điểm cao hơn; bằng điểm sau câu tie-break → hòa |
-| Disconnect | Grace 30 s ([MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)); quá hạn → câu còn lại tính 0; cả hai rời → trận hủy, không tính rating |
+| Disconnect | Grace và kết quả khi hết grace theo [MULTIPLAYER_GAMEPLAY §9.2](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) (1v1: thua do `abandon`, tính rating, đối thủ thắng); cả hai rời → trận hủy, không tính rating |
 | Chat | **Luôn có** (ADR-0020 mục 6): channel `match` từ lobby đến hết trận; panel tự thu nhỏ khi câu hỏi hiển thị; mute/chặn/báo cáo ngay trên tin |
 
 ### 3.2. Team Battle [Proposed]
@@ -63,7 +63,7 @@ Party cùng chống "thử thách thời gian" (ví dụ dập tắt 10 ngọn l
 
 ### 3.4. Timed Quiz
 
-Giáo viên (Class Competition từ LMS) hoặc sự kiện tổ chức trong một instance/lớp: tất cả trả lời cùng bộ câu; kết quả hiển thị top 5 + vị trí của chính mình.
+Thử thách lớp do nhà trường tạo từ template qua LMS (chỉ `school_admin`, ADR-0072) hoặc sự kiện tổ chức trong một instance/lớp: tất cả trả lời cùng bộ câu; kết quả hiển thị top 5 + vị trí của chính mình (lớp 1–3 chỉ hiển thị mục tiêu lớp, §9.4). Điểm theo §3.1, lớp 1–5 không có bonus tốc độ.
 
 ### 3.5. Tournament
 
@@ -78,7 +78,7 @@ Season 8 tuần (§8): Competition Points tích lũy từ trận và giải; sea
 | Quy tắc | Chi tiết |
 |---|---|
 | Câu hỏi gửi xuống | Render payload, không có đáp án; đáp án gửi sau khi câu đóng (ADR-0016) |
-| Thời gian | Bonus tốc độ đo bằng `server_received_at − question_opened_at`; giờ client chỉ tham khảo |
+| Thời gian | Bonus tốc độ (chỉ khối ≥ `speed_bonus_min_grade`, §3.1) đo bằng `server_received_at − question_opened_at`; giờ client chỉ tham khảo |
 | Ngưỡng bất thường | Trả lời < 400 ms sau khi câu mở (lớp 6–9; < 600 ms lớp 1–5) liên tục ≥ 3 câu → gắn cờ review, không tính bonus tốc độ [Proposed] |
 | Ghi kết quả | `MatchResult` ghi một lần (unique `match_id`); rating/points cập nhật qua event `match.completed` |
 | Learning record | Mỗi câu trả lời trong trận tạo attempt mode `competition` (trọng số mastery 0.4, ADR-0017) |
@@ -91,19 +91,19 @@ Chi tiết chống gian lận: [ANTI_CHEAT](../10-security/ANTI_CHEAT.md).
 1. **Hard constraint trước rating** [Confirmed — Master Prompt §5.2]: không bao giờ ghép lớp 1 với lớp 9 dù rating tương đương.
 2. Ghép cùng `grade_level` cho lớp 1–5; lớp 6–9 cho phép ±1 khối nếu chờ > 30 s, câu hỏi thuộc khối thấp hơn của hai bên [Proposed].
 3. Party có thành viên khác khối: chỉ chơi Co-op Challenge/Timed Quiz với câu hỏi của khối thấp nhất; không vào ranked [Proposed].
-4. Liên trường: theo [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) — mặc định cùng trường; khác trường trong tenant đơn vị khi tenant bật; khác tenant chỉ trong giải/sự kiện do platform tổ chức. Người chơi chỉ thấy nickname, không thấy tên trường (hiển thị "Trường bạn"/"Trường khác").
+4. Liên trường: theo [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) — mặc định cùng trường; khác trường trong tenant đơn vị khi tenant bật `cross_school_social_enabled`; khác tenant chỉ trong giải/sự kiện do platform tổ chức. Người chơi chỉ thấy nickname, không thấy tên trường (hiển thị "Trường bạn"/"Trường khác").
 
 ## 6. Năm loại số liệu [Confirmed]
 
 | Số liệu | Lưu ở | Cập nhật bởi | Hiển thị trong thi đấu | Dùng cho | Không bao giờ dùng cho |
 |---|---|---|---|---|---|
-| Learning Score | learning-service `attempts.score` | Chấm bài | Không | Kết quả bài/đề | Ghép trận |
-| Learning Mastery | learning-service `objective_masteries` | MasteryModel (ADR-0017) | Không (chỉ để chọn độ khó `question_plan`) | Năng lực theo LO | Ranking |
-| **Game Rating** | competition-service `ratings` | Glicko-2 sau trận ranked | Chỉ dạng **tier** | Ghép trận, seed giải, bảng rating | Báo cáo học tập |
-| Game XP | game-service `xp_ledger` | Reward rule ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md)) | Có (XP sau trận, có cap) | Level | Ghép trận |
-| **Competition Points** | competition-service `competition_point_ledger` | Kết quả trận/giải | Có | Leaderboard mùa/giải, season track | Đánh giá học tập |
+| Learning Score | module learning `attempts.score` | Chấm bài | Không | Kết quả bài/đề | Ghép trận |
+| Learning Mastery | module learning `objective_masteries` | MasteryModel (ADR-0017) | Không (chỉ để chọn độ khó `question_plan`) | Năng lực theo LO | Ranking |
+| **Game Rating** | module competition `ratings` | Glicko-2 sau trận ranked | Chỉ dạng **tier** | Ghép trận, seed giải, bảng rating | Báo cáo học tập |
+| Game XP | module game `xp_ledger` | Reward rule ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md)) | Có (XP sau trận, có cap) | Level | Ghép trận |
+| **Competition Points** | module competition `competition_point_ledger` | Kết quả trận/giải | Có | Leaderboard mùa/giải, season track | Đánh giá học tập |
 
-Teacher Dashboard **không** hiển thị Game Rating như chỉ số năng lực; chỉ hiển thị số trận tham gia và learning evidence từ trận (qua mastery) [Proposed].
+School Learning Dashboard ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) **không** hiển thị Game Rating như chỉ số năng lực; chỉ hiển thị số trận tham gia và learning evidence từ trận (qua mastery) [Proposed].
 
 ## 7. Game Rating — Glicko-2 (ADR-0018)
 
@@ -142,7 +142,7 @@ r' = 173.7178 μ' + 1500 ;  RD' = 173.7178 φ'
 
 - Team battle: mỗi thành viên cập nhật như đấu với "đối thủ ảo" có `μ`, `φ` trung bình của đội đối phương; `s` là kết quả đội [Proposed].
 - Kết quả: thắng 1, hòa 0.5, thua 0; `abandon`/`forfeit`: người bỏ 0, người còn lại 1. Trận hủy (`server_failure`), unranked, bot, friend challenge: **không cập nhật**.
-- Hiện thực: hàm thuần `glicko2.Update(player, opponents, results)` trong competition-service, unit test với vector chuẩn của Glickman (r=1500, RD=200 vs 3 đối thủ → r'≈1464.06, RD'≈151.52). Consumer `match.completed` cập nhật rating cùng `rating_history (match_id, student_id, before, after)` trong một transaction; unique `(match_id, student_id)` chống tính trùng [Confirmed]. Event `rating.updated`.
+- Hiện thực: hàm thuần `glicko2.Update(player, opponents, results)` trong module competition, unit test với vector chuẩn của Glickman (r=1500, RD=200 vs 3 đối thủ → r'≈1464.06, RD'≈151.52). Consumer `match.completed` cập nhật rating cùng `rating_changes (match_id, student_id, before, after)` trong một transaction; unique `(match_id, student_id)` chống tính trùng [Confirmed]. Event `rating.updated`.
 
 ### 7.4. Provisional
 
@@ -158,7 +158,7 @@ r' = 173.7178 μ' + 1500 ;  RD' = 173.7178 φ'
 | Soft reset rating | `r_new = 1500 + 0.5 · (r_old − 1500)`; `RD_new = max(RD_old, 150)`; volatility giữ nguyên |
 | Competition Points | Reset về 0 mỗi season |
 | Lịch sử | Rating cuối mùa + tier cao nhất lưu `season_results` (không xóa) [Confirmed: lưu lịch sử] |
-| Season track | Miễn phí, không premium track; cách tính điểm mùa, cấp và phần thưởng do [EVENT_SEASON_SYSTEM §7](EVENT_SEASON_SYSTEM.md#7-season-và-season-track) sở hữu (game-service); competition-service phát `season.started`/`season.ended` |
+| Season track | Miễn phí, không premium track; cách tính điểm mùa, cấp và phần thưởng do [EVENT_SEASON_SYSTEM §7](EVENT_SEASON_SYSTEM.md#7-season-và-season-track) sở hữu (module game); module competition phát `season.started`/`season.ended` |
 | Thưởng cuối mùa | Cosmetic theo **tier cao nhất đạt được**, không theo thứ hạng tuyệt đối |
 | Giải trong mùa | Tournament lớp/trường trong 2 tuần cuối mùa |
 | Vật phẩm mùa | Có thể quay lại ở mùa sau (không FOMO) |
@@ -202,22 +202,25 @@ Bảng xếp hạng yêu cầu [Confirmed]: Global, School, Class, Grade, Subjec
 
 | Trục | Giá trị | Nhãn |
 |---|---|---|
-| Metric | `competition_points`, `xp`, `quest_completed`, `rating` (lớp 6–9, không provisional, hiển thị tier + thứ hạng, không số rating), `team_points` | [Proposed] |
+| Metric | `competition_points`, `effort_points` (§9.2), `class_goal` (tiến độ tập thể của lớp, không có thứ hạng cá nhân), `xp` (chỉ scope `friends`; không dùng cho `class`/`school`/`grade`), `quest_completed`, `rating` (lớp 6–9, không provisional, hiển thị tier + thứ hạng, không số rating), `team_points` | [Proposed] |
 | Scope | `global` (chỉ nickname), `tenant`, `school`, `class`, `grade`, `friends`, `team` | [Confirmed] |
 | Period | `daily`, `weekly` (thứ Hai 00:00 ICT), `monthly`, `season`, `all_time` (chỉ XP/quest) | [Confirmed] / `all_time` [Proposed] |
 | Filter | `subject_id`, `topic_id`, `mode` | [Confirmed] |
 
-**Không** có leaderboard theo Learning Score hoặc Mastery [Proposed]; giáo viên xem tiến độ lớp trong Teacher Dashboard, không công khai cho học sinh.
+**Không** có leaderboard theo Learning Score hoặc Mastery [Proposed]; nhà trường (`school_admin`/`academic_manager`) xem tiến độ học tập của lớp trong School Learning Dashboard, không công khai cho học sinh.
+
+**Bảng của lớp không xếp theo XP** [Proposed]: XP chủ yếu đến từ câu đúng ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md)), nên bảng XP trong phạm vi lớp/trường vô tình công khai thứ hạng năng lực giữa các bạn. Bảng scope `class` chỉ dùng **nỗ lực** (`effort_points`) hoặc **mục tiêu tập thể** (`class_goal`). **Tiến bộ** cá nhân (so với chính em tuần trước) chỉ hiển thị cho riêng học sinh đó, không xếp hạng.
 
 ### 9.2. Danh mục bảng mặc định [Proposed]
 
 | Bảng | Metric | Scope | Period | Lớp |
 |---|---|---|---|---|
-| Lớp em tuần này | `xp` | class | weekly | 1–9 (lớp 1–3 hiển thị dạng mục tiêu lớp, §9.4) |
-| Nhiệm vụ của lớp | `quest_completed` | class | weekly | 1–9 |
+| Mục tiêu lớp | `class_goal` (tổng `effort_points` của lớp so với mục tiêu tuần) | class | weekly | 1–9 (lớp 1–3 chỉ có bảng này, §9.4) |
+| Lớp em tuần này | `effort_points` | class | weekly | 4–9 |
+| Nhiệm vụ của lớp | `quest_completed` (hiển thị tổng của lớp) | class | weekly | 1–9 |
 | Đấu trường trường | `competition_points` | school + grade | weekly, season | 4–9 |
 | Đấu trường môn | `competition_points` + `subject_id` | school + grade | season | 4–9 |
-| Bạn bè | `competition_points`, `xp` | friends | weekly | 4–9 |
+| Bạn bè | `competition_points`, `effort_points`, `xp` | friends | weekly | 4–9 |
 | Đội | `team_points` | school | season | 6–9 |
 | Toàn hệ thống | `competition_points` | global + grade | season | 6–9, khi platform bật |
 | Xếp hạng rating | `rating` | school + grade, mode, subject | season | 6–9 |
@@ -225,11 +228,24 @@ Bảng xếp hạng yêu cầu [Confirmed]: Global, School, Class, Grade, Subjec
 
 Bảng ngoài trường (tenant đơn vị/global) chỉ bật khi platform cho phép **và** policy trường cho phép học sinh xuất hiện ngoài trường (`allow_cross_school_listing`, mặc định `false`) [Proposed].
 
+`school_admin` có thể **tắt** từng bảng scope `class`/`school` cho trường mình (policy trường `disabled_leaderboard_definitions`); chỉ tắt được, không đổi metric hay tham số (cấu hình vẫn platform-only, §13) [Confirmed — Technical Architect 2026-11-15].
+
+**`effort_points`** [Confirmed — Technical Architect 2026-11-15] — điểm nỗ lực, không phụ thuộc đúng/sai, tính từ learning event (đã loại attempt gắn cờ `rapid_guess`, [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)):
+
+| Sự kiện | Điểm |
+|---|---|
+| Hoàn thành một hoạt động học tập (nộp bài, không abandon) | +1, tối đa 10 hoạt động/ngày |
+| Hoàn thành hoạt động ôn tập do hệ thống gợi ý hoặc nhà trường giao | +2 (thay cho +1) |
+| Ngày có ít nhất một hoạt động học tập | +3 |
+| Cap | 25 điểm/ngày |
+
+Bảng điểm là một phần của Ranking Rules (§13), có `rule_version`.
+
 ### 9.3. Kiến trúc dữ liệu
 
 ```mermaid
 flowchart LR
-  E["Event: match.completed, xp.awarded, quest.completed"] --> W[competition-service worker: leaderboard consumer]
+  E["Event: match.completed, xp.awarded, quest.completed"] --> W[module competition worker: leaderboard consumer]
   W -->|ZINCRBY| VK[("Valkey sorted sets<br/>period đang mở")]
   W -->|đọc ledger| PG[("PostgreSQL<br/>ledger + snapshot")]
   CRON[period close job] -->|snapshot top N + rank mọi member| PG
@@ -238,8 +254,8 @@ flowchart LR
   API -->|period đã đóng| PG
 ```
 
-- **Nguồn sự thật**: ledger trong PostgreSQL (`competition_point_ledger`; XP và quest qua projection từ event của game-service) (ADR-0004, ADR-0037).
-- Valkey sorted set cho period đang mở, key theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) (`ew:competition:ldb:{definition_id}:{scope_id}:{period_key}`), member = `student_id`, TTL = hết period + 7 ngày. Bằng điểm → ai đạt trước xếp trên.
+- **Nguồn sự thật**: ledger trong PostgreSQL (`competition_point_ledger`; XP và quest qua projection từ event của module game) (ADR-0004, ADR-0037).
+- Valkey sorted set cho period đang mở, key theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) (`ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>`), member = `student_id`, TTL = hết period + 7 ngày. Bằng điểm → ai đạt trước xếp trên.
 - `ZINCRBY` không idempotent: consumer kiểm tra `processed_events` trước khi cộng (ADR-0042); job rebuild định kỳ (mỗi giờ, so checksum) sửa lệch [Proposed].
 - Friends: tính lúc đọc bằng `ZMSCORE` trên bảng school của từng bạn (≤ 200 bạn).
 - Đóng period: worker ghi `leaderboard_snapshots` (top 100 + rank của mọi member scope class/school), partition theo tháng; key Valkey mất → dựng lại từ ledger, API trả `stale=true` trong lúc dựng.
@@ -249,7 +265,7 @@ flowchart LR
 | Quy tắc | Nhãn |
 |---|---|
 | Hiển thị nickname + avatar + (tùy scope) tên lớp; **không** tên thật, mã học sinh, tên trường ở scope liên trường | [Confirmed] |
-| Giáo viên xem bảng lớp trong portal có thể bật tên thật cho chính giáo viên | [Proposed] |
+| `school_admin`/`academic_manager` xem bảng lớp trong portal có thể bật tên thật cho chính mình (theo quyền xem danh sách học sinh của trường) | [Proposed] |
 | **Lớp 1–3**: không có thứ hạng cá nhân; thay bằng "mục tiêu lớp" (thanh tiến độ tập thể) và "Bạn nổi bật tuần này" ngẫu nhiên trong những người đạt ngưỡng | [Proposed] |
 | **Lớp 4–5**: top 10 + vị trí của mình; người ngoài top 10 thấy "Em đang ở nhóm X%"; không hiển thị người xếp cuối | [Proposed] |
 | **Lớp 6–9**: top 50 + `around_me` (±3) | [Proposed] |
@@ -259,7 +275,7 @@ flowchart LR
 
 ### 9.5. Reset và thưởng theo kỳ
 
-Period key theo `Asia/Ho_Chi_Minh`. Job đóng period (Valkey lock singleton) chạy sau mốc 5 phút, snapshot, rồi trao thưởng theo **ngưỡng** (ví dụ đạt 200 points) thay vì chỉ top 1 [Proposed]. Event `leaderboard.period_closed`, idempotent theo `(definition_id, scope_id, period_key)`.
+Period key theo `Asia/Ho_Chi_Minh`. Job đóng period (Valkey lock singleton) chạy sau mốc 5 phút, snapshot, rồi trao thưởng theo **ngưỡng** (ví dụ đạt 200 points) thay vì chỉ top 1 [Proposed]. Event `leaderboard.period_closed`, idempotent theo `(leaderboard_id, scope_id, period_key)`.
 
 ## 10. Tournament
 
@@ -277,7 +293,7 @@ Period key theo `Asia/Ho_Chi_Minh`. Job đóng period (Valkey lock singleton) ch
 | `bracket_node` | `node_id`, `bracket` (`winners`/`losers`/`grand_final`/`group`), `round`, `position`, `entry_a_id`, `entry_b_id`, `match_id?`, `scheduled_at`, `winner_entry_id`, `next_win_node_id`, `next_lose_node_id`, `status` |
 | `tournament_result` | Thứ hạng cuối, points, thưởng đã trao |
 
-**Giải luôn tạo từ template (ADR-0027).** Luật chơi, phần thưởng và ràng buộc nằm trong tournament/challenge template do platform soạn (`/api/v1/game-admin/tournament-templates`, `challenge-templates`) và được **gán cho tenant** (ADR-0029). Vận hành tenant tạo giải bằng `POST /api/v1/lms/challenges`: giáo viên tạo Class Tournament, School Admin tạo School Tournament, Tenant Admin của tenant đơn vị tạo giải liên trường trong đơn vị — chỉ điền `allowed_params` (tên, lớp/khối/trường, lịch, question set); template chưa gán → `403 RESOURCE_NOT_ASSIGNED`. System Admin tạo giải cho tenant đích hoặc giải platform [Proposed].
+**Giải luôn tạo từ template (ADR-0027).** Luật chơi, phần thưởng và ràng buộc nằm trong tournament/challenge template do platform soạn (`/api/v1/game-admin/tournament-templates`, `challenge-templates`) và được **gán cho tenant** (ADR-0029). Vận hành tenant tạo giải bằng `POST /api/v1/lms/challenges` (endpoint của **module competition**, dù có tiền tố `/lms`): School Admin tạo Class Tournament và School Tournament cho trường mình (ADR-0072) — chỉ điền `allowed_params` (tên, lớp/khối, lịch, question set); template chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Tenant Admin không tạo giải (ma trận quyền ở [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md)). System Admin tạo giải cho tenant đích hoặc giải platform [Proposed].
 
 ### 10.3. Vòng đời
 
@@ -304,7 +320,7 @@ stateDiagram-v2
 | Bước | Quy tắc |
 |---|---|
 | Đăng ký | Học sinh/đội thỏa `grade_levels`, scope, không bị sanction `restrict_competition`; team: mọi thành viên đủ điều kiện, cùng trường |
-| Đăng ký hộ | Giáo viên đăng ký cả lớp (Class Tournament) |
+| Đăng ký hộ | School Admin đăng ký cả lớp (Class Tournament) |
 | Xác nhận người tham gia | Người tổ chức duyệt danh sách hoặc auto-confirm [Confirmed] |
 | Check-in | Mở 15 phút trước `starts_at`; không check-in → `withdrawn`, bracket điều chỉnh (bye) trước khi khóa |
 | Tối thiểu | Single elim ≥ 4, double elim ≥ 4, round robin ≥ 3 |
@@ -328,7 +344,7 @@ stateDiagram-v2
 
 - Round liên tiếp cách nhau 5 phút trong cùng buổi (Class Tournament) hoặc theo ngày (School/tenant) [Proposed]; tôn trọng khung giờ truy cập của trường (OQ-17) [TBD].
 - Tới giờ và đủ hai entry: worker tạo trận qua proposal/ready check của [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) (không qua queue), `match.tournament_node_id` liên kết node.
-- Thông báo `tournament.match.scheduled` 10 phút và 1 phút trước giờ.
+- Thông báo trận sắp đấu 10 phút và 1 phút trước giờ (event `tournament.match_scheduled`).
 
 ### 10.7. No-show, disconnect, forfeit, kết quả [Proposed]
 
@@ -381,13 +397,13 @@ Không có phần thưởng thi đấu ảnh hưởng điểm học tập [Confi
 
 ## 13. Cấu hình (platform-only, ADR-0027)
 
-Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisional, tier, soft reset factor, point table, cap), leaderboard definitions, tournament/challenge templates, season và competition reward là dữ liệu cấu hình phiên bản hóa trong Game Operations Console (`/api/v1/game-admin/{ranking-rules|leaderboard-definitions|tournament-templates|challenge-templates|seasons}`, `eduworld-portal` + MFA qua gateway nội bộ). Mỗi `rating_history` và point ledger lưu `rule_version`. Vận hành tenant không đổi được tham số. Giá trị [Proposed] trong tài liệu là mặc định khởi tạo.
+Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisional, tier, soft reset factor, point table, cap), leaderboard definitions, tournament/challenge templates, season và competition reward (`config_type = competition_reward`) là dữ liệu cấu hình phiên bản hóa trong Game Operations Console (`/api/v1/game-admin/{ranking-rules|leaderboard-definitions|tournament-templates|challenge-templates|seasons}`, quyền `competition.config.reward.write` cho `competition_reward`, `eduworld-portal` + MFA qua gateway nội bộ). Mỗi `rating_changes` và point ledger lưu `rule_version`. Vận hành tenant không đổi được tham số. Giá trị [Proposed] trong tài liệu là mặc định khởi tạo.
 
 ## 14. Dữ liệu, API, event
 
-### 14.1. Dữ liệu (competition-service, `eduworld_competition`)
+### 14.1. Dữ liệu (module competition, `eduworld_competition`)
 
-`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_history` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`. DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md).
+`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_changes` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`. DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md).
 
 ### 14.2. API
 
@@ -397,19 +413,19 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 | `GET /api/v1/competition/seasons`, `/{season_id}` | Học sinh, staff |
 | `GET /api/v1/competition/matches?student=me`, `/matches/{match_id}` | Lịch sử trận, câu hỏi + giải thích sau trận |
 | `GET /api/v1/leaderboards` | Bảng học sinh được xem (đã lọc khối/policy) |
-| `GET /api/v1/leaderboards/{definition_id}?scope_id=&period=&limit=&cursor=` | Top N + `me` + `around_me` |
-| `GET /api/v1/leaderboards/{definition_id}/history?scope_id=` | Period đã đóng |
-| `POST /api/v1/lms/challenges` (template `school_tournament`) | Giáo viên/School Admin/Tenant Admin/System Admin — không có `POST /competition/tournaments` |
+| `GET /api/v1/leaderboards/{leaderboard_id}?scope_id=&period=&limit=&cursor=` | Top N + `me` + `around_me` |
+| `GET /api/v1/leaderboards/{leaderboard_id}/history?scope_id=` | Period đã đóng |
+| `POST /api/v1/lms/challenges` (template `class_tournament`/`school_tournament`) | module competition; School Admin (trường mình)/System Admin (tenant đích) — không có `POST /competition/tournaments` |
 | `GET /api/v1/competition/tournaments?scope=&status=` | Học sinh (trong phạm vi), staff |
 | `POST /api/v1/competition/tournaments/{id}:publish` / `:cancel` | Người tổ chức |
-| `POST /api/v1/competition/tournaments/{id}/entries` (`Idempotency-Key`), `DELETE .../entries/{entry_id}`, `POST .../entries:confirm`, `POST .../entries/{entry_id}:check-in` | Học sinh/leader/giáo viên/người tổ chức |
+| `POST /api/v1/competition/tournaments/{id}/entries` (`Idempotency-Key`), `DELETE .../entries/{entry_id}`, `POST .../entries:confirm`, `POST .../entries/{entry_id}:check-in` | Học sinh/leader/người tổ chức (School Admin) |
 | `POST /api/v1/competition/tournaments/{id}:generate-bracket`, `GET .../bracket`, `POST .../nodes/{node_id}:confirm` / `:override` | Người tổ chức (audit) |
 
-Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; giáo viên đọc lớp mình dạy; School Admin đọc trường. Scope ngoài phạm vi → 404 ([MULTITENANCY](../06-architecture/MULTITENANCY.md)).
+Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; School Admin/Academic Manager đọc các lớp trong trường mình. Scope ngoài phạm vi → 404 ([MULTITENANCY](../06-architecture/MULTITENANCY.md)).
 
 ### 14.3. Event
 
-`match.completed`, `rating.updated`, `competition_points.awarded`, `leaderboard.period_closed`, `tournament.match.scheduled`, `tournament.rewarded` — envelope và consumer: [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md).
+`match.completed`, `rating.updated`, `competition_points.awarded`, `leaderboard.period_closed`, `tournament.match_scheduled`, `tournament.rewarded` — envelope và consumer: [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md).
 
 ## 15. Acceptance criteria
 
@@ -419,7 +435,7 @@ Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; giáo vi�
 | AC-RNK-002 | `match.completed` xử lý 2 lần → rating chỉ cập nhật 1 lần |
 | AC-RNK-003 | Trận unranked/bot/hủy không thay đổi rating và points |
 | AC-RNK-004 | Soft reset cuối mùa đúng công thức; lịch sử mùa cũ còn truy vấn được |
-| AC-RNK-005 | API báo cáo học tập cho giáo viên không trả Game Rating |
+| AC-RNK-005 | API School Learning Dashboard (`GET /lms/dashboards/school`) không trả Game Rating |
 | AC-RNK-006 | Points vượt cap ngày không được cộng |
 | AC-LDB-001 | Học sinh trường A không đọc được leaderboard class/school của trường B (404) |
 | AC-LDB-002 | Xóa toàn bộ key Valkey → leaderboard được dựng lại đúng từ ledger |
@@ -427,6 +443,8 @@ Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; giáo vi�
 | AC-LDB-004 | Học sinh lớp 2 không nhận được bảng thứ hạng cá nhân |
 | AC-LDB-005 | Response leaderboard không chứa tên thật hay `student_code` |
 | AC-LDB-006 | `match.completed` lặp lại không cộng điểm leaderboard hai lần |
+| AC-LDB-007 | Không có leaderboard definition scope `class`/`school`/`grade` nào dùng metric `xp`; attempt gắn cờ `rapid_guess` không cộng `effort_points` |
+| AC-CMP-103 | Trận 1v1/Timed Quiz lớp 1–5: điểm mỗi câu đúng luôn bằng 100, không có bonus tốc độ |
 | AC-TRN-001 | Bracket single elim N = 5 → 8 slot, 3 bye cho seed 1–3; seed 1 và 2 ở hai nửa bracket |
 | AC-TRN-002 | Double elim: người thua winners round 1 vào đúng vị trí losers bracket |
 | AC-TRN-003 | Round robin N = 5: mỗi entry đấu 4 trận, không trùng cặp |

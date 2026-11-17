@@ -1,7 +1,7 @@
 # Quest System
 
 > Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Backend Architect · Cập nhật: 2026-11-15
-> Liên quan: [DOMAIN_MODEL §5](../06-architecture/DOMAIN_MODEL.md) · [ADR-0015, ADR-0016](../adr/README.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [quest.schema.json](../../specs/schemas/quest.schema.json) · [Ví dụ quest Toán lớp 3](../../specs/examples/quest.math-g3-multiplication.json) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [GAME_DESIGN](GAME_DESIGN.md)
+> Liên quan: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) · [DOMAIN_MODEL §5](../06-architecture/DOMAIN_MODEL.md) · [ADR-0015, ADR-0016](../adr/README.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [quest.schema.json](../../specs/schemas/quest.schema.json) · [Ví dụ quest Toán lớp 3](../../specs/examples/quest.math-g3-multiplication.json) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [GAME_DESIGN](GAME_DESIGN.md)
 
 ## 1. Mục đích và phạm vi
 
@@ -17,6 +17,7 @@ Quest là cầu nối giữa **thế giới game** và **Learning Engine** [Conf
 | Q-4 | Quest liên kết `grade_levels`, `subject_id`, `topic_ids`, `objective_ids` | [Confirmed] |
 | Q-5 | Không trừng phạt nặng khi sai: bước học tập cho phép thử lại với câu hỏi mới; quest không "thất bại" vì trả lời sai | [Proposed] |
 | Q-6 | Phần thưởng đi qua Reward Engine (cap, diminishing returns) — quest chỉ khai báo ý định thưởng | [Proposed] |
+| Q-7 | Ưu tiên bước mà **hành động chính chính là khái niệm học** (cơ chế học tập nội tại, [LEARNING_MECHANICS](LEARNING_MECHANICS.md)); bước khung (`talk_npc`/`go_to`/`collect`) chỉ dẫn dắt | [Proposed] |
 
 ## 2. Data model
 
@@ -43,7 +44,7 @@ Entity: `QuestDefinition` (định danh) → `QuestVersion` (nội dung bất bi
 | Phần thưởng | `rewards[]` | XP / item / badge — qua Reward Engine |
 | Thời gian | `availability` | `start_at`, `end_at`, `recurrence`, `time_limit_minutes` |
 | Phiên bản nội dung | `version`, `status`, `curriculum_version_id` | Workflow Draft → Review → Approved → Published → Archived |
-| (Party) | `party_mode`, `party_size`, `shared_progress_policy` | §6 |
+| (Party) | `party_mode`, `party_size`, `shared_progress_policy`, `steps[].assignee`, `steps[].roles[]` | §3.2, §6 |
 | (Phạm vi) | `owner_scope`, `tenant_id` | platform (cấu hình game do platform sở hữu, tenant chỉ dùng khi được gán — ADR-0027, ADR-0029) |
 
 ### 2.2. QuestProgress
@@ -85,7 +86,7 @@ Tài liệu này sở hữu các tham số sau [Proposed]:
 | Tham số | Giá trị |
 |---|---|
 | Số daily quest mỗi ngày | 3 (1 học tập, 1 khám phá/quest, 1 xã hội hoặc thi đấu — tùy chọn) |
-| Số weekly quest mỗi tuần | 3, theo chủ đề tuần (giáo viên có thể chọn chủ đề cho lớp) |
+| Số weekly quest mỗi tuần | 3, theo chủ đề tuần (mặc định theo lịch chương trình; nhà trường — `school_admin`/`academic_manager` — có thể chọn chủ đề tuần cho khối/lớp qua LMS) |
 | Giờ reset daily | 04:00 ICT |
 | Giờ reset weekly | Thứ Hai 04:00 ICT |
 | Bỏ lỡ | Không phạt, không streak bị mất; mục tiêu tuần tính "4/7 ngày" |
@@ -106,14 +107,15 @@ Tài liệu này sở hữu các tham số sau [Proposed]:
 | `talk_npc` | Nói chuyện với NPC (dialogue có thể chứa action `complete_step`) | `step.report` khi tới node đích | NPC tồn tại trong area hiện tại của phiên; rate limit; không mang giá trị học tập |
 | `go_to` | Đến một vị trí/vật thể (`area_id` + `interactable_id`) | `step.report` khi chạm trigger | Học sinh đang ở instance của `area_id` (realtime presence); khoảng cách hợp lý theo vị trí server đã nhận |
 | `collect` | Thu thập N vật thể quest | `step.report` mỗi vật | Mỗi `interactable_id` chỉ tính 1 lần, cùng area |
-| `activity` | Làm hoạt động học tập: `question_set`, `lesson`, `assessment` | `activities:start` → attempt | Attempt do `exercise` chấm; hoàn thành khi thỏa `pass_rule` |
+| `activity` | Làm hoạt động học tập: `content_ref.item_type` ∈ `question_set`, `lesson`, `assessment`, `activity` (activity tương tác, video, audio, mô phỏng — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)) | `activities:start` → attempt | Attempt do `exercise` chấm; hoàn thành khi thỏa `pass_rule` |
 | `minigame` | Chơi mini-game (câu hỏi từ Learning Engine) | `activities:start` → attempt | Như `activity`; xem [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) |
 | `party_activity` | Hoạt động tập thể (co-op puzzle, đếm chung) | qua room co-op | Mỗi thành viên có attempt riêng; tiến độ tập thể = tổng hợp theo `collective_target` |
+| `interdependent` | Câu đố **phụ thuộc lẫn nhau**: mỗi thành viên giữ một phần dữ kiện theo `role`, chỉ giải được khi ghép dữ kiện của cả nhóm [Proposed] | qua room co-op (§3.2) | Server chỉ gửi dữ kiện của role cho người giữ role đó; mỗi thành viên trả lời câu hỏi cuối trong attempt riêng |
 | `discover` | Tìm N điểm khám phá/vật sưu tầm trong area | `:discover` ([WORLD_DESIGN](WORLD_DESIGN.md) §8) | Như `collect`, đồng thời ghi `exploration_progress` |
 | `challenge` | Hoàn thành một challenge (tùy chọn độ khó tối thiểu) | `/game/challenges/{id}:start` | Hoàn thành khi `challenge.completed` với `status = succeeded` và độ khó ≥ `challenge_min_difficulty` |
 | `boss` | Hạ một boss | `/game/bosses/{id}/encounters` | Hoàn thành khi `boss.encounter_completed` `defeated` và học sinh đạt `min_contribution` |
 
-Bước `talk_npc`/`go_to`/`collect` **không cấp mastery/điểm**; chúng chỉ là khung trải nghiệm. Giá trị học tập luôn nằm ở `activity`/`minigame`/`party_activity`.
+Bước `talk_npc`/`go_to`/`collect` **không cấp mastery/điểm**; chúng chỉ là khung trải nghiệm. Giá trị học tập luôn nằm ở `activity`/`minigame`/`party_activity`/`interdependent`. Khi muốn hành động di chuyển/thu thập mang khái niệm học (ví dụ nhặt vật phẩm theo nhóm để biểu diễn phép nhân), dùng bước `minigame` với cơ chế tương ứng trong [LEARNING_MECHANICS](LEARNING_MECHANICS.md) thay vì thêm điều kiện học tập vào `collect`.
 
 `depends_on[]` tạo DAG giữa các bước (mặc định tuần tự theo `order`). `optional: true` cho bước phụ (thưởng thêm, không bắt buộc hoàn thành).
 
@@ -126,6 +128,32 @@ Bước `talk_npc`/`go_to`/`collect` **không cấp mastery/điểm**; chúng ch
 - Không đạt → bước vẫn `active`, học sinh được gợi ý ôn (link lesson của LO yếu) và thử lại với bộ câu mới (`retry_policy: new_questions`).
 - `max_attempts_per_day` chống farm; vượt → thông báo "Hãy quay lại ngày mai" (thân thiện).
 
+### 3.2. Gán bước trong party và bước `interdependent` [Proposed]
+
+**`assignee`** (mọi bước, chỉ có nghĩa khi quest chơi theo party): `each_member` (mặc định cho bước học tập — mỗi người tự làm), `any_member` (một người làm tính cho cả nhóm, chỉ cho bước khung, theo `shared_progress_policy` §6), `role:<role>` (chỉ người giữ role đó làm).
+
+**Bước `interdependent`** biến co-op từ "quiz cá nhân chạy song song" thành hợp tác thật: không ai giải được một mình vì mỗi người chỉ thấy một phần dữ kiện.
+
+Mô tả ở mức schema (bổ sung vào `$defs.step` của [quest.schema.json](../../specs/schemas/quest.schema.json); mọi chuỗi có `maxLength` theo ADR-0041):
+
+| Trường | Kiểu | Ý nghĩa |
+|---|---|---|
+| `type` | `"interdependent"` | |
+| `roles[]` | mảng 2–4 phần tử (`interdependent_roles`, [Confirmed — Technical Architect 2026-11-15]) | Mỗi phần tử: `role` (string, `pattern ^[a-z][a-z0-9_]{1,31}$`), `title` (`localized_text`, ví dụ "Người đo", "Người đọc bản đồ"), `clue_content_ref` (`content_ref` tới dữ kiện riêng của role — learning material/thẻ dữ kiện đã publish), `icon_key` (string ≤ 64) |
+| `content_ref` | `content_ref` | Câu hỏi/question set **cuối** cần ghép dữ kiện; đáp án ở module learning như mọi câu hỏi (ADR-0016) |
+| `role_assignment` | enum `auto` (mặc định, server chia đều theo thứ tự vào phòng) \| `leader_assigns` | Cách gán role khi bắt đầu bước |
+| `allow_multi_role` | boolean, mặc định `true` | Khi số thành viên online ít hơn số role, một người giữ nhiều role (party nhỏ vẫn chơi được) |
+| `share_mode` | enum `clue_card` (mặc định) \| `clue_card_and_chat` | `clue_card`: thành viên bấm "Chia sẻ dữ kiện" để hiện thẻ dữ kiện (nội dung CMS) lên bảng chung của nhóm; không cần gõ chữ nên dùng được cho mọi lớp. `clue_card_and_chat`: thêm trao đổi qua channel `party` (cùng ChatPolicy và pipeline kiểm duyệt như mọi tin, ADR-0020) |
+| `pass_rule` | như §3.1 | Áp cho attempt của **từng** thành viên ở câu hỏi cuối |
+| `completion` | enum `all_members` (mặc định) \| `min_members` (+ `min_members_count`) | Khi nào bước hoàn thành cho party |
+
+Quy tắc:
+- Server chỉ gửi dữ kiện đã render của role cho người giữ role đó; thẻ chỉ hiện với người khác khi chủ thẻ chia sẻ. Dữ kiện không chứa đáp án; client không tự ghép dữ kiện.
+- Câu hỏi cuối tạo **attempt riêng cho từng thành viên** (Q-3): học sinh vẫn phải tự trả lời; mastery chỉ ghi từ câu trả lời của chính học sinh đó. Không copy kết quả giữa các thành viên.
+- Thành viên disconnect: role của người đó chuyển cho người còn lại nếu `allow_multi_role = true`; thẻ đã chia sẻ vẫn còn trên bảng chung.
+- Mỗi thành viên phải đạt `pass_rule` của mình mới nhận thưởng bước (chống "ăn theo", tương tự `min_contribution`).
+- Quest `party_optional` chơi solo: bước `interdependent` chạy với `allow_multi_role` — người chơi giữ mọi role, thấy mọi thẻ.
+
 ## 4. Start triggers
 
 | `start_trigger.kind` | Mô tả |
@@ -133,7 +161,7 @@ Bước `talk_npc`/`go_to`/`collect` **không cấp mastery/điểm**; chúng ch
 | `npc` | Nhận từ NPC (dialogue action `give_quest`) |
 | `quest_board` | Bảng nhiệm vụ ở hub |
 | `auto_daily` / `auto_weekly` | Server cấp khi bắt đầu kỳ (lần đăng nhập đầu tiên trong kỳ), chọn theo grade/subject và LO yếu [Proposed] |
-| `assignment` | Giáo viên giao qua LMS (`Assignment.content_ref` trỏ quest) |
+| `assignment` | Nhà trường giao qua LMS (`school_admin`/`academic_manager`, `Assignment.content_ref` trỏ quest); hiển thị ở tab "Nhà trường giao" trong game |
 | `event` | Sự kiện live-ops đang chạy (`event_id`; [EVENT_SEASON_SYSTEM](EVENT_SEASON_SYSTEM.md)); sự kiện bị tạm dừng/kết thúc thì quest ẩn khỏi danh sách nhận mới; quest đã nhận vẫn hoàn thành được theo version đã ghim đến hết `claim_grace_hours` sau khi sự kiện kết thúc |
 | `chain` | Tự mở khi hoàn thành quest trước (`prerequisites.completed_quest_ids`) |
 | `discovery` | Mở khi tìm thấy điểm khám phá ẩn (secret quest) |
@@ -173,11 +201,15 @@ stateDiagram-v2
 
 `party_mode`: `solo` | `party_optional` | `party_required`. `party_size`: `{min, max}`.
 
+Tài liệu này là **nguồn duy nhất** của enum `shared_progress_policy` (khớp [quest.schema.json](../../specs/schemas/quest.schema.json) và `completion_rule` của boss); [PARTY_SYSTEM §7.1](../03-social-multiplayer/PARTY_SYSTEM.md#71-shared-quest-progress) chỉ tham chiếu. Ba giá trị [Proposed]:
+
 | `shared_progress_policy` | Bước `talk_npc`/`go_to`/`collect` | Bước học tập | Dùng cho |
 |---|---|---|---|
 | `individual` (mặc định) | Mỗi người tự làm | Mỗi người tự làm | Quest thường |
 | `shared_steps` | Một thành viên hoàn thành → tính cho cả party (cùng instance) | **Mỗi người tự làm, tự đạt `pass_rule`** | Khám phá cùng nhau |
 | `collective_count` | Như `shared_steps` | Mỗi người có attempt riêng; tiến độ bước = tổng `metric` của party (vd. 20 câu đúng chung), mỗi người phải đóng góp tối thiểu `min_contribution` | Cooperative Quest |
+
+Bước `interdependent` (§3.2) dùng được với mọi policy. Tên trong bản nháp cũ của PARTY_SYSTEM ánh xạ: `none` → `individual`, `shared_steps_individual_learning` → `shared_steps`, `team_goal` → `collective_count`.
 
 Quy tắc [Confirmed] (Addendum §4, §6):
 - Kết quả học tập, attempt, mastery **luôn cá nhân**; party chỉ chia sẻ **tiến độ quest** theo policy.
@@ -188,7 +220,7 @@ Quy tắc [Confirmed] (Addendum §4, §6):
 
 ## 7. Phần thưởng
 
-`rewards[]` khai báo phần thưởng dự kiến (`xp`, `item`, `badge`), kèm `reward_rule_id` tùy chọn. Khi `quest.completed`, Reward Engine của game-service áp [reward-rule](../../specs/schemas/reward-rule.schema.json): cap ngày/tuần, diminishing returns cho daily lặp, idempotency theo `(quest_progress_id, rule_id)`. Client chỉ hiển thị `RewardGrant` server trả qua notification `reward.granted`.
+`rewards[]` khai báo phần thưởng dự kiến (`xp`, `item`, `badge`), kèm `reward_rule_id` tùy chọn. Khi `quest.completed`, Reward Engine của module game áp [reward-rule](../../specs/schemas/reward-rule.schema.json): cap ngày/tuần, diminishing returns cho daily lặp, idempotency theo `(quest_progress_id, rule_id)`. Client chỉ hiển thị `RewardGrant` server trả qua notification `reward.granted`.
 
 ## 8. API flow
 
@@ -209,11 +241,11 @@ Realtime notification: `quest.progress_updated`, `quest.completed`, `reward.gran
 sequenceDiagram
   autonumber
   participant G as Godot
-  participant API as game-service
+  participant API as module game
   participant Q as quest
-  participant E as learning-service (exercise, /internal/v1/attempts)
+  participant E as module learning (exercise, facade attempts)
   participant W as worker (consumer NATS)
-  participant RT as realtime-gateway
+  participant RT as realtime
   G->>API: POST /game/quests/{id}:accept
   API->>Q: Accept (kiểm tra grade, prerequisites, availability)
   Q-->>G: QuestProgress(step s1 active)
@@ -223,7 +255,7 @@ sequenceDiagram
   Q->>E: StartAttempt(mode=quest, context_ref=progress/s3)
   E-->>G: attempt + render payload
   G->>API: answers..., :submit
-  E->>W: outbox exercise.submitted
+  E->>W: outbox activity.graded
   W->>Q: đánh giá pass_rule → step completed
   Q->>W: outbox quest.progress_updated / quest.completed
   W->>RT: fan-out notification
@@ -245,7 +277,7 @@ Phần thưởng dự kiến: 120 XP, outfit "Tạp dề chợ phiên", badge "B
 
 ## 10. CMS & kiểm định
 
-- **Platform-only (ADR-0027):** quest được soạn trong **Game Operations Console** (workspace A của Admin Portal, API `/api/v1/game-admin/quests`, chỉ gateway nội bộ, `eduworld-portal` + MFA, role `game_designer`/`liveops`/`system_admin`). Vận hành tenant không sửa quest; giáo viên chỉ **chọn** quest đã publish và được gán cho tenant (ADR-0029) để giao bài qua `POST /api/v1/lms/assignments`.
+- **Platform-only (ADR-0027):** quest được soạn trong **Game Operations Console** (workspace A của Admin Portal, API `/api/v1/game-admin/quests`, chỉ gateway nội bộ, `eduworld-portal` + MFA, role `game_designer`/`liveops`/`system_admin`). Vận hành tenant không sửa quest; nhà trường (`school_admin`/`academic_manager`) chỉ **chọn** quest đã publish và được gán cho tenant (ADR-0029) để giao bài qua `POST /api/v1/lms/assignments`.
 - Biên tập quest trong Game Studio bằng form + preview đồ thị bước; validate theo JSON Schema và kiểm tra tham chiếu (`npc_id`, `interactable_id`, `area_id` tồn tại trong manifest area; question set published; LO thuộc grade).
 - Reviewer học thuật kiểm tra sự phù hợp lớp/LO; reviewer game kiểm tra trải nghiệm.
 - **Song ngữ (ADR-0056):** mọi văn bản người chơi thấy trong quest (`name`, `description`, `narrative`, `steps[].title`, `steps[].hint`, dòng hội thoại NPC của quest, thông điệp hoàn thành/thất bại) là `localized_text` bắt buộc đủ `vi` và `en`; thiếu bản nào thì không publish được (`422 TRANSLATION_INCOMPLETE`). Hoạt động học tập mà quest tham chiếu tuân theo `content_language` của activity (bản dịch tùy chọn — [CONTENT_MODEL §8](../02-learning/CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056)). Biên tập hai cột vi/en: [ADMIN_PORTAL §1.5](../04-admin-portal/ADMIN_PORTAL.md#15-biên-tập-song-ngữ-adr-0056).
@@ -269,3 +301,5 @@ Phần thưởng dự kiến: 120 XP, outfit "Tạp dề chợ phiên", badge "B
 | AC-QST-011 | Quest có `learning_requirements` chỉ khả dụng khi LO đạt mức yêu cầu; quest học tập bắt buộc không bị khóa bởi level |
 | AC-QST-012 | Bước `boss` trong party: chỉ thành viên đạt `min_contribution` được tính hoàn thành bước; learning record từng người riêng |
 | AC-QST-013 | `failure_conditions` `reset_step`: hết giờ bước chỉ đặt lại bước đó, giữ tiến độ các bước khác |
+| AC-QST-014 | Bước `interdependent` 3 role: mỗi thành viên chỉ nhận dữ kiện của role mình (response gửi thành viên khác không chứa thẻ chưa chia sẻ); câu hỏi cuối tạo 3 attempt riêng; thành viên không đạt `pass_rule` không nhận thưởng bước |
+| AC-QST-015 | Bước `interdependent` khi một thành viên disconnect: role chuyển cho người còn lại (`allow_multi_role`), bước vẫn hoàn thành được |

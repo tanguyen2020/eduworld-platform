@@ -1,6 +1,6 @@
 # CONFIG_DEFAULTS — Sổ đăng ký tham số mặc định
 
-> Trạng thái: Draft · Phiên bản: 1.0 · Owner: Technical PM + Solution Architect · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 1.0 · Owner: Technical PM + Solution Architect · Cập nhật: 2026-11-17 (ADR-0091: `portal_setup_ticket_ttl`, `portal_password_reset_ttl`, `portal_login_rate`, sửa `portal_session_sso`; ADR-0090: `feature_toggle_cache_ttl`; ADR-0074: tách `internal_api_resilience` thành `module_call_deadline` và `external_api_resilience`; đăng ký tham số feature spec; quyết định Technical Architect 2026-11-16 và 2026-11-17: ADR-0075, ADR-0078, ADR-0086 bổ sung)
 > Liên quan: [docs/README](../README.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [GLOSSARY](GLOSSARY.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Mục đích và quy tắc
@@ -15,7 +15,7 @@ Một chỉ mục duy nhất cho **mọi tham số mặc định cấu hình đ�
 | R4 — Phạm vi | `platform` = chỉ đội platform cấu hình (Game Operations Console/Platform Administration); `tenant` = tenant được ghi đè trong giới hạn platform cho phép; `code` = hằng số trong mã/hạ tầng, đổi bằng release |
 | R5 — Tên | Tên `snake_case`, dùng làm khóa cấu hình trong hệ thống (`platform_settings`, `tenant_settings`, cấu hình game có version) |
 
-Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giảm dần XP → [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md); trần Xu → [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md); [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) chỉ sở hữu ngưỡng phát hiện và xử lý gian lận; nhắc nghỉ → [CHILD_SAFETY](../10-security/CHILD_SAFETY.md); lời mời party → [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md); SLA báo cáo → [MODERATION](../03-social-multiplayer/MODERATION.md); giới hạn độ dài chat → [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md); rate limit API → [SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md).
+Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giảm dần XP → [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md); trần Xu → [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md); [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) chỉ sở hữu ngưỡng phát hiện và xử lý gian lận; nhắc nghỉ → [CHILD_SAFETY](../10-security/CHILD_SAFETY.md); lời mời party → [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md); SLA báo cáo → [MODERATION](../03-social-multiplayer/MODERATION.md); giới hạn độ dài và rate limit chat → [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §3.1; ngưỡng kiểm duyệt (spam, danh mục từ) → [MODERATION](../03-social-multiplayer/MODERATION.md); retention dữ liệu cá nhân → [DATA_PRIVACY §2](../10-security/DATA_PRIVACY.md); rate limit API → [SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md).
 
 ## 2. Thế giới và phiên chơi
 
@@ -43,6 +43,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `xp_daily_cap` | 1.000 | XP/ngày | platform | [Proposed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `xp_competition_matches_per_day` | 10 | trận/ngày | platform | [Proposed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `xp_below_grade_multiplier` | ×0,25 khi nội dung thấp hơn ≥ 2 khối | — | platform | [Proposed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
+| `xp_objective_mastered` | 50 XP, một lần cho mỗi LO khi đạt mức mastered | XP | platform | [Confirmed — Technical Architect 2026-11-15] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) §3.1 |
 
 ## 4. Quest
 
@@ -54,6 +55,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `max_active_quests` | 10 | quest | platform | [Proposed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `quest_pass_rule` | tỷ lệ đúng 0,7; tối thiểu 8 câu; 5 lần/ngày | — | platform (theo quest) | [Proposed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `coop_quest_reconnect_grace` | 120 | giây | platform | [Proposed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `interdependent_roles` | 2–4 vai mỗi bước `interdependent` | vai | platform | [Confirmed — Technical Architect 2026-11-15] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) §3.2 |
 
 ## 5. Challenge và boss
 
@@ -86,6 +88,8 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `emote_rate` | 1 lần/2 s | — | code | [Proposed] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) |
 | `emote_wheel_slots` | 6 | ô | code | [Proposed] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) |
 | `avatar_creation_presets` / `saved_outfits_max` | 6 / 3 | bộ | platform | [Proposed] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) |
+| `nickname_change_monthly_limit` | 1 (trường có thể siết thêm, không nới) | lần/tháng | tenant | [Confirmed — Technical Architect 2026-11-16] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) §5.3 |
+| `nickname_suggestion_ttl` | 10 | phút | code | [Confirmed — Technical Architect 2026-11-16] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) §5.3 |
 
 ## 8. Thi đấu, ranking, leaderboard, tournament
 
@@ -103,6 +107,9 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `cheat_fast_answer_flag` | < 400 ms (g1_5: < 600 ms) liên tiếp ≥ 3 câu | — | platform | [Proposed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | `leaderboard_visibility` | g1_3: không xếp hạng cá nhân; g4_5: top 10; g6_9: top 50 + ±3 quanh mình | — | platform | [Proposed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | `tournament_timers` | check-in 15 phút; no-show 3 phút; disconnect grace 60 s × 2; khiếu nại 10 phút | — | platform | [Proposed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
+| `speed_bonus_min_grade` | 6 (lớp 1–5 không có bonus tốc độ ở 1v1 và Timed Quiz) | khối | platform | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §3.1 |
+| `effort_points` | +1/hoạt động (tối đa 10/ngày), +2/hoạt động ôn tập, +3/ngày hoạt động; trần 25/ngày | điểm | platform | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §9.2 |
+| `disabled_leaderboard_definitions` | Rỗng (chính sách trường; school_admin tắt được bảng lớp/trường của trường mình) | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §9.2 |
 
 ### 8.1. Sự kiện và season track
 
@@ -115,7 +122,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `event_upcoming_visible_days` | 7 | ngày | platform | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `event_rule_change_effective` | 04:00 ICT hôm sau | — | code | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `community_goal_contribution_daily_cap` | 50 | đơn vị/học sinh/ngày | platform (theo goal) | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `community_goal_progress_flush_seconds` | 30 | giây | platform | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `community_goal_progress_flush_seconds` | 30 (nhịp đẩy tiến độ community goal tới client) | giây | platform | [Confirmed — Technical Architect 2026-11-16] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_track_tiers` / `season_track_points_per_tier` | 30 cấp / 100 điểm | — | platform (theo track) | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_points_daily_cap` | 100 | điểm mùa/ngày | platform (theo track) | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_point_sources` | daily quest 20 · weekly quest 50 · hoạt động học tập 5 · hoạt động sự kiện 10 · co-op 10 · trận 5 | điểm | platform (theo track) | [Proposed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
@@ -130,13 +137,21 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 |---|---|---|---|---|---|
 | `party_max_members` | 4 (cấu hình 2–8) | người | platform + tenant | [Confirmed] cấu hình được · [Proposed] số | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | `party_invite_ttl` | 5 | phút | platform | [Proposed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
-| `party_invite_rate` | 10/phút, 50/giờ | lời mời | platform | [Proposed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
+| `party_invite_rate` | 10/phút, 50/ngày mỗi học sinh | lời mời | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_invite_repeat_rules` | 1 lời mời pending tới cùng một người; bị từ chối → chờ 5 phút; 3 lần bị từ chối/ngày → chặn mời người đó đến hết ngày | — | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_pending_invites_max` | 20 lời mời đang chờ mỗi người nhận; vượt → lời mời cũ nhất hết hạn | lời mời | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_create_rate` | 10 lần tạo/giải tán mỗi giờ | lần/giờ | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_kick_rate` | 10 mỗi giờ mỗi leader | lần/giờ | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_lobby_cmd_rate` | 5 (ready, chọn hoạt động) | lệnh/giây | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §10 |
+| `party_activity_min_members_timeout` | 120 (số thành viên online < `min_members` quá ngưỡng → hoạt động kết thúc `timeout`) | giây | platform | [Confirmed — Technical Architect 2026-11-16] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) §9 |
 | `party_leader_grace` | 60 | giây | platform | [Proposed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | `party_dormant_timeout` | 30 | phút | platform | [Proposed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | `party_kick_reinvite_block` | 10 | phút | platform | [Proposed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | `friend_limits` | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn | — | platform | [Proposed] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
 | `friend_request_ttl` / `friend_code_ttl` | 7 ngày / 10 phút | — | platform | [Proposed] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
 | `club_max_members` / `clubs_per_student_max` | 50 / 5 | — | platform + tenant | [Proposed] (ADR-0050) | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
+| `student_club_creation` | `disabled` (chính sách trường; giá trị `disabled` / `requires_approval` / `auto`) | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) §6.1 |
+| `cross_school_social_enabled` | `false` (chỉ áp dụng tenant `unit`; bật → kết bạn, DM, party, club, World mở rộng, ghép trận liên trường trong tenant) | — | tenant | [Confirmed — Technical Architect 2026-11-16] (ADR-0054) | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) §7 |
 
 ## 10. Matchmaking
 
@@ -161,6 +176,12 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `nats_request_timeout` | 2 | giây | code | [Proposed] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) |
 | `hub_sync_rate` | 10 | Hz | code | [Proposed] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) |
 | `ws_per_gateway_node` | 4.000 | kết nối | code | [Proposed] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) |
+| `ws_frame_rate` | Tổng frame 30/s, burst 60; `hub.player.move` 12/s; vi phạm liên tục > 3 lần/phút → đóng `4429` | frame/giây/kết nối | code | [Confirmed — Technical Architect 2026-11-16] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) §8.1 |
+| `ws_inflight_commands` | 8 (vượt → `RATE_LIMITED`) | NATS request/kết nối | code | [Confirmed — Technical Architect 2026-11-16] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) §8 |
+| `ws_send_queue` | 256 message; đầy → bỏ message `droppable`; message quan trọng không đẩy được trong 5 s → đóng `4408`; write deadline 10 s | — | code | [Confirmed — Technical Architect 2026-11-16] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) §8 |
+| `ws_accept_rate` | 200 kết nối mới/giây mỗi node; quá tải → close `4429` kèm thời gian thử lại | kết nối/giây | code | [Confirmed — Technical Architect 2026-11-16] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) §11 |
+| `game_session_heartbeat_timeout` | 45 s không heartbeat → kết thúc game session (`end_reason = timeout`); job `game-session-timeout` quét mỗi 15 s | giây | code | [Confirmed — Technical Architect 2026-11-16] | [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) §3.2 |
+| `audit_hub_membership` | bật (pilot); bản ghi `session_memberships` của hub giữ 90 ngày | — | platform + tenant | [Confirmed — Technical Architect 2026-11-16] | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) §10 |
 | `client_reconnect_backoff` | 0,5–15 s, jitter ±20% | — | code | [Proposed] | [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) |
 | `client_interpolation` | 100 ms (tối đa 200) | — | code | [Proposed] | [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) |
 | `client_input_rate` / `client_command_timeout` | ≤ 10 Hz / 10 s | — | code | [Proposed] | [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) |
@@ -177,12 +198,30 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `gameplay_chat_retention_days` | 7 (tối thiểu 3) | ngày | platform + tenant | [Proposed] (ADR-0033) | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) |
 | `ephemeral_chat_retention` | 24 (World/Area) | giờ | platform | [Proposed] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) |
 | `chat_recent_buffer` | 200 tin / 10 phút | — | code | [Proposed] (ADR-0035) | [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) |
-| `chat_rate_per_user` | ≤ 30 | tin/phút | platform | [Proposed] | [SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md) |
-| `moderation_switches` | bật tất cả bước | — | platform + tenant (chỉ System Admin) | [Confirmed] cơ chế (ADR-0030) | [MODERATION](../03-social-multiplayer/MODERATION.md) |
+| `chat_rate_per_user` | ≤ 30 tin/phút trên mọi channel; rate theo channel (msg/phút, burst) theo bảng mặc định platform | tin/phút | platform | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §3.1 |
+| `persistent_chat_retention_days` | 180 (channel `class`, `study_group`, `direct`, club; tin bị report giữ theo case) | ngày | platform | [Confirmed — Technical Architect 2026-11-16] tên · giá trị theo OQ-09 | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §2 |
+| `chat_publish_ack_timeout` | 2 s chờ JetStream PubAck; quá hạn → gửi thất bại, không fan-out | giây | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0035) | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §5.2 |
+| `chat_persister_batch` | ≤ 500 sự kiện hoặc 50 ms mỗi lô; `max_deliver` 5 → DLQ + alert | — | code | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §5.3 |
+| `gameplay_chat_purge_job` | chạy hằng giờ; lô 1.000 dòng; cảnh báo khi tồn đọng quá hạn > 2 ngày | — | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0033) | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §6.1 |
+| `chat_sticker_gif_rate` | 4 (sticker và GIF tính chung) | lượt/phút/channel | platform | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §7.5 |
+| `chat_asset_file_max` | sticker WebP/PNG ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh | — | code | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §7.5 |
+| `chat_typing_throttle` | 1 lần/3 s; tự hết sau 5 s không cập nhật | — | code | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §7.10 |
+| `chat_receipt_coalesce` | ≤ 1 lần/2 s mỗi thành viên mỗi channel | — | code | [Confirmed — Technical Architect 2026-11-16] | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) §8.1 |
+| `chat_spam_thresholds` | ≥ 3 tin giống nhau (similarity ≥ 0,9) trong 60 s → block tin lặp; cùng nội dung ≥ 4 channel trong 2 phút → block + tăng điểm spam; > 70% chữ hoa hoặc > 10 emoji liên tiếp → mask/giảm; 3 lần block trong 10 phút → auto-mute (`auto_mute_spam`) | — | platform | [Confirmed — Technical Architect 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §3.4 |
+| `sensitive_terms_engine_limits` | RE2 timeout 5 ms/pattern; tối đa 200 pattern/tenant | — | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0030) | [MODERATION](../03-social-multiplayer/MODERATION.md) §11.5 |
+| `moderation_config_propagation_max` | ≤ 60 s từ khi publish danh mục từ hoặc đổi công tắc kiểm duyệt đến khi mọi node áp dụng (pub/sub + biên dịch nền) | giây | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0030) | [MODERATION](../03-social-multiplayer/MODERATION.md) §11.6, §12.2 |
+| `moderation_snapshot_retention` | đến khi case đóng + 1 năm | — | platform | [Confirmed — Technical Architect 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §10 |
+| `moderation_switches` | bật tất cả bước; bước `pii` và phát hiện grooming **luôn chạy**, không nằm trong công tắc | — | platform + tenant (chỉ System Admin) | [Confirmed] cơ chế (ADR-0030) · [Confirmed — Technical Architect 2026-11-17] phạm vi (ADR-0078) | [MODERATION](../03-social-multiplayer/MODERATION.md) §12.2 |
+| `moderation_switch_max_duration` | 24 (mọi lần tắt một bước bắt buộc có `expires_at` ≤ 24 giờ; hết hạn tự bật lại) | giờ | platform | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [MODERATION](../03-social-multiplayer/MODERATION.md) §12.2 |
+| `moderation_switch_approvals` | 2 (người đề xuất + một System Admin khác phê duyệt; không tự duyệt) | người | code | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [MODERATION](../03-social-multiplayer/MODERATION.md) §12.2 |
+| `chat_policy_preset` | `standard`; trường có thể chọn `quick_message_emote_only` (chỉ quick message + emote, áp cho cả trường, không theo khối) | — | tenant (cấp trường) | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §3.5 |
+| `common_tenant_social_defaults` | Tenant `common`: tắt kết bạn, DM, World chat; giờ giới nghiêm bắt buộc; kiểm duyệt bởi Platform Safety Team | — | platform | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §3.6 |
 | `moderation_pipeline_latency` | p95 < 20 ms (trần 50 ms) | — | code | [Proposed] | [MODERATION](../03-social-multiplayer/MODERATION.md) |
 | `report_sla` | p1: phản hồi 1 giờ / xong 24 giờ; p2: 1 / 3 ngày học; p3: 3 / 7 ngày học | — | platform | [Proposed] | [MODERATION](../03-social-multiplayer/MODERATION.md) |
 | `auto_mute_spam` | 10 phút → 1 giờ khi tái phạm | — | platform | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `filter_quality_gate` | recall ≥ 95%; false positive ≤ 3% | — | release gate | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
+| `school_notification_ack_sla_hours` | 24 (p1, tự hại) · 72 (khác) | giờ | platform | [Confirmed — Technical Architect 2026-11-15] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.4 |
+| `p1_unclaimed_alert_minutes` | 15 (cảnh báo on-call khi case p1 chưa có người nhận) | phút | platform | [Confirmed — Technical Architect 2026-11-15] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.3 |
 
 ## 13. Học tập
 
@@ -201,58 +240,99 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `publish_to_visible_max` | ≤ 30 | giây | code (SLO) | [Proposed] (ADR-0043) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) |
 | `video_completion` | xem thật ≥ 90% + trả lời câu chèn bắt buộc; heartbeat 10 s | — | platform | [Proposed] | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) |
 | `video_recommended_length` | ≤ 8 phút (g1_5); ≤ 15 phút (g6_9) | — | hướng dẫn biên tập | [Proposed] | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) |
-| `recording_limits` | 30 s (g1_5) / 90 s (g6_9); 3 lần ghi lại; xóa 90 ngày sau khi chấm | — | platform | [Proposed] | [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) |
-| `written_autosave` / `grading_deadline` | 15 giây / 7 ngày | — | tenant | [Proposed] | [WRITTEN_RESPONSE_RUBRIC](../02-learning/WRITTEN_RESPONSE_RUBRIC.md) |
 | `attempt_start_rate` | 20/giờ | lượt | platform | [Proposed] | [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) |
+| `w_hint` | 1 / 0,6 / 0,3 (0 / 1 / ≥ 2 gợi ý; chỉ áp khi trả lời đúng) | hệ số | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.1 |
+| `guess_coefficient` | true_false 0,5 · single_choice 1/k · multiple_choice, matching, ordering, drag_drop 0,1 · dạng tự nhập 0 | hệ số | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.1 |
+| `rapid_guess_min_response_ms` | 1,5 / 2 / 3 / 4 s theo loại câu; × 1,5 cho g1_3 | ms | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.1 |
+| `w_ctx` (bổ sung) | challenge 0,6 · timed_challenge 0,4 | hệ số | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.1 |
+| `diagnostic_prior` | M0 = clamp(0,15 + 0,6·acc; 0,15; 0,75); ≥ 2 câu/LO; tối đa 15/20 câu | — | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.5 |
+| `bkt_irt_readiness` | ≥ 1 học kỳ; ≥ 200 học sinh/LO; ≥ 200 lượt/item; log-loss tốt hơn ≥ 5% | — | code | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) §3.4 |
+| `interleave_mix` | 50/50; 2–4 chủ đề; tối đa 2 câu liên tiếp cùng chủ đề | — | platform | [Confirmed — Technical Architect 2026-11-15] | [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) §5.2 |
+| `difficulty_calibration` | ≥ 100 lượt trả lời lần đầu; bảng p_value → độ khó; người duyệt xác nhận | — | platform | [Confirmed — Technical Architect 2026-11-15] | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) §9.1 |
+| `variant_balance_max_mean_p_diff` | 0,05 | — | platform | [Confirmed — Technical Architect 2026-11-15] | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) §4.1 |
+| `exam_reliability_warn` | < 0,7 (cần ≥ 30 học sinh) | — | platform | [Confirmed — Technical Architect 2026-11-15] | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) §8.1 |
+| `exam_offline_sync_grace` | 30 s sau `deadline_at` để nhận câu trả lời đệm khi mất kết nối (`answered_at_client` < `deadline_at`); client chỉ đệm trong RAM, không ghi đĩa | giây | code | [Confirmed — Technical Architect 2026-11-16] | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) §6 |
+| `exam_autosubmit_interval` | 15 (job `exam.autosubmit`) | giây | code | [Confirmed — Technical Architect 2026-11-16] | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) §7.2 |
+| `item_analysis_min_responses` | ≥ 30 lượt trả lời lần đầu có tính điểm (loại `rapid_guess`); tính hằng đêm | lượt | platform | [Confirmed — Technical Architect 2026-11-16] | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) §9 |
+| `param_sampling_max_tries` | 1.000 (số lần thử tối đa khi sinh tham số câu hỏi; không tìm được bộ giá trị → `422` khi lưu) | lần | code | [Confirmed — Technical Architect 2026-11-16] | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) §5 |
+| `simulation_action_log_max` | ≤ 500 hành động, ≤ 64 KB | — | code | [Confirmed — Technical Architect 2026-11-16] | [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) §5 |
+| `assessment_reference_thresholds` | Bảng ánh xạ mức tham khảo TT27/TT22 | — | platform | [Confirmed — Technical Architect 2026-11-15] | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) §4 |
 
 ## 14. LMS và Admin Portal
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
 | `lesson_completion_heartbeat` | ≥ 50% thời lượng | — | platform | [Proposed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
-| `teacher_dashboard_refresh` | 15 phút; trang chủ p95 < 1,5 s | — | code | [Proposed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
+| `school_dashboard_refresh` | 15 phút; trang chủ p95 < 1,5 s (School Learning Dashboard, ADR-0072) | — | code | [Proposed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
 | `report_link_ttl` | 15 | phút | code | [Proposed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
-| `former_teacher_access` | 1 năm dữ liệu lớp cũ | — | tenant | [Proposed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
+| `former_teacher_access` | 1 năm dữ liệu lớp cũ | — | tenant | Không dùng (ADR-0072: không có vai trò giáo viên) | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
 | `scheduled_publish_min_lead` | ≥ 5 | phút | platform | [Proposed] | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) |
 | `assets_per_version_max` | 50 | asset | platform | [Proposed] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) |
+| `content_snapshot_cache_ttl` | 7 ngày, TTL trượt (snapshot bất biến `ew:<module>:cv:…`) | ngày | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0043) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §5.4 |
+| `media_max_bytes_by_kind` | ảnh ≤ 10 MB · âm thanh ≤ 20 MB, ≤ 10 phút · video ≤ 300 MB, ≤ 20 phút · mô hình 3D/scene ≤ 50 MB | — | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
+| `media_presign_ttl` | 15 (presigned PUT tải lên `ew-media-quarantine`) | phút | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
+| `media_signed_url_ttl` | 10 (signed URL CDN cho `ew-media-private`) | phút | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
+| `preview_token_ttl` | 30 (chỉ đọc draft được chỉ định; không tạo attempt, XP, learning event) | phút | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) §5 |
+| `content_review_sla_days` | 3 (quá hạn → cảnh báo trong hàng đợi review) | ngày | platform | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) §4 |
+| `content_review_bulk_max` | 50 item mỗi lần (mỗi item vẫn kiểm reviewer ≠ author) | item | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) §4 |
+| `content_autosave_interval` | 10 (kèm `If-Match` chống ghi đè) | giây | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) §1.4 |
 | `supported_locales` | `vi-VN`, `en-US` | — | platform | [Confirmed] (ADR-0056) | [GODOT_ARCHITECTURE §10.1](../08-game-client/GODOT_ARCHITECTURE.md#101-quốc-tế-hóa-i18n) |
 | `tenant_default_locale` | `vi-VN` | — | tenant | [Confirmed] (ADR-0056) | [GODOT_ARCHITECTURE §10.1](../08-game-client/GODOT_ARCHITECTURE.md#101-quốc-tế-hóa-i18n) |
 | `game_text_required_languages` | `vi`, `en` | — | platform | [Confirmed] (ADR-0056) | [CONTENT_MODEL §8](../02-learning/CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056) |
 | `learning_translation_required` | false (chỉ bản `content_language`) | — | tenant | [Proposed] (ADR-0056) | [CONTENT_MODEL §8](../02-learning/CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056) |
 | `text_expansion_allowance` | 1,35 | hệ số | code | [Proposed] | [DESIGN_SYSTEM §5.5](../05-ux/DESIGN_SYSTEM.md#55-font) |
 | `bilingual_names_display` | bật ở khu Tiếng Anh, tắt nơi khác | — | platform (học sinh đổi được) | [Proposed] | [WORLD_DESIGN §2.4](../01-game-design/WORLD_DESIGN.md#24-tên-song-ngữ-và-quy-tắc-hiển-thị-confirmed--adr-0056) |
+| `dashboard_attention_thresholds` | ≥ 2 bài `missed` trong 14 ngày · ≥ 3 LO ở mức `beginning` · không vào game ≥ 7 ngày · tỷ lệ `rapid_guess` ≥ 30% trong 7 ngày | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) §8.1 |
+| `graded_assignment_release_default` | `feedback_timing = after_close`, `result_release = after_close` khi `mode = graded` | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) §4.1 |
+| `late_window_hours` | 0 (không nhận nộp muộn); tối đa 168 | giờ | tenant | [Confirmed — Technical Architect 2026-11-15] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) §4.1 |
+| `assignment_remind_limit` | 1 lần/ngày/bài | lần | platform | [Confirmed — Technical Architect 2026-11-15] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) §4.1 |
 
 ## 15. An toàn trẻ em và sức khỏe
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
 | `break_reminder` | 45 phút (g1_3: 30 phút); lần 2 sau 90 phút | — | platform + tenant | [Proposed, OQ-17] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
-| `teacher_mute_max` | 24 | giờ | tenant | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
+| `teacher_mute_max` | 24 | giờ | tenant | Không dùng (ADR-0072: không có điều khiển chat lớp của giáo viên) | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `risk_signal_thresholds` | bắt nạt ≥ 3/24 h; hội đồng ≥ 3 người/1 h; loại trừ ≥ 5/7 ngày; ≥ 3 report/24 h | — | platform | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `evidence_context` | ±20 | tin | platform | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
-| `chat_policy_cache` | 5 | phút | code | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
+| `chat_policy_cache` | 5 | phút | code | [Confirmed — Technical Architect 2026-11-16] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
+| `platform_curfew` | 21:30–06:30 giờ Việt Nam (ICT) mỗi ngày: không đăng nhập game, không tạo game session, không gửi chat; trường chỉ được mở rộng khung giới nghiêm (siết thêm), không thu hẹp; áp như nhau cho mọi học sinh | — | platform (trường siết thêm) | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4.1 |
+| `curfew_warning_minutes` | 10 (cảnh báo trong game trước giờ giới nghiêm; tới giờ thì lưu tiến độ và kết thúc phiên) | phút | platform | [Proposed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4.1 |
 
 ## 16. Identity, phiên, SIS, tài khoản
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
 | `access_token_ttl` | 5 | phút | code | [Proposed] (ADR-0008) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
-| `game_session_sso` | idle 30 phút / tối đa 10 giờ; không Remember me; không offline token; token chỉ trong RAM; mỗi lần mở game nhập mật khẩu vào form trong game (ADR-0068) | — | platform | [Proposed] tham số / [Confirmed] chính sách (ADR-0064) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
-| `game_mobile_background_relogin` | 30 | phút ở nền trước khi bắt đăng nhập lại | platform | [Proposed] (ADR-0064) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
-| `game_remember_username` | bật (tắt sẵn khi `device.cfg` `shared_device: true`) | — | thiết bị | [Proposed] (ADR-0064) | [GODOT_ARCHITECTURE §5.1](../08-game-client/GODOT_ARCHITECTURE.md#51-đăng-nhập-và-xác-định-tenant-adr-0063-adr-0064-adr-0065-adr-0068) |
-| `shared_device_idle_logout` | 30 | phút không hoạt động | thiết bị | [Proposed] (ADR-0064) | [KEYCLOAK_SSO §9](../09-identity/KEYCLOAK_SSO.md) |
-| `login_capacity_target` | đỉnh 100 đăng nhập mật khẩu/giây; bão 5.000 lượt/10 phút; 500 refresh/giây | — | platform | [Proposed] (ADR-0064) | [KEYCLOAK_SSO §12](../09-identity/KEYCLOAK_SSO.md) |
-| `portal_session_sso` | idle 30 phút / tối đa 10 giờ; platform `auth_time` ≤ 8 giờ | — | platform | [Proposed] | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
-| `quick_login` | **Ngoài Release 1.0** (ADR-0063) — khi bật sau: QR TTL 60 s, mở tối đa 15 phút + PIN 4 số; PIN 4–6 số; mật khẩu hình ảnh 3–6 hình; device code 10 phút, polling 5 s | — | tenant | Mở rộng sau | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
+| `game_session_sso` | Client `eduworld-game-backend`: access token 5 phút; client session idle **7 ngày**, tối đa **30 ngày** (realm SSO Session Idle/Max nâng tương ứng vì Keycloak giới hạn client session ≤ realm); refresh token rotation (`revokeRefreshToken=true`, reuse 0) + phát hiện dùng lại (server giữ SHA-256 của 20 token đã xoay gần nhất), gắn `device_id`; không offline token, không Remember me. Refresh token lưu trong kho bảo mật OS trên thiết bị cá nhân (Windows DPAPI, Android Keystore, iOS Keychain); Web và máy `shared_device` chỉ giữ trong RAM. Còn hạn → mở game tự vào lại, không nhập mật khẩu | — | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0086) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
+| `game_mobile_background_relogin` | 30 | phút ở nền trước khi bắt đăng nhập lại | platform | Không dùng (ADR-0086 thay ADR-0064 mục 5: app mobile bị đóng hoặc ở nền lâu mở lại bằng refresh token đã lưu, hết hạn theo `game_session_sso`) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
+| `game_remember_username` | bật (tắt sẵn khi `device.cfg` `shared_device: true`); điền sẵn form S01 khi phiên hết hạn | — | thiết bị | [Proposed] (ADR-0064, ADR-0086) | [GODOT_ARCHITECTURE §5.1](../08-game-client/GODOT_ARCHITECTURE.md#51-đăng-nhập-và-xác-định-tenant-adr-0063-adr-0064-adr-0065-adr-0068) |
+| `shared_device_default` | Windows: `true` (máy dùng chung, không lưu refresh token) trừ khi bộ cài được chọn "máy cá nhân" (ghi `shared_device: false` vào `device.cfg`); Android, iOS: `false`; Web: không lưu refresh token bền vững | — | thiết bị (bộ cài) | [Confirmed — Technical Architect 2026-11-17] (ADR-0078, ADR-0086) | [GODOT_ARCHITECTURE §5.1](../08-game-client/GODOT_ARCHITECTURE.md#51-đăng-nhập-và-xác-định-tenant-adr-0063-adr-0064-adr-0065-adr-0068) |
+| `resume_confirm_screen` | Bật trên mọi nền tảng: khi tự vào lại bằng refresh token, hiện "Tiếp tục là <nickname>?" kèm nút "Không phải tôi" (đăng xuất, xóa token) trước khi tạo game session | — | code | [Confirmed — Technical Architect 2026-11-17] (ADR-0086) | [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) S01 |
+| `shared_device_idle_logout` | 30 | phút không hoạt động (máy `shared_device`: token chỉ trong RAM, thoát game = đăng xuất) | thiết bị | [Proposed] (ADR-0064, ADR-0086 mục 2) | [KEYCLOAK_SSO §9](../09-identity/KEYCLOAK_SSO.md) |
+| `login_capacity_target` | đỉnh 100 đăng nhập mật khẩu/giây; bão 5.000 lượt/10 phút; 500 refresh/giây (gồm refresh `mode=resume` khi mở game trên thiết bị cá nhân, ADR-0086); là mục tiêu năng lực đăng nhập duy nhất cho load test và capacity plan | — | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0045, ADR-0064 mục 6) | [KEYCLOAK_SSO §12](../09-identity/KEYCLOAK_SSO.md) |
+| `portal_session_sso` | idle 30 phút / tối đa 10 giờ (client session `eduworld-portal`, realm SSO idle 7 ngày cho game); platform `auth_time` ≤ 8 giờ; refresh token xoay vòng trong cookie `HttpOnly; Secure; SameSite=Strict` do module identity đặt, access token chỉ trong bộ nhớ SPA — tải lại trang gọi `POST /auth/portal/token:refresh`, không đăng nhập lại khi còn hạn (ADR-0086 mục 7, ADR-0091) | — | platform | [Proposed] thời hạn · [Confirmed] cách lưu (ADR-0091) | [KEYCLOAK_SSO §5.2](../09-identity/KEYCLOAK_SSO.md) |
+| `portal_setup_ticket_ttl` | 10 phút, dùng một lần (`setup_ticket` khi `403 ACCOUNT_SETUP_REQUIRED`: đổi mật khẩu tạm, gửi email đăng ký OTP) | phút | platform | [Confirmed] (ADR-0091) | [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md) |
+| `portal_password_reset_ttl` | 30 phút, dùng một lần (link đặt lại mật khẩu nhân sự; cấp mới vô hiệu link cũ) | phút | platform | [Proposed] (ADR-0091) | [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md) |
+| `quick_login` | **Không làm** (ADR-0063; ADR-0076 Rejected 2026-11-17): không QR lớp, thẻ QR, PIN, mật khẩu hình; đăng nhập chỉ username/password + giữ phiên bằng refresh token (ADR-0086); Device Grant chỉ khi có ADR mới (ADR-0063) | — | — | Không dùng | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
 | `password_hash_budget` | ≤ 80 ms/lần | — | code | [Proposed] | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
 | `principal_cache` | 60 s (Valkey) + L1 15 s | — | code | [Proposed] | [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) |
 | `inactive_student_cleanup_days` | 180; báo trước 14 ngày; chạy 02:00 ICT; cần duyệt khi > 10% tenant | — | platform + tenant | [Proposed] (ADR-0032) | [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) |
+| `inactive_student_cleanup_low_days_warning` | Cảnh báo khi đặt số ngày dọn < 60 (dễ dọn nhầm qua kỳ nghỉ hè); vẫn cho lưu kèm lý do | ngày | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0032) | [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) |
+| `min_client_version` | Đặt theo mỗi release; một nguồn cấu hình triển khai `EW_GAME_MIN_CLIENT_VERSION` dùng chung module identity (`gameLogin` → `426 CLIENT_VERSION_UNSUPPORTED`) và module game (`client-config`) | phiên bản | code | [Confirmed — Technical Architect 2026-11-16] | [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) |
+| `audit_log_retention` | 2 năm; hết hạn ẩn danh hóa, giữ partition (ADR-0070) | năm | platform | [Confirmed — Technical Architect 2026-11-16] | [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) §2 |
+| `audit_query_max_range_days` | 93 mỗi lần truy vấn audit | ngày | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) |
+| `login_events_retention` | `identity.login_events` (nhật ký xác thực) 90 ngày; `game.login_events` 1 năm rồi ẩn danh hóa `ip_hash`, `device_model` | — | platform | [Confirmed — Technical Architect 2026-11-16] | [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) §2 |
+| `student_data_retention` | suốt thời gian học + 1 năm sau khi học sinh `deactivated`, sau đó ẩn danh hóa | — | platform | [Confirmed — Technical Architect 2026-11-16] | [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) §2 |
 | `sis_sync_schedule` | full 01:00 ICT; delta 15 phút | — | tenant | [Proposed] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) |
-| `sis_lookup_timeout` | 3 | giây | code | [Proposed] (ADR-0046) | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) |
-| `sis_staging_retention` | 30 | ngày | code | [Proposed] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) |
+| `sis_staging_retention` | 30 | ngày | code | [Confirmed — Technical Architect 2026-11-16] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) |
+| `sis_contract_violation_threshold` | > 10% bản ghi của một run vi phạm contract → dừng run, connection `contract_error`; > 10% lô apply lỗi → dừng run | % | code | [Confirmed — Technical Architect 2026-11-16] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) §2.5, §7 |
+| `sis_client_rate` | 10 req/s mỗi connection `contract_v1`; timeout 15 s/request; tôn trọng `Retry-After` | — | tenant | [Confirmed — Technical Architect 2026-11-16] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) §4.2 |
+| `sis_retry_backoff` | exponential + jitter 1 s, 2 s, 4 s…, tối đa 6 lần (timeout, 5xx, lỗi mạng) | — | code | [Confirmed — Technical Architect 2026-11-16] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) §7 |
+| `sis_circuit_breaker` | 5 run liên tiếp thất bại → tạm dừng lịch, chỉ chạy lại khi admin kích hoạt | run | code | [Confirmed — Technical Architect 2026-11-16] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) §7 |
 | `sis_webhook_skew` / `sis_webhook_nonce_ttl` | ±5 phút / 10 phút | — | code | [Proposed] | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) |
 | `sis_login_refresh_after_hours` | 24 | giờ | tenant | [Proposed] (ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
-| `sis_login_sync_timeout_ms` | 3000 | ms | code | [Proposed] (ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
+| `sis_login_sync_timeout_ms` | 3000 (timeout duy nhất cho lookup SIS lúc đăng nhập, gồm on-demand lookup lần đầu của ADR-0046) | ms | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0046, ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
 | `sis_login_sync_concurrency` | 20 | lookup đồng thời / SIS connection | platform | [Proposed] (ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
 | `enabled_countries` | `VN` | ISO 3166-1 | platform | [Confirmed] (ADR-0060) | [DATABASE_DESIGN §2.2a](../07-backend/DATABASE_DESIGN.md) |
 
@@ -262,22 +342,25 @@ Bảng rate limit đầy đủ theo endpoint nằm ở [SECURITY_ARCHITECTURE §
 
 | Tham số | Mặc định | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|
-| `login_rate` | `/auth/game/login`: toàn cục 120 đăng nhập mật khẩu/giây (đỉnh thiết kế 100/s, ADR-0064) → `429 LOGIN_QUEUE_BUSY`; 10/phút/thiết bị; 10/phút/username (ADR-0068) → `429 RATE_LIMITED` | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
+| `login_rate` | `/auth/game/login`: toàn cục 120 đăng nhập mật khẩu/giây (đỉnh thiết kế 100/s, ADR-0064 mục 6) → `429 LOGIN_QUEUE_BUSY`; 10/phút/thiết bị; 10/phút/username (ADR-0068) → `429 RATE_LIMITED` | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `brute_force_lockout` | 5 lần sai → chờ 1–15 phút (theo tài khoản, không theo IP); thông điệp chung `INVALID_CREDENTIALS` | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
+| `portal_login_rate` | `/auth/portal/login`: 10/phút/username, 10/phút/`device_id`, toàn cục 20/giây; `password:forgot`: 3/giờ/identifier, 10/giờ/`device_id`; `setup:password`, `password:reset`: 10/phút/`device_id`; `token:refresh`: 30/phút/`device_id` → `429 RATE_LIMITED`; **không** giới hạn theo IP (R30) | platform | [Proposed] (ADR-0091) | [SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md#14-rate-limiting-proposed) |
 | `game_login_ticket_ttl` | 2 phút, dùng một lần (chọn tenant khi thuộc nhiều tenant) | platform | [Confirmed] (ADR-0068) | [KEYCLOAK_SSO §6](../09-identity/KEYCLOAK_SSO.md) |
-| `keycloak_token_call_timeout` | 3 giây (identity-service → Keycloak token endpoint) | code | [Proposed] | [BACKEND_DESIGN §6.1](../07-backend/BACKEND_DESIGN.md) |
-| `game_login_body_logging` | **tắt** (APISIX, service, tracing, client) — không cấu hình bật được ở production | code | [Confirmed] (ADR-0068) | [SECURITY_ARCHITECTURE §3.1b](../10-security/SECURITY_ARCHITECTURE.md) |
+| `keycloak_token_call_timeout` | 3 giây (module identity → Keycloak token endpoint) | code | [Proposed] | [BACKEND_DESIGN §6.1](../07-backend/BACKEND_DESIGN.md) |
+| `game_login_body_logging` | **tắt** (APISIX, `core-api`, tracing, client) — không cấu hình bật được ở production | code | [Confirmed] (ADR-0068) | [SECURITY_ARCHITECTURE §3.1b](../10-security/SECURITY_ARCHITECTURE.md) |
 | `certificate_pinning` | bật cho desktop/mobile, tắt Web (HSTS) | client | [Proposed] (ADR-0068) | [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) |
+| `feature_toggle_cache_ttl` | 60 giây, không vượt `principal_cache_ttl`; cache trạng thái bật/tắt menu/action hiệu lực theo tenant cho `featuregate`, làm mới ngay khi nhận `platform_settings.changed` (scope `feature_flag`) | code | [Proposed] (ADR-0090) | [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) |
 | `principal_cache_ttl` | 60 giây (làm mới ngay khi `user_role.changed`/`role.updated`) | code | [Proposed] (ADR-0066) | [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) |
 | `tenant_header_required` | bắt buộc `X-Tenant-Id` mọi route tenant-scoped; ngoại lệ: `/auth/game/login`, `/auth/game/tenant:select`, `/auth/session`, `/me/tenants`, `/game/client-config`, health | code | [Confirmed] (ADR-0065) | [API_DESIGN §2](../07-backend/API_DESIGN.md#2-quy-ước) |
 | `identifier_uniqueness` | username và email duy nhất trên SSO (một người một tài khoản), không phân biệt hoa thường, do đó không trùng trong cùng tenant; email bắt buộc với nhân sự | platform | [Confirmed] (ADR-0067, ADR-0069) | [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) |
-| `api_rate_default` | GET 300/phút; ghi 60/phút; refresh 30/phút (`/auth/game/token:refresh`); `auth/session` 10/phút | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
+| `api_rate_default` | GET 300/phút; ghi 60/phút; refresh 30/phút theo thiết bị (`/auth/game/token:refresh`, cả `renew` lẫn `resume`); `auth/session` 10/phút | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `answer_rate` | 60/phút, tối thiểu 1 s/câu; submit 10/phút | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
-| `ws_ticket_rate` / `ws_connections_per_user` | 10/phút / 2 | platform | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
+| `ws_ticket_rate` / `ws_connections_per_user` | 10/phút / 1 (kết nối mới đóng kết nối cũ bằng `4409 replaced`) | platform | [Proposed] rate · [Confirmed] 1 kết nối (ADR-0031) | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `request_body_max` / `csv_import_max` | 256 KB / 10 MB | code | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `secret_rotation` | 90 ngày | code | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `critical_vuln_fix` | ≤ 72 giờ | quy trình | [Proposed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
-| `internal_api_resilience` | timeout 800 ms đọc / 2 s ghi / 5 s saga; retry 2 (chỉ idempotent); circuit breaker 50% / 20 request, nửa mở sau 10 s; bulkhead 50 | code | [Proposed] (ADR-0040) | [API_DESIGN](../07-backend/API_DESIGN.md) |
+| `module_call_deadline` | Deadline gọi facade giữa module trong tiến trình (`pkg/modcall`): 800 ms đọc / 2 s ghi / 5 s bước saga; không retry, không circuit breaker giữa module (thay `internal_api_resilience`, đã bỏ) | code | [Proposed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
+| `external_api_resilience` | Adapter tích hợp ngoài (Keycloak Admin, SIS, object storage): timeout theo adapter; retry 2 (chỉ thao tác idempotent); circuit breaker 50% / 20 request, nửa mở sau 10 s; bulkhead 50 | code | [Proposed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
 | `idempotency_record_ttl` | 24 giờ | code | [Proposed] | [API_DESIGN](../07-backend/API_DESIGN.md) |
 
 ## 17b. Hiệu năng client (máy tầm trung, ADR-0057)
@@ -299,6 +382,9 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `build_size` | Android/iOS ≤ 300 MB; Windows ≤ 1 GB; Web tải đầu ≤ 40 MB; gói vùng ≤ 40 MB; cache thiết bị ≤ 1,5 GB | MB | code | [Proposed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 |
 | `battery_target` | ≤ 15%/giờ trên Android tầm trung; giảm render 3D còn 15 FPS khi màn đứng yên > 10 s | — | code | [Proposed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §12 |
 | `perf_budget_tolerance_ci` | Vượt ngân sách cảnh > 5% → chặn merge | % | code | [Proposed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §15 |
+| `classroom_reference_bandwidth` | 20 Mbps cho 40 máy dùng chung | Mbps | code | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
+| `offhours_prefetch_window` | 18:00–06:00 | giờ địa phương | thiết bị | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
+| `lan_cache_url` | Trống (tắt); đặt trong `device.cfg` khi trường có cache LAN | — | thiết bị | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
 
 ## 17c. Game Analytics (ADR-0058)
 
@@ -313,8 +399,8 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `analytics_late_night_window` | 22:00–06:00 ICT (chỉ dùng cho chỉ số, không phải khung giờ truy cập) | — | platform | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §4.6 |
 | `analytics_late_event_window` | 48 | giờ | code | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §5 |
 | `analytics_perf_sample_interval` | 60 | giây/phiên | code | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
-| `analytics_product_telemetry_enabled` | bật; tenant tắt được (perf/crash vẫn gửi) | — | platform + tenant | [Proposed, OQ-12] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
-| `analytics_store_migration_threshold` | raw > 500 triệu dòng · dashboard p95 > 5 s · rollup ngày > 2 h · tăng p95 ghi DB > 20% (kéo dài ≥ 2 tuần) | — | — | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §10 |
+| `analytics_product_telemetry_enabled` | bật; tenant tắt được (perf/crash vẫn gửi) | — | platform + tenant | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
+| `analytics_store_migration_threshold` | raw > 500 triệu dòng · dashboard p95 > 2 s · rollup ngày > 2 h · tăng p95 ghi DB > 20% (kéo dài ≥ 2 tuần) | — | — | [Proposed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §10 |
 
 ## 17d. Dashboard (ADR-0062)
 
@@ -346,24 +432,30 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | Tham số | Mặc định | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|
 | `target_ccu` | 10.000 | — | **[Confirmed]** (stakeholder, ADR-0045) | [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) |
-| `login_storm` | 3.000 lượt/10 phút; đỉnh 50 đăng nhập mật khẩu/s; 500 refresh/s | — | [Proposed] (ADR-0045) | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
 | `login_slo` | đăng nhập mật khẩu → vào hub p95 ≤ 3 s; Keycloak ≤ 800 ms; refresh p95 ≤ 200 ms; `auth/game/login` p95 ≤ 400 ms (gồm Keycloak) + `game/sessions` p95 ≤ 150 ms | — | [Proposed] | [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) |
 | `warm_up_windows` | 06:45–08:00, 13:15–14:30, 19:00–21:00 ICT; scale trước 15 phút | platform | [Proposed] (ADR-0024) | [DEPLOYMENT](../11-operations/DEPLOYMENT.md) |
 | `alert_thresholds` | NodeCapacityHigh 75%; KeycloakCpuHigh 75%; LoginLatencyHigh p95 > 3 s; EventConsumerLag 10.000; BackupMissing 26 giờ | code | [Proposed] | [MONITORING](../11-operations/MONITORING.md) |
 | `rpo_rto` | RPO ≤ 5 phút; RTO ≤ 4 giờ | — | [Proposed] (NFR-AVAIL-002) | [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md) |
-| `object_storage_backup` | floci: backup ngoài máy hằng ngày; giữ 30 bản ngày + 12 bản tháng; diễn tập khôi phục hằng quý | — | [Proposed] (ADR-0071) | [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md) §6, §8 |
+| `object_storage_backend` | local/CI: floci; staging/production: S3-compatible managed tại Việt Nam (ưu tiên) hoặc Garage/SeaweedFS ≥ 3 node có replication — chọn sau spike [TBD] | — | [Confirmed — Technical Architect 2026-11-17] (ADR-0075) | [DEPLOYMENT](../11-operations/DEPLOYMENT.md) §9 |
+| `object_storage_backup` | staging/production: replication của backend + bản sao ngoài cụm hằng ngày; bucket riêng tư (`ew-media-private`; `ew-student-submissions` nếu sau này có) có RPO như dữ liệu học tập (`rpo_rto`); giữ 30 bản ngày + 12 bản tháng; diễn tập khôi phục hằng quý | — | [Proposed] (ADR-0075) | [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md) §6, §8 |
 | `availability` | 99,5% trong giờ học | — | [TBD, OQ-11] | [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) |
 | `event_stream_retention` / `outbox_retention` | 7 ngày / 30 ngày | code | [Proposed] (ADR-0042) | [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md), [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) |
 | `jetstream_duplicate_window` | 2 phút | code | [Proposed] | [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) |
 | `app_log_retention` | 14 ngày | code | [Proposed] | [MONITORING](../11-operations/MONITORING.md) |
 
-## 19. Mâu thuẫn đã xử lý (2026-11-15)
+## 19. Mâu thuẫn đã xử lý (2026-11-15, 2026-11-16)
 
 | # | Tham số | Quyết định | Tài liệu sở hữu |
 |---|---|---|---|
 | C-1 | `learning_block_max_items` | g1_3: 3 · g4_5: 5 · g6_9: 8; GAME_DESIGN L-2 chỉ link | [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) |
 | C-2 | `abandon_penalty` | ≥ 3 trận/24 h → hạn chế ranked **15 phút** (mức nhẹ hơn cho trẻ em); ANTI_CHEAT chỉ link | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) |
-| C-3 | `party_invite_rate` | 10/phút, **50/giờ**; SECURITY_ARCHITECTURE §14 chỉ tham chiếu | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
+| C-3 | `party_invite_rate` | 10/phút, **50/ngày** mỗi học sinh; SECURITY_ARCHITECTURE §14 và REALTIME_ARCHITECTURE §8.1 chỉ tham chiếu | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | C-4 | `xp_below_grade_multiplier` | ×0,25 khi nội dung thấp hơn ≥ 2 khối; đã chuyển khỏi ANTI_CHEAT | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | C-5 | Giới hạn import SIS | Hai endpoint khác nhau, **có chủ ý**: `/schools/{id}/sis-imports` (School Admin của tenant) 10/giờ; `/sis/imports` (platform, gateway nội bộ) 5/giờ | [API_DESIGN](../07-backend/API_DESIGN.md), [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | C-6 | `hub_instance_capacity` (40), `battle_1v1_reconnect_grace` (30 s) | Cùng giá trị ở nhiều nơi; nơi sở hữu: capacity → [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md), grace theo chế độ → [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md); nơi khác chỉ được nhắc kèm link | xem cột trước |
+| C-7 | `login_storm` và `login_capacity_target` | Một tham số `login_capacity_target` (100 đăng nhập/giây, 5.000 lượt/10 phút, 500 refresh/giây); `login_storm` không còn dùng | [KEYCLOAK_SSO §12](../09-identity/KEYCLOAK_SSO.md) |
+| C-8 | `sis_lookup_timeout` và `sis_login_sync_timeout_ms` | Một tham số `sis_login_sync_timeout_ms` (3000 ms); `sis_lookup_timeout` không còn dùng | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
+| C-9 | `ws_connections_per_user` | 1 kết nối mỗi học sinh (ADR-0031); kết nối mới thay kết nối cũ | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md), [REALTIME_ARCHITECTURE §3](../06-architecture/REALTIME_ARCHITECTURE.md) |
+| C-10 | Rate limit chat | Chỉ [CHAT_SYSTEM §3.1](../03-social-multiplayer/CHAT_SYSTEM.md) sở hữu (theo channel + 30 tin/phút/người); REALTIME_ARCHITECTURE §8.1 và API_DESIGN chỉ link; cache chat policy 5 phút | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) |
+| C-11 | Retention staging SIS và login events | Staging SIS 30 ngày; `identity.login_events` 90 ngày (tối thiểu hóa dữ liệu) | [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md), [DATA_PRIVACY §2](../10-security/DATA_PRIVACY.md) |
+| C-12 | `community_goal_progress_flush_seconds` | 30 s (không dùng 10 s) | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |

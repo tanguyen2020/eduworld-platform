@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Tách spec public gộp `specs/openapi/eduworld-api.v1.yaml` (NGUỒN SỰ THẬT) thành
-// `specs/openapi/services/<service>.v1.yaml` theo `x-service` của từng operation (ADR-0036).
+// `specs/openapi/modules/<module>.v1.yaml` theo `x-service` (tên module sở hữu) của từng operation (ADR-0074).
 // File sinh ra KHÔNG được sửa tay; sửa spec gộp rồi chạy lại script này.
 //
-// - `x-service: <svc>`            → operation thuộc 1 service.
+// - `x-service: <module>`            → operation thuộc 1 module.
 // - `x-service: [a, b]` + `x-service-routing: { param, map }`
-//                                  → operation được nhân cho từng service, enum của tham số `param`
+//                                  → operation được nhân cho từng module, enum của tham số `param`
 //                                    thu hẹp theo `map` (vd. /game-admin/{config_type}).
 // - components: chỉ giữ phần được tham chiếu (bao đóng bắc cầu của $ref).
 //
@@ -22,7 +22,7 @@ const yaml = require('js-yaml');
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
 const SRC = path.join(repo, 'specs/openapi/eduworld-api.v1.yaml');
-const OUT_DIR = path.join(repo, 'specs/openapi/services');
+const OUT_DIR = path.join(repo, 'specs/openapi/modules');
 const SERVICES = ['identity', 'learning', 'game', 'competition', 'chat'];
 const METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
 const checkOnly = process.argv.includes('--check');
@@ -107,8 +107,8 @@ for (const s of SERVICES) {
     openapi: spec.openapi,
     info: {
       ...clone(spec.info),
-      title: `EduWorld ${s}-service — Public API`,
-      description: `FILE SINH TỰ ĐỘNG từ specs/openapi/eduworld-api.v1.yaml bởi scripts/openapi/split-public.mjs — KHÔNG sửa tay.\n\nCác operation public do \`${s}-service\` phục vụ (ADR-0036). APISIX định tuyến theo prefix tới service này.`,
+      title: `EduWorld module ${s} — Public API`,
+      description: `FILE SINH TỰ ĐỘNG từ specs/openapi/eduworld-api.v1.yaml bởi scripts/openapi/split-public.mjs — KHÔNG sửa tay.\n\nCác operation public do module \`${s}\` xử lý (ADR-0074). APISIX định tuyến mọi route REST tới binary \`core-api\`.`,
     },
     servers: clone(spec.servers),
     security: clone(spec.security),

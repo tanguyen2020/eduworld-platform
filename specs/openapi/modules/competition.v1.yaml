@@ -1,0 +1,3034 @@
+# GENERATED — do not edit. Source: specs/openapi/eduworld-api.v1.yaml
+openapi: 3.1.0
+info:
+  title: EduWorld module competition — Public API
+  version: 1.0.0-draft.1
+  summary: REST API của nền tảng EduWorld (Godot game client, CMS/LMS web).
+  description: |-
+    FILE SINH TỰ ĐỘNG từ specs/openapi/eduworld-api.v1.yaml bởi scripts/openapi/split-public.mjs — KHÔNG sửa tay.
+
+    Các operation public do module `competition` xử lý (ADR-0074). APISIX định tuyến mọi route REST tới binary `core-api`.
+  contact:
+    name: EduWorld Backend Team
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://api.{env}.eduworld.example/api/v1
+    description: |
+      Gateway public (APISIX). Domain thật [TBD — OQ-10]; `eduworld.example` là placeholder.
+      Local dev: `http://localhost:9080/api/v1` (APISIX trong docker compose, xem docs/11-operations/LOCAL_DEVELOPMENT.md) —
+      không khai báo thành server ở đây để spec không trỏ tới localhost.
+    variables:
+      env:
+        default: dev
+        enum:
+          - dev
+          - staging
+security:
+  - keycloakBearer: []
+tags:
+  - name: multiplayer
+    description: Party, invitation, room
+  - name: competition
+    description: Matchmaking, match, rating, tournament
+  - name: leaderboards
+    description: Bảng xếp hạng theo scope × period (chỉ nickname/avatar)
+  - name: game-admin
+    description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal + MFA, chỉ gateway nội bộ (ADR-0027)
+paths:
+  /multiplayer/parties:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: createParty
+      summary: Tạo party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyCreate'
+      responses:
+        '201':
+          description: Party đã tạo (người tạo là leader)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /multiplayer/parties/me:
+    get:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: getMyParty
+      summary: Active party của mình
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: Active party
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /multiplayer/parties/{party_id}:
+    get:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: getParty
+      summary: Chi tiết party và trạng thái thành viên
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: updatePartySettings
+      summary: Cập nhật party settings
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PartySettingsUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /multiplayer/parties/{party_id}:leave:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: leaveParty
+      summary: Rời party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      responses:
+        '204':
+          description: Đã rời; nếu là leader, leader được chuyển tự động
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /multiplayer/parties/{party_id}:disband:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: disbandParty
+      summary: Giải tán party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      responses:
+        '204':
+          description: Đã giải tán
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /multiplayer/parties/{party_id}:transfer-leader:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: transferPartyLeader
+      summary: Chuyển leader
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - new_leader_id
+              properties:
+                new_leader_id:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /multiplayer/parties/{party_id}/members/{student_id}:kick:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: kickPartyMember
+      summary: Kick thành viên
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '204':
+          description: Đã kick
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /multiplayer/parties/{party_id}/members/me/ready:
+    put:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: setPartyReady
+      summary: Đặt Ready / Not ready (fallback của WS party.member.ready_set)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ready
+              properties:
+                ready:
+                  type: boolean
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /multiplayer/parties/{party_id}/activity:
+    put:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: selectPartyActivity
+      summary: Chọn activity / game mode (fallback của WS party.activity.select)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyActivitySelection'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /multiplayer/parties/{party_id}:start:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: startPartySession
+      summary: Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Session bắt đầu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartySessionStart'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /multiplayer/parties/{party_id}/invitations:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: inviteToParty
+      summary: Mời bạn vào party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - invitee_id
+              properties:
+                invitee_id:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '201':
+          description: Đã gửi lời mời
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyInvitation'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /multiplayer/invitations:
+    get:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: listMyInvitations
+      summary: Lời mời party nhận được
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/InvitationStatus'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PartyInvitation'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /multiplayer/invitations/{invitation_id}:accept:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: acceptPartyInvitation
+      summary: Chấp nhận lời mời party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/InvitationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã tham gia party
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+  /multiplayer/invitations/{invitation_id}:reject:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: rejectPartyInvitation
+      summary: Từ chối lời mời party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/InvitationId'
+      responses:
+        '204':
+          description: Đã từ chối
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /multiplayer/invitations/{invitation_id}:cancel:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: cancelPartyInvitation
+      summary: Hủy lời mời đã gửi (inviter hoặc leader)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/InvitationId'
+      responses:
+        '204':
+          description: Đã hủy
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /multiplayer/parties/{party_id}:join:
+    post:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: joinParty
+      summary: Tham gia party visibility class/friends (party private bắt buộc qua invitation)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã tham gia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /multiplayer/rooms/{room_id}:
+    get:
+      x-service: competition
+      tags:
+        - multiplayer
+      operationId: getRoom
+      summary: Thông tin room
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/duels:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: createDuel
+      summary: Thách đấu bạn (friend duel, unranked) — hết hạn 60 giây
+      description: Hai người là bạn bè, cùng grade band, không block nhau (MATCHMAKING §8). Không tính rating/Competition Points; vẫn tính XP theo cap và learning evidence.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - opponent_id
+                - subject_id
+              properties:
+                opponent_id:
+                  $ref: '#/components/schemas/Uuid'
+                subject_id:
+                  $ref: '#/components/schemas/Uuid'
+                topic_id:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '201':
+          description: Đã gửi lời thách đấu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Duel'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /competition/duels/{duel_id}:accept:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: acceptDuel
+      summary: Nhận lời thách đấu — tạo match unranked
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/DuelIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã tạo trận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Duel'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+  /competition/duels/{duel_id}:decline:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: declineDuel
+      summary: Từ chối lời thách đấu
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/DuelIdPath'
+      responses:
+        '204':
+          description: Đã từ chối
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/matchmaking/tickets:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: createMatchmakingTicket
+      summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchmakingTicketCreate'
+      responses:
+        '201':
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchmakingTicket'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /competition/matchmaking/tickets/{ticket_id}:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: getMatchmakingTicket
+      summary: Trạng thái matchmaking ticket (fallback khi mất WS)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchmakingTicket'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: competition
+      tags:
+        - competition
+      operationId: cancelMatchmakingTicket
+      summary: Rời hàng đợi (fallback của WS matchmaking.ticket.cancel)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '204':
+          description: Đã rời hàng đợi
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/matches:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: listMyMatches
+      summary: Lịch sử trận của mình
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: mode
+          in: query
+          schema:
+            $ref: '#/components/schemas/MatchMode'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Match history
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Match'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /competition/matches/{match_id}:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: getMatch
+      summary: Trạng thái và kết quả trận
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/matches/{match_id}/proposal:accept:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: acceptMatchProposal
+      summary: Chấp nhận ready check (fallback của WS matchmaking.proposal.accept)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '204':
+          description: Đã sẵn sàng
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /competition/ratings/me:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: getMyRatings
+      summary: Rating/tier của mình theo mode, môn, mùa
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: Rating/tier theo mode × subject × season (không phải chỉ số học tập)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rating'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /competition/tournaments:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: listTournaments
+      x-portal-action: action.school_lms.challenges.view
+      summary: Giải đấu trong scope
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tournament'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /leaderboards/{leaderboard_id}:
+    get:
+      x-service: competition
+      tags:
+        - leaderboards
+      operationId: getLeaderboard
+      summary: Trang bảng xếp hạng
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/LeaderboardId'
+        - name: period_key
+          in: query
+          description: vd. 2026-W46, 2026-11, season-2026-1
+          schema:
+            type: string
+            maxLength: 64
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Trang xếp hạng — chỉ nickname/avatar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardPage'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /leaderboards/{leaderboard_id}/me:
+    get:
+      x-service: competition
+      tags:
+        - leaderboards
+      operationId: getMyLeaderboardPosition
+      summary: Vị trí của mình trên bảng xếp hạng
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/LeaderboardId'
+        - name: period_key
+          in: query
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        '200':
+          description: Vị trí của mình ±5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardPage'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /game-admin/{config_type}:
+    get:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: listGameConfigs_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.view
+          npc-dialogues: action.game_ops.npcs.view
+          quests: action.game_ops.quests.view
+          story-chapters: action.game_ops.quests.view
+          minigame-configs: action.game_ops.minigames.view
+          challenges: action.game_ops.challenges.view
+          bosses: action.game_ops.bosses.view
+          levels: action.game_ops.progression.view
+          progression-curves: action.game_ops.progression.view
+          achievements: action.game_ops.achievements.view
+          items: action.game_ops.items.view
+          collections: action.game_ops.items.view
+          shop-items: action.game_ops.shop.view
+          currencies: action.game_ops.shop.view
+          reward-rules: action.game_ops.rewards.view
+          events: action.game_ops.events.view
+          event-templates: action.game_ops.events.view
+          season-tracks: action.game_ops.events.view
+          matchmaking-configs: action.game_ops.competition.view
+          ranking-rules: action.game_ops.competition.view
+          seasons: action.game_ops.competition.view
+          tournament-templates: action.game_ops.competition.view
+          challenge-templates: action.game_ops.competition.view
+          leaderboard-definitions: action.game_ops.competition.view
+          sticker-packs: action.game_ops.chat_assets.view
+          gifs: action.game_ops.chat_assets.view
+      summary: Danh sách cấu hình game theo loại (Game Studio)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameConfigVersion'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: createGameConfig_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.edit
+          npc-dialogues: action.game_ops.npcs.edit
+          quests: action.game_ops.quests.edit
+          story-chapters: action.game_ops.quests.edit
+          minigame-configs: action.game_ops.minigames.edit
+          challenges: action.game_ops.challenges.edit
+          bosses: action.game_ops.bosses.edit
+          levels: action.game_ops.progression.edit
+          progression-curves: action.game_ops.progression.edit
+          achievements: action.game_ops.achievements.edit
+          items: action.game_ops.items.edit
+          collections: action.game_ops.items.edit
+          shop-items: action.game_ops.shop.edit
+          currencies: action.game_ops.shop.edit
+          reward-rules: action.game_ops.rewards.edit
+          events: action.game_ops.events.edit
+          event-templates: action.game_ops.events.edit
+          season-tracks: action.game_ops.events.edit
+          matchmaking-configs: action.game_ops.competition.edit
+          ranking-rules: action.game_ops.competition.edit
+          seasons: action.game_ops.competition.edit
+          tournament-templates: action.game_ops.competition.edit
+          challenge-templates: action.game_ops.competition.edit
+          leaderboard-definitions: action.game_ops.competition.edit
+          sticker-packs: action.game_ops.chat_assets.edit
+          gifs: action.game_ops.chat_assets.edit
+      summary: Tạo cấu hình game mới (version 1, draft)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameConfigInput'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigVersion'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/{config_type}/{config_id}/versions/{version}:
+    get:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: getGameConfigVersion_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.view
+          npc-dialogues: action.game_ops.npcs.view
+          quests: action.game_ops.quests.view
+          story-chapters: action.game_ops.quests.view
+          minigame-configs: action.game_ops.minigames.view
+          challenges: action.game_ops.challenges.view
+          bosses: action.game_ops.bosses.view
+          levels: action.game_ops.progression.view
+          progression-curves: action.game_ops.progression.view
+          achievements: action.game_ops.achievements.view
+          items: action.game_ops.items.view
+          collections: action.game_ops.items.view
+          shop-items: action.game_ops.shop.view
+          currencies: action.game_ops.shop.view
+          reward-rules: action.game_ops.rewards.view
+          events: action.game_ops.events.view
+          event-templates: action.game_ops.events.view
+          season-tracks: action.game_ops.events.view
+          matchmaking-configs: action.game_ops.competition.view
+          ranking-rules: action.game_ops.competition.view
+          seasons: action.game_ops.competition.view
+          tournament-templates: action.game_ops.competition.view
+          challenge-templates: action.game_ops.competition.view
+          leaderboard-definitions: action.game_ops.competition.view
+          sticker-packs: action.game_ops.chat_assets.view
+          gifs: action.game_ops.chat_assets.view
+      summary: Xem một version cấu hình game
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigVersion'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: updateGameConfigDraft_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.edit
+          npc-dialogues: action.game_ops.npcs.edit
+          quests: action.game_ops.quests.edit
+          story-chapters: action.game_ops.quests.edit
+          minigame-configs: action.game_ops.minigames.edit
+          challenges: action.game_ops.challenges.edit
+          bosses: action.game_ops.bosses.edit
+          levels: action.game_ops.progression.edit
+          progression-curves: action.game_ops.progression.edit
+          achievements: action.game_ops.achievements.edit
+          items: action.game_ops.items.edit
+          collections: action.game_ops.items.edit
+          shop-items: action.game_ops.shop.edit
+          currencies: action.game_ops.shop.edit
+          reward-rules: action.game_ops.rewards.edit
+          events: action.game_ops.events.edit
+          event-templates: action.game_ops.events.edit
+          season-tracks: action.game_ops.events.edit
+          matchmaking-configs: action.game_ops.competition.edit
+          ranking-rules: action.game_ops.competition.edit
+          seasons: action.game_ops.competition.edit
+          tournament-templates: action.game_ops.competition.edit
+          challenge-templates: action.game_ops.competition.edit
+          leaderboard-definitions: action.game_ops.competition.edit
+          sticker-packs: action.game_ops.chat_assets.edit
+          gifs: action.game_ops.chat_assets.edit
+      summary: Sửa version cấu hình game ở trạng thái draft
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/GameConfigInput'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigVersion'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /game-admin/{config_type}/{config_id}/versions/{version}:transition:
+    post:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: transitionGameConfigVersion_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.workflow
+          npc-dialogues: action.game_ops.npcs.workflow
+          quests: action.game_ops.quests.workflow
+          story-chapters: action.game_ops.quests.workflow
+          minigame-configs: action.game_ops.minigames.workflow
+          challenges: action.game_ops.challenges.workflow
+          bosses: action.game_ops.bosses.workflow
+          levels: action.game_ops.progression.workflow
+          progression-curves: action.game_ops.progression.workflow
+          achievements: action.game_ops.achievements.workflow
+          items: action.game_ops.items.workflow
+          collections: action.game_ops.items.workflow
+          shop-items: action.game_ops.shop.workflow
+          currencies: action.game_ops.shop.workflow
+          reward-rules: action.game_ops.rewards.workflow
+          events: action.game_ops.events.workflow
+          event-templates: action.game_ops.events.workflow
+          season-tracks: action.game_ops.events.workflow
+          matchmaking-configs: action.game_ops.competition.workflow
+          ranking-rules: action.game_ops.competition.workflow
+          seasons: action.game_ops.competition.workflow
+          tournament-templates: action.game_ops.competition.workflow
+          challenge-templates: action.game_ops.competition.workflow
+          leaderboard-definitions: action.game_ops.competition.workflow
+          sticker-packs: action.game_ops.chat_assets.workflow
+          gifs: action.game_ops.chat_assets.workflow
+      summary: Workflow cấu hình game Draft → Review → Approved → Published → Archived
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - submit_review
+                    - approve
+                    - reject
+                    - archive
+                  description: Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
+                note:
+                  type: string
+                  maxLength: 2000
+                effective_from:
+                  $ref: '#/components/schemas/Timestamp'
+      responses:
+        '200':
+          description: Trạng thái mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigVersion'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/{config_type}/{config_id}/versions:
+    get:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: listGameConfigVersions_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.view
+          npc-dialogues: action.game_ops.npcs.view
+          quests: action.game_ops.quests.view
+          story-chapters: action.game_ops.quests.view
+          minigame-configs: action.game_ops.minigames.view
+          challenges: action.game_ops.challenges.view
+          bosses: action.game_ops.bosses.view
+          levels: action.game_ops.progression.view
+          progression-curves: action.game_ops.progression.view
+          achievements: action.game_ops.achievements.view
+          items: action.game_ops.items.view
+          collections: action.game_ops.items.view
+          shop-items: action.game_ops.shop.view
+          currencies: action.game_ops.shop.view
+          reward-rules: action.game_ops.rewards.view
+          events: action.game_ops.events.view
+          event-templates: action.game_ops.events.view
+          season-tracks: action.game_ops.events.view
+          matchmaking-configs: action.game_ops.competition.view
+          ranking-rules: action.game_ops.competition.view
+          seasons: action.game_ops.competition.view
+          tournament-templates: action.game_ops.competition.view
+          challenge-templates: action.game_ops.competition.view
+          leaderboard-definitions: action.game_ops.competition.view
+          sticker-packs: action.game_ops.chat_assets.view
+          gifs: action.game_ops.chat_assets.view
+      summary: Lịch sử version của một cấu hình game (ADR-0043)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Danh sách version + con trỏ release hiện hành
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersionHistory'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /game-admin/{config_type}/{config_id}/versions/{version}:diff:
+    get:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: diffGameConfigVersions_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.view
+          npc-dialogues: action.game_ops.npcs.view
+          quests: action.game_ops.quests.view
+          story-chapters: action.game_ops.quests.view
+          minigame-configs: action.game_ops.minigames.view
+          challenges: action.game_ops.challenges.view
+          bosses: action.game_ops.bosses.view
+          levels: action.game_ops.progression.view
+          progression-curves: action.game_ops.progression.view
+          achievements: action.game_ops.achievements.view
+          items: action.game_ops.items.view
+          collections: action.game_ops.items.view
+          shop-items: action.game_ops.shop.view
+          currencies: action.game_ops.shop.view
+          reward-rules: action.game_ops.rewards.view
+          events: action.game_ops.events.view
+          event-templates: action.game_ops.events.view
+          season-tracks: action.game_ops.events.view
+          matchmaking-configs: action.game_ops.competition.view
+          ranking-rules: action.game_ops.competition.view
+          seasons: action.game_ops.competition.view
+          tournament-templates: action.game_ops.competition.view
+          challenge-templates: action.game_ops.competition.view
+          leaderboard-definitions: action.game_ops.competition.view
+          sticker-packs: action.game_ops.chat_assets.view
+          gifs: action.game_ops.chat_assets.view
+      summary: So sánh hai version cấu hình game
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+        - name: with
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersionDiff'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /game-admin/{config_type}/{config_id}/versions/{version}:publish:
+    post:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: publishGameConfigVersion_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.publish
+          npc-dialogues: action.game_ops.npcs.publish
+          quests: action.game_ops.quests.publish
+          story-chapters: action.game_ops.quests.publish
+          minigame-configs: action.game_ops.minigames.publish
+          challenges: action.game_ops.challenges.publish
+          bosses: action.game_ops.bosses.publish
+          levels: action.game_ops.progression.publish
+          progression-curves: action.game_ops.progression.publish
+          achievements: action.game_ops.achievements.publish
+          items: action.game_ops.items.publish
+          collections: action.game_ops.items.publish
+          shop-items: action.game_ops.shop.publish
+          currencies: action.game_ops.shop.publish
+          reward-rules: action.game_ops.rewards.publish
+          events: action.game_ops.events.publish
+          event-templates: action.game_ops.events.publish
+          season-tracks: action.game_ops.events.publish
+          matchmaking-configs: action.game_ops.competition.publish
+          ranking-rules: action.game_ops.competition.publish
+          seasons: action.game_ops.competition.publish
+          tournament-templates: action.game_ops.competition.publish
+          challenge-templates: action.game_ops.competition.publish
+          leaderboard-definitions: action.game_ops.competition.publish
+          sticker-packs: action.game_ops.chat_assets.publish
+          gifs: action.game_ops.chat_assets.publish
+      summary: Xuất bản cấu hình game (ngay/hẹn giờ) — dựng snapshot, đổi con trỏ, cập nhật manifest tenant
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '200':
+          description: Đã xuất bản
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '202':
+          description: Đã hẹn giờ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/{config_type}/{config_id}:rollback:
+    post:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: rollbackGameConfig_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.rollback
+          npc-dialogues: action.game_ops.npcs.rollback
+          quests: action.game_ops.quests.rollback
+          story-chapters: action.game_ops.quests.rollback
+          minigame-configs: action.game_ops.minigames.rollback
+          challenges: action.game_ops.challenges.rollback
+          bosses: action.game_ops.bosses.rollback
+          levels: action.game_ops.progression.rollback
+          progression-curves: action.game_ops.progression.rollback
+          achievements: action.game_ops.achievements.rollback
+          items: action.game_ops.items.rollback
+          collections: action.game_ops.items.rollback
+          shop-items: action.game_ops.shop.rollback
+          currencies: action.game_ops.shop.rollback
+          reward-rules: action.game_ops.rewards.rollback
+          events: action.game_ops.events.rollback
+          event-templates: action.game_ops.events.rollback
+          season-tracks: action.game_ops.events.rollback
+          matchmaking-configs: action.game_ops.competition.rollback
+          ranking-rules: action.game_ops.competition.rollback
+          seasons: action.game_ops.competition.rollback
+          tournament-templates: action.game_ops.competition.rollback
+          challenge-templates: action.game_ops.competition.rollback
+          leaderboard-definitions: action.game_ops.competition.rollback
+          sticker-packs: action.game_ops.chat_assets.rollback
+          gifs: action.game_ops.chat_assets.rollback
+      summary: Dùng lại version cấu hình game đã publish (đổi con trỏ)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackRequest'
+      responses:
+        '200':
+          description: Con trỏ đã đổi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/{config_type}/{config_id}:unpublish:
+    post:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: unpublishGameConfig_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.rollback
+          npc-dialogues: action.game_ops.npcs.rollback
+          quests: action.game_ops.quests.rollback
+          story-chapters: action.game_ops.quests.rollback
+          minigame-configs: action.game_ops.minigames.rollback
+          challenges: action.game_ops.challenges.rollback
+          bosses: action.game_ops.bosses.rollback
+          levels: action.game_ops.progression.rollback
+          progression-curves: action.game_ops.progression.rollback
+          achievements: action.game_ops.achievements.rollback
+          items: action.game_ops.items.rollback
+          collections: action.game_ops.items.rollback
+          shop-items: action.game_ops.shop.rollback
+          currencies: action.game_ops.shop.rollback
+          reward-rules: action.game_ops.rewards.rollback
+          events: action.game_ops.events.rollback
+          event-templates: action.game_ops.events.rollback
+          season-tracks: action.game_ops.events.rollback
+          matchmaking-configs: action.game_ops.competition.rollback
+          ranking-rules: action.game_ops.competition.rollback
+          seasons: action.game_ops.competition.rollback
+          tournament-templates: action.game_ops.competition.rollback
+          challenge-templates: action.game_ops.competition.rollback
+          leaderboard-definitions: action.game_ops.competition.rollback
+          sticker-packs: action.game_ops.chat_assets.rollback
+          gifs: action.game_ops.chat_assets.rollback
+      summary: Gỡ xuất bản cấu hình game
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: Đã gỡ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /game-admin/{config_type}/{config_id}/releases:
+    get:
+      x-service: competition
+      tags:
+        - game-admin
+      operationId: listGameConfigReleases_competition
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.view
+          npc-dialogues: action.game_ops.npcs.view
+          quests: action.game_ops.quests.view
+          story-chapters: action.game_ops.quests.view
+          minigame-configs: action.game_ops.minigames.view
+          challenges: action.game_ops.challenges.view
+          bosses: action.game_ops.bosses.view
+          levels: action.game_ops.progression.view
+          progression-curves: action.game_ops.progression.view
+          achievements: action.game_ops.achievements.view
+          items: action.game_ops.items.view
+          collections: action.game_ops.items.view
+          shop-items: action.game_ops.shop.view
+          currencies: action.game_ops.shop.view
+          reward-rules: action.game_ops.rewards.view
+          events: action.game_ops.events.view
+          event-templates: action.game_ops.events.view
+          season-tracks: action.game_ops.events.view
+          matchmaking-configs: action.game_ops.competition.view
+          ranking-rules: action.game_ops.competition.view
+          seasons: action.game_ops.competition.view
+          tournament-templates: action.game_ops.competition.view
+          challenge-templates: action.game_ops.competition.view
+          leaderboard-definitions: action.game_ops.competition.view
+          sticker-packs: action.game_ops.chat_assets.view
+          gifs: action.game_ops.chat_assets.view
+      summary: Lịch sử publish/rollback/unpublish của cấu hình game
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+            enum:
+              - matchmaking-configs
+              - ranking-rules
+              - seasons
+              - tournament-templates
+              - challenge-templates
+              - leaderboard-definitions
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentRelease'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+components:
+  parameters:
+    TenantIdHeader:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: |
+        Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+        Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+        lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en.
+      schema:
+        type: string
+        maxLength: 64
+        examples:
+          - vi-VN
+          - en-US
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID do client sinh; lưu 24h (ADR-0010)
+      schema:
+        type: string
+        format: uuid
+    PartyId:
+      name: party_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    StudentId:
+      name: student_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    InvitationId:
+      name: invitation_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DuelIdPath:
+      name: duel_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TicketId:
+      name: ticket_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: Cursor opaque từ page.next_cursor
+      schema:
+        type: string
+        maxLength: 512
+    MatchId:
+      name: match_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    LeaderboardId:
+      name: leaderboard_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    GameConfigId:
+      name: config_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    Version:
+      name: version
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 512
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+      description: UUIDv7
+    PartyCreate:
+      type: object
+      required:
+        - name
+        - party_type
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        party_type:
+          $ref: '#/components/schemas/PartyType'
+        visibility:
+          $ref: '#/components/schemas/PartyVisibility'
+        invitation_policy:
+          type: string
+          enum:
+            - leader_only
+            - members
+          default: leader_only
+        max_members:
+          type: integer
+          minimum: 2
+          maximum: 8
+          default: 4
+    PartyType:
+      type: string
+      enum:
+        - friend
+        - study_group
+        - quest
+        - competition_team
+        - custom
+    PartyVisibility:
+      type: string
+      enum:
+        - private
+        - friends
+        - class
+    Party:
+      type: object
+      required:
+        - party_id
+        - name
+        - leader_id
+        - party_type
+        - visibility
+        - max_members
+        - status
+        - members
+      properties:
+        party_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 255
+        leader_id:
+          $ref: '#/components/schemas/Uuid'
+        party_type:
+          $ref: '#/components/schemas/PartyType'
+        visibility:
+          $ref: '#/components/schemas/PartyVisibility'
+        invitation_policy:
+          type: string
+          enum:
+            - leader_only
+            - members
+        max_members:
+          type: integer
+          minimum: 2
+          maximum: 8
+        status:
+          type: string
+          enum:
+            - open
+            - in_activity
+            - disbanded
+        current_activity:
+          $ref: '#/components/schemas/PartyActivitySelection'
+        current_game_session_ref:
+          $ref: '#/components/schemas/Uuid'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartyMember'
+        chat_channel_id:
+          $ref: '#/components/schemas/Uuid'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    PartyActivitySelection:
+      type: object
+      required:
+        - activity_type
+      properties:
+        activity_type:
+          type: string
+          enum:
+            - explore
+            - quest
+            - learning_challenge
+            - coop_challenge
+            - team_battle
+        activity_ref:
+          $ref: '#/components/schemas/Uuid'
+        game_mode:
+          type: string
+          maxLength: 64
+    PartyMember:
+      type: object
+      required:
+        - student_id
+        - nickname
+        - role
+        - joined_at
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        nickname:
+          type: string
+          maxLength: 128
+        avatar_config:
+          $ref: '#/components/schemas/AvatarConfig'
+        role:
+          type: string
+          enum:
+            - leader
+            - member
+        ready:
+          type: boolean
+        presence:
+          type: string
+          enum:
+            - online
+            - in_activity
+            - disconnected
+            - offline
+        joined_at:
+          $ref: '#/components/schemas/Timestamp'
+    AvatarConfig:
+      type: object
+      properties:
+        body:
+          type: string
+          maxLength: 1000
+        skin_tone:
+          type: string
+          maxLength: 64
+        hair_item_id:
+          $ref: '#/components/schemas/Uuid'
+        outfit_item_id:
+          $ref: '#/components/schemas/Uuid'
+        accessory_item_ids:
+          type: array
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/Uuid'
+        emote_item_ids:
+          type: array
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/Uuid'
+    Timestamp:
+      type: string
+      format: date-time
+    Problem:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - code
+      properties:
+        type:
+          type: string
+          maxLength: 2048
+          format: uri
+        title:
+          type: string
+          maxLength: 255
+        status:
+          type: integer
+        code:
+          description: Mã ổn định; client phải chấp nhận giá trị chưa biết
+          anyOf:
+            - $ref: '#/components/schemas/ProblemCode'
+            - type: string
+              maxLength: 64
+        detail:
+          type: string
+          maxLength: 1000
+        instance:
+          type: string
+          maxLength: 2048
+        trace_id:
+          type: string
+          maxLength: 64
+        policy_reason:
+          type: string
+          maxLength: 1000
+        feature_key:
+          type: string
+          maxLength: 128
+          description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+    ProblemCode:
+      type: string
+      description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
+      enum:
+        - BAD_REQUEST
+        - TENANT_HEADER_REQUIRED
+        - UNAUTHENTICATED
+        - TOKEN_EXPIRED
+        - PERMISSION_DENIED
+        - MFA_REQUIRED
+        - CALLER_NOT_ALLOWED
+        - FORBIDDEN_SCOPE
+        - POLICY_DENIED
+        - NOT_FOUND
+        - CONFLICT
+        - VALIDATION_FAILED
+        - INVALID_STATE_TRANSITION
+        - VERSION_MISMATCH
+        - PRECONDITION_REQUIRED
+        - IDEMPOTENCY_KEY_REQUIRED
+        - IDEMPOTENCY_KEY_REUSED
+        - IDEMPOTENCY_IN_PROGRESS
+        - RATE_LIMITED
+        - INTERNAL
+        - UNAVAILABLE
+        - MAINTENANCE
+        - ACCOUNT_NOT_PROVISIONED
+        - INVALID_CREDENTIALS
+        - LOGIN_TICKET_INVALID
+        - REFRESH_TOKEN_INVALID
+        - REFRESH_TOKEN_REUSED
+        - REFRESH_TOKEN_DEVICE_MISMATCH
+        - CLIENT_VERSION_UNSUPPORTED
+        - LOGIN_QUEUE_BUSY
+        - PORTAL_ACCESS_STAFF_ONLY
+        - ACCOUNT_SETUP_REQUIRED
+        - SETUP_TICKET_INVALID
+        - PASSWORD_RESET_TOKEN_INVALID
+        - CSRF_TOKEN_INVALID
+        - USERNAME_TAKEN
+        - EMAIL_TAKEN
+        - ACCOUNT_LOCKED
+        - ACCOUNT_DEACTIVATED
+        - NO_ACTIVE_ENROLLMENT
+        - TENANT_ACCESS_DISABLED
+        - ACCESS_OUTSIDE_ALLOWED_HOURS
+        - CURFEW_ACTIVE
+        - IDENTITY_CONFLICT
+        - TENANT_NOT_SELECTED
+        - TENANT_MISMATCH
+        - GAME_ACCESS_STUDENT_ONLY
+        - ACTIVE_SESSION_ON_OTHER_DEVICE
+        - RETENTION_BELOW_MINIMUM
+        - RESOURCE_NOT_ASSIGNED
+        - CONTENT_NOT_EDITABLE
+        - CONTENT_VERSION_CONFLICT
+        - CONTENT_NOT_PUBLISHED
+        - ROLLBACK_TARGET_INVALID
+        - MEDIA_TYPE_NOT_ALLOWED
+        - MEDIA_TOO_LARGE
+        - MEDIA_NOT_READY
+        - AUDIO_REQUIRED
+        - SIS_SCHOOL_ALREADY_CONNECTED
+        - QUESTION_POOL_INSUFFICIENT
+        - ATTEMPT_NOT_FOUND
+        - ATTEMPT_NOT_IN_PROGRESS
+        - ATTEMPT_ALREADY_SUBMITTED
+        - ATTEMPT_DEADLINE_PASSED
+        - ATTEMPT_EXPIRED
+        - ANSWER_LIMIT_REACHED
+        - INVALID_RESPONSE
+        - ASSIGNMENT_NOT_OPEN
+        - ASSIGNMENT_MAX_ATTEMPTS
+        - ASSIGNMENT_NOT_EDITABLE
+        - HINTS_NOT_ALLOWED
+        - HINTS_EXHAUSTED
+        - ACTIVITY_TYPE_NOT_SUPPORTED
+        - ACTIVITY_CONFIG_INVALID
+        - EVALUATION_NOT_EDITABLE
+        - MATH_RENDER_FAILED
+        - VIDEO_NOT_READY
+        - VIDEO_SEEK_NOT_ALLOWED
+        - CUE_ANSWER_REQUIRED
+        - RESPONSE_TOO_LONG
+        - SIMULATION_LOG_INVALID
+        - EXAM_NOT_ASSIGNED
+        - EXAM_NOT_OPEN
+        - EXAM_WINDOW_CLOSED
+        - EXAM_MAX_ATTEMPTS
+        - EXAM_ACTIVE_ON_OTHER_DEVICE
+        - EXAM_TIME_OVER
+        - EXAM_ALREADY_SUBMITTED
+        - EXAM_RESULTS_NOT_RELEASED
+        - STEP_PRECONDITION_FAILED
+        - ITEM_NOT_OWNED
+        - EQUIP_SLOT_INVALID
+        - QUEST_ALREADY_COMPLETED
+        - QUEST_COOLDOWN
+        - AREA_LOCKED
+        - DISCOVERY_ALREADY_FOUND
+        - CHALLENGE_NOT_ELIGIBLE
+        - CHALLENGE_ATTEMPT_LIMIT
+        - BOSS_ENCOUNTER_FULL
+        - BOSS_PHASE_CLOSED
+        - INSUFFICIENT_BALANCE
+        - PURCHASE_LIMIT_REACHED
+        - SHOP_ITEM_UNAVAILABLE
+        - ITEM_ALREADY_OWNED
+        - TRADE_DISABLED
+        - PARTY_ALREADY_IN_PARTY
+        - PARTY_FULL
+        - PARTY_NOT_FOUND
+        - PARTY_NOT_LEADER
+        - PARTY_INVITE_NOT_ALLOWED
+        - PARTY_INVITE_RATE_LIMITED
+        - PARTY_INVITATION_EXPIRED
+        - PARTY_POLICY_VIOLATION
+        - PARTY_MEMBER_NOT_ONLINE
+        - PARTY_ACTIVITY_NOT_ELIGIBLE
+        - ROOM_NOT_MEMBER
+        - MM_TICKET_ALREADY_ACTIVE
+        - MATCH_RESULT_ALREADY_RECORDED
+        - DUEL_EXPIRED
+        - SOCIAL_SCOPE_VIOLATION
+        - FRIEND_LIMIT_REACHED
+        - FRIEND_CODE_INVALID
+        - CLUB_FULL
+        - CLUB_LIMIT_REACHED
+        - CLUB_NOT_APPROVED
+        - CHAT_NOT_ALLOWED
+        - CHAT_KIND_NOT_ALLOWED
+        - CHAT_CONTENT_BLOCKED
+        - CHAT_MUTED
+        - CHAT_RATE_LIMITED
+        - CHAT_POLICY_ALWAYS_ON
+        - CHAT_CHANNEL_CLOSED
+        - CHAT_POLICY_RELAX_NOT_ALLOWED
+        - CHAT_EDIT_WINDOW_EXPIRED
+        - CHAT_RECALL_WINDOW_EXPIRED
+        - CHAT_FORWARD_NOT_ALLOWED
+        - CHAT_PIN_LIMIT_REACHED
+        - CHAT_MENTION_LIMIT
+        - CHAT_TEMPORARILY_UNAVAILABLE
+        - CHAT_FEATURE_DISABLED
+        - CHAT_ASSET_NOT_AVAILABLE
+        - CHAT_CONTENT_HELD
+        - MODERATION_SWITCH_REASON_REQUIRED
+        - MODERATION_SWITCH_STEP_NOT_ALLOWED
+        - MODERATION_SWITCH_EXPIRY_REQUIRED
+        - MODERATION_SWITCH_SELF_APPROVAL
+        - TENANT_TOGGLE_NOT_ALLOWED
+        - SENSITIVE_TERM_INVALID
+        - SENSITIVE_CATALOG_REGRESSION_FAILED
+        - ITEM_REF_INVALID
+        - TRANSLATION_INCOMPLETE
+        - EVENT_NOT_AVAILABLE
+        - EVENT_ENDED
+        - EVENT_MILESTONE_NOT_REACHED
+        - SEASON_TIER_NOT_REACHED
+        - EVENT_TEMPLATE_PARAM_NOT_ALLOWED
+        - DASHBOARD_RANGE_TOO_LARGE
+        - DASHBOARD_BUSY
+        - DASHBOARD_QUERY_TIMEOUT
+        - EXPORT_LIMIT_REACHED
+        - MODERATION_CASE_CLOSED
+        - ROLE_NOT_FOUND
+        - FEATURE_DISABLED
+        - FEATURE_NOT_DISABLEABLE
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required:
+                  - field
+                  - code
+                properties:
+                  field:
+                    type: string
+                    maxLength: 64
+                  code:
+                    type: string
+                    maxLength: 64
+                  message:
+                    type: string
+                    maxLength: 1000
+    PartySettingsUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        visibility:
+          $ref: '#/components/schemas/PartyVisibility'
+        invitation_policy:
+          type: string
+          enum:
+            - leader_only
+            - members
+        max_members:
+          type: integer
+          minimum: 2
+          maximum: 8
+    PartySessionStart:
+      type: object
+      required:
+        - room_id
+        - game_session_ref
+        - members
+      properties:
+        room_id:
+          $ref: '#/components/schemas/Uuid'
+        game_session_ref:
+          $ref: '#/components/schemas/Uuid'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+        excluded_members:
+          type: array
+          description: Thành viên không đủ điều kiện (policy) kèm lý do
+          items:
+            type: object
+            properties:
+              student_id:
+                $ref: '#/components/schemas/Uuid'
+              reason:
+                type: string
+                maxLength: 1000
+    PartyInvitation:
+      type: object
+      required:
+        - invitation_id
+        - party_id
+        - inviter
+        - status
+        - expires_at
+      properties:
+        invitation_id:
+          $ref: '#/components/schemas/Uuid'
+        party_id:
+          $ref: '#/components/schemas/Uuid'
+        party_name:
+          type: string
+          maxLength: 128
+        inviter:
+          $ref: '#/components/schemas/PlayerCard'
+        invitee_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    PlayerCard:
+      type: object
+      description: Thông tin công khai tối thiểu của người chơi khác (không tên thật, không trường nếu liên trường)
+      required:
+        - user_id
+        - nickname
+      properties:
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        nickname:
+          type: string
+          maxLength: 128
+        level:
+          type: integer
+        avatar_config:
+          $ref: '#/components/schemas/AvatarConfig'
+        presence:
+          type: string
+          enum:
+            - online
+            - in_activity
+            - offline
+    InvitationStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - rejected
+        - expired
+        - cancelled
+    Room:
+      type: object
+      required:
+        - room_id
+        - room_type
+        - status
+      properties:
+        room_id:
+          $ref: '#/components/schemas/Uuid'
+        room_type:
+          type: string
+          enum:
+            - hub_instance
+            - private_instance
+            - battle
+            - coop
+            - lobby
+        area_id:
+          type: string
+          maxLength: 64
+        capacity:
+          type: integer
+        status:
+          type: string
+          enum:
+            - open
+            - running
+            - closing
+            - closed
+        member_count:
+          type: integer
+    Duel:
+      type: object
+      required:
+        - duel_id
+        - challenger_id
+        - opponent_id
+        - subject_id
+        - status
+        - expires_at
+      properties:
+        duel_id:
+          $ref: '#/components/schemas/Uuid'
+        challenger_id:
+          $ref: '#/components/schemas/Uuid'
+        opponent_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - pending
+            - accepted
+            - declined
+            - expired
+            - cancelled
+        match_id:
+          $ref: '#/components/schemas/Uuid'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    MatchmakingTicketCreate:
+      type: object
+      required:
+        - mode
+        - subject_id
+      properties:
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        party_id:
+          $ref: '#/components/schemas/Uuid'
+        matchmaking_type:
+          type: string
+          enum:
+            - random
+            - skill
+            - grade
+            - subject
+            - topic
+            - friend
+            - team
+            - tournament
+          default: skill
+    MatchMode:
+      type: string
+      enum:
+        - battle_1v1
+        - team_battle
+        - coop_challenge
+        - timed_quiz
+        - tournament
+    MatchmakingTicket:
+      type: object
+      required:
+        - ticket_id
+        - status
+        - mode
+        - created_at
+      properties:
+        ticket_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - queued
+            - proposed
+            - matched
+            - cancelled
+            - expired
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        estimated_wait_seconds:
+          type: integer
+        match_id:
+          $ref: '#/components/schemas/Uuid'
+    Match:
+      type: object
+      required:
+        - match_id
+        - mode
+        - status
+      properties:
+        match_id:
+          $ref: '#/components/schemas/Uuid'
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        status:
+          type: string
+          enum:
+            - proposed
+            - lobby
+            - running
+            - completed
+            - cancelled
+            - aborted
+        room_id:
+          $ref: '#/components/schemas/Uuid'
+        started_at:
+          $ref: '#/components/schemas/Timestamp'
+        ended_at:
+          $ref: '#/components/schemas/Timestamp'
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              player:
+                $ref: '#/components/schemas/PlayerCard'
+              team_no:
+                type: integer
+              outcome:
+                type:
+                  - string
+                  - 'null'
+                enum:
+                  - win
+                  - loss
+                  - draw
+                  - abandoned
+                  - null
+              score:
+                type:
+                  - number
+                  - 'null'
+              competition_points:
+                type:
+                  - integer
+                  - 'null'
+              rating_delta:
+                type:
+                  - number
+                  - 'null'
+    GradeLevel:
+      type: integer
+      minimum: 1
+      maximum: 9
+    PageInfo:
+      type: object
+      required:
+        - has_more
+        - limit
+      properties:
+        next_cursor:
+          type:
+            - string
+            - 'null'
+          maxLength: 512
+        has_more:
+          type: boolean
+        limit:
+          type: integer
+    Rating:
+      type: object
+      required:
+        - mode
+        - subject_id
+        - season_id
+        - tier
+      properties:
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        season_id:
+          $ref: '#/components/schemas/Uuid'
+        tier:
+          type: string
+          maxLength: 64
+          description: Hiển thị thân thiện (vd. Đồng, Bạc, Vàng)
+        rating:
+          type: number
+        rd:
+          type: number
+        games_played:
+          type: integer
+    Tournament:
+      allOf:
+        - $ref: '#/components/schemas/TournamentCreate'
+        - type: object
+          required:
+            - tournament_id
+            - status
+          properties:
+            tournament_id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              type: string
+              enum:
+                - draft
+                - registration
+                - seeded
+                - running
+                - completed
+                - cancelled
+            entry_count:
+              type: integer
+    TournamentCreate:
+      type: object
+      description: Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+      required:
+        - template_id
+        - name
+        - format
+        - scope_type
+        - scope_id
+        - subject_id
+        - registration_closes_at
+      properties:
+        template_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 80
+        format:
+          type: string
+          enum:
+            - single_elim
+            - double_elim
+            - round_robin
+            - team
+        scope_type:
+          type: string
+          enum:
+            - class
+            - school
+            - organization
+        scope_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        registration_closes_at:
+          $ref: '#/components/schemas/Timestamp'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        max_entries:
+          type: integer
+          minimum: 2
+          maximum: 256
+    LeaderboardPage:
+      type: object
+      required:
+        - leaderboard_id
+        - period_key
+        - entries
+      properties:
+        leaderboard_id:
+          $ref: '#/components/schemas/Uuid'
+        scope_type:
+          type: string
+          enum:
+            - global
+            - organization
+            - school
+            - class
+            - grade
+            - subject
+            - topic
+            - game_mode
+            - friends
+            - team
+        metric:
+          type: string
+          enum:
+            - competition_points
+            - xp
+            - quests_completed
+            - rating
+        period:
+          type: string
+          enum:
+            - daily
+            - weekly
+            - monthly
+            - season
+            - all_time
+        period_key:
+          type: string
+          maxLength: 64
+        entries:
+          type: array
+          items:
+            type: object
+            required:
+              - rank
+              - player
+              - value
+            properties:
+              rank:
+                type: integer
+              player:
+                $ref: '#/components/schemas/PlayerCard'
+              value:
+                type: number
+              is_me:
+                type: boolean
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    ContentStatus:
+      type: string
+      enum:
+        - draft
+        - in_review
+        - approved
+        - published
+        - archived
+        - rejected
+    GameConfigVersion:
+      type: object
+      required:
+        - config_type
+        - config_id
+        - version
+        - status
+        - payload
+      properties:
+        config_type:
+          $ref: '#/components/schemas/GameConfigType'
+        config_id:
+          $ref: '#/components/schemas/Uuid'
+        config_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        title:
+          type: string
+          maxLength: 255
+        payload:
+          type: object
+          additionalProperties: true
+        effective_from:
+          $ref: '#/components/schemas/Timestamp'
+        author_id:
+          $ref: '#/components/schemas/Uuid'
+        reviewer_id:
+          $ref: '#/components/schemas/Uuid'
+        published_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    GameConfigType:
+      type: string
+      description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
+      enum:
+        - quests
+        - minigame-configs
+        - npc-dialogues
+        - world-areas
+        - story-chapters
+        - items
+        - reward-rules
+        - levels
+        - progression-curves
+        - challenges
+        - bosses
+        - achievements
+        - collections
+        - shop-items
+        - currencies
+        - matchmaking-configs
+        - ranking-rules
+        - seasons
+        - tournament-templates
+        - challenge-templates
+        - leaderboard-definitions
+        - sticker-packs
+        - gifs
+        - events
+        - event-templates
+        - season-tracks
+    GameConfigInput:
+      type: object
+      required:
+        - payload
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        payload:
+          type: object
+          description: Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json)
+          additionalProperties: true
+    ContentVersionHistory:
+      type: object
+      required:
+        - item_id
+        - data
+        - page
+      properties:
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        current_version:
+          type: integer
+          minimum: 1
+          description: Version học sinh nhận khi bắt đầu lượt mới; vắng = chưa publish/đã gỡ
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentVersionSummary'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    ContentVersionSummary:
+      type: object
+      required:
+        - version
+        - status
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        content_version_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        is_current:
+          type: boolean
+          description: true nếu là con trỏ release hiện hành
+        change_note:
+          type: string
+          maxLength: 500
+        author_id:
+          $ref: '#/components/schemas/Uuid'
+        reviewer_id:
+          $ref: '#/components/schemas/Uuid'
+        published_by:
+          $ref: '#/components/schemas/Uuid'
+        published_at:
+          $ref: '#/components/schemas/Timestamp'
+        publish_at:
+          $ref: '#/components/schemas/Timestamp'
+        active_pinned_sessions:
+          type: integer
+          minimum: 0
+          description: Số lượt chơi/học đang ghim version này (ước lượng)
+    ContentVersionDiff:
+      type: object
+      required:
+        - from_version
+        - to_version
+        - changes
+      properties:
+        from_version:
+          type: integer
+          minimum: 1
+        to_version:
+          type: integer
+          minimum: 1
+        changes:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required:
+              - path
+              - op
+            properties:
+              path:
+                type: string
+                maxLength: 512
+                description: JSON pointer của field/khối
+              op:
+                type: string
+                enum:
+                  - added
+                  - removed
+                  - changed
+              before:
+                description: Giá trị cũ (answer_key chỉ trả khi có quyền review)
+              after:
+                description: Giá trị mới
+    PublishRequest:
+      type: object
+      properties:
+        publish_at:
+          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay
+          $ref: '#/components/schemas/Timestamp'
+        change_note:
+          type: string
+          maxLength: 500
+    ContentRelease:
+      type: object
+      required:
+        - release_id
+        - item_type
+        - item_id
+        - action
+        - released_by
+        - released_at
+      properties:
+        release_id:
+          $ref: '#/components/schemas/Uuid'
+        item_type:
+          type: string
+          maxLength: 64
+        item_id:
+          $ref: '#/components/schemas/Uuid'
+        action:
+          type: string
+          enum:
+            - publish
+            - rollback
+            - unpublish
+        from_version:
+          type: integer
+          minimum: 1
+        to_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 500
+        scheduled_for:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum:
+            - scheduled
+            - applied
+            - cancelled
+        released_by:
+          $ref: '#/components/schemas/Uuid'
+        released_at:
+          $ref: '#/components/schemas/Timestamp'
+    RollbackRequest:
+      type: object
+      required:
+        - to_version
+        - reason
+      properties:
+        to_version:
+          type: integer
+          minimum: 1
+          description: Số version đã publish của chính item (ROLLBACK_TARGET_INVALID nếu không hợp lệ)
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ReasonRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+  headers:
+    ContentLanguage:
+      description: Ngôn ngữ của văn bản đã chọn trong response (`vi-VN` | `en-US`)
+      schema:
+        type: string
+        maxLength: 16
+    RateLimitLimit:
+      schema:
+        type: integer
+    RateLimitRemaining:
+      schema:
+        type: integer
+    RateLimitReset:
+      schema:
+        type: integer
+    RetryAfter:
+      schema:
+        type: integer
+    ETag:
+      description: Phiên bản tài nguyên cho optimistic concurrency
+      schema:
+        type: string
+        maxLength: 512
+  responses:
+    Conflict:
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: VALIDATION_FAILED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
+    NotFound:
+      description: Không tồn tại hoặc ngoài tenant scope (NOT_FOUND)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthenticated:
+      description: Thiếu/sai/hết hạn token (UNAUTHENTICATED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068)
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Gone:
+      description: Tài nguyên hết hạn (PARTY_INVITATION_EXPIRED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionFailed:
+      description: VERSION_MISMATCH
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionRequired:
+      description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  securitySchemes:
+    keycloakBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token Keycloak (realm eduworld, aud eduworld-api, TTL 5 phút).
+    keycloakAdminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`, phát qua `POST /auth/portal/login` — ADR-0091) có MFA (`acr` mức MFA, `amr` chứa `otp`; thiếu hoặc `auth_time` quá 8 giờ → 403 MFA_REQUIRED),
+        Principal phải có role platform với permission tương ứng (`game.*`, `competition.config.*`, `platform.*`).
+        Chỉ dùng trên gateway nội bộ (ADR-0027).
+    keycloakOidc:
+      type: openIdConnect
+      description: Host thật theo môi trường (`sso.<env>.<domain>`, OQ-10); URL dưới đây là placeholder hợp lệ.
+      openIdConnectUrl: https://sso.eduworld.example/realms/eduworld/.well-known/openid-configuration

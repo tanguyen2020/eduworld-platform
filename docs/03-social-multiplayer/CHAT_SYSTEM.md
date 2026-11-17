@@ -1,21 +1,21 @@
 # Chat System
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-15
-> Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0033](../adr/ADR-0033-purge-nhom-chat-gameplay-ngoai-le-co-kiem-soat-cua-adr-0028.md) · [ADR-0034](../adr/ADR-0034-bo-tinh-nang-chat-day-du.md) · [ADR-0035](../adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) · [MODERATION](MODERATION.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-17 (ADR-0078: PII/grooming luôn chạy, giờ giới nghiêm platform, preset quick message + emote, tenant `common`; 2026-11-16: channel `study_group` theo event module learning — ADR-0084)
+> Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0033](../adr/ADR-0033-purge-nhom-chat-gameplay-ngoai-le-co-kiem-soat-cua-adr-0028.md) · [ADR-0034](../adr/ADR-0034-bo-tinh-nang-chat-day-du.md) · [ADR-0035](../adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) · [MODERATION](MODERATION.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 ## 1. Phạm vi & nguyên tắc
 
 Tài liệu **duy nhất** về chat: channel, policy, tính năng tin nhắn, truyền tải, lưu trữ/purge và **trải nghiệm chat của học sinh** (§4.3). Kiểm duyệt nội dung (pipeline, danh mục từ nhạy cảm, công tắc, report, sanction) thuộc [MODERATION](MODERATION.md); quan hệ bạn bè/block/club thuộc [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md).
 
-Chat là **domain riêng** trong **chat-service** (ADR-0036), database `eduworld_chat`, schema `chat` **[Confirmed]**.
+Chat là **domain riêng** trong **module chat** (ADR-0074, thay ADR-0036), database `eduworld_chat`, schema `chat` **[Confirmed]**. Lệnh gửi tin chạy trong `core-api` (nhận từ `realtime` qua NATS `ew.cmd.chat.*`); mọi consumer và job nền của chat (`chat-persister`, `chat-notifier`, `chat-moderation-async`, `chat-stats`, `chat-channel-closer`, `gameplay-chat-purge`) chạy trong Swarm service `worker-chat` (`cmd/worker --profile=chat`), scale riêng khi chat tăng đột biến ([DEPLOYMENT §3.1](../11-operations/DEPLOYMENT.md#31-binary-và-swarm-service-backend-adr-0074)).
 
 1. **Một bộ quy tắc cho mọi lớp 1–9** (ADR-0020, Accepted): `ChatPolicy` **không** có điều kiện theo `grade_level`/`grade_band`. Mọi học sinh có cùng loại channel, cùng loại tin nhắn (`text`, `emoji`, `quick`, `sticker`, `gif`, reaction) và cùng bộ tính năng (§7) và cùng rate limit **[Confirmed]**.
 2. **Mọi tin nhắn phải hợp lệ trước khi phát**: tất cả nội dung mới (text, **bản sửa**, **tin forward**, đoạn **quote**, quick message có tham số, tên nhóm/channel do người dùng đặt) qua pipeline kiểm tra hợp lệ đồng bộ phía server ([MODERATION](MODERATION.md) §3) → `allow | mask | block | hold_for_review | block_and_alert`. Chỉ `allow`/`mask` được phát; `block` không lưu nội dung **[Confirmed]**. Từ nhạy cảm so khớp theo **danh mục quản lý trong CMS** ([MODERATION](MODERATION.md) §11). Pipeline **bật mặc định**; System Admin có thể tắt từng bước hoặc toàn bộ theo platform/tenant ([MODERATION](MODERATION.md) §12, ADR-0030). Khi tắt vẫn giữ độ dài tối đa, rate limit, quyền channel, sanction, block/mute/report **[Confirmed]**.
 3. **Không mở tự do vô điều kiện**: quyền gửi vào một channel xác định theo **quan hệ** (thành viên trường, instance, nhóm, lớp, bạn bè) và `ChatPolicy`; không có rule = deny **[Confirmed]**.
-4. **Tenant isolation**: tin nhắn chỉ đọc được bởi member channel; moderator chỉ trong phạm vi trường; không ai đọc toàn bộ chat của mọi trường **[Confirmed]**.
-5. **Data minimization**: chỉ lưu những gì cần cho lịch sử + an toàn, có retention (OQ-12) **[Confirmed]**.
+4. **Tenant isolation**: tin nhắn chỉ đọc được bởi member channel; Platform Safety Team (`safety_moderator`, ADR-0072) chỉ đọc tin trong ngữ cảnh một moderation case, có audit ([MODERATION §6.1](MODERATION.md#61-vai-trò-và-phạm-vi)); không ai đọc toàn bộ chat của mọi trường **[Confirmed]**.
+5. **Data minimization**: chỉ lưu những gì cần cho lịch sử + an toàn, có retention ([DATA_PRIVACY](../10-security/DATA_PRIVACY.md)) **[Confirmed]**.
 6. Voice chat: **không làm trong Release 1.0** ([ADR-0070](../adr/ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md)); §11 chỉ giữ điểm mở rộng ở mức thiết kế **[Confirmed]**.
-7. **Chat gameplay luôn có** (ADR-0020 mục 6): khi vào trận **1v1**, **chơi theo đội** hoặc **tạo nhóm chơi (party)**, hệ thống tự tạo channel `match`/`team`/`party` và tự cho người chơi tham gia (§4.1). Ba loại channel này là **always-on**: cài đặt tenant/trường/lớp **không tắt được**, không thu hẹp loại tin, không áp khung giờ. Chỉ mute/block của chính người chơi hoặc sanction của moderator mới ngăn được một người gửi. Kiểm tra nội dung vẫn theo công tắc ADR-0030 **[Confirmed]**.
+7. **Chat gameplay luôn có** (ADR-0020 mục 6): khi vào trận **1v1**, **chơi theo đội** hoặc **tạo nhóm chơi (party)**, hệ thống tự tạo channel `match`/`team`/`party` và tự cho người chơi tham gia (§4.1). Ba loại channel này là **always-on**: cài đặt tenant/trường/lớp **không tắt được**, không thu hẹp loại tin, không áp khung giờ. Chỉ mute/block của chính người chơi hoặc sanction của Safety Team mới ngăn được một người gửi. Kiểm tra nội dung vẫn theo công tắc ADR-0030 **[Confirmed]**.
 
 ## 2. Channel types
 
@@ -24,18 +24,19 @@ Chat là **domain riêng** trong **chat-service** (ADR-0036), database `eduworld
 | `world` | School (mặc định); toàn tenant nếu tenant `unit` bật mở rộng | Hệ thống | Ngầm định — người online cùng trường (hoặc cùng tenant) | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction — qua kiểm tra hợp lệ | Ephemeral, **purge sau 24 h** (ADR-0033) |
 | `area` | `room_id` (hub instance) | Hệ thống khi tạo instance | Ngầm định — người trong instance | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | Ephemeral, **purge sau 24 h** (ADR-0033) |
 | `match` **(always-on)** | `match_id` | Tự động khi trận 1v1 / team battle / trận tournament bắt đầu (`match.started`) | Mọi người chơi của trận (cả hai đội) | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | **Purge** sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) kể từ `closed_at` (ADR-0033) |
-| `party` **(always-on)** | `party_id` | Tự động khi tạo party | Member party | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | **Purge** sau `gameplay_chat_retention_days` kể từ khi party giải tán (ADR-0033) |
-| `team` **(always-on)** | `team_id` / đội trong trận | Tự động khi trận đội bắt đầu (mỗi đội một channel) hoặc khi tạo Team bền vững | Member đội | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | Team theo trận: **purge** như `match` (ADR-0033). Team cố định: 180 ngày, không purge |
-| `class` | `class_id` | Đồng bộ khi lớp được tạo; giáo viên có thể khóa | Học sinh + giáo viên lớp (từ Enrollment/TeachingAssignment) | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction; giáo viên có thể đặt "chỉ giáo viên đăng" | 180 ngày |
-| `study_group` | `study_group_id` | Giáo viên hoặc học sinh (theo policy trường, như nhau cho mọi lớp) | Member nhóm | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | 180 ngày |
-| `direct` | cặp `(user_a, user_b)` | Khi gửi tin đầu tiên | 2 người **đã là bạn bè** và không block nhau | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | 180 ngày |
+| `party` **(always-on; văn bản tự do từ P4 — FR-CHAT-009)** | `party_id` | Tự động khi module chat tiêu thụ `party.created` | Member party | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | **Purge** sau `gameplay_chat_retention_days` kể từ khi party giải tán (ADR-0033) |
+| `team` **(always-on)** | `team_id` / đội trong trận | Tự động khi trận đội bắt đầu (mỗi đội một channel) hoặc khi tạo club — team cố định là channel của club ([SOCIAL_SYSTEM §6](SOCIAL_SYSTEM.md#6-club--guild-nhóm-bền-vững--adr-0050-proposed)) | Member đội / thành viên club | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | Team theo trận: **purge** như `match` (ADR-0033). Team cố định (club): `persistent_chat_retention_days`, không purge |
+| `class` | `class_id` | Đồng bộ khi lớp được tạo; bật/tắt theo chat policy cấp trường do `school_admin` đặt (ADR-0072) | Học sinh của lớp (từ Enrollment) | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | `persistent_chat_retention_days` |
+| `study_group` | `study_group_id` | Tự động khi tiêu thụ event `study_group.created` của module learning (nhóm học tập LMS do `school_admin`/`academic_manager` tạo — [ADR-0084](../adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)); có từ M5 (channel bền vững) | Học sinh thành viên nhóm (bản chiếu từ event) | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | `persistent_chat_retention_days` |
+| `direct` | cặp `(user_a, user_b)` | Khi gửi tin đầu tiên | 2 người **đã là bạn bè** và không block nhau | `text`, `emoji`, `quick`, `sticker`, `gif`, reaction | `persistent_chat_retention_days` |
 
 - Người ngoài trường (World mở rộng toàn tenant, team liên trường/liên tenant) chỉ thấy nickname và avatar, không thấy tên thật/trường/lớp.
-- Giáo viên ↔ học sinh DM: **không** mở mặc định; nếu trường bật, mọi DM giáo viên–học sinh hiển thị cho school admin khi điều tra và có banner thông báo **[Proposed]**.
+- Channel bền vững (`class`, `study_group`, `team` cố định/club, `direct`) lưu theo `persistent_chat_retention_days` (180 ngày, OQ-09) **[Confirmed — Technical Architect 2026-11-16]** rồi ẩn danh hóa (§6); tin bị report giữ theo case.
+- Nhân sự (portal) không là thành viên channel chat nào và không có DM với học sinh; chat chỉ giữa học sinh với nhau (ADR-0031, ADR-0072).
 
 ## 3. Policy resolution
 
-`ChatPolicy` có 4 cấp: `platform → tenant → school → class`. Cấp dưới **chỉ được siết chặt hơn** cấp trên (ADR-0020), trừ khi cấp trên đặt `allow_override_relax=true` cho một rule cụ thể. Rule **không có** trường `grade_band`/`grade_level`; schema từ chối rule chứa điều kiện theo lớp.
+`ChatPolicy` có 4 cấp: `platform → tenant → school → class`. Cấp `school` và `class` đều do `school_admin` đặt (ADR-0072). Cấp dưới **chỉ được siết chặt hơn** cấp trên (ADR-0020), trừ khi cấp trên đặt `allow_override_relax=true` cho một rule cụ thể. Rule **không có** trường `grade_band`/`grade_level`; schema từ chối rule chứa điều kiện theo lớp.
 
 Cấu trúc rule (JSON Schema ở [`specs/schemas/chat-policy.schema.json`](../../specs/schemas/chat-policy.schema.json)):
 
@@ -73,14 +74,17 @@ flowchart TD
   C --> D["∩ class rule (nếu channel gắn class / user thuộc class)"]
   D --> E["∩ sanction của user: mute, restrict..."]
   E --> F["∩ quan hệ: member channel / bạn bè cho direct / cùng trường cho world"]
-  F --> G[Effective policy — cache Valkey 60s, invalidate khi policy đổi]
+  F --> G[Effective policy — cache Valkey chat_policy_cache 5 phút, invalidate qua pub/sub khi policy đổi]
 ```
 
 - Phép `∩` = lấy giá trị chặt hơn: `allowed_kinds` giao nhau, số lượng lấy min, giờ lấy giao, boolean `enabled` lấy AND, `strictness` lấy mức cao hơn.
 - **Ngoại lệ always-on** (`match`, `team`, `party`): `enabled` luôn `true`, `allowed_kinds` luôn gồm `text`, `emoji`, `quick`, `sticker`, `gif`, mọi `features` bắt buộc ở §7.1 luôn `true`, không có `allowed_hours` ở mọi cấp. Cấp dưới chỉ được siết `rate`, `slow_mode_seconds` (tối đa 10 s) và `validation.strictness`. Schema v5 từ chối rule vi phạm (`enabled:false`, thiếu loại tin, có `allowed_hours`, slow mode > 10 s) và API trả `CHAT_POLICY_ALWAYS_ON`.
 - Effective policy giống nhau cho mọi thành viên của cùng channel trong cùng trường/lớp: **không** có quy tắc "grade band thấp nhất" hay ngoại lệ theo khối.
 - Không có rule ở bất kỳ cấp nào = **deny**.
-- **Công tắc kiểm duyệt** (`moderation_switches`: `enabled_all`, `steps.{sensitive_terms,pii,spam,bullying,async_analysis}`, `expires_at`) nằm ở cấp platform và tenant, không nằm trong rule channel; chỉ System Admin thay đổi ([MODERATION](MODERATION.md) §12). `validation.*` và `sensitive_term_policy` chỉ có hiệu lực với các bước đang bật.
+- **Công tắc kiểm duyệt** (`moderation_switches`: `enabled_all`, `steps.{sensitive_terms,spam,bullying,async_analysis}`, `expires_at` bắt buộc ≤ 24 giờ) nằm ở cấp platform và tenant, không nằm trong rule channel; chỉ System Admin thay đổi, tắt cần System Admin thứ hai duyệt ([MODERATION](MODERATION.md) §12). Bước PII và phát hiện grooming **luôn chạy**, không có công tắc ([ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md)). `validation.*` và `sensitive_term_policy` chỉ có hiệu lực với các bước đang bật (`validation.pii` luôn hiệu lực).
+- **Giờ giới nghiêm platform** (`platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) không phải rule channel: module chat từ chối mọi lệnh gửi trong giờ giới nghiêm ở mọi channel, kể cả gameplay (khi đó game session cũng đã kết thúc nên không có trận/party đang chạy). Điều này không làm trái ngoại lệ always-on vì channel vẫn tồn tại và tự tạo khi được chơi [Confirmed — Technical Architect 2026-11-17].
+- **Preset cấp trường** `chat_policy_preset = quick_message_emote_only` ([CHILD_SAFETY §3.5](../10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078)): `allowed_kinds` của mọi channel trong trường chỉ còn `quick` + `emoji` (emote/reaction). Đây là **ngoại lệ duy nhất** được phép thu hẹp `allowed_kinds` của `match`/`team`/`party`; channel vẫn always-on (`enabled` luôn `true`), preset áp cho cả trường, không theo khối (R15) [Confirmed — Technical Architect 2026-11-17].
+- **Tenant `common`** ([CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)): rule mặc định của tenant tắt `world` và `direct`, `area` chỉ `quick` + `emoji`; chỉ System Admin bật lại [Confirmed — Technical Architect 2026-11-17].
 
 ### 3.1. Mặc định platform [Proposed — giá trị số; cấu trúc Confirmed theo ADR-0020]
 
@@ -93,25 +97,26 @@ Một bảng duy nhất theo channel, áp dụng cho mọi học sinh lớp 1–
 | `match` | **luôn bật** (always-on) | text, emoji, quick, sticker, gif | 200 | 12, 3 | 0 | `strict` |
 | `party` | **luôn bật** (always-on) | text, emoji, quick, sticker, gif | 200 | 12, 3 | 0 | `strict` |
 | `team` | **luôn bật** (always-on) | text, emoji, quick, sticker, gif | 200 | 12, 3 | 0 | `strict` |
-| `class` | bật (giáo viên có thể khóa) | text, emoji, quick, sticker, gif | 300 | 10, 3 | 0 | `strict` |
+| `class` | bật (`school_admin` có thể tắt cho trường/lớp) | text, emoji, quick, sticker, gif | 300 | 10, 3 | 0 | `strict` |
 | `study_group` | bật | text, emoji, quick, sticker, gif | 300 | 10, 3 | 0 | `strict` |
 | `direct` | bật (chỉ bạn bè) | text, emoji, quick, sticker, gif | 300 | 15, 4 | 0 | `strict` |
 
-- Giới hạn tổng mỗi người: 30 tin/phút trên mọi channel [Proposed].
-- Khung giờ mặc định: 06:30–21:30 giờ Việt Nam [Proposed]; trường có thể thu hẹp.
+- Giới hạn tổng mỗi người (`chat_rate_per_user`): 30 tin/phút trên mọi channel **[Confirmed — Technical Architect 2026-11-16]**; cột `rate` ở bảng trên là giới hạn theo channel. module chat đếm ở Valkey xuyên node. Mục này là **nguồn duy nhất** của rate limit chat; [REALTIME_ARCHITECTURE §8.1](../06-architecture/REALTIME_ARCHITECTURE.md) và API_DESIGN chỉ tham chiếu.
+- Sticker/GIF tính chung `chat_sticker_gif_rate` (4/phút/channel, §7.5); typing theo `chat_typing_throttle` (§7.10).
+- Giờ chat: ngoài giờ giới nghiêm `platform_curfew` ([CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); `allowed_hours` của channel bền vững mặc định 06:30–21:30, trường có thể thu hẹp thêm.
 - Link: chỉ cho phép link nội bộ EduWorld đã whitelist (ví dụ mời vào quest); link ngoài bị chặn. Ảnh/file do người dùng upload: **không** hỗ trợ; sticker/GIF chỉ từ thư viện nội bộ đã duyệt (§7.5).
 - `features` (§7.1) chỉ cấp platform được đổi; cấp dưới không nới.
 - Trường/lớp có thể tắt channel, thu hẹp giờ, bật slow mode, nâng strictness — áp dụng như nhau cho mọi học sinh trong phạm vi đó. **Trừ** `match`/`party`/`team`: không tắt, không thu hẹp giờ; chỉ siết rate/slow mode (≤ 10 s)/strictness.
-- Khung giờ chat không áp cho channel gameplay vì việc vào chơi đã bị giới hạn bởi giờ truy cập game của tenant (CHILD_SAFETY).
+- `allowed_hours` không áp cho channel gameplay vì việc vào chơi đã bị giới hạn bởi giờ giới nghiêm platform và giờ truy cập game của trường (CHILD_SAFETY §4).
 
 ## 4. Membership
 
 | Channel | Nguồn membership | Đồng bộ |
 |---|---|---|
-| `class` | `org.enrollments` + `org.teaching_assignments` | Consumer `enrollment.*`, `teaching_assignment.*`; học sinh chuyển lớp → rời channel lớp cũ (mất quyền đọc lịch sử mới, lịch sử cũ không còn truy cập) |
-| `match` | `competition.match_participants` | Consumer `match.started` (tạo channel + thêm mọi participant), `match.ended`/`match.aborted` (đóng channel) |
+| `class` | Học sinh có enrollment active của lớp (bản chiếu từ module identity; không có giáo viên/phân công giảng dạy — ADR-0072) | Consumer `enrollment.changed`; học sinh chuyển lớp → rời channel lớp cũ (mất quyền đọc lịch sử mới, lịch sử cũ không còn truy cập) |
+| `match` | `participants[]` trong payload `match.started` (module chat không đọc database của module competition) | Consumer `match.started` (tạo channel + thêm mọi participant), `match.completed`/`match.aborted` (đóng channel) |
 | `party`/`team` | Party/team events, đội trong trận | `party.created` (tạo), `party.member_joined/left`, `party.disbanded` (đóng); `match.started` tạo channel `team` cho từng đội |
-| `study_group` | `social.study_group_members` | |
+| `study_group` | Bản chiếu thành viên trong `chat.channel_members` (nguồn sự thật: `lms.study_group_members` của module learning; module chat không sở hữu dữ liệu nhóm) | Consumer `study_group.created` (tạo channel + thêm thành viên), `study_group.updated` (đổi tên channel), `study_group.member_changed` (thêm/bớt thành viên), `study_group.deleted` (lưu trữ channel, tin giữ theo retention chung, không purge) — ADR-0084 |
 | `direct` | 2 người | Block → channel bị "đóng băng" với cả hai |
 | `world`/`area` | Không lưu `channel_members`; quyền kiểm tra động theo room | |
 
@@ -123,7 +128,7 @@ Một bảng duy nhất theo channel, áp dụng cho mọi học sinh lớp 1–
 stateDiagram-v2
   [*] --> Open: match.started / party.created
   Open --> Open: member join/leave, reconnect, đổi thiết bị (ADR-0031)
-  Open --> Closed: match.ended / match.aborted / party.disbanded (ghi closed_at)
+  Open --> Closed: match.completed / match.aborted / party.disbanded (ghi closed_at)
   Closed --> Closed: còn report / moderation case mở → hoãn purge
   Closed --> Purged: closed_at + gameplay_chat_retention_days (job gameplay-chat-purge, ADR-0033)
   Purged --> [*]
@@ -137,7 +142,7 @@ stateDiagram-v2
 | Party (nhóm chơi) | 1 × `party` | Mọi member, kể cả người vào sau | `party.disbanded` → đóng (read-only), purge theo ADR-0033; rời party → mất quyền gửi, không đọc tin mới |
 
 Quy tắc:
-- Tạo channel và thêm member nằm trong **cùng transaction** với tạo trận/party (outbox), nên người chơi luôn có chat ngay khi vào lobby/trận. Không có bước "bật chat".
+- module competition ghi outbox (`match.started`, `party.created`, `party.member_joined`) **cùng transaction** với tạo trận/party; module chat tạo channel và thêm member khi tiêu thụ event (idempotent). Không thể tạo channel trong cùng transaction vì hai module khác database (ADR-0037, ADR-0074). `channel_id` là UUIDv5 **tất định** từ loại channel + `match_id`/`party_id`/`team_id` (hàm thuần trong `pkg/`), nên module competition trả `chat_channel_id` cho client ngay mà không chờ module chat; client gửi tin trước khi channel kịp tạo nhận lỗi retryable và tự gửi lại. Không có bước "bật chat".
 - **Reconnect / đổi thiết bị** (ADR-0031): người chơi tiếp tục trận từ thiết bị mới vẫn là member channel; client gọi `system.session.resume` với `last_seq` để nhận tin bỏ lỡ.
 - Không giới hạn theo quan hệ bạn bè/trường trong channel gameplay: ai cùng trận/party đều chat được với nhau (người ngoài trường chỉ thấy nickname). Block vẫn ẩn tin hai chiều; người chơi bị block không bị đưa ra khỏi trận.
 - Học sinh đang bị sanction `mute` vẫn vào trận/party bình thường, chỉ không gửi được tin (UI hiển thị "Bạn đang tạm thời không thể chat") **[Proposed]**.
@@ -200,7 +205,7 @@ Không bao giờ cho người gửi biết từ nào bị khớp, vị trí kh�
 | Thành phần | Vai trò trong chat | Không làm |
 |---|---|---|
 | **NATS JetStream** (stream `CHAT_MESSAGES`) | Đường ghi **bền vững**: mọi tin mới và mọi sự kiện thay đổi tin (sửa, thu hồi, reaction, pin, gỡ bởi moderator, forward) được publish vào stream **trước khi** người gửi nhận "Sent". Bộ đệm cho `chat-persister` và nguồn cho consumer bất đồng bộ | Không lưu lâu dài (`max_age` 72 h) |
-| **Valkey Pub/Sub** (`ew:chat:fanout:<channel_id>`) | **Fan-out realtime** tới các node `realtime-gateway` giữ kết nối của thành viên (chat-service publish, gateway subscribe). Mang cả tín hiệu tạm thời: typing, receipts, `chat.unread.updated` | Không đảm bảo giao, không lưu |
+| **Valkey Pub/Sub** (`ew:chat:fanout:<channel_id>`) | **Fan-out realtime** tới các node `realtime` giữ kết nối của thành viên (module chat publish, gateway subscribe). Mang cả tín hiệu tạm thời: typing, receipts, `chat.unread.updated` | Không đảm bảo giao, không lưu |
 | **Valkey** (key thường) | Cấp `seq` (`INCR ew:chat:seq:<channel_id>`), bộ đệm gần nhất `ew:chat:recent:<channel_id>`, cache unread, rate limit | Không là nguồn sự thật |
 | **PostgreSQL** (schema `chat`) | **Nguồn sự thật**: tin nhắn, revision, reaction, pin, con trỏ, lịch sử, tìm kiếm | Không nằm trên đường trễ gửi/nhận |
 
@@ -212,15 +217,15 @@ Game client và CMS **không bao giờ** kết nối NATS hay Valkey; chỉ đi 
 sequenceDiagram
   autonumber
   participant C as Godot (sender)
-  participant RT as realtime-gateway (node A) → chat-service (NATS request ew.cmd.chat.message.send)
+  participant RT as realtime (node A) → module chat (NATS request ew.cmd.chat.message.send)
   participant F as Moderation pipeline (sync)
   participant VK as Valkey
   participant JS as NATS JetStream (CHAT_MESSAGES)
   participant PS as Valkey Pub/Sub
-  participant RT2 as realtime-gateway (node B)
+  participant RT2 as realtime (node B)
   participant R as Recipients
 
-  C->>RT: chat.message.send {client_msg_id, channel_id, kind, body | quick_message_id | sticker_id | gif_id, reply_to?, quote?, mentions?}
+  C->>RT: chat.message.send {client_message_id, channel_id, kind, body | quick_message_id | sticker_id | gif_id, reply_to?, quote?, mentions?}
   RT->>RT: Membership + EffectivePolicy + features (§7) + rate limit (Valkey)
   alt Bị từ chối
     RT-->>C: system.command.failed {ref: id lệnh, code}
@@ -233,11 +238,11 @@ sequenceDiagram
     RT->>VK: EVAL seq_next.lua ew:chat:seq:<channel_id> (khởi tạo từ MAX(seq) PG nếu thiếu)
     VK-->>RT: seq
     RT->>JS: PUBLISH ew.chat.<tenant_id>.msg.<channel_id> (Nats-Msg-Id = message_id)
-    alt NATS lỗi / timeout 2 s
+    alt NATS lỗi / timeout chat_publish_ack_timeout (2 s)
       RT-->>C: system.command.failed {code: CHAT_TEMPORARILY_UNAVAILABLE, retryable: true}
     else ack
       JS-->>RT: PubAck {stream_seq}
-      RT-->>C: chat.message.acked {client_msg_id, message_id, seq}  (Sent)
+      RT-->>C: chat.message.acked {client_message_id, message_id, seq}  (Sent)
       opt decision ∈ {allow, unchecked, mask}
         RT->>VK: LPUSH+LTRIM ew:chat:recent:<channel_id> (200 tin, TTL 10')
         RT->>PS: PUBLISH ew:chat:fanout:<channel_id>
@@ -253,7 +258,7 @@ sequenceDiagram
 ```
 
 - Tin chỉ được phát **sau khi** JetStream ack. Không có tin nào tới người nhận mà chưa nằm trong JetStream.
-- `client_msg_id` là idempotency key ở realtime (Valkey `SET NX ew:chat:cmid:<sender>:<client_msg_id>` TTL 10'), `message_id` là khóa khử trùng lặp của JetStream (`duplicate_window` 2') và PostgreSQL (`ON CONFLICT DO NOTHING`).
+- `client_message_id` (tên duy nhất ở REST, realtime và DB) là idempotency key ở realtime (Valkey `SET NX ew:chat:cmid:<sender>:<client_message_id>` TTL 10'), `message_id` là khóa khử trùng lặp của JetStream (`duplicate_window` 2') và PostgreSQL (`ON CONFLICT DO NOTHING`).
 - REST fallback `POST /api/v1/chat/channels/{channel_id}/messages` dùng cùng use case.
 - `seq` cấp trước khi publish; nếu publish thất bại, `seq` đó bị bỏ trống. Client coi khoảng trống do lỗi gửi là bình thường: lịch sử không có tin đó, không retry vô hạn (§5.4).
 
@@ -262,7 +267,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant JS as JetStream CHAT_MESSAGES
-  participant P as chat-persister (worker, N instance)
+  participant P as chat-persister (worker-chat, N replica)
   participant PG as PostgreSQL
   participant N as chat-notifier
   participant M as chat-moderation-async
@@ -271,14 +276,14 @@ sequenceDiagram
   P->>PG: INSERT ... ON CONFLICT (message_id) DO NOTHING, apply edit/recall/reaction/pin/cursor, UPDATE channels.last_seq = GREATEST(...)
   PG-->>P: commit
   P->>JS: Ack (chỉ sau commit)
-  Note over P,JS: Lỗi > max_deliver (5) → publish CHAT_DLQ + alert
+  Note over P,JS: Lỗi > max_deliver (5, chat_persister_batch) → publish DLQ_CHAT + alert
   JS->>N: durable "notifier": mention / tin mới cho member offline
   JS->>M: durable "moderation": bước async_analysis (ADR-0030) nếu bật
   JS->>S: durable "stats": rollup cho analytics (ADR-0033)
 ```
 
 - Mục tiêu độ trễ lưu (publish → commit) p95 ≤ 500 ms [Proposed]; metric `eduworld_chat_persist_lag_seconds`.
-- Persister ghi theo lô (≤ 500 sự kiện hoặc 50 ms). Thứ tự ghi không quan trọng vì `seq` đã cấp trước; sự kiện thay đổi (sửa, thu hồi) áp dụng theo `revision` tăng dần, bản cũ đến muộn bị bỏ qua.
+- Persister ghi theo lô `chat_persister_batch` (≤ 500 sự kiện hoặc 50 ms; `max_deliver` 5 → `DLQ_CHAT` + alert). Thứ tự ghi không quan trọng vì `seq` đã cấp trước; sự kiện thay đổi (sửa, thu hồi) áp dụng theo `revision` tăng dần, bản cũ đến muộn bị bỏ qua.
 - Con trỏ đọc (`chat.receipt.read`) được realtime gộp (tối đa 1 lần/2 s/thành viên) rồi publish `ew.chat.<tenant_id>.cursor.<channel_id>` để persister cập nhật `channel_members.last_read_seq`.
 - Tin `world`/`area` (ephemeral) cũng đi qua JetStream; persister ghi vào `chat.ephemeral_messages` (purge 24 h, ADR-0033).
 
@@ -320,16 +325,17 @@ Thứ tự hiển thị luôn theo `seq`, không theo thứ tự đến.
 
 | Loại channel | Bị purge? | Mốc tính | Thời hạn |
 |---|---|---|---|
-| `match` | Có | `closed_at` (trận kết thúc/hủy) | `gameplay_chat_retention_days`: mặc định 7, **tối thiểu 3** [Proposed] |
+| `match` | Có | `closed_at` (trận kết thúc/hủy) | `gameplay_chat_retention_days`: mặc định 7, **tối thiểu 3** [Proposed]; job theo `gameplay_chat_purge_job` (hằng giờ, lô 1.000 dòng) |
 | `team` gắn với một trận | Có | `closed_at` | như `match` |
 | `party` | Có | `closed_at` (party giải tán) | như `match` |
 | `world`, `area` (ephemeral) | Có | `created_at` | 24 giờ |
-| `class`, `study_group`, `team` cố định, `direct` | **Không** | — | Chính sách lưu trữ chung, ẩn danh hóa (OQ-12, ADR-0070) |
+| `class`, `study_group`, `team` cố định, `direct` | **Không** | — | Chính sách lưu trữ chung, ẩn danh hóa (DATA_PRIVACY, ADR-0070) |
 
-Quy trình job `gameplay-chat-purge` (worker của chat-service, role DB `chat_purger`, chi tiết DB/metric ở DATABASE_DESIGN và MONITORING):
+Quy trình job `gameplay-chat-purge` (profile `worker-chat` của module chat, khóa leader, role DB `chat_purger`, chi tiết DB/metric ở DATABASE_DESIGN và MONITORING):
 1. Rollup chỉ số tổng hợp (số tin, số tin bị chặn theo category…) vào analytics.
 2. Tin thuộc report, moderation case hoặc sanction → **sao chép** sang `chat.moderation_evidence` ([MODERATION](MODERATION.md) §6.1).
 3. Channel còn report chưa xử lý hoặc case đang mở → **hoãn purge** đến khi case đóng.
+   **Fail-closed:** khi module moderation chưa sẵn sàng (chưa có nguồn report/case/sanction để kiểm, ví dụ trước khi triển khai Platform Safety Team) hoặc sao bằng chứng của một channel thất bại, job **không xóa** channel đó, chỉ tăng metric `eduworld_chat_purge_blocked_total` và cảnh báo vận hành (lần chạy ghi `status = blocked`). Giữ dữ liệu lâu hơn hạn tạm thời là chấp nhận được; mất bằng chứng thì không.
 4. Purge **theo channel** đã hết hạn: xóa lô 1.000 dòng `chat.gameplay_messages`, revision, reaction, pin, member, channel của các channel có `purge_after < now()` và không bị hoãn. Partition ngày `created_on = D` chỉ `DETACH` + `DROP` khi **mọi** channel có tin trong partition đó đã purge (kiểm tra bằng bảng theo dõi `chat.gameplay_partition_channels`) — nhanh với trận ngắn, an toàn với party sống lâu. Không có API ứng dụng nào làm việc này.
    *Lý do không partition theo `closed_on`:* tin được ghi khi channel còn mở (chưa biết `closed_on`), nên partition theo `closed_on` buộc phải di chuyển dòng khi đóng channel — tốn I/O và cần quyền ghi xóa cho role app. Partition theo ngày tạo tránh việc này [Proposed].
 5. Ghi audit tổng hợp (không nội dung) + metric `eduworld_chat_purge_total{tenant,kind}`.
@@ -349,8 +355,8 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 | Reply / Quote | ✓ | ✓ | ✓ luôn | ✓ luôn | ✓ luôn | ✓ | ✓ | ✓ |
 | Forward **ra khỏi** channel | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Reactions | ✓ | ✓ | ✓ luôn | ✓ luôn | ✓ luôn | ✓ | ✓ | ✓ |
-| Mention `@nickname` | ✓ | ✓ | ✓ luôn | ✓ luôn | ✓ luôn | ✓ (+ `@all` giáo viên) | ✓ | — (2 người) |
-| Pin (≤ 3) | ✗ | ✗ | ✓ | ✓ (leader) | ✓ | ✓ (giáo viên) | ✓ (owner/giáo viên) | ✓ (cả hai) |
+| Mention `@nickname` | ✓ | ✓ | ✓ luôn | ✓ luôn | ✓ luôn | ✓ | ✓ | — (2 người) |
+| Pin (≤ 3) | ✗ | ✗ | ✓ | ✓ (leader) | ✓ | ✗ | ✗ | ✓ (cả hai) |
 | Copy | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Typing indicator | ✗ | ✗ | ✓ luôn | ✓ luôn | ✓ luôn | ✓ | ✓ | ✓ |
 | Receipts | ✗ | ✗ | Chi tiết từng người (≤ 8) | Chi tiết (≤ 8) | Chi tiết (≤ 8) | "N người đã xem" | "N người đã xem" | Chi tiết |
@@ -373,7 +379,7 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 - Mọi người thấy placeholder "Tin nhắn đã được thu hồi"; reaction, pin, quote/reply tới tin đó hiển thị "Tin nhắn gốc không còn". Tin bị pin tự bỏ ghim.
 - Là **soft** (ADR-0028): đặt `recalled_at`, `recalled_by`; nội dung gốc **giữ làm bằng chứng** đến hết thời hạn lưu trữ của channel (gameplay: đến purge, ADR-0033), chỉ moderator xem trong case. API người dùng, tìm kiếm, forward, quote không bao giờ trả nội dung tin đã thu hồi.
 - Vẫn **báo cáo được** tin đã thu hồi trong cửa sổ báo cáo (chống bắt nạt rồi xóa dấu vết) — [MODERATION](MODERATION.md) §6.1.
-- Giáo viên/moderator gỡ tin của người khác là thao tác **moderation** (`moderation_state = removed`, audit), không phải thu hồi.
+- `safety_moderator` gỡ tin của người khác là thao tác **moderation** (`moderation_state = removed`, audit), không phải thu hồi.
 
 ### 7.4. Reply, Quote, Forward
 
@@ -388,7 +394,7 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 - **Emoji**: bộ Unicode giới hạn đã duyệt (danh sách cấu hình platform), loại emoji có thể dùng để bắt nạt/gợi dục.
 - **Sticker**: `chat.sticker_packs` → `chat.stickers`, do **Game Studio (platform-only, ADR-0027)** quản lý; pack có thể **mở khóa làm phần thưởng** (`unlock_rule` tham chiếu reward rule) hoặc mặc định cho mọi người. Tin `kind = sticker` gửi `sticker_id`; server kiểm tra pack đã publish, được gán cho tenant (ADR-0029) và học sinh đã sở hữu (nếu pack bị khóa).
 - **GIF**: **thư viện nội bộ đã duyệt** (`chat.gif_assets` + `chat.gif_tags`), platform upload qua presigned URL, kiểm tra kích thước (≤ 2 MB, ≤ 480 px), gắn tag tiếng Việt/Anh, publish; phục vụ từ CDN EduWorld. Học sinh tìm theo tag (`GET /chat/gifs?tag=`). **Không** gọi Giphy/Tenor hay dịch vụ GIF bên thứ ba.
-- **Không có upload ảnh/file của người dùng**. Sticker/GIF không qua bước kiểm tra văn bản (đã duyệt trước) nhưng vẫn chịu rate limit (sticker/GIF tính chung, tối đa 4/phút/channel) [Proposed].
+- **Không có upload ảnh/file của người dùng**. Sticker/GIF không qua bước kiểm tra văn bản (đã duyệt trước) nhưng vẫn chịu rate limit `chat_sticker_gif_rate` (sticker/GIF tính chung, tối đa 4/phút/channel) **[Confirmed — Technical Architect 2026-11-16]**; file theo `chat_asset_file_max` (sticker WebP/PNG ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh).
 
 ### 7.6. Reactions
 
@@ -396,13 +402,13 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 
 ### 7.7. Mention
 
-- Cú pháp `@nickname` trong text; client gửi kèm `mentions: [user_id]` lấy từ autocomplete. Server **kiểm tra lại**: mỗi user_id phải là thành viên channel, không block người gửi; nickname hiển thị lấy từ GameProfile — **không** dùng username đăng nhập (chứa mã học sinh).
-- Tối đa **5 mention/tin** → vượt `CHAT_MENTION_LIMIT`. `@all` chỉ giáo viên trong channel `class` (và owner study group) [Proposed].
+- Cú pháp `@nickname` trong text; client gửi kèm `mentions: [user_id]` lấy từ autocomplete. Server **kiểm tra lại**: mỗi user_id phải là thành viên channel, không block người gửi; user_id không hợp lệ bị **loại khỏi** danh sách mention (tin vẫn gửi, không lỗi, không thông báo cho người đó); nickname hiển thị lấy từ GameProfile — **không** dùng username đăng nhập (chứa mã học sinh).
+- Tối đa **5 mention/tin** → vượt `CHAT_MENTION_LIMIT`. Không có `@all` (giảm spam, tránh dồn dập thông báo) [Proposed].
 - Người được mention: tăng `channel_members.unread_mentions`, nhận `chat.mention.created` (realtime) hoặc thông báo qua `chat-notifier` khi offline; `notification_level = mentions` vẫn nhận.
 
 ### 7.8. Pin
 
-- `chat.pin.add/remove {message_id}`; tối đa **3 tin/channel** → `CHAT_PIN_LIMIT_REACHED`. Quyền: leader (party), thành viên (match/team — bất kỳ người chơi), giáo viên (class), owner/giáo viên (study_group), cả hai (direct). Không có ở world/area.
+- `chat.pin.add/remove {message_id}`; tối đa **3 tin/channel** → `CHAT_PIN_LIMIT_REACHED`. Quyền: leader (party), thành viên (match/team — bất kỳ người chơi), cả hai (direct). Không có ở world/area/class/study_group (không có người điều khiển channel trong các channel này).
 - Lưu `chat.pinned_messages (channel_id, message_id, pinned_by, pinned_at)`; audit; fan-out `chat.pin.updated`. Tin bị thu hồi/gỡ → tự bỏ ghim.
 
 ### 7.9. Copy
@@ -411,7 +417,7 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 
 ### 7.10. Typing indicator
 
-`chat.typing.start/stop {channel_id}` → realtime throttle **1 lần/3 s**, tự hết sau **5 s** không cập nhật; publish chỉ qua Valkey Pub/Sub (`chat.typing.updated {channel_id, user_ids[]}`), **không** qua JetStream, **không** lưu DB. Không gửi tới người đã block; không có ở world/area. Hiển thị tối đa 3 nickname ("An, Bình đang soạn tin…").
+`chat.typing.start/stop {channel_id}` → realtime throttle **1 lần/3 s**, tự hết sau **5 s** không cập nhật (`chat_typing_throttle`); publish chỉ qua Valkey Pub/Sub (`chat.typing.updated {channel_id, user_ids[]}`), **không** qua JetStream, **không** lưu DB. Không gửi tới người đã block; không có ở world/area. Hiển thị tối đa 3 nickname ("An, Bình đang soạn tin…").
 
 ## 8. Lịch sử, receipts, unread, tìm kiếm
 
@@ -424,8 +430,8 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 | **Read** | Người nhận mở channel, con trỏ đọc vượt `seq` (`chat.receipt.read {channel_id, seq}`) | `channel_members.last_read_seq` (gộp, max) |
 
 - **Không** lưu một dòng cho mỗi tin × người. Trạng thái của tin `seq = s` với người X: Read nếu `X.last_read_seq ≥ s`, Delivered nếu `X.last_delivered_seq ≥ s`, ngược lại Sent.
-- Realtime gộp receipt (≤ 1 lần/2 s/thành viên/channel), fan-out `chat.receipt.updated {channel_id, user_id, delivered_seq, read_seq}` qua Valkey Pub/Sub; persist qua JetStream subject `cursor`.
-- Hiển thị: nhóm ≤ 8 người (party, match, team, direct) — chi tiết từng người; class/study_group — "N người đã xem" (`GET /chat/channels/{id}/messages/{message_id}/receipts` trả số đếm, danh sách chỉ cho giáo viên); world/area — không có.
+- Realtime gộp receipt (`chat_receipt_coalesce`: ≤ 1 lần/2 s/thành viên/channel), fan-out `chat.receipt.updated {channel_id, user_id, delivered_seq, read_seq}` qua Valkey Pub/Sub; persist qua JetStream subject `cursor`.
+- Hiển thị: nhóm ≤ 8 người (party, match, team, direct) — chi tiết từng người; class/study_group — "N người đã xem" (`GET /chat/channels/{id}/messages/{message_id}/receipts` chỉ trả số đếm); world/area — không có.
 - Người dùng bị block không thấy trạng thái đọc của nhau.
 
 ### 8.2. Unread count
@@ -441,7 +447,7 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 | Lịch sử | `GET /api/v1/chat/channels/{id}/messages?before_seq=&after_seq=&limit=50` — hợp nhất PostgreSQL với `ew:chat:recent` để che độ trễ persister; tin thu hồi/gỡ trả placeholder |
 | Pins | `GET /api/v1/chat/channels/{id}/pins` |
 | Đồng bộ khi reconnect / seq gap | WS `chat.sync {channel_id: last_seen_seq}` → server trả tin thiếu (≤ 200), nhiều hơn → client tải lịch sử REST |
-| Quyền xem lịch sử | Member chỉ xem tin từ `joined_at` [Proposed]; giáo viên xem toàn bộ channel lớp mình dạy trong retention |
+| Quyền xem lịch sử | Member chỉ xem tin từ `joined_at` [Proposed]; không có vai trò nhân sự nào xem lịch sử channel lớp ngoài moderation case |
 
 ### 8.4. Tìm kiếm
 
@@ -449,7 +455,7 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 - PostgreSQL full-text: cột `search_tsv tsvector GENERATED ALWAYS AS (to_tsvector('simple', unaccent(lower(body_display))))` + GIN index; tìm có dấu hoặc không dấu đều khớp. Trigram (`pg_trgm`) cho truy vấn ngắn ≤ 3 ký tự [Proposed].
 - Tìm trên **nội dung đã che** (`body_display`), không bao giờ khớp nội dung gốc bị che.
 - Không có ở world/area; dữ liệu gameplay đã purge không còn tìm được (ADR-0033).
-- Moderator dùng công cụ tìm kiếm riêng, chỉ trong phạm vi case ([MODERATION](MODERATION.md) §6.1).
+- `safety_moderator` dùng công cụ tìm kiếm riêng, chỉ trong phạm vi case ([MODERATION](MODERATION.md) §6.1).
 
 ### 8.5. Quick messages
 
@@ -471,12 +477,12 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 | Block | Ẩn tin hai chiều trong channel chung (trừ channel lớp: tin của người bị block hiển thị thu gọn), chặn DM, lời mời, friend request | `POST /api/v1/social/blocks` |
 | Report message / user | Tạo `report` → [MODERATION](MODERATION.md); báo cáo được cả tin **đã thu hồi** hoặc **đã sửa** (moderator thấy bản gốc và các revision) | `POST /api/v1/chat/reports` |
 
-Block **không** chặn được giáo viên trong channel lớp **[Proposed]**. Quy tắc quan hệ block/mute (hiệu lực ngoài chat: lời mời, ghép trận, instance) thuộc [SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào).
+Quy tắc quan hệ block/mute (hiệu lực ngoài chat: lời mời, ghép trận, instance) thuộc [SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào).
 
 ## 10. Notifications
 
-- Module notification của chat-service: **chỉ in-app** (WS `notification.created`, hộp thông báo, badge). **Không push ngoài game cho học sinh trong Release 1.0** [Proposed] — thống nhất với [SOCIAL_SYSTEM §8](SOCIAL_SYSTEM.md#8-thông-báo-xã-hội) và nguyên tắc chống kéo trẻ quay lại game. Push (nếu sau này có) cần ADR mới: payload không chứa nội dung tin, không gửi ngoài giờ trường cho phép.
-- `notification_level`: `all` / `mentions` / `none`. Mặc định: party/team/match `all`, class `mentions` + thông báo giáo viên, study_group `mentions`.
+- Module notification của module chat: **chỉ in-app** (WS `notification.created`, hộp thông báo, badge). **Không push ngoài game cho học sinh trong Release 1.0** [Proposed] — thống nhất với [SOCIAL_SYSTEM §8](SOCIAL_SYSTEM.md#8-thông-báo-xã-hội) và nguyên tắc chống kéo trẻ quay lại game. Push (nếu sau này có) cần ADR mới: payload không chứa nội dung tin, không gửi ngoài giờ trường cho phép.
+- `notification_level`: `all` / `mentions` / `none`. Mặc định: party/team/match `all`, class `mentions`, study_group `mentions`. Thông báo trường (chỉ bài giao và kết quả bài giao) đi qua bảng tin lớp ([SOCIAL_SYSTEM §8](SOCIAL_SYSTEM.md#8-thông-báo-xã-hội)), không qua chat.
 
 ## 11. Mở rộng voice chat (chỉ thiết kế; không làm trong Release 1.0, ADR-0070)
 
@@ -491,48 +497,53 @@ Chuẩn bị sẵn để không phải đổi model:
 
 ## 13. Acceptance criteria (Master Prompt §22 — Chat)
 
-| ID | Tiêu chí |
-|---|---|
-| AC-CHAT-001 | Tạo channel: tạo party → channel `party` tồn tại, mọi member có membership |
-| AC-CHAT-002 | Tham gia channel: học sinh được thêm vào lớp → có quyền vào channel `class` |
-| AC-CHAT-003 | Gửi/nhận: tin text hợp lệ ở party tới mọi member online ≤ 250 ms p95 (cùng region) |
-| AC-CHAT-004 | Cùng một tin text hợp lệ, học sinh lớp 2 và lớp 8 gửi ở cùng loại channel nhận cùng kết quả `allow`; cùng một tin vi phạm (tục tĩu/PII) bị chặn như nhau cho cả hai — không có nhánh xử lý theo lớp |
-| AC-CHAT-005 | Tin chứa số điện thoại bị chặn, người nhận không nhận được |
-| AC-CHAT-006 | Block: sau khi A block B, B không DM/mời A được, A không thấy tin B trong party chung |
-| AC-CHAT-007 | Report tin nhắn tạo `report` và `moderation_case` trong hàng đợi của trường đúng |
-| AC-CHAT-008 | Không truy cập channel trái phép: user không phải member gọi history → 404 |
-| AC-CHAT-009 | Không đọc tin trường khác: giáo viên/moderator trường A truy vấn channel trường B → 404, RLS chặn ở DB khi bỏ qua tầng app (test trực tiếp repository) |
-| AC-CHAT-010 | Gửi lại cùng `client_msg_id` sau reconnect không tạo tin trùng |
-| AC-CHAT-011 | Policy trường không thể nới lỏng quá platform (API trả `CHAT_POLICY_RELAX_NOT_ALLOWED`) |
-| AC-CHAT-012 | Lưu policy có trường `grade_band`/`grade_level` bị từ chối (validation schema) |
-| AC-CHAT-013 | DM chỉ gửi được khi hai người là bạn bè và không block nhau; ngược lại `CHAT_NOT_ALLOWED` |
-| AC-CHAT-014 | Quick message có tham số chứa PII bị chặn như tin text |
-| AC-CHAT-015 | Tin chứa term thuộc category đang bật bị xử lý theo action của danh mục; phản hồi chỉ có `category_code`, không có từ đã khớp |
-| AC-CHAT-016 | Khi `enabled_all` của tenant tắt, tin vẫn được gửi với decision `unchecked`, vẫn tuân giới hạn độ dài, rate limit, quyền channel và sanction |
-| AC-CHAT-017 | Trận 1v1 bắt đầu → channel `match` tồn tại, cả hai người chơi là member và gửi/nhận text được ngay, không cần bật |
-| AC-CHAT-018 | Team battle → mỗi đội có channel `team` riêng (đội kia không đọc được) và một channel `match` chung |
-| AC-CHAT-019 | Tạo party → channel `party` có ngay; người vào party sau tự thành member; giải tán → channel read-only |
-| AC-CHAT-020 | Policy trường/lớp đặt `enabled:false`, bỏ `text`, đặt `allowed_hours` hoặc slow mode > 10 s cho `match`/`team`/`party` → bị từ chối `CHAT_POLICY_ALWAYS_ON` |
-| AC-CHAT-021 | Người chơi đổi thiết bị giữa trận (ADR-0031) vẫn ở trong channel `match` và nhận tin bỏ lỡ qua resume |
-| AC-CHAT-022 | Trận kết thúc → channel `match` read-only: gửi tin trả `CHAT_CHANNEL_CLOSED` |
-| AC-CHAT-023 | Học sinh bị mute (sanction) vẫn vào trận/party, không gửi được tin; người khác vẫn chat bình thường |
-| AC-CHAT-024 | Channel `match` đóng ngày D → purge đúng sau `gameplay_chat_retention_days` (mặc định 7); trước hạn vẫn xem được lịch sử, sau hạn API trả 404 |
-| AC-CHAT-025 | Tin trong channel gameplay có report trước hạn purge được sao sang `moderation_evidence` và còn xem được trong case sau khi channel bị purge |
-| AC-CHAT-026 | Channel có moderation case đang mở không bị purge cho đến khi case đóng |
-| AC-CHAT-027 | Job purge không xóa bất kỳ dòng nào của `class`, `study_group`, `team` cố định, `direct` |
-| AC-CHAT-028 | Cấu hình `gameplay_chat_retention_days` < 3 bị từ chối |
-| AC-CHAT-029 | Người gửi chỉ nhận `chat.message.acked` sau khi JetStream ack; giả lập NATS lỗi → `CHAT_TEMPORARILY_UNAVAILABLE`, không người nhận nào thấy tin |
-| AC-CHAT-030 | PostgreSQL ngừng 10 phút: gửi/nhận realtime vẫn chạy; sau khi DB trở lại, mọi tin trong khoảng đó có trong lịch sử, không trùng, đúng `seq` |
-| AC-CHAT-031 | Bỏ một gói Valkey Pub/Sub: client phát hiện seq gap và bù đủ tin qua `chat.sync`/lịch sử |
-| AC-CHAT-032 | Sửa tin trong 15': người khác thấy bản mới + nhãn "đã chỉnh sửa"; sau 15' → `CHAT_EDIT_WINDOW_EXPIRED`; bản sửa vi phạm bị chặn và bản cũ giữ nguyên |
-| AC-CHAT-033 | Thu hồi trong 24 h: mọi người thấy placeholder; moderator vẫn xem được nội dung gốc trong case; tin đã thu hồi vẫn báo cáo được |
-| AC-CHAT-034 | Quote/reply hiển thị bản đã che; tin gốc thu hồi → "Tin nhắn gốc không còn" |
-| AC-CHAT-035 | Forward sang channel khác tenant hoặc channel không có quyền gửi → `CHAT_FORWARD_NOT_ALLOWED`; forward hợp lệ chạy lại kiểm duyệt của channel đích |
-| AC-CHAT-036 | Sticker của pack chưa mở khóa / chưa gán cho tenant bị từ chối; GIF chỉ lấy từ thư viện nội bộ |
-| AC-CHAT-037 | Mention > 5 người → `CHAT_MENTION_LIMIT`; người được mention nhận `chat.mention.created` và `unread_mentions` tăng; mention dùng nickname, không lộ username |
-| AC-CHAT-038 | Pin tin thứ 4 → `CHAT_PIN_LIMIT_REACHED`; thu hồi tin đã pin → tự bỏ ghim |
-| AC-CHAT-039 | Typing không ghi DB, không gửi tới người đã block, tự hết sau 5 s |
-| AC-CHAT-040 | Receipts: trong party 4 người, người gửi thấy chính xác ai đã nhận/đã xem; trong class chỉ thấy "N người đã xem" |
-| AC-CHAT-041 | Unread count và mention count đúng sau khi đọc trên thiết bị khác (cập nhật qua `chat.unread.updated`) |
-| AC-CHAT-042 | Tìm "nhan vat" khớp tin "nhân vật"; không trả tin đã thu hồi/bị chặn/khác tenant/channel không phải thành viên; không khớp nội dung gốc đã bị che |
-| AC-CHAT-043 | Copy tin đã che chỉ copy bản đã che |
+Mã `AC-CHAT-NNN` chỉ do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) cấp (ADR-0082). Tiêu chí chi tiết của tài liệu này dùng tiền tố cục bộ `AC-CHS-NNN` và ghi AC của PRD mà nó chi tiết hóa (một AC PRD có thể có nhiều dòng).
+
+| ID | AC (PRD) | Tiêu chí chi tiết |
+|---|---|---|
+| AC-CHS-001 | AC-CHAT-001 | Tạo channel: tạo party → channel `party` tồn tại, mọi member có membership |
+| AC-CHS-002 | AC-CHAT-001 | Tham gia channel: học sinh được thêm vào lớp → có quyền vào channel `class` |
+| AC-CHS-003 | AC-CHAT-002 | Gửi/nhận: tin text hợp lệ ở party tới mọi member online ≤ 250 ms p95 (cùng region) |
+| AC-CHS-004 | AC-CHAT-003 | Cùng một tin text hợp lệ, học sinh lớp 2 và lớp 8 gửi ở cùng loại channel nhận cùng kết quả `allow`; cùng một tin vi phạm (tục tĩu/PII) bị chặn như nhau cho cả hai — không có nhánh xử lý theo lớp |
+| AC-CHS-005 | AC-CHAT-004 | Tin chứa số điện thoại bị chặn, người nhận không nhận được |
+| AC-CHS-006 | AC-CHAT-005 | Block: sau khi A block B, B không DM/mời A được, A không thấy tin B trong party chung |
+| AC-CHS-007 | AC-CHAT-006 | Report tin nhắn tạo `report` và `moderation_case` trong hàng đợi Platform Safety Team, gắn đúng tenant và trường của học sinh bị báo cáo (ADR-0072) |
+| AC-CHS-008 | AC-CHAT-007 | Không truy cập channel trái phép: user không phải member gọi history → 404 |
+| AC-CHS-009 | AC-CHAT-007 | Không đọc tin trường khác: học sinh hoặc nhân sự trường A truy vấn channel trường B → 404, RLS chặn ở DB khi bỏ qua tầng app (test trực tiếp repository); `safety_moderator` chỉ đọc được qua API moderation case |
+| AC-CHS-010 | AC-CHAT-011 | Gửi lại cùng `client_message_id` sau reconnect không tạo tin trùng |
+| AC-CHS-011 | AC-CHAT-001 | Policy trường không thể nới lỏng quá platform (API trả `CHAT_POLICY_RELAX_NOT_ALLOWED`) |
+| AC-CHS-012 | AC-CHAT-003 | Lưu policy có trường `grade_band`/`grade_level` bị từ chối (validation schema) |
+| AC-CHS-013 | AC-CHAT-005 | DM chỉ gửi được khi hai người là bạn bè và không block nhau; ngược lại `CHAT_NOT_ALLOWED` |
+| AC-CHS-014 | AC-CHAT-004 | Quick message có tham số chứa PII bị chặn như tin text |
+| AC-CHS-015 | AC-CHAT-003 | Tin chứa term thuộc category đang bật bị xử lý theo action của danh mục; phản hồi chỉ có `category_code`, không có từ đã khớp |
+| AC-CHS-016 | AC-CHAT-003 | Khi `enabled_all` của tenant tắt, tin không vi phạm PII/grooming vẫn được gửi với decision `unchecked`; tin có SĐT/mạng xã hội vẫn bị chặn (ADR-0078); vẫn tuân giới hạn độ dài, rate limit, quyền channel và sanction |
+| AC-CHS-017 | AC-CHAT-008 | Trận 1v1 bắt đầu → channel `match` tồn tại, cả hai người chơi là member và gửi/nhận text được ngay, không cần bật |
+| AC-CHS-018 | AC-CHAT-008 | Team battle → mỗi đội có channel `team` riêng (đội kia không đọc được) và một channel `match` chung |
+| AC-CHS-019 | AC-CHAT-008 | Tạo party → channel `party` có ngay (tạo từ event, ≤ 1 s); người vào party sau tự thành member; giải tán → channel read-only |
+| AC-CHS-020 | AC-CHAT-009 | Policy trường/lớp đặt `enabled:false`, bỏ `text`, đặt `allowed_hours` hoặc slow mode > 10 s cho `match`/`team`/`party` → bị từ chối `CHAT_POLICY_ALWAYS_ON` |
+| AC-CHS-021 | AC-CHAT-008 | Người chơi đổi thiết bị giữa trận (ADR-0031) vẫn ở trong channel `match` và nhận tin bỏ lỡ qua resume |
+| AC-CHS-022 | AC-CHAT-008 | Trận kết thúc → channel `match` read-only: gửi tin trả `CHAT_CHANNEL_CLOSED` |
+| AC-CHS-023 | AC-CHAT-006 | Học sinh bị mute (sanction) vẫn vào trận/party, không gửi được tin; người khác vẫn chat bình thường |
+| AC-CHS-024 | AC-CHAT-010 | Channel `match` đóng ngày D → purge đúng sau `gameplay_chat_retention_days` (mặc định 7); trước hạn vẫn xem được lịch sử, sau hạn API trả 404 |
+| AC-CHS-025 | AC-CHAT-010 | Tin trong channel gameplay có report trước hạn purge được sao sang `moderation_evidence` và còn xem được trong case sau khi channel bị purge |
+| AC-CHS-026 | AC-CHAT-010 | Channel có moderation case đang mở không bị purge cho đến khi case đóng |
+| AC-CHS-027 | AC-CHAT-010 | Job purge không xóa bất kỳ dòng nào của `class`, `study_group`, `team` cố định, `direct` |
+| AC-CHS-028 | AC-CHAT-010 | Cấu hình `gameplay_chat_retention_days` < 3 bị từ chối |
+| AC-CHS-029 | AC-CHAT-011 | Người gửi chỉ nhận `chat.message.acked` sau khi JetStream ack; giả lập NATS lỗi → `CHAT_TEMPORARILY_UNAVAILABLE`, không người nhận nào thấy tin |
+| AC-CHS-030 | AC-CHAT-011 | PostgreSQL ngừng 10 phút: gửi/nhận realtime vẫn chạy; sau khi DB trở lại, mọi tin trong khoảng đó có trong lịch sử, không trùng, đúng `seq` |
+| AC-CHS-031 | AC-CHAT-002 | Bỏ một gói Valkey Pub/Sub: client phát hiện seq gap và bù đủ tin qua `chat.sync`/lịch sử |
+| AC-CHS-032 | AC-CHAT-012 | Sửa tin trong 15': người khác thấy bản mới + nhãn "đã chỉnh sửa"; sau 15' → `CHAT_EDIT_WINDOW_EXPIRED`; bản sửa vi phạm bị chặn và bản cũ giữ nguyên |
+| AC-CHS-033 | AC-CHAT-012 | Thu hồi trong 24 h: mọi người thấy placeholder; `safety_moderator` vẫn xem được nội dung gốc trong case; tin đã thu hồi vẫn báo cáo được |
+| AC-CHS-034 | AC-CHAT-012 | Quote/reply hiển thị bản đã che; tin gốc thu hồi → "Tin nhắn gốc không còn" |
+| AC-CHS-035 | AC-CHAT-013 | Forward sang channel khác tenant hoặc channel không có quyền gửi → `CHAT_FORWARD_NOT_ALLOWED`; forward hợp lệ chạy lại kiểm duyệt của channel đích |
+| AC-CHS-036 | AC-CHAT-013 | Sticker của pack chưa mở khóa / chưa gán cho tenant bị từ chối; GIF chỉ lấy từ thư viện nội bộ |
+| AC-CHS-037 | AC-CHAT-002 | Mention > 5 người → `CHAT_MENTION_LIMIT`; mention tới người không hợp lệ bị loại khỏi tin (không lỗi); người được mention nhận `chat.mention.created` và `unread_mentions` tăng; mention dùng nickname, không lộ username |
+| AC-CHS-038 | AC-CHAT-012 | Pin tin thứ 4 → `CHAT_PIN_LIMIT_REACHED`; thu hồi tin đã pin → tự bỏ ghim |
+| AC-CHS-039 | AC-CHAT-014 | Typing không ghi DB, không gửi tới người đã block, tự hết sau 5 s |
+| AC-CHS-040 | AC-CHAT-014 | Receipts: trong party 4 người, người gửi thấy chính xác ai đã nhận/đã xem; trong class chỉ thấy "N người đã xem" |
+| AC-CHS-041 | AC-CHAT-002 | Unread count và mention count đúng sau khi đọc trên thiết bị khác (cập nhật qua `chat.unread.updated`) |
+| AC-CHS-042 | AC-CHAT-014 | Tìm "nhan vat" khớp tin "nhân vật"; không trả tin đã thu hồi/bị chặn/khác tenant/channel không phải thành viên; không khớp nội dung gốc đã bị che |
+| AC-CHS-043 | AC-CHAT-012 | Copy tin đã che chỉ copy bản đã che |
+| AC-CHS-044 | AC-CHAT-001 | Trong giờ giới nghiêm `platform_curfew`, gửi tin ở mọi channel bị từ chối; `school_admin` đặt giờ chat rộng hơn giờ ngoài giới nghiêm → `CHAT_POLICY_RELAX_NOT_ALLOWED` (ADR-0078) |
+| AC-CHS-045 | AC-CHAT-001 | Trường chọn preset `quick_message_emote_only` → text tự do, sticker, GIF bị từ chối ở mọi channel của trường kể cả `party`/`match`; quick message và emote gửi được; channel gameplay vẫn tự tạo |
+| AC-CHS-046 | AC-CHAT-005 | Tenant `common`: gửi friend request, mở DM, gửi tin `world` → `CHAT_NOT_ALLOWED`/bị từ chối; System Admin bật lại có audit |

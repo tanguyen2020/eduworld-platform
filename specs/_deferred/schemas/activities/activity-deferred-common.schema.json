@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/activity-deferred-common.schema.json",
+  "title": "Phần chung activity deferred (written_response, speaking, project)",
+  "$comment": "Deferred (ADR-0082) — không sinh code, không lint, không triển khai. Tách từ activity-base.schema.json ngày 2026-11-15.",
+  "$defs": {
+    "deferredActivityType": {
+      "$comment": "Deferred (ADR-0072, ADR-0082)",
+      "type": "string",
+      "enum": [
+        "written_response",
+        "speaking",
+        "project"
+      ]
+    },
+    "deferredEvaluation": {
+      "type": "object",
+      "required": [
+        "strategies",
+        "max_score"
+      ],
+      "properties": {
+        "strategies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "exact",
+              "accepted_answers",
+              "rule",
+              "numeric_tolerance",
+              "rubric",
+              "teacher_review",
+              "completion",
+              "deterministic_check",
+              "ai_suggestion"
+            ]
+          }
+        },
+        "max_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "pass_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rubric_ref": {
+          "type": "object",
+          "required": [
+            "rubric_id",
+            "version"
+          ],
+          "properties": {
+            "rubric_id": {
+              "$ref": "activity-base.schema.json#/$defs/uuid"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "requires_teacher_review": {
+          "type": "boolean",
+          "default": false
+        },
+        "ai_suggestion_enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "ADR-0053: chỉ gợi ý, tắt mặc định, chỉ có hiệu lực khi tenant bật"
+        }
+      },
+      "additionalProperties": false,
+      "$comment": "Deferred (ADR-0072, ADR-0082)"
+    },
+    "deferredFeedback": {
+      "type": "object",
+      "required": [
+        "timing"
+      ],
+      "properties": {
+        "timing": {
+          "type": "string",
+          "enum": [
+            "immediate",
+            "after_submit",
+            "after_review",
+            "never"
+          ]
+        },
+        "show_explanation": {
+          "type": "boolean",
+          "default": true
+        },
+        "show_correct_answer": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false,
+      "$comment": "Deferred (ADR-0072, ADR-0082)"
+    },
+    "deferredCompletionRule": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "submit",
+            "min_watched_ratio",
+            "goals_met",
+            "all_milestones",
+            "graded"
+          ]
+        },
+        "min_watched_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "min_score_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "require_required_cues": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$comment": "Deferred (ADR-0072, ADR-0082)"
+    },
+    "deferredActivityCommon": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "activity_id",
+        "activity_version_id",
+        "version",
+        "activity_type",
+        "owner_scope",
+        "title",
+        "grade_levels",
+        "subject_id",
+        "objective_ids",
+        "difficulty",
+        "evaluation",
+        "feedback",
+        "completion_rule",
+        "status",
+        "content",
+        "content_language"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "activity_id": {
+          "$ref": "activity-base.schema.json#/$defs/uuid"
+        },
+        "activity_version_id": {
+          "$ref": "activity-base.schema.json#/$defs/uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "activity_type": {
+          "$ref": "#/$defs/deferredActivityType"
+        },
+        "owner_scope": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "tenant"
+          ]
+        },
+        "tenant_id": {
+          "$ref": "activity-base.schema.json#/$defs/nullableUuid"
+        },
+        "title": {
+          "$ref": "activity-base.schema.json#/$defs/i18nShort"
+        },
+        "description": {
+          "$ref": "activity-base.schema.json#/$defs/i18nMedium"
+        },
+        "grade_levels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_id": {
+          "$ref": "activity-base.schema.json#/$defs/uuid"
+        },
+        "topic_id": {
+          "$ref": "activity-base.schema.json#/$defs/uuid"
+        },
+        "objective_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "activity-base.schema.json#/$defs/uuid"
+          }
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "instructions": {
+          "$ref": "activity-base.schema.json#/$defs/i18nLong"
+        },
+        "time_limit_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 14400
+        },
+        "evaluation": {
+          "$ref": "#/$defs/deferredEvaluation"
+        },
+        "feedback": {
+          "$ref": "#/$defs/deferredFeedback"
+        },
+        "completion_rule": {
+          "$ref": "#/$defs/deferredCompletionRule"
+        },
+        "reward_rule_id": {
+          "$ref": "activity-base.schema.json#/$defs/uuid"
+        },
+        "media_refs": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "activity-base.schema.json#/$defs/uuid"
+          }
+        },
+        "math_assets": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "activity-base.schema.json#/$defs/mathDisplay"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "published",
+            "archived",
+            "rejected"
+          ]
+        },
+        "content": {
+          "type": "object"
+        },
+        "interaction": {
+          "type": "object"
+        },
+        "content_language": {
+          "$ref": "activity-base.schema.json#/$defs/contentLanguage"
+        }
+      },
+      "$comment": "Deferred (ADR-0072, ADR-0082)",
+      "description": "Phần chung cho các loại activity ngoài Release (written_response, speaking, project — ADR-0072). Giữ làm thiết kế tham khảo; mở lại phải có ADR mới."
+    }
+  }
+}

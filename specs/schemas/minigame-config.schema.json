@@ -181,19 +181,7 @@
                   "minItems": 1,
                   "uniqueItems": true,
                   "items": {
-                    "enum": [
-                      "single_choice",
-                      "multiple_choice",
-                      "true_false",
-                      "fill_in_blank",
-                      "short_answer",
-                      "numeric_answer",
-                      "matching",
-                      "ordering",
-                      "drag_and_drop",
-                      "image_based",
-                      "interactive"
-                    ]
+                    "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
                   }
                 },
                 "exclude_recently_seen_days": {
@@ -334,16 +322,18 @@
     "feedback_policy": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Chính sách phản hồi (EDU_FIT_REVIEW SPC-03): timing theo enum chuẩn FeedbackTiming; feedback_display chỉ là cách hiển thị khi timing = immediate (vắng mặt = hiện ngay sau mỗi câu).",
       "required": [
-        "mode"
+        "timing"
       ],
       "properties": {
-        "mode": {
+        "timing": {
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming"
+        },
+        "feedback_display": {
           "enum": [
-            "immediate",
             "end_of_round",
-            "end_of_game",
-            "none"
+            "end_of_game"
           ]
         },
         "show_explanation": {
@@ -353,6 +343,20 @@
         "show_correct_answer": {
           "type": "boolean",
           "default": true
+        }
+      },
+      "if": {
+        "properties": {
+          "timing": {
+            "not": {
+              "const": "immediate"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "feedback_display": false
         }
       }
     },

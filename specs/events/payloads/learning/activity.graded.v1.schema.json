@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/activity.graded.v1.schema.json",
+  "title": "Payload activity.graded v1 (module learning, ADR-0048, ADR-0072)",
+  "description": "Evaluation có hiệu lực của một attempt (server tự chấm, source = system). Phát ngay sau activity.submitted khi chấm đồng bộ, hoặc khi chấm trì hoãn hoàn tất. Consumer: learning_record (evidence), LMS, NTF (theo ResultRelease), GAM. Chấm lại do nội dung lỗi phát attempt.re_evaluated, không phát lại event này.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt_id", "student_id", "evaluation_id", "activity_type", "mode", "source", "score", "max_score", "result_release", "objective_ids"],
+  "properties": {
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "evaluation_id": { "type": "string", "format": "uuid" },
+    "activity_id": { "type": ["string", "null"], "format": "uuid" },
+    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
+    "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
+    "assignment_id": { "type": ["string", "null"], "format": "uuid" },
+    "source": { "const": "system", "description": "Mọi hoạt động trong Release do server tự chấm (ADR-0072)" },
+    "strategies": {
+      "type": "array",
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["auto", "exact", "accepted_answers", "rule", "numeric_tolerance", "completion", "deterministic_check"] }
+    },
+    "score": { "type": "number", "minimum": 0 },
+    "max_score": { "type": "number", "minimum": 0 },
+    "passed": { "type": ["boolean", "null"] },
+    "correct_count": { "type": ["integer", "null"], "minimum": 0 },
+    "item_count": { "type": ["integer", "null"], "minimum": 0 },
+    "result_release": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease" },
+    "results_visible_at": { "type": ["string", "null"], "format": "date-time", "description": "Thời điểm học sinh được xem kết quả; null khi manual chưa công bố" },
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } }
+  }
+}

@@ -1,6 +1,9 @@
 # ADR-0045 — Đăng nhập nhanh ở quy mô 10.000 CCU
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-03 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md), [TEST_STRATEGY](../12-project/TEST_STRATEGY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-03 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md), [TEST_STRATEGY](../12-project/TEST_STRATEGY.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: "mã lớp ngắn hạn do giáo viên mở" trong cách đăng nhập nhanh (mục 4); phương án đăng nhập nhanh cho lớp 1–3 được đề xuất lại ở ADR-0076 (Proposed). **Còn hiệu lực:** năng lực đăng nhập 10.000 CCU và các mục còn lại theo chú thích hiện có.
 
 > [!WARNING]
 > **Mục 3 (phiên dài, refresh token lưu trên thiết bị) đã được thay bởi ADR-0064; mục 4 (đăng nhập nhanh) đã được thay bởi ADR-0063** (2026-11-15): QR lớp + PIN, thẻ QR, mật khẩu hình ảnh, Device Grant, SSO của trường không thuộc Release 1.0. **Còn hiệu lực:** mục tiêu tải, SLO, phiên dài + refresh token, năng lực Keycloak, biên/backend, kiểm chứng.
@@ -29,3 +32,4 @@ Stakeholder xác nhận mục tiêu **10.000 CCU** và lo ngại đăng nhập b
 |---|---|---|
 | 2026-11-15 | Accepted (10.000 CCU) | Stakeholder |
 | 2026-11-15 | Autoscale Keycloak đổi thành scale theo lịch học | ADR-0024 |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

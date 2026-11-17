@@ -7,7 +7,7 @@
 
 Tài liệu là nguồn duy nhất cho: item catalog và danh sách slot trang bị, kho đồ, tiền tệ trong game, cửa hàng, danh mục phần thưởng, cấp thưởng, bộ sưu tập và thành tựu. Cách nhân vật mặc/hiển thị vật phẩm: [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md); XP: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md). Mục tiêu: phần thưởng hấp dẫn, **kiểm toán được**, **không** tạo cơ chế cờ bạc hay áp lực chi tiêu cho trẻ.
 
-Service sở hữu: **`game-service`** (DB `eduworld_game`). Sticker/GIF chat thuộc `chat-service` nhưng có thể được mở khóa bằng phần thưởng (ADR-0034).
+Module sở hữu: **module `game`** (DB `eduworld_game`). Sticker/GIF chat thuộc module `chat` nhưng có thể được mở khóa bằng phần thưởng (ADR-0034).
 
 Nguyên tắc bắt buộc:
 - **Không** mua bằng tiền thật, **không** loot box, **không** phần thưởng ngẫu nhiên trả phí [Confirmed: không pay-to-learn; Proposed: không tiền thật trong Release 1.0, OQ-14].
@@ -38,7 +38,7 @@ Không có vật phẩm tiêu hao tăng sức mạnh, tăng XP hay bỏ qua bài
 
 ### 2.2. Thuộc tính `ItemDefinition`
 
-`item_id`, `code` (varchar 64), `kind`, `name` (vi/en), `description`, `rarity` (`common`, `uncommon`, `rare`, `epic`, `legendary` — màu độ hiếm là mã màu nghiệp vụ dùng chung, ADR-0047), `grade_restriction` (tùy chọn, ví dụ phong cách phù hợp lứa tuổi), `asset_refs` (model/icon/thumbnail, ADR-0044), `equip_slot`, `stackable`, `max_stack`, `tradable` (luôn `false` trong Release 1.0), `sources[]` (nguồn có thể nhận), `status`/`version` (ADR-0043).
+`item_id` (**mã** `varchar(64)` dạng người đọc, vd. `hair_ponytail_01` — không phải UUID; dùng thống nhất ở DB, OpenAPI, event và `avatar_config`), `kind`, `name` (vi/en), `description`, `rarity` (`common`, `uncommon`, `rare`, `epic`, `legendary` — màu độ hiếm là mã màu nghiệp vụ dùng chung, ADR-0047), `grade_restriction` (tùy chọn, ví dụ phong cách phù hợp lứa tuổi), `asset_refs` (model/icon/thumbnail, ADR-0044), `equip_slot`, `stackable`, `max_stack`, `tradable` (luôn `false` trong Release 1.0), `sources[]` (nguồn có thể nhận), `status`/`version` (ADR-0043).
 
 Vật phẩm là nội dung platform (Game Studio, ADR-0027); có thể gán cho tenant theo sự kiện trường (ADR-0029).
 
@@ -93,7 +93,7 @@ Quy tắc: giá hiển thị trước, vật phẩm xác định (không hộp b
 sequenceDiagram
   autonumber
   participant C as Godot client
-  participant G as game-service
+  participant G as module game
   participant DB as eduworld_game
   C->>G: POST shop item purchase (Idempotency-Key)
   G->>DB: BEGIN, khóa wallet, kiểm tra giá, giới hạn, sở hữu
@@ -121,7 +121,7 @@ sequenceDiagram
 | Loại | Ví dụ | Cách nhận |
 |---|---|---|
 | Pet | Thú đồng hành của từng khu | Hoàn thành chuỗi quest khu vực, boss |
-| Knowledge Card | "Bảng cửu chương 7", "Vòng đời của ếch" | Đạt mastery `proficient` của LO tương ứng (đọc từ learning-service qua event `learning_objective.progressed`) |
+| Knowledge Card | "Bảng cửu chương 7", "Vòng đời của ếch" | Đạt mastery `proficient` của LO tương ứng (đọc từ module learning qua event `learning_objective.progressed`) |
 | Cosmetic | Bộ trang phục theo chủ đề | Quest, shop, sự kiện |
 | Badge | Huy hiệu thành tựu | Achievement |
 | Exploration | Vật sưu tầm trong bản đồ | Discovery ([WORLD_DESIGN](WORLD_DESIGN.md) §8) |
@@ -158,10 +158,10 @@ Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hi�
 Quy tắc:
 - Achievement học tập dựa trên **mastery/hoàn thành**, không dựa trên thời gian chơi hay số lần đăng nhập [Proposed, [GAME_DESIGN](GAME_DESIGN.md) §12].
 - Achievement xã hội chỉ dựa trên hành vi tích cực (giúp bạn trong co-op), không dựa trên số tin nhắn.
-- Đánh giá bởi consumer `achievement-evaluator` trong game-service, idempotent theo `(student_id, achievement_id, tier)`.
+- Đánh giá bởi consumer `achievement-evaluator` trong module game, idempotent theo `(student_id, achievement_id, tier)`.
 - Đổi điều kiện bằng version mới: tiến độ đã đạt không bị giảm; học sinh đã mở khóa giữ nguyên.
 
-## 8. Dữ liệu (game-service, `eduworld_game`)
+## 8. Dữ liệu (module game, `eduworld_game`)
 
 | Bảng | Loại | Cột chính |
 |---|---|---|
@@ -201,12 +201,12 @@ Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-i
 
 | Event | Producer | Payload chính |
 |---|---|---|
-| `currency.credited` / `currency.debited` | game-service | `currency_code`, `delta`, `balance_after`, `reason_code`, `source_id` |
-| `shop.item_purchased` | game-service | `shop_item_version_id`, `item_id`, `price` |
-| `item.granted` | game-service | `item_id`, `quantity`, `grant_id` (đã có) |
-| `collection.item_added` / `collection.completed` | game-service | `collection_id`, `item_id` |
-| `achievement.progressed` / `achievement.unlocked` | game-service | `achievement_id`, `tier`, `progress` |
-| `economy.adjusted` | game-service | `entry_ids[]`, `reason`, `approved_by` |
+| `currency.credited` / `currency.debited` | module game | `currency_code`, `delta`, `balance_after`, `reason_code`, `source_id` |
+| `shop.item_purchased` | module game | `shop_item_version_id`, `item_id`, `price` |
+| `item.granted` | module game | `item_id`, `quantity`, `grant_id` (đã có) |
+| `collection.item_added` / `collection.completed` | module game | `collection_id`, `item_id` |
+| `achievement.progressed` / `achievement.unlocked` | module game | `achievement_id`, `tier`, `progress` |
+| `economy.adjusted` | module game | `entry_ids[]`, `reason`, `approved_by` |
 
 ## 11. Lỗi
 

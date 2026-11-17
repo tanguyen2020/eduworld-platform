@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/identity/role.updated.v1.schema.json",
-  "title": "Payload role.updated v1 (identity-service, ADR-0066)",
+  "title": "Payload role.updated v1 (module identity, ADR-0066)",
   "description": "Tạo/sửa/xóa mềm Role. Consumer: audit, vô hiệu cache Principal của mọi người dùng có UserRole với role này.",
   "type": "object",
   "additionalProperties": false,

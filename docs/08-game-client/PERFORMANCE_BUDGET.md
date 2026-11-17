@@ -1,9 +1,9 @@
 # Performance Budget — Ngân sách hiệu năng client (máy tầm trung)
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-15
 > Liên quan: [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)
 
-**Mục lục:** 1. Mục đích và phạm vi · 2. Hạng thiết bị tham chiếu · 3. Mục tiêu khung hình · 4. Renderer theo nền tảng · 5. Preset chất lượng · 6. Tự phát hiện và độ phân giải động · 7. Ngân sách theo cảnh · 8. Ngân sách asset · 9. Ngân sách UI 2D · 10. Ngân sách mạng · 11. Thời gian tải và dung lượng · 12. Pin và nhiệt · 13. Kỹ thuật tối ưu bắt buộc · 14. Web export · 15. Quy trình kiểm soát · 16. Tiêu chí nghiệm thu
+**Mục lục:** 1. Mục đích và phạm vi · 2. Hạng thiết bị tham chiếu · 3. Mục tiêu khung hình · 4. Renderer theo nền tảng · 5. Preset chất lượng · 6. Tự phát hiện và độ phân giải động · 7. Ngân sách theo cảnh · 8. Ngân sách asset · 9. Ngân sách UI 2D · 10. Ngân sách mạng (10.1 phòng máy) · 11. Thời gian tải và dung lượng · 12. Pin và nhiệt · 13. Kỹ thuật tối ưu bắt buộc · 14. Web export · 15. Quy trình kiểm soát · 16. Tiêu chí nghiệm thu
 
 ## 1. Mục đích và phạm vi
 
@@ -151,6 +151,23 @@ Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọ
 | Mạng tối thiểu chơi được | 4G hoặc Wi-Fi 1 Mbps, RTT ≤ 200 ms | Trên 300 ms: hiển thị chỉ báo mạng yếu |
 | Tải nội dung vùng (PCK) | Tải nền khi đang ở vùng trước; tiếp tục được khi rớt mạng | §11 |
 
+### 10.1. Ngân sách phòng máy (classroom budget) [Proposed]
+
+Ngân sách trên tính cho **một** học sinh. Phòng máy trường học dùng chung một đường truyền: 40 máy cùng tải gói vùng 40 MB đầu tiết là khoảng 1,6 GB, vượt khả năng của đường truyền trường phổ thông. Release 1.0 thiết kế theo các quy tắc sau (nguồn: [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) CLS-03; NFR-PERF-019 trong [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md)):
+
+| Hạng mục | Mục tiêu / quy tắc | Ghi chú |
+|---|---|---|
+| Đường truyền tham chiếu của phòng máy | 20 Mbps chia sẻ cho 40 máy | Giá trị thiết kế; đo thực tế ở trường pilot (OQ-04) |
+| Lưu lượng nền khi cả lớp đang chơi (sau khi đã có nội dung) | ≤ 40 × (Hub + chat) theo bảng §10, tức ≤ 1,3 MB/s xuống cho cả phòng | Không tải PCK/media trong lúc cả lớp đang chơi nếu đã có gói cài sẵn |
+| Tải đầu tiết khi máy chưa có nội dung | Không phụ thuộc tải 40 MB/máy cùng lúc: ưu tiên gói cài sẵn hoặc cache LAN | Không đạt được thì game vẫn vào được Hub với nội dung lõi trong bản cài |
+| **Gói nội dung cài sẵn** | Bộ cài Windows/Android cho trường (MDM/USB) kèm PCK các vùng theo khối của trường; cập nhật delta theo hash | Bản cài Windows vẫn trong trần §11 |
+| **Tải trước ngoài giờ** | Thiết bị dùng chung (`shared_device: true`) tải PCK/media mới trong khung giờ trường cấu hình (mặc định 18:00–06:00) khi máy bật | Tôn trọng khung giờ truy cập của trường; không đăng nhập học sinh |
+| **Cache LAN tùy chọn theo hash** | Trường có thể đặt một máy chủ cache HTTP trong LAN (reverse proxy) cho CDN nội dung; client thử `lan_cache_url` trong `device.cfg` trước, kiểm tra SHA-256 của mọi gói (khóa content-addressed, ADR-0044), lỗi thì về CDN | Chỉ nội dung công khai (PCK, media công khai); không cache API, câu hỏi đề, answer key hay media private |
+| Chế độ dữ liệu thấp | Tắt tải trước vùng kế tiếp, giảm chất lượng media video/âm thanh | Bật tự động khi đo băng thông thấp hoặc do trường bật |
+| Đo đạc | Telemetry không PII: dung lượng tải theo nguồn (gói cài sẵn/LAN/CDN), tỷ lệ cache LAN hit | Dashboard trong [MONITORING](../11-operations/MONITORING.md) |
+
+Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `offhours_prefetch_window` (khung giờ tải trước), `lan_cache_url` là [Confirmed — Technical Architect 2026-11-15], đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md). Phân phối bộ cài trường: [DEPLOYMENT](../11-operations/DEPLOYMENT.md).
+
 ## 11. Thời gian tải và dung lượng
 
 | Chỉ số | Mục tiêu (Tầm trung) |
@@ -223,3 +240,4 @@ Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọ
 | AC-PERF-009 | Đồng bộ Hub 40 người ≤ 30 KB/s xuống trong 10 phút đo |
 | AC-PERF-010 | Mọi zone trong bản build qua benchmark CI không vượt ngân sách §7 quá 5% |
 | AC-PERF-011 | DEV-AND-MID1 chơi 30 phút: pin giảm ≤ 8%, không throttle mức severe |
+| AC-PERF-012 | Phòng máy giả lập 40 client trên đường truyền 20 Mbps: với gói nội dung cài sẵn hoặc cache LAN, cả lớp vào Hub ≤ 2 phút; client kiểm tra SHA-256 và tự về CDN khi cache LAN lỗi [Proposed] |

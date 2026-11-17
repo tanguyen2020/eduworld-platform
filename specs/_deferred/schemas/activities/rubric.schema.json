@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/rubric.schema.json",
+  "title": "RubricVersion",
+  "$comment": "Deferred (ADR-0072, ADR-0082) — không triển khai",
+  "description": "Rubric chấm tự luận/nói/dự án, có version và publish như nội dung (ADR-0043). Xem docs/99-deferred/WRITTEN_RESPONSE_RUBRIC.md §5.",
+  "type": "object",
+  "required": ["schema_version", "rubric_id", "rubric_version_id", "version", "owner_scope", "title", "grade_levels", "scoring_mode", "total_points", "criteria", "status"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "rubric_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+    "rubric_version_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "owner_scope": { "type": "string", "enum": ["platform", "tenant"] },
+    "tenant_id": { "$ref": "activity-base.schema.json#/$defs/nullableUuid" },
+    "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+    "subject_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+    "grade_levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1, "maximum": 9 }
+    },
+    "scoring_mode": { "type": "string", "enum": ["points", "levels"] },
+    "total_points": { "type": "number", "minimum": 1, "maximum": 1000 },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["criterion_id", "title", "weight", "levels"],
+        "properties": {
+          "criterion_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+          "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+          "description": { "$ref": "activity-base.schema.json#/$defs/i18nMedium" },
+          "weight": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+          "objective_ids": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": { "$ref": "activity-base.schema.json#/$defs/uuid" }
+          },
+          "levels": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "required": ["level_id", "label", "points", "descriptor"],
+              "properties": {
+                "level_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+                "label": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+                "points": { "type": "number", "minimum": 0, "maximum": 1000 },
+                "descriptor": { "$ref": "activity-base.schema.json#/$defs/i18nMedium" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "status": { "type": "string", "enum": ["draft", "in_review", "approved", "published", "archived", "rejected"] }
+  },
+  "additionalProperties": false
+}

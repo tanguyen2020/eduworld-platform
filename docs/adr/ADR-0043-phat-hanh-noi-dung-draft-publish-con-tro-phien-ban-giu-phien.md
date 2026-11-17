@@ -1,6 +1,9 @@
 # ADR-0043 — Phát hành nội dung: Draft/Publish, con trỏ phiên bản, giữ phiên bản khi đang chơi, rollback, đẩy cache
 
-> **Trạng thái:** Accepted · supersedes cách rollback của [ADR-0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · supersedes cách rollback của [ADR-0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: chủ thể "giáo viên" chọn "Luôn dùng bản mới nhất" cho bài giao — nay là người tạo bài giao của nhà trường (`school_admin`/`academic_manager`). **Còn hiệu lực:** toàn bộ mô hình phát hành.
 
 ## Bối cảnh
 
@@ -39,3 +42,4 @@ Stakeholder yêu cầu: nội dung sửa liên tục nên cần Draft/Publish; p
 |---|---|---|
 | 2026-11-15 | Accepted, supersede cách rollback của ADR-0015 | Stakeholder |
 | 2026-11-15 | Mở rộng phạm vi sang activity, rubric, challenge, boss, progression curve | ADR-0048, PROGRESSION_SYSTEM |
+| 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |

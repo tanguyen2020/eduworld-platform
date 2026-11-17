@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/identity/province.updated.v1.schema.json",
-  "title": "Payload province.updated v1 (identity-service, ADR-0060)",
+  "title": "Payload province.updated v1 (module identity, ADR-0060)",
   "description": "Tạo/sửa/đổi trạng thái một đơn vị hành chính cấp tỉnh hoặc ghi kế thừa. Envelope tenant_id = null (dữ liệu platform). Consumer: projection ref.provinces (learning, game), ref.schools (tên tỉnh phi chuẩn hóa).",
   "type": "object",
   "additionalProperties": false,

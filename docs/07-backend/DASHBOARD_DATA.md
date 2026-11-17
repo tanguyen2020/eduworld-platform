@@ -1,6 +1,6 @@
 # Dashboard Data — cơ chế dữ liệu cho mọi dashboard
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Backend Architect + Data/Analytics · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Backend Architect + Data/Analytics · Cập nhật: 2026-11-17 (loại tenant QA; rollup game theo `dims_hash`)
 > Liên quan: [ADR-0062](../adr/ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) · [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [ADR-0042](../adr/ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [DATABASE_DESIGN](DATABASE_DESIGN.md) · [VALKEY_DESIGN](VALKEY_DESIGN.md) · [MONITORING](../11-operations/MONITORING.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Danh mục dashboard · 3. Mô hình rollup chung · 4. Pipeline gia tăng · 5. Dữ liệu đến muộn và backfill · 6. Lưu trữ: partition và index · 7. Bảo vệ database khi truy vấn · 8. Quy tắc truy vấn · 9. Cache · 10. Xuất báo cáo bất đồng bộ · 11. Ước lượng kích thước · 12. Ngưỡng nâng cấp · 13. Quan sát và cảnh báo · 14. API đề xuất · 15. Kiểm thử tải · 16. Tiêu chí nghiệm thu
@@ -10,7 +10,9 @@
 Tài liệu là **nguồn sở hữu cơ chế dữ liệu dashboard** (ADR-0062): cách dựng, lưu, truy vấn, cache và xuất số liệu cho mọi dashboard của EduWorld, sao cho dữ liệu lớn theo từng ngày **không làm treo database**.
 
 - **Thuộc phạm vi:** mô hình rollup, pipeline, partition/index, read replica, giới hạn truy vấn, cache, export, sizing, giám sát, kiểm thử tải.
-- **Không thuộc phạm vi:** định nghĩa chỉ số học tập ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)), định nghĩa chỉ số game ([GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md)), giao diện màn hình ([SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-teacher-dashboard), [ADMIN_PORTAL §3.14](../04-admin-portal/ADMIN_PORTAL.md#314-live-ops-dashboards--game-analytics)), số liệu kỹ thuật thời gian thực của hạ tầng ([MONITORING](../11-operations/MONITORING.md)).
+- **Không thuộc phạm vi:** định nghĩa chỉ số học tập ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)), định nghĩa chỉ số game ([GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md)), giao diện màn hình ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) — School Learning Dashboard, [ADMIN_PORTAL §3.14](../04-admin-portal/ADMIN_PORTAL.md#314-live-ops-dashboards--game-analytics)), số liệu kỹ thuật thời gian thực của hạ tầng ([MONITORING](../11-operations/MONITORING.md)).
+
+**Yêu cầu (mã PRD):** [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) FR-ANL-012 (dashboard trường → lớp → học sinh, tenant, platform, Game Analytics), FR-ANL-013 (chỉ đọc rollup, khoảng tối đa 2 năm, nhãn tạm tính), FR-ANL-014 (xuất báo cáo bất đồng bộ, link có hạn, audit).
 
 **Nguyên tắc cốt lõi [Confirmed — ADR-0062]:**
 
@@ -21,21 +23,20 @@ Tài liệu là **nguồn sở hữu cơ chế dữ liệu dashboard** (ADR-0062
 | D-3 | Truy vấn dashboard chạy trên **read replica**, role riêng, có `statement_timeout`, pool và giới hạn đồng thời riêng |
 | D-4 | Mọi truy vấn bắt buộc có **tenant** (và scope theo quyền) + **khoảng thời gian** có giới hạn; độ hạt tự chọn theo khoảng |
 | D-5 | Xuất báo cáo lớn **luôn bất đồng bộ** |
-| D-6 | Rollup nằm trong database của service sở hữu dữ liệu; không join chéo database (ADR-0037) |
+| D-6 | Rollup nằm trong database của module sở hữu dữ liệu; không join chéo database (ADR-0037) |
 
 ## 2. Danh mục dashboard
 
-| Dashboard | Người xem | Service sở hữu | Nguồn đọc | Độ trễ chấp nhận |
+| Dashboard | Người xem | Module sở hữu | Nguồn đọc | Độ trễ chấp nhận |
 |---|---|---|---|---|
-| Trang chủ giáo viên, theo dõi bài giao | Giáo viên | learning-service | `lms.assignment_submissions` (read model trạng thái) + `learning.rollup_class_daily` | Tiến độ bài giao: gần thời gian thực (event); số liệu tuần: ≤ 15 phút |
-| Bản đồ kỹ năng lớp (LO heatmap) | Giáo viên | learning-service | `learning.rm_class_objective_stats` (trạng thái hiện tại) + `learning.rollup_class_objective_weekly` (xu hướng) | ≤ 15 phút |
-| Hồ sơ học sinh (tiến độ, xu hướng 8 tuần) | Giáo viên | learning-service | `learning.progress_daily`, `learning.mastery_snapshots_weekly` | ≤ 15 phút |
-| Tổng hợp trường | School Admin, Academic Manager | learning-service | `learning.rollup_school_daily/weekly/monthly` | Hôm nay ≤ 15 phút; ngày đã chốt sau 02:30 ICT |
-| Tổng hợp tenant (đơn vị nhiều trường) | Tenant Admin | learning-service + game-service | `learning.rollup_tenant_*`, `analytics.rollup_*` (game) | Như trên |
-| Platform học tập | System Admin | learning-service | `learning.rollup_tenant_*` (liên tenant qua role platform) | Ngày đã chốt |
+| School Learning Dashboard — cấp trường (trang chủ, theo dõi bài giao) | School Admin, Academic Manager (ADR-0072) | module learning | `learning.rollup_school_daily/weekly/monthly` + `lms.assignment_submissions` (read model trạng thái) | Tiến độ bài giao: gần thời gian thực (event); số liệu ngày: hôm nay ≤ 15 phút, ngày đã chốt sau 02:30 ICT |
+| School Learning Dashboard — cấp lớp (tiến độ, LO heatmap, cờ "làm quá nhanh") | School Admin, Academic Manager | module learning | `learning.rollup_class_daily`, `learning.rm_class_objective_stats` (trạng thái hiện tại) + `learning.rollup_class_objective_weekly` (xu hướng) | ≤ 15 phút |
+| School Learning Dashboard — cấp học sinh (tiến độ, xu hướng 8 tuần, báo cáo tham khảo TT27/TT22) | School Admin, Academic Manager | module learning | `learning.progress_daily`, `learning.mastery_snapshots_weekly` | ≤ 15 phút |
+| Tổng hợp tenant (đơn vị nhiều trường) | Tenant Admin | module learning + module game | `learning.rollup_tenant_*`, `analytics.rollup_*` (game) | Như trên |
+| Platform học tập | System Admin | module learning | `learning.rollup_tenant_*` (liên tenant qua role platform; không tính tenant QA, §3.4) | Ngày đã chốt |
 | Live Ops thời gian thực | Live-ops | MONITORING (Prometheus), không qua database | Metric | 15–30 giây |
-| Game Analytics | Platform; Tenant Admin (tổng hợp) | game-service | `analytics.rollup_*`, `analytics.cohort_retention`, `analytics.funnel_daily`, `analytics.perf_daily` | Hôm nay ≤ 1 giờ; ngày đã chốt sau 02:30 ICT |
-| Hoạt động đăng nhập game (giáo viên/tenant) | Giáo viên, Tenant Admin | learning-service | `ref.login_activity` (projection từ event game-service) | ≤ 5 phút |
+| Game Analytics | Platform; Tenant Admin (tổng hợp) | module game | `analytics.rollup_*`, `analytics.cohort_retention`, `analytics.funnel_daily`, `analytics.perf_daily` | Hôm nay ≤ 1 giờ; ngày đã chốt sau 02:30 ICT |
+| Hoạt động đăng nhập game (trường/tenant) | School Admin, Tenant Admin | module learning | `ref.login_activity` (projection từ event module game) | ≤ 5 phút |
 
 Có **hai loại nguồn đọc**:
 
@@ -59,7 +60,7 @@ Mỗi bảng rollup chuỗi thời gian có:
 | `is_final` (`boolean`) | `false` = số tạm tính (hôm nay/đang trong cửa sổ trễ); `true` = đã chốt |
 | `computed_at` | Thời điểm cập nhật gần nhất, hiển thị "cập nhật lúc…" |
 
-Khóa chính: `(tenant_id, <chiều phạm vi>, bucket_date, metric_version)`. Không có `deleted_at` (bảng dẫn xuất, dựng lại được; không phải dữ liệu nghiệp vụ — ADR-0028 áp dụng cho nguồn).
+Khóa chính: `(tenant_id, <chiều phạm vi>, bucket_date, metric_version)`. Ngoại lệ: rollup Game Analytics (`analytics.rollup_*`, `cohort_retention`, `funnel_daily`) lưu chiều trong `dims` jsonb kèm `dims_hash` và dùng khóa `(metric_date, metric_code, metric_version, tenant_id, dims_hash)` vì nhiều chỉ số dùng chung một bảng ([GAME_ANALYTICS §6](../11-operations/GAME_ANALYTICS.md), [DATABASE_DESIGN §2.8b](DATABASE_DESIGN.md)); dashboard vẫn chỉ lọc theo tập chiều cố định ở §3.3. Không có `deleted_at` (bảng dẫn xuất, dựng lại được; không phải dữ liệu nghiệp vụ — ADR-0028 áp dụng cho nguồn).
 
 ### 3.2. Cột đo không cộng dồn được
 
@@ -75,25 +76,29 @@ Không dùng extension HLL của PostgreSQL trong Release 1.0 (thêm phụ thu�
 
 ### 3.3. Cấp tổng hợp và tập chiều cố định
 
-Không lưu tích Descartes của mọi chiều. Mỗi service khai báo **tập chiều (grouping set) được phép**; chiều không nằm trong tập thì dashboard không lọc được (thêm chiều = thay đổi có backfill, §5).
+Không lưu tích Descartes của mọi chiều. Mỗi module khai báo **tập chiều (grouping set) được phép**; chiều không nằm trong tập thì dashboard không lọc được (thêm chiều = thay đổi có backfill, §5).
 
-| Service | Cấp (bảng) | Chiều |
+| Module | Cấp (bảng) | Chiều |
 |---|---|---|
-| learning-service | học sinh × ngày (`progress_daily`) | `student_id`, `class_id` (snapshot lúc event), `subject_id` |
+| module learning | học sinh × ngày (`progress_daily`) | `student_id`, `class_id` (snapshot lúc event), `subject_id` |
 | | lớp (`rollup_class_*`) | `class_id`, `subject_id` |
 | | lớp × LO (`rollup_class_objective_weekly`) | `class_id`, `objective_id` (chỉ theo tuần) |
 | | trường (`rollup_school_*`) | `school_id`, `grade_level`, `subject_id` |
 | | tenant (`rollup_tenant_*`) | `grade_level`, `subject_id` |
-| game-service | `analytics.rollup_*` | Tập cố định theo [GAME_ANALYTICS §6](../11-operations/GAME_ANALYTICS.md#6-mô-hình-dữ-liệu): `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)`; cột `grouping_set` cho biết dòng thuộc tập nào |
+| module game | `analytics.rollup_*` | Tập cố định theo [GAME_ANALYTICS §6](../11-operations/GAME_ANALYTICS.md#6-mô-hình-dữ-liệu): `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)`; tập chiều của một dòng xác định bởi các khóa trong `dims` (`dims_hash`) |
+
+### 3.4. Loại tenant QA
+
+Tenant có cờ `is_qa = true` (cột của tenant ở module identity, chỉ System Admin đặt, tenant `common` không được đánh dấu; các module nhận qua projection `ref.tenants.is_qa`) chỉ chứa tài khoản kiểm thử và probe synthetic ([MONITORING](../11-operations/MONITORING.md)). Mọi dashboard và export **cấp platform hoặc liên tenant** (Platform học tập, Game Analytics, báo cáo platform) loại tenant QA, kể cả dữ liệu ghi trước khi đánh dấu; khi bộ lọc `tenant_ids` chỉ định tenant QA, API trả rỗng kèm `excluded_tenant_ids`. Game Analytics không ghi sự kiện của tenant QA ngay từ consumer ([GAME_ANALYTICS §2](../11-operations/GAME_ANALYTICS.md), nguyên tắc A-8). Dữ liệu của tenant QA vẫn cô lập như mọi tenant khác.
 
 ## 4. Pipeline gia tăng
 
 ```mermaid
 sequenceDiagram
   autonumber
-  participant SVC as Service nghiệp vụ
+  participant SVC as Module nghiệp vụ (core-api)
   participant JS as NATS JetStream (EVT_*)
-  participant RC as Rollup consumer (worker của service sở hữu)
+  participant RC as Rollup consumer (worker của module sở hữu)
   participant VK as Valkey (HLL hôm nay, cache)
   participant PRI as PostgreSQL primary (rollup)
   participant JOB as Job chốt ngày 02:30 ICT
@@ -111,16 +116,16 @@ sequenceDiagram
   UI->>API: yêu cầu số liệu (scope, khoảng, metric)
   API->>VK: đọc cache
   alt cache miss
-    API->>REP: truy vấn rollup (role <svc>_dashboard, timeout 5 s)
+    API->>REP: truy vấn rollup (role <module>_dashboard, timeout 5 s)
     API->>VK: ghi cache
   end
   API-->>UI: số liệu + grain + data_as_of + is_partial
 ```
 
 - **Upsert gia tăng:** consumer cộng dồn vào dòng của ngày event (`ON CONFLICT … DO UPDATE SET count = count + excluded.count`), idempotent nhờ `processed_events` (ADR-0042). Gom lô để giảm số câu lệnh ghi.
-- **Job chốt ngày** (`dashboard-day-close`, 02:30 ICT [Proposed]): chạy theo service, theo từng tenant để chia nhỏ; tính các chỉ số không cộng dồn (§3.2); đặt `is_final = true`; dựng tuần/tháng từ bảng ngày (không từ dữ liệu thô).
+- **Job chốt ngày** (`dashboard-day-close`, 02:30 ICT [Proposed], profile `worker-jobs`): chạy theo module, theo từng tenant để chia nhỏ; tính các chỉ số không cộng dồn (§3.2); đặt `is_final = true`; dựng tuần/tháng từ bảng ngày (không từ dữ liệu thô).
 - **Read model 15 phút** (LEARNING_ANALYTICS §5) vẫn giữ cho trạng thái hiện tại; rollup chuỗi thời gian không phụ thuộc vào chúng.
-- Rollup chỉ chạy trên **primary** bằng role `<svc>_app`/worker; replica chỉ đọc.
+- Rollup chỉ chạy trên **primary** bằng role `<module>_app`/worker; replica chỉ đọc.
 
 ## 5. Dữ liệu đến muộn và backfill
 
@@ -130,7 +135,7 @@ sequenceDiagram
 | Event đến muộn > 48 giờ | Không sửa rollup; ghi metric `eduworld_rollup_late_events_total`; nếu vượt ngưỡng thì vận hành chạy backfill có chủ đích |
 | Đổi định nghĩa chỉ số | Tăng `metric_version`; dashboard chỉ đọc version hiện hành; backfill version mới trong giới hạn retention của nguồn |
 | Thêm chiều mới / thêm cấp | Migration thêm bảng/cột (expand); job **backfill** chạy nền theo tenant × tháng, giới hạn tốc độ, ghi `available_from` cho chỉ số; dashboard hiển thị "chưa có số liệu trước ngày …" |
-| Nguồn hết hạn lưu trữ | Backfill chỉ được trong phạm vi nguồn còn giữ: `learning_events` theo OQ-12; game raw 90 ngày (ADR-0058) |
+| Nguồn hết hạn lưu trữ | Backfill chỉ được trong phạm vi nguồn còn giữ: `learning_events` theo retention của DATA_PRIVACY; game raw 90 ngày (ADR-0058) |
 | Dựng lại toàn bộ (lỗi logic) | Job `rollup-rebuild` theo tenant × khoảng ngày, ghi vào bảng tạm rồi hoán đổi partition; không chặn dashboard |
 
 ## 6. Lưu trữ: partition và index
@@ -151,7 +156,7 @@ sequenceDiagram
 | Biện pháp | Giá trị mặc định | Nhãn |
 |---|---|---|
 | Truy vấn trên **read replica** của `eduworld_learning` và `eduworld_game` | Bắt buộc ở staging/production; local dùng primary | [Proposed] |
-| Role `<svc>_dashboard` (`learning_dashboard`, `game_dashboard`) | Chỉ `SELECT` trên bảng rollup/read model và view dashboard; chịu RLS; không truy cập bảng nghiệp vụ/thô | [Proposed] |
+| Role `<module>_dashboard` (`learning_dashboard`, `game_dashboard`) | Chỉ `SELECT` trên bảng rollup/read model và view dashboard; chịu RLS; không truy cập bảng nghiệp vụ/thô | [Proposed] |
 | `statement_timeout` | 5 giây (role dashboard) | [Confirmed — ADR-0062] |
 | `idle_in_transaction_session_timeout` | 10 giây | [Proposed] |
 | `work_mem` cho role dashboard | 32 MB | [Proposed] |
@@ -164,7 +169,7 @@ Timeout trả `504 DASHBOARD_QUERY_TIMEOUT` kèm gợi ý thu hẹp khoảng/ph�
 
 ## 8. Quy tắc truy vấn
 
-1. **Bắt buộc** `tenant_id` của phiên (System Admin: danh sách tenant tường minh, ADR-0027) và scope theo quyền (lớp được phân công, trường của mình…).
+1. **Bắt buộc** `tenant_id` của phiên (System Admin: danh sách tenant tường minh, ADR-0027) và scope theo quyền (trường của mình, môn được gán với Academic Manager scope `subject`…); không có scope lớp theo phân công giảng dạy (ADR-0072).
 2. **Bắt buộc** khoảng thời gian `from`–`to`; tối đa **2 năm** (`dashboard_max_range_days` = 730). Vượt → `422 DASHBOARD_RANGE_TOO_LARGE`.
 3. **Độ hạt tự chọn** (server quyết định, client chỉ gợi ý):
 
@@ -185,10 +190,10 @@ Timeout trả `504 DASHBOARD_QUERY_TIMEOUT` kèm gợi ý thu hẹp khoảng/ph�
 
 | Khóa (Valkey) | Nội dung | TTL |
 |---|---|---|
-| `ew:<svc>:dash:ver:<tenant_id>` | Phiên bản dữ liệu dashboard của tenant (tăng khi chốt ngày/backfill) | Không hết hạn |
-| `ew:<svc>:dash:res:<tenant_id>:<ver>:<hash(query_id, scope, from, to, grain, locale)>` | Kết quả truy vấn đã serialize | **5 phút** nếu khoảng chứa hôm nay; **24 giờ** nếu toàn bộ đã chốt |
-| `ew:<svc>:dash:hll:<metric>:<tenant_id>:<scope>:<yyyymmdd>` | HyperLogLog người dùng hoạt động hôm nay | 3 ngày |
-| `ew:<svc>:dash:inflight:<user_id>` | Bộ đếm truy vấn đang chạy (giới hạn đồng thời) | 30 giây |
+| `ew:<module>:dash:ver:<tenant_id>` | Phiên bản dữ liệu dashboard của tenant (tăng khi chốt ngày/backfill) | Không hết hạn |
+| `ew:<module>:dash:res:<tenant_id>:<ver>:<hash(query_id, scope, from, to, grain, locale)>` | Kết quả truy vấn đã serialize | **5 phút** nếu khoảng chứa hôm nay; **24 giờ** nếu toàn bộ đã chốt |
+| `ew:<module>:dash:hll:<metric>:<tenant_id>:<scope>:<yyyymmdd>` | HyperLogLog người dùng hoạt động hôm nay | 3 ngày |
+| `ew:<module>:dash:inflight:<user_id>` | Bộ đếm truy vấn đang chạy (giới hạn đồng thời) | 30 giây |
 
 - **Vô hiệu cache:** không xóa từng khóa; job chốt ngày/backfill tăng `ver` của tenant → khóa cũ không còn được đọc và tự hết hạn.
 - Chống "dồn cache" (cache stampede): khóa ngắn `SET NX` khi tính lại cùng một kết quả; người đến sau chờ tối đa 2 giây rồi đọc cache.
@@ -199,7 +204,7 @@ Timeout trả `504 DASHBOARD_QUERY_TIMEOUT` kèm gợi ý thu hẹp khoảng/ph�
 ```mermaid
 flowchart LR
   U[Người dùng bấm Xuất] --> A[API tạo export job 202 + export_id]
-  A --> Q[NATS work-queue theo service]
+  A --> Q[NATS work-queue theo module]
   Q --> W[Worker đọc replica theo lô 10.000 dòng]
   W --> F[Ghi CSV/XLSX lên object storage ew-exports]
   F --> N[Thông báo trong portal + link ký có hạn]
@@ -229,8 +234,8 @@ Với 50.000 học sinh (giả định sizing của DATABASE_DESIGN §8): nhân 
 
 | Truy vấn | Bảng | Dòng đọc |
 |---|---|---|
-| Giáo viên: lớp 45 HS × 1 môn × 31 ngày, chuỗi theo ngày | `rollup_class_daily` | 31 |
-| Giáo viên: danh sách 45 HS × 1 môn × 31 ngày | `progress_daily` | ≤ 1.395 (phân trang 100 HS) |
+| School Learning Dashboard cấp lớp: lớp 45 HS × 1 môn × 31 ngày, chuỗi theo ngày | `rollup_class_daily` | 31 |
+| School Learning Dashboard cấp lớp: danh sách 45 HS × 1 môn × 31 ngày | `progress_daily` | ≤ 1.395 (phân trang 100 HS) |
 | School Admin: trường × 9 khối × 5 môn × 2 năm (độ hạt tháng) | `rollup_school_monthly` | 9 × 5 × 24 = 1.080 |
 | Tenant Admin: tenant × 9 khối × 1 năm (độ hạt tuần) | `rollup_tenant_weekly` | 9 × 52 = 468 |
 | Live-ops: 1 chỉ số × 1 tập chiều × 31 ngày | `analytics.rollup_daily` | 31 × (số giá trị chiều) ≤ vài trăm |
@@ -250,13 +255,13 @@ So với dữ liệu thô (`learning_events` ≈ 700 triệu dòng/năm ở 50.0
 
 | Metric | Nhãn | Ý nghĩa |
 |---|---|---|
-| `eduworld_dashboard_query_duration_seconds` (histogram) | `service`, `query_id`, `grain`, `cache` (`hit`/`miss`) | Thời gian truy vấn dashboard |
-| `eduworld_dashboard_cache_requests_total` | `service`, `result` | Tỷ lệ cache hit |
-| `eduworld_dashboard_rejected_total` | `service`, `reason` (`range`, `busy`, `timeout`) | Truy vấn bị từ chối |
-| `eduworld_rollup_lag_seconds` | `service`, `rollup` | Thời gian từ event đến khi vào rollup "hôm nay" |
-| `eduworld_rollup_day_close_duration_seconds` | `service` | Thời gian job chốt ngày |
-| `eduworld_rollup_late_events_total` | `service`, `bucket` (`<=48h`, `>48h`) | Event đến muộn |
-| `eduworld_export_jobs_total` / `_duration_seconds` | `service`, `status` | Export |
+| `eduworld_dashboard_query_duration_seconds` (histogram) | `module`, `query_id`, `grain`, `cache` (`hit`/`miss`) | Thời gian truy vấn dashboard |
+| `eduworld_dashboard_cache_requests_total` | `module`, `result` | Tỷ lệ cache hit |
+| `eduworld_dashboard_rejected_total` | `module`, `reason` (`range`, `busy`, `timeout`) | Truy vấn bị từ chối |
+| `eduworld_rollup_lag_seconds` | `module`, `rollup` | Thời gian từ event đến khi vào rollup "hôm nay" |
+| `eduworld_rollup_day_close_duration_seconds` | `module` | Thời gian job chốt ngày |
+| `eduworld_rollup_late_events_total` | `module`, `bucket` (`<=48h`, `>48h`) | Event đến muộn |
+| `eduworld_export_jobs_total` / `_duration_seconds` | `module`, `status` | Export |
 
 Cảnh báo (định nghĩa ngưỡng chính thức ở [MONITORING](../11-operations/MONITORING.md)): DashboardSlow (p95 > 2 s trong 15 phút), DashboardTimeoutsSpike, RollupLagHigh (> 15 phút cho học tập, > 1 giờ cho game), DayCloseNotDone (chưa chốt xong lúc 05:00 ICT), DashboardReplicaLag (> 60 s), LateEventsHigh.
 
@@ -264,11 +269,11 @@ Cảnh báo (định nghĩa ngưỡng chính thức ở [MONITORING](../11-opera
 
 Các endpoint dashboard đã có giữ nguyên đường dẫn, **bổ sung quy ước chung** của §8 (tham số `from`, `to`, `grain` gợi ý; phản hồi có `grain`, `data_as_of`, `is_partial`): `/lms/classes/{class_id}/analytics/*`, `/lms/students/{student_id}/analytics`, `/lms/schools/{school_id}/analytics/summary` (LEARNING_ANALYTICS §8), `/admin/analytics/game/*`, `/tenant/analytics/game/summary` (GAME_ANALYTICS §11).
 
-Endpoint bổ sung (đã có trong OpenAPI — operationId `getTeacherDashboard`, `getSchoolAnalyticsSeries`, `getTenantLearningSummary`, `getPlatformLearningSummary`, `createTenantReport`, `getTenantReport`, `createPlatformReport`, `getPlatformReport`; chuẩn ở [API_DESIGN §9.14, §9.16](API_DESIGN.md#914-lms--apiv1lms)):
+Endpoint bổ sung (operationId `getSchoolDashboard` thay `getTeacherDashboard` theo ADR-0072, `getSchoolAnalyticsSeries`, `getTenantLearningSummary`, `getPlatformLearningSummary`, `createTenantReport`, `getTenantReport`, `createPlatformReport`, `getPlatformReport`; chuẩn ở [API_DESIGN §9.14, §9.16](API_DESIGN.md#914-lms--apiv1lms)):
 
-| Method | Path | Service | Mô tả | Quyền |
+| Method | Path | Module | Mô tả | Quyền |
 |---|---|---|---|---|
-| GET | `/api/v1/lms/dashboards/teacher?class_id=&subject_id=&from=&to=` | learning | Gói widget trang chủ giáo viên trong một lần gọi | Giáo viên (lớp được phân công) |
+| GET | `/api/v1/lms/dashboards/school?school_id=&class_id=&subject_id=&from=&to=` | learning | Gói widget School Learning Dashboard (trường → lớp → học sinh) trong một lần gọi | `analytics.school.read` (School Admin trong trường; Academic Manager trong trường/môn được gán) |
 | GET | `/api/v1/lms/schools/{school_id}/analytics/series?metric=&grade_level=&subject_id=&from=&to=&grain=` | learning | Chuỗi thời gian cấp trường | `analytics.school.read` |
 | GET | `/api/v1/tenant/analytics/learning/summary?school_ids=&grade_level=&from=&to=` | learning | Tổng hợp học tập cấp tenant | `analytics.tenant.read` |
 | GET | `/api/v1/admin/analytics/learning/summary?tenant_ids=&from=&to=` | learning | Tổng hợp học tập liên tenant (gateway nội bộ) | System Admin |
@@ -283,7 +288,7 @@ Mã lỗi (trong [API_DESIGN §4.1](API_DESIGN.md#41-catalog-mã-lỗi) và enum
 | Kịch bản | Dữ liệu | Mục tiêu |
 |---|---|---|
 | Sinh dữ liệu tổng hợp 2 năm | Generator tạo rollup + `progress_daily` cho 50.000 học sinh, 1.500 lớp, 100 trường, 5 tenant (≈ 5 lần §11) | Đủ để đo trên kích thước năm 1 |
-| Giờ cao điểm giáo viên | 1.500 giáo viên mở trang chủ trong 10 phút, 30% mở heatmap | p95 ≤ 2 s; replica CPU < 70%; không ảnh hưởng p95 ghi primary |
+| Giờ cao điểm nhà trường | 500 nhân sự trường mở School Learning Dashboard trong 10 phút, 30% drill-down heatmap lớp | p95 ≤ 2 s; replica CPU < 70%; không ảnh hưởng p95 ghi primary |
 | Báo cáo trường/tenant | 200 phiên đồng thời chọn khoảng 1–2 năm | p95 ≤ 2 s; không truy vấn nào > 5 s |
 | Cache lạnh | Ngay sau job chốt ngày (phiên bản tăng) | p95 ≤ 2 s khi cache miss toàn bộ |
 | Job chốt ngày | Dữ liệu 50.000 học sinh, 1 ngày | Hoàn tất < 30 phút; primary p95 ghi tăng < 20% trong lúc chạy |
@@ -296,7 +301,7 @@ Kiểm tra `EXPLAIN (ANALYZE, BUFFERS)` của mọi truy vấn trong query catal
 
 | ID | Tiêu chí |
 |---|---|
-| AC-DASH-001 | Không endpoint dashboard nào truy vấn bảng nghiệp vụ hay bảng thô (kiểm bằng role `<svc>_dashboard` không có quyền trên các bảng đó) |
+| AC-DASH-001 | Không endpoint dashboard nào truy vấn bảng nghiệp vụ hay bảng thô (kiểm bằng role `<module>_dashboard` không có quyền trên các bảng đó) |
 | AC-DASH-002 | Truy vấn thiếu khoảng thời gian hoặc khoảng > 730 ngày bị từ chối `DASHBOARD_RANGE_TOO_LARGE` |
 | AC-DASH-003 | Độ hạt trả về đúng quy tắc §8 (31 ngày → ngày; 6 tháng → tuần; 2 năm → tháng) |
 | AC-DASH-004 | Truy vấn chạy quá 5 giây bị hủy ở database, API trả `DASHBOARD_QUERY_TIMEOUT`, không giữ kết nối |
