@@ -26,16 +26,16 @@
 
 ### Tests cho User Story 1
 
-- [ ] T008 [P] [US1] Test F002-AC-01, F002-AC-02: bảng ca token hợp lệ/sai aud/sai iss/chữ ký giả/alg none/thiếu/`typ` sai/`azp` ngoài danh sách — file: `src/backend/pkg/httpx/auth_test.go` — phải FAIL trước khi code
-- [ ] T009 [P] [US1] Test F002-AC-03: token hết hạn → `TOKEN_EXPIRED`; `nbf` tương lai ngoài skew → 401 — file: `src/backend/pkg/httpx/auth_expiry_test.go`
-- [ ] T010 [P] [US1] Test F002-AC-04: JWKS refresh khi gặp kid lạ, giới hạn tần suất, không gọi introspection — file: `src/backend/pkg/httpx/jwks_test.go`
-- [ ] T011 [P] [US1] Test F002-AC-05: token client credentials (`svc-identity`) tới route ứng dụng → 401; mọi request `/internal/v1/*` → 404 vì server không đăng ký tiền tố — file: `src/backend/pkg/httpx/no_internal_route_test.go`
+- [x] T008 [P] [US1] Test F002-AC-01, F002-AC-02: bảng ca token hợp lệ/sai aud/sai iss/chữ ký giả/alg none/thiếu/`typ` sai/`azp` ngoài danh sách — file: `src/backend/pkg/httpx/auth_test.go` — phải FAIL trước khi code
+- [x] T009 [P] [US1] Test F002-AC-03: token hết hạn → `TOKEN_EXPIRED`; `nbf` tương lai ngoài skew → 401 — file: `src/backend/pkg/httpx/auth_expiry_test.go`
+- [x] T010 [P] [US1] Test F002-AC-04: JWKS refresh khi gặp kid lạ, giới hạn tần suất, không gọi introspection — file: `src/backend/pkg/httpx/jwks_test.go`
+- [x] T011 [P] [US1] Test F002-AC-05: token client credentials (`svc-identity`) tới route ứng dụng → 401; mọi request `/internal/v1/*` → 404 vì server không đăng ký tiền tố — file: `src/backend/pkg/httpx/no_internal_route_test.go`
 
 ### Implementation cho User Story 1
 
-- [ ] T012 [US1] JWKS cache (go-oidc RemoteKeySet bọc refresh nền + rate limit kid lạ) — file: `src/backend/pkg/httpx/jwks.go`
-- [ ] T013 [US1] Middleware `auth` dựng `authz.Claims` (sub, azp, sid, acr, auth_time, roles) vào context — file: `src/backend/pkg/httpx/auth.go`
-- [ ] T014 [US1] `auth` từ chối token không có người dùng (client credentials); `httpx.NewServer` chặn đăng ký route tiền tố `/internal/` — file: `src/backend/pkg/httpx/auth.go`
+- [x] T012 [US1] JWKS cache (go-oidc RemoteKeySet bọc refresh nền + rate limit kid lạ) — file: `src/backend/pkg/httpx/jwks.go`
+- [x] T013 [US1] Middleware `auth` dựng `authz.Claims` (sub, azp, sid, acr, auth_time, roles) vào context — file: `src/backend/pkg/httpx/auth.go`
+- [x] T014 [US1] `auth` từ chối token không có người dùng (client credentials); `httpx.NewServer` chặn đăng ký route tiền tố `/internal/` — file: `src/backend/pkg/httpx/auth.go`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -47,8 +47,8 @@
 
 ### Tests cho User Story 2
 
-- [ ] T015 [P] [US2] Test F002-AC-06: thiếu header, sai UUID, route miễn trừ (`tenant_header_required`), header tùy chọn — file: `src/backend/pkg/httpx/tenant_test.go` — phải FAIL trước khi code
-- [ ] T016 [P] [US2] Test F002-AC-07, F002-AC-08: membership lệch → `TENANT_MISMATCH` + audit + metric; `TenantID` lấy từ resolver; `tenant_ids` bị bỏ qua với người dùng tenant — file: `src/backend/pkg/httpx/principal_test.go`
+- [x] T015 [P] [US2] Test F002-AC-06: thiếu header, sai UUID, route miễn trừ (`tenant_header_required`), header tùy chọn — file: `src/backend/pkg/httpx/tenant_test.go` — phải FAIL trước khi code
+- [x] T016 [P] [US2] Test F002-AC-07, F002-AC-08: membership lệch → `TENANT_MISMATCH` + audit + metric; `TenantID` lấy từ resolver; `tenant_ids` bị bỏ qua với người dùng tenant — file: `src/backend/pkg/httpx/principal_test.go`
 - [x] T017 [P] [US2] Test F002-AC-09: resolver lỗi + cache trống → 503 retryable; cache còn hạn → thành công — file: `src/backend/pkg/authz/cache_failclosed_test.go`
 - [x] T018 [P] [US2] Test F002-AC-10: L1 + Valkey hit/miss, `Invalidate` xóa cả hai (testcontainers valkey:8) — file: `src/backend/pkg/authz/cache_test.go`
 - [x] T019 [P] [US2] Test F002-AC-11: `ScopeFor` một tenant; `CrossTenantScope` cần quyền + MFA + lý do; `PlatformScope(p)`/`SystemPlatformScope(job)` chỉ thấy dòng `tenant_id IS NULL`; depguard chặn gói khác dùng `scopector` — file: `src/backend/pkg/authz/scope_test.go`
@@ -65,7 +65,7 @@
 - [ ] T058 [P] [US2] Analyzer `bypassreason` (go/analysis) chặn lý do `Bypass` ngoài danh sách, đăng ký vào `golangci.base.yml` — file: `src/backend/tools/lint/bypassreason/analyzer.go`
 - [x] T025 [US2] `authz.Principal`, `PrincipalResolver`, `ErrNotMember`, `ScopeFor`, `CrossTenantScope`, `PlatformScope(p)`, `SystemPlatformScope(job)` — file: `src/backend/pkg/authz/principal.go`
 - [x] T026 [US2] Cache hai lớp `principal_cache`/`principal_cache_ttl`, key `ew:<module>:principal:<user>:<tenant>`, `Invalidate` — file: `src/backend/pkg/authz/cache.go`
-- [ ] T027 [US2] Middleware `tenant` (parse, miễn trừ) và `principal` (resolve, ánh xạ lỗi, audit) — file: `src/backend/pkg/httpx/tenant.go`
+- [x] T027 [US2] Middleware `tenant` (parse, miễn trừ) và `principal` (resolve, ánh xạ lỗi, audit) — file: `src/backend/pkg/httpx/tenant.go`
 
 **Checkpoint**: User Story 2 chạy và kiểm độc lập được.
 
@@ -78,15 +78,15 @@
 ### Tests cho User Story 3
 
 - [x] T028 [P] [US3] Test F002-AC-14, F002-AC-15: catalog hợp lệ qua; role tenant chứa từng loại permission platform-only (game, competition.config, platform, moderation, chat platform) → lỗi (TC-CMS-AUTHZ-04) — file: `src/backend/pkg/authz/validate_test.go` — phải FAIL trước khi code
-- [ ] T029 [P] [US3] Test F002-AC-16, F002-AC-17: ma trận `azp` × `user_type` × nhóm route — file: `src/backend/pkg/httpx/guards_test.go`
-- [ ] T030 [P] [US3] Test F002-AC-18: thiếu MFA (`acr`), `auth_time` quá hạn, không role platform — file: `src/backend/pkg/httpx/platform_guard_test.go`
+- [x] T029 [P] [US3] Test F002-AC-16, F002-AC-17: ma trận `azp` × `user_type` × nhóm route — file: `src/backend/pkg/httpx/guards_test.go`
+- [x] T030 [P] [US3] Test F002-AC-18: thiếu MFA (`acr`), `auth_time` quá hạn, không role platform — file: `src/backend/pkg/httpx/platform_guard_test.go`
 - [x] T031 [P] [US3] Test F002-AC-19: `Require` trả 404 ngoài tenant, `PERMISSION_DENIED` cả khi ngoài school/subject lẫn khi thiếu quyền (TC-TEN-002, TC-TEN-003) — file: `src/backend/pkg/authz/require_test.go`
 
 ### Implementation cho User Story 3
 
 - [x] T032 [US3] Hằng permission theo ADMIN_PORTAL §2.2 + danh sách platform-only — file: `src/backend/pkg/authz/catalog.go`
 - [x] T033 [US3] Role hệ thống theo ADMIN_PORTAL §2.3 (`RoleDef{Name, ScopeKind, Permissions}`) + `ValidateCatalog`; hook `authz.MustValidateAtStartup()` gọi trong `src/backend/cmd/*` của mọi binary — file: `src/backend/pkg/authz/roles.go`
-- [ ] T034 [US3] Guard `portal_staff`, `game_player`, `platform_mfa` (đọc `EW_OIDC_PLATFORM_REQUIRED_ACR`, `EW_OIDC_PLATFORM_MAX_AUTH_AGE`) — file: `src/backend/pkg/httpx/guards.go`
+- [x] T034 [US3] Guard `portal_staff`, `game_player`, `platform_mfa` (đọc `EW_OIDC_PLATFORM_REQUIRED_ACR`, `EW_OIDC_PLATFORM_MAX_AUTH_AGE`) — file: `src/backend/pkg/httpx/guards.go`
 - [x] T035 [US3] `authz.Require(ctx, p, perm, resource)` + `Resource{TenantID, SchoolID, SubjectID}` — file: `src/backend/pkg/authz/require.go`
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
@@ -153,3 +153,10 @@
 - [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
 - [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
 - [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+
+## Ghi chú triển khai (2026-11-17)
+
+- Test gộp file: T009 (`auth_expiry_test.go`) và T011 (`no_internal_route_test.go`) nằm trong `src/backend/pkg/httpx/auth_test.go`; T016 (`principal_test.go`) trong `tenant_test.go`; T030 (`platform_guard_test.go`) trong `guards_test.go`.
+- `authz.Grant` mang `ScopeKind` (role_scope_kind) để guard `platform_mfa` nhận ra role platform kể cả role platform tùy biến; `Principal` = `PrincipalData` (dữ liệu resolve) + tập permission tính sẵn; `ClientID`, `SessionID`, `Channel`, `MFA` lấy từ token mỗi request, không cache.
+- Client id portal/game đọc từ `EW_KC_PORTAL_CLIENT_ID`/`EW_KC_GAME_CLIENT_ID` (R3), không hardcode.
+- Cache Principal: `ew:<module>:principal:<user_id>:<tenant_id|platform>` (VALKEY_DESIGN) + khóa phụ `…:principal:sub:<hash(iss,sub)>` → `user_id` (token không mang `user_id`) + `…:principal:idx:<user_id>` (SET) cho invalidate toàn user.

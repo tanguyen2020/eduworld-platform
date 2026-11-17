@@ -58,10 +58,11 @@ func (s PermissionSet) List() []Permission {
 // Grant is one effective UserRole: its permissions and the school/subject it is limited to (nil = the
 // whole tenant, or the platform for platform roles). There is no class scope (ADR-0072).
 type Grant struct {
-	Role        string       `json:"role"`
-	Permissions []Permission `json:"permissions"`
-	SchoolID    *uuid.UUID   `json:"school_id,omitempty"`
-	SubjectID   *uuid.UUID   `json:"subject_id,omitempty"`
+	Role        string        `json:"role"`
+	ScopeKind   RoleScopeKind `json:"scope_kind"` // role_scope_kind of the role (platform roles need MFA)
+	Permissions []Permission  `json:"permissions"`
+	SchoolID    *uuid.UUID    `json:"school_id,omitempty"`
+	SubjectID   *uuid.UUID    `json:"subject_id,omitempty"`
 }
 
 // PrincipalData is what the identity module resolves plus what httpx reads from the token.

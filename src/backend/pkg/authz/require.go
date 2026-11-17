@@ -96,12 +96,11 @@ func deny(ctx context.Context, p Principal, perm Permission, why string) {
 		return
 	}
 	// A failed denial audit never turns a denial into an allow; the outbox recorder logs its own errors.
-	_ = rec.Record(ctx, audit.Event{
-		Action:     audit.ActionAuthzDenied,
-		TargetType: "permission",
-		TargetID:   string(perm),
-		Result:     audit.ResultDenied,
-		Reason:     string(problem.PermissionDenied),
-		Metadata:   map[string]any{"permission": string(perm), "why": why, "user_id": p.UserID.String()},
-	})
+	e := deniedEvent(string(problem.PermissionDenied), map[string]any{"permission": string(perm), "why": why, "user_id": p.UserID.String()})
+	e.TargetType, e.TargetID = "permission", string(perm)
+	_ = rec.Record(ctx, e)
+}
+
+func deniedEvent(reason string, metadata map[string]any) audit.Event {
+	return audit.Event{Action: audit.ActionAuthzDenied, Result: audit.ResultDenied, Reason: reason, Metadata: metadata}
 }
