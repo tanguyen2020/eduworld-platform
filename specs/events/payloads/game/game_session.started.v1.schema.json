@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/game_session.started.v1.schema.json",
+  "title": "Payload game_session.started v1 (module game, owner F014)",
+  "description": "Game session được tạo (createGameSession). Consumer: LA (thời gian học), ANA, AUD. Không IP/device_id thô (ADR-0031).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["game_session_id", "student_id", "platform", "client_version", "started_at"],
+  "properties": {
+    "game_session_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "platform": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] },
+    "client_version": { "type": "string", "maxLength": 32 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "replaced_session_id": { "type": ["string", "null"], "format": "uuid" }
+  },
+  "examples": [
+    { "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "platform": "windows", "client_version": "1.0.0", "started_at": "2026-11-17T01:00:00Z", "replaced_session_id": null }
+  ]
+}

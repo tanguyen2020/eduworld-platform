@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/student.game_logged_in.v1.schema.json",
+  "title": "Payload student.game_logged_in v1 (module game, owner F014)",
+  "description": "Học sinh vào game (tạo game session + login event). Consumer: identity (users.last_login_at), learning (ref.login_activity), AUD. Không IP/device_id thô (ADR-0031).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "tenant_id", "game_session_id", "login_event_id", "platform", "login_at"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "game_session_id": { "type": "string", "format": "uuid" },
+    "login_event_id": { "type": "string", "format": "uuid" },
+    "platform": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] },
+    "login_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "login_event_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "platform": "android", "login_at": "2026-11-17T01:00:00Z" }
+  ]
+}

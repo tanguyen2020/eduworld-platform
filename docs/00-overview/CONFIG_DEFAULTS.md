@@ -1,6 +1,6 @@
 # CONFIG_DEFAULTS — Sổ đăng ký tham số mặc định
 
-> Trạng thái: Draft · Phiên bản: 1.0 · Owner: Technical PM + Solution Architect · Cập nhật: 2026-11-17 (ADR-0091: `portal_setup_ticket_ttl`, `portal_password_reset_ttl`, `portal_login_rate`, sửa `portal_session_sso`; ADR-0090: `feature_toggle_cache_ttl`; ADR-0074: tách `internal_api_resilience` thành `module_call_deadline` và `external_api_resilience`; đăng ký tham số feature spec; quyết định Technical Architect 2026-11-16 và 2026-11-17: ADR-0075, ADR-0078, ADR-0086 bổ sung)
+> Trạng thái: Draft · Phiên bản: 1.0 · Owner: Technical PM + Solution Architect · Cập nhật: 2026-11-17 (`common_student_batch_max` — ACCOUNT_PROVISIONING §3.4; ADR-0091: `portal_setup_ticket_ttl`, `portal_password_reset_ttl`, `portal_login_rate`, sửa `portal_session_sso`; ADR-0090: `feature_toggle_cache_ttl`; ADR-0074: tách `internal_api_resilience` thành `module_call_deadline` và `external_api_resilience`; đăng ký tham số feature spec; quyết định Technical Architect 2026-11-16 và 2026-11-17: ADR-0075, ADR-0078, ADR-0086 bổ sung)
 > Liên quan: [docs/README](../README.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [GLOSSARY](GLOSSARY.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Mục đích và quy tắc
@@ -319,6 +319,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `principal_cache` | 60 s (Valkey) + L1 15 s | — | code | [Proposed] | [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) |
 | `inactive_student_cleanup_days` | 180; báo trước 14 ngày; chạy 02:00 ICT; cần duyệt khi > 10% tenant | — | platform + tenant | [Proposed] (ADR-0032) | [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) |
 | `inactive_student_cleanup_low_days_warning` | Cảnh báo khi đặt số ngày dọn < 60 (dễ dọn nhầm qua kỳ nghỉ hè); vẫn cho lưu kèm lý do | ngày | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0032) | [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) |
+| `common_student_batch_max` | 500 dòng mỗi request `createCommonTenantStudents` (tạo học sinh tenant chung) | dòng | code | [Proposed] (Technical Architect 2026-11-17) | [ACCOUNT_PROVISIONING §3.4](../09-identity/ACCOUNT_PROVISIONING.md#34-tài-khoản-tenant-chung-do-platform-tạo-adr-0063) |
 | `min_client_version` | Đặt theo mỗi release; một nguồn cấu hình triển khai `EW_GAME_MIN_CLIENT_VERSION` dùng chung module identity (`gameLogin` → `426 CLIENT_VERSION_UNSUPPORTED`) và module game (`client-config`) | phiên bản | code | [Confirmed — Technical Architect 2026-11-16] | [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) |
 | `audit_log_retention` | 2 năm; hết hạn ẩn danh hóa, giữ partition (ADR-0070) | năm | platform | [Confirmed — Technical Architect 2026-11-16] | [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) §2 |
 | `audit_query_max_range_days` | 93 mỗi lần truy vấn audit | ngày | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) |

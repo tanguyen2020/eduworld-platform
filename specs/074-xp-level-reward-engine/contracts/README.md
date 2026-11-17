@@ -36,7 +36,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → sinh `specs/openapi/modul
 | `lesson.completed` | learning (F031) → game (`game.reward_engine`) | `specs/events/payloads/learning/lesson.completed.v1.schema.json` | Có sẵn (owner F031) |
 | `quest.completed`, `minigame.completed` | game (F072/F073) → `game.reward_engine` | `specs/events/payloads/game/` | Cần thêm (owner F072, F073) |
 | `world.discovery_found`, `world.area_completed` | game (F071) → `game.reward_engine` | `specs/events/payloads/game/` | Cần thêm (owner F071) |
-| `student.synced`, `enrollment.changed` | identity → game (`game.grade_transition`) | `specs/events/payloads/identity/` | Cần thêm (owner F010/F011) |
+| `student.synced`, `enrollment.changed` | identity → game (`game.grade_transition`) | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17, owner F010/F011) |
 | `content.published` (item_type `progression_curve`, `reward_rule`) | game (F071/F078) → game (`curve-rollout`, cache rule) | `specs/events/payloads/game/content.published.v1.schema.json` | Cần thêm (owner F071, F078 mở rộng; F074 chỉ tiêu thụ) |
 | `xp.awarded` | game → RT, LDB, ANA | `specs/events/payloads/game/xp.awarded.v1.schema.json` | Cần thêm |
 | `level.reached` | game → RT, NTF, achievement (F075), ANA | `specs/events/payloads/game/level.reached.v1.schema.json` | Cần thêm |

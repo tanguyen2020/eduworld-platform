@@ -60,7 +60,7 @@ Database `eduworld_identity`. Bảng T có cột chung `tenant_id`, `created_at`
 
 ### ExternalIdentity — `identity.external_identities` (Có sẵn, G); SisIdentityLink — `identity.sis_identity_links` (Có sẵn, T)
 
-- `external_identities`: `issuer varchar(512)`, `subject varchar(255)`, `user_id`, `idp_alias varchar(64)`, `status` (`active`/`superseded`), `last_login_at`; UNIQUE `(issuer, subject)`, UNIQUE `(user_id, issuer) WHERE status='active'`.
+- `external_identities`: `issuer varchar(512)`, `subject varchar(255)`, `user_id`, `idp_alias varchar(64)`, `status` (`active`/`superseded`), `last_login_at`; UNIQUE `(issuer, subject) WHERE deleted_at IS NULL`, UNIQUE `(user_id, issuer) WHERE status='active' AND deleted_at IS NULL`; có `deleted_at`/`deleted_by` (G, `GlobalBase`, theo [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)).
 - `sis_identity_links`: `link_id`, `user_id`, `school_id`, `sis_connection_id`, `student_external_id varchar(64)`, `status varchar(16)` (`active`/`superseded`), `linked_at`, `superseded_at`, `superseded_by`; UNIQUE một active/user và một active/khóa nguồn.
 
 ## 2. Vòng đời / trạng thái
@@ -84,11 +84,11 @@ Database `eduworld_identity`. Bảng T có cột chung `tenant_id`, `created_at`
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `school.synced`, `student.synced` | Apply SIS | `specs/events/payloads/identity/` — Cần thêm |
+| `school.synced`, `student.synced` | Apply SIS | `specs/events/payloads/identity/` — Có sẵn (áp 2026-11-17) |
 | `enrollment.changed` | Apply SIS (enrollment từ SIS) | Schema owner F010 (T004) — F011 phát cùng schema |
 | `class.synced` | Apply lớp | `class.synced.v1.schema.json` (có sẵn) |
-| `student.provisioning_requested` | Học sinh mới | Cần thêm |
+| `student.provisioning_requested` | Học sinh mới | Có sẵn (áp 2026-11-17) |
 | `user.provisioned` | Tạo user học sinh từ SIS | Schema owner F010 (T004) — F011 phát cùng schema |
-| `student.sis_link_created`, `student.sis_link_superseded` | Tạo/chuyển link | Cần thêm |
-| `user.status_changed`, `user.access_revoked` | Trạng thái từ SIS | Cần thêm |
-| `sis.sync_completed`, `sis.reconciliation_issue_raised` | Kết thúc run / tạo issue | Cần thêm |
+| `student.sis_link_created`, `student.sis_link_superseded` | Tạo/chuyển link | Có sẵn (áp 2026-11-17) |
+| `user.status_changed`, `user.access_revoked` | Trạng thái từ SIS | Có sẵn (áp 2026-11-17) |
+| `sis.sync_completed`, `sis.reconciliation_issue_raised` | Kết thúc run / tạo issue | Có sẵn (áp 2026-11-17) |

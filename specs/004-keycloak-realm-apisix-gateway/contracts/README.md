@@ -6,7 +6,7 @@
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| mọi operation | `x-service` (module sở hữu, không còn quyết định upstream), `x-service-routing`, `x-internal`, tham số `X-Tenant-Id` | `specs/openapi/eduworld-api.v1.yaml` | — (gateway không kiểm permission) | Có sẵn — đầu vào `render.mjs`/`check-routes.mjs` (upstream luôn `core-api`, `/realtime/v1` → `realtime`); `x-internal` Cần sửa (§6) |
+| mọi operation | `x-service` (module sở hữu, không còn quyết định upstream), `x-service-routing`, `x-internal`, tham số `X-Tenant-Id` | `specs/openapi/eduworld-api.v1.yaml` | — (gateway không kiểm permission) | Có sẵn — đầu vào `render.mjs`/`check-routes.mjs` (upstream luôn `core-api`, `/realtime/v1` → `realtime`); `x-internal` Có sẵn (áp 2026-11-17) (§6) |
 | `gameLogin` và nhóm `/auth/game/*` | `POST /api/v1/auth/game/login`, `tenant:select`, `token:refresh`, `logout` | `specs/openapi/eduworld-api.v1.yaml` | Không token (login/select) | Có sẵn — route không ghi body |
 | `portalLogin` và nhóm `/auth/portal/*` | `POST /api/v1/auth/portal/login`, `token:refresh`, `logout`, `setup:password`, `password:forgot`, `password:reset` | `specs/openapi/eduworld-api.v1.yaml` | Không token (cookie refresh + `X-EW-CSRF` cho `token:refresh`/`logout`) | Mới (ADR-0091, chủ sở hữu F012) — route public dưới host portal, không ghi body/cookie, rate `portal_login_rate`, miễn header tenant |
 | `getClientConfig` | `GET /api/v1/game/client-config` | `specs/openapi/eduworld-api.v1.yaml` | Không token | Có sẵn — route không `openid-connect`, không header tenant |
@@ -40,4 +40,4 @@
 
 ## 6. Delta cần thực hiện
 
-- Spec gộp: thêm `x-internal: true` cho 20 operation `/admin/*` đang thiếu — `listTenantSensitiveTerms`, `createTenantSensitiveTerm`, `updateTenantSensitiveTerm`, `deleteTenantSensitiveTerm`, `publishTenantSensitiveCatalog`, `toggleTenantSensitiveCategory`, `listModerationCases`, `getModerationCase`, `listModerationCaseMessages`, `assignModerationCase`, `actOnModerationCase`, `notifySchoolForCase`, `listSanctions`, `createSanction`, `revokeSanction`, `listSchoolSafetyNotificationsPlatform`, `listPlatformAuditLogs`, `listDataRequests`, `createDataRequest`, `getDataRequest`; chạy `split-public.mjs`. Task T005.
+- **Đã áp 2026-11-17 (T005).** Spec gộp: thêm `x-internal: true` cho 20 operation `/admin/*` đang thiếu — `listTenantSensitiveTerms`, `createTenantSensitiveTerm`, `updateTenantSensitiveTerm`, `deleteTenantSensitiveTerm`, `publishTenantSensitiveCatalog`, `toggleTenantSensitiveCategory`, `listModerationCases`, `getModerationCase`, `listModerationCaseMessages`, `assignModerationCase`, `actOnModerationCase`, `notifySchoolForCase`, `listSanctions`, `createSanction`, `revokeSanction`, `listSchoolSafetyNotificationsPlatform`, `listPlatformAuditLogs`, `listDataRequests`, `createDataRequest`, `getDataRequest`; chạy `split-public.mjs`. Task T005.

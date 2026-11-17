@@ -40,7 +40,7 @@ Spec: `specs/asyncapi/eduworld-realtime.v1.yaml`; gateway định tuyến `battl
 |---|---|---|---|
 | `match.started`, `match.completed`, `match.aborted` | Phát (`EVT_COMPETITION`) | `specs/events/payloads/competition/match.<verb>.v1.schema.json` | Cần thêm |
 | `match.created` | Tiêu thụ nội bộ (F104 phát) | `specs/events/payloads/competition/match.created.v1.schema.json` | Cần thêm (F104) |
-| `game_session.replaced` | Tiêu thụ (module game) | — | Cần thêm (thuộc F014) |
+| `game_session.replaced` | Tiêu thụ (module game) | — | Có sẵn (áp 2026-11-17, owner F014) |
 | `audit.recorded` | Phát | envelope | Có sẵn |
 | learning event `question.answered` (`context.mode = competition`, `context.match_id`) | module learning phát khi chấm | `specs/schemas/learning-event.schema.json` | Có sẵn |
 

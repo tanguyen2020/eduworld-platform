@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/school.synced.v1.schema.json",
+  "title": "Payload school.synced v1 (module identity, owner F011)",
+  "description": "Trường được tạo/cập nhật khi apply SIS (CSV ở F011; contract_v1 ở F017). Consumer: AUD, vô hiệu cache, projection ref.schools.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["school_id", "sync_run_id", "changed_fields"],
+  "properties": {
+    "school_id": { "type": "string", "format": "uuid" },
+    "sync_run_id": { "type": "string", "format": "uuid" },
+    "sis_connection_id": { "type": ["string", "null"], "format": "uuid" },
+    "name": { "type": "string", "maxLength": 255 },
+    "name_i18n": { "type": "object", "additionalProperties": false, "required": ["vi"], "properties": { "vi": { "type": "string", "maxLength": 255, "minLength": 1 }, "en": { "type": "string", "maxLength": 255 } } },
+    "province_code": { "type": ["string", "null"], "maxLength": 64 },
+    "school_level": { "type": "string", "enum": ["primary", "lower_secondary", "multi_level"] },
+    "status": { "type": "string", "enum": ["active", "pending_review", "inactive"] },
+    "changed_fields": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Version của aggregate nguồn (projection chỉ áp bản mới hơn — DATABASE_DESIGN §2.17); vắng mặt = dùng occurred_at của envelope" }
+  },
+  "examples": [
+    { "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "status": "active", "changed_fields": ["address"] }
+  ]
+}

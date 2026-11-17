@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/common/audit.recorded.v1.schema.json",
+  "title": "Payload audit.recorded v1 (mọi module, owner F003)",
+  "description": "Một bản ghi audit do audit.Recorder (pkg/audit; hiện thực outbox.AuditRecorder, F003) phát qua outbox của module làm thao tác; module identity (consumer audit-sink, F015) ghi audit.audit_logs (DATABASE_DESIGN §3.11). Một schema cho mọi producer, đặt ở payloads/common. Envelope mang actor, tenant_id, trace_id của thao tác. Không PII, token, nội dung chat hay đáp án (AGENTS R14): khóa cấm trong metadata bị lọc trước khi ghi outbox (F003-AC-22).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "actor_type", "action", "target_type", "target_id", "result"],
+  "properties": {
+    "actor_id": { "type": ["string", "null"], "format": "uuid", "description": "null = hệ thống/job" },
+    "actor_type": { "type": "string", "enum": ["user", "service", "system"], "description": "Khớp cột audit.audit_logs.actor_type (DATABASE_DESIGN §3.11)" },
+    "action": { "type": "string", "maxLength": 64, "minLength": 1, "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$", "description": "vd. tenant.created, role.assigned, cross_tenant.accessed" },
+    "target_type": { "type": "string", "maxLength": 64, "minLength": 1 },
+    "target_id": { "type": "string", "maxLength": 128, "minLength": 1 },
+    "result": { "type": "string", "enum": ["success", "denied", "error"] },
+    "reason": { "type": ["string", "null"], "maxLength": 1000 },
+    "school_id": { "type": ["string", "null"], "format": "uuid", "description": "Trường liên quan (cột audit.audit_logs.school_id, lọc audit cho School Admin — F015); null nếu không gắn trường" },
+    "metadata": { "type": "object", "maxProperties": 50, "propertyNames": { "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*$" }, "additionalProperties": { "type": "string", "maxLength": 255 }, "description": "Ngữ cảnh bổ sung đã lọc khóa cấm (password, refresh_token, access_token, login_ticket, body, message, full_name, date_of_birth, email, username — F015 data-model §3); vắng mặt = {}" }
+  },
+  "examples": [
+    { "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "actor_type": "user", "action": "tenant.created", "target_type": "tenant", "target_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "result": "success", "reason": null, "metadata": { "tenant_type": "school" } }
+  ]
+}

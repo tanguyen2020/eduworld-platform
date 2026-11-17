@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.sis_link_created.v1.schema.json",
+  "title": "Payload student.sis_link_created v1 (module identity, owner F011, ADR-0046)",
+  "description": "Tạo liên kết học sinh ↔ khóa nguồn (sis_connection_id, student_external_id). Consumer: AUD, LA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "tenant_id", "school_id", "sis_connection_id", "student_external_id", "via"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "sis_connection_id": { "type": "string", "format": "uuid" },
+    "student_external_id": { "type": "string", "maxLength": 64, "minLength": 1 },
+    "via": { "type": "string", "enum": ["provisioning", "jit_login_key", "jit_lookup", "transfer"] }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "student_external_id": "HS-2026-0001", "via": "provisioning" }
+  ]
+}

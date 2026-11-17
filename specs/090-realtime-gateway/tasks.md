@@ -70,12 +70,13 @@
 
 ### Tests cho User Story 4
 
-- [ ] T029 [P] [US4] Test F090-AC-24: control `access_revoked` → 4403 ≤ 5 s, buffer resume bị xóa, resume sau đó thất bại (TC-AUTH-006, TC-TEN-009) — file: `modules/realtime/tests/integration/revocation_test.go` — phải FAIL trước khi code
+- [ ] T029 [P] [US4] Test F090-AC-24: control `access_revoked` (mỗi lý do, gồm `password_changed`) → `session.session.ended` đúng `reason` rồi 4403 ≤ 5 s, buffer resume bị xóa, resume sau đó thất bại (TC-AUTH-006, TC-TEN-009) — file: `modules/realtime/tests/integration/revocation_test.go` — phải FAIL trước khi code
+- [ ] T042 [P] [US4] Test F090-AC-32: `session.session.ended` (`curfew`, `reopen_at`) khớp session → giao rồi `4410` (không 4403), buffer resume bị xóa, resume thất bại; khác session → giữ kết nối (TC-AUTH-092) — file: `modules/realtime/tests/integration/session_ended_test.go` — phải FAIL trước khi code
 - [ ] T030 [P] [US4] Test F090-AC-25, F090-AC-26: `session.session.replaced` khớp session → giao rồi 4409; khác session → giữ kết nối (E2E với module game takeover, TC-AUTH-015) — file: `tests/e2e/realtime_takeover_test.go`
 
 ### Implementation cho User Story 4
 
-- [ ] T031 [US4] `Revocation` xử lý control và `session.session.replaced` — file: `modules/realtime/internal/revocation/handler.go`
+- [ ] T031 [US4] `Revocation` xử lý control, `session.session.replaced` (4409) và `session.session.ended` (4410, F090-AC-32) — file: `modules/realtime/internal/revocation/handler.go`
 
 ## Phase 7: User Story 5 — Scale ngang và tắt êm (Priority: P2)
 

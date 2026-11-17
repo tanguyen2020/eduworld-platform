@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.provisioned.v1.schema.json",
+  "title": "Payload user.provisioned v1 (module identity, owner F010)",
+  "description": "Tài khoản được tạo: học sinh tenant chung do System Admin tạo (F010-AC-24, source = platform_common); học sinh từ SIS (F011 phát cùng schema, source = sis). Consumer: AUD, GAM (tạo GameProfile, F070). Không PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "user_type", "source"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "user_type": { "type": "string", "enum": ["student", "staff"] },
+    "source": { "type": "string", "enum": ["jit", "sis", "manual", "platform_common"] },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "grade_level": { "type": ["integer", "null"], "minimum": 1, "maximum": 9 },
+    "sis_connection_id": { "type": ["string", "null"], "format": "uuid" }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "user_type": "student", "source": "platform_common", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "grade_level": 4, "sis_connection_id": null }
+  ]
+}

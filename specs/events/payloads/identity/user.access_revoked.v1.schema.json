@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.access_revoked.v1.schema.json",
+  "title": "Payload user.access_revoked v1 (module identity, owner F011)",
+  "description": "Thu hồi quyền truy cập (khóa, vô hiệu hóa, chuyển tenant). Phát cùng transaction với user.status_changed (F011-AC-23); F010 (đổi membership — F010-AC-20) và F016 (khóa; đặt lại mật khẩu học sinh với reason = password_changed) phát cùng schema. Consumer: realtime (đóng WS close 4403), identity (thu hồi phiên game + Keycloak — F013), module game (đóng game session — F014), mọi module vô hiệu cache Principal (F003), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "reason"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "reason": { "type": "string", "enum": ["locked", "deactivated", "transferred", "password_changed"], "description": "password_changed: đặt lại mật khẩu (ACCOUNT_PROVISIONING §6d) — chỉ thu hồi phiên, không tắt user Keycloak, không đổi status" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "Tenant bị thu hồi khi reason = transferred; null hoặc vắng mặt = mọi tenant" }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "reason": "locked", "tenant_id": null }
+  ]
+}

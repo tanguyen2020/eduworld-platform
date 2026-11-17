@@ -56,6 +56,10 @@ Database `eduworld_identity`. Cột chung bảng T: `tenant_id` (FK `platform.te
 - `users`: cột theo DDL §3.1 (`user_type` CHECK `student`/`staff`, `status`, `username varchar(128)` chuẩn hóa, `email varchar(320)`, `display_name varchar(128)`, `locale varchar(64)`, `primary_tenant_id`, `primary_school_id`, `provisioned_at`, `last_login_at`, `deleted_at`, `delete_reason`); UNIQUE `lower(username)`, UNIQUE `lower(email)` WHERE NOT NULL AND `deleted_at IS NULL`; CHECK học sinh có `primary_tenant_id`.
 - `students`: `student_id` (= `user_id`), `school_id`, `grade_level`, `student_code varchar(32)`, `full_name varchar(128)`, `date_of_birth_enc bytea`, `national_id_hash varchar(64)`, `status varchar(64)`; UNIQUE `(school_id, student_code)`.
 
+### ExternalIdentity `platform_common` — `identity.external_identities` (Có sẵn, G; quyết định Technical Architect 2026-11-17)
+
+`external_ref` của học sinh tenant chung (`createCommonTenantStudents`) lưu thành một dòng `issuer = platform_common`, `subject` = `external_ref` (≤ 64), `idp_alias = NULL`, `status = active`; không thêm cột ở `org.students`. Duy nhất theo `(issuer, subject)` trong các bản ghi chưa xóa (ADR-0028, ADR-0089); trùng → dòng `failed` `IDENTITY_CONFLICT`. `platform_common` không thuộc allowlist issuer đăng nhập ([ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md#34-tài-khoản-tenant-chung-do-platform-tạo-adr-0063)).
+
 ### Enrollment — `org.enrollments` (Có sẵn, T)
 
 | Trường | Kiểu | Ràng buộc |
@@ -91,11 +95,11 @@ Hợp: học sinh (enrollment active → `tenant_id`) ∪ nhân sự (`identity.
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `tenant.created` / `tenant.updated` | Tạo/sửa/bật-tắt tenant | `specs/events/payloads/identity/` — Cần thêm |
+| `tenant.created` / `tenant.updated` | Tạo/sửa/bật-tắt tenant | `specs/events/payloads/identity/` — Có sẵn (áp 2026-11-17) |
 | `province.updated` | Tạo/sửa đơn vị, ghi kế thừa | `specs/events/payloads/identity/province.updated.v1.schema.json` (có sẵn) |
-| `school.updated` | Sửa/duyệt trường | Cần thêm |
-| `class.created` / `class.updated` | Tạo/sửa lớp (thủ công, tenant chung) | Cần thêm (lớp từ SIS dùng `class.synced`, F011) |
-| `enrollment.changed` | Mở/đóng enrollment | Cần thêm |
-| `student.transferred` | Chuyển trường | Cần thêm |
-| `tenant_membership.changed` | Học sinh đổi tenant | Cần thêm |
-| `user.provisioned` | Tạo học sinh tenant chung | Cần thêm |
+| `school.updated` | Sửa/duyệt trường | Có sẵn (áp 2026-11-17) |
+| `class.created` / `class.updated` | Tạo/sửa lớp (thủ công, tenant chung) | Có sẵn (áp 2026-11-17) (lớp từ SIS dùng `class.synced`, F011) |
+| `enrollment.changed` | Mở/đóng enrollment | Có sẵn (áp 2026-11-17) |
+| `student.transferred` | Chuyển trường | Có sẵn (áp 2026-11-17) |
+| `tenant_membership.changed` | Học sinh đổi tenant | Có sẵn (áp 2026-11-17) |
+| `user.provisioned` | Tạo học sinh tenant chung | Có sẵn (áp 2026-11-17) |

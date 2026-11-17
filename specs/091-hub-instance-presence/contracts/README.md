@@ -47,8 +47,8 @@ NATS (lệnh từ gateway, F090):
 | `world.area_unlocked` | game → competition (`ref.area_unlocks`) | `specs/events/payloads/game/world.area_unlocked.v1.schema.json` | Cần thêm |
 | `game_profile.updated` | game (F070) → competition (`ref.player_profiles`, appearance) | `specs/events/payloads/game/game_profile.updated.v1.schema.json` (có `avatar_config`) | Cần thêm |
 | `friend.added` / `friend.removed`, `user.blocked` / `user.unblocked` | chat (F095) → competition | `specs/events/payloads/chat/*.v1.schema.json` | Cần thêm (F095) |
-| `tenant.*`, `student.synced`, `user.status_changed`, `student.cleaned_up/restored`, `user.access_revoked` | identity → competition | `specs/events/payloads/identity/` | Cần thêm (F010, F011, F016) |
-| `audit.recorded` | competition → identity | schema audit chung | Cần thêm |
+| `tenant.*`, `student.synced`, `user.status_changed`, `student.cleaned_up/restored`, `user.access_revoked` | identity → competition | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
+| `audit.recorded` | competition → identity | schema audit chung | Có sẵn (áp 2026-11-17, owner F003) |
 
 ## 5. JSON Schema nội dung
 

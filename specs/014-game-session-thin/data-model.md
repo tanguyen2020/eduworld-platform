@@ -21,7 +21,7 @@ Database `eduworld_game`.
 | `keycloak_sid` | `varchar(64)` | | `sid` của token game |
 | `started_at`, `last_heartbeat_at` | timestamptz | NOT NULL | giờ server |
 | `ended_at` | timestamptz | CHECK `(ended_at IS NULL) = (end_reason IS NULL)` | |
-| `end_reason` | `varchar(64)` | CHECK `logout`/`replaced_by_other_device`/`timeout`/`account_locked`/`cleanup`/`client_crash` | |
+| `end_reason` | `varchar(64)` | CHECK `logout`/`replaced_by_other_device`/`timeout`/`account_locked`/`access_revoked`/`cleanup`/`client_crash`/`curfew` | |
 | `replaced_by_session_id` | uuid | FK `game_sessions` | |
 | `deleted_at`, `deleted_by` | | | R21 |
 
@@ -76,7 +76,7 @@ stateDiagram-v2
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `game_session.started` / `game_session.ended` | Tạo / kết thúc session | `specs/events/payloads/game/` — Cần thêm |
-| `student.game_logged_in` | Tạo session | Cần thêm (`student_id`, `tenant_id`, `game_session_id`, `login_event_id`, `platform`, `login_at`) |
-| `student.game_logged_out` | Kết thúc session | Cần thêm |
-| `game_session.replaced` | Takeover | Cần thêm (thêm `old_keycloak_sid`, `old_device_id` để identity thu hồi phiên Keycloak và phiên game đã lưu — ADR-0086) |
+| `game_session.started` / `game_session.ended` | Tạo / kết thúc session | `specs/events/payloads/game/` — Có sẵn (áp 2026-11-17) |
+| `student.game_logged_in` | Tạo session | Có sẵn (áp 2026-11-17) (`student_id`, `tenant_id`, `game_session_id`, `login_event_id`, `platform`, `login_at`) |
+| `student.game_logged_out` | Kết thúc session | Có sẵn (áp 2026-11-17) |
+| `game_session.replaced` | Takeover | Có sẵn (áp 2026-11-17) (thêm `old_keycloak_sid`, `old_device_id` để identity thu hồi phiên Keycloak và phiên game đã lưu — ADR-0086) |

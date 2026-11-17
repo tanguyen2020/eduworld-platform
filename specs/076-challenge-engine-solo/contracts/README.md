@@ -36,7 +36,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 | `challenge.started` | game → LA, ANA | `specs/events/payloads/game/challenge.started.v1.schema.json` | Cần thêm |
 | `challenge.completed` | game → reward (F074), achievement (F075), QST (F072), LA, ANA | `specs/events/payloads/game/challenge.completed.v1.schema.json` | Cần thêm |
 | `activity.graded` | learning → game (`game.challenge_progress`) | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Có sẵn |
-| `student.cleaned_up`, `user.access_revoked` | identity → game | `specs/events/payloads/identity/` | Cần thêm (owner F016/F011) |
+| `student.cleaned_up`, `user.access_revoked` | identity → game | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17, owner F016/F011) |
 
 ## 5. JSON Schema nội dung
 

@@ -24,6 +24,7 @@
 | 9 | Chuyển `hs.an.3a` sang 3B; chuyển `hs.em.4a` sang THCS Demo B (cùng `pgd-demo`) | Một enrollment active; `enrollment.changed`; `hs.em.4a` giữ tenant và membership | F010-AC-11, F010-AC-13, F010-AC-14 |
 | 10 | Thêm tay `hs.an.3a` vào Organization `pgd-demo`, chạy `org-membership-reconcile --once` | Member bị gỡ, issue `unexpected_org_member` | F010-AC-22 |
 | 11 | `sa.admin` gọi `createCommonTenantStudents` khối 4 | User + enrollment `common-g4`, member Organization `common` | F010-AC-24 |
+| 11b | `sa.admin` gọi `createCommonTenantStudents` lô 3 dòng (`hs.tudo1` khối 4, `hs.tudo2` khối 7, dòng 3 trùng `hs.an.3a`), rồi gọi lại cùng `Idempotency-Key` | `200`: 2 `created` có `initial_password` (khối 7 phải đổi mật khẩu lần đầu), 1 `failed` `USERNAME_TAKEN`; lần gọi lại: cùng kết quả, không có `initial_password`, `password_redacted = true` | F010-AC-28, F010-AC-29 |
 | 12 | `hs.an.3a` gọi `getMyStudentProfile` | Trường/lớp/tỉnh song ngữ của chính mình | F010-AC-19 |
 | 13 | Facade test: module learning gọi `listProjectionSnapshot` `entity_type=class`, `tenant_id` của `pgd-demo`, `limit=2` rồi theo `next_cursor` | Đủ lớp của tenant, có `source_version`; không lớp của tenant khác | F010-AC-27 |
 

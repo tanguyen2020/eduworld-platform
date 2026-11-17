@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/sis.sync_completed.v1.schema.json",
+  "title": "Payload sis.sync_completed v1 (module identity, owner F011)",
+  "description": "Kết thúc một sync run (CSV ở F011). F017 bổ sung trường tương thích (mode, status, dry_run, connection_status, failure_code — F017 T007) qua delta trên schema này. Consumer: AUD, NTF (admin).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sync_run_id", "stats", "issues_count"],
+  "properties": {
+    "sync_run_id": { "type": "string", "format": "uuid" },
+    "stats": { "type": "object", "additionalProperties": false, "properties": { "fetched": { "type": "integer", "minimum": 0 }, "created": { "type": "integer", "minimum": 0 }, "updated": { "type": "integer", "minimum": 0 }, "unchanged": { "type": "integer", "minimum": 0 }, "errors": { "type": "integer", "minimum": 0 } } },
+    "issues_count": { "type": "integer", "minimum": 0 }
+  },
+  "examples": [
+    { "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "stats": { "fetched": 120, "created": 3, "updated": 5, "unchanged": 112, "errors": 0 }, "issues_count": 1 }
+  ]
+}

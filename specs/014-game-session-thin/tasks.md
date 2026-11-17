@@ -10,8 +10,8 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Thêm payload schema `student.game_logged_in`, `student.game_logged_out`, `game_session.started`, `game_session.ended`, `game_session.replaced` (có `old_keycloak_sid`, `old_device_id` — ADR-0086) — file: `specs/events/payloads/game/` — kiểm: `make specs-lint`
-- [ ] T005 [P] Bổ sung response `426`, `503` cho `createGameSession`, `403` cho `endGameSession`/`heartbeatGameSession` ở spec gộp rồi chạy `node scripts/openapi/split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=game`
+- [x] T004 Thêm payload schema `student.game_logged_in`, `student.game_logged_out`, `game_session.started`, `game_session.ended`, `game_session.replaced` (có `old_keycloak_sid`, `old_device_id` — ADR-0086) — file: `specs/events/payloads/game/` — kiểm: `make specs-lint` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001)
+- [x] T005 [P] Bổ sung response `426`, `503` cho `createGameSession`, `403` cho `endGameSession`/`heartbeatGameSession` ở spec gộp rồi chạy `node scripts/openapi/split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=game` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001)
 - [ ] T006 ent schema `GameSession`, `LoginEvent` (AppendOnly), `ContentManifest`, `RefTenant`, `RefStudent` với `MaxLen` — file: `modules/game/ent/schema/` — kiểm: `make migrate-diff MOD=game name=f014_session`, `make migrate-lint MOD=game`
 - [ ] T007 Migration: unique partial một session active, index heartbeat, partition tháng `login_events`, RLS, `REVOKE DELETE, TRUNCATE`, `infra.*` — file: `modules/game/migrations/`
 - [ ] T008 [P] Consumer projection `ref.tenants`, `ref.students` (`tenant.*`, `student.synced`, `user.status_changed`, `student.cleaned_up`, `student.restored`; `source_version`) + test bắt kịp (TC-SVC-008) — file: `modules/game/internal/presentation/consumer/projection_identity.go`
@@ -41,7 +41,7 @@
 - [ ] T017 [US1] `RealtimePublisher` Valkey `ew:rt:user:<id>` sau commit — file: `modules/game/internal/infrastructure/realtime/valkey_publisher.go`
 - [ ] T018 [US1] Handler `createGameSession` (middleware `game_player`, `tenant`) — file: `modules/game/internal/presentation/http/public/sessions.go`
 - [ ] T019 [US1] Consumer `identity.revoke_on_session_replaced` — file: `modules/identity/internal/presentation/consumer/revoke_on_session_replaced.go`
-- [ ] T041 [US1] Projection khung giới nghiêm (`platform_settings.changed`, `school.updated` → `ref.tenants`/`ref.schools`) + kiểm giới nghiêm trong `StartGameSession` — file: `modules/game/internal/domain/gamesession/curfew_policy.go`, `modules/game/internal/application/command/start_game_session.go`
+- [ ] T041 [US1] Projection khung giới nghiêm (`platform_settings.changed`, `school.updated` → `ref.tenants`/`ref.schools`) + kiểm giới nghiêm trong `StartGameSession` — file: `modules/game/internal/domain/gamesession/curfew_policy.go`, `modules/game/internal/application/command/start_game_session.go` — **2026-11-17:** phần contract đã áp (`createGameSession` khai báo `403 CURFEW_ACTIVE` + `Problem.reopen_at`; payload `platform_settings.changed.curfew_window`, `school.updated.settings_subset.curfew_window`); còn projection + kiểm giới nghiêm
 
 ## Phase 4: User Story 2 — Lịch sử đăng nhập game và lần vào game gần nhất (Priority: P1)
 
@@ -71,7 +71,7 @@
 
 - [ ] T039 [US3] Command `EndSessionsForUser` + consumer `user.access_revoked`/`user.status_changed`/`student.cleaned_up` (inbox idempotent; chuyển từ F016 T013) — file: `modules/game/internal/application/command/end_sessions_for_user.go`, `modules/game/internal/presentation/consumer/access_revoked.go`
 - [ ] T029 [US3] Command `EndGameSession`, `HeartbeatGameSession`, `TimeoutStaleSessions` + handler + job `session-timeout` — file: `modules/game/internal/application/command/end_session.go`, `modules/game/internal/presentation/job/session_timeout.go`
-- [ ] T043 [US3] Command `CloseSessionsAtCurfew` + job `curfew-session-closer` (`worker-jobs`, mỗi phút, `FOR UPDATE SKIP LOCKED`); thêm `curfew` vào CHECK `end_reason` — file: `modules/game/internal/application/command/close_sessions_at_curfew.go`, `modules/game/internal/presentation/job/curfew_session_closer.go`
+- [ ] T043 [US3] Command `CloseSessionsAtCurfew` + job `curfew-session-closer` (`worker-jobs`, mỗi phút, `FOR UPDATE SKIP LOCKED`); thêm `curfew` vào CHECK `end_reason` — file: `modules/game/internal/application/command/close_sessions_at_curfew.go`, `modules/game/internal/presentation/job/curfew_session_closer.go` — **2026-11-17:** phần contract đã áp (`LoginEndReason`/payload `game_session.ended`, `student.game_logged_out` thêm `curfew`); AsyncAPI `session.session.ended` + close `4410` đã thêm (quyết định Technical Architect); còn command/job + CHECK DB
 
 ## Phase 6: User Story 4 — Client-config và buộc cập nhật (Priority: P1)
 

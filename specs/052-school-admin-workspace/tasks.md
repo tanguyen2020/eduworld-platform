@@ -34,12 +34,14 @@ Gốc mã: `web/apps/portal/src/workspaces/school-lms/` (viết tắt `WS/`). D�
 - [ ] T012 [P] [US1] Unit test `ClassStudentsPage`, `UnassignedStudentsPage` không có thao tác sửa/gán (F052-AC-04, F052-AC-05) — file: `web/apps/portal/tests/unit/school-lms/classes/readOnly.test.tsx`
 - [ ] T013 [US1] E2E trường/lớp/học sinh/hoạt động đăng nhập với `ad.donvi`, `ad.truong.a` (F052-AC-01, F052-AC-02, F052-AC-03, F052-AC-04, F052-AC-05, F052-AC-06; TC-ORG-102, TC-ORG-104, TC-SIS-103) — file: `web/apps/portal/tests/e2e/school-lms/schools.spec.ts`
 - [ ] T014 [US1] E2E tenant isolation + authorization cho `getTenantSchool`, `listTenantSchoolClasses`, `listTenantClassStudents` (mới), `listTenantStudentLoginEvents`: `ad.truong.b` mở tài nguyên TH Demo A → "Không tìm thấy" (F052-AC-07; TC-TEN-001, TC-TEN-003) — file: `web/apps/portal/tests/e2e/school-lms/isolation.spec.ts`
+- [ ] T058 [P] [US1] Test F052-AC-31: dialog đặt lại mật khẩu (bắt buộc `reason`, `Idempotency-Key` dùng lại khi thử lại, mật khẩu hiện một lần + in thẻ, `password_redacted` → thông báo, ẩn nút khi thiếu `lms.student.password_reset`/action tắt; không ghi mật khẩu vào storage/log) — file: `web/apps/portal/src/workspaces/school/classes/__tests__/ResetStudentPasswordDialog.test.tsx` — phải FAIL trước khi code
 
 ### Implementation cho User Story 1
 
 - [ ] T015 [P] [US1] Hook `useSchools` (`listTenantSchools`, `getTenantSchool`, `updateTenantSchool`, `approveTenantSchool`, `listProvinces`) — file: `web/apps/portal/src/workspaces/school-lms/schools/useSchools.ts`
 - [ ] T016 [US1] `SchoolListPage`, `SchoolDetailPage`, `SchoolEditForm`, `ApproveSchoolDialog` — file: `web/apps/portal/src/workspaces/school-lms/schools/SchoolDetailPage.tsx`
 - [ ] T017 [US1] `ClassListPage`, `ClassStudentsPage`, `useClasses` (`listTenantSchoolClasses`, `listTenantClassStudents`) — file: `web/apps/portal/src/workspaces/school-lms/classes/ClassStudentsPage.tsx`
+- [ ] T059 [US1] `ResetStudentPasswordDialog` trên `ClassStudentsPage` gọi `resetStudentPassword` (`x-portal-action: action.school_lms.classes.reset_student_password`) — file: `web/apps/portal/src/workspaces/school/classes/ResetStudentPasswordDialog.tsx`
 - [ ] T018 [P] [US1] `UnassignedStudentsPage` (`listUnassignedStudents`) — file: `web/apps/portal/src/workspaces/school-lms/students/UnassignedStudentsPage.tsx`
 - [ ] T019 [P] [US1] `StudentLoginActivityPanel`, `useLoginEvents` (`listTenantStudentLoginEvents`, view model whitelist) — file: `web/apps/portal/src/workspaces/school-lms/students/StudentLoginActivityPanel.tsx`
 

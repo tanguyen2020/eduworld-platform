@@ -1,6 +1,6 @@
 # Account Provisioning
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-17 (ADR-0074: saga gọi facade platform của module trong tiến trình thay internal HTTP; job chạy trong binary `worker`) · 2026-11-16 (§6: thu hồi phiên game giữ bằng refresh token — ADR-0086; §6b: dọn học sinh giữ user Keycloak enabled — quyết định Technical Architect)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-17 (§6d đặt lại mật khẩu học sinh; §3.4 `external_ref` = ExternalIdentity `platform_common` — quyết định Technical Architect · §3.4: quy tắc tạo học sinh tenant chung — username bắt buộc, mật khẩu sinh và trả một lần, lô `common_student_batch_max`, thành công một phần, replay không có mật khẩu; quyết định Technical Architect · 2026-11-17 (ADR-0074: saga gọi facade platform của module trong tiến trình thay internal HTTP; job chạy trong binary `worker`) · 2026-11-16 (§6: thu hồi phiên game giữ bằng refresh token — ADR-0086; §6b: dọn học sinh giữ user Keycloak enabled — quyết định Technical Architect)
 > Liên quan: [KEYCLOAK_SSO](KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](IDENTITY_MAPPING.md) · [SIS_INTEGRATION](SIS_INTEGRATION.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [MULTITENANCY §8](../06-architecture/MULTITENANCY.md) · ADR-0026 · OQ-01, OQ-02
 
 **Mục đích & phạm vi.** Nguồn chuẩn cho vòng đời tài khoản: tạo tài khoản (tự động từ SIS, tài khoản tenant chung do platform tạo; JIT là mở rộng sau — ADR-0063), đồng bộ membership Keycloak, chuyển trường ở phía tài khoản, khóa/vô hiệu hóa, dọn học sinh không đăng nhập và khôi phục, credential đăng nhập nhanh, saga platform.
@@ -113,11 +113,25 @@ Thay cho "JIT vào tenant chung" của ADR-0026 mục 4 (đã bỏ): **không** 
 
 | Bước | Hành động | Nhãn |
 |---|---|---|
-| 1 | System Admin tạo/import học sinh vào tenant `common` có chủ đích (form hoặc CSV trong Admin Portal), bắt buộc khai báo **khối** (1–9) | [Confirmed] ADR-0063 |
-| 2 | Tạo Keycloak local user (username + mật khẩu ban đầu), `identity.users` (`user_type=student`, `primary_tenant_id = common`), `org.students` (`tenant_id = common`, School ảo), ExternalIdentity; thêm member Organization `common` | [Confirmed] |
+| 1 | System Admin tạo/import học sinh vào tenant `common` có chủ đích (form hoặc CSV trong Admin Portal), bắt buộc khai báo **khối** (1–9); API `createCommonTenantStudents` nhận một hoặc lô ≤ `common_student_batch_max` dòng (`username`, `display_name`, `grade_level`, `external_ref` tùy chọn) | [Confirmed] ADR-0063 · lô [Proposed] |
+| 2 | Tạo Keycloak local user (username + mật khẩu ban đầu theo quy tắc dưới bảng), `identity.users` (`user_type=student`, `primary_tenant_id = common`), `org.students` (`tenant_id = common`, School ảo), ExternalIdentity; thêm member Organization `common` | [Confirmed] |
 | 3 | Enrollment vào lớp ảo `common-g<n>` ("Khối n – chung", `is_virtual = true`) theo khối đã khai báo — mọi học sinh có một trường và một lớp (ADR-0060); không có màn chọn khối trong game | [Proposed] |
 | 4 | Ghi audit `user.provisioned{source=platform_common}`; metric `eduworld_auth_common_tenant_total` | [Proposed] |
 | 5 | Khi SIS của một tenant sau này đồng bộ bản ghi khớp user (qua reconciliation) → chuyển `tenant_id`, đổi membership, lịch sử ở `common` giữ `tenant_id = common` | [Proposed] |
+
+Quy tắc tạo tài khoản tenant chung (quyết định Technical Architect 2026-11-17, như provisioning từ SIS ở §2):
+
+| Mục | Quy tắc | Nhãn |
+|---|---|---|
+| Username | Bắt buộc, do System Admin nhập; chuẩn hóa trim, Unicode NFC, chữ thường (ADR-0067) trước khi kiểm trùng; cùng mẫu với username khác (`^[A-Za-z0-9._-]{3,128}$`, không có `@`) | [Confirmed] |
+| Mật khẩu ban đầu | Module identity sinh ngẫu nhiên cho từng học sinh, đặt trong Keycloak và trả **một lần** trong response (`initial_password`) để System Admin in thẻ đăng nhập; không lưu, không log (AGENTS R14), response `Cache-Control: no-store` | [Confirmed] |
+| Đổi mật khẩu lần đầu | Khối 6–9: `temporary = true` (đổi khi đăng nhập lần đầu); khối 1–5: `temporary = false` | [Proposed] |
+| Lô và thành công một phần | Tối đa `common_student_batch_max` dòng mỗi request; mỗi dòng xử lý độc lập, response `200` có `results[]` (`row_no`, `status` `created`/`failed`, `user_id`, `username`, `initial_password`, `error_code`) và số đếm. Request vi phạm schema (thiếu/ngoài khoảng khối, quá số dòng) → `422` cho cả request | [Confirmed] · số dòng [Proposed] |
+| Trùng username | Dòng trùng username của tài khoản khác (kể cả tenant khác, soft-delete chưa ẩn danh hóa — ADR-0069) → dòng `failed`, `error_code = USERNAME_TAKEN`; không tạo `reconciliation_issue` (tài khoản do platform tạo, không phải dữ liệu SIS) | [Confirmed] |
+| Idempotency | Bắt buộc `Idempotency-Key`; replay trả kết quả đã lưu **không có** `initial_password` (`password_redacted = true`) vì mật khẩu không được lưu; muốn cấp lại thì đặt lại mật khẩu (§6d) | [Confirmed] |
+| Mỗi học sinh tạo được | Enrollment lớp ảo `common-g<n>`, audit, event `user.provisioned` (`source = platform_common`) | [Confirmed] |
+| `external_ref` | Lưu thành một dòng `identity.external_identities` (`issuer = platform_common`, `subject` = `external_ref`, `idp_alias = NULL`), không thêm cột ở `org.students`; duy nhất theo `(issuer, subject)` trong các bản ghi chưa xóa (ADR-0028); trùng với học sinh khác → dòng `failed`, `error_code = IDENTITY_CONFLICT`. `platform_common` không nằm trong allowlist issuer đăng nhập nên dòng này không bao giờ dùng để xác thực | [Confirmed] |
+| Lấy lại mật khẩu | Đặt lại mật khẩu học sinh theo §6d | [Confirmed] |
 
 ### 3.3. Thực thi
 
@@ -224,6 +238,19 @@ module identity quản lý các credential phụ trợ cho học sinh, tách kh�
 - **(Mở rộng sau, ngoài Release 1.0 — ADR-0063)** Authenticator Keycloak (`ew-class-qr`, `ew-card-qr`, `ew-picture-password`) gọi `POST /internal/v1/login-credentials:verify` bằng client `svc-keycloak-authn`; module identity trả `user_id` khi hợp lệ, đếm thử sai **theo tài khoản** và đồng bộ với brute-force của Keycloak.
 - Mọi lần cấp/đặt lại/thu hồi ghi audit. Credential bị thu hồi cùng lúc khi tài khoản bị khóa, bị dọn (ADR-0032) hoặc chuyển sang tenant khác.
 - Rehash mật khẩu: khi đổi thuật toán/tham số băm, Keycloak băm lại mật khẩu ở lần đăng nhập thành công tiếp theo (rehash on login); không cần chiến dịch đổi mật khẩu hàng loạt.
+
+## 6d. Đặt lại mật khẩu học sinh
+
+Nguồn quy tắc duy nhất (quyết định Technical Architect 2026-11-17; owner F016). Học sinh không có tự đặt lại mật khẩu (game chỉ hướng dẫn "Quên mật khẩu? Liên hệ nhà trường để đặt lại", [KEYCLOAK_SSO §4](KEYCLOAK_SSO.md)); nhân sự dùng luồng quên mật khẩu của portal (ADR-0091).
+
+| Mục | Quy tắc | Nhãn |
+|---|---|---|
+| Ai gọi | `POST /tenant/students/{student_id}/password:reset` (`resetStudentPassword`), permission `lms.student.password_reset`: School Admin trường của học sinh, Tenant Admin của tenant, System Admin (tenant đích qua `X-Tenant-Id`, gồm tenant `common` qua gateway nội bộ). Học sinh ngoài scope → `404`; học sinh tự gọi → `403` | [Confirmed] |
+| Đầu vào | `Idempotency-Key` và `reason` bắt buộc | [Confirmed] |
+| Mật khẩu mới | Module identity sinh ngẫu nhiên, đặt qua Keycloak Admin API với `temporary` theo khối như §3.4 (khối 6–9 `true`, khối 1–5 `false` [Proposed]); trả **một lần** (`initial_password`, `Cache-Control: no-store`); không lưu, không log (AGENTS R14) | [Confirmed] · khối [Proposed] |
+| Thu hồi phiên | Mọi `game_auth_sessions` của học sinh `revoked_at` với `revoke_reason = password_changed` + phiên Keycloak theo `sid` (ADR-0086); phát `user.access_revoked` (`reason = password_changed`) — consumer thu hồi phiên/đóng WS (close `4403`)/kết thúc game session nhưng **không** đặt Keycloak `enabled=false` và không đổi `users.status` | [Confirmed] |
+| Replay | Cùng `Idempotency-Key` trả kết quả đã lưu **không có** `initial_password` (`password_redacted = true`) | [Confirmed] |
+| Audit | Ghi audit (không có mật khẩu) | [Confirmed] |
 
 ## 7. Deprovisioning & retention
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.sis_link_superseded.v1.schema.json",
+  "title": "Payload student.sis_link_superseded v1 (module identity, owner F011, ADR-0046)",
+  "description": "Liên kết cũ bị thay khi chuyển trường giữa hai SIS (F011-AC-16); User giữ nguyên. Consumer: AUD, LA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "old_sis_connection_id", "old_student_external_id", "new_sis_connection_id", "new_student_external_id", "cross_tenant"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "old_sis_connection_id": { "type": "string", "format": "uuid" },
+    "old_student_external_id": { "type": "string", "maxLength": 64, "minLength": 1 },
+    "new_sis_connection_id": { "type": "string", "format": "uuid" },
+    "new_student_external_id": { "type": "string", "maxLength": 64, "minLength": 1 },
+    "cross_tenant": { "type": "boolean" }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "old_sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "old_student_external_id": "HS-OLD-01", "new_sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "new_student_external_id": "HS-NEW-01", "cross_tenant": false }
+  ]
+}

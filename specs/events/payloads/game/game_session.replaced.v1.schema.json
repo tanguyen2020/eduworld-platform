@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/game_session.replaced.v1.schema.json",
+  "title": "Payload game_session.replaced v1 (module game, owner F014, ADR-0031, ADR-0086)",
+  "description": "Takeover: session trên thiết bị cũ bị thay bởi session mới. Consumer: realtime (session.session.replaced tới thiết bị cũ, close 4409), identity (thu hồi phiên Keycloak theo old_keycloak_sid + phiên game đã lưu của old_device_id — F013 GameAuthSessionRevoker), competition (disconnect trong grace), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["old_game_session_id", "new_game_session_id", "student_id", "new_platform", "old_keycloak_sid", "old_device_id"],
+  "properties": {
+    "old_game_session_id": { "type": "string", "format": "uuid" },
+    "new_game_session_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "new_platform": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] },
+    "old_keycloak_sid": { "type": "string", "maxLength": 64, "minLength": 1, "description": "Claim sid của token phiên cũ" },
+    "old_device_id": { "type": "string", "format": "uuid", "description": "X-Device-Id của bản cài cũ (không phải định danh phần cứng)" }
+  },
+  "examples": [
+    { "old_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "new_game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "new_platform": "ios", "old_keycloak_sid": "6f1d2c4e-0d9a-4c51-9b8e-3a2f1e0d9c8b", "old_device_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002" }
+  ]
+}

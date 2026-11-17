@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.synced.v1.schema.json",
+  "title": "Payload student.synced v1 (module identity, owner F011)",
+  "description": "Học sinh được tạo/cập nhật/vô hiệu hóa khi apply SIS (F011-AC-04). Consumer: AUD, vô hiệu cache, projection ref.students, game (quy tắc chuyển năm học khi đổi khối). Không PII (không họ tên, ngày sinh, mã định danh).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "school_id", "action", "sync_run_id"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "action": { "type": "string", "enum": ["create", "update", "deactivate"] },
+    "sync_run_id": { "type": "string", "format": "uuid" },
+    "sis_connection_id": { "type": ["string", "null"], "format": "uuid" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "status": { "type": "string", "enum": ["pending", "active", "locked", "deactivated", "anonymized"] },
+    "changed_fields": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Version của aggregate nguồn (projection chỉ áp bản mới hơn — DATABASE_DESIGN §2.17); vắng mặt = dùng occurred_at của envelope" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "action": "update", "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "grade_level": 4, "status": "active", "changed_fields": ["grade_level"] }
+  ]
+}

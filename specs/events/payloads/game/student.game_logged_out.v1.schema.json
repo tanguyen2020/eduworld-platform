@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/student.game_logged_out.v1.schema.json",
+  "title": "Payload student.game_logged_out v1 (module game, owner F014)",
+  "description": "Học sinh rời game (game session kết thúc). Consumer: learning (ref.login_activity), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "game_session_id", "logout_at", "end_reason"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "game_session_id": { "type": "string", "format": "uuid" },
+    "logout_at": { "type": "string", "format": "date-time" },
+    "end_reason": { "type": "string", "enum": ["logout", "replaced_by_other_device", "timeout", "account_locked", "access_revoked", "cleanup", "client_crash", "curfew"] }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "logout_at": "2026-11-17T01:30:00Z", "end_reason": "timeout" }
+  ]
+}

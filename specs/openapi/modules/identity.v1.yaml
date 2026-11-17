@@ -107,7 +107,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS
+          description: TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078)
           content:
             application/problem+json:
               schema:
@@ -163,7 +163,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS
+          description: TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (kèm `reopen_at` — ADR-0078)
           content:
             application/problem+json:
               schema:
@@ -232,7 +232,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY
+          description: ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY, CURFEW_ACTIVE (chỉ `mode = resume`, kèm `reopen_at` — ADR-0078)
           content:
             application/problem+json:
               schema:
@@ -556,7 +556,7 @@ paths:
       tags:
         - auth
       operationId: createAuthSession
-      summary: Bootstrap sau đăng nhập portal (Keycloak trên trình duyệt) — map (iss, sub) → User, không JIT
+      summary: Bootstrap phiên cho client có hồ sơ người chơi (trả PlayerBootstrap) — map (iss, sub) → User, không JIT; Admin Portal không gọi
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
       responses:
@@ -576,7 +576,8 @@ paths:
         default:
           $ref: '#/components/responses/Problem'
       description: |
-        Dùng cho Admin Portal và client đăng nhập qua trình duyệt; game dùng `/auth/game/login` (ADR-0068). Không cần `X-Tenant-Id`.
+        Bootstrap cho client dùng luồng trình duyệt có hồ sơ người chơi (trả `PlayerBootstrap`); game dùng `/auth/game/login` (ADR-0068). Không cần `X-Tenant-Id`.
+        **Admin Portal không gọi endpoint này** (RB-115): sau `portalLogin` portal gọi `listMyTenants` → `getMyPermissions` (header `X-Tenant-Id`) → `getMe` (ADR-0091).
         Không có JIT provisioning (ADR-0063): tài khoản không có membership tenant chung/SIS hoặc không còn UserRole portal → `403 ACCOUNT_NOT_PROVISIONED`
         / `403 PORTAL_ACCESS_STAFF_ONLY`. Nhân sự thuộc nhiều tenant chọn tenant sau đăng nhập qua `GET /me/tenants` (ADR-0067, ADR-0069).
   /auth/me:
@@ -629,6 +630,9 @@ paths:
       responses:
         '204':
           description: Đã thu hồi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
   /me/permissions:
@@ -982,6 +986,9 @@ paths:
       responses:
         '202':
           description: Đã tạo import, trả presigned URL để upload
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1075,6 +1082,9 @@ paths:
       responses:
         '201':
           description: Đã gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1087,7 +1097,120 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+  /sis/connections:
+    get:
+      x-service: identity
+      tags:
+        - sis
+      operationId: listSisConnections
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Danh sách SIS connection (không trả credential/secret_ref)
+      description: |
+        Quyền `platform.sis_connection.manage` (System Admin lọc bằng `tenant_ids`, audit `cross_tenant.accessed`) hoặc `tenant.sis.read` (chỉ connection
+        gắn trường trong scope). Route chỉ có trên gateway nội bộ; không API nào trả `secret_ref`/credential (F011-AC-27).
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+        - name: provider_kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/SisProviderKind'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/SisConnectionStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisConnectionPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: identity
+      tags:
+        - sis
+      operationId: createSisConnection
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Tạo SIS connection trong tenant đích (F011 chỉ provider_kind = csv_import)
+      description: |
+        Quyền `platform.sis_connection.manage`; header `X-Tenant-Id` = tenant đích, `Idempotency-Key` bắt buộc. Connection `csv_import` không cần
+        `config`/`secret_ref`; gán trường bằng `setSisConnectionSchools` (một trường chỉ một connection active → `409 SIS_SCHOOL_ALREADY_CONNECTED`).
+        Ghi audit (F011-AC-26). Nhánh `contract_v1` do F017 mở rộng (`SisConnectionCreate` thành `oneOf` theo `provider_kind`).
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SisConnectionCreate'
+      responses:
+        '201':
+          description: Đã tạo connection
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisConnection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /sis/connections/{connection_id}/sync-runs:
+    get:
+      x-service: identity
+      tags:
+        - sis
+      operationId: listSisSyncRuns
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Lịch sử sync run của một SIS connection
+      description: |
+        Quyền `platform.sis_connection.manage` hoặc `tenant.sis.read` trong scope trường của connection (gateway nội bộ, F011-AC-27). Connection ngoài phạm vi → `404`.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/ConnectionIdPath'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - queued
+              - running
+              - succeeded
+              - partially_failed
+              - failed
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncRunPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       x-service: identity
       tags:
@@ -1123,12 +1246,202 @@ paths:
       responses:
         '202':
           description: Đã xếp hàng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncRun'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /sis/runs/{run_id}:
+    get:
+      x-service: identity
+      tags:
+        - sis
+      operationId: getSisSyncRun
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Chi tiết một sync run (thống kê, trạng thái)
+      description: Quyền `tenant.sis.read` trong scope trường của run hoặc `platform.sis_connection.manage`; ngoài phạm vi → `404`.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/SyncRunIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncRun'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /sis/runs/{run_id}/errors:
+    get:
+      x-service: identity
+      tags:
+        - sis
+      operationId: listSisSyncRunErrors
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Lỗi theo bản ghi của một sync run (SIS_CONTRACT_VIOLATION theo dòng/cột)
+      description: Quyền `tenant.sis.read` trong scope trường của run hoặc `platform.sis_connection.manage`; ngoài phạm vi → `404`. Không trả payload thô của bản ghi.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/SyncRunIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncRecordErrorPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /sis/imports:
+    post:
+      x-service: identity
+      tags:
+        - sis
+      operationId: createPlatformSisImport
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: System Admin tải CSV SIS (csv_import) cho một trường của tenant đích qua presigned URL
+      description: |
+        Quyền `platform.sis_connection.manage`; header `X-Tenant-Id` = tenant đích, `school_id` thuộc tenant đó (khác → `404`). Luồng và validate giống
+        `createSisImport` (worker tạo SyncRun `kind = csv_import`); vượt `csv_import_max` → `422`. Audit `actor = system:sis-sync:<connection_id>` cho từng thay đổi.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformSisImportCreate'
+      responses:
+        '202':
+          description: Đã tạo import, trả presigned URL để upload
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisImport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /sis/reconciliation-issues:
+    get:
+      x-service: identity
+      tags:
+        - sis
+      operationId: listSisReconciliationIssues
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Danh sách reconciliation issue (xung đột đồng bộ SIS)
+      description: |
+        Quyền `tenant.sis.read` (chỉ trường trong scope) hoặc `platform.sis_connection.manage` (lọc `tenant_ids`, audit `cross_tenant.accessed`).
+        Trả `entity_refs` là ID nội bộ/external, không PII thô.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+        - name: school_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: sis_connection_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: issue_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/SisReconciliationIssueType'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - resolved
+              - ignored
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisReconciliationIssuePage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sis/reconciliation-issues/{issue_id}:resolve:
+    post:
+      x-service: identity
+      tags:
+        - sis
+      operationId: resolveSisReconciliationIssue
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Xử lý reconciliation issue (link, xác nhận cùng một người, bỏ qua, đã sửa ở nguồn)
+      description: |
+        Quyền `tenant.sis.import` trong scope trường của issue hoặc `platform.sis_connection.manage`; header `X-Tenant-Id` = tenant của issue.
+        Người ngoài scope → `404` (F011-AC-17). `resolution = same_person` với `duplicate_identifier` thêm membership tenant vào tài khoản sẵn có,
+        không tạo tài khoản thứ hai (F011-AC-11). Lưu `resolved_by`, `resolved_at`, ghi audit; issue không ở `open` → `409 CONFLICT`.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ReconciliationIssueIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SisReconciliationResolve'
+      responses:
+        '200':
+          description: Đã xử lý
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisReconciliationIssue'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /admin/tenants:
     get:
       x-service: identity
@@ -1174,6 +1487,296 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: createTenant
+      x-portal-action: action.platform_admin.tenants.edit
+      summary: Tạo tenant (school/unit/common) — worker tạo Keycloak Organization, phát tenant.created
+      description: |
+        Quyền `platform.tenant.manage` (token `eduworld-portal` + MFA, gateway nội bộ; người dùng tenant → `403 PERMISSION_DENIED` — F010-AC-04).
+        Tenant là dữ liệu platform: không gửi `X-Tenant-Id`. `keycloak_org_alias` duy nhất, khớp `^[a-z0-9-]{3,63}$` (sai mẫu → `422`);
+        tạo tenant `common` thứ hai hoặc trùng `code`/alias → `409 CONFLICT` (F010-AC-02). Ghi audit `tenant.created`, phát `tenant.created` qua outbox;
+        worker tạo đúng một Keycloak Organization có attribute `tenant_id`, `tenant_type` (F010-AC-01, KEYCLOAK_SSO §2.1).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreate'
+      responses:
+        '201':
+          description: Đã tạo tenant
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/tenants/{tenant_id}:
+    patch:
+      x-service: identity
+      tags:
+        - admin
+      operationId: updateTenant
+      x-portal-action: action.platform_admin.tenants.edit
+      summary: Sửa tenant (tên) hoặc bật/tắt tenant (JSON Merge Patch, If-Match, reason)
+      description: |
+        Quyền `platform.tenant.manage` (gateway nội bộ + MFA). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
+        `status = disabled` → worker đặt Organization `enabled=false`, mọi thành viên nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp (F010-AC-03).
+        Ghi audit `tenant.updated`, phát `tenant.updated` (F010-AC-05). Không gửi `X-Tenant-Id` (tenant đích là `tenant_id` trên path).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/TenantUpdate'
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/tenants/{tenant_id}/schools:
+    get:
+      x-service: identity
+      tags:
+        - admin
+      operationId: listAdminTenantSchools
+      x-portal-action: action.platform_admin.tenants.view
+      summary: Danh sách trường thuộc một tenant (System Admin)
+      description: |
+        Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Đọc liên tenant: không gửi `X-Tenant-Id`, ghi audit `cross_tenant.accessed` (F010-AC-10).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdPath'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending_review
+              - active
+              - disabled
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: createAdminTenantSchool
+      x-portal-action: action.platform_admin.tenants.edit
+      summary: Tạo trường trong tenant đích (System Admin)
+      description: |
+        Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Ghi dữ liệu tenant: header `X-Tenant-Id` = tenant đích, phải trùng `tenant_id` trên path (khác → `422`).
+        Tenant `school` đã có trường → `422 VALIDATION_FAILED` (tenant `school` có đúng một trường); tỉnh/thành `inactive` → `422` (F010-AC-07);
+        `code`/`moet_code` trùng → `409 CONFLICT`. Ghi audit, phát `school.updated`.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSchoolCreate'
+      responses:
+        '201':
+          description: Đã tạo trường
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/School'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/tenants/{tenant_id}/schools/{school_id}:
+    patch:
+      x-service: identity
+      tags:
+        - admin
+      operationId: updateAdminTenantSchool
+      x-portal-action: action.platform_admin.tenants.edit
+      summary: Sửa hoặc kích hoạt/tắt trường thuộc tenant đích (JSON Merge Patch, If-Match, reason)
+      description: |
+        Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Header `X-Tenant-Id` = tenant đích, trùng `tenant_id` trên path. Trường thuộc tenant khác → `404`.
+        Tỉnh/thành `inactive` → `422` (F010-AC-07). Ghi audit, phát `school.updated`.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdPath'
+        - $ref: '#/components/parameters/SchoolId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/AdminSchoolUpdate'
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/School'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/common-tenant/students:
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: createCommonTenantStudents
+      x-portal-action: action.platform_admin.access_control.edit_users
+      summary: System Admin tạo học sinh tenant chung (một hoặc lô ≤ common_student_batch_max) — mật khẩu ban đầu trả một lần
+      description: |
+        Quyền `platform.user.manage` (token `eduworld-portal` + MFA, gateway nội bộ). Header `X-Tenant-Id` = tenant `common` (tenant khác → `422`).
+        Không có tự đăng ký (F010-AC-26). Quy tắc nguồn: ACCOUNT_PROVISIONING §3.4.
+
+        - Mỗi dòng xử lý **độc lập** (thành công một phần): `200` kèm `results[]` theo `row_no` và số đếm. Dòng trùng `username` với tài khoản khác
+          (sau chuẩn hóa trim/NFC/chữ thường, ADR-0067, ADR-0069) → `status = failed`, `error_code = USERNAME_TAKEN` (không tạo reconciliation issue).
+          Request vi phạm schema (thiếu/ngoài khoảng `grade_level`, quá `common_student_batch_max` dòng) → `422 VALIDATION_FAILED` cho cả request (F010-AC-25).
+        - Mỗi học sinh tạo được: Keycloak local user (role `student`, member Organization `common`), `identity.users` (`student`, `primary_tenant_id = common`),
+          `org.students` thuộc School ảo, enrollment lớp ảo `common-g<n>`, audit, event `user.provisioned` (`source = platform_common`) — F010-AC-24.
+        - Mật khẩu ban đầu do module identity sinh ngẫu nhiên cho từng dòng, đặt trong Keycloak (khối 6–9: `temporary = true`, đổi khi đăng nhập lần đầu;
+          khối 1–5: `temporary = false` [Proposed]) và chỉ trả **một lần** trong `initial_password` để in thẻ đăng nhập; không lưu, không log (R14); `Cache-Control: no-store`.
+        - Replay cùng `Idempotency-Key` trả kết quả đã lưu **không có** `initial_password` (`password_redacted = true`); lấy lại mật khẩu bằng đặt lại mật khẩu học sinh.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommonTenantStudentsCreate'
+      responses:
+        '200':
+          description: Đã xử lý từng dòng (có thể thành công một phần)
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonTenantStudentsResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /admin/trash:
     get:
       x-service: identity
@@ -1234,6 +1837,9 @@ paths:
       responses:
         '204':
           description: Đã khôi phục
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -1305,6 +1911,9 @@ paths:
       responses:
         '200':
           description: Danh sách assignment sau khi gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1359,6 +1968,9 @@ paths:
       responses:
         '204':
           description: Đã gỡ gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
   /admin/tenant-clones:
@@ -1385,6 +1997,9 @@ paths:
       responses:
         '202':
           description: Đã xếp hàng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1475,6 +2090,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1661,6 +2279,9 @@ paths:
       responses:
         '201':
           description: Đã gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1720,6 +2341,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1793,6 +2417,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1866,6 +2493,9 @@ paths:
       responses:
         '201':
           description: Đã ghi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1913,6 +2543,9 @@ paths:
       responses:
         '202':
           description: Đã nhận job
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2005,6 +2638,9 @@ paths:
       responses:
         '204':
           description: Đã khôi phục
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -2324,6 +2960,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2449,6 +3088,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2616,6 +3258,9 @@ paths:
       responses:
         '201':
           description: Đã gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2649,6 +3294,62 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /tenant/students/{student_id}/password:reset:
+    post:
+      x-service: identity
+      tags:
+        - tenant
+      operationId: resetStudentPassword
+      x-portal-action: action.school_lms.classes.reset_student_password
+      summary: Đặt lại mật khẩu học sinh — mật khẩu mới sinh ngẫu nhiên, trả một lần (owner F016)
+      description: |
+        Quyền `lms.student.password_reset`: School Admin của trường học sinh, Tenant Admin của tenant, System Admin (tenant đích qua `X-Tenant-Id`,
+        gồm tenant `common` qua gateway nội bộ). Học sinh không gọi được (game không có tự đặt lại — "Quên mật khẩu? Liên hệ nhà trường").
+        Học sinh ngoài tenant/scope → `404`. Quy tắc nguồn: ACCOUNT_PROVISIONING §6d.
+
+        Module identity sinh mật khẩu ngẫu nhiên, đặt qua Keycloak Admin API (`temporary` theo khối như ACCOUNT_PROVISIONING §3.4), trả **một lần** trong
+        `initial_password` (`Cache-Control: no-store`), không lưu, không log (R14); thu hồi mọi phiên game của học sinh (`revoke_reason = password_changed`,
+        ADR-0086) và phát `user.access_revoked` (`reason = password_changed`, không tắt user Keycloak); ghi audit. Replay cùng `Idempotency-Key` trả kết quả
+        đã lưu không có `initial_password` (`password_redacted = true`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentPasswordResetRequest'
+      responses:
+        '200':
+          description: Đã đặt lại mật khẩu
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentPasswordResetResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /tenant/student-cleanup/preview:
     get:
       x-service: identity
@@ -2690,6 +3391,9 @@ paths:
       responses:
         '204':
           description: Đã loại trừ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
         '422':
@@ -3014,6 +3718,9 @@ paths:
       responses:
         '202':
           description: Đã xác nhận, worker tiếp tục
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -3081,6 +3788,7 @@ paths:
       tags:
         - admin
       operationId: listPlatformAuditLogs
+      x-internal: true
       x-portal-action: action.platform_admin.audit_logs.view
       summary: Truy vấn audit liên tenant (system_admin · platform.audit.read; gồm role.*, user_role.*, cross_tenant.accessed, moderation.*)
       parameters:
@@ -3186,6 +3894,7 @@ paths:
       tags:
         - admin
       operationId: listDataRequests
+      x-internal: true
       x-portal-action: action.platform_admin.data_requests.view
       summary: Yêu cầu dữ liệu cá nhân (xuất / ẩn danh hóa — ADR-0028 §8, ADR-0070) và trạng thái
       parameters:
@@ -3228,6 +3937,7 @@ paths:
       tags:
         - admin
       operationId: createDataRequest
+      x-internal: true
       x-portal-action: action.platform_admin.data_requests.create
       summary: Ghi nhận yêu cầu xuất/ẩn danh dữ liệu học sinh (system_admin · platform.data_request.write; X-Tenant-Id = tenant đích; saga qua interface platform ops)
       parameters:
@@ -3242,6 +3952,9 @@ paths:
       responses:
         '202':
           description: Đã ghi nhận
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3260,6 +3973,7 @@ paths:
       tags:
         - admin
       operationId: getDataRequest
+      x-internal: true
       x-portal-action: action.platform_admin.data_requests.view
       summary: Trạng thái yêu cầu dữ liệu + link ký gói xuất (15 phút) khi hoàn tất
       parameters:
@@ -3305,6 +4019,9 @@ paths:
       responses:
         '204':
           description: Đã khóa, phát user.access_revoked
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -3377,6 +4094,9 @@ paths:
       responses:
         '200':
           description: Danh sách trường sau khi gán
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3528,6 +4248,30 @@ components:
       schema:
         type: string
         maxLength: 512
+    ConnectionIdPath:
+      name: connection_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    SyncRunIdPath:
+      name: run_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ReconciliationIssueIdPath:
+      name: issue_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TenantIdPath:
+      name: tenant_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     ResourceTypePath:
       name: resource_type
       in: path
@@ -3583,12 +4327,6 @@ components:
         $ref: '#/components/schemas/Uuid'
     DataRequestIdPath:
       name: data_request_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    ConnectionIdPath:
-      name: connection_id
       in: path
       required: true
       schema:
@@ -3689,12 +4427,15 @@ components:
           description: Giây tới khi refresh token hết hạn theo idle (7 ngày) nhưng không vượt tối đa phiên (30 ngày) — `game_session_sso`, ADR-0086
     PlayerBootstrap:
       type: object
+      description: |
+        Bootstrap phiên người chơi do module identity trả (`gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume`, `createAuthSession`).
+        Khi `is_common_tenant = false`, server luôn trả `school`, `class`, `grade_band` (học sinh thuộc đúng một trường, một lớp — ADR-0060).
+        `game_profile` tùy chọn: module identity không đọc dữ liệu của module game (ADR-0074); game lấy hồ sơ người chơi từ API của module game.
       required:
         - user
         - tenant_id
         - tenant_type
         - is_common_tenant
-        - game_profile
         - policies
         - feature_flags
       properties:
@@ -3759,6 +4500,29 @@ components:
                   type: string
                   maxLength: 64
                   description: vd. 06:30-21:30 Asia/Ho_Chi_Minh
+                curfew:
+                  type: object
+                  description: Giờ giới nghiêm hiệu lực của học sinh (hợp platform_curfew và curfew_window của trường, giờ ICT — ADR-0078); client chỉ hiển thị cảnh báo, server vẫn kiểm tra
+                  required:
+                    - start
+                    - end
+                    - warning_minutes
+                  additionalProperties: false
+                  properties:
+                    start:
+                      type: string
+                      maxLength: 5
+                      pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+                      example: '21:30'
+                    end:
+                      type: string
+                      maxLength: 5
+                      pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+                      example: '06:30'
+                    warning_minutes:
+                      type: integer
+                      minimum: 0
+                      description: curfew_warning_minutes (CONFIG_DEFAULTS)
         feature_flags:
           type: object
           additionalProperties:
@@ -4060,6 +4824,10 @@ components:
           type: string
           maxLength: 128
           description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+        reopen_at:
+          type: string
+          format: date-time
+          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -4071,7 +4839,6 @@ components:
         - PERMISSION_DENIED
         - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
-        - FORBIDDEN_SCOPE
         - POLICY_DENIED
         - NOT_FOUND
         - CONFLICT
@@ -4838,9 +5605,8 @@ components:
           allOf:
             - $ref: '#/components/schemas/Uuid'
         allowed_hours:
-          type: object
-          additionalProperties: true
-          description: Khung giờ truy cập của trường (schema chi tiết dùng chung với TenantSettings — delta F015)
+          $ref: '#/components/schemas/AllowedHours'
+          description: Khung giờ truy cập của trường (chỉ siết chặt hơn tenant)
         class_leaderboard_enabled:
           type: boolean
         school_leaderboard_enabled:
@@ -4872,6 +5638,53 @@ components:
           maxLength: 500
           writeOnly: true
           description: Bắt buộc khi đổi curfew_window (audit)
+    AllowedHours:
+      type: object
+      additionalProperties: false
+      required:
+        - windows
+      description: Khung giờ truy cập dùng chung cho tenant và trường (F015); cấp dưới chỉ siết chặt (ADR-0020). Giờ HH:MM theo `timezone` (mặc định múi giờ tenant).
+      properties:
+        timezone:
+          type: string
+          maxLength: 64
+          example: Asia/Ho_Chi_Minh
+        windows:
+          type: array
+          maxItems: 14
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - days
+              - from
+              - to
+            properties:
+              days:
+                type: array
+                minItems: 1
+                maxItems: 7
+                uniqueItems: true
+                items:
+                  type: string
+                  enum:
+                    - mon
+                    - tue
+                    - wed
+                    - thu
+                    - fri
+                    - sat
+                    - sun
+              from:
+                type: string
+                maxLength: 5
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+                example: '06:30'
+              to:
+                type: string
+                maxLength: 5
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+                example: '21:30'
     CurfewWindow:
       type: object
       required:
@@ -5058,8 +5871,69 @@ components:
         reason:
           type: string
           maxLength: 1000
+    SisProviderKind:
+      type: string
+      enum:
+        - contract_v1
+        - csv_import
+      description: Loại nguồn SIS (ADR-0021); `contract_v1` do F017 hiện thực
+    SisConnectionStatus:
+      type: string
+      enum:
+        - active
+        - auth_error
+        - contract_error
+        - paused
+    SisConnectionPage:
+      type: object
+      required:
+        - data
+        - page
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SisConnection'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SisConnection:
+      type: object
+      required:
+        - sis_connection_id
+        - tenant_id
+        - provider_kind
+        - status
+        - created_at
+      description: SIS connection; không bao giờ chứa `secret_ref` hay credential (F011-AC-27).
+      properties:
+        sis_connection_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        provider_kind:
+          $ref: '#/components/schemas/SisProviderKind'
+        contract_version:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/SisConnectionStatus'
+        school_count:
+          type: integer
+          minimum: 0
+        last_sync_run:
+          oneOf:
+            - $ref: '#/components/schemas/SyncRun'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
     SyncRun:
       type: object
+      description: Một lần đồng bộ SIS (sis.sync_runs, DATABASE_DESIGN §2.3); `kind` = cột `mode`.
       required:
         - sync_run_id
         - kind
@@ -5067,20 +5941,40 @@ components:
       properties:
         sync_run_id:
           $ref: '#/components/schemas/Uuid'
+        sis_connection_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
         kind:
           type: string
           enum:
             - full
             - delta
             - webhook
+            - csv_import
         status:
           type: string
           enum:
             - queued
             - running
             - succeeded
+            - partially_failed
             - failed
-            - partial
+        dry_run:
+          type: boolean
+          default: false
+        trigger:
+          type: string
+          enum:
+            - schedule
+            - manual
+            - webhook
+            - fallback_full
+        failure_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
         started_at:
           $ref: '#/components/schemas/Timestamp'
         finished_at:
@@ -5089,6 +5983,449 @@ components:
           type: object
           additionalProperties:
             type: integer
+    SisConnectionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - provider_kind
+      description: F011 chỉ nhận `provider_kind = csv_import` (không `config`, không `secret_ref`); F017 mở rộng thành `oneOf` theo `provider_kind` cho `contract_v1`.
+      properties:
+        provider_kind:
+          type: string
+          enum:
+            - csv_import
+        reason:
+          type: string
+          maxLength: 500
+    SyncRunPage:
+      type: object
+      required:
+        - data
+        - page
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SyncRun'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SyncRecordErrorPage:
+      type: object
+      required:
+        - data
+        - page
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SyncRecordError'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SyncRecordError:
+      type: object
+      required:
+        - error_code
+        - occurred_at
+      description: Lỗi theo bản ghi của sync run (sis.sync_record_errors); không chứa payload thô.
+      properties:
+        entity_kind:
+          type: string
+          maxLength: 64
+          description: vd. school, class, student, enrollment
+        external_id:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        row_no:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          description: Số dòng CSV (csv_import)
+        column_name:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        error_code:
+          type: string
+          maxLength: 64
+          description: vd. SIS_CONTRACT_VIOLATION
+        message:
+          type: string
+          maxLength: 1000
+        occurred_at:
+          $ref: '#/components/schemas/Timestamp'
+    PlatformSisImportCreate:
+      description: Như `SisImportCreate`, thêm `school_id` của trường thuộc tenant đích (System Admin).
+      allOf:
+        - $ref: '#/components/schemas/SisImportCreate'
+        - type: object
+          required:
+            - school_id
+          properties:
+            school_id:
+              $ref: '#/components/schemas/Uuid'
+    SisReconciliationIssueType:
+      type: string
+      description: Loại xung đột (conflict matrix SIS_INTEGRATION §6.3, F011-AC-14; `unexpected_org_member`, `school_duplicate` do F010)
+      enum:
+        - possible_duplicate
+        - transfer_confirmation
+        - missing_class
+        - class_school_mismatch
+        - orphan_enrollment
+        - multi_school_enrollment
+        - school_province_missing
+        - unmapped_school
+        - cleaned_up_student_in_sis
+        - duplicate_identifier
+        - grade_mismatch
+        - deactivation_review
+        - ambiguous_login
+        - school_duplicate
+        - unexpected_org_member
+    SisReconciliationIssuePage:
+      type: object
+      required:
+        - data
+        - page
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SisReconciliationIssue'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SisReconciliationIssue:
+      type: object
+      required:
+        - issue_id
+        - tenant_id
+        - issue_type
+        - status
+        - created_at
+      properties:
+        issue_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        school_id:
+          description: null với `unmapped_school`
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        sis_connection_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        issue_type:
+          $ref: '#/components/schemas/SisReconciliationIssueType'
+        entity_refs:
+          type: object
+          maxProperties: 20
+          description: ID nội bộ/external của bản ghi liên quan (không PII thô)
+          additionalProperties:
+            type: string
+            maxLength: 128
+        suggested_action:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        status:
+          type: string
+          enum:
+            - open
+            - resolved
+            - ignored
+        resolution:
+          type:
+            - string
+            - 'null'
+          enum:
+            - link
+            - same_person
+            - ignore
+            - fixed_in_source
+            - null
+        resolution_note:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
+        resolved_by:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        resolved_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    SisReconciliationResolve:
+      type: object
+      additionalProperties: false
+      required:
+        - resolution
+      description: '`ignore` → issue `ignored`; các giá trị khác → `resolved`.'
+      properties:
+        resolution:
+          type: string
+          enum:
+            - link
+            - same_person
+            - ignore
+            - fixed_in_source
+        resolution_note:
+          type: string
+          maxLength: 1000
+    TenantCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - name
+        - tenant_type
+        - keycloak_org_alias
+      description: Tạo tenant (F010-AC-01, F010-AC-02, F010-AC-05). Chỉ một tenant `common`.
+      properties:
+        code:
+          type: string
+          minLength: 2
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        tenant_type:
+          $ref: '#/components/schemas/TenantType'
+        keycloak_org_alias:
+          type: string
+          maxLength: 63
+          pattern: ^[a-z0-9-]{3,63}$
+          description: Alias Keycloak Organization
+          duy nhất (KEYCLOAK_SSO §2.1): null
+        default_locale:
+          $ref: '#/components/schemas/Locale'
+        reason:
+          type: string
+          maxLength: 500
+    TenantDetail:
+      allOf:
+        - $ref: '#/components/schemas/TenantSummary'
+        - type: object
+          required:
+            - keycloak_org_alias
+            - created_at
+            - updated_at
+          properties:
+            keycloak_org_alias:
+              type: string
+              maxLength: 63
+              pattern: ^[a-z0-9-]{3,63}$
+            created_at:
+              $ref: '#/components/schemas/Timestamp'
+            updated_at:
+              $ref: '#/components/schemas/Timestamp'
+    TenantUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 2
+      required:
+        - reason
+      description: JSON Merge Patch cho tenant; `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        status:
+          type: string
+          enum:
+            - active
+            - disabled
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    AdminSchoolCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - name
+        - province_code
+        - school_level
+        - grade_min
+        - grade_max
+      description: Trường mới trong tenant đích (System Admin). `province_code` chỉ đơn vị `active` (F010-AC-07).
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        name:
+          $ref: '#/components/schemas/TenantLocalizedName'
+        province_code:
+          type: string
+          maxLength: 64
+        moet_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 32
+        school_level:
+          $ref: '#/components/schemas/SchoolLevel'
+        grade_min:
+          $ref: '#/components/schemas/GradeLevel'
+        grade_max:
+          $ref: '#/components/schemas/GradeLevel'
+        address:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+        reason:
+          type: string
+          maxLength: 500
+    AdminSchoolUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 2
+      required:
+        - reason
+      description: JSON Merge Patch trường thuộc tenant đích (System Admin); `status` kích hoạt/tắt trường.
+      properties:
+        name:
+          $ref: '#/components/schemas/TenantLocalizedName'
+        province_code:
+          type: string
+          maxLength: 64
+          description: Chỉ đơn vị `active`
+        moet_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 32
+        school_level:
+          $ref: '#/components/schemas/SchoolLevel'
+        grade_min:
+          $ref: '#/components/schemas/GradeLevel'
+        grade_max:
+          $ref: '#/components/schemas/GradeLevel'
+        address:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+        status:
+          type: string
+          enum:
+            - active
+            - disabled
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    CommonTenantStudentsCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - students
+      properties:
+        students:
+          type: array
+          minItems: 1
+          maxItems: 500
+          description: Tối đa `common_student_batch_max` dòng (CONFIG_DEFAULTS, mặc định 500 [Proposed])
+          items:
+            $ref: '#/components/schemas/CommonTenantStudentInput'
+    CommonTenantStudentInput:
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - display_name
+        - grade_level
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 128
+          pattern: ^[A-Za-z0-9._-]{3,128}$
+          description: Không có `@`; server chuẩn hóa trim/NFC/chữ thường trước khi kiểm trùng (ADR-0067, ADR-0069)
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        external_ref:
+          type: string
+          maxLength: 64
+          description: Mã tham chiếu tùy chọn của System Admin, lưu thành ExternalIdentity (`issuer = platform_common`, `subject` = giá trị này), duy nhất trong các bản ghi chưa xóa (ACCOUNT_PROVISIONING §3.4); không phải khóa SIS, không dùng để đăng nhập; trùng → dòng `failed` `IDENTITY_CONFLICT`
+    CommonTenantStudentsResult:
+      type: object
+      required:
+        - total
+        - created_count
+        - failed_count
+        - password_redacted
+        - results
+      properties:
+        total:
+          type: integer
+          minimum: 1
+        created_count:
+          type: integer
+          minimum: 0
+        failed_count:
+          type: integer
+          minimum: 0
+        password_redacted:
+          type: boolean
+          description: true khi response là replay theo `Idempotency-Key` (mật khẩu không được lưu nên bị bỏ)
+        results:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/CommonTenantStudentResult'
+    CommonTenantStudentResult:
+      type: object
+      required:
+        - row_no
+        - status
+        - username
+      properties:
+        row_no:
+          type: integer
+          minimum: 1
+          description: Vị trí dòng trong `students` (bắt đầu từ 1)
+        status:
+          type: string
+          enum:
+            - created
+            - failed
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        username:
+          type: string
+          maxLength: 128
+          description: Username sau chuẩn hóa
+        initial_password:
+          type: string
+          maxLength: 128
+          description: Chỉ có ở lần xử lý đầu với dòng `created`; không lưu, không log, không có khi replay (R14)
+        error_code:
+          type: string
+          maxLength: 64
+          description: Khi `status = failed`, vd. USERNAME_TAKEN
     ResourceType:
       type: string
       description: Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
@@ -5543,8 +6880,7 @@ components:
       description: Cài đặt tenant (một phần). Trường cleanup chỉ ghi được khi platform cho phép ghi đè (ADR-0032).
       properties:
         allowed_hours:
-          type: object
-          additionalProperties: true
+          $ref: '#/components/schemas/AllowedHours'
         inactive_student_cleanup_days:
           description: null hoặc 0 = tắt dọn cho tenant; vắng mặt = dùng mặc định platform
           oneOf:
@@ -5808,6 +7144,43 @@ components:
             - active
             - locked
             - deactivated
+    StudentPasswordResetRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+          description: Lý do (audit)
+    StudentPasswordResetResult:
+      type: object
+      required:
+        - student_id
+        - username
+        - password_temporary
+        - password_redacted
+        - reset_at
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        username:
+          type: string
+          maxLength: 128
+        initial_password:
+          type: string
+          maxLength: 128
+          description: Mật khẩu mới; chỉ có ở lần xử lý đầu, không lưu, không log, không có khi replay (R14)
+        password_temporary:
+          type: boolean
+          description: true nếu học sinh phải đổi mật khẩu khi đăng nhập lần đầu (khối 6–9, [Proposed])
+        password_redacted:
+          type: boolean
+          description: true khi response là replay theo `Idempotency-Key`
+        reset_at:
+          $ref: '#/components/schemas/Timestamp'
     StudentCleanupCandidatePage:
       type: object
       required:
@@ -6276,10 +7649,15 @@ components:
           $ref: '#/components/schemas/PageInfo'
     AuditLogEntry:
       type: object
+      description: Một dòng audit.audit_logs (DATABASE_DESIGN §3.11) đã lọc PII/secret.
       required:
         - audit_id
         - action
         - actor_id
+        - actor_type
+        - target_type
+        - target_id
+        - result
         - occurred_at
       properties:
         audit_id:
@@ -6288,23 +7666,38 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Uuid'
             - type: 'null'
+        school_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
         actor_id:
-          $ref: '#/components/schemas/Uuid'
+          description: null = hệ thống/job
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
         actor_type:
           type: string
           enum:
+            - student
             - staff
-            - system
             - service
-          description: staff gồm nhân sự trường và platform (ADR-0081)
+            - system
+          description: student/staff theo user_type của actor (ADR-0081); service, system cho job và module
         action:
           type: string
-          maxLength: 128
-        resource_type:
+          maxLength: 64
+        target_type:
           type: string
           maxLength: 64
-        resource_id:
-          $ref: '#/components/schemas/Uuid'
+        target_id:
+          type: string
+          maxLength: 128
+        result:
+          type: string
+          enum:
+            - success
+            - denied
+            - error
         reason:
           type: string
           maxLength: 1000
@@ -6427,6 +7820,14 @@ components:
       schema:
         type: string
         maxLength: 8192
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
     ETag:
       description: Phiên bản tài nguyên cho optimistic concurrency
       schema:
@@ -6470,7 +7871,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:

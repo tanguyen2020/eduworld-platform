@@ -41,7 +41,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → sinh `specs/openapi/modul
 | `friend.added` / `friend.removed` | chat → competition (`ref.friendships`, F091), NTF | `friend.added.v1`, `friend.removed.v1` | Cần thêm |
 | `user.blocked` / `user.unblocked` | chat → competition (`ref.blocks`, F091/F100/F104), chat (F115), AUD | `user.blocked.v1`, `user.unblocked.v1` | Cần thêm |
 | `user.muted` / `user.unmuted` | chat → chat (F115), AUD | `user.muted.v1`, `user.unmuted.v1` | Cần thêm |
-| `tenant.*`, `student.synced`, `user.status_changed`, `student.cleaned_up/restored` | identity → chat (projection) | `specs/events/payloads/identity/` | Cần thêm (F010, F011, F016) |
+| `tenant.*`, `student.synced`, `user.status_changed`, `student.cleaned_up/restored` | identity → chat (projection) | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
 | `game_profile.updated` | game → chat (`ref.player_profiles`) | `specs/events/payloads/game/game_profile.updated.v1.schema.json` | Cần thêm (owner F070) |
 | `ew.rt.presence.<tenant_id>` (NATS core) | gateway → chat | `specs/schemas/realtime/presence-changed.schema.json` | Cần thêm (F091) |
 

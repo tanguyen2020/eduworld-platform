@@ -54,7 +54,7 @@ Giao qua Valkey `ew:rt:user:<user_id>` (research R1).
 | `party.invitation_*` (5 event) | competition → NTF, AUD | `party.invitation_sent.v1` … `party.invitation_cancelled.v1` | Cần thêm |
 | `party.leader_transferred`, `party.settings_updated` | competition → AUD, game (F103) | `party.leader_transferred.v1`, `party.settings_updated.v1` | Cần thêm |
 | `friend.added`/`removed`, `user.blocked`/`unblocked`, `sanction.applied`/`lifted` | chat → competition (projection) | `specs/events/payloads/chat/` | Cần thêm (owner F095 cho `friend.*`/`user.*`, owner F116 cho `sanction.applied`, owner F121 cho `sanction.lifted`) |
-| `tenant.*`, `student.synced`, `user.status_changed`, `enrollment.changed`, `student.cleaned_up` | identity → competition | `specs/events/payloads/identity/` | Cần thêm (F010, F011, F016) |
+| `tenant.*`, `student.synced`, `user.status_changed`, `enrollment.changed`, `student.cleaned_up` | identity → competition | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
 | `game_profile.updated` | game → competition (`ref.player_profiles`) | `specs/events/payloads/game/game_profile.updated.v1.schema.json` | Cần thêm (F070) |
 
 ## 5. JSON Schema nội dung

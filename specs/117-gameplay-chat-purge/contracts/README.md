@@ -35,7 +35,7 @@
 | `party.created`, `party.member_joined`, `party.member_left`, `party.member_kicked`, `party.disbanded` | competition → chat | `specs/events/payloads/competition/party.*.v1.schema.json` | Cần thêm (F100/F101 sở hữu) |
 | `match.started` (thêm `participants[] {student_id, team_id?, school_id}`, `mode`) | competition → chat | `specs/events/payloads/competition/match.started.v1.schema.json` | Cần thêm + Cần sửa payload EVENT_DESIGN §4.8 (F105 sở hữu) |
 | `match.completed`, `match.aborted` | competition → chat | `specs/events/payloads/competition/match.completed.v1.schema.json`, `match.aborted.v1.schema.json` | Cần thêm (F105) |
-| `tenant.updated`, `platform_settings.changed` (key `chat_retention`) | identity → chat | `specs/events/payloads/identity/` | Cần thêm (owner F010 cho `tenant.updated`, owner F015 cho `platform_settings.changed`) |
+| `tenant.updated`, `platform_settings.changed` (key `chat_retention`) | identity → chat | `specs/events/payloads/identity/` | Có sẵn (áp 2026-11-17; owner F010 cho `tenant.updated`, owner F015 cho `platform_settings.changed`) |
 | `chat.channel_opened`, `chat.channel_closed` | chat → RT, worker `chat-channel-closer` | `specs/events/payloads/chat/chat.channel_opened.v1.schema.json`, `chat.channel_closed.v1.schema.json` | Cần thêm |
 | `chat.gameplay_purged` | job purge → AUD, MON | `specs/events/payloads/chat/chat.gameplay_purged.v1.schema.json` | Cần thêm |
 | `chat.daily_stats` | job rollup → analytics (module game) | `specs/events/payloads/chat/chat.daily_stats.v1.schema.json` | Cần thêm |

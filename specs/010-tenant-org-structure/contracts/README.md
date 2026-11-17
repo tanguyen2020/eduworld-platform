@@ -9,11 +9,11 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openap
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listTenants` | `GET /api/v1/admin/tenants` | identity.v1.yaml | `platform.tenant.manage` (hoặc `platform.cross_tenant.read`) | Có sẵn |
-| `createTenant` | `POST /api/v1/admin/tenants` | identity.v1.yaml | `platform.tenant.manage` | Cần thêm |
-| `updateTenant` | `PATCH /api/v1/admin/tenants/{tenant_id}` | identity.v1.yaml | `platform.tenant.manage` | Cần thêm |
-| `listAdminTenantSchools` | `GET /api/v1/admin/tenants/{tenant_id}/schools` | identity.v1.yaml | `platform.tenant.manage` | Cần thêm |
-| `createAdminTenantSchool` | `POST /api/v1/admin/tenants/{tenant_id}/schools` | identity.v1.yaml | `platform.tenant.manage` | Cần thêm |
-| `updateAdminTenantSchool` | `PATCH /api/v1/admin/tenants/{tenant_id}/schools/{school_id}` | identity.v1.yaml | `platform.tenant.manage` | Cần thêm |
+| `createTenant` | `POST /api/v1/admin/tenants` | identity.v1.yaml | `platform.tenant.manage` | Có sẵn (áp 2026-11-17) |
+| `updateTenant` | `PATCH /api/v1/admin/tenants/{tenant_id}` | identity.v1.yaml | `platform.tenant.manage` | Có sẵn (áp 2026-11-17) |
+| `listAdminTenantSchools` | `GET /api/v1/admin/tenants/{tenant_id}/schools` | identity.v1.yaml | `platform.tenant.manage` | Có sẵn (áp 2026-11-17) |
+| `createAdminTenantSchool` | `POST /api/v1/admin/tenants/{tenant_id}/schools` | identity.v1.yaml | `platform.tenant.manage` | Có sẵn (áp 2026-11-17) |
+| `updateAdminTenantSchool` | `PATCH /api/v1/admin/tenants/{tenant_id}/schools/{school_id}` | identity.v1.yaml | `platform.tenant.manage` | Có sẵn (áp 2026-11-17) |
 | `listCountries` · `listProvinces` · `listCatalogSchools` | `GET /api/v1/catalog/*` | identity.v1.yaml | đã xác thực (`listCatalogSchools` tenant-scoped) | Có sẵn |
 | `createCountry` · `updateCountry` · `createProvince` · `updateProvince` · `createProvinceSuccession` | `/api/v1/admin/catalog/*` | identity.v1.yaml | `platform.catalog.write` | Có sẵn |
 | `importSchools` · `getSchoolImport` | `POST /api/v1/admin/schools:import` · `GET /api/v1/admin/school-imports/{import_id}` | identity.v1.yaml | `platform.catalog.write` | Có sẵn |
@@ -23,7 +23,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openap
 | `listClasses` | `GET /api/v1/schools/{school_id}/classes` | identity.v1.yaml | `lms.class.read` (scope trường) | Có sẵn |
 | `getMyStudentProfile` | `GET /api/v1/students/me` | identity.v1.yaml | học sinh (self, `game_player`) | Có sẵn |
 | `getStudentProfile` | `GET /api/v1/students/{student_id}` | identity.v1.yaml | `school.people.read` (scope) + audit | Có sẵn |
-| `createCommonTenantStudents` | `POST /api/v1/admin/common-tenant/students` (một hoặc lô ≤ 500, kèm `grade_level`) | identity.v1.yaml | `platform.user.manage` | Cần thêm |
+| `createCommonTenantStudents` | `POST /api/v1/admin/common-tenant/students` (một hoặc lô ≤ 500, kèm `grade_level`) | identity.v1.yaml | `platform.user.manage` | Có sẵn (áp 2026-11-17, quyết định Technical Architect — ACCOUNT_PROVISIONING §3.4) |
 
 ## 2. Internal API
 
@@ -31,7 +31,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openap
 |---|---|---|---|---|
 | `getTenant` | learning/game/competition/chat/realtime → identity | identity.internal.v1.yaml | learning, game, competition, chat, realtime | Có sẵn |
 | `checkMemberships` | learning/game/competition/chat → identity | identity.internal.v1.yaml | learning, game, competition, chat | Có sẵn |
-| `listProjectionSnapshot` | learning/game/competition/chat (job rebuild projection `ref.*`) → identity | identity.internal.v1.yaml | learning, game, competition, chat | Cần thêm (owner F010, task T043) |
+| `listProjectionSnapshot` | learning/game/competition/chat (job rebuild projection `ref.*`) → identity | identity.internal.v1.yaml | learning, game, competition, chat | Có sẵn (áp 2026-11-17) — contract; query/facade ở task T043 |
 
 Keycloak Admin REST (ra ngoài, không phải contract EduWorld): organizations, members, users, realm roles, `POST users/{id}/logout`.
 
@@ -45,14 +45,14 @@ Keycloak Admin REST (ra ngoài, không phải contract EduWorld): organizations,
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `tenant.created`, `tenant.updated` | identity phát; identity worker, learning/game/competition/chat (`ref.tenants`) tiêu thụ | `specs/events/payloads/identity/tenant.created.v1.schema.json`, `tenant.updated.v1.schema.json` | Cần thêm |
+| `tenant.created`, `tenant.updated` | identity phát; identity worker, learning/game/competition/chat (`ref.tenants`) tiêu thụ | `specs/events/payloads/identity/tenant.created.v1.schema.json`, `tenant.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `province.updated` | identity phát; learning, game tiêu thụ | `province.updated.v1.schema.json` | Có sẵn |
-| `school.updated` | identity phát; mọi module (`ref.schools`) | `school.updated.v1.schema.json` | Cần thêm |
-| `class.created`, `class.updated` | identity phát; chat, learning | `class.created.v1.schema.json`, `class.updated.v1.schema.json` | Cần thêm |
-| `enrollment.changed` | identity phát; learning, game, chat | `enrollment.changed.v1.schema.json` | Cần thêm |
-| `student.transferred` | identity phát; chat, competition, learning | `student.transferred.v1.schema.json` | Cần thêm |
-| `tenant_membership.changed` | identity phát và tiêu thụ (worker); mọi module invalidate Principal | `tenant_membership.changed.v1.schema.json` | Cần thêm |
-| `user.provisioned` | identity phát; game (GameProfile, F070) | `user.provisioned.v1.schema.json` | Cần thêm |
+| `school.updated` | identity phát; mọi module (`ref.schools`) | `school.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) |
+| `class.created`, `class.updated` | identity phát; chat, learning | `class.created.v1.schema.json`, `class.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) |
+| `enrollment.changed` | identity phát; learning, game, chat | `enrollment.changed.v1.schema.json` | Có sẵn (áp 2026-11-17) |
+| `student.transferred` | identity phát; chat, competition, learning | `student.transferred.v1.schema.json` | Có sẵn (áp 2026-11-17) |
+| `tenant_membership.changed` | identity phát và tiêu thụ (worker); mọi module invalidate Principal | `tenant_membership.changed.v1.schema.json` | Có sẵn (áp 2026-11-17) |
+| `user.provisioned` | identity phát; game (GameProfile, F070) | `user.provisioned.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `user_role.changed` | F012 phát; worker F010 tiêu thụ | `user_role.changed.v1.schema.json` | Có sẵn |
 
 ## 5. JSON Schema nội dung
@@ -63,7 +63,7 @@ Keycloak Admin REST (ra ngoài, không phải contract EduWorld): organizations,
 
 ## 6. Delta cần thực hiện
 
-- OpenAPI `identity.v1.yaml`: thêm `createTenant`, `updateTenant` (`If-Match`, `Idempotency-Key`), `listAdminTenantSchools`, `createAdminTenantSchool`, `updateAdminTenantSchool`, `createCommonTenantStudents` theo [API_DESIGN §9.16](../../../docs/07-backend/API_DESIGN.md); mọi chuỗi có `maxLength`; tag `x-internal: true` (gateway nội bộ).
-- Event payload JSON Schema: `tenant.created`, `tenant.updated`, `school.updated`, `class.created`, `class.updated`, `enrollment.changed`, `student.transferred`, `tenant_membership.changed`, `user.provisioned` trong `specs/events/payloads/identity/`.
+- **Đã áp 2026-11-17** ở spec gộp rồi `split-public.mjs`: `createTenant` (`TenantCreate` → `TenantDetail`), `updateTenant` (`TenantUpdate`, merge-patch), `listAdminTenantSchools` (`SchoolPage`), `createAdminTenantSchool` (`AdminSchoolCreate`), `updateAdminTenantSchool` (`AdminSchoolUpdate`), tham số `TenantIdPath`; `x-portal-action` `action.platform_admin.tenants.view`/`.edit` (menu catalog cập nhật `operation_ids`). **`createCommonTenantStudents` đã áp 2026-11-17** theo quyết định Technical Architect (ACCOUNT_PROVISIONING §3.4): `POST /admin/common-tenant/students`, `X-Tenant-Id` = tenant `common`, `Idempotency-Key`; body `CommonTenantStudentsCreate` (≤ `common_student_batch_max` dòng `CommonTenantStudentInput`: `username`, `display_name`, `grade_level`, `external_ref`); `200 CommonTenantStudentsResult` (`results[]` theo dòng, `initial_password` một lần, `password_redacted` khi replay, `Cache-Control: no-store`); `x-portal-action: action.platform_admin.access_control.edit_users`. Nguyên văn delta: OpenAPI `identity.v1.yaml`: thêm `createTenant`, `updateTenant` (`If-Match`, `Idempotency-Key`), `listAdminTenantSchools`, `createAdminTenantSchool`, `updateAdminTenantSchool`, `createCommonTenantStudents` theo [API_DESIGN §9.16](../../../docs/07-backend/API_DESIGN.md); mọi chuỗi có `maxLength`; tag `x-internal: true` (gateway nội bộ).
+- **Đã áp 2026-11-17 (T004).** Event payload JSON Schema: `tenant.created`, `tenant.updated`, `school.updated`, `class.created`, `class.updated`, `enrollment.changed`, `student.transferred`, `tenant_membership.changed`, `user.provisioned` trong `specs/events/payloads/identity/` (mỗi file có `examples`). `user.provisioned.source` gồm `platform_common` (F010-AC-24; EVENT_DESIGN §4.1 đã đồng bộ).
 - Kiểm tra: `make specs-lint`, `make gen MOD=identity`.
-- Thêm operation facade `listProjectionSnapshot` (F010 là owner duy nhất; F020 là bên gọi đầu tiên) — task T043.
+- **Đã áp 2026-11-17 (phần contract của T043).** Thêm operation facade `listProjectionSnapshot` `GET /internal/v1/projection-snapshots/{entity_type}` (`ProjectionSnapshotPage`; F010 là owner duy nhất; F020 là bên gọi đầu tiên) — query và facade còn ở task T043.

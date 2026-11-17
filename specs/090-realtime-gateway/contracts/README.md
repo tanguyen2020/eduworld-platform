@@ -33,15 +33,16 @@ Subject NATS (không phải OpenAPI, ghi ở [specs/events/README](../../../spec
 | `system.service.degraded` | server → client | Có sẵn |
 | `system.notice.broadcasted` | server → client (từ `ew:rt:broadcast`) | Có sẵn |
 | `session.session.replaced` | server → thiết bị cũ, sau đó close `4409` | Có sẵn |
+| `session.session.ended` | server → client trước khi đóng: `reason = curfew` → close `4410`; lý do thu hồi → close `4403` (owner F014) | Có sẵn (áp 2026-11-17, quyết định Technical Architect) |
 | `system.server.draining` (`reconnect_after_ms`) | server → client, trước khi đóng `1012` | Cần thêm |
-| Close codes `1012/4400/4401/4403/4408/4409/4429` | server → client | Cần sửa (thay `4500` bằng `1012` sau `system.server.draining`) |
+| Close codes `1012/4400/4401/4403/4408/4409/4410/4429` | server → client | `4410` có sẵn (áp 2026-11-17); Cần sửa (thay `4500` bằng `1012` sau `system.server.draining`) |
 
 ## 4. Event (NATS)
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `audit.recorded` | gateway → identity (AUD) qua `EVT_REALTIME` | `specs/events/payloads/common/audit.recorded.v1.schema.json` (schema chung, owner F003 T004) | Cần thêm (F003) |
-| `user.access_revoked` | identity → (identity tự publish message điều khiển lên Valkey, F016) | `specs/events/payloads/identity/user.access_revoked.v1.schema.json` | Cần thêm (F016) |
+| `audit.recorded` | gateway → identity (AUD) qua `EVT_REALTIME` | `specs/events/payloads/common/audit.recorded.v1.schema.json` (schema chung, owner F003 T004) | Có sẵn (áp 2026-11-17, owner F003) |
+| `user.access_revoked` | identity → (identity tự publish message điều khiển lên Valkey, F016) | `specs/events/payloads/identity/user.access_revoked.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F011) |
 
 ## 5. JSON Schema nội dung
 

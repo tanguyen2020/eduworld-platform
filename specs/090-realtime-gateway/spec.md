@@ -103,9 +103,10 @@ Học sinh bị khóa hoặc chuyển sang trường thuộc tenant khác thì b
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F090-AC-24 | KHI nhận message điều khiển `access_revoked` trên `ew:rt:user:<id>`, gateway PHẢI đóng mọi kết nối của học sinh với `4403` trong ≤ 5 giây và xóa buffer resume của học sinh | FR-AUTH-010 · AC-AUTH-006 | TC-AUTH-006, TC-AUTH-036, TC-TEN-009 |
+| F090-AC-24 | KHI nhận message điều khiển thu hồi (`access_revoked`, kèm lý do `account_locked`/`access_revoked`/`cleanup`/`admin`/`password_changed`) trên `ew:rt:user:<id>`, gateway PHẢI gửi `session.session.ended` với `reason` tương ứng rồi đóng mọi kết nối của học sinh với `4403` trong ≤ 5 giây và xóa buffer resume của học sinh | FR-AUTH-010 · AC-AUTH-006 · [REALTIME_ARCHITECTURE §3.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) | TC-AUTH-006, TC-AUTH-036, TC-TEN-009 |
 | F090-AC-25 | KHI nhận `session.session.replaced` cho `game_session_id` mà kết nối đang giữ, gateway PHẢI giao message đó rồi đóng `4409` và vô hiệu resume token cũ | FR-AUTH-023 · ADR-0031 | TC-AUTH-015 |
 | F090-AC-26 | NẾU message điều khiển/`session.session.replaced` nhắm `game_session_id` khác với kết nối hiện tại, THÌ gateway PHẢI không đóng kết nối đó | ADR-0031 | TC-AUTH-015 |
+| F090-AC-32 | KHI nhận `session.session.ended` với `reason = curfew` trên `ew:rt:user:<id>` cho `game_session_id` mà kết nối đang giữ, gateway PHẢI giao message đó rồi đóng kết nối với `4410` (không phải `4403`), xóa buffer resume và vô hiệu resume token; message nhắm `game_session_id` khác PHẢI không đóng kết nối | ADR-0078 · [REALTIME_ARCHITECTURE §3.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md) | TC-AUTH-092 |
 
 ---
 

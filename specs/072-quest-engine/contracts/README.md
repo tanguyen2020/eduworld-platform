@@ -36,7 +36,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `modules/game.v1.yaml`)
 | `quest.completed` | game → game (F071 unlock/chương, F074 reward), learning (learning event), analytics | `specs/events/payloads/game/quest.completed.v1.schema.json` | Cần thêm |
 | `activity.graded` | learning → game | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Có sẵn, owner F030 (dùng `attempt_id`, `correct_count`, `item_count`, `passed`; tra bước qua `game.quest_step_attempts`) |
 | `world.discovery_found` | game (F071) → game | `specs/events/payloads/game/world.discovery_found.v1.schema.json` | Cần thêm (F071) |
-| `game_session.started` | game (F014) → game | `specs/events/payloads/game/game_session.started.v1.schema.json` | Cần thêm (F014) |
+| `game_session.started` | game (F014) → game | `specs/events/payloads/game/game_session.started.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F014) |
 
 ## 5. JSON Schema nội dung
 

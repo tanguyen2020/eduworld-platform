@@ -47,7 +47,7 @@ Spec: `specs/openapi/modules/identity.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `tenant_data.unassigned` | Phát | `specs/events/payloads/identity/tenant_data.unassigned.v1.schema.json` | Cần thêm |
 | `tenant_data.cloned` | Phát (AUD, NTF System Admin) | `specs/events/payloads/identity/tenant_data.cloned.v1.schema.json` | Cần thêm |
 | `audit.recorded` (`user.merged`) | Phát khi saga gộp xong (AUD) | Theo [EVENT_DESIGN §2](../../../docs/07-backend/EVENT_DESIGN.md#2-envelope-chuẩn) | Có sẵn (envelope) |
-| `tenant.created` | Tiêu thụ (gán mặc định) | `specs/events/payloads/identity/tenant.created.v1.schema.json` | Cần thêm (thuộc F010) |
+| `tenant.created` | Tiêu thụ (gán mặc định) | `specs/events/payloads/identity/tenant.created.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010) |
 | `<entity>.restored` | Module sở hữu phát | Theo module sở hữu | Không thuộc F045 |
 
 ## 5. JSON Schema nội dung

@@ -1,6 +1,6 @@
 # EduWorld Event Specs
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Backend Architect · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Backend Architect · Cập nhật: 2026-11-17 (payload schema M-C0/M-C1: `common/audit.recorded`, event identity của F010/F011/F013/F015/F016, event game của F014) · 2026-11-15
 > Liên quan: [EVENT_DESIGN](../../docs/07-backend/EVENT_DESIGN.md) · [ADR-0042](../../docs/adr/ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · [ADR-0035](../../docs/adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md)
 
 Hợp đồng máy đọc cho **domain event giữa các service**. Catalog nghiệp vụ (event nào, ai phát, ai nhận) nằm ở [EVENT_DESIGN §4](../../docs/07-backend/EVENT_DESIGN.md#4-catalog-domain-events). Thư mục này giữ schema để producer/consumer validate trong contract test.
@@ -16,14 +16,16 @@ Payload đã có schema:
 
 | Service | File (`payloads/<service>/<event_type>.v<schema_version>.schema.json`) |
 |---|---|
-| identity | `user_role.changed.v1`, `role.updated.v1`, `province.updated.v1`, `class.synced.v1` |
+| common | `audit.recorded.v1` (mọi module phát, owner F003) |
+| identity | `user_role.changed.v1`, `role.updated.v1`, `province.updated.v1`, `class.synced.v1`; F010: `tenant.created.v1`, `tenant.updated.v1`, `school.updated.v1`, `class.created.v1`, `class.updated.v1`, `enrollment.changed.v1`, `student.transferred.v1`, `tenant_membership.changed.v1`, `user.provisioned.v1`; F011: `school.synced.v1`, `student.synced.v1`, `student.provisioning_requested.v1`, `student.sis_link_created.v1`, `student.sis_link_superseded.v1`, `user.status_changed.v1`, `user.access_revoked.v1`, `sis.sync_completed.v1`, `sis.reconciliation_issue_raised.v1`; F013: `user.activated.v1`; F015: `platform_settings.changed.v1`; F016: `student.cleaned_up.v1`, `student.restored.v1` |
+| game | F014: `game_session.started.v1`, `game_session.ended.v1`, `game_session.replaced.v1`, `student.game_logged_in.v1`, `student.game_logged_out.v1` |
 | learning | `content.published.v1`, `activity.submitted.v1`, `activity.graded.v1`, `assignment.created.v1` (dùng chung cho `assignment.published`), `study_group.created.v1`, `study_group.updated.v1`, `study_group.member_changed.v1`, `study_group.deleted.v1` (ADR-0084), `lesson.completed.v1` (F031) |
 
 **Feature sở hữu:** mỗi file `payloads/<module>/<event_type>.v<N>.schema.json` do đúng một feature tạo — feature hiện thực use case phát event trong module producer (quy tắc ở [EVENT_DESIGN §4](../../docs/07-backend/EVENT_DESIGN.md#4-catalog-domain-events)); feature khác cùng phát hoặc tiêu thụ chỉ tham chiếu ("owner F<NNN>"), không tạo file và đề xuất delta tương thích qua owner. Tên file phải là một `event_type` có trong catalog. Bảng module:event → feature: `node scripts/specs/check-cross-features.mjs --list`.
 
 Event do mọi module phát (`audit.recorded`, EVENT_DESIGN §4.1) có một schema duy nhất ở `payloads/common/audit.recorded.v1.schema.json` (owner F003), không đặt theo module.
 
-Schema payload theo từng `event_type` khác được thêm dần khi service triển khai (Phase 1+). Mọi `string` phải có `maxLength` (ADR-0041); enum học tập (`ActivityType`, `AttemptMode`, `FeedbackTiming`, `ResultRelease`, `LearningContentType`) `$ref` tới [`../schemas/common/enums.schema.json`](../schemas/common/enums.schema.json).
+Schema payload theo từng `event_type` khác được thêm dần khi service triển khai (Phase 1+). Schema mới có `examples` (một payload hợp lệ) làm mẫu fixture cho contract test consumer. Mọi `string` phải có `maxLength` (ADR-0041); enum học tập (`ActivityType`, `AttemptMode`, `FeedbackTiming`, `ResultRelease`, `LearningContentType`) `$ref` tới [`../schemas/common/enums.schema.json`](../schemas/common/enums.schema.json).
 
 ## Stream và subject (NATS JetStream)
 

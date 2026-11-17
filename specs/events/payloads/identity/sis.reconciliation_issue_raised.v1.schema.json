@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/sis.reconciliation_issue_raised.v1.schema.json",
+  "title": "Payload sis.reconciliation_issue_raised v1 (module identity, owner F011)",
+  "description": "Reconciler tạo issue và bỏ qua bản ghi (F011-AC-14; F010 tạo unexpected_org_member — F010-AC-22 — và school_duplicate cùng schema). Consumer: NTF (school admin). Không mang entity_refs (không PII).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["issue_id", "kind"],
+  "properties": {
+    "issue_id": { "type": "string", "format": "uuid" },
+    "kind": { "type": "string", "enum": ["possible_duplicate", "transfer_confirmation", "missing_class", "class_school_mismatch", "orphan_enrollment", "multi_school_enrollment", "school_province_missing", "unmapped_school", "cleaned_up_student_in_sis", "duplicate_identifier", "grade_mismatch", "deactivation_review", "ambiguous_login", "school_duplicate", "unexpected_org_member"] },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "sis_connection_id": { "type": ["string", "null"], "format": "uuid" }
+  },
+  "examples": [
+    { "issue_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "kind": "missing_class", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003" }
+  ]
+}

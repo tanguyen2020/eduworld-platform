@@ -30,6 +30,7 @@ Schema dùng: `GameLoginRequest`, `GameLoginResponse`, `GameSessionCreate`, `Gam
 | Message | Hướng | Trạng thái |
 |---|---|---|
 | `session.session.replaced` | server → client | Có sẵn trong `specs/asyncapi/eduworld-realtime.v1.yaml`; F061 không dùng (F092 xử lý qua WS) |
+| `session.session.ended` (close `4410` khi `curfew`, `4403` khi thu hồi) | server → client | Có sẵn (áp 2026-11-17, owner F014); F092 nhận qua WS và kích hoạt `CurfewNotice` của F061 khi `reason = curfew` (F061-AC-36, giữ token); lý do khác (close `4403`) xóa token, về màn đăng nhập (GAME_NETWORKING §4.4) |
 
 ## 4. Event (NATS)
 

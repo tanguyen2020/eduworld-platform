@@ -30,6 +30,7 @@
 | 15 | `docker kill -s TERM gw-1` khi đang có kết nối | readiness 503, nhận `system.server.draining` rồi close `1012`, client resume trên `gw-2` | F090-AC-27 |
 | 16 | Dừng Valkey | `/readyz` gateway fail; kết nối nhận `system.service.degraded` | F090-AC-30 |
 | 17 | Clock giả 21:35: `hs.an.3a` gọi `createRealtimeTicket` | `403 CURFEW_ACTIVE` + `reopen_at` | F090-AC-31 |
+| 18 | `hs.an.3a` đang kết nối; tua 21:29 → 21:30 (job `curfew-session-closer` của F014) | Client nhận `session.session.ended` (`reason = curfew`, `reopen_at`) rồi close `4410`; không tự kết nối lại | F090-AC-32 |
 
 ## 3. Lệnh test tự động
 

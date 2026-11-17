@@ -39,7 +39,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `modules/chat.v1.yaml`)
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
 | `class.synced` | Tiêu thụ (identity) | `specs/events/payloads/identity/class.synced.v1.schema.json` | Có sẵn |
-| `class.created` · `enrollment.changed` · `school.updated` | Tiêu thụ (identity) | `specs/events/payloads/identity/*.v1.schema.json` | Cần thêm (owner F010/F015) |
+| `class.created` · `enrollment.changed` · `school.updated` | Tiêu thụ (identity) | `specs/events/payloads/identity/*.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F015) |
 | `study_group.created` · `study_group.updated` · `study_group.member_changed` · `study_group.deleted` | Tiêu thụ (learning, ADR-0084) | `specs/events/payloads/learning/study_group.*.v1.schema.json` | Cần thêm (owner F040) |
 | `user.blocked` · `user.unblocked` | Tiêu thụ (chat/social) | `specs/events/payloads/chat/user.blocked.v1.schema.json` | Cần thêm (owner F095) |
 | `activity.graded` | Tiêu thụ (club goal) | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Có sẵn (Cần sửa: `duration_seconds`, owner F030) |

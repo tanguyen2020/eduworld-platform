@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.cleaned_up.v1.schema.json",
+  "title": "Payload student.cleaned_up v1 (module identity, owner F016, ADR-0032)",
+  "description": "Học sinh không đăng nhập bị dọn (soft-delete, không xóa dữ liệu). Consumer: identity (gỡ Organization, thu hồi phiên game + Keycloak — F013; giữ user Keycloak enabled), module game (đóng game session, ref.students — F014), party, realtime (đóng WS), LA, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "tenant_id", "last_login_at", "cutoff_days", "run_id"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "last_login_at": { "type": ["string", "null"], "format": "date-time" },
+    "cutoff_days": { "type": "integer", "minimum": 1, "maximum": 3650 },
+    "run_id": { "type": "string", "format": "uuid" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "last_login_at": "2026-03-01T07:00:00Z", "cutoff_days": 180, "run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004" }
+  ]
+}

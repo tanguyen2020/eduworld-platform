@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/class.created.v1.schema.json",
+  "title": "Payload class.created v1 (module identity, owner F010)",
+  "description": "Lớp tạo/sửa thủ công (gồm lớp ảo common-g1…g9 của tenant chung); lớp từ SIS dùng class.synced (F011). Consumer: chat (channel lớp), LMS, projection ref.classes. Không chứa danh sách học sinh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["class_id", "school_id", "grade_level"],
+  "properties": {
+    "class_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "name": { "type": "string", "maxLength": 128 },
+    "academic_year_id": { "type": ["string", "null"], "format": "uuid" },
+    "is_virtual": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["active", "closed"] },
+    "changed_fields": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Version của aggregate nguồn (projection chỉ áp bản mới hơn — DATABASE_DESIGN §2.17); vắng mặt = dùng occurred_at của envelope" }
+  },
+  "examples": [
+    { "class_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "grade_level": 3, "name": "3A", "academic_year_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "is_virtual": false, "status": "active", "changed_fields": [] }
+  ]
+}

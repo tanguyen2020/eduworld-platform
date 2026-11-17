@@ -96,6 +96,6 @@ Tập `disabled_menus`, `disabled_actions` đã tính sẵn; TTL `feature_toggle
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `audit.recorded` | Mọi module, mọi thao tác cần audit | `specs/events/payloads/common/audit.recorded.v1.schema.json` — Cần thêm (owner F003 T004) |
-| `platform_settings.changed` | Ghi cài đặt platform/tenant/trường/flag (flag menu/action: `scope = feature_flag`, `flag_key`, `tenant_id?`) | Cần thêm (thêm `scope = school`, `school_id?`, `feature_flag`) — schema do đợt cập nhật event sở hữu |
+| `audit.recorded` | Mọi module, mọi thao tác cần audit | `specs/events/payloads/common/audit.recorded.v1.schema.json` — Có sẵn (áp 2026-11-17) (owner F003 T004) |
+| `platform_settings.changed` | Ghi cài đặt platform/tenant/trường/flag (flag menu/action: `scope = feature_flag`, `flag_key`, `tenant_id?`) | Có sẵn (áp 2026-11-17) (thêm `scope = school`, `school_id?`, `feature_flag`) — schema do đợt cập nhật event sở hữu |
 | `tenant.updated`, `school.updated` | Đổi cài đặt tenant/trường | Schema owner F010 (T004) — F015 phát cùng schema |

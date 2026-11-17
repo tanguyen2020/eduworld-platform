@@ -62,6 +62,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Party'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -204,6 +206,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Party'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -305,6 +309,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PartySessionStart'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -342,6 +348,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PartyInvitation'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -403,6 +411,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Party'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -467,6 +477,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Party'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -538,6 +550,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Duel'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -568,6 +582,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Duel'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -621,6 +637,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MatchmakingTicket'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -1012,6 +1030,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1252,6 +1272,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1471,12 +1494,18 @@ paths:
       responses:
         '200':
           description: Đã xuất bản
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentRelease'
         '202':
           description: Đã hẹn giờ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1555,6 +1584,9 @@ paths:
       responses:
         '200':
           description: Con trỏ đã đổi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1631,6 +1663,9 @@ paths:
       responses:
         '200':
           description: Đã gỡ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2036,6 +2071,10 @@ components:
           type: string
           maxLength: 128
           description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+        reopen_at:
+          type: string
+          format: date-time
+          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -2047,7 +2086,6 @@ components:
         - PERMISSION_DENIED
         - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
-        - FORBIDDEN_SCOPE
         - POLICY_DENIED
         - NOT_FOUND
         - CONFLICT
@@ -2928,6 +2966,14 @@ components:
           minLength: 1
           maxLength: 500
   headers:
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
     ContentLanguage:
       description: Ngôn ngữ của văn bản đã chọn trong response (`vi-VN` | `en-US`)
       schema:
@@ -2970,7 +3016,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:

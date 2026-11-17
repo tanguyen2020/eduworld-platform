@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.status_changed.v1.schema.json",
+  "title": "Payload user.status_changed v1 (module identity, owner F011)",
+  "description": "Trạng thái tài khoản đổi (apply SIS: inactive/graduated → deactivated, suspended → locked — F011-AC-23; khóa/vô hiệu hóa thủ công — F016 phát cùng schema). Consumer: AUD, MOD, projection ref.students, module game (kết thúc game session — F014), identity (thu hồi phiên game — F013).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "from", "to"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "from": { "type": "string", "enum": ["pending", "active", "locked", "deactivated", "anonymized"] },
+    "to": { "type": "string", "enum": ["pending", "active", "locked", "deactivated", "anonymized"] },
+    "reason": { "type": ["string", "null"], "maxLength": 64, "description": "Mã lý do trung tính (vd. sis_inactive, sis_graduated, sis_suspended, admin_lock); không chứa văn bản tự do" }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "from": "active", "to": "locked", "reason": "sis_suspended" }
+  ]
+}

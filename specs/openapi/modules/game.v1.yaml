@@ -140,6 +140,8 @@ paths:
         thiết bị khác → 409 ACTIVE_SESSION_ON_OTHER_DEVICE kèm `other_device`; client hỏi xác nhận rồi gọi
         lại với `takeover: true` (không nhập lại mật khẩu; body khác nên dùng `Idempotency-Key` **mới**) để kết thúc
         session cũ (thiết bị cũ nhận `session.session.replaced`).
+        Trong giờ giới nghiêm hiệu lực (platform_curfew ∪ curfew_window của trường) → `403 CURFEW_ACTIVE` kèm `reopen_at` (ADR-0078).
+        `client_version` thấp hơn tối thiểu → `426 CLIENT_VERSION_UNSUPPORTED`; đang bảo trì → `503 MAINTENANCE`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -159,6 +161,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GameSession'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -171,8 +175,23 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ActiveSessionConflict'
+        '426':
+          description: CLIENT_VERSION_UNSUPPORTED — game hiển thị màn cập nhật
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ClientVersionProblem'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          description: MAINTENANCE — hệ thống đang bảo trì (cờ bảo trì của client-config); client hiện màn bảo trì và thử lại theo Retry-After
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         default:
           $ref: '#/components/responses/Problem'
   /game/sessions/{game_session_id}:end:
@@ -189,6 +208,8 @@ paths:
       responses:
         '204':
           description: Đã kết thúc
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /game/sessions/{game_session_id}:heartbeat:
@@ -206,6 +227,8 @@ paths:
       responses:
         '204':
           description: OK
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -432,6 +455,9 @@ paths:
       responses:
         '200':
           description: Đã gán instance
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -610,6 +636,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/QuestProgress'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -636,6 +664,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/QuestProgress'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '404':
@@ -669,6 +699,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/QuestProgress'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '404':
@@ -698,6 +730,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -742,6 +776,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MiniGameSession'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1089,6 +1125,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1365,6 +1403,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1620,12 +1661,18 @@ paths:
       responses:
         '200':
           description: Đã xuất bản
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentRelease'
         '202':
           description: Đã hẹn giờ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1716,6 +1763,9 @@ paths:
       responses:
         '200':
           description: Con trỏ đã đổi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1804,6 +1854,9 @@ paths:
       responses:
         '200':
           description: Đã gỡ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1925,6 +1978,9 @@ paths:
       responses:
         '202':
           description: Job đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1957,6 +2013,9 @@ paths:
       responses:
         '202':
           description: Job đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2017,6 +2076,9 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2053,6 +2115,9 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2089,6 +2154,9 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2150,6 +2218,9 @@ paths:
       responses:
         '201':
           description: Asset quarantined + URL upload
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2230,6 +2301,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LevelSession'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -2278,6 +2351,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LevelSession'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -2320,6 +2395,9 @@ paths:
       responses:
         '201':
           description: Preview token (TTL 30 phút, chỉ đọc draft chỉ định)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2493,6 +2571,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/DiscoveryResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -2711,6 +2791,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GameChallengeAttempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -2760,6 +2842,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChallengeNextActivity'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '404':
@@ -2786,6 +2870,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GameChallengeAttempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '404':
@@ -2867,6 +2953,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BossEncounter'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -2911,6 +2999,9 @@ paths:
       responses:
         '204':
           description: Đã rời
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -3085,6 +3176,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PurchaseResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -3222,6 +3315,9 @@ paths:
       responses:
         '200':
           description: Đã tham gia
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3245,6 +3341,9 @@ paths:
       responses:
         '200':
           description: Phần thưởng đã cấp
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3306,6 +3405,9 @@ paths:
       responses:
         '200':
           description: Phần thưởng đã cấp
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3367,6 +3469,9 @@ paths:
       responses:
         '202':
           description: Đã tạo, chờ người thứ hai duyệt
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3397,6 +3502,9 @@ paths:
       responses:
         '200':
           description: Đã ghi sổ cái
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3912,6 +4020,9 @@ paths:
       responses:
         '202':
           description: Job đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4016,6 +4127,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4099,6 +4213,9 @@ paths:
       responses:
         '200':
           description: Đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4450,6 +4567,10 @@ components:
           type: string
           maxLength: 128
           description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+        reopen_at:
+          type: string
+          format: date-time
+          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -4461,7 +4582,6 @@ components:
         - PERMISSION_DENIED
         - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
-        - FORBIDDEN_SCOPE
         - POLICY_DENIED
         - NOT_FOUND
         - CONFLICT
@@ -4747,6 +4867,21 @@ components:
           description: Ví dụ "Máy tính Windows", "Điện thoại Android"
         last_seen_at:
           $ref: '#/components/schemas/Timestamp'
+    ClientVersionProblem:
+      description: '`426 CLIENT_VERSION_UNSUPPORTED` — game hiển thị màn cập nhật'
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required:
+            - min_client_version
+          properties:
+            min_client_version:
+              type: string
+              maxLength: 32
+            store_url:
+              type: string
+              maxLength: 2048
+              format: uri
     RealtimeTicket:
       type: object
       required:
@@ -6160,8 +6295,11 @@ components:
         - replaced_by_other_device
         - timeout
         - account_locked
+        - access_revoked
         - cleanup
         - client_crash
+        - curfew
+      description: Lý do kết thúc game session; `curfew` = job đóng session khi vào giờ giới nghiêm (ADR-0078)
     GradeBand:
       type: string
       enum:
@@ -8480,6 +8618,17 @@ components:
       schema:
         type: string
         maxLength: 16
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
+    RetryAfter:
+      schema:
+        type: integer
     RateLimitLimit:
       schema:
         type: integer
@@ -8487,9 +8636,6 @@ components:
       schema:
         type: integer
     RateLimitReset:
-      schema:
-        type: integer
-    RetryAfter:
       schema:
         type: integer
     ETag:
@@ -8517,7 +8663,7 @@ components:
           schema:
             $ref: '#/components/schemas/ValidationProblem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:

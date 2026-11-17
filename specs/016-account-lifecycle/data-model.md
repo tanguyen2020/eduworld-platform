@@ -65,9 +65,9 @@ stateDiagram-v2
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `user.status_changed`, `user.access_revoked` | Khóa/vô hiệu hóa | `specs/events/payloads/identity/` — owner F011 (T005), F016 phát cùng schema |
+| `user.status_changed`, `user.access_revoked` | Khóa/vô hiệu hóa; đặt lại mật khẩu học sinh (chỉ `user.access_revoked`, `reason = password_changed`) | `specs/events/payloads/identity/` — owner F011 (T005), F016 phát cùng schema |
 | `user.access_restored` | Mở khóa | Cần thêm |
 | `student.cleanup_scheduled` | Vào cửa sổ báo trước | Cần thêm |
-| `student.cleaned_up` | Dọn xong | Cần thêm |
-| `student.restored` | Khôi phục | Cần thêm |
+| `student.cleaned_up` | Dọn xong | Có sẵn (áp 2026-11-17) |
+| `student.restored` | Khôi phục | Có sẵn (áp 2026-11-17) |
 | `user.anonymized` | Ẩn danh hóa xong | Cần thêm `specs/events/payloads/identity/user.anonymized.v1.schema.json` (EVENT_DESIGN §4.1) |

@@ -258,6 +258,9 @@ paths:
       responses:
         '200':
           description: Đã hoàn thành (gọi lại trả cùng kết quả)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -352,6 +355,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -413,6 +418,9 @@ paths:
       responses:
         '200':
           description: Đã công bố
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -447,6 +455,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -503,6 +513,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/AttemptResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -616,6 +628,8 @@ paths:
         '201':
           description: Question + version 1 (draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -777,6 +791,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -902,12 +919,18 @@ paths:
       responses:
         '200':
           description: Đã xuất bản (con trỏ đã đổi)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentRelease'
         '202':
           description: Đã hẹn giờ xuất bản (publish_at trong tương lai)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -955,6 +978,9 @@ paths:
       responses:
         '200':
           description: Con trỏ đã trỏ về version được chọn
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1000,6 +1026,9 @@ paths:
       responses:
         '200':
           description: Đã gỡ xuất bản
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1080,6 +1109,8 @@ paths:
         '201':
           description: Version draft mới
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1114,6 +1145,9 @@ paths:
       responses:
         '201':
           description: Phiên preview ngắn hạn
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1146,6 +1180,9 @@ paths:
       responses:
         '202':
           description: Đã xếp hàng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1285,6 +1322,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1417,6 +1456,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1530,6 +1571,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1648,6 +1691,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1767,6 +1812,8 @@ paths:
         '201':
           description: Đã tạo (version 1 draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1826,6 +1873,8 @@ paths:
         '201':
           description: Version draft mới
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -1948,6 +1997,8 @@ paths:
         '201':
           description: Đã tạo (version 1 draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -2007,6 +2058,8 @@ paths:
         '201':
           description: Version draft mới
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -2129,6 +2182,8 @@ paths:
         '201':
           description: Đã tạo (version 1 draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -2188,6 +2243,8 @@ paths:
         '201':
           description: Version draft mới
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -2269,6 +2326,9 @@ paths:
       responses:
         '202':
           description: Đã nhận, job re-evaluate chạy nền
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2303,6 +2363,9 @@ paths:
       responses:
         '202':
           description: Job đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2333,6 +2396,9 @@ paths:
       responses:
         '202':
           description: Job đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2387,6 +2453,9 @@ paths:
       responses:
         '201':
           description: Asset ở trạng thái quarantined + URL upload
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2536,6 +2605,8 @@ paths:
         '201':
           description: Đã giao bài
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -2630,6 +2701,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2667,6 +2741,9 @@ paths:
       responses:
         '200':
           description: Đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2696,6 +2773,9 @@ paths:
       responses:
         '200':
           description: Đã công bố (phát assignment.results_released)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2723,6 +2803,9 @@ paths:
       responses:
         '200':
           description: Đã lưu trữ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2750,6 +2833,9 @@ paths:
       responses:
         '202':
           description: Đã xếp hàng gửi nhắc
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2790,6 +2876,9 @@ paths:
       responses:
         '200':
           description: Submission sau khi gia hạn
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2826,6 +2915,9 @@ paths:
       responses:
         '200':
           description: Submission sau khi miễn
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3029,6 +3121,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -3108,6 +3202,9 @@ paths:
       responses:
         '204':
           description: Đã mở khóa
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -3216,6 +3313,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3343,6 +3443,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3463,6 +3566,9 @@ paths:
       responses:
         '202':
           description: Đã xếp hàng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3691,6 +3797,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3831,6 +3940,9 @@ paths:
       responses:
         '202':
           description: Đã nhận
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3921,6 +4033,9 @@ paths:
       responses:
         '202':
           description: Đã nhận
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4011,6 +4126,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4051,6 +4169,9 @@ paths:
       responses:
         '200':
           description: Đã thu hồi (gọi lại cùng key trả cùng kết quả)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4123,6 +4244,8 @@ paths:
         '201':
           description: Đã tạo (draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -4263,6 +4386,9 @@ paths:
       responses:
         '201':
           description: Đã thêm
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4328,6 +4454,9 @@ paths:
       responses:
         '200':
           description: Đã kích hoạt
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4392,6 +4521,9 @@ paths:
       responses:
         '201':
           description: Đã lập đợt
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4432,6 +4564,9 @@ paths:
       responses:
         '200':
           description: Đã rút (gọi lại cùng key trả kết quả cũ)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4467,6 +4602,9 @@ paths:
       responses:
         '200':
           description: Đã kết thúc
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4506,6 +4644,9 @@ paths:
       responses:
         '202':
           description: Đã nhận
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4606,6 +4747,8 @@ paths:
         '201':
           description: Đã tạo (draft)
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -4717,6 +4860,9 @@ paths:
       responses:
         '200':
           description: Đã chuyển trạng thái
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4756,6 +4902,9 @@ paths:
       responses:
         '200':
           description: Đã dừng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4848,6 +4997,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -4929,6 +5080,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -5017,6 +5170,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActivityResponseResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -5048,6 +5203,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HintResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -5086,6 +5243,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SimulationRunResult'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -5112,6 +5271,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '409':
@@ -5138,6 +5299,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attempt'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '404':
@@ -5301,6 +5464,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -5820,6 +5986,10 @@ components:
           type: string
           maxLength: 128
           description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+        reopen_at:
+          type: string
+          format: date-time
+          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -5831,7 +6001,6 @@ components:
         - PERMISSION_DENIED
         - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
-        - FORBIDDEN_SCOPE
         - POLICY_DENIED
         - NOT_FOUND
         - CONFLICT
@@ -10875,7 +11044,7 @@ components:
           schema:
             $ref: '#/components/schemas/ValidationProblem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:
@@ -10951,6 +11120,14 @@ components:
       schema:
         type: string
         maxLength: 512
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
     RateLimitLimit:
       schema:
         type: integer

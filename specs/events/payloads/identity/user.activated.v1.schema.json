@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.activated.v1.schema.json",
+  "title": "Payload user.activated v1 (module identity, owner F013)",
+  "description": "Lần đăng nhập thành công đầu tiên chuyển tài khoản pending → active (ACCOUNT_PROVISIONING, F013-AC-07). Consumer: AUD, GAM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "external_identity_id"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "external_identity_id": { "type": "string", "format": "uuid", "description": "Bản ghi identity.external_identities (issuer, subject) đã đăng nhập" }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "external_identity_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004" }
+  ]
+}

@@ -98,7 +98,7 @@ stateDiagram-v2
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `user.activated` | Lần đầu đăng nhập thành công (`pending → active`) | `specs/events/payloads/identity/user.activated.v1.schema.json` — Cần thêm |
+| `user.activated` | Lần đầu đăng nhập thành công (`pending → active`) | `specs/events/payloads/identity/user.activated.v1.schema.json` — Có sẵn (áp 2026-11-17) |
 | `audit.recorded` | `account_not_provisioned`, `game_access_denied_non_student`, `tenant_mismatch`, logout, `auth.game_session_revoked`, `auth.refresh_token_reused`, `auth.refresh_device_mismatch` | Schema chung `specs/events/payloads/common/audit.recorded.v1.schema.json` (owner F003) |
 
 Tiêu thụ (thu hồi phiên game): `user.access_revoked`, `user.status_changed`, `student.cleaned_up`; consumer idempotent theo `event_id` (inbox). Takeover: consumer `game_session.replaced` của F014 (payload có `old_device_id`/`old_keycloak_sid`) gọi `GameAuthSessionRevoker`.

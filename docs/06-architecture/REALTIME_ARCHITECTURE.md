@@ -1,6 +1,6 @@
 # Realtime Architecture
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-17 (ADR-0074: binary `realtime` chỉ giữ kết nối, ticket, presence và định tuyến; lệnh nghiệp vụ và room host của module competition chạy trong `core-api` qua NATS request/reply; NATS user theo binary) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-17 (§3.1: `session.session.ended` trước close; `4410` chỉ khi không thu hồi credential (giờ giới nghiêm ADR-0078), `4403` khi thu hồi — quyết định Technical Architect; ADR-0074: binary `realtime` chỉ giữ kết nối, ticket, presence và định tuyến; lệnh nghiệp vụ và room host của module competition chạy trong `core-api` qua NATS request/reply; NATS user theo binary) · 2026-11-15
 > Liên quan: [ADR-0008](../adr/ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) · [ADR-0011](../adr/ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) · [ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) · [ADR-0035](../adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) · [BACKEND_DESIGN §9](../07-backend/BACKEND_DESIGN.md)
 
 > **Thay đổi v0.4 (ADR-0074, thay ADR-0036):** `realtime` là **binary** riêng (`cmd/realtime`, module `realtime`, Swarm service `realtime` ≥ 2 replica, drain khi deploy). Binary này chỉ kết thúc WebSocket, xác thực ticket, presence và định tuyến lệnh/sự kiện; không nạp module domain, không có database, không gọi facade. Mọi bước nghiệp vụ chạy trong module sở hữu bên trong `core-api`, nhận lệnh qua NATS request/reply `ew.cmd.<module>.>`: chat trong **module chat**; party/lobby/matchmaking và **room host** (hub instance, battle/co-op state machine, trạng thái trong Valkey với lease theo room) trong **module competition**, chấm điểm qua facade module learning trong tiến trình; game session/ticket/boss trong **module game**.
@@ -121,9 +121,10 @@ Nguồn chuẩn của mã đóng kết nối. Hành vi phía client (reconnect, 
 |---|---|
 | 4400 | Bad message/protocol |
 | 4401 | Ticket không hợp lệ |
-| 4403 | Tài khoản bị khóa/thu hồi quyền (kể cả chuyển trường khác tenant) |
+| 4403 | Tài khoản bị khóa/thu hồi quyền (kể cả chuyển trường khác tenant), dọn học sinh, đặt lại mật khẩu, kết thúc do quản trị — credential/phiên đã bị thu hồi: gửi `session.session.ended` (`reason` = `account_locked`/`access_revoked`/`cleanup`/`admin`/`password_changed`) trước khi đóng; client đăng xuất và xóa refresh token |
 | 4408 | Heartbeat timeout |
 | 4409 | Bị thay thế, gồm **đăng nhập trên thiết bị khác** (gửi `session.session.replaced` trước khi đóng) |
+| 4410 | Game session bị server kết thúc **không** thu hồi credential — hiện chỉ giờ giới nghiêm: gửi `session.session.ended` (`reason = curfew`, `reopen_at`) trước khi đóng; client không tự kết nối lại, giữ refresh token — module game publish (F014), gateway giao và đóng (F090) |
 | 4429 | Vượt rate limit nặng |
 | 1012 | Node shutdown (graceful): gateway gửi `system.server.draining` (kèm `reconnect_after_ms` ngẫu nhiên để giãn tải) rồi đóng `1012`; client resume ở node khác |
 

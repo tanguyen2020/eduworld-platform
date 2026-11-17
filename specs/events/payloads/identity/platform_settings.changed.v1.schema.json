@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/platform_settings.changed.v1.schema.json",
+  "title": "Payload platform_settings.changed v1 (module identity, owner F015)",
+  "description": "Ghi cài đặt platform/tenant/trường hoặc flag menu/action portal (ADR-0090). Consumer: API/worker vô hiệu cache (mọi module), projection giới nghiêm (module game — F014, chat), AUD. Không PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["key", "scope", "before", "after", "reason", "actor_id"],
+  "properties": {
+    "key": { "type": "string", "maxLength": 128, "pattern": "^[a-z][a-z0-9_.]*$", "description": "Khóa cài đặt (vd. student_cleanup, chat_retention, platform_curfew, curfew_window) hoặc flag_key khi scope = feature_flag" },
+    "scope": { "type": "string", "enum": ["platform", "tenant", "school", "feature_flag"] },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "Có khi scope = tenant/school hoặc flag ghi đè theo tenant" },
+    "school_id": { "type": ["string", "null"], "format": "uuid", "description": "Có khi scope = school" },
+    "flag_key": { "type": ["string", "null"], "maxLength": 128, "description": "Khóa flag/menu/action khi scope = feature_flag" },
+    "before": { "type": ["object", "null"], "maxProperties": 50 },
+    "after": { "type": ["object", "null"], "maxProperties": 50 },
+    "curfew_window": { "oneOf": [{ "type": "object", "additionalProperties": false, "required": ["start", "end"], "properties": { "start": { "type": "string", "maxLength": 5, "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" }, "end": { "type": "string", "maxLength": 5, "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" } } }, { "type": "null" }], "description": "Khung giới nghiêm (giờ ICT) sau thay đổi khi key = platform_curfew hoặc curfew_window (ADR-0078, F015 T032)" },
+    "reason": { "type": ["string", "null"], "maxLength": 1000 },
+    "actor_id": { "type": ["string", "null"], "format": "uuid" }
+  },
+  "examples": [
+    { "key": "platform_curfew", "scope": "platform", "tenant_id": null, "school_id": null, "flag_key": null, "before": { "start": "21:30", "end": "06:30" }, "after": { "start": "21:00", "end": "06:30" }, "curfew_window": { "start": "21:00", "end": "06:30" }, "reason": "Điều chỉnh theo chính sách", "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001" }
+  ]
+}

@@ -38,6 +38,7 @@ Tenant Admin/School Admin xem trường trong tenant, sửa thông tin hiển th
 | F052-AC-05 | KHI mở "Học sinh chưa có lớp", Portal PHẢI liệt kê `listUnassignedStudents` kèm hướng dẫn bổ sung lớp trong SIS/CSV và không có nút gán lớp. | FR-SIS-005 · ADR-0060 | TC-SIS-103 |
 | F052-AC-06 | KHI người có `lms.student_activity.read` mở hoạt động đăng nhập của học sinh, Portal PHẢI hiển thị `listTenantStudentLoginEvents` (vào/ra, nền tảng, thiết bị rút gọn, lý do kết thúc) và số ngày chưa vào game, không hiển thị IP, `ip_hash` hay mã thiết bị thô. | FR-GAME-013, AC-AUTH-017 · ADR-0031 | — |
 | F052-AC-07 | NẾU API trả 404 hoặc 403 cho trường/lớp/học sinh ngoài scope (ví dụ `ad.truong.b` mở trường TH Demo A), THÌ Portal PHẢI hiện trang "Không tìm thấy" và không tiết lộ tài nguyên tồn tại. | AC-ORG-001, AC-ORG-003 | TC-TEN-001, TC-TEN-003 |
+| F052-AC-31 | KHI người có `lms.student.password_reset` bấm "Đặt lại mật khẩu" ở danh sách học sinh của lớp, Portal PHẢI yêu cầu `reason`, gọi `resetStudentPassword` với một `Idempotency-Key` cho mỗi lần xác nhận (dùng lại khi thử lại), hiển thị `initial_password` đúng một lần kèm nút in thẻ đăng nhập, không lưu mật khẩu vào bộ nhớ trình duyệt/log; NẾU response có `password_redacted = true` THÌ PHẢI báo mật khẩu không xem lại được và gợi ý đặt lại lần nữa; nút PHẢI ẩn khi thiếu permission hoặc action bị tắt | FR-AUTH-017 · AC-AUTH-028 · [ACCOUNT_PROVISIONING §6d](../../docs/09-identity/ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh) | TC-AUTH-087 |
 
 ---
 

@@ -36,7 +36,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `assignment.created` | Tiêu thụ | `specs/events/payloads/learning/assignment.created.v1.schema.json` | Có sẵn |
 | `exam.graded`, `attempt.re_evaluated`, `assignment.published`, `assignment.completed`, `assignment.results_released`, `learning_objective.progressed`, `learning_objective.mastered`, `learning.recommendation_generated` | Tiêu thụ | `specs/events/payloads/learning/<event>.v1.schema.json` | Cần thêm (thuộc F031/F032/F041/F042; F043 chỉ tiêu thụ) |
 | `assignment.submission_updated` | Tiêu thụ | `specs/events/payloads/learning/assignment.submission_updated.v1.schema.json` | Cần thêm (owner F041) |
-| `student.game_logged_in`, `student.game_logged_out` | Tiêu thụ (`ref.login_activity`) | `specs/events/payloads/game/<event>.v1.schema.json` | Cần thêm (thuộc F014) |
+| `student.game_logged_in`, `student.game_logged_out` | Tiêu thụ (`ref.login_activity`) | `specs/events/payloads/game/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F014) |
 
 ## 5. JSON Schema nội dung
 

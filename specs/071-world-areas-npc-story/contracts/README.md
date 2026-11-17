@@ -44,7 +44,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `modules/game.v1.yaml`)
 | `quest.completed` | game (F072) → game (unlock, story) | `specs/events/payloads/game/quest.completed.v1.schema.json` | Cần thêm (F072) |
 | `level.reached`, `achievement.unlocked`, `event.participation_started` | game (F074/F075/F077) → game (unlock) | `specs/events/payloads/game/` | Cần thêm (feature sở hữu) |
 | `learning_objective.progressed` | learning → game (`ref.mastery_summary`) | `specs/events/payloads/learning/learning_objective.progressed.v1.schema.json` | Cần thêm |
-| `school.updated` | identity → game (`ref.schools.settings_subset`) | `specs/events/payloads/identity/school.updated.v1.schema.json` | Cần thêm |
+| `school.updated` | identity → game (`ref.schools.settings_subset`) | `specs/events/payloads/identity/school.updated.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010) |
 
 ## 5. JSON Schema nội dung
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.transferred.v1.schema.json",
+  "title": "Payload student.transferred v1 (module identity, owner F010)",
+  "description": "Học sinh chuyển trường (cùng tenant unit: from_tenant_id = to_tenant_id — F010-AC-14; khác tenant: kèm tenant_membership.changed — F010-AC-15). Consumer: chat, party (rời party), LMS, tenancy, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "from_tenant_id", "to_tenant_id", "from_school_id", "to_school_id"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "from_tenant_id": { "type": "string", "format": "uuid" },
+    "to_tenant_id": { "type": "string", "format": "uuid" },
+    "from_school_id": { "type": "string", "format": "uuid" },
+    "to_school_id": { "type": "string", "format": "uuid" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "from_tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "to_tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "from_school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "to_school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003" }
+  ]
+}

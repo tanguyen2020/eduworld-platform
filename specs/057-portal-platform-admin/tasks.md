@@ -10,7 +10,7 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Delta contract (owner F010/F045): `createTenant`, `updateTenant`, schema `TenantCreate`/`TenantUpdate` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [ ] T004 Delta contract (owner F010/F045): `createTenant`, `updateTenant`, schema `TenantCreate`/`TenantUpdate` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — **2026-11-17:** `createTenant`, `updateTenant`, `TenantCreate`, `TenantUpdate` đã áp bởi owner F010 (contracts §6 của F057 tham chiếu bản owner)
 - [ ] T005 Delta contract (owner F045): `previewTenantClone` + `TenantClonePreview` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T006 Delta contract (owner F016): `cancelStudentCleanupRun`, thêm `cancelled` vào `StudentCleanupRun.status`; cập nhật ADMIN_PORTAL §8 — file: `specs/openapi/eduworld-api.v1.yaml`, `docs/04-admin-portal/ADMIN_PORTAL.md` — kiểm: `make specs-lint`
 - [ ] T007 Sinh lại client TS — file: `web/apps/portal/src/api/generated/eduworld-api.d.ts` — kiểm: `pnpm gen:api` + CI diff

@@ -79,6 +79,12 @@ workspaces:
             required_permissions: [tenant.class.read, lms.class.read]
             operation_ids: [listClasses, listTenantSchoolClasses, listUnassignedStudents, getStudentProfile, getStudentProgress]
             can_disable: true
+          - key: action.school_lms.classes.reset_student_password
+            label_key: portal.action.school_lms.classes.reset_student_password
+            title: Đặt lại mật khẩu học sinh (mật khẩu mới hiển thị một lần để in thẻ đăng nhập)
+            required_permissions: [lms.student.password_reset]
+            operation_ids: [resetStudentPassword]
+            can_disable: true
       - key: menu.school_lms.sis_sync
         label_key: portal.menu.school_lms.sis_sync
         title: Đồng bộ SIS/CSV
@@ -1966,19 +1972,19 @@ workspaces:
             label_key: portal.action.platform_admin.tenants.view
             title: Xem tenant
             required_permissions: [platform.tenant.manage, platform.cross_tenant.read]
-            operation_ids: [listTenants]
+            operation_ids: [listTenants, listAdminTenantSchools]
             can_disable: false
           - key: action.platform_admin.tenants.edit
             label_key: portal.action.platform_admin.tenants.edit
             title: Tạo/sửa/kích hoạt tenant và trường thuộc tenant
             required_permissions: [platform.tenant.manage]
-            operation_ids: []
+            operation_ids: [createTenant, updateTenant, createAdminTenantSchool, updateAdminTenantSchool]
             can_disable: false
           - key: action.platform_admin.tenants.sis_connections
             label_key: portal.action.platform_admin.tenants.sis_connections
             title: Gán trường cho SIS connection, đồng bộ ngay
             required_permissions: [platform.sis_connection.manage]
-            operation_ids: [listSisConnectionSchools, setSisConnectionSchools, triggerSisSync]
+            operation_ids: [listSisConnections, createSisConnection, listSisConnectionSchools, setSisConnectionSchools, triggerSisSync, listSisSyncRuns, getSisSyncRun, listSisSyncRunErrors, createPlatformSisImport, listSisReconciliationIssues, resolveSisReconciliationIssue]
             can_disable: false
       - key: menu.platform_admin.access_control
         label_key: portal.menu.platform_admin.access_control
@@ -1996,9 +2002,9 @@ workspaces:
             can_disable: false
           - key: action.platform_admin.access_control.edit_users
             label_key: portal.action.platform_admin.access_control.edit_users
-            title: Tạo/sửa nhân sự platform, mở khóa
+            title: Tạo/sửa nhân sự platform, mở khóa; tạo học sinh tenant chung
             required_permissions: [platform.user.manage]
-            operation_ids: []
+            operation_ids: [createCommonTenantStudents]
             can_disable: false
           - key: action.platform_admin.access_control.view_roles
             label_key: portal.action.platform_admin.access_control.view_roles

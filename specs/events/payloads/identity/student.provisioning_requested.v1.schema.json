@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.provisioning_requested.v1.schema.json",
+  "title": "Payload student.provisioning_requested v1 (module identity, owner F011)",
+  "description": "Học sinh mới từ SIS chưa có tài khoản SSO: User pending đã tạo; worker identity (keycloak-provisioner) tạo Keycloak user, gán role student, thêm member Organization (F011-AC-08). Consumer nội bộ module identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "tenant_id", "school_id", "sis_connection_id"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "sis_connection_id": { "type": "string", "format": "uuid" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003" }
+  ]
+}

@@ -15,6 +15,7 @@
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Operation facade phân trang để rebuild projection `ref.*` (`listProjectionSnapshot`, F020 yêu cầu) thuộc feature nào? → A: F010 sở hữu (module identity là nguồn tenant/trường/lớp/học sinh/enrollment; [DATABASE_DESIGN §2.17](../../docs/07-backend/DATABASE_DESIGN.md) mục 3, BACKUP_RECOVERY §3); khai báo trong `specs/openapi/modules/identity.internal.v1.yaml`, `x-allowed-callers` `learning`, `game`, `competition`, `chat`; bên gọi (F020, F014, F091, F095) chỉ hiện thực consumer/job rebuild.
+- Q: Mật khẩu ban đầu, quy tắc username và lô một phần của `createCommonTenantStudents`? → A (Technical Architect 2026-11-17): username bắt buộc (chuẩn hóa ADR-0067, không `@`); module identity sinh mật khẩu ngẫu nhiên, trả một lần (`no-store`), không lưu/log; khối 6–9 đổi mật khẩu lần đầu, khối 1–5 không [Proposed]; lô ≤ `common_student_batch_max`, từng dòng độc lập (`USERNAME_TAKEN` theo dòng); replay không có mật khẩu (`password_redacted`). Nguồn: [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) (F010-AC-28, F010-AC-29).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -117,6 +118,8 @@ System Admin tạo/import có chủ đích học sinh vào tenant `common` với
 | F010-AC-24 | KHI System Admin tạo học sinh tenant chung với khối n, module identity PHẢI tạo `identity.users` (`student`, `primary_tenant_id = common`), `org.students` thuộc School ảo, enrollment lớp ảo `common-g<n>`, Keycloak local user member Organization `common`, audit `user.provisioned` với `source = platform_common` | FR-AUTH-021 · AC-AUTH-011 | TC-ORG-108 |
 | F010-AC-25 | NẾU yêu cầu tạo học sinh tenant chung thiếu khối hoặc khối ngoài 1–9, THÌ module identity PHẢI trả `422 VALIDATION_FAILED` | FR-AUTH-021 · FR-ORG-017 | — |
 | F010-AC-26 | HỆ THỐNG PHẢI không có endpoint nào cho phép tự đăng ký hoặc tự tạo tài khoản học sinh từ client game; không bao giờ tự đưa người dùng không khớp tenant nào vào `common` | FR-AUTH-001 · FR-AUTH-021 · ADR-0063 | TC-TEN-014 |
+| F010-AC-28 | KHI System Admin gọi `createCommonTenantStudents` (`Idempotency-Key`, `X-Tenant-Id` = tenant `common`, ≤ `common_student_batch_max` dòng, mỗi dòng `username` bắt buộc đã chuẩn hóa trim/NFC/chữ thường, `display_name`, `grade_level`, `external_ref` tùy chọn), module identity PHẢI xử lý từng dòng độc lập và trả `200` với `results[]` (`row_no`, `status` `created`/`failed`, `user_id`, `username`, `initial_password`, `error_code`) cùng số đếm; dòng trùng username với tài khoản khác PHẢI `failed` với `USERNAME_TAKEN` và không tạo reconciliation issue; `external_ref` PHẢI lưu thành ExternalIdentity `issuer = platform_common` (không thêm cột học sinh), trùng với bản ghi chưa xóa PHẢI `failed` với `IDENTITY_CONFLICT` | FR-AUTH-021 · ADR-0069 · [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) | — |
+| F010-AC-29 | KHI tạo được một học sinh tenant chung, module identity PHẢI sinh ngẫu nhiên mật khẩu ban đầu, đặt trong Keycloak (`temporary = true` với khối 6–9, `false` với khối 1–5 [Proposed]) và trả đúng một lần trong `initial_password` với `Cache-Control: no-store`, không lưu và không log mật khẩu; replay cùng `Idempotency-Key` PHẢI trả kết quả đã lưu không có `initial_password` và `password_redacted = true` | FR-AUTH-021 · AGENTS R14 · [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) | — |
 
 ### Edge Cases
 
@@ -161,6 +164,7 @@ System Admin tạo/import có chủ đích học sinh vào tenant `common` với
 | `principal_cache` | TTL cache tenant/membership khi invalidate theo `tenant.updated`, `tenant_membership.changed` |
 | `supported_locales`, `tenant_default_locale` | Tên song ngữ trường/tỉnh, locale mặc định của tenant |
 | `csv_import_max` | Giới hạn file import trường |
+| `common_student_batch_max` | Số dòng tối đa mỗi request `createCommonTenantStudents` |
 
 ### Ràng buộc phi chức năng
 

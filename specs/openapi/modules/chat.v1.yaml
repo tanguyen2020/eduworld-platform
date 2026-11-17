@@ -141,6 +141,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Message'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -382,6 +384,8 @@ paths:
                     items:
                       $ref: '#/components/schemas/Message'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -557,6 +561,8 @@ paths:
                     enum:
                       - open
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -661,6 +667,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FriendRequest'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '403':
@@ -688,6 +696,9 @@ paths:
       responses:
         '204':
           description: Đã kết bạn
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '404':
           $ref: '#/components/responses/NotFound'
   /social/blocks/{user_id}:
@@ -784,6 +795,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FriendCode'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -822,6 +835,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FriendRequest'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1008,6 +1023,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Club'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1102,6 +1119,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Club'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1148,6 +1167,9 @@ paths:
       responses:
         '204':
           description: Đã lưu trữ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -1309,6 +1331,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubJoinRequest'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1341,6 +1365,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubMember'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1417,6 +1443,8 @@ paths:
                     items:
                       $ref: '#/components/schemas/ClubInvitation'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1447,6 +1475,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubMember'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1533,6 +1563,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubGoal'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1603,6 +1635,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubEvent'
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
@@ -1699,6 +1733,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1824,6 +1861,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1973,6 +2013,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2030,6 +2073,9 @@ paths:
       responses:
         '201':
           description: Đã publish
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2127,6 +2173,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2175,6 +2224,7 @@ paths:
       tags:
         - tenant
       operationId: listTenantSensitiveTerms
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.view
       summary: Term bổ sung của một tenant (safety_moderator · chat.sensitive_terms.read; X-Tenant-Id = tenant đích)
       parameters:
@@ -2200,6 +2250,7 @@ paths:
       tags:
         - tenant
       operationId: createTenantSensitiveTerm
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.edit
       summary: Thêm term bổ sung cho tenant theo yêu cầu của tenant (Platform Safety Team · chat.sensitive_terms.write; chỉ siết chặt, vào category có sẵn)
       parameters:
@@ -2214,6 +2265,9 @@ paths:
       responses:
         '201':
           description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2230,6 +2284,7 @@ paths:
       tags:
         - tenant
       operationId: deleteTenantSensitiveTerm
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.edit
       summary: Xóa mềm term của tenant (Safety Team)
       parameters:
@@ -2246,6 +2301,7 @@ paths:
       tags:
         - tenant
       operationId: updateTenantSensitiveTerm
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.edit
       summary: Sửa term của tenant (Safety Team; không sửa được term platform)
       parameters:
@@ -2278,6 +2334,7 @@ paths:
       tags:
         - tenant
       operationId: publishTenantSensitiveCatalog
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.edit
       summary: Publish term bổ sung của tenant thành version tenant mới (Safety Team)
       parameters:
@@ -2292,6 +2349,9 @@ paths:
       responses:
         '201':
           description: Đã publish
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2335,6 +2395,7 @@ paths:
       tags:
         - tenant
       operationId: toggleTenantSensitiveCategory
+      x-internal: true
       x-portal-action: action.live_ops.tenant_terms.toggle_category
       summary: Bật/tắt một category cho tenant theo yêu cầu của tenant (Safety Team; chỉ khi allow_tenant_toggle)
       description: Category không cho phép → 403 TENANT_TOGGLE_NOT_ALLOWED.
@@ -2367,6 +2428,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2383,6 +2447,7 @@ paths:
       tags:
         - moderation
       operationId: listModerationCases
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.view
       summary: Hàng đợi kiểm duyệt liên tenant của Platform Safety Team (safety_moderator · moderation.case.read; Bypass moderation_case có audit)
       description: |
@@ -2446,6 +2511,7 @@ paths:
       tags:
         - moderation
       operationId: getModerationCase
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.view
       summary: Chi tiết case (báo cáo, snapshot bằng chứng, lịch sử xử lý, thông báo trường) — safety_moderator
       parameters:
@@ -2472,6 +2538,7 @@ paths:
       tags:
         - moderation
       operationId: listModerationCaseMessages
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.view
       summary: Tin nhắn trong snapshot + ngữ cảnh của case (không có tìm kiếm toàn bộ chat; ghi audit mỗi lần xem)
       parameters:
@@ -2513,6 +2580,7 @@ paths:
       tags:
         - moderation
       operationId: assignModerationCase
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.act
       summary: Nhận/gán case cho một safety_moderator (assignee_moderator_id; phát moderation.case_assigned)
       parameters:
@@ -2533,6 +2601,9 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2551,6 +2622,7 @@ paths:
       tags:
         - moderation
       operationId: actOnModerationCase
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.act
       summary: Xử lý case — warn/mute/restrict/remove_message/escalate/dismiss/close (moderation.case.act; ghi X-Tenant-Id = tenant của case; MODERATION_CASE_CLOSED)
       parameters:
@@ -2567,6 +2639,9 @@ paths:
       responses:
         '200':
           description: Case sau khi xử lý
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2589,6 +2664,7 @@ paths:
       tags:
         - moderation
       operationId: notifySchoolForCase
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.notify_school
       summary: Gửi thông báo vụ việc cho school_admin của trường liên quan — tóm tắt theo mẫu, không có chat thô (moderation.school_notification.send; MODERATION §6.4)
       parameters:
@@ -2604,6 +2680,9 @@ paths:
       responses:
         '201':
           description: Đã gửi (school_notified_at; phát moderation.school_notified)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2624,6 +2703,7 @@ paths:
       tags:
         - moderation
       operationId: listSanctions
+      x-internal: true
       x-portal-action: action.live_ops.sanctions.view
       summary: Sanction đang/đã áp (safety_moderator · moderation.sanction.read; lọc tenant_ids, user_id)
       parameters:
@@ -2664,6 +2744,7 @@ paths:
       tags:
         - moderation
       operationId: createSanction
+      x-internal: true
       x-portal-action: action.live_ops.sanctions.write
       summary: Áp sanction (moderation.sanction.write; gắn case_id; ghi X-Tenant-Id = tenant của người bị áp; phát chat.sanction.applied)
       parameters:
@@ -2678,6 +2759,9 @@ paths:
       responses:
         '201':
           description: Đã áp
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2696,6 +2780,7 @@ paths:
       tags:
         - moderation
       operationId: revokeSanction
+      x-internal: true
       x-portal-action: action.live_ops.sanctions.write
       summary: Gỡ sanction trước hạn (lý do bắt buộc, audit)
       parameters:
@@ -2711,6 +2796,9 @@ paths:
       responses:
         '200':
           description: Đã gỡ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2727,6 +2815,7 @@ paths:
       tags:
         - moderation
       operationId: listSchoolSafetyNotificationsPlatform
+      x-internal: true
       x-portal-action: action.live_ops.moderation_cases.view
       summary: Thông báo vụ việc đã gửi cho các trường + trạng thái xác nhận, quá hạn SLA (safety_moderator · moderation.school_notification.send)
       parameters:
@@ -2824,6 +2913,9 @@ paths:
       responses:
         '200':
           description: Đã xác nhận (phát moderation.school_acknowledged)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -2973,6 +3065,8 @@ paths:
         '201':
           description: Đã tạo
           headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
             ETag:
               $ref: '#/components/headers/ETag'
           content:
@@ -3201,6 +3295,9 @@ paths:
       responses:
         '200':
           description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3408,12 +3505,18 @@ paths:
       responses:
         '200':
           description: Đã xuất bản
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentRelease'
         '202':
           description: Đã hẹn giờ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3488,6 +3591,9 @@ paths:
       responses:
         '200':
           description: Con trỏ đã đổi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3560,6 +3666,9 @@ paths:
       responses:
         '200':
           description: Đã gỡ
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3930,6 +4039,10 @@ components:
           type: string
           maxLength: 128
           description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)'
+        reopen_at:
+          type: string
+          format: date-time
+          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -3941,7 +4054,6 @@ components:
         - PERMISSION_DENIED
         - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
-        - FORBIDDEN_SCOPE
         - POLICY_DENIED
         - NOT_FOUND
         - CONFLICT
@@ -5997,6 +6109,14 @@ components:
       schema:
         type: string
         maxLength: 16
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
     RateLimitLimit:
       schema:
         type: integer
@@ -6028,7 +6148,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, FORBIDDEN_SCOPE, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:

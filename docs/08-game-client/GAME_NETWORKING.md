@@ -1,6 +1,6 @@
 # Game Networking — phía Godot client
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer + Senior Godot Developer · Cập nhật: 2026-11-17 (`Idempotency-Key` UUIDv7 theo ADR-0089; màn "Tiếp tục là…" khi resume, Windows mặc định máy dùng chung, lỗi giờ giới nghiêm ADR-0078; bỏ QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer + Senior Godot Developer · Cập nhật: 2026-11-17 (§4.4: `session.session.ended` trước close — `4410` giờ giới nghiêm giữ token, `4403` thu hồi xóa token; `Idempotency-Key` UUIDv7 theo ADR-0089; màn "Tiếp tục là…" khi resume, Windows mặc định máy dùng chung, lỗi giờ giới nghiêm ADR-0078; bỏ QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
 > Liên quan: [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) (giao thức, server) · [AsyncAPI realtime](../../specs/asyncapi/eduworld-realtime.v1.yaml) · [API_DESIGN](../07-backend/API_DESIGN.md) · [ADR-0008, ADR-0010, ADR-0011](../adr/README.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Phía client Godot: REST client, vòng đời token, RealtimeClient (kết nối, reconnect/resume, takeover), hub sync, đồng hồ server, client state machine cho battle/party/chat. Giao thức và hành vi server ở REALTIME_ARCHITECTURE và AsyncAPI.
@@ -129,7 +129,7 @@ stateDiagram-v2
   Resuming --> Resync: system.session.resume_failed
   Resync --> Online: REST resync xong
   Online --> Backoff: mất kết nối / 4408 / 1012 (sau system.server.draining)
-  Online --> Stopped: 4409 replaced / 4403 revoked
+  Online --> Stopped: 4409 replaced / 4403 revoked / 4410 ended
   Backoff --> FetchingTicket: hết delay
   AuthFailed --> [*]
   Stopped --> [*]
@@ -138,10 +138,11 @@ stateDiagram-v2
 | Close code (REALTIME_ARCHITECTURE §3.1) | Hành vi client |
 |---|---|
 | 4401 | Xin ticket mới (refresh token nếu cần), reconnect |
-| 4403 | Dừng, `EventBus.session_expired`/màn hình tài khoản bị khóa (gồm trường hợp học sinh đã chuyển trường: membership trường cũ bị thu hồi) |
+| 4403 | Có thể nhận `session.session.ended` (`reason` = `account_locked`/`access_revoked`/`cleanup`/`admin`/`password_changed`) ngay trước đó. Dừng, **không reconnect**, xóa token (RAM + `SecureStorage` — phiên đã bị thu hồi, ADR-0086), `EventBus.session_expired` và về màn đăng nhập/màn tài khoản bị khóa với thông báo theo `reason` (gồm trường hợp học sinh đã chuyển trường: membership trường cũ bị thu hồi; đặt lại mật khẩu: đăng nhập bằng mật khẩu mới) |
 | 4408, đóng bất thường | Backoff 0.5 s → 15 s, jitter ±20%, resume |
 | 1012 (sau `system.server.draining`) | Node gateway đang tắt: chờ `reconnect_after_ms` trong message (giãn tải), xin ticket mới nếu cần, resume ở node khác; không hiện lỗi cho học sinh |
 | 4409 | Nhận `session.session.replaced` ngay trước đó (ADR-0031): dừng, **không reconnect**, xóa token (RAM + `SecureStorage` — phiên của thiết bị cũ đã bị thu hồi, ADR-0086), hiển thị "Em đã được đăng xuất vì tài khoản vừa đăng nhập trên thiết bị khác", về màn hình đăng nhập. Nếu 4409 đến mà không có message (kết nối mới của chính thiết bị này thay thế) → im lặng |
+| 4410 | Nhận `session.session.ended` (`reason = curfew`, `reopen_at`) ngay trước đó: dừng, **không reconnect**, màn giờ giới nghiêm (`CurfewNotice`) với giờ mở lại, **giữ** refresh token (giới nghiêm không thu hồi phiên, chỉ chặn vào lại tới `reopen_at` — CHILD_SAFETY §4.1) |
 | 4429 | Chờ ≥ 30 s rồi reconnect |
 
 ### 4.5. Takeover từ thiết bị mới (ADR-0031, ADR-0083)

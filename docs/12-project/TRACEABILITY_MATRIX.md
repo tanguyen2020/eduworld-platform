@@ -14,8 +14,8 @@
 | Domain | Module sở hữu | FR | FR có tài liệu tường minh | FR có operation tường minh | Operation suy luận | FR có TC tường minh | TC suy luận | US | AC | FR / AC mở rộng ở tài liệu sở hữu |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `AUTH` Identity & Authentication | module identity | 32 | 32 | 10 | 16 | 1 | AUTH (79) | 3 | 36 | 0 / 56 |
-| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 38 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
-| `SIS` SIS Integration | module identity | 9 | 9 | 0 | 5 | 0 | SIS (7) | 2 | 0 | 0 / 0 |
+| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 44 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
+| `SIS` SIS Integration | module identity | 9 | 9 | 0 | 13 | 0 | SIS (7) | 2 | 0 | 0 / 0 |
 | `CUR` Curriculum | module learning | 12 | 12 | 0 | 6 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
 | `CNT` Learning Content | module learning | 21 | 21 | 0 | 13 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
 | `QB` Question Bank | module learning | 14 | 14 | 0 | 12 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 43 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | pkg/ (platform kit) · mọi service | 5 | 5 | 0 | 16 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 18 | 469 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 18 | 484 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -103,24 +103,24 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 21 AC, 0 US — [MULTITENANCY](../
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
 
 ### 3.3. `SIS` SIS Integration
 
@@ -130,15 +130,15 @@ AC: — · US: US-SIS-001, US-SIS-002
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-SIS-001 | EduWorld sở hữu DTO/API contract SIS (EduWorld SIS Contract v1); mỗi trường cung cấp API theo contract; khô… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-002 | Đồng bộ School, Class, Student, Enrollment, Account Status; không đồng bộ giáo viên và phân công giảng dạy… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-003 | Hai cách nhận dữ liệu: contract_v1 (pull HTTP theo contract) và csv_import (cột CSV = tên trường DTO) cho t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-009 | Bộ conformance test + mock server sinh từ contract để trường tự kiểm tra facade trước khi kết nối | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-004 | Full sync định kỳ + delta sync + webhook (khi trường khai báo capability delta/webhook trong contract) | P1–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-005 | Reconciliation: phát hiện bản ghi trùng/thiếu/xung đột, tạo ReconciliationIssue cho người duyệt | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-006 | Sync error handling, retry có backoff, audit mọi lần chạy (SyncRun) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-007 | Godot không gọi SIS; SIS credential không lộ qua public gateway (/api/v1/sis chỉ gateway nội bộ) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
-| FR-SIS-008 | Account deactivation/lock từ SIS lan truyền tới EduWorld trong ≤ 1 chu kỳ sync | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 5 op | _suy luận:_ TC-SIS |
+| FR-SIS-001 | EduWorld sở hữu DTO/API contract SIS (EduWorld SIS Contract v1); mỗi trường cung cấp API theo contract; khô… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-002 | Đồng bộ School, Class, Student, Enrollment, Account Status; không đồng bộ giáo viên và phân công giảng dạy… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-003 | Hai cách nhận dữ liệu: contract_v1 (pull HTTP theo contract) và csv_import (cột CSV = tên trường DTO) cho t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-009 | Bộ conformance test + mock server sinh từ contract để trường tự kiểm tra facade trước khi kết nối | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-004 | Full sync định kỳ + delta sync + webhook (khi trường khai báo capability delta/webhook trong contract) | P1–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-005 | Reconciliation: phát hiện bản ghi trùng/thiếu/xung đột, tạo ReconciliationIssue cho người duyệt | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-006 | Sync error handling, retry có backoff, audit mọi lần chạy (SyncRun) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-007 | Godot không gọi SIS; SIS credential không lộ qua public gateway (/api/v1/sis chỉ gateway nội bộ) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-008 | Account deactivation/lock từ SIS lan truyền tới EduWorld trong ≤ 1 chu kỳ sync | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
 
 ### 3.4. `CUR` Curriculum
 

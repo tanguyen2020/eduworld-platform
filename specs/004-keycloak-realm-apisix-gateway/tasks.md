@@ -11,7 +11,7 @@
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T004 Nguồn route `routes.yaml` theo API_DESIGN §10 (mọi prefix, gateway, upstream, auth, tenant_header, rate, body_max, log_body, priority) — file: `deploy/apisix/routes/routes.yaml`
-- [ ] T005 Delta contract: thêm `x-internal: true` cho 20 operation `/admin/*` (contracts §6), chạy `split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [x] T005 Delta contract: thêm `x-internal: true` cho 20 operation `/admin/*` (contracts §6), chạy `split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001)
 - [ ] T006 `render.mjs`: thay biến env, sinh `standalone/{public,internal}/apisix.yaml` (kết thúc `#END`) và `adc/{public,internal}.yaml` — file: `deploy/apisix/scripts/render.mjs`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.

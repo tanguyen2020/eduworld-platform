@@ -20,6 +20,7 @@ Nguồn contract: [`specs/openapi/eduworld-api.v1.yaml`](../../openapi/eduworld-
 | `createSisImport` | `POST /api/v1/schools/{school_id}/sis-imports` (`Idempotency-Key`) | như trên | `tenant.sis.import` | Có sẵn |
 | `getSisImport` | `GET /api/v1/schools/{school_id}/sis-imports/{import_id}` | như trên | `tenant.sis.read` | Có sẵn |
 | `listSchoolReconciliationIssues` | `GET /api/v1/schools/{school_id}/reconciliation-issues` | như trên | `tenant.sis.read` | Cần thêm |
+| `resetStudentPassword` | `POST /api/v1/tenant/students/{student_id}/password:reset` (`reason`, `Idempotency-Key`) | eduworld-api (identity) | `lms.student.password_reset` | Có sẵn (áp 2026-11-17, owner F016) |
 | `resolveSchoolReconciliationIssue` | `POST /api/v1/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` (`Idempotency-Key`) | như trên | `tenant.sis.import` | Cần thêm |
 | `listTenantUsers` | `GET /api/v1/tenant/users` | như trên | `tenant.user.read` | Có sẵn |
 | `createTenantUser` | `POST /api/v1/tenant/users` (`Idempotency-Key`) | như trên | `tenant.user.write` | Có sẵn (Cần sửa `scope_type`) |

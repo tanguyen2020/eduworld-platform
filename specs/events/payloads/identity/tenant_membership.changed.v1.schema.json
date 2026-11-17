@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/tenant_membership.changed.v1.schema.json",
+  "title": "Payload tenant_membership.changed v1 (module identity, owner F010)",
+  "description": "Membership tenant của người dùng được thêm/gỡ (học sinh đổi tenant: removed rồi added — F010-AC-15). Consumer: worker Keycloak (gỡ khỏi Organization cũ, thêm vào mới, thu hồi phiên — F010-AC-20), mọi module vô hiệu cache Principal (natsx.PrincipalInvalidator, F003).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "tenant_id", "op", "source"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "op": { "type": "string", "enum": ["added", "removed"] },
+    "source": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*$", "description": "Use case gây thay đổi (vd. enrollment, transfer, user_role, sis_sync, platform_common)" },
+    "user_type": { "type": "string", "enum": ["student", "staff"] }
+  },
+  "examples": [
+    { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "op": "removed", "source": "transfer", "user_type": "student" }
+  ]
+}

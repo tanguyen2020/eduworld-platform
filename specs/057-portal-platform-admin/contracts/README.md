@@ -9,8 +9,8 @@ Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/admin/*` chỉ gateway nội
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listTenants` | `GET /api/v1/admin/tenants` | eduworld-api (identity) | `platform.cross_tenant.read` | Có sẵn |
-| `createTenant` | `POST /api/v1/admin/tenants` | eduworld-api (identity) | `platform.tenant.manage` | Cần thêm |
-| `updateTenant` | `PATCH /api/v1/admin/tenants/{tenant_id}` | eduworld-api (identity) | `platform.tenant.manage` | Cần thêm |
+| `createTenant` | `POST /api/v1/admin/tenants` | eduworld-api (identity) | `platform.tenant.manage` | Có sẵn (áp 2026-11-17, owner F010) |
+| `updateTenant` | `PATCH /api/v1/admin/tenants/{tenant_id}` | eduworld-api (identity) | `platform.tenant.manage` | Có sẵn (áp 2026-11-17, owner F010) |
 | `assignToTenants` · `listTenantAssignments` · `unassignFromTenants` | `POST`/`GET`/`DELETE /api/v1/admin/tenant-assignments` | eduworld-api | `platform.tenant_data.assign` | Có sẵn |
 | `createTenantClone` · `getTenantClone` | `POST /api/v1/admin/tenant-clones` · `GET …/{job_id}` | eduworld-api | `platform.tenant_data.clone` | Có sẵn |
 | `previewTenantClone` | `POST /api/v1/admin/tenant-clones:preview` | eduworld-api | `platform.tenant_data.clone` | Cần thêm |
@@ -55,6 +55,6 @@ Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/admin/*` chỉ gateway nội
 
 Phase 2 task T004–T006.
 
-- **Cần thêm** (owner F010/F045) `createTenant` `POST /admin/tenants` body `TenantCreate` {`code` maxLength 64 pattern mã, `name` maxLength 255, `tenant_type` `TenantType`, `default_locale` `Locale`, `reason` maxLength 500} → 201 `TenantSummary`, 409 `CONFLICT`, 422; `updateTenant` `PATCH /admin/tenants/{tenant_id}` (JSON Merge Patch: `name`, `status` `active`/`disabled`, `reason` bắt buộc; `If-Match`). Cả hai `Idempotency-Key` (POST), `x-internal: true` ([ADMIN_PORTAL §10.1](../../../docs/04-admin-portal/ADMIN_PORTAL.md), CODE_PLAN §3).
+- **Đã áp bởi owner F010 (2026-11-17)** — dùng contract của owner: `TenantCreate` {`code` (2–64), `name` (≤ 255), `tenant_type`, `keycloak_org_alias` (bắt buộc, `^[a-z0-9-]{3,63}$`, F010-AC-01), `default_locale`, `reason` (≤ 500, tùy chọn)} → `201 TenantDetail` (`TenantSummary` + `keycloak_org_alias`, `created_at`, `updated_at`, header `ETag`); `TenantUpdate` (merge-patch: `name`, `status`, `reason` bắt buộc) + `If-Match` + `Idempotency-Key`. Mô tả gốc của F057 (không có `keycloak_org_alias`, trả `TenantSummary`) được thay bằng bản của owner. ~~**Cần thêm** (owner F010/F045) `createTenant` `POST /admin/tenants` body `TenantCreate` {`code` maxLength 64 pattern mã, `name` maxLength 255, `tenant_type` `TenantType`, `default_locale` `Locale`, `reason` maxLength 500} → 201 `TenantSummary`, 409 `CONFLICT`, 422; `updateTenant` `PATCH /admin/tenants/{tenant_id}` (JSON Merge Patch: `name`, `status` `active`/`disabled`, `reason` bắt buộc; `If-Match`). Cả hai `Idempotency-Key` (POST), `x-internal: true` ([ADMIN_PORTAL §10.1](../../../docs/04-admin-portal/ADMIN_PORTAL.md), CODE_PLAN §3).~~
 - **Cần thêm** (owner F045) `previewTenantClone` `POST /admin/tenant-clones:preview` body `TenantCloneRequest` → `TenantClonePreview` {`items[]` {`resource_type`, `source_id`, `action` enum `clone`/`keep_platform_ref`, `title` maxLength 255} maxItems 2000, `blocked[]` {`resource_type`, `reason_code` maxLength 64}} ([ADMIN_PORTAL §3.7](../../../docs/04-admin-portal/ADMIN_PORTAL.md) bước 3).
 - **Cần thêm** (owner F016) `cancelStudentCleanupRun` `POST /admin/student-cleanup/runs/{run_id}:cancel` body `ReasonRequest`, `Idempotency-Key`; trạng thái `StudentCleanupRun.status` thêm `cancelled` ([ADMIN_PORTAL §3.10](../../../docs/04-admin-portal/ADMIN_PORTAL.md) "Xác nhận hoặc Hủy").

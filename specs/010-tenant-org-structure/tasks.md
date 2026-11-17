@@ -9,8 +9,8 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Thêm `createTenant`, `updateTenant`, `listAdminTenantSchools`, `createAdminTenantSchool`, `updateAdminTenantSchool`, `createCommonTenantStudents` (có `maxLength`, `Idempotency-Key`, `x-internal`) — file: `specs/openapi/modules/identity.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=identity`
-- [ ] T004 [P] Thêm payload schema `tenant.created`, `tenant.updated`, `school.updated`, `class.created`, `class.updated`, `enrollment.changed`, `student.transferred`, `tenant_membership.changed`, `user.provisioned` — file: `specs/events/payloads/identity/` — kiểm: `make specs-lint`
+- [x] T003 Thêm `createTenant`, `updateTenant`, `listAdminTenantSchools`, `createAdminTenantSchool`, `updateAdminTenantSchool`, `createCommonTenantStudents` (có `maxLength`, `Idempotency-Key`, `x-internal`) — file: `specs/openapi/modules/identity.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=identity` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001); `createCommonTenantStudents` áp theo quyết định Technical Architect 2026-11-17 (ACCOUNT_PROVISIONING §3.4)
+- [x] T004 [P] Thêm payload schema `tenant.created`, `tenant.updated`, `school.updated`, `class.created`, `class.updated`, `enrollment.changed`, `student.transferred`, `tenant_membership.changed`, `user.provisioned` — file: `specs/events/payloads/identity/` — kiểm: `make specs-lint` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001)
 - [ ] T005 ent schema `Tenant`, `Country`, `Province`, `ProvinceSuccession`, `School`, `AcademicYear`, `Class`, `Student`, `Enrollment`, `User` với `MaxLen` theo data-model — file: `modules/identity/ent/schema/` — kiểm: `make migrate-diff MOD=identity name=f010_org`, `make migrate-lint MOD=identity`
 - [ ] T006 Migration RLS (policy T, không DELETE), FK ghép `(class_id, school_id)`, unique partial, view `identity.tenant_memberships_v`, `REVOKE DELETE, TRUNCATE` — file: `modules/identity/migrations/`
 - [ ] T007 Seed migration: danh mục từ `specs/reference-data`, tenant `common`, School ảo, lớp ảo `common-g1…g9` — file: `modules/identity/migrations/` — kiểm: `node scripts/specs/validate-reference-data.mjs`
@@ -77,7 +77,7 @@
 - [ ] T027 [P] [US3] Aggregate `Enrollment` + domain service `TransferStudent` (đóng/mở cùng transaction) — file: `modules/identity/internal/domain/enrollment/`
 - [ ] T028 [US3] Command `TransferStudent` (dùng bởi F011 apply); query `ListClasses`, `ListUnassignedStudents`, `GetStudentProfile` (audit), `GetMyStudentProfile` — file: `modules/identity/internal/application/`
 - [ ] T029 [US3] Handler `listClasses`, `listTenantSchoolClasses`, `listUnassignedStudents`, `getStudentProfile`, `getMyStudentProfile` — file: `modules/identity/internal/presentation/http/public/org.go`
-- [ ] T043 [US3] Contract `listProjectionSnapshot` trong `identity.internal.v1.yaml` (schema item theo payload event `tenant.*`, `school.*`, `class.synced`, `student.synced`, `enrollment.changed`) + query `ListProjectionSnapshot` (read context) + facade — file: `specs/openapi/modules/identity.internal.v1.yaml`, `modules/identity/internal/application/query/list_projection_snapshot.go`, `modules/identity/api/` — kiểm: `make specs-lint`, `make gen MOD=identity`, `make arch-check`
+- [ ] T043 [US3] Contract `listProjectionSnapshot` trong `identity.internal.v1.yaml` (schema item theo payload event `tenant.*`, `school.*`, `class.synced`, `student.synced`, `enrollment.changed`) + query `ListProjectionSnapshot` (read context) + facade — file: `specs/openapi/modules/identity.internal.v1.yaml`, `modules/identity/internal/application/query/list_projection_snapshot.go`, `modules/identity/api/` — kiểm: `make specs-lint`, `make gen MOD=identity`, `make arch-check` — **2026-11-17:** phần contract đã áp (`listProjectionSnapshot` trong `identity.internal.v1.yaml`, schema `ProjectionSnapshotItem`/`ProjectionSnapshotPage`); còn query `ListProjectionSnapshot` + facade
 
 ## Phase 6: User Story 4 — Membership Keycloak Organization đồng bộ tự động (Priority: P1)
 
@@ -105,12 +105,13 @@
 ### Tests cho User Story 5
 
 - [ ] T035 [P] [US5] Test F010-AC-24, F010-AC-25: tạo học sinh khối 4 → `common-g4`, member `common`, audit; thiếu khối → 422 — file: `modules/identity/tests/integration/common_tenant_test.go` — phải FAIL trước khi code
+- [ ] T044 [P] [US5] Test F010-AC-28, F010-AC-29: lô 3 dòng (1 trùng username → `failed` `USERNAME_TAKEN`, không reconciliation issue), `200` + số đếm; `initial_password` chỉ ở lần đầu, `Cache-Control: no-store`, không có trong log/span/DB; khối 6 → Keycloak `temporary = true`, khối 4 → `false`; replay cùng `Idempotency-Key` → không `initial_password`, `password_redacted = true`; quá `common_student_batch_max` dòng → 422 — file: `modules/identity/tests/integration/common_tenant_batch_test.go` — phải FAIL trước khi code
 - [ ] T036 [P] [US5] Test F010-AC-26: quét OpenAPI không có route tự đăng ký/tạo học sinh với `azp = eduworld-game-backend` — file: `modules/identity/tests/contract/no_self_registration_test.go`
 
 ### Implementation cho User Story 5
 
-- [ ] T037 [US5] Command `CreateCommonTenantStudents` (Keycloak user local, role `student`, member `common`, `external_identities`, enrollment lớp ảo, outbox `user.provisioned`) — file: `modules/identity/internal/application/command/common_tenant.go`
-- [ ] T038 [US5] Handler `createCommonTenantStudents` — file: `modules/identity/internal/presentation/http/public/admin_common_tenant.go`
+- [ ] T037 [US5] Command `CreateCommonTenantStudents` (từng dòng độc lập; chuẩn hóa username; sinh mật khẩu ngẫu nhiên, Keycloak user local `temporary` theo khối, role `student`, member `common`, `external_identities` (gồm dòng `issuer = platform_common` cho `external_ref`, trùng → `IDENTITY_CONFLICT` theo dòng), enrollment lớp ảo, outbox `user.provisioned`; kết quả lưu idempotency không có mật khẩu; đọc `common_student_batch_max`) — file: `modules/identity/internal/application/command/common_tenant.go`
+- [ ] T038 [US5] Handler `createCommonTenantStudents` (`Cache-Control: no-store`, redaction `initial_password` trong log/trace, replay đặt `password_redacted`) — file: `modules/identity/internal/presentation/http/public/admin_common_tenant.go`
 
 ## Phase 8: Polish & Cross-Cutting
 

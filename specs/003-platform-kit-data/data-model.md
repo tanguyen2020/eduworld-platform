@@ -98,5 +98,5 @@ Mỗi entity khai báo đúng một mixin; test `entx/mixin_coverage_test.go` li
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `audit.recorded` | Mọi lần `audit.Recorder.Record` | `specs/events/payloads/common/audit.recorded.v1.schema.json` (Cần thêm, T004) — owner F003; mọi module phát cùng schema |
+| `audit.recorded` | Mọi lần `audit.Recorder.Record` | `specs/events/payloads/common/audit.recorded.v1.schema.json` (Có sẵn (áp 2026-11-17), T004) — owner F003; mọi module phát cùng schema |
 | `<entity>.deleted` | `entx.SoftDelete` | Theo feature sở hữu entity (`specs/events/payloads/<module>/…`) |
