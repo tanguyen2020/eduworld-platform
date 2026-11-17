@@ -4,18 +4,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Thêm dependency (ent, pgx/v5, nats.go jetstream, failsafe-go, oapi-codegen runtime, jsonschema, testcontainers, oauth2) — file: `src/backend/go.mod` (Go module duy nhất, ADR-0074, ADR-0092)
+- [x] T001 Thêm dependency (ent, pgx/v5, nats.go jetstream, failsafe-go, oapi-codegen runtime, jsonschema, testcontainers, oauth2) — file: `src/backend/go.mod` (Go module duy nhất, ADR-0074, ADR-0092)
 - [ ] T002 [P] `src/backend/pkg/testkit/containers.go`: khởi động postgres:17, nats:2.10-alpine `-js`, valkey:8; helper DSN theo role `_app/_platform/_migrator/_relay/_partition_admin/_readonly` — file: `src/backend/pkg/testkit/containers.go`
-- [ ] T003 [P] Module mẫu `src/backend/pkg/testkit/sample` (ent schema `Widget`, migration Atlas) dùng làm đối tượng test của mọi story — file: `src/backend/pkg/testkit/sample/ent/schema/widget.go`
+- [x] T003 [P] Module mẫu `src/backend/pkg/testkit/sample` (ent schema `Widget`, migration Atlas) dùng làm đối tượng test của mọi story — file: `src/backend/pkg/testkit/sample/ent/schema/widget.go`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [x] T004 Thêm schema payload `audit.recorded` v1 và cập nhật bảng payload — file: `specs/events/payloads/common/audit.recorded.v1.schema.json` — kiểm: `make specs-lint` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001); payload có thêm `school_id` tùy chọn (cột `audit.audit_logs.school_id`)
 - [ ] T005 [P] Fixture envelope (chỉ trường cần để vô hiệu cache: `user_id`, `tenant_id`, `role_id?`) cho `tenant_membership.changed`, `user.access_revoked`, `enrollment.changed`, `tenant.updated` — **không** tạo schema payload (consumer chỉ tham chiếu: owner F010 cho `tenant_membership.changed`, `enrollment.changed`, `tenant.updated`; owner F011 cho `user.access_revoked`); contract test với schema của owner bật khi file có — file: `src/backend/pkg/natsx/testdata/events/` — kiểm: `go -C src/backend test ./pkg/natsx/...`
 - [x] T006 [P] Khai báo header `Idempotent-Replayed` và gắn vào response 2xx của operation có `IdempotencyKey`; chạy `split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001); header `components.headers.IdempotentReplayed` gắn vào 170 response 2xx của 168 operation
-- [ ] T007 Schema ent bảng `infra` (`OutboxEvent`, `ProcessedEvent`, `DeadLetter`, `IdempotencyRecord`) theo data-model §1 — file: `src/backend/pkg/entx/infraschema/outbox_event.go`
-- [ ] T008 Nhúng `infraschema` vào 5 module, sinh migration Atlas + `REVOKE DELETE, TRUNCATE ON infra.*`, role `<module>_relay`/`<module>_partition_admin` và `GRANT` theo ADR-0089 §4 (không bật RLS trên `infra.*`) — file: `src/backend/modules/identity/ent/schema/infra.go` — kiểm: `make migrate-diff MOD=identity`, `make migrate-lint MOD=identity`
-- [ ] T066 Migration partition viết tay (ADR-0089 §6): `PARTITION BY RANGE` theo ngày cho `infra.outbox_events` (`created_at`), `infra.processed_events` (`event_occurred_at`), `infra.idempotency_records` (`key_issued_on`), `infra.dead_letters` (`created_at`) + partition 7 ngày đầu — file: `src/backend/modules/identity/migrations/partitions/` — kiểm: `make migrate-lint MOD=identity`
+- [x] T007 Schema ent bảng `infra` (`OutboxEvent`, `ProcessedEvent`, `DeadLetter`, `IdempotencyRecord`) theo data-model §1 — file: `src/backend/pkg/entx/infraschema/outbox_event.go`
+- [x] T008 Nhúng `infraschema` vào 5 module, sinh migration Atlas + `REVOKE DELETE, TRUNCATE ON infra.*`, role `<module>_relay`/`<module>_partition_admin` và `GRANT` theo ADR-0089 §4 (không bật RLS trên `infra.*`) — file: `src/backend/modules/identity/ent/schema/infra.go` — kiểm: `make migrate-diff MOD=identity`, `make migrate-lint MOD=identity`
+- [x] T066 Migration partition viết tay (ADR-0089 §6): `PARTITION BY RANGE` theo ngày cho `infra.outbox_events` (`created_at`), `infra.processed_events` (`event_occurred_at`), `infra.idempotency_records` (`key_issued_on`), `infra.dead_letters` (`created_at`) + partition 7 ngày đầu — file: `src/backend/modules/identity/migrations/partitions/` — kiểm: `make migrate-lint MOD=identity`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -27,19 +27,19 @@
 
 ### Tests cho User Story 1
 
-- [ ] T009 [P] [US1] Test F003-AC-01: schema sinh từ mixin có đủ cột/kiểu (so migration Atlas của `Widget`) — file: `src/backend/pkg/entx/base_test.go` — phải FAIL trước khi code
-- [ ] T010 [P] [US1] Integration test F003-AC-02: query không scope → `ErrMissingTenantScope`; scope A không thấy dòng B (TC-TEN-021) — file: `src/backend/pkg/entx/interceptor_integration_test.go`
-- [ ] T011 [P] [US1] Integration test F003-AC-03, F003-AC-04, F003-AC-05: `Delete()` thành update; entity không soft-delete → `ErrHardDeleteForbidden`; outbox có `<entity>.deleted` + audit; tạo lại cùng mã (TC-TEN-022, TC-TEN-015) — file: `src/backend/pkg/entx/softdelete_integration_test.go`
-- [ ] T012 [P] [US1] Integration test F003-AC-06: `InTenantTx` set `app.tenant_id`, chọn client `_app`/`_platform`; truy vấn ngoài UoW lỗi (TC-TEN-005) — file: `src/backend/pkg/entx/uow_integration_test.go`
+- [x] T009 [P] [US1] Test F003-AC-01: schema sinh từ mixin có đủ cột/kiểu (so migration Atlas của `Widget`) — file: `src/backend/pkg/entx/base_test.go` — phải FAIL trước khi code
+- [x] T010 [P] [US1] Integration test F003-AC-02: query không scope → `ErrMissingTenantScope`; scope A không thấy dòng B (TC-TEN-021) — file: `src/backend/pkg/entx/interceptor_integration_test.go`
+- [x] T011 [P] [US1] Integration test F003-AC-03, F003-AC-04, F003-AC-05: `Delete()` thành update; entity không soft-delete → `ErrHardDeleteForbidden`; outbox có `<entity>.deleted` + audit; tạo lại cùng mã (TC-TEN-022, TC-TEN-015) — file: `src/backend/pkg/entx/softdelete_integration_test.go`
+- [x] T012 [P] [US1] Integration test F003-AC-06: `InTenantTx` set `app.tenant_id`, chọn client `_app`/`_platform`; truy vấn ngoài UoW lỗi (TC-TEN-005) — file: `src/backend/pkg/entx/uow_integration_test.go`
 - [ ] T013 [P] [US1] Test F003-AC-07: fixture vi phạm (String thiếu MaxLen, schema không mixin hoặc hai mixin, policy RLS có `deleted_at`, SQL thiếu tenant/deleted_at, `DELETE FROM`, bảng tenant thiếu RLS) → `entlint`/`tenancyguard`/`mixin_coverage_test` fail có vị trí (TC-TEN-017, TC-TEN-024 phần DB) — file: `src/backend/tools/tenancyguard/guard_test.go`
-- [ ] T067 [P] [US1] Integration test F003-AC-34: `DeleteWidget` qua `UnitOfWork` bằng role `_app` dưới RLS thành công; `ListWidgets` không còn dòng; `Bypass(ctx, "trash")` đọc lại được — file: `src/backend/pkg/entx/softdelete_rls_integration_test.go`
+- [x] T067 [P] [US1] Integration test F003-AC-34: `DeleteWidget` qua `UnitOfWork` bằng role `_app` dưới RLS thành công; `ListWidgets` không còn dòng; `Bypass(ctx, "trash")` đọc lại được — file: `src/backend/pkg/entx/softdelete_rls_integration_test.go`
 
 ### Implementation cho User Story 1
 
-- [ ] T014 [P] [US1] Mixin `Base`, `TenantAppendOnly`, `TenantOptional`, `HybridContent` (đổi tên từ `PlatformBase`), `GlobalBase`, `AppendOnly` + test `mixin_coverage_test.go` liệt kê mọi schema ent (ADR-0089 §2) — file: `src/backend/pkg/entx/base.go`
-- [ ] T015 [US1] `TenantFilterInterceptor` theo mixin (bảng MULTITENANCY §4.4; `PlatformScope` chỉ `tenant_id IS NULL`; `GlobalBase`/`AppendOnly` không cần scope; bỏ qua khi `Bypassed`) — file: `src/backend/pkg/entx/interceptor.go`
-- [ ] T016 [US1] `SoftDeleteHook`, `SoftDelete(ctx, e, reason)`, `Restore(ctx, e)` (chỉ khi `Bypassed` lý do `trash`) — file: `src/backend/pkg/entx/softdelete.go`
-- [ ] T017 [US1] `UnitOfWork.InTenantTx` + chọn client theo scope — file: `src/backend/pkg/entx/uow.go`
+- [x] T014 [P] [US1] Mixin `Base`, `TenantAppendOnly`, `TenantOptional`, `HybridContent` (đổi tên từ `PlatformBase`), `GlobalBase`, `AppendOnly` + test `mixin_coverage_test.go` liệt kê mọi schema ent (ADR-0089 §2) — file: `src/backend/pkg/entx/base.go`
+- [x] T015 [US1] `TenantFilterInterceptor` theo mixin (bảng MULTITENANCY §4.4; `PlatformScope` chỉ `tenant_id IS NULL`; `GlobalBase`/`AppendOnly` không cần scope; bỏ qua khi `Bypassed`) — file: `src/backend/pkg/entx/interceptor.go`
+- [x] T016 [US1] `SoftDeleteHook`, `SoftDelete(ctx, e, reason)`, `Restore(ctx, e)` (chỉ khi `Bypassed` lý do `trash`) — file: `src/backend/pkg/entx/softdelete.go`
+- [x] T017 [US1] `UnitOfWork.InTenantTx` + chọn client theo scope — file: `src/backend/pkg/entx/uow.go`
 - [ ] T018 [P] [US1] `src/backend/tools/entlint` (MaxLen, annotation `maxlen-justified`) — file: `src/backend/tools/entlint/main.go`
 - [ ] T019 [P] [US1] `src/backend/tools/tenancyguard` (5 kiểm tra MULTITENANCY §11), thêm vào `make lint` và CI — file: `src/backend/tools/tenancyguard/main.go`
 
@@ -53,7 +53,7 @@
 
 ### Tests cho User Story 2
 
-- [ ] T020 [P] [US2] Integration test F003-AC-08: `UnitOfWork.Do` commit khi nil, rollback khi lỗi/panic; repository và `outbox.Writer` dùng cùng tx từ context; `Do` lồng dùng lại tx ngoài — file: `src/backend/pkg/entx/uow_do_integration_test.go` — phải FAIL trước khi code
+- [x] T020 [P] [US2] Integration test F003-AC-08: `UnitOfWork.Do` commit khi nil, rollback khi lỗi/panic; repository và `outbox.Writer` dùng cùng tx từ context; `Do` lồng dùng lại tx ngoài — file: `src/backend/pkg/entx/uow_do_integration_test.go` — phải FAIL trước khi code
 - [ ] T021 [P] [US2] Integration test F003-AC-09: `CreateWidget` lỗi sau khi ghi outbox → rollback, outbox trống; `ListWidgets` chạy với role chỉ đọc; adapter read ghi trong `ReadSession` → lỗi (TC-SVC-001) — file: `src/backend/pkg/testkit/sample/cqrs_integration_test.go`
 - [ ] T022 [P] [US2] Test F003-AC-10: fixture vi phạm (query import `port/write`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `application/command`; `persistence/read` import `src/backend/pkg/outbox`) → `go-arch-lint`/`depguard` fail có vị trí — file: `src/backend/tools/lint/testdata/badquery/internal/application/query/bad.go`
 - [ ] T023 [P] [US2] Integration test F003-AC-12: `Save` version cũ → 409 `CONFLICT` — file: `src/backend/pkg/testkit/sample/repo_integration_test.go`
@@ -62,7 +62,7 @@
 
 ### Implementation cho User Story 2
 
-- [ ] T024 [US2] `UnitOfWork.Do` (scope từ context, tx trong context, `Publisher()` trả `outbox.Writer` gắn tx) và `ReadSession.InTenantRead` (tx `READ ONLY`, client đọc) — file: `src/backend/pkg/entx/readsession.go`
+- [x] T024 [US2] `UnitOfWork.Do` (scope từ context, tx trong context, `Publisher()` trả `outbox.Writer` gắn tx) và `ReadSession.InTenantRead` (tx `READ ONLY`, client đọc) — file: `src/backend/pkg/entx/readsession.go`
 - [ ] T025 [US2] `observability.UseCase(ctx, name) (context.Context, func(error))` — span, metric, log kết quả theo `problem.Kind` — file: `src/backend/pkg/observability/usecase.go`
 - [ ] T062 [US2] Thêm rule read/write context vào cấu hình lint nền (go-arch-lint components `command`/`query`/`port-write`/`port-read`/`persist-write`/`persist-read`; depguard cho `query`, `persistence/read`) theo BACKEND_DESIGN §3 — file: `src/backend/tools/lint/go-arch-lint.base.yml` — kiểm: `make lint MOD=pkg`
 - [ ] T063 [US2] Module mẫu theo khuôn: command `CreateWidget`/`DeleteWidget`, query `ListWidgets`, port `write`/`read`, persistence `write`/`read`, HTTP handler giữ interface có kiểu, nối ở composition root — file: `src/backend/pkg/testkit/sample/internal/application/command/create_widget.go`
@@ -201,3 +201,10 @@
 - [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
 - [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
 - [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+
+## Ghi chú triển khai (2026-11-18)
+
+- T007/T008/T066: bốn bảng `infra` partition theo ngày nên toàn bộ DDL viết tay, sinh từ một template bằng `src/backend/tools/infragen` cho 5 module (`modules/<m>/migrations/20261118000001_infra.sql`, `make gen`/`gen-check`); ent không dùng cho bảng `infra` — `outbox`/`idempotency` truy cập bằng SQL tường minh trong transaction của `UnitOfWork` (bảng không có `tenant_id` nghiệp vụ, không RLS). Partition tạo/gỡ qua hàm `SECURITY DEFINER` `infra.ensure_partitions`, `infra.partition_days_ahead`, `infra.drop_expired_partitions` (owner `<m>_migrator`); `<m>_partition_admin` chỉ có `EXECUTE`; partition mới không có grant; có partition `DEFAULT` để ghi không lỗi khi thiếu partition ngày (cảnh báo khi có dòng).
+- T014: mixin mang luôn interceptor (truy vấn) và hook (create gán/kiểm `tenant_id`, update/delete thêm cùng điều kiện, delete → soft-delete hoặc `ErrHardDeleteForbidden`); `entx` không import code ent sinh (gọi `Where`/`Client().Mutate` qua reflection). Bảng H cần `HybridContent{ResourceType: "<loại>"}`.
+- T017/T024: `UnitOfWork` giữ `*sql.Tx` trong context; module dựng client `ent.NewClient(ent.Driver(entx.Driver(ctx)))`; ngoài transaction mọi lệnh trả `ErrNoTransaction`. `CrossTenantScope` ghi audit `cross_tenant.accessed` khi mở transaction.
+- T003: module mẫu ở `src/backend/pkg/testkit/sample` (ent sinh trong `sample/ent`, DDL fixture `sample/fixture/sample.sql` áp bằng `learning_migrator` trong test, schema `sample` của `eduworld_learning`).
