@@ -104,14 +104,14 @@
 - [x] T038 [P] [US4] Test F002-AC-22: thiếu biến → exit 1 + tên biến, không giá trị; đọc `*_FILE` — file: `src/backend/pkg/config/load_test.go`
 - [x] T039 [P] [US4] Test F002-AC-23: log capture với header Authorization, body có `password`, email → không xuất hiện (TC-AUTH-060 phần backend) — file: `src/backend/pkg/observability/redact_test.go`
 - [x] T040 [P] [US4] Test F002-AC-24: exporter in-memory có span server + `traceparent` lan truyền; metric có nhãn chuẩn, không user_id — file: `src/backend/pkg/observability/otel_test.go`
-- [ ] T041 [P] [US4] Test F002-AC-25: validator kin-openapi trả 422 `MAX_LENGTH` với tên trường (TC-TEN-024 phần API) — file: `src/backend/pkg/httpx/validate_test.go`
+- [x] T041 [P] [US4] Test F002-AC-25: validator kin-openapi trả 422 `MAX_LENGTH` với tên trường (TC-TEN-024 phần API) — file: `src/backend/pkg/httpx/validate_test.go`
 
 ### Implementation cho User Story 4
 
 - [x] T042 [P] [US4] `src/backend/pkg/problem` (RFC 9457, `Kind`, `Map`, `Invalid(field, code)`) — file: `src/backend/pkg/problem/problem.go`
 - [x] T043 [P] [US4] `src/backend/pkg/config` (koanf env, `*_FILE`, `Required`) — file: `src/backend/pkg/config/load.go`
 - [x] T044 [P] [US4] `src/backend/pkg/observability` (slog JSON + redaction, OTel tracer/meter, Prometheus registry nhãn `binary`, `module`, metric HTTP + DB pool) — file: `src/backend/pkg/observability/logger.go`
-- [ ] T045 [US4] `httpx.NewServer` ráp chuỗi middleware theo plan, validator kin-openapi theo spec của module, timeout biên — file: `src/backend/pkg/httpx/server.go`
+- [x] T045 [US4] `httpx.NewServer` ráp chuỗi middleware theo plan, validator kin-openapi theo spec của module, timeout biên — file: `src/backend/pkg/httpx/server.go`
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.
 
@@ -160,3 +160,6 @@
 - `authz.Grant` mang `ScopeKind` (role_scope_kind) để guard `platform_mfa` nhận ra role platform kể cả role platform tùy biến; `Principal` = `PrincipalData` (dữ liệu resolve) + tập permission tính sẵn; `ClientID`, `SessionID`, `Channel`, `MFA` lấy từ token mỗi request, không cache.
 - Client id portal/game đọc từ `EW_KC_PORTAL_CLIENT_ID`/`EW_KC_GAME_CLIENT_ID` (R3), không hardcode.
 - Cache Principal: `ew:<module>:principal:<user_id>:<tenant_id|platform>` (VALKEY_DESIGN) + khóa phụ `…:principal:sub:<hash(iss,sub)>` → `user_id` (token không mang `user_id`) + `…:principal:idx:<user_id>` (SET) cho invalidate toàn user.
+- T045: `httpx.NewServer` + validator kin-openapi (spec gộp OpenAPI 3.1, mọi operation đăng ký phải có trong spec) xong; `bootstrap` dùng logger/OTel/metric của `pkg/observability` cho mọi binary. Nối `httpx.Server` + `PrincipalResolver` thật vào `src/backend/cmd/core-api` thuộc F003 T048 (adapter facade identity) — trước đó core-api không có route ứng dụng.
+- Compose app xuất trace OTLP/HTTP (`otel-collector:4318`, `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`).
+- Sửa lỗi YAML trong spec gộp: `TenantCreate.keycloak_org_alias.description` có dấu phẩy không quote trong flow mapping tạo key thừa (kin-openapi `doc.Validate` phát hiện); sinh lại `identity.v1.yaml`.

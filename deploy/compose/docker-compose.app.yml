@@ -16,7 +16,8 @@ x-common-env: &common-env
   EW_ADMIN_ADDR: ":9090"
   EW_VALKEY_ADDR: valkey:6379
   EW_NATS_URLS: nats://nats:4222
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
 
 x-app-deps: &app-deps
   postgres: { condition: service_healthy }

@@ -6212,8 +6212,7 @@ components:
           type: string
           maxLength: 63
           pattern: ^[a-z0-9-]{3,63}$
-          description: Alias Keycloak Organization
-          duy nhất (KEYCLOAK_SSO §2.1): null
+          description: Alias Keycloak Organization, duy nhất (KEYCLOAK_SSO §2.1)
         default_locale:
           $ref: '#/components/schemas/Locale'
         reason:

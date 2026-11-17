@@ -1,7 +1,7 @@
 // Package bootstrap runs one EduWorld binary (F001 T014): admin port with health/metrics/version,
 // optional public HTTP listener, Valkey and NATS readiness, module registration and graceful stop.
-// F002 replaces the env reading/logging here with pkg/config and pkg/observability; F003 adds the
-// full shutdown sequence (drain consumers, outbox relay).
+// Logging, tracing and HTTP metrics come from pkg/observability (F002); F003 adds the full shutdown
+// sequence (drain consumers, outbox relay).
 package bootstrap
 
 import (
@@ -20,6 +20,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/buildinfo"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Options describes one binary.
@@ -54,10 +55,16 @@ func Run(ctx context.Context, o Options) error {
 	if o.Getenv == nil {
 		return errors.New("bootstrap: Getenv is required")
 	}
-	log := newLogger(o)
 	info := buildinfo.Get(o.Binary, o.Profile)
+	log := newLogger(o, info)
+	slog.SetDefault(log)
 
 	hr := health.NewRegistry(info)
+	obs, err := newObs(ctx, o, log, hr)
+	if err != nil {
+		return fmt.Errorf("observability: %w", err)
+	}
+	defer obs.Shutdown()
 	reg := module.NewRegistry(o.Binary, o.Profile, hr, o.Getenv)
 	defer reg.Close()
 
@@ -100,7 +107,7 @@ func Run(ctx context.Context, o Options) error {
 		if h == nil {
 			h = http.NotFoundHandler()
 		}
-		public = &http.Server{Handler: h, ReadHeaderTimeout: 5 * time.Second}
+		public = &http.Server{Handler: obs.HTTP(h), ReadHeaderTimeout: 5 * time.Second}
 	}
 
 	errc := make(chan error, 2)
@@ -167,7 +174,7 @@ func envOr(getenv func(string) string, key, def string) string {
 	return def
 }
 
-func newLogger(o Options) *slog.Logger {
+func newLogger(o Options, info buildinfo.Info) *slog.Logger {
 	level := slog.LevelInfo
 	if strings.EqualFold(o.Getenv("EW_LOG_LEVEL"), "debug") {
 		level = slog.LevelDebug
@@ -176,9 +183,22 @@ func newLogger(o Options) *slog.Logger {
 	if out == nil {
 		out = io.Discard
 	}
-	hopts := &slog.HandlerOptions{Level: level}
-	if strings.EqualFold(o.Getenv("EW_LOG_FORMAT"), "text") {
-		return slog.New(slog.NewTextHandler(out, hopts))
+	return observability.NewLogger(out, observability.LoggerOptions{
+		Binary: o.Binary, Profile: o.Profile, Env: o.Getenv("EW_ENV"), Version: info.Version, Level: level,
+		Text: strings.EqualFold(o.Getenv("EW_LOG_FORMAT"), "text"),
+	})
+}
+
+// newObs exports spans with OTLP/HTTP when OTEL_EXPORTER_OTLP_ENDPOINT is set and registers the HTTP
+// metrics on the admin registry.
+func newObs(ctx context.Context, o Options, log *slog.Logger, hr *health.Registry) (*observability.Obs, error) {
+	opts := observability.Options{Logger: log, Binary: o.Binary, Registerer: hr.Metrics()}
+	if strings.TrimSpace(o.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")) != "" {
+		p, err := observability.NewOTLPProcessor(ctx)
+		if err != nil {
+			return nil, err
+		}
+		opts.SpanProcessor = p
 	}
-	return slog.New(slog.NewJSONHandler(out, hopts))
+	return observability.New(opts)
 }

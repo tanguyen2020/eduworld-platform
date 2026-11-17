@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -87,6 +88,9 @@ type Deps struct {
 	Clock      clock.Clock
 	Registerer prometheus.Registerer
 	Logger     *slog.Logger
+	// Spec is the merged public OpenAPI spec; when set, every operation must exist in it and requests are
+	// validated against it (ADR-0041, F002-AC-25).
+	Spec *openapi3.T
 	// Middlewares run first for every request (request id, OTel, access log — package observability).
 	Middlewares []func(http.Handler) http.Handler
 }
@@ -152,6 +156,13 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 		return fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
 	}
 	var chain http.Handler = h
+	if s.d.Spec != nil {
+		route, err := specRoute(s.d.Spec, op)
+		if err != nil {
+			return err
+		}
+		chain = validate(route, chain)
+	}
 	if !op.Public {
 		chain = s.guards(effectiveGuard(op), chain)
 		chain = s.principal(op, chain)

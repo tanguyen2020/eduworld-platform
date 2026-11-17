@@ -119,7 +119,8 @@ EW_CDN_BASE_URL=http://localhost:8090
 EW_CDN_SIGNING_KEY=change-me-local        # ký signed URL cho ew-media-private
 EW_MEDIA_SCAN=clamd://localhost:3310      # hoặc disabled
 EW_CONTENT_SNAPSHOT_TTL=168h
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318   # OTLP/HTTP (exporter otlptracehttp, F002)
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 OTEL_TRACES_SAMPLER=parentbased_traceidratio
 OTEL_TRACES_SAMPLER_ARG=1.0
 

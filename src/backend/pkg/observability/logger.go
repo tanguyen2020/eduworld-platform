@@ -20,6 +20,7 @@ type LoggerOptions struct {
 	Env     string
 	Version string
 	Level   slog.Leveler
+	Text    bool // EW_LOG_FORMAT=text for local runs; redaction applies the same way
 }
 
 // Redacted replaces a sensitive value.
@@ -82,7 +83,11 @@ func NewLogger(w io.Writer, o LoggerOptions) *slog.Logger {
 	if o.Level == nil {
 		o.Level = slog.LevelInfo
 	}
-	h := slog.NewJSONHandler(w, &slog.HandlerOptions{Level: o.Level, ReplaceAttr: redactAttr})
+	hopts := &slog.HandlerOptions{Level: o.Level, ReplaceAttr: redactAttr}
+	var h slog.Handler = slog.NewJSONHandler(w, hopts)
+	if o.Text {
+		h = slog.NewTextHandler(w, hopts)
+	}
 	attrs := []slog.Attr{slog.String("binary", o.Binary), slog.String("env", o.Env), slog.String("version", o.Version)}
 	if o.Profile != "" {
 		attrs = append(attrs, slog.String("profile", o.Profile))

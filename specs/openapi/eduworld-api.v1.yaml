@@ -17494,7 +17494,7 @@ components:
         code: { type: string, minLength: 2, maxLength: 64 }
         name: { type: string, minLength: 1, maxLength: 255 }
         tenant_type: { $ref: '#/components/schemas/TenantType' }
-        keycloak_org_alias: { type: string, maxLength: 63, pattern: '^[a-z0-9-]{3,63}$', description: Alias Keycloak Organization, duy nhất (KEYCLOAK_SSO §2.1) }
+        keycloak_org_alias: { type: string, maxLength: 63, pattern: '^[a-z0-9-]{3,63}$', description: 'Alias Keycloak Organization, duy nhất (KEYCLOAK_SSO §2.1)' }
         default_locale: { $ref: '#/components/schemas/Locale' }
         reason: { type: string, maxLength: 500 }
     TenantUpdate:

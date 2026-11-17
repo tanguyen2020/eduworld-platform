@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -92,7 +93,7 @@ type Options struct {
 	Logger        *slog.Logger
 	Binary        string
 	SpanProcessor sdktrace.SpanProcessor // nil = no tracing export (spans still propagate)
-	Sampler       sdktrace.Sampler       // nil = parent-based always-on
+	Sampler       sdktrace.Sampler       // nil = OTEL_TRACES_SAMPLER (SDK default: parent-based always-on)
 	Registerer    prometheus.Registerer
 }
 
@@ -114,12 +115,14 @@ func New(o Options) (*Obs, error) {
 	}
 	ob := &Obs{log: o.Logger, prop: propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})}
 	if o.SpanProcessor != nil {
-		sampler := o.Sampler
-		if sampler == nil {
-			sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
-		}
 		res, _ := sdkresource.Merge(sdkresource.Default(), sdkresource.NewSchemaless(attribute.String("service.name", o.Binary)))
-		ob.tp = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(o.SpanProcessor), sdktrace.WithSampler(sampler), sdktrace.WithResource(res))
+		opts := []sdktrace.TracerProviderOption{sdktrace.WithSpanProcessor(o.SpanProcessor), sdktrace.WithResource(res)}
+		if o.Sampler != nil {
+			opts = append(opts, sdktrace.WithSampler(o.Sampler)) // otherwise OTEL_TRACES_SAMPLER / parent-based always-on
+		}
+		ob.tp = sdktrace.NewTracerProvider(opts...)
+		otel.SetTracerProvider(ob.tp)
+		otel.SetTextMapPropagator(ob.prop)
 		ob.tracer = ob.tp.Tracer("eduworld/httpx")
 	} else {
 		ob.tracer = noop.NewTracerProvider().Tracer("eduworld/httpx")
