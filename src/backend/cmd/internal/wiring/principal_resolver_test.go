@@ -97,3 +97,20 @@ func TestPrincipalResolver(t *testing.T) {
 		t.Fatalf("realtime caller: %v", err)
 	}
 }
+
+// The generated identityapi.Fake serves caller-side facade tests (make test-contract).
+func TestGeneratedFake(t *testing.T) {
+	var fake identityapi.Fake
+	r := wiring.PrincipalResolver{Identity: &fake}
+	ctx := tenancy.WithModule(context.Background(), "game")
+	req := authz.ResolveRequest{Subject: authz.SubjectRef{Issuer: "iss", Subject: "s"}}
+	if _, err := r.Resolve(ctx, req); codeOf(err) != problem.Internal || !errors.Is(err, identityapi.ErrNotFaked) {
+		t.Fatalf("unset fake: %v", err)
+	}
+	fake.ResolvePrincipalFunc = func(context.Context, identityapi.ResolvePrincipalRequestObject) (identityapi.ResolvePrincipalResponseObject, error) {
+		return identityapi.ResolvePrincipal404ApplicationProblemPlusJSONResponse{Code: "NOT_FOUND"}, nil
+	}
+	if _, err := r.Resolve(ctx, req); !errors.Is(err, authz.ErrNotMember) {
+		t.Fatalf("faked 404: %v", err)
+	}
+}

@@ -3099,3 +3099,111 @@ func (sh *strictHandler) ScorePlanAnswer(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
 	}
 }
+
+// ErrNotFaked is returned by Fake for an operation without a func.
+var ErrNotFaked = errors.New("api: operation not faked")
+
+// Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
+type Fake struct {
+	CreateAttemptFunc          func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
+	GetAttemptResultFunc       func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
+	CleanupStudentDataFunc     func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
+	RestoreStudentDataFunc     func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
+	ExecuteTenantCloneStepFunc func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
+	ListTrashFunc              func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
+	RestoreTrashItemFunc       func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
+	AnonymizeUserDataFunc      func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
+	MergeUserDataFunc          func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
+	CreateQuestionPlanFunc     func(ctx context.Context, request CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error)
+	ScorePlanAnswerFunc        func(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
+}
+
+var _ StrictServerInterface = (*Fake)(nil)
+
+// CreateAttempt calls CreateAttemptFunc.
+func (f *Fake) CreateAttempt(a0 context.Context, a1 CreateAttemptRequestObject) (CreateAttemptResponseObject, error) {
+	if f.CreateAttemptFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CreateAttemptFunc(a0, a1)
+}
+
+// GetAttemptResult calls GetAttemptResultFunc.
+func (f *Fake) GetAttemptResult(a0 context.Context, a1 GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error) {
+	if f.GetAttemptResultFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.GetAttemptResultFunc(a0, a1)
+}
+
+// CleanupStudentData calls CleanupStudentDataFunc.
+func (f *Fake) CleanupStudentData(a0 context.Context, a1 CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error) {
+	if f.CleanupStudentDataFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CleanupStudentDataFunc(a0, a1)
+}
+
+// RestoreStudentData calls RestoreStudentDataFunc.
+func (f *Fake) RestoreStudentData(a0 context.Context, a1 RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error) {
+	if f.RestoreStudentDataFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.RestoreStudentDataFunc(a0, a1)
+}
+
+// ExecuteTenantCloneStep calls ExecuteTenantCloneStepFunc.
+func (f *Fake) ExecuteTenantCloneStep(a0 context.Context, a1 ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error) {
+	if f.ExecuteTenantCloneStepFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ExecuteTenantCloneStepFunc(a0, a1)
+}
+
+// ListTrash calls ListTrashFunc.
+func (f *Fake) ListTrash(a0 context.Context, a1 ListTrashRequestObject) (ListTrashResponseObject, error) {
+	if f.ListTrashFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListTrashFunc(a0, a1)
+}
+
+// RestoreTrashItem calls RestoreTrashItemFunc.
+func (f *Fake) RestoreTrashItem(a0 context.Context, a1 RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error) {
+	if f.RestoreTrashItemFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.RestoreTrashItemFunc(a0, a1)
+}
+
+// AnonymizeUserData calls AnonymizeUserDataFunc.
+func (f *Fake) AnonymizeUserData(a0 context.Context, a1 AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error) {
+	if f.AnonymizeUserDataFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.AnonymizeUserDataFunc(a0, a1)
+}
+
+// MergeUserData calls MergeUserDataFunc.
+func (f *Fake) MergeUserData(a0 context.Context, a1 MergeUserDataRequestObject) (MergeUserDataResponseObject, error) {
+	if f.MergeUserDataFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.MergeUserDataFunc(a0, a1)
+}
+
+// CreateQuestionPlan calls CreateQuestionPlanFunc.
+func (f *Fake) CreateQuestionPlan(a0 context.Context, a1 CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error) {
+	if f.CreateQuestionPlanFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CreateQuestionPlanFunc(a0, a1)
+}
+
+// ScorePlanAnswer calls ScorePlanAnswerFunc.
+func (f *Fake) ScorePlanAnswer(a0 context.Context, a1 ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error) {
+	if f.ScorePlanAnswerFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ScorePlanAnswerFunc(a0, a1)
+}

@@ -158,7 +158,8 @@ test: ## Unit tests (MOD=<module> to scope; -race when cgo is available)
 test-integration: ## Integration tests with testcontainers (Docker required)
 	$(GO) test -count=1 -tags integration $(if $(MOD),./modules/$(MOD)/...,./...)
 
-test-contract: ## Facade tests between modules (added with the first facade operation)
+test-contract: ## Contract tests: public/facade/event helpers, caller-side facade tests (generated api.Fake), module facade tests
+	$(GO) test -count=1 ./pkg/testkit/contract/... ./cmd/internal/wiring/...
 	$(GO) test -count=1 -run Facade ./modules/...
 
 # ---------- specs / docs ----------

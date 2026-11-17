@@ -5,7 +5,7 @@
 ## Phase 1: Setup
 
 - [x] T001 Thêm dependency (ent, pgx/v5, nats.go jetstream, failsafe-go, oapi-codegen runtime, jsonschema, testcontainers, oauth2) — file: `src/backend/go.mod` (Go module duy nhất, ADR-0074, ADR-0092)
-- [ ] T002 [P] `src/backend/pkg/testkit/containers.go`: khởi động postgres:17, nats:2.10-alpine `-js`, valkey:8; helper DSN theo role `_app/_platform/_migrator/_relay/_partition_admin/_readonly` — file: `src/backend/pkg/testkit/containers.go`
+- [x] T002 [P] `src/backend/pkg/testkit/containers.go`: khởi động postgres:17, nats:2.10-alpine `-js`, valkey:8; helper DSN theo role `_app/_platform/_migrator/_relay/_partition_admin/_readonly` — file: `src/backend/pkg/testkit/containers.go`
 - [x] T003 [P] Module mẫu `src/backend/pkg/testkit/sample` (ent schema `Widget`, migration Atlas) dùng làm đối tượng test của mọi story — file: `src/backend/pkg/testkit/sample/ent/schema/widget.go`
 
 ## Phase 2: Foundational (chặn mọi user story)
@@ -166,13 +166,13 @@
 
 ### Tests cho User Story 7
 
-- [ ] T052 [P] [US7] Test F003-AC-31: testkit dựng đủ container, migrate module mẫu, fixture tenant A/B, context scope — file: `src/backend/pkg/testkit/testkit_integration_test.go` — phải FAIL trước khi code
-- [ ] T053 [P] [US7] Test F003-AC-32: contract helper phát hiện response lệch spec public, response object facade lệch ví dụ spec internal và payload event lệch schema; fake facade sinh được cho bên gọi; `make specs-breaking` fail với thay đổi breaking mẫu (TC-SVC-015) — file: `src/backend/pkg/testkit/contract/openapi_test.go`
+- [x] T052 [P] [US7] Test F003-AC-31: testkit dựng đủ container, migrate module mẫu, fixture tenant A/B, context scope — file: `src/backend/pkg/testkit/testkit_integration_test.go` — phải FAIL trước khi code
+- [x] T053 [P] [US7] Test F003-AC-32: contract helper phát hiện response lệch spec public, response object facade lệch ví dụ spec internal và payload event lệch schema; fake facade sinh được cho bên gọi; `make specs-breaking` fail với thay đổi breaking mẫu (TC-SVC-015) — file: `src/backend/pkg/testkit/contract/openapi_test.go`
 
 ### Implementation cho User Story 7
 
-- [ ] T054 [US7] `testkit.New(t, module)`, `Fixtures` (tenant A/B, Principal theo role từ `authztest`), `migrate.go` — file: `src/backend/pkg/testkit/fixtures.go`
-- [ ] T055 [US7] `testkit/contract` (kin-openapi validator public, kiểm facade theo ví dụ spec internal, fake facade cho bên gọi, jsonschema cho event; target `make test-contract`) + target `make specs-breaking` (oasdiff spec gộp + mọi internal) — file: `src/backend/pkg/testkit/contract/openapi.go`
+- [x] T054 [US7] `testkit.New(t, module)`, `Fixtures` (tenant A/B, Principal theo role từ `authztest`), `migrate.go` — file: `src/backend/pkg/testkit/fixtures.go`
+- [x] T055 [US7] `testkit/contract` (kin-openapi validator public, kiểm facade theo ví dụ spec internal, fake facade cho bên gọi, jsonschema cho event; target `make test-contract`) + target `make specs-breaking` (oasdiff spec gộp + mọi internal) — file: `src/backend/pkg/testkit/contract/openapi.go`
 
 **Checkpoint**: User Story 7 chạy và kiểm độc lập được.
 
@@ -215,3 +215,4 @@
 - US5: facade sinh bằng `tools/facadegen` (bundle spec internal + oapi-codegen v2.8.2: models + strict-server) vào `modules/<m>/api/facade_gen.go`; phần HTTP server sinh kèm không bao giờ được mount — analyzer `nointernalhttp` (trong `ewlint`) chặn mọi lời gọi `Handler*`/`NewStrictHandler*`. `allowedcallers` sinh thêm `ContextRequired`. `cmd/internal/wiring` được phép import `modules/<m>/api` (archgen). Caller của `modcall` = module của operation (`httpx` đặt `tenancy.WithModule`).
 - Delta hợp đồng (bảo mật): `Principal.grants[]` (`PrincipalGrant`: `role_code`, `role_scope_kind`, `school_id`, `subject_id`, `permissions`) trong `identity.internal.v1.yaml` — `permissions`/`scopes` gộp không cho biết permission nào chỉ áp trong trường/môn nào; adapter từ chối Principal thiếu `grants` (503, fail-closed). Nội dung thuộc F012 [Proposed].
 - US6: `pkg/lifecycle` (Plan + Group) dùng trong `bootstrap` cho mọi binary: readiness 503 (`health.Registry.SetDraining`), `EW_SHUTDOWN_DRAIN_DELAY` (5 s khi có HTTP public), dừng worker (`EW_WORKER_SHUTDOWN_TIMEOUT` 60 s), `EW_HTTP_SHUTDOWN_TIMEOUT` (20 s), drain NATS, đóng pool. Consumer xử lý message đã đệm khi drain bằng context không bị hủy; `MaxInFlight` giới hạn số message đệm.
+- US7: `testkit.New(t, module)` (Postgres migrated + NATS streams + Valkey + pools + UnitOfWork/ReadSession/outbox, `Kit.As(principal)` với fixture `authztest`); `testkit/contract` (response public theo spec gộp, response facade theo spec internal + ví dụ, envelope/payload theo JSON Schema); `facadegen` sinh `api.Fake` cho test bên gọi; `make test-contract` chạy contract helper + test bên gọi. `make specs-breaking` (oasdiff) có từ F001.

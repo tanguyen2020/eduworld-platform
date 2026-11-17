@@ -1584,3 +1584,57 @@ func (sh *strictHandler) GetTenant(w http.ResponseWriter, r *http.Request, tenan
 		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
 	}
 }
+
+// ErrNotFaked is returned by Fake for an operation without a func.
+var ErrNotFaked = errors.New("api: operation not faked")
+
+// Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
+type Fake struct {
+	CheckMembershipsFunc       func(ctx context.Context, request CheckMembershipsRequestObject) (CheckMembershipsResponseObject, error)
+	GetPrincipalFunc           func(ctx context.Context, request GetPrincipalRequestObject) (GetPrincipalResponseObject, error)
+	ResolvePrincipalFunc       func(ctx context.Context, request ResolvePrincipalRequestObject) (ResolvePrincipalResponseObject, error)
+	ListProjectionSnapshotFunc func(ctx context.Context, request ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error)
+	GetTenantFunc              func(ctx context.Context, request GetTenantRequestObject) (GetTenantResponseObject, error)
+}
+
+var _ StrictServerInterface = (*Fake)(nil)
+
+// CheckMemberships calls CheckMembershipsFunc.
+func (f *Fake) CheckMemberships(a0 context.Context, a1 CheckMembershipsRequestObject) (CheckMembershipsResponseObject, error) {
+	if f.CheckMembershipsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CheckMembershipsFunc(a0, a1)
+}
+
+// GetPrincipal calls GetPrincipalFunc.
+func (f *Fake) GetPrincipal(a0 context.Context, a1 GetPrincipalRequestObject) (GetPrincipalResponseObject, error) {
+	if f.GetPrincipalFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.GetPrincipalFunc(a0, a1)
+}
+
+// ResolvePrincipal calls ResolvePrincipalFunc.
+func (f *Fake) ResolvePrincipal(a0 context.Context, a1 ResolvePrincipalRequestObject) (ResolvePrincipalResponseObject, error) {
+	if f.ResolvePrincipalFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ResolvePrincipalFunc(a0, a1)
+}
+
+// ListProjectionSnapshot calls ListProjectionSnapshotFunc.
+func (f *Fake) ListProjectionSnapshot(a0 context.Context, a1 ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error) {
+	if f.ListProjectionSnapshotFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListProjectionSnapshotFunc(a0, a1)
+}
+
+// GetTenant calls GetTenantFunc.
+func (f *Fake) GetTenant(a0 context.Context, a1 GetTenantRequestObject) (GetTenantResponseObject, error) {
+	if f.GetTenantFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.GetTenantFunc(a0, a1)
+}
