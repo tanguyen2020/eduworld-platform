@@ -13,3 +13,14 @@ var AllowedCallers = map[string][]string{
 	"restoreStudentData":     {"identity"},
 	"restoreTrashItem":       {"identity"},
 }
+
+// ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);
+// pkg/modcall refuses a call whose context lacks them.
+var ContextRequired = map[string][]string{
+	"anonymizeUserData":      {"idempotency_key", "tenant_scope"},
+	"cleanupStudentData":     {"idempotency_key", "tenant_scope"},
+	"executeTenantCloneStep": {"idempotency_key"},
+	"mergeUserData":          {"idempotency_key", "tenant_scope"},
+	"restoreStudentData":     {"idempotency_key", "tenant_scope"},
+	"restoreTrashItem":       {"idempotency_key", "tenant_scope"},
+}

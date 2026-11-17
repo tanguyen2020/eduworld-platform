@@ -19,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
 // BasePath is the public API prefix.
@@ -196,7 +197,11 @@ type opKey struct{}
 func withOperation(op Operation, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		observability.InfoFrom(r.Context()).SetRoute(BasePath+op.Pattern, op.ID, op.Module)
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), opKey{}, op)))
+		ctx := context.WithValue(r.Context(), opKey{}, op)
+		if op.Module != "" {
+			ctx = tenancy.WithModule(ctx, op.Module) // caller module of facade calls and metric label
+		}
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

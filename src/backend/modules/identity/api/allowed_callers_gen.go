@@ -11,3 +11,9 @@ var AllowedCallers = map[string][]string{
 	"listProjectionSnapshot": {"chat", "competition", "game", "learning"},
 	"resolvePrincipal":       {"chat", "competition", "game", "learning"},
 }
+
+// ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);
+// pkg/modcall refuses a call whose context lacks them.
+var ContextRequired = map[string][]string{
+	"checkMemberships": {"tenant_scope"},
+}

@@ -30,6 +30,8 @@ func TestModuleBoundaries(t *testing.T) {
 		{"pkg imports modules", "pkg/health", mp + "/modules/identity", true},
 		{"cmd imports module root", "cmd/core-api", mp + "/modules/identity", false},
 		{"cmd imports api", "cmd/core-api", mp + "/modules/identity/api", true},
+		{"wiring imports api", "cmd/internal/wiring", mp + "/modules/identity/api", false},
+		{"wiring imports internal", "cmd/internal/wiring", mp + "/modules/identity/internal/domain", true},
 		{"domain imports infrastructure", "modules/game/internal/domain", mp + "/modules/game/internal/infrastructure", true},
 		{"application imports presentation", "modules/game/internal/application/command", mp + "/modules/game/internal/presentation", true},
 		{"query imports port/write", "modules/game/internal/application/query", mp + "/modules/game/internal/application/port/write", true},

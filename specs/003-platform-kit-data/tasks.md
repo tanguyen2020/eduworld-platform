@@ -130,14 +130,14 @@
 
 ### Tests cho User Story 5
 
-- [ ] T044 [P] [US5] Test F003-AC-24, F003-AC-25: span + metric + deadline theo `Kind`; scope/Principal gốc/caller/`Idempotency-Key` có trong context bên nhận; thiếu `tenant_scope`/`idempotency_key` khi `x-context-required` → 500 không gọi facade; caller ngoài allowlist → `403 CALLER_NOT_ALLOWED` (TC-SVC-006) — file: `src/backend/pkg/modcall/call_test.go` — phải FAIL trước khi code
-- [ ] T045 [P] [US5] Test F003-AC-26, F003-AC-27: facade giả chậm quá deadline → 503 `UNAVAILABLE` sau đúng một lần gọi (không retry); facade panic → 500; Problem 4xx giữ `code`; không có policy circuit/bulkhead nào được đăng ký (TC-SVC-011) — file: `src/backend/pkg/modcall/errors_test.go`
-- [ ] T046 [P] [US5] Test F003-AC-28: adapter `PrincipalResolver` với facade identity giả: thành công → Principal, không membership → `ErrNotMember`, deadline → `UNAVAILABLE` — file: `src/backend/cmd/internal/wiring/principal_resolver_test.go`
+- [x] T044 [P] [US5] Test F003-AC-24, F003-AC-25: span + metric + deadline theo `Kind`; scope/Principal gốc/caller/`Idempotency-Key` có trong context bên nhận; thiếu `tenant_scope`/`idempotency_key` khi `x-context-required` → 500 không gọi facade; caller ngoài allowlist → `403 CALLER_NOT_ALLOWED` (TC-SVC-006) — file: `src/backend/pkg/modcall/call_test.go` — phải FAIL trước khi code
+- [x] T045 [P] [US5] Test F003-AC-26, F003-AC-27: facade giả chậm quá deadline → 503 `UNAVAILABLE` sau đúng một lần gọi (không retry); facade panic → 500; Problem 4xx giữ `code`; không có policy circuit/bulkhead nào được đăng ký (TC-SVC-011) — file: `src/backend/pkg/modcall/errors_test.go`
+- [x] T046 [P] [US5] Test F003-AC-28: adapter `PrincipalResolver` với facade identity giả: thành công → Principal, không membership → `ErrNotMember`, deadline → `UNAVAILABLE` — file: `src/backend/cmd/internal/wiring/principal_resolver_test.go`
 
 ### Implementation cho User Story 5
 
-- [ ] T047 [US5] `modcall.Call` (span, deadline theo `module_call_deadline`, kiểm `x-context-required`/`x-allowed-callers`, context on-behalf, recover, `problem.Map`, metric API_DESIGN §12.3) — file: `src/backend/pkg/modcall/call.go`
-- [ ] T048 [US5] Adapter `authz.PrincipalResolver` bọc facade `identity` (`resolvePrincipal`) qua `modcall`, nối ở composition root `core-api`/`worker` — file: `src/backend/cmd/internal/wiring/principal_resolver.go`
+- [x] T047 [US5] `modcall.Call` (span, deadline theo `module_call_deadline`, kiểm `x-context-required`/`x-allowed-callers`, context on-behalf, recover, `problem.Map`, metric API_DESIGN §12.3) — file: `src/backend/pkg/modcall/call.go`
+- [x] T048 [US5] Adapter `authz.PrincipalResolver` bọc facade `identity` (`resolvePrincipal`) qua `modcall`, nối ở composition root `core-api`/`worker` — file: `src/backend/cmd/internal/wiring/principal_resolver.go`
 
 **Checkpoint**: User Story 5 chạy và kiểm độc lập được.
 
@@ -212,3 +212,5 @@
 - US3: command ghi kết quả bằng `idempotency.SetResult(ctx, result)` bên trong `UnitOfWork.Do` (đăng ký `entx.BeforeCommit`); middleware `httpx.Idempotency` bọc response, nếu handler lỗi do request trùng đã commit trước thì đọc lại và replay; `lock_timeout` 5 s → `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After`. Test integration đặt ở `src/backend/pkg/testkit/sample/idempotency_integration_test.go` (gói `internal` của module mẫu).
 - US4: thêm `authz.EventScope(tenantID)` (scope của consumer lấy từ envelope — scope chỉ tạo trong `authz`; golden API cập nhật, là bổ sung không đổi chữ ký cũ). Consumer tự quyết DLQ theo `NumDelivered` (durable `MaxDeliver: -1`), lỗi `outbox.Permanent` vào DLQ ngay. Relay chỉ poll (200 ms); `pg_notify('ew_outbox')` đã phát khi commit để nối `LISTEN` sau [Proposed]. Test gộp: `pkg/outbox/outbox_integration_test.go` (relay crash, consumer trùng/qua nửa đêm/scope, DLQ, quyền), `writer_test.go` (envelope + `audit.recorded` theo JSON Schema).
 - T043/T037: `natsx.PrincipalInvalidator` dùng consumer ordered (tạm thời, `DeliverNew`) để mọi replica nhận mọi event và xóa L1 của chính mình; thêm `CachedResolver.InvalidateTenant` (`tenant.updated`) và `InvalidateAll` (`role.updated`, SCAN + UNLINK prefix module); `enrollment.changed` dùng `student_id`.
+- US5: facade sinh bằng `tools/facadegen` (bundle spec internal + oapi-codegen v2.8.2: models + strict-server) vào `modules/<m>/api/facade_gen.go`; phần HTTP server sinh kèm không bao giờ được mount — analyzer `nointernalhttp` (trong `ewlint`) chặn mọi lời gọi `Handler*`/`NewStrictHandler*`. `allowedcallers` sinh thêm `ContextRequired`. `cmd/internal/wiring` được phép import `modules/<m>/api` (archgen). Caller của `modcall` = module của operation (`httpx` đặt `tenancy.WithModule`).
+- Delta hợp đồng (bảo mật): `Principal.grants[]` (`PrincipalGrant`: `role_code`, `role_scope_kind`, `school_id`, `subject_id`, `permissions`) trong `identity.internal.v1.yaml` — `permissions`/`scopes` gộp không cho biết permission nào chỉ áp trong trường/môn nào; adapter từ chối Principal thiếu `grants` (503, fail-closed). Nội dung thuộc F012 [Proposed].

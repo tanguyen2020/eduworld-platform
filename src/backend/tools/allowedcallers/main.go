@@ -1,4 +1,5 @@
-// Command allowedcallers generates modules/<m>/api/allowed_callers_gen.go from `x-allowed-callers` of
+// Command allowedcallers generates modules/<m>/api/allowed_callers_gen.go from `x-allowed-callers` and
+// `x-context-required` of
 // specs/openapi/modules/<m>.internal.v1.yaml (F002 T006). pkg/modcall (F003) checks it at run time and
 // answers 403 CALLER_NOT_ALLOWED; tools/archgen checks the same lists at build time.
 //
@@ -48,11 +49,11 @@ func run(root, specsDir string, check bool) error {
 		if err != nil {
 			return err
 		}
-		ops, err := Parse(b)
+		ops, ctxReq, err := ParseAll(b)
 		if err != nil {
 			return fmt.Errorf("%s: %w", f, err)
 		}
-		src, err := Render(callee, ops)
+		src, err := RenderAll(callee, ops, ctxReq)
 		if err != nil {
 			return err
 		}
@@ -76,13 +77,22 @@ func run(root, specsDir string, check bool) error {
 
 // Parse returns operationId → callers; every operation must declare known callers.
 func Parse(spec []byte) (map[string][]string, error) {
+	ops, _, err := ParseAll(spec)
+	return ops, err
+}
+
+var knownContext = []string{"tenant_scope", "idempotency_key"}
+
+// ParseAll also returns operationId → x-context-required.
+func ParseAll(spec []byte) (map[string][]string, map[string][]string, error) {
 	var doc struct {
 		Paths map[string]map[string]yaml.Node `yaml:"paths"`
 	}
 	if err := yaml.Unmarshal(spec, &doc); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	ops := map[string][]string{}
+	ctxReq := map[string][]string{}
 	for path, item := range doc.Paths {
 		for method, node := range item {
 			if !slices.Contains(httpMethods, method) {
@@ -91,34 +101,50 @@ func Parse(spec []byte) (map[string][]string, error) {
 			var op struct {
 				ID      string   `yaml:"operationId"`
 				Callers []string `yaml:"x-allowed-callers"`
+				Context []string `yaml:"x-context-required"`
 			}
 			if err := node.Decode(&op); err != nil {
-				return nil, fmt.Errorf("%s %s: %w", method, path, err)
+				return nil, nil, fmt.Errorf("%s %s: %w", method, path, err)
 			}
 			if op.ID == "" {
-				return nil, fmt.Errorf("%s %s: missing operationId", method, path)
+				return nil, nil, fmt.Errorf("%s %s: missing operationId", method, path)
 			}
 			if len(op.Callers) == 0 {
-				return nil, fmt.Errorf("operation %s: missing x-allowed-callers", op.ID)
+				return nil, nil, fmt.Errorf("operation %s: missing x-allowed-callers", op.ID)
 			}
 			for _, c := range op.Callers {
 				if !slices.Contains(knownCallers, c) {
-					return nil, fmt.Errorf("operation %s: unknown caller %q", op.ID, c)
+					return nil, nil, fmt.Errorf("operation %s: unknown caller %q", op.ID, c)
 				}
 			}
 			if _, dup := ops[op.ID]; dup {
-				return nil, fmt.Errorf("duplicate operationId %s", op.ID)
+				return nil, nil, fmt.Errorf("duplicate operationId %s", op.ID)
 			}
 			callers := slices.Clone(op.Callers)
 			sort.Strings(callers)
 			ops[op.ID] = slices.Compact(callers)
+			for _, c := range op.Context {
+				if !slices.Contains(knownContext, c) {
+					return nil, nil, fmt.Errorf("operation %s: unknown x-context-required %q", op.ID, c)
+				}
+			}
+			if len(op.Context) > 0 {
+				c := slices.Clone(op.Context)
+				sort.Strings(c)
+				ctxReq[op.ID] = slices.Compact(c)
+			}
 		}
 	}
-	return ops, nil
+	return ops, ctxReq, nil
 }
 
 // Render returns the gofmt'ed Go source for package api of callee.
 func Render(callee string, ops map[string][]string) ([]byte, error) {
+	return RenderAll(callee, ops, nil)
+}
+
+// RenderAll also emits ContextRequired.
+func RenderAll(callee string, ops, ctxReq map[string][]string) ([]byte, error) {
 	ids := make([]string, 0, len(ops))
 	for id := range ops {
 		ids = append(ids, id)
@@ -132,6 +158,15 @@ func Render(callee string, ops map[string][]string) ([]byte, error) {
 	b.WriteString("var AllowedCallers = map[string][]string{\n")
 	for _, id := range ids {
 		fmt.Fprintf(&b, "\t%q: {%s},\n", id, quoteAll(ops[id]))
+	}
+	b.WriteString("}\n\n")
+	b.WriteString("// ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);\n")
+	b.WriteString("// pkg/modcall refuses a call whose context lacks them.\n")
+	b.WriteString("var ContextRequired = map[string][]string{\n")
+	for _, id := range ids {
+		if c, ok := ctxReq[id]; ok {
+			fmt.Fprintf(&b, "\t%q: {%s},\n", id, quoteAll(c))
+		}
 	}
 	b.WriteString("}\n")
 	return format.Source(b.Bytes())

@@ -248,10 +248,37 @@ components:
           type: array
           maxItems: 1000
           items: { $ref: '#/components/schemas/Scope' }
+        grants:
+          type: array
+          maxItems: 100
+          description: |
+            Mỗi UserRole còn hiệu lực với permission của role và phạm vi gán (F003 Clarifications 2026-11-18). `permissions`/`scopes`
+            gộp không cho biết permission nào chỉ áp trong trường/môn nào, nên `authz.Require` dựa vào `grants`; bên gọi
+            (adapter `PrincipalResolver`) từ chối Principal thiếu `grants` (503, fail-closed). Owner nội dung: F012.
+          items: { $ref: '#/components/schemas/PrincipalGrant' }
         version:
           type: integer
           minimum: 0
           description: Tăng khi role/membership/trạng thái đổi; bên gọi dùng để vô hiệu cache.
+
+    PrincipalGrant:
+      type: object
+      required: [role_code, role_scope_kind, permissions]
+      properties:
+        role_code: { type: string, maxLength: 64 }
+        role_scope_kind: { type: string, enum: [tenant, platform] }
+        school_id:
+          type: [string, 'null']
+          format: uuid
+          description: Giới hạn trong một trường (UserRole scope school); null = toàn tenant hoặc platform
+        subject_id:
+          type: [string, 'null']
+          format: uuid
+          description: Giới hạn trong một môn (UserRole scope subject, ADR-0072)
+        permissions:
+          type: array
+          maxItems: 500
+          items: { type: string, maxLength: 128 }
 
     SchoolRef:
       type: object

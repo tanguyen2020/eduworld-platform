@@ -5,7 +5,8 @@
 //   - modules/<A>/... may import modules/<B>/... (B ≠ A) only as modules/<B>/api, and only when A is
 //     an allowed caller of at least one operation of B;
 //   - pkg/... never imports modules/...;
-//   - cmd/... imports only module root packages modules/<m> (which expose Register);
+//   - cmd/... imports only module root packages modules/<m> (which expose Register); cmd/internal/wiring
+//     may also import modules/<m>/api (composition-root adapters such as the PrincipalResolver, F003 T048);
 //   - layers inside a module: domain imports no application/infrastructure/presentation;
 //     application imports no infrastructure/presentation; application/query never imports
 //     application/command or application/port/write (ADR-0087);
@@ -185,8 +186,9 @@ func Violations(modPath string, pkgs []Package, allowed map[string]map[string]bo
 				out = append(out, fmt.Sprintf("%s: pkg/ must not import modules/ (%s)", rel, irel))
 			case strings.HasPrefix(rel, "cmd/") && strings.HasPrefix(imp, modPrefix):
 				parts := strings.Split(strings.TrimPrefix(imp, modPrefix), "/")
-				if len(parts) != 1 {
-					out = append(out, fmt.Sprintf("%s: cmd/ may import only module root packages (Register), not %s", rel, irel))
+				wiringAPI := strings.HasPrefix(rel, "cmd/internal/wiring") && len(parts) == 2 && parts[1] == "api"
+				if len(parts) != 1 && !wiringAPI {
+					out = append(out, fmt.Sprintf("%s: cmd/ may import only module root packages (Register) and, in cmd/internal/wiring, modules/<m>/api, not %s", rel, irel))
 				}
 			case owner != "" && strings.HasPrefix(imp, modPrefix):
 				parts := strings.Split(strings.TrimPrefix(imp, modPrefix), "/")

@@ -125,6 +125,7 @@ gen: ## Generate code: architecture rules from x-allowed-callers, problem codes 
 	$(GO) run ./tools/archgen
 	$(GO) generate ./pkg/problem
 	$(GO) run ./tools/allowedcallers
+	cd $(BACKEND) && go run ./tools/facadegen --oapi=oapi-codegen
 	$(GO) run ./tools/routematrix gen
 	$(GO) run ./tools/infragen
 	cd $(BACKEND)/pkg/testkit/sample/ent && go generate .
@@ -132,6 +133,7 @@ gen: ## Generate code: architecture rules from x-allowed-callers, problem codes 
 gen-check: gen ## Fail if generated files differ from the committed ones
 	git diff --exit-code -- $(BACKEND)/.golangci.arch.yml $(BACKEND)/pkg/problem/codes_gen.go
 	$(GO) run ./tools/allowedcallers --check
+	cd $(BACKEND) && go run ./tools/facadegen --check --oapi=oapi-codegen
 	$(GO) run ./tools/infragen --check
 	git diff --exit-code -- $(BACKEND)/pkg/testkit/sample/ent $(BACKEND)/modules/*/migrations
 
