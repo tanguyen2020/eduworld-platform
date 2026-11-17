@@ -99,3 +99,27 @@ func TestInvalidateL1(t *testing.T) {
 		t.Fatalf("Invalidate did not clear L1: calls = %d", next.calls.Load())
 	}
 }
+
+func TestInvalidateTenantAndAll(t *testing.T) {
+	ta, tb := uuid.New(), uuid.New()
+	pa := authz.NewPrincipal(authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, TenantID: &ta})
+	next := &fakeResolver{p: pa}
+	c := newCache(t, next, clock.System())
+	reqA := authz.ResolveRequest{Subject: authz.SubjectRef{Issuer: "iss", Subject: "a"}, TenantID: &ta}
+	_, _ = c.Resolve(context.Background(), reqA)
+	_ = c.InvalidateTenant(context.Background(), tb)
+	_, _ = c.Resolve(context.Background(), reqA)
+	if next.calls.Load() != 1 {
+		t.Fatal("InvalidateTenant removed another tenant")
+	}
+	_ = c.InvalidateTenant(context.Background(), ta)
+	_, _ = c.Resolve(context.Background(), reqA)
+	if next.calls.Load() != 2 {
+		t.Fatal("InvalidateTenant kept the tenant")
+	}
+	_ = c.InvalidateAll(context.Background())
+	_, _ = c.Resolve(context.Background(), reqA)
+	if next.calls.Load() != 3 {
+		t.Fatal("InvalidateAll kept entries")
+	}
+}

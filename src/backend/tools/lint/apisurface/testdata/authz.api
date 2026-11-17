@@ -9,6 +9,8 @@ type CacheOptions struct{Module string; TTL time.Duration; L1TTL time.Duration; 
 type CachedResolver struct{next PrincipalResolver; o CacheOptions; l1 *github.com/hashicorp/golang-lru/v2.Cache[string, l1Entry]; mu sync.Mutex; hits *github.com/prometheus/client_golang/prometheus.CounterVec; prefix string}
   func (*CachedResolver).Resolve(ctx context.Context, req ResolveRequest) (Principal, error)
   func (*CachedResolver).Invalidate(ctx context.Context, userID github.com/google/uuid.UUID, tenantID *github.com/google/uuid.UUID) error
+  func (*CachedResolver).InvalidateTenant(ctx context.Context, tenantID github.com/google/uuid.UUID) error
+  func (*CachedResolver).InvalidateAll(ctx context.Context) error
 func Catalog() []Permission
 type CatalogError struct{Violations []Violation}
   func (*CatalogError).Error() string

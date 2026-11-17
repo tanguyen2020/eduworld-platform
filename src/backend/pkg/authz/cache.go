@@ -234,3 +234,47 @@ func (c *CachedResolver) Invalidate(ctx context.Context, userID uuid.UUID, tenan
 	}
 	return nil
 }
+
+// InvalidateTenant removes every principal of tenantID (tenant.updated) from L1 and Valkey.
+func (c *CachedResolver) InvalidateTenant(ctx context.Context, tenantID uuid.UUID) error {
+	tp := tenantID.String()
+	c.mu.Lock()
+	for _, k := range c.l1.Keys() {
+		if e, ok := c.l1.Peek(k); ok && tenantPart(e.data.TenantID) == tp {
+			c.l1.Remove(k)
+		}
+	}
+	c.mu.Unlock()
+	return c.scanDelete(ctx, c.prefix+"*:"+tp)
+}
+
+// InvalidateAll empties the cache (role.updated changes permissions of every holder of the role).
+func (c *CachedResolver) InvalidateAll(ctx context.Context) error {
+	c.mu.Lock()
+	c.l1.Purge()
+	c.mu.Unlock()
+	return c.scanDelete(ctx, c.prefix+"*")
+}
+
+func (c *CachedResolver) scanDelete(ctx context.Context, pattern string) error {
+	if c.o.Valkey == nil {
+		return nil
+	}
+	vk := c.o.Valkey
+	var cursor uint64
+	for {
+		e, err := vk.Do(ctx, vk.B().Scan().Cursor(cursor).Match(pattern).Count(500).Build()).AsScanEntry()
+		if err != nil {
+			return fmt.Errorf("authz: scan principals: %w", err)
+		}
+		if len(e.Elements) > 0 {
+			if err := vk.Do(ctx, vk.B().Unlink().Key(e.Elements...).Build()).Error(); err != nil {
+				return fmt.Errorf("authz: unlink principals: %w", err)
+			}
+		}
+		if e.Cursor == 0 {
+			return nil
+		}
+		cursor = e.Cursor
+	}
+}

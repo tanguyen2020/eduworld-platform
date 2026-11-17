@@ -80,6 +80,26 @@ func TestCacheTwoLevels(t *testing.T) {
 		t.Fatal("user-wide invalidate left the key")
 	}
 
+	// Tenant-wide and full invalidation (tenant.updated, role.updated).
+	if _, err := a.Resolve(ctx, req); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.InvalidateTenant(ctx, tid); err != nil {
+		t.Fatal(err)
+	}
+	if n, _ := vk.Do(ctx, vk.B().Exists().Key(key).Build()).AsInt64(); n != 0 {
+		t.Fatal("InvalidateTenant left the key")
+	}
+	if _, err := a.Resolve(ctx, req); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.InvalidateAll(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if keys, _ := vk.Do(ctx, vk.B().Keys().Pattern("ew:learning:principal:*").Build()).AsStrSlice(); len(keys) != 0 {
+		t.Fatalf("InvalidateAll left %v", keys)
+	}
+
 	// Valkey down → fall back to the resolver (still correct, not fail-open).
 	vk.Close()
 	clk.Advance(16 * time.Second)
