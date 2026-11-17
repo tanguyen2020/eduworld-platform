@@ -7,10 +7,11 @@ import { check, operations, route } from './check-routes.mjs';
 import { yaml, ROOT, loadEnv, loadRoutes } from './lib.mjs';
 
 const base = () => ({
+  rate_profiles: { api: { read_count: 300, write_count: 60 } },
   routes: [
-    { id: 'player', gateway: 'public', uris: ['/api/v1/game/*'], upstream: 'core-api', modules: ['game'], auth: 'oidc', tenant_header: 'required', priority: 100 },
+    { id: 'player', gateway: 'public', uris: ['/api/v1/game/*'], upstream: 'core-api', modules: ['game'], auth: 'oidc', rate: 'api', tenant_header: 'required', priority: 100 },
     { id: 'cfg', gateway: 'public', uris: ['/api/v1/game/client-config'], methods: ['GET'], upstream: 'core-api', modules: ['game'], auth: 'none', tenant_header: 'none', priority: 250 },
-    { id: 'admin', gateway: 'internal', uris: ['/api/v1/admin/*'], upstream: 'core-api', modules: ['identity'], auth: 'oidc', tenant_header: 'optional', priority: 100 },
+    { id: 'admin', gateway: 'internal', uris: ['/api/v1/admin/*'], upstream: 'core-api', modules: ['identity'], auth: 'oidc', rate: 'api', tenant_header: 'optional', priority: 100 },
     { id: 'rt', gateway: 'public', uris: ['/realtime/v1'], upstream: 'realtime', modules: ['realtime'], auth: 'ticket', tenant_header: 'none', websocket: true },
   ],
 });
@@ -57,6 +58,15 @@ test('an internal prefix on the public gateway fails (route and operation)', () 
   const p = check(s, spec()).join('\n');
   assert.match(p, /internal prefix \/api\/v1\/admin\/\* on the public gateway/);
   assert.match(p, /listTenants\): internal operation reachable on the public gateway/);
+});
+
+test('an authenticated route without rate profile fails (api_rate_default)', () => {
+  const s = base();
+  delete s.routes[0].rate;
+  assert.match(check(s, spec()).join('\n'), /player: authenticated route without rate profile/);
+  const s2 = base();
+  s2.routes[2].rate = 'missing';
+  assert.match(check(s2, spec()).join('\n'), /admin: authenticated route without rate profile/);
 });
 
 test('a catch-all route fails', () => {

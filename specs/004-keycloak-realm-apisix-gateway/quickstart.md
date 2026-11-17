@@ -54,3 +54,21 @@ postman collection run specs/postman/gateway.postman_collection.json -e specs/po
 
 - Output script kiểm, kết quả quét log TC-AUTH-060 (kịch bản 16), bảng 404 của prefix nội bộ, diff realm lần áp thứ hai.
 - Kết quả spike R5 (token đã giải mã có/không OTP), quét log `/auth/portal/*` (kịch bản 28).
+
+## 5. Bằng chứng (2026-11-18, Windows 11 + Docker Desktop; keycloak 26.4, apache/apisix:3.13.0-debian, valkey:8 trong compose)
+
+Kịch bản §2 được tự động hóa; lệnh `make apisix-plugin-test` (test-nginx) được thay bằng smoke trên gateway thật (`make apisix-smoke`).
+
+| # | Test tự động | Kết quả |
+|---|---|---|
+| 1, 24, 27 (tĩnh) | `node deploy/keycloak/scripts/check-realm.mjs` + `check-realm.test.mjs` (client, secret chỉ `$(env:KC_…)`/`change-me-local`, không `users`, portal confidential không redirect URI, flow đúng thứ tự, không browser flow/login theme portal) | 8/8 pass |
+| 2–3, 5–8, 24–26 | `KC_INTEGRATION=1 node --test deploy/keycloak/tests/realm.integration.test.mjs` (password grant theo client; chặn non-student ở game, student ở portal; `svc-identity` duy nhất; token có `aud`, `roles`, không PII/`organization`/`offline_access`; tham số realm; `amr` `pwd`/`pwd,otp`; áp lần 2 không đổi) | 6/6 pass |
+| 29 | [research.md](research.md) R5 | có kết quả spike |
+| 9, 10, 11, 12, 13, 16, 17, 18, 21, 28 (một phần) | `APISIX_SMOKE=1 node --test deploy/apisix/tests/smoke.test.mjs`: prefix nội bộ `Route Not Found` ở `:9080`; `/admin/*` 401 ở `:9180`, route người chơi không có ở internal; 401 thiếu token/sửa chữ ký/token realm `master`/logout không token; 400 `TENANT_HEADER_REQUIRED`/`BAD_REQUEST` Problem JSON, header hợp lệ tới backend, `/me/tenants` miễn, `/me/permissions` tùy chọn; 429 `RATE_LIMITED` theo thiết bị và theo username chuẩn hóa từ nhiều thiết bị, IP chung không bị chặn, đủ `Retry-After`/`RateLimit-*`; `api_rate_default` ghi 60/phút → 429 Problem, đọc đếm riêng (300); CORS chỉ origin allowlist; mật khẩu duy nhất gửi tới `/auth/game/login` và `/auth/portal/login` không có trong log gateway | 8/8 pass |
+| 14 | `node deploy/apisix/scripts/check-routes.mjs` (484 operation, 11 route, 0 lỗi) + `check-routes.test.mjs` (upstream sai, thiếu route, prefix nội bộ ở public, catch-all, `/admin/*` thiếu `x-internal`, auth/tenant/module lệch, route OIDC thiếu `rate`) | 12/12 pass |
+| 15, 28 (cấu hình) | `check-no-body-logging.mjs` + test (bật `include_req_body`, logger trên `/auth/game/*`/`/auth/portal/*`, route login thiếu `sensitive`, OTel thu body/header, access log có `$request`/`$args`/`$request_body`/`$http_authorization`) | 8/8 pass |
+| 19, 20, 21 (render) | `render.test.mjs` (staging: `redirect` HTTPS + HSTS mọi route public, `ssl_protocols` TLSv1.2/1.3; local không redirect; `/realtime/v1` websocket + `limit-conn`, không `openid-connect`; access log không query string; plugin chung mọi route public, `ip-restriction` mọi route internal; `ew-api-rate` trên mọi route OIDC, không secret trong file render; file standalone khớp nguồn) | 7/7 pass |
+| 22 | `check-no-hardcode.mjs` + test (URL, IP/CIDR, hostname, host:port trong `routes.yaml` và realm chung) | 3/3 pass |
+| 23 | Job `apisix` của `deploy-config.yml` (check, boot từng file standalone trong image APISIX bằng `validate-standalone.sh`, diff render staging so base vào job summary); `node scripts/ci/check-workflows.mjs` 0 lỗi, `test-path-filters.sh` 19/19 | chờ chạy trên GitHub (T033) |
+
+Chưa kiểm được ở local: 403 ngoài CIDR của gateway internal (máy dev nằm trong CIDR; kiểm ở mức render), upgrade WebSocket thật và log không `ticket=` (cần binary `realtime`), quét Tempo (stack obs không chạy trong smoke), ngưỡng toàn cục `LOGIN_QUEUE_BUSY` (cần tải ≥ 120 req/s), `Set-Cookie` qua `/auth/portal/*` (cần F012). `validate-standalone.sh` chưa chạy được trên máy dev (lệnh `docker run`/`docker rm` bị chặn trong phiên làm việc) — chạy trong CI.

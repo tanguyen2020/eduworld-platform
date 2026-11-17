@@ -62,6 +62,25 @@ test('OIDC routes validate issuer and audience; login routes carry the login lim
   assert.equal(portal.plugins['ew-tenant-header'], undefined);
 });
 
+test('api_rate_default: every OIDC route counts per user in Valkey; login and public routes do not', () => {
+  for (const gw of ['public', 'internal']) {
+    for (const r of doc('local.env', gw).routes) {
+      const rate = r.plugins['ew-api-rate'];
+      if (r.plugins['openid-connect']) {
+        assert.ok(rate, `${r.id} lacks ew-api-rate`);
+        assert.equal(rate.redis_host, 'valkey');
+        assert.equal(rate.allow_degradation, true);
+        assert.equal(rate.redis_password, undefined, 'no secret in the rendered file');
+      } else {
+        assert.equal(rate, undefined, `${r.id}: ew-api-rate without OIDC`);
+      }
+    }
+  }
+  const d = doc('local.env', 'public');
+  assert.deepEqual([byId(d, 'public-player').plugins['ew-api-rate'].read_count, byId(d, 'public-player').plugins['ew-api-rate'].write_count], [300, 60]);
+  assert.equal(byId(d, 'public-auth-session').plugins['ew-api-rate'].read_count, 10);
+});
+
 test('internal gateway never serves player or login routes', () => {
   const ids = doc('local.env', 'internal').routes.map((r) => r.id);
   for (const id of ids) assert.doesNotMatch(id, /player|auth-|realtime/);

@@ -47,7 +47,8 @@ File: `deploy/compose/docker-compose.yml` (hạ tầng), `docker-compose.app.yml
 | `nats` | `nats:2.10-alpine` (`-js -sd /data -m 8222`) | 4222, 8222 | JetStream 1 node: stream `EVT_*`, `CHAT_MESSAGES`, `DLQ_*`; request/reply `ew.cmd.>` | default |
 | `nats-box` | `natsio/nats-box` | — | CLI debug (`nats stream ls`, `nats consumer info ...`) | `tools` |
 | `keycloak` | `quay.io/keycloak/keycloak:26.x` (`start-dev`) | 8180 | OIDC, import realm `eduworld` dev (gồm client `svc-identity` cho Keycloak Admin API) | default |
-| `apisix` | `apache/apisix:3.x` (standalone) | 9080, 9443 | Gateway local, hai upstream `core-api` và `realtime` (public + internal cùng máy) | default |
+| `apisix` | `apache/apisix:3.13.0-debian` (standalone) | 9080, 9443 | Gateway **public** local: route render từ `deploy/apisix/routes/routes.yaml` vào `deploy/apisix/standalone/public/apisix.yaml` (`make apisix-render`), plugin Lua `ew-tenant-header`, `ew-login-key` mount từ `deploy/apisix/plugins` (F004) | default |
+| `apisix-internal` | `apache/apisix:3.13.0-debian` (standalone) | 9180 | Gateway **internal** local: prefix nền tảng `/api/v1/admin`, `/sis`, `/game-admin`, `/game-media*` + route portal, `ip-restriction` theo `EW_ADMIN_CIDRS` (F004) | default |
 | `mailpit` | `axllent/mailpit` | 8025, 1025 | Bắt email của Keycloak và email nghiệp vụ của module identity (`EW_SMTP_*`); xem tại `http://localhost:8025` | default |
 | `floci` | `floci/floci:<release-tag>` (ghim tag release cụ thể; tra tag mới nhất trên GitHub Releases/Docker Hub, không commit `latest`) | 4566 | **S3 local giả lập bằng [floci](https://github.com/floci-io/floci)** (ADR-0044) — **chỉ local và CI**; staging/production dùng S3 managed tại Việt Nam hoặc Garage/SeaweedFS ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md)): `FLOCI_STORAGE_MODE=persistent`, `FLOCI_SERVICES_S3_ENFORCE_AUTH=true` (bắt buộc ký request như S3 thật; khi bật, floci chỉ chấp nhận credential tài khoản mặc định `test` / `test`, khóa khác bị `InvalidAccessKeyId`), volume `./data/floci:/app/data`. Cùng công cụ với staging/production (ADR-0071), khác cấu hình | default |
 | `s3-init` | `floci/floci:<release-tag>-compat` (có AWS CLI; hoặc `amazon/aws-cli`) | — | Job một lần, credential `AWS_ACCESS_KEY_ID=test` / `AWS_SECRET_ACCESS_KEY=test` (chỉ local/CI): `aws --endpoint-url http://floci:4566 s3 mb s3://<bucket>` cho 5 bucket `ew-media-quarantine`, `ew-media-public`, `ew-media-private`, `ew-game-bundles`, `ew-exports` (không có bucket bài nộp của học sinh: ngoài version này, ADR-0082); bật versioning cho public/private/bundles bằng `s3api put-bucket-versioning`. Lifecycle 7 ngày của quarantine và bucket policy **không** giả lập ở local (floci chưa ghi rõ hỗ trợ) mà kiểm thử trên staging | default |
@@ -100,6 +101,9 @@ Quy ước tên: tiền tố `EW_`; kết nối database theo module `EW_DB_<MOD
 | `EW_WS_MAX_CONNECTIONS`, `EW_WS_HEARTBEAT`, `EW_WS_TIMEOUT` | như local | Giới hạn kết nối WebSocket mỗi replica và nhịp heartbeat/timeout của realtime; giá trị theo `ws_*` trong [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md) |
 | `EW_CMD_TIMEOUT` | như local | Timeout request/reply NATS `ew.cmd.*` từ `realtime` tới handler trong `core-api` |
 | `EW_CORS_ALLOWED_ORIGINS`, `EW_REALTIME_PUBLIC_URL` | như local | Allowlist Origin của WebSocket (Web export) và URL WebSocket công khai trả trong `client-config` |
+| `EW_APISIX_VALKEY_PASSWORD` | như local, từ Docker secret của gateway | Mật khẩu user ACL `apisix_ratelimit` cho plugin `ew-api-rate` (`api_rate_default`); local trống (Valkey không ACL) |
+| `EW_APISIX_LOGIN_KEY_SECRET` | như local, từ Docker secret của gateway | Khóa HMAC của plugin `ew-login-key` (băm username chuẩn hóa làm khóa đếm giới hạn đăng nhập); biến môi trường của container APISIX, không nằm trong file route. Local mặc định `change-me-local` |
+| Biến route gateway (`EW_UPSTREAM_CORE_API`, `EW_UPSTREAM_REALTIME`, `EW_OIDC_DISCOVERY`, `EW_PORTAL_HOST`, `EW_ADMIN_CIDRS`, `EW_RATE_*`, `EW_RATELIMIT_VALKEY_HOST`/`_PORT`, `EW_REALTIME_CONN_PER_IP`, `EW_TLS`, `EW_OTEL_COLLECTOR`) | `deploy/apisix/routes/env/<env>.env` của pipeline (mẫu `staging.env.example`) | Không phải biến runtime: `render.mjs` thay `${VAR}` trong `routes.yaml` khi render file standalone. `EW_ADMIN_CIDRS` là allowlist của gateway internal; ngưỡng `EW_RATE_*` theo [SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md) (đăng nhập: đếm theo từng node gateway; `EW_RATE_API_*`, `EW_RATE_SESSION_PER_MIN`: đếm chung trong Valkey) |
 
 ```dotenv
 # ---- Chung (gốc) ----
@@ -112,7 +116,8 @@ EW_OIDC_ISSUERS=http://localhost:8180/realms/eduworld
 EW_OIDC_AUDIENCE=eduworld-api
 EW_OIDC_ALLOWED_AZP=eduworld-game-backend,eduworld-portal
 EW_OIDC_ALLOWED_CLOCK_SKEW=30s
-EW_OIDC_PLATFORM_REQUIRED_ACR=mfa
+EW_OIDC_PLATFORM_REQUIRED_AMR=otp                 # MFA platform: amr chứa otp (direct grant không nâng acr — research F004 R5)
+EW_OIDC_PLATFORM_REQUIRED_ACR=                    # tùy chọn: acr chấp nhận thêm (trống = chỉ xét amr)
 EW_OIDC_PLATFORM_MAX_AUTH_AGE=8h
 EW_KC_PORTAL_CLIENT_ID=eduworld-portal            # azp của portal (guard portal_staff, F002)
 EW_KC_GAME_CLIENT_ID=eduworld-game-backend        # azp của game (guard game_player, F002)
@@ -240,7 +245,7 @@ Lệnh seed: `make seed` = import realm → `make migrate` (mọi module) → se
 ### 6.1. Hạ tầng và toàn bộ backend
 ```bash
 cp .env.example .env && make env           # sao chép .env.example gốc, của từng module và từng binary
-make up                                     # hạ tầng: postgres valkey nats keycloak apisix mailpit floci s3-init sis-mock
+make up                                     # hạ tầng: postgres valkey nats keycloak apisix apisix-internal mailpit floci s3-init sis-mock
 make migrate                                # atlas migrate apply cho 5 database module
 make seed
 make up-app                                 # 3 binary core-api, realtime, worker (--profile=all) trong container
@@ -283,6 +288,8 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 |---|---|
 | `make tools` | Cài công cụ Go ghim version trong `tools/versions.mk` (ent, oapi-codegen, golangci-lint, go-arch-lint, govulncheck) vào `./bin` và kéo image Atlas `arigaio/atlas:0.38.0` |
 | `make up` / `make down` / `make reset` | Khởi động / dừng / xóa volume hạ tầng |
+| `make keycloak-import` / `make keycloak-check` / `make keycloak-test` | Áp realm `eduworld` bằng `keycloak-config-cli` + post-apply (local thêm user/organization dev) / kiểm tĩnh realm as code / kiểm hành vi realm trên Keycloak đang chạy (F004) |
+| `make apisix-render [ENV=local]` / `make apisix-check` / `make apisix-smoke` | Render file standalone hai gateway từ `routes.yaml` / kiểm file render mới, route ↔ spec gộp, không log body, không hardcode / smoke trên stack đang chạy (F004) |
 | `make up-app [EXCEPT=<binary>]` | Chạy 3 binary `core-api`, `realtime`, `worker` trong container (trừ binary chỉ định) |
 | `make up-obs` | Bật stack observability |
 | `make run-core-api` / `make run-realtime` / `make run-worker [PROFILE=events\|chat\|jobs\|all]` | Chạy native một binary (`go -C src/backend run ./cmd/<binary>`) |
@@ -328,7 +335,8 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `sis-mock` thoát ngay, log `Cannot read properties of undefined (reading 'isPrimary')` | Dùng image prism 5 | Ghim `stoplight/prism:4` |
 | Upload/`s3-init` lỗi `InvalidAccessKeyId` | floci bật `FLOCI_SERVICES_S3_ENFORCE_AUTH=true` chỉ nhận credential mặc định | Đặt `EW_S3_ACCESS_KEY=test`, `EW_S3_SECRET_KEY=test` (và `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` của `s3-init`), chỉ local/CI |
 | `make migrate`/`migrate-lint` không kết nối được PostgreSQL | Atlas chạy trong container trên network `eduworld_default`, hạ tầng chưa chạy | `make up` trước; kiểm tra `docker network ls` có `eduworld_default` |
-| APISIX 404 | Route standalone chưa reload / upstream sai | `docker compose restart apisix`; kiểm tra `apisix.yaml` kết thúc bằng `#END` |
+| APISIX 404 `Route Not Found` | File standalone cũ hoặc chưa reload; prefix nội bộ gọi vào gateway public (đúng thiết kế) | `make apisix-render` rồi `docker compose restart apisix apisix-internal`; prefix `/api/v1/admin`, `/sis`, `/game-admin`, `/game-media*` gọi qua `:9180` |
+| APISIX 400 `TENANT_HEADER_REQUIRED` | Route cần `X-Tenant-Id` (plugin `ew-tenant-header`) | Gửi header UUID tenant đang chọn; `/me/tenants`, `/auth/session` không cần |
 | WebSocket đóng ngay với mã 4401 | Ticket hết hạn (60 s) hoặc đã dùng | Xin ticket mới mỗi lần kết nối |
 | Lệnh WS timeout | `core-api` chưa chạy nên không có handler subscribe `ew.cmd.<module>.>` | Chạy `core-api`; `nats sub 'ew.cmd.>'` trong `nats-box` để xem |
 | Gửi chat báo `CHAT_TEMPORARILY_UNAVAILABLE` | `nats` chưa chạy hoặc stream chưa tạo | `docker compose up -d nats`; chạy `core-api` một lần để tạo stream |

@@ -49,6 +49,7 @@ export function check(src, spec) {
       if (r.upstream !== want) p.push(`route ${r.id}: ${u} must go to upstream ${want}`);
     }
     if (r.uris.some((u) => u === '/api/v1/*' || u === '/*')) p.push(`route ${r.id}: catch-all uri would expose internal prefixes`);
+    if (r.auth === 'oidc' && !(r.rate && src.rate_profiles?.[r.rate])) p.push(`route ${r.id}: authenticated route without rate profile (api_rate_default)`);
   }
   for (const op of operations(spec)) {
     const where = `${op.method} ${op.path} (${op.id})`;

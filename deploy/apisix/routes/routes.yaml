@@ -5,7 +5,8 @@
 #
 # Fields: gateway public|internal|both · upstream core-api|realtime · modules (x-service of the
 # operations served) · auth oidc|none|ticket · tenant_header required|optional|none · login (plugin
-# ew-login-key profile) · body_max (bytes) · sensitive (never log/trace the body) · priority.
+# ew-login-key profile) · rate (plugin ew-api-rate profile, api_rate_default per user; required with
+# auth oidc) · body_max (bytes) · sensitive (never log/trace the body) · priority.
 
 upstreams:
   core-api: ${EW_UPSTREAM_CORE_API}
@@ -18,6 +19,12 @@ login_profiles:
                   global_window: 1, global_code: LOGIN_QUEUE_BUSY, name: game-refresh }
   portal: { fields: [username, identifier], device_count: ${EW_RATE_PORTAL_DEVICE_PER_MIN}, user_count: ${EW_RATE_PORTAL_USER_PER_MIN},
             global_count: ${EW_RATE_PORTAL_GLOBAL_PER_SEC}, global_window: 1, global_code: RATE_LIMITED, name: portal-login }
+
+# api_rate_default (SECURITY_ARCHITECTURE §14): per user (`sub`), reads and writes counted apart, in Valkey.
+rate_store: { host: ${EW_RATELIMIT_VALKEY_HOST}, port: ${EW_RATELIMIT_VALKEY_PORT} }
+rate_profiles:
+  api: { read_count: ${EW_RATE_API_READ_PER_MIN}, write_count: ${EW_RATE_API_WRITE_PER_MIN} }
+  session: { read_count: ${EW_RATE_SESSION_PER_MIN}, write_count: ${EW_RATE_SESSION_PER_MIN} }
 
 routes:
   - id: auth-game-login
@@ -54,6 +61,7 @@ routes:
     upstream: core-api
     modules: [identity]
     auth: oidc
+    rate: api
     tenant_header: required
     body_max: 4096
     sensitive: true
@@ -78,6 +86,7 @@ routes:
     upstream: core-api
     modules: [identity]
     auth: oidc
+    rate: session
     tenant_header: none
     body_max: 16384
     priority: 250
@@ -88,6 +97,7 @@ routes:
     upstream: core-api
     modules: [identity, learning]
     auth: oidc
+    rate: api
     tenant_header: optional
     body_max: 1048576
     priority: 200
@@ -109,6 +119,7 @@ routes:
     upstream: core-api
     modules: [identity, learning, game, chat, competition]
     auth: oidc
+    rate: api
     tenant_header: required
     body_max: 1048576
     priority: 100
@@ -121,6 +132,7 @@ routes:
     upstream: core-api
     modules: [identity, learning, game, competition, chat]
     auth: oidc
+    rate: api
     tenant_header: required
     body_max: 262144
     priority: 100
@@ -131,6 +143,7 @@ routes:
     upstream: core-api
     modules: [identity, learning, game, competition, chat]
     auth: oidc
+    rate: api
     tenant_header: optional
     body_max: 1048576
     priority: 100

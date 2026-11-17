@@ -19,6 +19,7 @@ apisix:
 nginx_config:
   envs:
     - EW_APISIX_LOGIN_KEY_SECRET
+    - EW_APISIX_VALKEY_PASSWORD
   http:
     custom_lua_shared_dict:
       ew-login-limit: 10m
@@ -38,6 +39,7 @@ plugins:
   - redirect
   - response-rewrite
   - ew-tenant-header
+  - ew-api-rate
   - ew-login-key
 
 plugin_attr:

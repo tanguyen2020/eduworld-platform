@@ -112,6 +112,13 @@ routes:
             match_with_client_id: true
       ew-tenant-header:
         mode: required
+      ew-api-rate:
+        name: api
+        read_count: 300
+        write_count: 60
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
     methods:
       - POST
   - id: public-auth-portal
@@ -190,6 +197,13 @@ routes:
             claim: aud
             required: true
             match_with_client_id: true
+      ew-api-rate:
+        name: session
+        read_count: 10
+        write_count: 10
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
   - id: public-tenant-optional
     uris:
       - /api/v1/me/permissions
@@ -236,6 +250,13 @@ routes:
             match_with_client_id: true
       ew-tenant-header:
         mode: optional
+      ew-api-rate:
+        name: api
+        read_count: 300
+        write_count: 60
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
   - id: public-game-client-config
     uris:
       - /api/v1/game/client-config
@@ -307,6 +328,13 @@ routes:
             match_with_client_id: true
       ew-tenant-header:
         mode: required
+      ew-api-rate:
+        name: api
+        read_count: 300
+        write_count: 60
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
   - id: public-player
     uris:
       - /api/v1/auth/*
@@ -362,6 +390,13 @@ routes:
             match_with_client_id: true
       ew-tenant-header:
         mode: required
+      ew-api-rate:
+        name: api
+        read_count: 300
+        write_count: 60
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
   - id: public-realtime
     uris:
       - /realtime/v1

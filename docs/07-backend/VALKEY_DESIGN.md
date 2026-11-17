@@ -192,7 +192,7 @@ ZCARD ew:rl:chat:<uid>:60s         # so với limit từ ChatPolicy
 EXPIRE ew:rl:chat:<uid>:60s 60
 ```
 
-Fixed-window cho API đơn giản: `INCR ew:rl:api:<sub>:<route>:<minute>` + `EXPIRE 60`. APISIX `limit-count` dùng policy `redis` trỏ tới Valkey với user ACL `apisix_ratelimit` (chỉ prefix `plugin-limit-count*`).
+Fixed-window cho API đơn giản: `INCR ew:rl:api:<sub>:<route>:<minute>` + `EXPIRE 60`. APISIX hiện thực bằng plugin Lua `ew-api-rate` (F004): khóa `ew:rl:api:<sub>:<profile>:<read|write>:<cửa sổ>` (`profile` = `api`/`session` trong `deploy/apisix/routes/routes.yaml`), user ACL `apisix_ratelimit` chỉ prefix `~ew:rl:*` và lệnh `INCR`, `EXPIRE`; mật khẩu từ biến môi trường gateway `EW_APISIX_VALKEY_PASSWORD`. Valkey không phản hồi → cho qua và ghi cảnh báo (allow_degradation).
 
 ### 4.6. Idempotency
 

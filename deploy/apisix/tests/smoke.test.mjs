@@ -94,6 +94,35 @@ run('F004-AC-17/18: login limits per device and username (not per IP) with Probl
   assert.notEqual(other.status, 429);
 });
 
+run('api_rate_default: writes per user are limited in Valkey (Problem 429), reads counted apart', async () => {
+  const t = await gameToken();
+  const headers = { 'X-Tenant-Id': randomUUID() };
+  let last;
+  for (let i = 0; i < 61; i++) {
+    last = await call(PUB, '/api/v1/game/telemetry', { method: 'POST', token: t, headers, body: {} });
+    if (last.status === 429) break;
+  }
+  assert.equal(last.status, 429);
+  assert.equal(last.json.code, 'RATE_LIMITED');
+  assert.match(last.headers.get('content-type'), /application\/problem\+json/);
+  for (const h of ['retry-after', 'ratelimit-limit', 'ratelimit-reset']) assert.ok(last.headers.get(h), `header ${h}`);
+  assert.equal(last.headers.get('ratelimit-limit'), '60');
+  const read = await call(PUB, '/api/v1/game/profile', { token: t, headers });
+  assert.notEqual(read.status, 429, 'reads have their own counter');
+  assert.equal(read.headers.get('ratelimit-limit'), '300');
+});
+
+run('F004-AC-21: CORS preflight allows only the allowlisted origin', async () => {
+  const pre = (origin) => fetch(`${PUB}/api/v1/game/profile`, { method: 'OPTIONS', headers: { Origin: origin,
+    'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'authorization,x-tenant-id' } });
+  const ok = await pre('http://localhost:5173');
+  assert.equal(ok.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+  assert.match(ok.headers.get('access-control-allow-headers') ?? '', /X-Tenant-Id/i);
+  const foreign = await pre('http://evil.example');
+  assert.notEqual(foreign.headers.get('access-control-allow-origin'), 'http://evil.example');
+  assert.notEqual(foreign.headers.get('access-control-allow-origin'), '*');
+});
+
 run('F004-AC-15/16: the password of a login never reaches the gateway logs', async () => {
   const secret = `Pw-${randomUUID()}`;
   await call(PUB, '/api/v1/auth/game/login', { method: 'POST', headers: { 'X-Device-Id': `dev-${randomUUID()}` },

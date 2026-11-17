@@ -44,6 +44,10 @@ export function render(src, env, gateway) {
     }
     if (r.tenant_header && r.tenant_header !== 'none') plugins['ew-tenant-header'] = { mode: r.tenant_header };
     if (r.login) plugins['ew-login-key'] = { ...src.login_profiles[r.login] };
+    if (r.rate) {
+      plugins['ew-api-rate'] = { name: r.rate, ...src.rate_profiles[r.rate], redis_host: src.rate_store.host,
+        redis_port: Number(src.rate_store.port), allow_degradation: true };
+    }
     if (r.websocket) {
       plugins['limit-conn'] = { conn: Number(env.EW_REALTIME_CONN_PER_IP), burst: 0, default_conn_delay: 0.1,
         key_type: 'var', key: 'remote_addr', rejected_code: 503 };
@@ -71,13 +75,22 @@ export function render(src, env, gateway) {
 }
 
 if (isMain(import.meta.url)) {
-  const envName = (process.argv.find((a) => a.startsWith('--env=')) ?? '--env=local').slice(6);
+  // --env=staging reads routes/env/staging.env; a name with a dot is a file name (staging.env.example).
+  // --out=<dir> writes <dir>/<gateway>/apisix.yaml instead of standalone/ (CI diff of a PR).
+  const arg = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
+  const envName = arg('env') ?? 'local';
+  const outDir = arg('out');
   const check = process.argv.includes('--check');
-  const env = loadEnv(envName === 'local' ? 'local.env' : `${envName}.env`);
+  const env = loadEnv(envName.includes('.') ? envName : `${envName}.env`);
   const src = loadRoutes(env);
   let stale = 0;
   for (const gw of ['public', 'internal']) {
     const out = render(src, env, gw);
+    if (outDir) {
+      mkdirSync(`${outDir}/${gw}`, { recursive: true });
+      writeFileSync(`${outDir}/${gw}/apisix.yaml`, out);
+      continue;
+    }
     const file = new URL(`standalone/${gw}/apisix.yaml`, ROOT);
     if (check) {
       let cur = '';

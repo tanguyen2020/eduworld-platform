@@ -19,6 +19,15 @@
 - Q: `amr`/`acr` có xuất hiện trong token direct grant không, và direct grant trả gì khi tài khoản còn required action? → A: Chưa chắc chắn → **spike** T039 [Proposed] phải xong trước khi F012/F051 làm phần đăng nhập portal: xác nhận mapper AMR (`amr` chứa `otp` khi bước OTP chạy, `pwd` khi không) và LoA (`acr` `1`/`2`), hành vi "Account is not fully set up" và việc Keycloak tự thêm `CONFIGURE_TOTP` cho `platform_staff` chưa có OTP (F004-AC-29).
 - Q: Route `/api/v1/auth/portal/*` ở gateway nào? → A: APISIX public, phục vụ dưới origin của portal (`https://portal.<domain>/api/v1/...`) để cookie refresh/CSRF là first-party [Proposed]; không `openid-connect`, không `ew-tenant-header`, không ghi body, rate limit theo `portal_login_rate` (username, `device_id`, toàn cục; không theo IP — R30) (F004-AC-28).
 
+### Session 2026-11-18 (khi triển khai)
+
+- Q: Cú pháp biến của realm as code? → A: `keycloak-config-cli` dùng `$(env:KC_…)` (bật `IMPORT_VARSUBSTITUTION_ENABLED`), không phải `${env.KC_…}`; `check-realm.mjs` và `check-no-hardcode.mjs` chấp nhận cú pháp này. `organizations` và User Profile không áp được qua `keycloak-config-cli` → Admin API trong `post-apply.mjs`/`seed-dev-orgs.mjs` (User Profile qua component `declarative-user-profile`).
+- Q: Kết quả spike R5 ảnh hưởng tiêu chí MFA thế nào? → A: Direct grant luôn `acr = 1` và không có `auth_time`; MFA platform xác định bằng `amr` chứa `otp` (`EW_OIDC_PLATFORM_REQUIRED_AMR`, backend F002), tuổi xác thực lấy `iat` khi thiếu `auth_time`. OTP chỉ yêu cầu khi tài khoản đã cấu hình OTP (OTP REQUIRED với user chưa có OTP trả 500); `platform_staff` chưa có OTP bị chặn ở backend (F012) chứ không ở flow.
+- Q: Giới hạn đăng nhập đếm ở đâu? → A: Plugin Lua `ew-login-key` đếm theo thiết bị/username (HMAC)/toàn cục trong shared dict `ew-login-limit` **của từng node gateway** (APISIX standalone không có `limit-count` policy `redis` cho khóa tính trong plugin); ngưỡng `EW_RATE_*` là ngưỡng mỗi node. `api_rate_default` (T029) do plugin Lua `ew-api-rate` đếm theo `sub` trong Valkey (đọc/ghi riêng, Problem Details `429 RATE_LIMITED`), không dùng `limit-count` có sẵn vì body lỗi không phải Problem Details. Ngưỡng riêng `/cms/*` (120/phút), `/sis/imports`, telemetry, chat report… của §14 chưa tách profile — chuyển feature sở hữu route [TBD].
+- Q: Gateway internal có yêu cầu `X-Tenant-Id`? → A: Route `platform-internal` chế độ `optional` (System Admin chọn tenant đích theo use case); route portal dùng chung (`portal-tenant`) giữ `required` trên cả hai gateway.
+- Q: `/auth/game/logout` có `openid-connect`? → A: Có. Contract không đặt `security: []` (trả `401`), nên route riêng `auth-game-logout` có `openid-connect` + `ew-tenant-header`; vẫn `sensitive` (không ghi body). `check-routes.mjs` bắt lệch này.
+- Q: Đầu ra ADC và `adc diff`? → A: Chưa làm trong F004 (cần APISIX etcd của dev/staging, F130); F004 sinh standalone, job CI boot từng file render trong image APISIX và đưa diff render staging (so nhánh base) vào job summary. `keycloak-config-cli --dry-run` trên staging cũng chuyển F130.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Realm Keycloak được quản lý bằng code (Priority: P1)
@@ -183,4 +192,4 @@ DevOps áp cùng cấu hình route cho local (standalone) và dev/staging/prod (
 
 - Keycloak 26.x (Organizations GA) và APISIX 3.x; `keycloak-config-cli` và ADC chạy trong workflow GitHub Actions `deploy-config.yml` (DEPLOYMENT §5, §6, §10; ADR-0088).
 - Kết quả spike KEYCLOAK_SSO §2.1 (scope `organization` khi không là member) không ảnh hưởng feature này vì backend luôn kiểm chéo.
-- Bộ đếm rate limit dùng Valkey `ratelimit` (DEPLOYMENT §5); ngưỡng từ biến môi trường theo SECURITY_ARCHITECTURE §14.
+- Bộ đếm giới hạn đăng nhập nằm trong shared dict của từng node gateway (Clarifications 2026-11-18); Valkey `ratelimit` dành cho `api_rate_default` (DEPLOYMENT §5); ngưỡng từ biến môi trường theo SECURITY_ARCHITECTURE §14.
