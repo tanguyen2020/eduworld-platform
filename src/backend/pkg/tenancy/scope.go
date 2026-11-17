@@ -105,7 +105,9 @@ func NewPlatformScopeForAuthz(actor string) PlatformScope { return PlatformScope
 type scopeKey struct{}
 
 // WithScope stores the scope in ctx.
-func WithScope(ctx context.Context, s Scope) context.Context { return context.WithValue(ctx, scopeKey{}, s) }
+func WithScope(ctx context.Context, s Scope) context.Context {
+	return context.WithValue(ctx, scopeKey{}, s)
+}
 
 // ScopeFrom returns the scope of ctx; ok is false when absent or invalid.
 func ScopeFrom(ctx context.Context) (Scope, bool) {

@@ -52,7 +52,10 @@ func TestPlatformScopeSeesOnlyNullTenant(t *testing.T) {
 
 type recorded struct{ events []audit.Event }
 
-func (r *recorded) Record(_ context.Context, e audit.Event) error { r.events = append(r.events, e); return nil }
+func (r *recorded) Record(_ context.Context, e audit.Event) error {
+	r.events = append(r.events, e)
+	return nil
+}
 
 // F002-AC-12: closed reason list, audit cross_tenant.accessed and metric per reason.
 func TestBypass(t *testing.T) {
