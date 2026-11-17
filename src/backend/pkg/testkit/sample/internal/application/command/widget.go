@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit/sample/internal/application/dto"
@@ -75,7 +76,11 @@ func (h Create) Handle(ctx context.Context, in dto.CreateWidget) (id uuid.UUID, 
 		if err := h.Repo.Create(ctx, w); err != nil {
 			return err
 		}
-		return h.Events.Publish(ctx, "widget.created", w.ID.String(), map[string]any{"id": w.ID.String(), "code": w.Code})
+		if err := h.Events.Publish(ctx, "widget.created", w.ID.String(), map[string]any{"id": w.ID.String(), "code": w.Code}); err != nil {
+			return err
+		}
+		// Idempotent operation: the response is stored in this transaction (no-op without a key).
+		return idempotency.SetResult(ctx, dto.Created{ID: w.ID})
 	})
 	return w.ID, err
 }

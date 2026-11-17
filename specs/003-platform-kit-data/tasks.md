@@ -77,15 +77,15 @@
 
 ### Tests cho User Story 3
 
-- [ ] T026 [P] [US3] Integration test F003-AC-13, F003-AC-14: bản ghi `INSERT` cùng tx nghiệp vụ; replay + header; khác payload 409; hai request song song → request sau chờ rồi replay (không chạy nghiệp vụ hai lần), vượt `lock_timeout` → 409 + `Retry-After`; thiếu key 428 — file: `src/backend/pkg/idempotency/store_integration_test.go` — phải FAIL trước khi code
-- [ ] T027 [P] [US3] Integration test F003-AC-15: command lỗi (4xx/5xx) rollback → không có bản ghi, retry cùng key được xử lý; bản ghi hết hạn bị bỏ qua, không có lệnh DELETE — file: `src/backend/pkg/idempotency/expiry_integration_test.go`
-- [ ] T072 [P] [US3] Test F003-AC-37: key UUIDv4/chuỗi lạ → 400 trước khi mở tx; key UUIDv7 lệch quá `idempotency_record_ttl` → 400; key tạo 23:59 UTC, retry 00:01 → replay (cùng `key_issued_on`) — file: `src/backend/pkg/idempotency/key_test.go`
-- [ ] T028 [P] [US3] Integration test F003-AC-16: user B cùng key/route không nhận response của A — file: `src/backend/pkg/idempotency/isolation_integration_test.go`
+- [x] T026 [P] [US3] Integration test F003-AC-13, F003-AC-14: bản ghi `INSERT` cùng tx nghiệp vụ; replay + header; khác payload 409; hai request song song → request sau chờ rồi replay (không chạy nghiệp vụ hai lần), vượt `lock_timeout` → 409 + `Retry-After`; thiếu key 428 — file: `src/backend/pkg/idempotency/store_integration_test.go` — phải FAIL trước khi code
+- [x] T027 [P] [US3] Integration test F003-AC-15: command lỗi (4xx/5xx) rollback → không có bản ghi, retry cùng key được xử lý; bản ghi hết hạn bị bỏ qua, không có lệnh DELETE — file: `src/backend/pkg/idempotency/expiry_integration_test.go`
+- [x] T072 [P] [US3] Test F003-AC-37: key UUIDv4/chuỗi lạ → 400 trước khi mở tx; key UUIDv7 lệch quá `idempotency_record_ttl` → 400; key tạo 23:59 UTC, retry 00:01 → replay (cùng `key_issued_on`) — file: `src/backend/pkg/idempotency/key_test.go`
+- [x] T028 [P] [US3] Integration test F003-AC-16: user B cùng key/route không nhận response của A — file: `src/backend/pkg/idempotency/isolation_integration_test.go`
 
 ### Implementation cho User Story 3
 
-- [ ] T029 [US3] Store (ent `IdempotencyRecord`, hash SHA-256 body chuẩn hóa, `Pending` trong context, `INSERT` trong tx của `UnitOfWork.Do` trước commit, xử lý lỗi unique → đọc và replay; không khóa Valkey) + `key.go` (UUIDv7, `key_issued_on`, kiểm lệch giờ) — file: `src/backend/pkg/idempotency/store.go`
-- [ ] T030 [US3] Middleware `httpx.Idempotency` (chỉ operation khai báo `IdempotencyKey` trong spec): kiểm key, đọc bản ghi để replay/409, đặt `Pending`, ghi `Idempotent-Replayed`, đọc `idempotency_record_ttl` — file: `src/backend/pkg/httpx/idempotency.go`
+- [x] T029 [US3] Store (ent `IdempotencyRecord`, hash SHA-256 body chuẩn hóa, `Pending` trong context, `INSERT` trong tx của `UnitOfWork.Do` trước commit, xử lý lỗi unique → đọc và replay; không khóa Valkey) + `key.go` (UUIDv7, `key_issued_on`, kiểm lệch giờ) — file: `src/backend/pkg/idempotency/store.go`
+- [x] T030 [US3] Middleware `httpx.Idempotency` (chỉ operation khai báo `IdempotencyKey` trong spec): kiểm key, đọc bản ghi để replay/409, đặt `Pending`, ghi `Idempotent-Replayed`, đọc `idempotency_record_ttl` — file: `src/backend/pkg/httpx/idempotency.go`
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
 
@@ -209,3 +209,4 @@
 - T017/T024: `UnitOfWork` giữ `*sql.Tx` trong context; module dựng client `ent.NewClient(ent.Driver(entx.Driver(ctx)))`; ngoài transaction mọi lệnh trả `ErrNoTransaction`. `CrossTenantScope` ghi audit `cross_tenant.accessed` khi mở transaction.
 - T003: module mẫu ở `src/backend/pkg/testkit/sample` (ent sinh trong `sample/ent`, DDL fixture `sample/fixture/sample.sql` áp bằng `learning_migrator` trong test, schema `sample` của `eduworld_learning`).
 - T022/T062: luật read/write context (F003-AC-10) nằm trong `tools/archgen` (`make arch-check`) cho mọi đường dẫn `*/internal/application/query` và `*/internal/infrastructure/persistence/read` (cả module mẫu), fixture thật trong `scripts/ci/test-arch-fixtures.sh` (14/14) thay cho `go-arch-lint.base.yml`.
+- US3: command ghi kết quả bằng `idempotency.SetResult(ctx, result)` bên trong `UnitOfWork.Do` (đăng ký `entx.BeforeCommit`); middleware `httpx.Idempotency` bọc response, nếu handler lỗi do request trùng đã commit trước thì đọc lại và replay; `lock_timeout` 5 s → `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After`. Test integration đặt ở `src/backend/pkg/testkit/sample/idempotency_integration_test.go` (gói `internal` của module mẫu).

@@ -16,6 +16,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/clock"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -52,6 +53,9 @@ type Operation struct {
 	Public  bool   // no token (login, refresh, client-config)
 	Tenant  TenantMode
 	Guard   Guard
+	// Idempotency and SuccessStatus come from the IdempotencyKey parameter and the 2xx response of the spec.
+	Idempotency   IdempotencyMode
+	SuccessStatus int
 }
 
 var (
@@ -91,6 +95,8 @@ type Deps struct {
 	// Spec is the merged public OpenAPI spec; when set, every operation must exist in it and requests are
 	// validated against it (ADR-0041, F002-AC-25).
 	Spec *openapi3.T
+	// Idempotency is the store of the module database for idempotent operations (F003 US3).
+	Idempotency *idempotency.Store
 	// Middlewares run first for every request (request id, OTel, access log — package observability).
 	Middlewares []func(http.Handler) http.Handler
 }
@@ -120,6 +126,7 @@ func NewServer(d Deps) (*Server, error) {
 		return nil, err
 	}
 	if d.Registerer != nil {
+		_ = d.Registerer.Register(idempotencyReplays)
 		if err := d.Registerer.Register(tenantMismatch); err != nil {
 			var are prometheus.AlreadyRegisteredError
 			if !errors.As(err, &are) {
@@ -162,6 +169,12 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 			return err
 		}
 		chain = validate(route, chain)
+	}
+	if op.Idempotency != IdempotencyNone {
+		if s.d.Idempotency == nil || op.Public {
+			return fmt.Errorf("httpx: operation %s is idempotent but the server has no idempotency store (or is public)", op.ID)
+		}
+		chain = Idempotency(s.d.Idempotency, op)(chain)
 	}
 	if !op.Public {
 		chain = s.guards(effectiveGuard(op), chain)

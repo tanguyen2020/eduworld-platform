@@ -71,3 +71,8 @@ type WidgetView struct {
 	Code string    `json:"code"`
 	Name string    `json:"name"`
 }
+
+// Created is the response of CreateWidget.
+type Created struct {
+	ID uuid.UUID `json:"id"`
+}
