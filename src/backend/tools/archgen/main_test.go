@@ -84,3 +84,28 @@ func TestCorePkgsWithoutDataLayer(t *testing.T) {
 		}
 	}
 }
+
+// F003-AC-10: read context never touches the write side, entx or outbox (ADR-0087).
+func TestReadWriteContexts(t *testing.T) {
+	for _, c := range []struct {
+		pkg, imp string
+		wantFail bool
+	}{
+		{"modules/game/internal/application/query", mp + "/pkg/entx", true},
+		{"modules/game/internal/application/query", mp + "/pkg/outbox", true},
+		{"modules/game/internal/application/query", mp + "/modules/game/internal/application/command", true},
+		{"modules/game/internal/application/query/sub", mp + "/modules/game/internal/application/port/write", true},
+		{"modules/game/internal/application/query", mp + "/modules/game/internal/application/port/read", false},
+		{"modules/game/internal/infrastructure/persistence/read", mp + "/pkg/outbox", true},
+		{"modules/game/internal/infrastructure/persistence/read", mp + "/modules/game/internal/infrastructure/persistence/write", true},
+		{"modules/game/internal/infrastructure/persistence/read", mp + "/pkg/entx", false},
+		{"modules/game/internal/infrastructure/persistence/write", mp + "/pkg/outbox", false},
+		{"pkg/testkit/sample/internal/application/query", mp + "/pkg/entx", true},
+		{"pkg/testkit/sample/internal/infrastructure/persistence/read", mp + "/pkg/testkit/sample/internal/infrastructure/persistence/write", true},
+	} {
+		got := v(c.pkg, c.imp)
+		if (len(got) > 0) != c.wantFail {
+			t.Errorf("%s → %s: violations=%v, wantFail=%v", c.pkg, c.imp, got, c.wantFail)
+		}
+	}
+}

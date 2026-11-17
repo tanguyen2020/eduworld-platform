@@ -11,7 +11,9 @@
 //     application/command or application/port/write (ADR-0087);
 //   - domain imports no infrastructure library (ent, pgx, database/sql, net/http, nats, valkey) nor the
 //     module ent package (F002-AC-26, BACKEND_DESIGN §3);
-//   - pkg/authz, pkg/problem, pkg/tenancy never depend on ent or pgx, even transitively (F002-AC-27).
+//   - pkg/authz, pkg/problem, pkg/tenancy never depend on ent or pgx, even transitively (F002-AC-27);
+//   - read context: application/query imports no application/command, application/port/write, pkg/entx,
+//     pkg/outbox; infrastructure/persistence/read imports no pkg/outbox nor persistence/write (F003-AC-10).
 //
 // Go's internal/ rule already stops imports of modules/<B>/internal/... at compile time.
 //
@@ -103,6 +105,35 @@ var domainForbidden = []string{"entgo.io/", "github.com/jackc/pgx", "database/sq
 // dataLayerFree are pkg/ packages (and their sub-packages) without ent/pgx in their dependency graph.
 var dataLayerFree = []string{"pkg/authz", "pkg/problem", "pkg/tenancy"}
 
+// cqrsViolations applies to any package path with /internal/application/query or
+// /internal/infrastructure/persistence/read (modules and the sample module of pkg/testkit).
+func cqrsViolations(modPath, rel string, imports []string) []string {
+	var out []string
+	base, layer, ok := strings.Cut(rel, "/internal/")
+	if !ok {
+		return nil
+	}
+	in := func(l, p string) bool { return l == p || strings.HasPrefix(l, p+"/") }
+	var banned []string
+	switch {
+	case in(layer, "application/query"):
+		banned = []string{base + "/internal/application/command", base + "/internal/application/port/write", "pkg/entx", "pkg/outbox"}
+	case in(layer, "infrastructure/persistence/read"):
+		banned = []string{base + "/internal/infrastructure/persistence/write", "pkg/outbox"}
+	default:
+		return nil
+	}
+	for _, imp := range imports {
+		irel := strings.TrimPrefix(imp, modPath+"/")
+		for _, b := range banned {
+			if irel == b || strings.HasPrefix(irel, b+"/") {
+				out = append(out, fmt.Sprintf("%s: read context must not import %s (F003-AC-10)", rel, irel))
+			}
+		}
+	}
+	return out
+}
+
 func externalViolations(modPath, rel, owner, layer string, p Package) []string {
 	var out []string
 	if owner != "" && (layer == "domain" || strings.HasPrefix(layer, "domain/")) {
@@ -143,6 +174,7 @@ func Violations(modPath string, pkgs []Package, allowed map[string]map[string]bo
 		}
 		owner, layer := ownerAndLayer(rel)
 		out = append(out, externalViolations(modPath, rel, owner, layer, p)...)
+		out = append(out, cqrsViolations(modPath, rel, p.Imports)...)
 		for _, imp := range p.Imports {
 			if !strings.HasPrefix(imp, modPath+"/") {
 				continue

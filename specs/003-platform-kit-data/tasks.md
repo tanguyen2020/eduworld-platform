@@ -54,18 +54,18 @@
 ### Tests cho User Story 2
 
 - [x] T020 [P] [US2] Integration test F003-AC-08: `UnitOfWork.Do` commit khi nil, rollback khi lỗi/panic; repository và `outbox.Writer` dùng cùng tx từ context; `Do` lồng dùng lại tx ngoài — file: `src/backend/pkg/entx/uow_do_integration_test.go` — phải FAIL trước khi code
-- [ ] T021 [P] [US2] Integration test F003-AC-09: `CreateWidget` lỗi sau khi ghi outbox → rollback, outbox trống; `ListWidgets` chạy với role chỉ đọc; adapter read ghi trong `ReadSession` → lỗi (TC-SVC-001) — file: `src/backend/pkg/testkit/sample/cqrs_integration_test.go`
-- [ ] T022 [P] [US2] Test F003-AC-10: fixture vi phạm (query import `port/write`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `application/command`; `persistence/read` import `src/backend/pkg/outbox`) → `go-arch-lint`/`depguard` fail có vị trí — file: `src/backend/tools/lint/testdata/badquery/internal/application/query/bad.go`
-- [ ] T023 [P] [US2] Integration test F003-AC-12: `Save` version cũ → 409 `CONFLICT` — file: `src/backend/pkg/testkit/sample/repo_integration_test.go`
-- [ ] T060 [P] [US2] Test F003-AC-11: tên widget vượt MaxLen → 422 `MAX_LENGTH`, `UnitOfWork` (spy) không được gọi; thiếu permission → lỗi `authz.Require`, repository không được gọi — file: `src/backend/pkg/testkit/sample/internal/application/command/create_widget_test.go`
-- [ ] T061 [P] [US2] Test F003-AC-33: exporter in-memory có span con `sample.command.CreateWidget`, metric `eduworld_usecase_duration_seconds` đủ nhãn, log không chứa payload — file: `src/backend/pkg/observability/usecase_test.go`
+- [x] T021 [P] [US2] Integration test F003-AC-09: `CreateWidget` lỗi sau khi ghi outbox → rollback, outbox trống; `ListWidgets` chạy với role chỉ đọc; adapter read ghi trong `ReadSession` → lỗi (TC-SVC-001) — file: `src/backend/pkg/testkit/sample/cqrs_integration_test.go`
+- [x] T022 [P] [US2] Test F003-AC-10: fixture vi phạm (query import `port/write`, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `application/command`; `persistence/read` import `src/backend/pkg/outbox`) → `go-arch-lint`/`depguard` fail có vị trí — file: `src/backend/tools/lint/testdata/badquery/internal/application/query/bad.go`
+- [x] T023 [P] [US2] Integration test F003-AC-12: `Save` version cũ → 409 `CONFLICT` — file: `src/backend/pkg/testkit/sample/repo_integration_test.go`
+- [x] T060 [P] [US2] Test F003-AC-11: tên widget vượt MaxLen → 422 `MAX_LENGTH`, `UnitOfWork` (spy) không được gọi; thiếu permission → lỗi `authz.Require`, repository không được gọi — file: `src/backend/pkg/testkit/sample/internal/application/command/create_widget_test.go`
+- [x] T061 [P] [US2] Test F003-AC-33: exporter in-memory có span con `sample.command.CreateWidget`, metric `eduworld_usecase_duration_seconds` đủ nhãn, log không chứa payload — file: `src/backend/pkg/observability/usecase_test.go`
 
 ### Implementation cho User Story 2
 
 - [x] T024 [US2] `UnitOfWork.Do` (scope từ context, tx trong context, `Publisher()` trả `outbox.Writer` gắn tx) và `ReadSession.InTenantRead` (tx `READ ONLY`, client đọc) — file: `src/backend/pkg/entx/readsession.go`
-- [ ] T025 [US2] `observability.UseCase(ctx, name) (context.Context, func(error))` — span, metric, log kết quả theo `problem.Kind` — file: `src/backend/pkg/observability/usecase.go`
-- [ ] T062 [US2] Thêm rule read/write context vào cấu hình lint nền (go-arch-lint components `command`/`query`/`port-write`/`port-read`/`persist-write`/`persist-read`; depguard cho `query`, `persistence/read`) theo BACKEND_DESIGN §3 — file: `src/backend/tools/lint/go-arch-lint.base.yml` — kiểm: `make lint MOD=pkg`
-- [ ] T063 [US2] Module mẫu theo khuôn: command `CreateWidget`/`DeleteWidget`, query `ListWidgets`, port `write`/`read`, persistence `write`/`read`, HTTP handler giữ interface có kiểu, nối ở composition root — file: `src/backend/pkg/testkit/sample/internal/application/command/create_widget.go`
+- [x] T025 [US2] `observability.UseCase(ctx, name) (context.Context, func(error))` — span, metric, log kết quả theo `problem.Kind` — file: `src/backend/pkg/observability/usecase.go`
+- [x] T062 [US2] Thêm rule read/write context vào cấu hình lint nền (go-arch-lint components `command`/`query`/`port-write`/`port-read`/`persist-write`/`persist-read`; depguard cho `query`, `persistence/read`) theo BACKEND_DESIGN §3 — file: `src/backend/tools/lint/go-arch-lint.base.yml` — kiểm: `make lint MOD=pkg`
+- [x] T063 [US2] Module mẫu theo khuôn: command `CreateWidget`/`DeleteWidget`, query `ListWidgets`, port `write`/`read`, persistence `write`/`read`, HTTP handler giữ interface có kiểu, nối ở composition root — file: `src/backend/pkg/testkit/sample/internal/application/command/create_widget.go`
 
 **Checkpoint**: User Story 2 chạy và kiểm độc lập được.
 
@@ -208,3 +208,4 @@
 - T014: mixin mang luôn interceptor (truy vấn) và hook (create gán/kiểm `tenant_id`, update/delete thêm cùng điều kiện, delete → soft-delete hoặc `ErrHardDeleteForbidden`); `entx` không import code ent sinh (gọi `Where`/`Client().Mutate` qua reflection). Bảng H cần `HybridContent{ResourceType: "<loại>"}`.
 - T017/T024: `UnitOfWork` giữ `*sql.Tx` trong context; module dựng client `ent.NewClient(ent.Driver(entx.Driver(ctx)))`; ngoài transaction mọi lệnh trả `ErrNoTransaction`. `CrossTenantScope` ghi audit `cross_tenant.accessed` khi mở transaction.
 - T003: module mẫu ở `src/backend/pkg/testkit/sample` (ent sinh trong `sample/ent`, DDL fixture `sample/fixture/sample.sql` áp bằng `learning_migrator` trong test, schema `sample` của `eduworld_learning`).
+- T022/T062: luật read/write context (F003-AC-10) nằm trong `tools/archgen` (`make arch-check`) cho mọi đường dẫn `*/internal/application/query` và `*/internal/infrastructure/persistence/read` (cả module mẫu), fixture thật trong `scripts/ci/test-arch-fixtures.sh` (14/14) thay cho `go-arch-lint.base.yml`.

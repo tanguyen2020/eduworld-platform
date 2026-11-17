@@ -74,5 +74,13 @@ fixture pkg/tenancy/zz_archfixture "package zz_archfixture
 import _ \"github.com/jackc/pgx/v5\""
 expect "F002-AC-27 pkg/tenancy/... depends on pgx → arch-check fails" fail go run ./tools/archgen --check
 
+fixture modules/learning/internal/application/query/zz_archfixture "package zz_archfixture
+import _ \"$MOD/pkg/entx\""
+expect "F003-AC-10 query imports pkg/entx → arch-check fails" fail go run ./tools/archgen --check
+
+fixture modules/learning/internal/infrastructure/persistence/read/zz_archfixture "package zz_archfixture
+import _ \"$MOD/pkg/outbox\""
+expect "F003-AC-10 persistence/read imports pkg/outbox → arch-check fails" fail go run ./tools/archgen --check
+
 echo "test-arch-fixtures: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
