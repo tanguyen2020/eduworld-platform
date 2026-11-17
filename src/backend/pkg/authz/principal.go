@@ -190,3 +190,12 @@ func SystemPlatformScope(job string) (tenancy.PlatformScope, error) {
 	}
 	return tenancy.NewPlatformScopeForAuthz("job:" + job), nil
 }
+
+// EventScope returns the TenantScope of an event consumer or realtime command: the tenant comes from the
+// event envelope (or command routing), never from user input (MULTITENANCY §4.1 item 7, F003-AC-20).
+func EventScope(tenantID uuid.UUID) (tenancy.TenantScope, error) {
+	if tenantID == uuid.Nil {
+		return tenancy.TenantScope{}, errors.New("authz: event scope needs a tenant id")
+	}
+	return tenancy.NewTenantScopeForAuthz(tenantID), nil
+}

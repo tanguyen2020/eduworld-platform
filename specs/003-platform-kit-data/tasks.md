@@ -97,26 +97,26 @@
 
 ### Tests cho User Story 4
 
-- [ ] T031 [P] [US4] Test F003-AC-17: Writer ghi trong tx, envelope validate schema, có `traceparent` — file: `src/backend/pkg/outbox/writer_test.go` — phải FAIL trước khi code
-- [ ] T032 [P] [US4] Integration test F003-AC-18: giết relay giữa chừng, chạy lại, không trùng (TC-SVC-002) — file: `src/backend/pkg/outbox/relay_integration_test.go`
-- [ ] T033 [P] [US4] Integration test F003-AC-19: giao trùng → xử lý một lần; `processed_events.event_occurred_at` = `occurred_at` của envelope (TC-SVC-003) — file: `src/backend/pkg/outbox/consumer_integration_test.go`
-- [ ] T073 [P] [US4] Integration test F003-AC-38: event `occurred_at` 23:59 UTC xử lý lúc 23:59, giao lại lúc 00:05 hôm sau (clock giả) → bỏ qua, ack, nghiệp vụ chạy đúng một lần — file: `src/backend/pkg/outbox/consumer_cross_midnight_integration_test.go`
-- [ ] T034 [P] [US4] Integration test F003-AC-20: scope từ envelope; event platform chỉ consumer platform; tham chiếu tenant khác → DLQ — file: `src/backend/pkg/outbox/consumer_tenant_integration_test.go`
-- [ ] T035 [P] [US4] Integration test F003-AC-21: quá ngưỡng giao/sai schema → DLQ subject + `infra.dead_letters` + Term — file: `src/backend/pkg/outbox/dlq_integration_test.go`
-- [ ] T036 [P] [US4] Test F003-AC-22: payload `audit.recorded` validate schema, không khóa PII — file: `src/backend/pkg/outbox/auditrecorder_test.go`
+- [x] T031 [P] [US4] Test F003-AC-17: Writer ghi trong tx, envelope validate schema, có `traceparent` — file: `src/backend/pkg/outbox/writer_test.go` — phải FAIL trước khi code
+- [x] T032 [P] [US4] Integration test F003-AC-18: giết relay giữa chừng, chạy lại, không trùng (TC-SVC-002) — file: `src/backend/pkg/outbox/relay_integration_test.go`
+- [x] T033 [P] [US4] Integration test F003-AC-19: giao trùng → xử lý một lần; `processed_events.event_occurred_at` = `occurred_at` của envelope (TC-SVC-003) — file: `src/backend/pkg/outbox/consumer_integration_test.go`
+- [x] T073 [P] [US4] Integration test F003-AC-38: event `occurred_at` 23:59 UTC xử lý lúc 23:59, giao lại lúc 00:05 hôm sau (clock giả) → bỏ qua, ack, nghiệp vụ chạy đúng một lần — file: `src/backend/pkg/outbox/consumer_cross_midnight_integration_test.go`
+- [x] T034 [P] [US4] Integration test F003-AC-20: scope từ envelope; event platform chỉ consumer platform; tham chiếu tenant khác → DLQ — file: `src/backend/pkg/outbox/consumer_tenant_integration_test.go`
+- [x] T035 [P] [US4] Integration test F003-AC-21: quá ngưỡng giao/sai schema → DLQ subject + `infra.dead_letters` + Term — file: `src/backend/pkg/outbox/dlq_integration_test.go`
+- [x] T036 [P] [US4] Test F003-AC-22: payload `audit.recorded` validate schema, không khóa PII — file: `src/backend/pkg/outbox/auditrecorder_test.go`
 - [ ] T037 [P] [US4] Integration test F003-AC-23: publish từng event invalidate → cache Principal bị xóa — file: `src/backend/pkg/natsx/principal_invalidator_integration_test.go`
-- [ ] T068 [P] [US4] Integration test F003-AC-35: `infra.*` không bật RLS; Writer bằng `_app` chỉ INSERT; Relay bằng `_relay` chỉ `SELECT, UPDATE (published_at, attempts)`; dead letters `_app` chỉ INSERT, `_platform` chỉ cập nhật cột xử lý; `DELETE`/`TRUNCATE` trên `infra.*` bằng mọi role ứng dụng → lỗi quyền — file: `src/backend/pkg/outbox/grants_integration_test.go`
+- [x] T068 [P] [US4] Integration test F003-AC-35: `infra.*` không bật RLS; Writer bằng `_app` chỉ INSERT; Relay bằng `_relay` chỉ `SELECT, UPDATE (published_at, attempts)`; dead letters `_app` chỉ INSERT, `_platform` chỉ cập nhật cột xử lý; `DELETE`/`TRUNCATE` trên `infra.*` bằng mọi role ứng dụng → lỗi quyền — file: `src/backend/pkg/outbox/grants_integration_test.go`
 - [ ] T069 [P] [US4] Integration test F003-AC-36: job tạo partition trước 7 ngày cho bốn bảng; gỡ partition quá `outbox_retention`/`idempotency_record_ttl`/retention dead letter; partition còn outbox chưa publish hoặc dead letter chưa xử lý → không gỡ + cảnh báo; thiếu partition → cảnh báo; không chạm bảng nghiệp vụ — file: `src/backend/pkg/entx/partitionmaint/job_integration_test.go`
 - [ ] T075 [P] [US4] Integration test F003-AC-39: module mẫu có projection `ref.*` lệch nguồn → `worker projection rebuild --module=<m> --source=<n>` khớp lại; chạy lại không đổi; bản `source_version` mới hơn không bị ghi đè; facade lỗi → exit ≠ 0, projection giữ nguyên (TC-SVC-014) — file: `src/backend/pkg/projection/rebuild_integration_test.go` — phải FAIL trước khi code
 
 ### Implementation cho User Story 4
 
-- [ ] T038 [P] [US4] `natsx`: kết nối, `CreateOrUpdateStream` `EVT_<SVC>`/`DLQ_<SVC>` (`event_stream_retention`, `jetstream_duplicate_window`), header `traceparent`/`Ew-Tenant-Id` — file: `src/backend/pkg/natsx/streams.go`
-- [ ] T039 [US4] `outbox.Writer` + envelope builder (producer `<module>/<bounded-context>`, `idempotency_key`) — file: `src/backend/pkg/outbox/writer.go`
-- [ ] T040 [US4] `outbox.Relay` (role `<module>_relay`, `FOR UPDATE SKIP LOCKED`, lô 500, poll 200 ms + `LISTEN ew_outbox`) — file: `src/backend/pkg/outbox/relay.go`
+- [x] T038 [P] [US4] `natsx`: kết nối, `CreateOrUpdateStream` `EVT_<SVC>`/`DLQ_<SVC>` (`event_stream_retention`, `jetstream_duplicate_window`), header `traceparent`/`Ew-Tenant-Id` — file: `src/backend/pkg/natsx/streams.go`
+- [x] T039 [US4] `outbox.Writer` + envelope builder (producer `<module>/<bounded-context>`, `idempotency_key`) — file: `src/backend/pkg/outbox/writer.go`
+- [x] T040 [US4] `outbox.Relay` (role `<module>_relay`, `FOR UPDATE SKIP LOCKED`, lô 500, poll 200 ms + `LISTEN ew_outbox`) — file: `src/backend/pkg/outbox/relay.go`
 - [ ] T070 [US4] Job `infra-partition-maintenance` (role `<module>_partition_admin`, chạy trong `src/backend/cmd/worker`) — file: `src/backend/pkg/entx/partitionmaint/job.go`
-- [ ] T041 [US4] `outbox.Consumer` (durable, BackOff, processed_events, scope từ envelope, DLQ) — file: `src/backend/pkg/outbox/consumer.go`
-- [ ] T042 [US4] `outbox.AuditRecorder` hiện thực `audit.Recorder` — file: `src/backend/pkg/outbox/auditrecorder.go`
+- [x] T041 [US4] `outbox.Consumer` (durable, BackOff, processed_events, scope từ envelope, DLQ) — file: `src/backend/pkg/outbox/consumer.go`
+- [x] T042 [US4] `outbox.AuditRecorder` hiện thực `audit.Recorder` — file: `src/backend/pkg/outbox/auditrecorder.go`
 - [ ] T043 [US4] `natsx.PrincipalInvalidator` gọi `authz.Cache.Invalidate` — file: `src/backend/pkg/natsx/principal_invalidator.go`
 - [ ] T076 [US4] Khung `src/backend/pkg/projection` (đăng ký bộ rebuild theo bảng `ref.*`, đọc trang facade qua `src/backend/pkg/modcall`, upsert theo `source_version`) + lệnh con `projection rebuild` của `src/backend/cmd/worker` (BACKEND_DESIGN §3, BACKUP_RECOVERY §3.5) — file: `src/backend/pkg/projection/rebuild.go`, `src/backend/cmd/worker/projection.go`
 
@@ -210,3 +210,4 @@
 - T003: module mẫu ở `src/backend/pkg/testkit/sample` (ent sinh trong `sample/ent`, DDL fixture `sample/fixture/sample.sql` áp bằng `learning_migrator` trong test, schema `sample` của `eduworld_learning`).
 - T022/T062: luật read/write context (F003-AC-10) nằm trong `tools/archgen` (`make arch-check`) cho mọi đường dẫn `*/internal/application/query` và `*/internal/infrastructure/persistence/read` (cả module mẫu), fixture thật trong `scripts/ci/test-arch-fixtures.sh` (14/14) thay cho `go-arch-lint.base.yml`.
 - US3: command ghi kết quả bằng `idempotency.SetResult(ctx, result)` bên trong `UnitOfWork.Do` (đăng ký `entx.BeforeCommit`); middleware `httpx.Idempotency` bọc response, nếu handler lỗi do request trùng đã commit trước thì đọc lại và replay; `lock_timeout` 5 s → `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After`. Test integration đặt ở `src/backend/pkg/testkit/sample/idempotency_integration_test.go` (gói `internal` của module mẫu).
+- US4: thêm `authz.EventScope(tenantID)` (scope của consumer lấy từ envelope — scope chỉ tạo trong `authz`; golden API cập nhật, là bổ sung không đổi chữ ký cũ). Consumer tự quyết DLQ theo `NumDelivered` (durable `MaxDeliver: -1`), lỗi `outbox.Permanent` vào DLQ ngay. Relay chỉ poll (200 ms); `pg_notify('ew_outbox')` đã phát khi commit để nối `LISTEN` sau [Proposed]. Test gộp: `pkg/outbox/outbox_integration_test.go` (relay crash, consumer trùng/qua nửa đêm/scope, DLQ, quyền), `writer_test.go` (envelope + `audit.recorded` theo JSON Schema).

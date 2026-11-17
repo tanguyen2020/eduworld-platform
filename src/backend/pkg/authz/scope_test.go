@@ -83,3 +83,14 @@ func TestPlatformScopes(t *testing.T) {
 		t.Fatal("invalid job name accepted")
 	}
 }
+
+func TestEventScope(t *testing.T) {
+	id := uuid.New()
+	s, err := authz.EventScope(id)
+	if err != nil || s.TenantIDs()[0] != id {
+		t.Fatalf("event scope: %v %v", s, err)
+	}
+	if _, err := authz.EventScope(uuid.Nil); err == nil {
+		t.Fatal("nil tenant accepted")
+	}
+}

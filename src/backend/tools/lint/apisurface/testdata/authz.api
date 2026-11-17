@@ -31,6 +31,7 @@ func ClaimsFrom(ctx context.Context) (Claims, bool)
 func Configure(h Hooks)
 func CrossTenantScope(p Principal, ids []github.com/google/uuid.UUID, reason github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.BypassReason) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.CrossTenantScope, error)
 var ErrNotMember error
+func EventScope(tenantID github.com/google/uuid.UUID) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.TenantScope, error)
 type Grant struct{Role string "json:\"role\""; ScopeKind RoleScopeKind "json:\"scope_kind\""; Permissions []Permission "json:\"permissions\""; SchoolID *github.com/google/uuid.UUID "json:\"school_id,omitempty\""; SubjectID *github.com/google/uuid.UUID "json:\"subject_id,omitempty\""}
   field Role string
   field ScopeKind RoleScopeKind
