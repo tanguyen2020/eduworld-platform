@@ -5,16 +5,16 @@
 ## Phase 1: Setup
 
 - [x] T001 Thêm dependency (chi, go-oidc, go-jose, koanf, otel, prometheus, kin-openapi, valkey-go, golang-lru) vào Go module `src/backend` — file: `src/backend/go.mod` (Go module duy nhất, ADR-0074, ADR-0092)
-- [ ] T002 [P] `src/backend/pkg/clock` (Clock, Fake) và `src/backend/pkg/ids` (UUIDv7) — file: `src/backend/pkg/ids/ids.go`
+- [x] T002 [P] `src/backend/pkg/clock` (Clock, Fake) và `src/backend/pkg/ids` (UUIDv7) — file: `src/backend/pkg/ids/ids.go`
 - [ ] T003 [P] Cấu hình lint nền: depguard theo tầng BACKEND_DESIGN §3, go-arch-lint, rule cấm `src/backend/pkg/*` import `src/backend/modules/*` — file: `src/backend/tools/lint/golangci.base.yml`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Generator mã lỗi từ enum `ProblemCode` (spec gộp) → `codes_gen.go`; hook vào `make gen` / `make gen-check` — file: `src/backend/pkg/problem/gen/main.go` — kiểm: `make gen-check`
+- [x] T004 Generator mã lỗi từ enum `ProblemCode` (spec gộp) → `codes_gen.go`; hook vào `make gen` / `make gen-check` — file: `src/backend/pkg/problem/gen/main.go` — kiểm: `make gen-check`
 - [x] T005 Áp sớm (M-C0, contract-first để F003 sinh facade) delta `resolvePrincipal` mà F012 sở hữu nội dung (F012 contracts §6, task F012 T003): `PrincipalResolveRequest` định danh bằng `issuer` + `subject` (oneOf `user_id`), `tenant_id` nullable, `Principal.tenant_id`/`tenant_type` nullable, `is_system_admin`, mô tả `404` = không membership; không tự định nghĩa thêm trường — file: `specs/openapi/modules/identity.internal.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — **xong 2026-11-17** (kiểm bằng script `scripts/specs/*`, `scripts/openapi/*`; target `make` chưa có tới F001)
 - [ ] T006 Generator allowlist `x-allowed-callers` → `api/allowed_callers_gen.go` của từng module (dùng bởi `src/backend/pkg/modcall` kiểm lúc chạy ở F003) — file: `src/backend/tools/allowedcallers/main.go` — kiểm: `make gen MOD=learning`
 - [x] T007 `src/backend/pkg/audit` (owner duy nhất của interface; hiện thực outbox ở F003 T042, F015 chỉ tiêu thụ): interface `Recorder.Record(ctx, Event) error`, `Event{Action, TargetType, TargetID, Result, Reason, Metadata}` (độ dài theo DATABASE_DESIGN §3.11) — file: `src/backend/pkg/audit/recorder.go`
-- [ ] T055 Delta contract `ProblemCode`: gỡ `FORBIDDEN_SCOPE` khỏi enum và mô tả `403` (spec gộp + spec theo module) rồi sinh lại `codes_gen.go` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/*.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen-check` — **2026-11-17:** phần contract đã áp (gỡ `FORBIDDEN_SCOPE` khỏi `ProblemCode`, mô tả response `Forbidden`, API_DESIGN §4.1; `split-public.mjs`); còn sinh lại `codes_gen.go` (cần generator T004)
+- [x] T055 Delta contract `ProblemCode`: gỡ `FORBIDDEN_SCOPE` khỏi enum và mô tả `403` (spec gộp + spec theo module) rồi sinh lại `codes_gen.go` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/*.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen-check` — **2026-11-17:** phần contract đã áp (gỡ `FORBIDDEN_SCOPE` khỏi `ProblemCode`, mô tả response `Forbidden`, API_DESIGN §4.1; `split-public.mjs`); còn sinh lại `codes_gen.go` (cần generator T004)
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -123,7 +123,7 @@
 
 ### Tests cho User Story 5
 
-- [ ] T046 [P] [US5] Test F002-AC-26, F002-AC-27: fixture module có import cấm → `golangci-lint`/`go-arch-lint` fail — file: `src/backend/tools/lint/testdata/badsvc/internal/domain/bad.go` — phải FAIL trước khi code
+- [x] T046 [P] [US5] Test F002-AC-26, F002-AC-27: fixture module có import cấm → `golangci-lint`/`go-arch-lint` fail — file: `src/backend/tools/lint/testdata/badsvc/internal/domain/bad.go` — phải FAIL trước khi code
 - [ ] T047 [P] [US5] Test F002-AC-28: `routematrix check` fail khi operation thiếu ca tenant A/B hoặc ca role thiếu quyền — file: `src/backend/tools/routematrix/check_test.go`
 
 ### Implementation cho User Story 5
@@ -163,3 +163,4 @@
 - T045: `httpx.NewServer` + validator kin-openapi (spec gộp OpenAPI 3.1, mọi operation đăng ký phải có trong spec) xong; `bootstrap` dùng logger/OTel/metric của `pkg/observability` cho mọi binary. Nối `httpx.Server` + `PrincipalResolver` thật vào `src/backend/cmd/core-api` thuộc F003 T048 (adapter facade identity) — trước đó core-api không có route ứng dụng.
 - Compose app xuất trace OTLP/HTTP (`otel-collector:4318`, `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`).
 - Sửa lỗi YAML trong spec gộp: `TenantCreate.keycloak_org_alias.description` có dấu phẩy không quote trong flow mapping tạo key thừa (kin-openapi `doc.Validate` phát hiện); sinh lại `identity.v1.yaml`.
+- T046/T003: luật F002-AC-26/27 được kiểm bởi `tools/archgen --check` (`make arch-check`, chạy local không cần golangci-lint) và fixture trong `scripts/ci/test-arch-fixtures.sh` (12/12); depguard sinh trong `.golangci.arch.yml` vẫn là lớp phụ cho CI.

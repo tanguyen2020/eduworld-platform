@@ -58,5 +58,21 @@ import _ \"$MOD/modules/identity/api\"
 func main() {}"
 expect "AC-23 cmd/ imports modules/x/api (not Register) → arch-check fails" fail go run ./tools/archgen --check
 
+fixture modules/learning/internal/domain/zz_archfixture "package zz_archfixture
+import _ \"net/http\""
+expect "F002-AC-26 domain imports net/http → arch-check fails" fail go run ./tools/archgen --check
+
+fixture modules/learning/internal/domain/zz_archfixture "package zz_archfixture
+import _ \"github.com/jackc/pgx/v5\""
+expect "F002-AC-26 domain imports pgx → arch-check fails" fail go run ./tools/archgen --check
+
+fixture modules/learning/internal/application/zz_archfixture "package zz_archfixture
+import _ \"$MOD/modules/learning/internal/infrastructure\""
+expect "F002-AC-26 application imports infrastructure → arch-check fails" fail go run ./tools/archgen --check
+
+fixture pkg/tenancy/zz_archfixture "package zz_archfixture
+import _ \"github.com/jackc/pgx/v5\""
+expect "F002-AC-27 pkg/tenancy/... depends on pgx → arch-check fails" fail go run ./tools/archgen --check
+
 echo "test-arch-fixtures: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

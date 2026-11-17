@@ -8,7 +8,10 @@
 //   - cmd/... imports only module root packages modules/<m> (which expose Register);
 //   - layers inside a module: domain imports no application/infrastructure/presentation;
 //     application imports no infrastructure/presentation; application/query never imports
-//     application/command or application/port/write (ADR-0087).
+//     application/command or application/port/write (ADR-0087);
+//   - domain imports no infrastructure library (ent, pgx, database/sql, net/http, nats, valkey) nor the
+//     module ent package (F002-AC-26, BACKEND_DESIGN §3);
+//   - pkg/authz, pkg/problem, pkg/tenancy never depend on ent or pgx, even transitively (F002-AC-27).
 //
 // Go's internal/ rule already stops imports of modules/<B>/internal/... at compile time.
 //
@@ -90,6 +93,43 @@ func normalize(b []byte) []byte { return bytes.ReplaceAll(b, []byte("\r\n"), []b
 type Package struct {
 	ImportPath string
 	Imports    []string
+	Deps       []string
+}
+
+// domainForbidden are import prefixes a domain package must never use (F002-AC-26).
+var domainForbidden = []string{"entgo.io/", "github.com/jackc/pgx", "database/sql", "net/http", "github.com/nats-io/",
+	"github.com/valkey-io/"}
+
+// dataLayerFree are pkg/ packages (and their sub-packages) without ent/pgx in their dependency graph.
+var dataLayerFree = []string{"pkg/authz", "pkg/problem", "pkg/tenancy"}
+
+func externalViolations(modPath, rel, owner, layer string, p Package) []string {
+	var out []string
+	if owner != "" && (layer == "domain" || strings.HasPrefix(layer, "domain/")) {
+		for _, imp := range p.Imports {
+			for _, f := range domainForbidden {
+				if strings.HasPrefix(imp, f) {
+					out = append(out, fmt.Sprintf("%s: domain must not import %s (F002-AC-26)", rel, imp))
+					break
+				}
+			}
+			if strings.HasPrefix(imp, modPath+"/modules/"+owner+"/ent") {
+				out = append(out, fmt.Sprintf("%s: domain must not import %s (F002-AC-26)", rel, strings.TrimPrefix(imp, modPath+"/")))
+			}
+		}
+	}
+	for _, d := range dataLayerFree {
+		if rel != d && !strings.HasPrefix(rel, d+"/") {
+			continue
+		}
+		for _, dep := range append(append([]string(nil), p.Imports...), p.Deps...) {
+			if strings.HasPrefix(dep, "entgo.io/") || strings.HasPrefix(dep, "github.com/jackc/pgx") {
+				out = append(out, fmt.Sprintf("%s: must not depend on %s (F002-AC-27)", rel, dep))
+				break
+			}
+		}
+	}
+	return out
 }
 
 // Violations returns one message per forbidden import.
@@ -102,6 +142,7 @@ func Violations(modPath string, pkgs []Package, allowed map[string]map[string]bo
 			continue
 		}
 		owner, layer := ownerAndLayer(rel)
+		out = append(out, externalViolations(modPath, rel, owner, layer, p)...)
 		for _, imp := range p.Imports {
 			if !strings.HasPrefix(imp, modPath+"/") {
 				continue
@@ -261,7 +302,7 @@ func modulePath(root string) (string, error) {
 }
 
 func goList(root string) ([]Package, error) {
-	cmd := exec.Command("go", "list", "-e", "-tags", "integration", "-json=ImportPath,Imports", "./...")
+	cmd := exec.Command("go", "list", "-e", "-tags", "integration", "-json=ImportPath,Imports,Deps", "./...")
 	cmd.Dir = root
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr

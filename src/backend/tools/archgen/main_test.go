@@ -35,6 +35,17 @@ func TestModuleBoundaries(t *testing.T) {
 		{"query imports port/write", "modules/game/internal/application/query", mp + "/modules/game/internal/application/port/write", true},
 		{"command imports domain", "modules/game/internal/application/command", mp + "/modules/game/internal/domain", false},
 		{"stdlib ignored", "modules/game/internal/domain", "strings", false},
+		// F002-AC-26: domain never imports infrastructure libraries or the module ent package.
+		{"domain imports net/http", "modules/game/internal/domain", "net/http", true},
+		{"domain imports httptest", "modules/game/internal/domain/quest", "net/http/httptest", true},
+		{"domain imports ent", "modules/game/internal/domain", "entgo.io/ent", true},
+		{"domain imports module ent", "modules/game/internal/domain", mp + "/modules/game/ent", true},
+		{"domain imports pgx", "modules/game/internal/domain", "github.com/jackc/pgx/v5", true},
+		{"domain imports nats", "modules/game/internal/domain", "github.com/nats-io/nats.go", true},
+		{"domain imports valkey", "modules/game/internal/domain", "github.com/valkey-io/valkey-go", true},
+		{"domain imports database/sql", "modules/game/internal/domain", "database/sql", true},
+		{"domain imports uuid", "modules/game/internal/domain", "github.com/google/uuid", false},
+		{"infrastructure imports pgx", "modules/game/internal/infrastructure", "github.com/jackc/pgx/v5", false},
 	}
 	for _, c := range cases {
 		got := v(c.pkg, c.imp)
@@ -51,5 +62,25 @@ func TestRenderDepguardDeniesOnlyDisallowed(t *testing.T) {
 	}
 	if strings.Contains(out, "module-identity:") {
 		t.Fatalf("identity may call every module here, no rule expected:\n%s", out)
+	}
+}
+
+// F002-AC-27: pkg/authz, pkg/problem and pkg/tenancy never depend on ent or pgx, even transitively.
+func TestCorePkgsWithoutDataLayer(t *testing.T) {
+	for _, c := range []struct {
+		pkg      string
+		deps     []string
+		wantFail bool
+	}{
+		{"pkg/tenancy", []string{"github.com/jackc/pgx/v5/pgconn"}, true},
+		{"pkg/authz", []string{"entgo.io/ent/dialect/sql"}, true},
+		{"pkg/problem", []string{"encoding/json"}, false},
+		{"pkg/authz/authztest", []string{"github.com/jackc/pgx/v5"}, true},
+		{"pkg/testkit", []string{"github.com/jackc/pgx/v5"}, false},
+	} {
+		got := Violations(mp, []Package{{ImportPath: mp + "/" + c.pkg, Deps: c.deps}}, allowed)
+		if (len(got) > 0) != c.wantFail {
+			t.Errorf("%s: violations=%v, wantFail=%v", c.pkg, got, c.wantFail)
+		}
 	}
 }
