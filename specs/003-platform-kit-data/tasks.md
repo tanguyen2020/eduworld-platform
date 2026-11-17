@@ -149,12 +149,12 @@
 
 ### Tests cho User Story 6
 
-- [ ] T049 [P] [US6] Integration test F003-AC-29: SIGTERM khi request đang chạy → readiness 503, request hoàn tất, server đóng — file: `src/backend/pkg/lifecycle/api_shutdown_integration_test.go` — phải FAIL trước khi code
-- [ ] T050 [P] [US6] Integration test F003-AC-30: SIGTERM worker giữa lô → ack phần xong, phần còn lại giao lại, outbox relay lần sau (TC-SVC-002) — file: `src/backend/pkg/lifecycle/worker_shutdown_integration_test.go`
+- [x] T049 [P] [US6] Integration test F003-AC-29: SIGTERM khi request đang chạy → readiness 503, request hoàn tất, server đóng — file: `src/backend/pkg/lifecycle/api_shutdown_integration_test.go` — phải FAIL trước khi code
+- [x] T050 [P] [US6] Integration test F003-AC-30: SIGTERM worker giữa lô → ack phần xong, phần còn lại giao lại, outbox relay lần sau (TC-SVC-002) — file: `src/backend/pkg/lifecycle/worker_shutdown_integration_test.go`
 
 ### Implementation cho User Story 6
 
-- [ ] T051 [US6] `lifecycle.RunAPI`/`RunWorker` theo BACKEND_DESIGN §13 (`EW_HTTP_SHUTDOWN_TIMEOUT`), gắn vào `src/backend/cmd/core-api`, `src/backend/cmd/realtime`, `src/backend/cmd/worker` — file: `src/backend/pkg/lifecycle/shutdown.go`
+- [x] T051 [US6] `lifecycle.RunAPI`/`RunWorker` theo BACKEND_DESIGN §13 (`EW_HTTP_SHUTDOWN_TIMEOUT`), gắn vào `src/backend/cmd/core-api`, `src/backend/cmd/realtime`, `src/backend/cmd/worker` — file: `src/backend/pkg/lifecycle/shutdown.go`
 
 **Checkpoint**: User Story 6 chạy và kiểm độc lập được.
 
@@ -214,3 +214,4 @@
 - T043/T037: `natsx.PrincipalInvalidator` dùng consumer ordered (tạm thời, `DeliverNew`) để mọi replica nhận mọi event và xóa L1 của chính mình; thêm `CachedResolver.InvalidateTenant` (`tenant.updated`) và `InvalidateAll` (`role.updated`, SCAN + UNLINK prefix module); `enrollment.changed` dùng `student_id`.
 - US5: facade sinh bằng `tools/facadegen` (bundle spec internal + oapi-codegen v2.8.2: models + strict-server) vào `modules/<m>/api/facade_gen.go`; phần HTTP server sinh kèm không bao giờ được mount — analyzer `nointernalhttp` (trong `ewlint`) chặn mọi lời gọi `Handler*`/`NewStrictHandler*`. `allowedcallers` sinh thêm `ContextRequired`. `cmd/internal/wiring` được phép import `modules/<m>/api` (archgen). Caller của `modcall` = module của operation (`httpx` đặt `tenancy.WithModule`).
 - Delta hợp đồng (bảo mật): `Principal.grants[]` (`PrincipalGrant`: `role_code`, `role_scope_kind`, `school_id`, `subject_id`, `permissions`) trong `identity.internal.v1.yaml` — `permissions`/`scopes` gộp không cho biết permission nào chỉ áp trong trường/môn nào; adapter từ chối Principal thiếu `grants` (503, fail-closed). Nội dung thuộc F012 [Proposed].
+- US6: `pkg/lifecycle` (Plan + Group) dùng trong `bootstrap` cho mọi binary: readiness 503 (`health.Registry.SetDraining`), `EW_SHUTDOWN_DRAIN_DELAY` (5 s khi có HTTP public), dừng worker (`EW_WORKER_SHUTDOWN_TIMEOUT` 60 s), `EW_HTTP_SHUTDOWN_TIMEOUT` (20 s), drain NATS, đóng pool. Consumer xử lý message đã đệm khi drain bằng context không bị hủy; `MaxInFlight` giới hạn số message đệm.

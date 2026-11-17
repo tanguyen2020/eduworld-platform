@@ -19,6 +19,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/buildinfo"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/lifecycle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
@@ -43,12 +44,19 @@ type Options struct {
 	Getenv func(string) string
 	Stdout io.Writer
 
+	// Workers run until shutdown (outbox relay, consumers, jobs); they must return after finishing
+	// in-flight work when their context is cancelled (F003-AC-30).
+	Workers []Worker
+
 	// Ready, when set, receives the bound admin and public addresses once listening (tests).
 	Ready func(adminAddr, httpAddr string)
 }
 
-// ShutdownTimeout bounds the graceful stop of the listeners.
-const ShutdownTimeout = 10 * time.Second
+// Worker is a named background loop.
+type Worker struct {
+	Name string
+	Run  func(ctx context.Context) error
+}
 
 // Run blocks until ctx is cancelled or a listener fails.
 func Run(ctx context.Context, o Options) error {
@@ -82,6 +90,11 @@ func Run(ctx context.Context, o Options) error {
 	}
 	defer nc.Close()
 	hr.Register("nats", health.Readiness, health.NATSCheck(nc))
+
+	workers := lifecycle.NewGroup(ctx)
+	for _, w := range o.Workers {
+		workers.Go(w.Name, w.Run)
+	}
 
 	if o.Register != nil {
 		if err := o.Register(reg); err != nil {
@@ -138,13 +151,21 @@ func Run(ctx context.Context, o Options) error {
 	}
 
 	log.Info("stopping")
-	sctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
-	defer cancel()
+	plan := lifecycle.Plan{Readiness: hr, Workers: workers, Admin: admin, NATS: nc, Close: []func(){reg.Close}, Logger: log,
+		Timeout: envDuration(o.Getenv, "EW_WORKER_SHUTDOWN_TIMEOUT", 60*time.Second)}
 	if public != nil {
-		_ = public.Shutdown(sctx)
+		plan.Public = []*http.Server{public}
+		plan.DrainDelay = envDuration(o.Getenv, "EW_SHUTDOWN_DRAIN_DELAY", 5*time.Second)
+		plan.Timeout = envDuration(o.Getenv, "EW_HTTP_SHUTDOWN_TIMEOUT", 20*time.Second)
 	}
-	_ = admin.Shutdown(sctx)
-	return nil
+	return plan.Run()
+}
+
+func envDuration(getenv func(string) string, key string, def time.Duration) time.Duration {
+	if d, err := time.ParseDuration(strings.TrimSpace(getenv(key))); err == nil && d >= 0 {
+		return d
+	}
+	return def
 }
 
 func serve(s *http.Server, ln net.Listener) error {

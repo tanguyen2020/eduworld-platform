@@ -42,21 +42,22 @@ type Handler func(ctx context.Context, e Envelope) error
 
 // ConsumerOptions configure a durable consumer <module>.<handler> (EVENT_DESIGN §3.1, §7).
 type ConsumerOptions struct {
-	Module     string // receiving module
-	Name       string // <module>.<handler>
-	Stream     string // EVT_<PRODUCER>
-	Subjects   []string
-	Platform   bool // handles tenant_id = null events (platform scope); tenant events are refused
-	MaxSchema  int  // highest supported schema_version (default 1)
-	MaxDeliver int  // default 5
-	BackOff    []time.Duration
-	AckWait    time.Duration
-	UoW        *entx.UnitOfWork
-	DLQDB      *sql.DB // <module>_app (INSERT infra.dead_letters)
-	JS         jetstream.JetStream
-	Handler    Handler
-	Logger     *slog.Logger
-	Registerer prometheus.Registerer
+	Module      string // receiving module
+	Name        string // <module>.<handler>
+	Stream      string // EVT_<PRODUCER>
+	Subjects    []string
+	Platform    bool // handles tenant_id = null events (platform scope); tenant events are refused
+	MaxSchema   int  // highest supported schema_version (default 1)
+	MaxDeliver  int  // default 5
+	BackOff     []time.Duration
+	AckWait     time.Duration
+	MaxInFlight int // messages buffered per pull (default: library default)
+	UoW         *entx.UnitOfWork
+	DLQDB       *sql.DB // <module>_app (INSERT infra.dead_letters)
+	JS          jetstream.JetStream
+	Handler     Handler
+	Logger      *slog.Logger
+	Registerer  prometheus.Registerer
 }
 
 // Consumer is an idempotent JetStream consumer: processed_events in the same transaction as the
@@ -103,7 +104,14 @@ func NewConsumer(ctx context.Context, o ConsumerOptions) (*Consumer, error) {
 
 // Run consumes until ctx ends, then drains: in-flight handlers finish and ack (F003-AC-30).
 func (c *Consumer) Run(ctx context.Context) error {
-	cc, err := c.cons.Consume(func(m jetstream.Msg) { c.Handle(ctx, m) })
+	// Messages already delivered when shutdown starts are still handled to completion (drain), so their
+	// handlers must not see the cancellation of ctx.
+	hctx := context.WithoutCancel(ctx)
+	var opts []jetstream.PullConsumeOpt
+	if c.o.MaxInFlight > 0 {
+		opts = append(opts, jetstream.PullMaxMessages(c.o.MaxInFlight))
+	}
+	cc, err := c.cons.Consume(func(m jetstream.Msg) { c.Handle(hctx, m) }, opts...)
 	if err != nil {
 		return err
 	}

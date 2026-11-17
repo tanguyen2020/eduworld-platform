@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,10 +47,15 @@ type Registry struct {
 	timeout time.Duration
 	metrics *prometheus.Registry
 
-	mu     sync.RWMutex
-	checks []check
-	names  map[string]struct{}
+	mu       sync.RWMutex
+	checks   []check
+	names    map[string]struct{}
+	draining atomic.Bool
 }
+
+// SetDraining makes /readyz answer 503 "draining" during graceful shutdown (F003-AC-29) so the load
+// balancer stops sending new requests while in-flight ones finish.
+func (r *Registry) SetDraining(v bool) { r.draining.Store(v) }
 
 // NewRegistry creates a registry with Go/process collectors and eduworld_build_info{binary,profile,version,commit} = 1.
 func NewRegistry(info buildinfo.Info) *Registry {
@@ -159,6 +165,10 @@ func (r *Registry) Handler() http.Handler {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, req *http.Request) {
+		if r.draining.Load() {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"status": "fail", "checks": map[string]string{"shutdown": "draining"}})
+			return
+		}
 		rep := r.Evaluate(req.Context(), false)
 		writeJSON(w, statusFor(rep), rep)
 	})
