@@ -68,6 +68,29 @@ Không có vai trò giáo viên trong hệ thống ([ADR-0072](docs/adr/ADR-0072
 | Chạy container | Docker Compose (local) · Docker Swarm (staging/production) | ADR-0024 |
 | CI/CD | GitHub Actions, image trên ghcr.io | ADR-0088 |
 
+### 3.1. Backend Go: thư viện và công cụ
+
+Một Go module duy nhất, Go stable mới nhất (≥ 1.24); phiên bản thư viện ghim trong `go.mod` ([ADR-0025](docs/adr/ADR-0025-thu-vien-nen-tang-cho-go-backend.md), [ADR-0039](docs/adr/ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md), [BACKEND_DESIGN](docs/07-backend/BACKEND_DESIGN.md)).
+
+| Nhóm | Thư viện / công cụ | Dùng để |
+|---|---|---|
+| HTTP | `go-chi/chi` (tương thích `net/http`) | Router và middleware của `core-api` (`pkg/httpx`) |
+| Contract → code | `oapi-codegen` (strict server) | Sinh handler/DTO từ OpenAPI public; sinh kiểu và interface facade từ spec internal vào `modules/<module>/api` |
+| ORM | `ent` (code-first) + driver `jackc/pgx/v5` | Schema có `MaxLen`, mixin theo loại bảng, interceptor lọc tenant + soft-delete, hook soft-delete |
+| Migration | Atlas (versioned, `atlas migrate diff/lint`) | Sinh SQL từ ent schema; RLS, trigger, GRANT, partition viết tay trong cùng thư mục |
+| Messaging | `nats-io/nats.go` (JetStream) | Outbox relay, consumer event, lệnh realtime request/reply, đường ghi chat |
+| Cache / Pub/Sub | `valkey-io/valkey-go` | Cache Principal/tenant/feature toggle, presence, fan-out chat, trạng thái phòng |
+| WebSocket | `coder/websocket` | Binary `realtime` |
+| Xác thực token | `coreos/go-oidc` + `go-jose` | Kiểm tra JWT của Keycloak qua JWKS (cache) |
+| Resilience | `failsafe-go` | Timeout, retry chỉ cho thao tác idempotent, circuit breaker cho tích hợp bên ngoài (Keycloak Admin, SIS, object storage) |
+| Config | Biến môi trường + `knadh/koanf` | Cấu hình theo môi trường, secret qua file (`*_FILE`) |
+| Log / trace / metric | `log/slog` (JSON), OpenTelemetry SDK, Prometheus client | Log có `trace_id`, span cho mỗi use case và lời gọi facade, metric chuẩn |
+| Test | `testing` + `testify` + `testcontainers-go` | Unit theo tầng; integration với PostgreSQL, NATS, Valkey thật trong container |
+| Lint / kiến trúc | `golangci-lint` (gồm `depguard`), `go-arch-lint`, `tools/allowedcallers` | Chặn vi phạm tầng Clean Architecture và import chéo module ngoài `x-allowed-callers` |
+| Platform kit nội bộ | `pkg/httpx`, `pkg/authz`, `pkg/tenancy`, `pkg/entx`, `pkg/outbox`, `pkg/modcall`, `pkg/roomhost`, `pkg/observability`, `pkg/problem` | Phần dùng chung cho mọi module: middleware, phân quyền, phạm vi tenant, `UnitOfWork`, outbox, gọi facade, phòng chơi, Problem Details |
+
+Admin Portal dùng React + TypeScript + Vite, Ant Design 5 + Ant Design Pro, TanStack Query, `react-i18next`, kiểu API sinh bằng `openapi-typescript`; game client dùng Godot 4.x với GDScript static typing và test bằng GdUnit4.
+
 ## 4. Kiến trúc tổng quan
 
 ### 4.1. Bối cảnh hệ thống
