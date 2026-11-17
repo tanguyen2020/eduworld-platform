@@ -248,46 +248,37 @@ Role hệ thống seed sẵn (`is_system = true`):
 ### 5.2. Permission catalog và bất biến
 
 ```go
-// src/backend/pkg/authz/catalog.go — mọi binary nạp lúc khởi động (AGENTS R20)
-type Permission string // "lms.assignment.write", "game.quest.write", "competition.config.season.write", ...
+// src/backend/pkg/authz/catalog.go + roles.go (F002) — mọi binary gọi authz.MustValidateAtStartup() (AGENTS R20)
+type Permission string // 121 hằng PermXxx khớp ADMIN_PORTAL §2.2 (test đối chiếu tài liệu)
 
-type ScopeKind string // "tenant" | "platform"
+type RoleScopeKind string // "tenant" | "platform"
 
 type RoleDef struct {
     Name        string
-    ScopeKind   ScopeKind
+    ScopeKind   RoleScopeKind
     Permissions []Permission
 }
 
-// Nhóm permission cấm với role tenant (ADR-0027).
-var platformOnlyPrefixes = []string{"game.", "competition.config.", "platform."}
-
-// ValidateCatalog chạy khi khởi động module identity (nơi sở hữu catalog) và trong unit test của src/backend/pkg/authz.
-// Vi phạm → tiến trình không start.
-func ValidateCatalog(roles []RoleDef) error {
-    for _, r := range roles {
-        if r.ScopeKind != "tenant" {
-            continue
-        }
-        for _, p := range r.Permissions {
-            for _, pre := range platformOnlyPrefixes {
-                if strings.HasPrefix(string(p), pre) {
-                    return fmt.Errorf("role %s (tenant) must not hold %s", r.Name, p)
-                }
-            }
-        }
-    }
-    return nil
+// Permission platform-only (ADR-0027, ADR-0072): tiền tố + mã tường minh.
+var platformOnlyPrefixes = []string{"game.", "competition.config.", "platform.", "moderation.case.", "moderation.sanction."}
+var platformOnlyCodes = map[Permission]bool{
+    "moderation.school_notification.send": true, "chat.sensitive_terms.write": true, "chat.policy.toggle": true,
+    "chat.tenant_terms.write": true, "chat.tenant_category.toggle": true,
 }
+
+// ValidateCatalog: tên role duy nhất, role_scope_kind hợp lệ, permission thuộc catalog, role tenant không giữ
+// permission platform-only. Trả *CatalogError liệt kê mọi vi phạm (tên role + permission, không giá trị khác).
+// MustValidateAtStartup: vi phạm → log JSON từng role/permission và thoát mã 1 (F002-AC-14, F002-AC-15).
+func ValidateCatalog(roles []RoleDef) error
 ```
 
-- Chỉ `system_admin` có `platform.cross_tenant.read`. Repository nhận `TenantScope` dạng `Single(tenant_id)` cho người dùng tenant và `Multi(tenant_ids | All)` chỉ khi Principal có permission này; phiên đó dùng role DB `<module>_platform` của database tương ứng và luôn kèm điều kiện `tenant_id` tường minh + audit `cross_tenant.accessed` (ADR-0005, ADR-0027 §6).
+- Chỉ `system_admin` có `platform.cross_tenant.read`. Repository nhận `tenancy.TenantScope` (`authz.ScopeFor`, đúng một tenant) cho người dùng tenant và `tenancy.CrossTenantScope` (`authz.CrossTenantScope`: danh sách tenant tường minh + lý do, cần permission này, client portal và MFA) chỉ cho System Admin; phiên đó dùng role DB `<module>_platform` của database tương ứng và luôn kèm điều kiện `tenant_id` tường minh + audit `cross_tenant.accessed` (ADR-0005, ADR-0027 §6).
 - Catalog **permission nằm trong code**, version cùng release, review qua merge request. Role (gồm role hệ thống seed và role tùy biến) và UserRole nằm trong DB `identity.roles`, `identity.role_permissions`, `identity.user_roles`; bảng `identity.permissions` là bản sao đọc-chỉ của catalog (đồng bộ lúc migrate/khởi động) để khóa ngoại và trigger kiểm tra ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)). `ValidateCatalog` chạy với role seed lúc khởi động; use case `CreateRole`/`UpdateRole` chạy cùng kiểm tra cho role tùy biến (`422 VALIDATION_FAILED`, `PERMISSION_NOT_ALLOWED_FOR_SCOPE`).
 - Gán role platform ở scope tenant, hoặc gán role portal cho học sinh, bị chặn ở 2 lớp: use case `GrantUserRole` và trigger DB. Mọi lần bị chặn ghi audit.
 - Permission bổ sung (2026-11-15, catalog đầy đủ ở [ADMIN_PORTAL §2.2](../04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog)):
   - **Platform-only** (thuộc tiền tố `game.`, bị `ValidateCatalog` chặn với role tenant): `game.challenge.write`, `game.boss.write`, `game.achievement.write`, `game.economy.write`, `game.economy.adjust`, `game.liveops.read`. `game.economy.adjust` chỉ `system_admin` và bắt buộc người duyệt thứ hai khác người tạo (`/admin/economy/adjustments`, ADR-0049). Quyền xem Game Live Operations dùng tên chuẩn `game.liveops.read` (không dùng `liveops.read` không tiền tố) để giữ bất biến.
   - **Tenant được phép**: `learning_content.activity.write`, `learning_content.activity.review` (ADR-0048). Không có permission chấm tay (ngoài version này, ADR-0082).
-- Permission kiểm duyệt (ADR-0072): `moderation.case.read|write`, `moderation.sanction.write`, `moderation.school_notification.send`, `chat.tenant_terms.write` là **platform-only**, chỉ gán cho `safety_moderator` (và `system_admin` cho break-glass); `moderation.school_notification.acknowledge` là tenant được phép, gán cho `school_admin`. Đề xuất thêm tiền tố `moderation.` (trừ `moderation.school_notification.acknowledge`) vào `platformOnlyPrefixes` để `ValidateCatalog` chặn role tenant giữ quyền kiểm duyệt [Proposed].
+- Permission kiểm duyệt và chat platform (ADR-0072, F002 Clarifications 2026-11-17): `moderation.case.*`, `moderation.sanction.*`, `moderation.school_notification.send`, `chat.sensitive_terms.write`, `chat.policy.toggle`, `chat.tenant_terms.write`, `chat.tenant_category.toggle` là **platform-only** (`platformOnlyPrefixes` + `platformOnlyCodes` ở trên, `ValidateCatalog` chặn role tenant), chỉ gán cho `safety_moderator`/`system_admin`; `moderation.school_notification.read`/`acknowledge` và `chat.sensitive_terms.read` là tenant được phép.
 - Permission bổ sung cho sự kiện/mùa, Game Analytics và song ngữ (2026-11-15; [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md), [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md), ADR-0056, ADR-0058):
 
   | Permission | Nhóm | Role điển hình | Endpoint |

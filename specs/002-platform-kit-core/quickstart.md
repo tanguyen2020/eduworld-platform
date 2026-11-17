@@ -52,3 +52,32 @@ go -C src/backend run ./tools/routematrix check --spec specs/openapi --module le
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo gói, `trace_id` của kịch bản 17 trong Tempo, kết quả quét log (bước 20), output `routematrix check`.
+
+## 5. Bằng chứng (2026-11-18, Windows 11 + Docker Desktop, Go 1.27)
+
+Kịch bản §2 được tự động hóa bằng test (server `httpx` dựng trong `httptest` với IdP/JWKS giả và `PrincipalResolver` giả trong test), không dùng route demo `/_kit/echo` (không thêm mã demo vào module).
+
+| # | Test tự động | Kết quả |
+|---|---|---|
+| 1–3 | `pkg/httpx` `TestAuthAcceptsValidToken`, `TestAuthRejects` (12 ca: thiếu, rác, `alg=none`, chữ ký giả, HS256 nhầm khóa, sai `aud`/`iss`/`azp`/`typ`, `nbf` tương lai, hết hạn → `TOKEN_EXPIRED`, thiếu `sub`; trong skew → 200) | pass |
+| 4 | `TestJWKSRefreshOnUnknownKidRateLimited` (xoay khóa: 1 lần tải; 20 kid lạ trong 30 s: 0 lần tải thêm), `TestJWKSBackgroundRefreshAndReadiness`, `TestJWKSUnavailableIs503` | pass |
+| 5 | `TestNoServiceTokensNoInternalRoutes` (azp `svc-identity`, token service account → 401; `/internal/…` → 404; `Handle` từ chối route `/internal/`) | pass |
+| 6–8 | `TestTenantHeader`, `TestTenantMismatch` (403 + audit + metric), `TestTenantIDsOnlyForSystemAdmin` | pass |
+| 9–10 | `pkg/authz` `TestCacheFailsClosed`, `TestCacheServesWhileIdentityDown`, `TestInvalidateL1`; integration `TestCacheTwoLevels` (valkey:8, 2 replica, invalidate, Valkey sập vẫn đúng); `pkg/httpx` `TestResolverDownIs503` | pass |
+| 11–12 | `TestCrossTenantScopeRequirements`, `TestScopeFor`, `TestPlatformScopes`, `pkg/tenancy` `TestBypass`, `TestBypassFailsClosedWhenAuditFails`, `TestAllReasonsListed`; analyzer `scopeguard` | pass |
+| 12, 25 | Integration `TestRLSPoliciesIsolateTenants` (12,6 s), `TestSoftDeleteUnderRLS` (11,8 s) trên postgres:17 | pass |
+| 13 | `TestSystemRolesValid`, `TestTenantRoleWithPlatformPermissionRejected` (10 loại permission platform-only), `TestMustValidateExits`, `TestCatalogMatchesAdminPortalDoc` (121 permission khớp ADMIN_PORTAL §2.2) | pass |
+| 14–15 | `TestGuardMatrix` (8 ca azp × user_type × nhóm route), `TestPortalGuardIsForcedByPrefix`, `TestPlatformMFAGuard` | pass |
+| 16 | `TestRequire` (9 ca), `TestRequireSystemAdminCrossTenant`, `TestRequireAuditsDenial`, `authztest` `TestHarnessSample` | pass |
+| 17 | `pkg/problem` test + `pkg/httpx` recoverer (500 `INTERNAL` không chi tiết) | pass |
+| 18 | `make gen` sinh lại `codes_gen.go` giống hệt bản commit; `pkg/problem/gen` test | pass |
+| 19 | `pkg/config` `Require` liệt kê tên biến, không giá trị; `httpx.AuthConfigFrom` dùng `Require`. Nối vào `core-api` thuộc F003 T048 | pass (gói) |
+| 20 | `pkg/observability` `TestLoggerRedacts` (JWT, Bearer, mật khẩu, refresh token, cookie, email, họ tên, câu trả lời, chat, IP, DSN), `TestAccessLogFields` | pass |
+| 21 | `TestServerSpanAndMetrics` (exporter in-memory: span server tiếp `traceparent`, tên theo route pattern; metric không nhãn `user_id`/`tenant_id`/IP), `TestServerFeedsObservability`. Chưa kiểm trên Tempo thật (image app chưa build lại) | pass (tự động) |
+| 22 | `TestValidateMaxLength` (7 ca, spec 3.1 inline), `TestOperationMustBeInSpec`, `TestLoadMergedSpec` (402 path) | pass |
+| 23 | `tools/archgen` test + `scripts/ci/test-arch-fixtures.sh` 12/12 (domain → `net/http`/pgx, application → infrastructure, `pkg/tenancy` → pgx đều fail) | pass |
+| 24 | `tools/routematrix` `TestCheck`, `TestCoverMustUseLiterals`; `routematrix check` trên cây thật: 484 operation, 0 vấn đề | pass |
+| 26 | `tools/lint/bypassreason` analysistest (7 ca); `ewlint ./...` sạch; golden API `tools/lint/apisurface` | pass |
+
+- Unit: 85 test cấp cao pass, 0 fail (`pkg/*`, `tools/*`). Integration: `pkg/authz`, `pkg/tenancy`, `cmd/core-api`, `cmd/worker` pass (một lần `cmd/core-api` lỗi lúc tạo container khi chạy song song, chạy lại 2 lần đều pass).
+- `golangci-lint run ./...` (v2.15.0, `.golangci.yml`): 0 issue; `--config .golangci.arch.yml`: 0 issue; `make arch-check` (archgen, ewlint, routematrix): sạch.

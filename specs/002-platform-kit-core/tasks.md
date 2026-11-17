@@ -136,10 +136,10 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [ ] T051 [P] Sửa tài liệu: SECURITY_ARCHITECTURE §5.2 đường dẫn `src/backend/pkg/authz/catalog.go`; MULTITENANCY §4.1/§4.3 key cache `ew:<module>:principal:`; TEST_STRATEGY TC-SVC-006 kỳ vọng `CALLER_NOT_ALLOWED` — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
-- [ ] T052 [P] Ghi danh sách permission platform-only mở rộng (moderation/chat) vào SECURITY_ARCHITECTURE §5.2 (bỏ nhãn [Proposed]) — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
-- [ ] T053 [P] CHANGELOG mục F002 — file: `CHANGELOG.md`
-- [ ] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/002-platform-kit-core/quickstart.md`
+- [x] T051 [P] Sửa tài liệu: SECURITY_ARCHITECTURE §5.2 đường dẫn `src/backend/pkg/authz/catalog.go`; MULTITENANCY §4.1/§4.3 key cache `ew:<module>:principal:`; TEST_STRATEGY TC-SVC-006 kỳ vọng `CALLER_NOT_ALLOWED` — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
+- [x] T052 [P] Ghi danh sách permission platform-only mở rộng (moderation/chat) vào SECURITY_ARCHITECTURE §5.2 (bỏ nhãn [Proposed]) — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
+- [x] T053 [P] CHANGELOG mục F002 — file: `CHANGELOG.md`
+- [x] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/002-platform-kit-core/quickstart.md`
 
 ## Dependencies & Execution Order
 
@@ -148,11 +148,11 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F002-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F002-AC-* có test pass (ghi mã test/TC)
+- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh — **2026-11-18:** đã chạy lệnh tương đương (`go generate`/`allowedcallers --check`/`routematrix check`, `gofmt` + `go vet` + `golangci-lint` + `ewlint`, `go test ./...`, `go test -tags integration` cho `pkg/authz`, `pkg/tenancy`, `cmd/*`) đều xanh; chưa chạy qua GNU make (máy local chưa cài make) — chờ CI xác nhận
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
 
 ## Ghi chú triển khai (2026-11-17)
 
