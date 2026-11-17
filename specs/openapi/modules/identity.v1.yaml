@@ -4817,6 +4817,9 @@ components:
         trace_id:
           type: string
           maxLength: 64
+        retryable:
+          type: boolean
+          description: 'Có khi lỗi tạm thời (vd. `503 UNAVAILABLE` khi module identity không trả Principal): client được phép thử lại với backoff (F002-AC-09)'
         policy_reason:
           type: string
           maxLength: 1000

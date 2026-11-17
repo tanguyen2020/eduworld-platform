@@ -15242,6 +15242,7 @@ components:
         detail: { type: string, maxLength: 1000 }
         instance: { type: string, maxLength: 2048 }
         trace_id: { type: string, maxLength: 64 }
+        retryable: { type: boolean, description: 'Có khi lỗi tạm thời (vd. `503 UNAVAILABLE` khi module identity không trả Principal): client được phép thử lại với backoff (F002-AC-09)' }
         policy_reason: { type: string, maxLength: 1000 }
         feature_key: { type: string, maxLength: 128, description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)' }
         reopen_at: { type: string, format: date-time, description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)' }
