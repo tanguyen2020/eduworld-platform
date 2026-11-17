@@ -87,12 +87,27 @@ services:
     image: apache/apisix:3.13.0-debian
     environment:
       APISIX_STAND_ALONE: "true"
-      EW_UPSTREAM_CORE_API: ${EW_UPSTREAM_CORE_API:-core-api:8100}
-      EW_UPSTREAM_REALTIME: ${EW_UPSTREAM_REALTIME:-realtime:8106}
+      EW_APISIX_LOGIN_KEY_SECRET: ${EW_APISIX_LOGIN_KEY_SECRET:-change-me-local}
     ports: ["9080:9080", "9443:9443"]
     volumes:
       - ../apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
-      - ../apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ../apisix/standalone/public/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ../apisix/plugins:/usr/local/apisix/custom/apisix/plugins:ro
+    healthcheck:
+      <<: *hc
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9080'"]
+
+  # Internal gateway (admin CIDRs only): /api/v1/admin, /sis, /game-admin, /game-media + portal routes (F004).
+  apisix-internal:
+    image: apache/apisix:3.13.0-debian
+    environment:
+      APISIX_STAND_ALONE: "true"
+      EW_APISIX_LOGIN_KEY_SECRET: ${EW_APISIX_LOGIN_KEY_SECRET:-change-me-local}
+    ports: ["9180:9080"]
+    volumes:
+      - ../apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ../apisix/standalone/internal/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ../apisix/plugins:/usr/local/apisix/custom/apisix/plugins:ro
     healthcheck:
       <<: *hc
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9080'"]

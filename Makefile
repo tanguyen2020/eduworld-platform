@@ -55,9 +55,9 @@ env: ## Copy every .env.example to .env (root, backend modules) if missing
 
 # ---------- infrastructure ----------
 .PHONY: up down reset up-obs
-up: ## Start infrastructure (postgres valkey nats keycloak apisix mailpit floci s3-init cdn sis-mock)
+up: ## Start infrastructure (postgres valkey nats keycloak apisix apisix-internal mailpit floci s3-init cdn sis-mock)
 	bash scripts/dev/check-docker.sh
-	$(DC) up -d --wait postgres valkey nats keycloak apisix mailpit floci cdn sis-mock
+	$(DC) up -d --wait postgres valkey nats keycloak apisix apisix-internal mailpit floci cdn sis-mock
 	$(DC) up s3-init
 
 down: ## Stop every container
@@ -175,6 +175,20 @@ keycloak-check: ## Static checks of the realm as code (clients, flows, secrets, 
 
 keycloak-test: ## Realm behaviour against the running Keycloak (direct grants, amr, idempotent apply)
 	KC_INTEGRATION=1 node --test deploy/keycloak/tests/realm.integration.test.mjs
+
+.PHONY: apisix-render apisix-check apisix-smoke
+apisix-render: ## Render deploy/apisix/standalone/{public,internal}/apisix.yaml from routes.yaml (ENV=local)
+	node deploy/apisix/scripts/render.mjs --env=$(or $(ENV),local)
+
+apisix-check: ## Gateway config checks: rendered files fresh, routes vs spec, no body logging, no hardcode
+	node deploy/apisix/scripts/render.mjs --check
+	node deploy/apisix/scripts/check-routes.mjs
+	node deploy/apisix/scripts/check-no-body-logging.mjs
+	node deploy/apisix/scripts/check-no-hardcode.mjs
+	node --test deploy/apisix/scripts/
+
+apisix-smoke: ## Gateway behaviour against the running stack (public :9080, internal :9180)
+	APISIX_SMOKE=1 node --test deploy/apisix/tests/smoke.test.mjs
 
 # ---------- specs / docs ----------
 .PHONY: specs-lint specs-breaking docs-check

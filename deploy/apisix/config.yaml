@@ -1,5 +1,5 @@
-# APISIX standalone (local). Routes live in apisix.yaml; F004 adds /api/v1/* → core-api and
-# /realtime/v1 → realtime. Admin ports of the binaries (9090 in containers) are never routed (F001-AC-06).
+# APISIX standalone (local) for both gateways (F004): routes come from standalone/<gateway>/apisix.yaml,
+# rendered from routes/routes.yaml. Admin ports of the binaries (9090 in containers) are never routed.
 deployment:
   role: data_plane
   role_data_plane:
@@ -11,4 +11,37 @@ apisix:
     enable: true
     listen:
       - port: 9443
+    ssl_protocols: TLSv1.2 TLSv1.3
   enable_admin: false
+  # Custom plugins (deploy/apisix/plugins) are mounted at custom/apisix/plugins.
+  extra_lua_path: /usr/local/apisix/custom/?.lua
+
+nginx_config:
+  envs:
+    - EW_APISIX_LOGIN_KEY_SECRET
+  http:
+    custom_lua_shared_dict:
+      ew-login-limit: 10m
+    # No $request / $args: query strings (realtime ticket) never reach the access log (MONITORING §8).
+    access_log_format: '$remote_addr - [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent $request_time "$http_user_agent" $upstream_addr $http_x_request_id'
+    access_log_format_escape: json
+
+plugins:
+  - request-id
+  - prometheus
+  - opentelemetry
+  - cors
+  - ip-restriction
+  - client-control
+  - openid-connect
+  - limit-conn
+  - redirect
+  - response-rewrite
+  - ew-tenant-header
+  - ew-login-key
+
+plugin_attr:
+  prometheus:
+    export_addr:
+      ip: 0.0.0.0
+      port: 9091
