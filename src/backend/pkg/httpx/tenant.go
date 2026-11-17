@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
@@ -100,6 +101,11 @@ func (s *Server) principal(op Operation, next http.Handler) http.Handler {
 			WriteError(w, r, err)
 			return
 		}
+		tenant := ""
+		if p.TenantID != nil {
+			tenant = p.TenantID.String()
+		}
+		observability.InfoFrom(ctx).SetPrincipal(p.UserID.String(), tenant)
 		ctx = authz.WithPrincipal(ctx, p)
 		if scope != nil {
 			ctx = tenancy.WithScope(ctx, scope)

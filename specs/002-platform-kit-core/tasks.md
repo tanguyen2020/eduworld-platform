@@ -102,15 +102,15 @@
 - [x] T036 [P] [US4] Test F002-AC-20: `problem.Map` theo Kind, lỗi lạ → 500 không lộ chi tiết, có `trace_id` — file: `src/backend/pkg/problem/problem_test.go` — phải FAIL trước khi code
 - [x] T037 [P] [US4] Test F002-AC-21: `gen-check` phát hiện mã lệch spec — file: `src/backend/pkg/problem/gen/gen_test.go`
 - [x] T038 [P] [US4] Test F002-AC-22: thiếu biến → exit 1 + tên biến, không giá trị; đọc `*_FILE` — file: `src/backend/pkg/config/load_test.go`
-- [ ] T039 [P] [US4] Test F002-AC-23: log capture với header Authorization, body có `password`, email → không xuất hiện (TC-AUTH-060 phần backend) — file: `src/backend/pkg/observability/redact_test.go`
-- [ ] T040 [P] [US4] Test F002-AC-24: exporter in-memory có span server + `traceparent` lan truyền; metric có nhãn chuẩn, không user_id — file: `src/backend/pkg/observability/otel_test.go`
+- [x] T039 [P] [US4] Test F002-AC-23: log capture với header Authorization, body có `password`, email → không xuất hiện (TC-AUTH-060 phần backend) — file: `src/backend/pkg/observability/redact_test.go`
+- [x] T040 [P] [US4] Test F002-AC-24: exporter in-memory có span server + `traceparent` lan truyền; metric có nhãn chuẩn, không user_id — file: `src/backend/pkg/observability/otel_test.go`
 - [ ] T041 [P] [US4] Test F002-AC-25: validator kin-openapi trả 422 `MAX_LENGTH` với tên trường (TC-TEN-024 phần API) — file: `src/backend/pkg/httpx/validate_test.go`
 
 ### Implementation cho User Story 4
 
 - [x] T042 [P] [US4] `src/backend/pkg/problem` (RFC 9457, `Kind`, `Map`, `Invalid(field, code)`) — file: `src/backend/pkg/problem/problem.go`
 - [x] T043 [P] [US4] `src/backend/pkg/config` (koanf env, `*_FILE`, `Required`) — file: `src/backend/pkg/config/load.go`
-- [ ] T044 [P] [US4] `src/backend/pkg/observability` (slog JSON + redaction, OTel tracer/meter, Prometheus registry nhãn `binary`, `module`, metric HTTP + DB pool) — file: `src/backend/pkg/observability/logger.go`
+- [x] T044 [P] [US4] `src/backend/pkg/observability` (slog JSON + redaction, OTel tracer/meter, Prometheus registry nhãn `binary`, `module`, metric HTTP + DB pool) — file: `src/backend/pkg/observability/logger.go`
 - [ ] T045 [US4] `httpx.NewServer` ráp chuỗi middleware theo plan, validator kin-openapi theo spec của module, timeout biên — file: `src/backend/pkg/httpx/server.go`
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.

@@ -15,6 +15,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/clock"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
@@ -44,6 +45,7 @@ const (
 // Operation describes one public operation (generated from OpenAPI in later features).
 type Operation struct {
 	ID      string
+	Module  string // owning module (metric/log label)
 	Method  string
 	Pattern string // path relative to BasePath, chi syntax
 	Public  bool   // no token (login, refresh, client-config)
@@ -169,6 +171,7 @@ type opKey struct{}
 
 func withOperation(op Operation, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		observability.InfoFrom(r.Context()).SetRoute(BasePath+op.Pattern, op.ID, op.Module)
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), opKey{}, op)))
 	})
 }
@@ -214,6 +217,7 @@ func (s *Server) recoverer(next http.Handler) http.Handler {
 // WriteError writes RFC 9457 Problem Details with the trace id of the request; unknown errors become
 // 500 INTERNAL without internal detail (F002-AC-20).
 func WriteError(w http.ResponseWriter, r *http.Request, err error) {
+	observability.InfoFrom(r.Context()).SetCode(string(problem.From(err, "").Code))
 	problem.Write(w, r, err, TraceID(r.Context()))
 }
 
