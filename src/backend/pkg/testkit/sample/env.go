@@ -14,7 +14,6 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit/sample/ent"
 	_ "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit/sample/ent/runtime" // mixin hooks, interceptors, defaults
@@ -45,7 +44,7 @@ func Open(t testing.TB, dsn string) *sql.DB {
 	return db
 }
 
-// Setup starts a migrated cluster and creates the sample tables with RLS.
+// Setup starts a migrated cluster and creates the sample tables (with their RLS policies).
 func Setup(ctx context.Context, t testing.TB) *Env {
 	t.Helper()
 	cl := testkit.StartCluster(ctx, t, true)
@@ -57,16 +56,6 @@ func Setup(ctx context.Context, t testing.TB) *Env {
 	}
 	if _, err := e.Migrator.ExecContext(ctx, fixture.SQL); err != nil {
 		t.Fatalf("sample fixture: %v", err)
-	}
-	for table, kind := range map[string]tenancy.TableKind{"sample.widgets": tenancy.KindT, "sample.widget_logs": tenancy.KindTA,
-		"sample.templates": tenancy.KindTStar} {
-		ddl, err := tenancy.RLSPolicies(table, kind)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, err := e.Migrator.ExecContext(ctx, ddl); err != nil {
-			t.Fatalf("rls %s: %v", table, err)
-		}
 	}
 	var err error
 	if e.Writer, err = outbox.NewWriter("learning", "sample", nil); err != nil {

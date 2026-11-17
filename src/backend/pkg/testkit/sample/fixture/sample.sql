@@ -44,3 +44,24 @@ CREATE TABLE sample.ref_widgets (
   id uuid PRIMARY KEY, tenant_id uuid NOT NULL, name varchar(128) NOT NULL, source_version bigint NOT NULL
 );
 GRANT SELECT, INSERT, UPDATE ON sample.ref_widgets TO learning_app, learning_platform;
+
+-- RLS (tenant condition only, ADR-0089 §1) — text of tenancy.RLSPolicies for each kind.
+ALTER TABLE sample.widgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sample.widgets FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_read ON sample.widgets FOR SELECT USING (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_insert ON sample.widgets FOR INSERT WITH CHECK (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_update ON sample.widgets FOR UPDATE USING (tenant_id = infra.current_tenant_id()) WITH CHECK (tenant_id = infra.current_tenant_id());
+ALTER TABLE sample.widget_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sample.widget_logs FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_read ON sample.widget_logs FOR SELECT USING (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_insert ON sample.widget_logs FOR INSERT WITH CHECK (tenant_id = infra.current_tenant_id());
+ALTER TABLE sample.templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sample.templates FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_read ON sample.templates FOR SELECT USING (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_insert ON sample.templates FOR INSERT WITH CHECK (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_update ON sample.templates FOR UPDATE USING (tenant_id = infra.current_tenant_id()) WITH CHECK (tenant_id = infra.current_tenant_id());
+ALTER TABLE sample.ref_widgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sample.ref_widgets FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_read ON sample.ref_widgets FOR SELECT USING (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_insert ON sample.ref_widgets FOR INSERT WITH CHECK (tenant_id = infra.current_tenant_id());
+CREATE POLICY tenant_update ON sample.ref_widgets FOR UPDATE USING (tenant_id = infra.current_tenant_id()) WITH CHECK (tenant_id = infra.current_tenant_id());

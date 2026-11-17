@@ -142,6 +142,8 @@ arch-check: ## Module boundaries: Go internal/, x-allowed-callers, pkg/ and cmd/
 	$(GO) run ./tools/archgen --check
 	$(GO) run ./tools/lint/ewlint ./... # bypassreason + scopeguard (ADR-0089 §3)
 	$(GO) run ./tools/routematrix check # every implemented operation has tenant A/B + role tests (F002-AC-28)
+	cd $(BACKEND) && go run ./tools/entlint # MaxLen, exactly one entx mixin (F003-AC-07)
+	cd $(BACKEND) && go run ./tools/tenancyguard # RLS, explicit SQL, no DELETE/TRUNCATE (F003-AC-07)
 
 lint: ## gofmt, go vet, golangci-lint + generated depguard rules (MOD=<module> to scope)
 	test -z "$$(gofmt -l $(BACKEND)/$(if $(MOD),modules/$(MOD)))"
