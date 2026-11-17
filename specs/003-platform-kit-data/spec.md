@@ -28,6 +28,17 @@
 - Q: Chống trùng xuyên ngày khi partition theo ngày? → A: Khóa partition ổn định: `processed_events` partition theo `event_occurred_at` của envelope, PK `(consumer, event_id, event_occurred_at)`; `idempotency_records` partition theo `key_issued_on` lấy từ timestamp của `Idempotency-Key` (bắt buộc UUIDv7), PK `(user_id, route_template, idem_key, key_issued_on)`; key không phải UUIDv7 hoặc lệch quá `idempotency_record_ttl` → `400` (ADR-0089 §4).
 - Q: Ghi idempotency thế nào? → A: `INSERT` một lần trong cùng transaction `UnitOfWork` với thay đổi nghiệp vụ, kèm response đã tuần tự hóa; request trùng đồng thời chờ ở unique index tới khi transaction đầu commit rồi replay; không có trạng thái `in_progress`, không khóa Valkey (ADR-0089 §4).
 
+### Session 2026-11-18 (quyết định khi triển khai, [Proposed])
+
+- Q: Bảng `infra` sinh bằng ent? → A: Không. Bốn bảng partition theo ngày (ent/Atlas không biểu diễn `PARTITION BY`) nên DDL viết tay, sinh từ một template bằng `tools/infragen` cho 5 module; `outbox`/`idempotency`/consumer truy cập bằng SQL tường minh trong tx của `UnitOfWork`. Partition tạo/gỡ qua hàm `SECURITY DEFINER` (owner `<m>_migrator`), `<m>_partition_admin` chỉ có `EXECUTE`; có partition `DEFAULT` để ghi không lỗi khi thiếu partition ngày.
+- Q: Hook/interceptor gắn thế nào khi `entx` không được import code sinh? → A: Mixin mang `Interceptors()` (truy vấn) và `Hooks()` (create/update/delete, soft-delete); `Where`/`Client().Mutate` gọi qua reflection. Bảng H khai báo `HybridContent{ResourceType}`.
+- Q: Ghi bản ghi idempotency trong tx bằng cách nào? → A: Command gọi `idempotency.SetResult(ctx, result)` trong `UnitOfWork.Do` (đăng ký `entx.BeforeCommit`); middleware replay kết quả đã commit khi request trùng đồng thời lỗi ở unique index.
+- Q: Consumer dựng scope thế nào khi scope chỉ được tạo trong `authz`? → A: Thêm `authz.EventScope(tenantID)` (bổ sung API, không đổi chữ ký cũ).
+- Q: Invalidate cache Principal trên mọi replica? → A: Consumer ordered (tạm thời, `DeliverNew`) mỗi tiến trình; thêm `InvalidateTenant` (`tenant.updated`) và `InvalidateAll` (`role.updated`).
+- Q: Facade sinh thế nào? → A: `tools/facadegen` (oapi-codegen v2.8.2, models + strict-server; tuple 3.1 chuẩn hóa chỉ cho bước sinh kiểu) + `api.Fake` cho test bên gọi; phần HTTP server sinh kèm bị analyzer `nointernalhttp` cấm dùng. `cmd/internal/wiring` được import `modules/<m>/api`.
+- Q: `resolvePrincipal` trả permission gộp, áp phạm vi trường/môn thế nào? → A: Delta hợp đồng `Principal.grants[]` (`PrincipalGrant`) trong `identity.internal.v1.yaml`; adapter từ chối Principal thiếu `grants` (503, fail-closed). Phần cài đặt thuộc F012.
+- Q: Linter read/write, entlint, tenancyguard chạy ở đâu? → A: Luật read/write trong `tools/archgen`, cùng `tools/entlint`, `tools/tenancyguard` trong `make arch-check`; không dùng `go-arch-lint`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Repository ent an toàn tenant và chỉ soft-delete (Priority: P1)

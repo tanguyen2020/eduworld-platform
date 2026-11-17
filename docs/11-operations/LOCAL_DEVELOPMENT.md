@@ -91,6 +91,7 @@ Quy ước tên: tiền tố `EW_`; kết nối database theo module `EW_DB_<MOD
 | `EW_DB_<MODULE>_RELAY_DSN` | `EW_DB_<MODULE>_RELAY_URL_FILE` | Chỉ outbox relay (profile `events`, role `<module>_relay`, ADR-0089) |
 | `EW_DB_<MODULE>_MIGRATOR_DSN` | `EW_DB_<MODULE>_MIGRATOR_URL_FILE` | Chỉ job `migrate --module=<module>` (Atlas) |
 | `EW_DB_CHAT_PURGER_DSN` | `EW_DB_CHAT_PURGER_URL_FILE` | Chỉ job purge chat gameplay trong profile `chat` (ADR-0033) |
+| `EW_DB_<MODULE>_PARTITION_ADMIN_DSN` | `EW_DB_<MODULE>_PARTITION_ADMIN_URL_FILE` | Chỉ job `infra-partition-maintenance` (profile `jobs`, role `<module>_partition_admin`: chỉ `EXECUTE` hàm partition, F003) |
 | `EW_VALKEY_<MODULE>_USER` / `EW_VALKEY_<MODULE>_PASSWORD` | như local, mật khẩu qua `EW_VALKEY_<MODULE>_PASSWORD_FILE` | ACL user Valkey của từng module; binary mở một client cho mỗi module nạp |
 | `EW_KC_ADMIN_CLIENT_ID` / `EW_KC_ADMIN_CLIENT_SECRET` | `EW_KC_ADMIN_CLIENT_ID` / `EW_KC_ADMIN_CLIENT_SECRET_FILE` | Client `svc-identity`, chỉ để module identity gọi Keycloak Admin API (ADR-0074 mục 5); không có token gọi giữa module |
 | `EW_S3_ACCESS_KEY` / `EW_S3_SECRET_KEY` | `EW_S3_ACCESS_KEY_FILE` / `EW_S3_SECRET_KEY_FILE` | Object storage (local/CI: floci, giá trị cố định `test` / `test`; staging/prod: backend theo ADR-0075) |
@@ -109,6 +110,15 @@ EW_VALKEY_ADDR=localhost:6379
 EW_NATS_URLS=nats://localhost:4222
 EW_OIDC_ISSUERS=http://localhost:8180/realms/eduworld
 EW_OIDC_AUDIENCE=eduworld-api
+EW_OIDC_ALLOWED_AZP=eduworld-game-backend,eduworld-portal
+EW_OIDC_ALLOWED_CLOCK_SKEW=30s
+EW_OIDC_PLATFORM_REQUIRED_ACR=mfa
+EW_OIDC_PLATFORM_MAX_AUTH_AGE=8h
+EW_KC_PORTAL_CLIENT_ID=eduworld-portal            # azp của portal (guard portal_staff, F002)
+EW_KC_GAME_CLIENT_ID=eduworld-game-backend        # azp của game (guard game_player, F002)
+EW_SHUTDOWN_DRAIN_DELAY=0s                  # chờ LB thấy readyz 503 (mặc định 5s khi có HTTP public; local 0s)
+EW_HTTP_SHUTDOWN_TIMEOUT=20s                # srv.Shutdown (BACKEND_DESIGN §13)
+EW_WORKER_SHUTDOWN_TIMEOUT=60s              # chờ handler worker đang chạy
 # ---- Object storage / CDN / media (ADR-0043, ADR-0044) ----
 EW_S3_ENDPOINT=http://localhost:4566        # floci chỉ local/CI; staging/prod: endpoint S3 managed hoặc Garage/SeaweedFS (ADR-0075)
 EW_S3_REGION=us-east-1                     # floci chấp nhận region bất kỳ; dùng giá trị chuẩn để SDK ký đúng

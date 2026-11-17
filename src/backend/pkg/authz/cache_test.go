@@ -24,6 +24,13 @@ func TestCacheTwoLevels(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(vk.Close)
+	// Writes to Valkey are best effort in the cache: wait until the server answers before asserting on keys.
+	for i := 0; vk.Do(ctx, vk.B().Ping().Build()).Error() != nil; i++ {
+		if i > 100 {
+			t.Fatal("valkey not ready")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 
 	tid := uuid.New()
 	p := authz.NewPrincipal(authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, TenantID: &tid,

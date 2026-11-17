@@ -55,3 +55,34 @@ make specs-breaking
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail, log kịch bản 15 (event_id trước/sau giết relay), output `nats consumer info`, `trace_id` một command có consumer nối trace.
+
+## 5. Bằng chứng (2026-11-18, Windows 11 + Docker Desktop, Go 1.27; postgres:17, nats:2.10-alpine -js, valkey:8 bằng testcontainers)
+
+Kịch bản §2 được tự động hóa bằng test trên module mẫu `src/backend/pkg/testkit/sample` (không thao tác tay bằng `nats-box`).
+
+| # | Test tự động | Kết quả |
+|---|---|---|
+| 1 | `pkg/entx` `TestMixinColumns` (cột theo 4 loại bảng, `delete_reason` 64), `TestFixtureMatchesEnt` | pass |
+| 2–3, 6 | `TestEntx/TenantFilterAndScope` (không scope → `ErrMissingTenantScope`; ngoài tx → `ErrNoTransaction`; A không thấy B; role `learning_app` + `app.tenant_id`; RLS chặn dòng `tenant_id NULL` từ `_app`; tạo với tenant ngoài scope bị chặn; B không update được dòng của A), `TestEntx/PlatformScopeAndGlobal` (`learning_platform`, T*/G) | pass |
+| 4–5, 26 | `TestEntx/SoftDelete` (`deleted_at/by/reason`; outbox có `audit.recorded` + `widget.deleted` cùng tx; `Bypass(trash)` đọc lại; tạo lại cùng mã; TA → `ErrHardDeleteForbidden`), `pkg/testkit/sample` `TestSampleCQRS` | pass |
+| 7 | `tools/entlint`, `tools/tenancyguard` với fixture vi phạm (MaxLen, Text, 0/2 mixin, policy có `deleted_at`, bảng thiếu RLS, `DELETE FROM` trong migration/Go, SQL thiếu tenant/`deleted_at`); chạy trên cây thật: sạch | pass |
+| 8 | `TestEntx/UnitOfWorkCommitRollback` (lỗi/panic → rollback, outbox trống; `Do` lồng dùng chung tx), `TestEntx/ReadSessionIsReadOnly`, `TestSampleCQRS` (lỗi sau khi ghi outbox → rollback) | pass |
+| 9 | `tools/archgen` `TestReadWriteContexts`, `scripts/ci/test-arch-fixtures.sh` 14/14 | pass |
+| 10, 10b | `TestCreateWidgetValidationAndAuthz` (422 `MAX_LENGTH` trước tx; thiếu quyền → không chạm repository), `observability` `TestUseCase` (span con, metric `module/kind/usecase/result`, log có `trace_id`, không payload) | pass |
+| 11 | `TestSampleCQRS` (version cũ → 409 `CONFLICT`) | pass |
+| 12–14, 13b | `TestIdempotentCreate` (428; UUIDv4 → 400 không gọi handler; replay + header; khác body → 409; user B không nhận response của A; 2 request đồng thời → 1 widget, 1 replay; lỗi trong tx → không có bản ghi, retry được; bản ghi hết hạn bị bỏ qua), `TestParseKey` (23:59 → 00:01 cùng `key_issued_on`) | pass |
+| 15 | `TestOutboxPipeline/RelayCrashAndRerun` (crash sau 3 lần publish → không đánh dấu; chạy lại → mỗi dòng outbox đúng một message trong `EVT_LEARNING`) | pass |
+| 16–18 | `ConsumerIdempotentAndScoped` (giao 2 lần → xử lý 1; `event_occurred_at` = envelope; scope từ envelope; event platform → DLQ), `DeadLetters` (lỗi tạm 2 lần → DLQ, lỗi permanent → DLQ ngay, envelope sai → DLQ; message sau vẫn chạy) | pass |
+| 19 | `TestAuditPayload` (theo JSON Schema, lọc khóa cấm, che email/JWT), `TestEnvelopeMatchesSchema` | pass |
+| 20 | `natsx` `TestPrincipalInvalidator` (6 event × 2 replica), `authz` `TestCacheTwoLevels`, `TestInvalidateTenantAndAll` | pass |
+| 21–22 | `modcall` `TestCallContextAndAllowlist`, `TestCallErrors` (deadline → 503 sau 1 lần gọi, panic → 500, giữ code, lỗi lạ → 500) | pass |
+| 23 | `cmd/internal/wiring` `TestPrincipalResolver` (Principal, 404 → `ErrNotMember`, thiếu `grants` → 503, khóa → `ACCOUNT_LOCKED`, deadline, caller ngoài allowlist), `TestGeneratedFake` | pass |
+| 24 | `lifecycle` `TestAPIShutdown` (readyz 503, request đang chạy hoàn tất, NATS drain, pool đóng), `TestWorkerShutdownMidBatch` (dừng sau 1/6, worker sau xử lý 5 còn lại, không trùng); integration `cmd/core-api`, `cmd/worker` vẫn pass | pass |
+| 25 | `testkit` `TestKit`, `testkit/contract` (response public, facade, payload); `make specs-breaking` có từ F001, chưa chạy lại trong phiên này | pass |
+| 27 | `TestOutboxPipeline/Grants` (không RLS trên `infra`, quyền đúng từng role, không DELETE/TRUNCATE, partition không có grant trực tiếp) | pass |
+| 28 | `partitionmaint` `TestPartitionMaintenance` (≥ 7 ngày, gỡ processed/idempotency cũ, giữ outbox chưa publish và dead letter chưa xử lý, gỡ sau khi xử lý, không chạm bảng nghiệp vụ) | pass |
+| AC-39 | `projection` `TestRebuild` (khớp lại, chạy lại không đổi, bản `source_version` mới hơn giữ nguyên, facade lỗi → lỗi và không mất dữ liệu), `cmd/worker` `TestProjectionCommand` | pass |
+
+- Tổng (gói F003 + F002 liên quan, unit + integration): 65 test cấp cao pass. Một lần chạy song song toàn bộ, `TestCacheTwoLevels` lỗi một lần (không tái hiện qua 5 lần chạy lại); test đã thêm bước chờ Valkey sẵn sàng.
+- `golangci-lint` 0 issue; `archgen`, `ewlint` (bypassreason, scopeguard, nointernalhttp), `routematrix`, `entlint`, `tenancyguard`: sạch.
+- Chưa chạy qua GNU make (máy chưa có make) và chưa xem trace nối consumer trên Tempo thật.

@@ -81,7 +81,15 @@ Nguyên tắc:
 | | `eduworld_chat_seq_gaps_total` | Counter | `channel_type` | client telemetry → module game |
 | | `nats_consumer_num_pending`, `nats_consumer_num_redelivered`, `nats_stream_total_bytes` (từ `prometheus-nats-exporter`) | Gauge | `stream`, `consumer` | NATS |
 | | `eduworld_moderation_queue_size` | Gauge | `priority` | module chat (`worker-chat`) |
-| | `eduworld_tenant_filter_bypass_total` | Counter | `module`, `reason` (danh sách đóng ADR-0089 §3: `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`) | mọi module qua `src/backend/pkg/tenancy.Bypass` (ADR-0039, ADR-0072, ADR-0089) |
+| | `eduworld_tenant_filter_bypass_total` | Counter | `module`, `reason` (danh sách đóng ADR-0089 §3: `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`, `platform_analytics`) | mọi module qua `src/backend/pkg/tenancy.Bypass` (ADR-0039, ADR-0072, ADR-0089) |
+| | `eduworld_usecase_duration_seconds` | Histogram | `module`, `kind` (`command`/`query`/`consumer`), `usecase`, `result` (`ok`/`client_error`/`server_error`) | `src/backend/pkg/observability.UseCase` (F003, ADR-0087) |
+| | `eduworld_idempotency_replays_total` | Counter | `route` | `src/backend/pkg/httpx.Idempotency` (F003) |
+| | `eduworld_events_consumed_total` | Counter | `module`, `consumer`, `event_type`, `result` (`ok`/`duplicate`/`retry`/`dlq`) | `src/backend/pkg/outbox.Consumer` (F003) |
+| | `eduworld_outbox_unpublished_count`, `eduworld_outbox_lag_seconds` | Gauge | `module` | `src/backend/pkg/outbox.Relay` (F003) |
+| | `eduworld_infra_partition_days_ahead` | Gauge | `module`, `table` | job `infra-partition-maintenance` (F003, ADR-0089 §5) |
+| | `eduworld_infra_partition_dropped_total`, `eduworld_infra_partition_refused_total` | Counter | `module`, `table` | job `infra-partition-maintenance` — refused = partition hết hạn còn outbox chưa publish / dead letter chưa xử lý |
+| | `eduworld_principal_cache_hits_total` | Counter | `layer` (`l1`/`valkey`), `result` (`hit`/`miss`/`error`) | `src/backend/pkg/authz.CachedResolver` (F002) |
+| | `eduworld_jwks_refresh_total`, `eduworld_auth_tenant_mismatch_total` | Counter | `result` / — | `src/backend/pkg/httpx` (F002) |
 | | `eduworld_moderation_school_notifications_total` | Counter | `status` (sent/acknowledged/overdue) | module chat (`worker-chat`) [Proposed] |
 | | `eduworld_reports_total` | Counter | `target_type`, `reason` | module chat |
 | Learning Completion | `eduworld_learning_activities_completed_total` | Counter | `activity_type`, `context` (practice/assignment/quest/competition), `subject`, `grade_band` | module learning |
@@ -206,6 +214,8 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `SagaStuck` | `eduworld_saga_stuck > 0` quá 30 phút | Warning | Xem bước saga lỗi, chạy lại hoặc bù trừ |
 | `EventDLQNotEmpty` | `nats_stream_total_messages{stream=~"DLQ_.*"} > 0` | Warning | Sửa nguyên nhân, replay |
 | `TenantFilterBypassSpike` | `eduworld_tenant_filter_bypass_total` tăng > 5× baseline 1 h | Warning | Nghi lạm dụng quyền liên tenant; xem audit |
+| `InfraPartitionsMissing` | `eduworld_infra_partition_days_ahead < 7` | P2 / Warning | Job `infra-partition-maintenance` không chạy hoặc lỗi; ghi vẫn chạy nhờ partition `DEFAULT`, sửa trước khi dòng dồn vào `*_default` (ADR-0089 §5) |
+| `InfraPartitionRefused` | `increase(eduworld_infra_partition_refused_total[1d]) > 0` | Warning | Partition hết hạn còn outbox chưa publish hoặc dead letter chưa xử lý: kiểm tra relay/DLQ |
 | `MatchmakingStalled` | `mm_queue_size` > 0 và không có proposal mới trong 3 phút (giờ học) | Warning | Kiểm tra lock matchmaker |
 | `MatchmakingWaitHigh` | p95 `mm_wait_seconds` > 90s trong 15 phút | Warning | Xem mở rộng rating window |
 | `DuplicateMatchResults` | `match_results_total{result="duplicate_rejected"}` tăng đột biến > 20/5 phút | Warning | Nghi lỗi client/anti-cheat |

@@ -178,14 +178,14 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [ ] T056 [P] Kiểm DATABASE_DESIGN §3.9–3.10 (DDL `infra.dead_letters`, CHECK kích thước `idempotency_records` đã có theo ADR-0089) khớp ent `infraschema`; API_DESIGN §6 đổi `platform.idempotency_records` → `infra.idempotency_records` (D6) nếu còn sót — file: `docs/07-backend/DATABASE_DESIGN.md`
-- [ ] T074 [P] Delta contract: mô tả `Idempotency-Key` là UUIDv7 (`format: uuid` + mô tả, `400 BAD_REQUEST` khi sai) ở parameter dùng chung của spec gộp rồi chạy `split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
-- [ ] T057 [P] BACKEND_DESIGN §5.5 thay `CONCURRENT_MODIFICATION` bằng `CONFLICT`; §11 và TC-SVC-004 dùng tên metric `eduworld_internal_client_*` — file: `docs/07-backend/BACKEND_DESIGN.md`
-- [ ] T058 [P] CHANGELOG mục F003 — file: `CHANGELOG.md`
-- [ ] T064 [P] Đăng ký metric `eduworld_usecase_duration_seconds` ở MONITORING; thêm biến `EW_DB_READ_URL_FILE` (client đọc của `ReadSession`) vào BACKEND_DESIGN §12 — file: `docs/11-operations/MONITORING.md`
-- [ ] T065 [P] Sửa mô tả TC-SVC-001 (bỏ chữ "Mediator CQRS", dùng write/read context theo ADR-0087) — file: `docs/12-project/TEST_STRATEGY.md`
-- [ ] T071 [P] Đăng ký cảnh báo P2 "thiếu partition `infra`" và metric của job `infra-partition-maintenance` ở MONITORING — file: `docs/11-operations/MONITORING.md`
-- [ ] T059 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/003-platform-kit-data/quickstart.md`
+- [x] T056 [P] Kiểm DATABASE_DESIGN §3.9–3.10 (DDL `infra.dead_letters`, CHECK kích thước `idempotency_records` đã có theo ADR-0089) khớp ent `infraschema`; API_DESIGN §6 đổi `platform.idempotency_records` → `infra.idempotency_records` (D6) nếu còn sót — file: `docs/07-backend/DATABASE_DESIGN.md`
+- [x] T074 [P] Delta contract: mô tả `Idempotency-Key` là UUIDv7 (`format: uuid` + mô tả, `400 BAD_REQUEST` khi sai) ở parameter dùng chung của spec gộp rồi chạy `split-public.mjs` — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [x] T057 [P] BACKEND_DESIGN §5.5 thay `CONCURRENT_MODIFICATION` bằng `CONFLICT`; §11 và TC-SVC-004 dùng tên metric `eduworld_internal_client_*` — file: `docs/07-backend/BACKEND_DESIGN.md`
+- [x] T058 [P] CHANGELOG mục F003 — file: `CHANGELOG.md`
+- [x] T064 [P] Đăng ký metric `eduworld_usecase_duration_seconds` ở MONITORING; thêm biến `EW_DB_READ_URL_FILE` (client đọc của `ReadSession`) vào BACKEND_DESIGN §12 — file: `docs/11-operations/MONITORING.md`
+- [x] T065 [P] Sửa mô tả TC-SVC-001 (bỏ chữ "Mediator CQRS", dùng write/read context theo ADR-0087) — file: `docs/12-project/TEST_STRATEGY.md`
+- [x] T071 [P] Đăng ký cảnh báo P2 "thiếu partition `infra`" và metric của job `infra-partition-maintenance` ở MONITORING — file: `docs/11-operations/MONITORING.md`
+- [x] T059 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/003-platform-kit-data/quickstart.md`
 
 ## Dependencies & Execution Order
 
@@ -196,11 +196,11 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F003-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F003-AC-* có test pass (ghi mã test/TC)
+- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh — **2026-11-18:** lệnh tương đương đã chạy xanh (generators `--check`, `go vet`, `golangci-lint`, `ewlint`, `archgen`, `routematrix`, `entlint`, `tenancyguard`, `go test ./...`, `go test -tags integration` cho các gói F003); chưa qua GNU make — chờ CI
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
 
 ## Ghi chú triển khai (2026-11-18)
 
