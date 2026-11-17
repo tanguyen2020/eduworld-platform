@@ -1,0 +1,5429 @@
+[
+  {
+    "operation_id": "abandonGameChallengeAttempt",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/challenge-attempts/{challenge_attempt_id}:abandon",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "abandonQuest",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/quests/{quest_id}:abandon",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptClubInvitation",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/club-invitations/{invitation_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptClubJoinRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/club-join-requests/{request_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptDuel",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/duels/{duel_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptFriendRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/friend-requests/{request_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptMatchProposal",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/matches/{match_id}/proposal:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptPartyInvitation",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/invitations/{invitation_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acceptQuest",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/quests/{quest_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "acknowledgeSchoolSafetyNotification",
+    "module": "chat",
+    "method": "POST",
+    "path": "/tenant/safety/school-notifications/{notification_id}:acknowledge",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "actOnModerationCase",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/cases/{case_id}:act",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "activateEfficacyStudy",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}:activate",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "addEfficacyStudyClass",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}/classes",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "approveClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "approveEconomyAdjustment",
+    "module": "game",
+    "method": "POST",
+    "path": "/admin/economy/adjustments/{adjustment_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "approveStudentCleanupRun",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/student-cleanup/runs/{run_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "approveTenantSchool",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/schools/{school_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "archiveAssignment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}:archive",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "archiveClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}:archive",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "assignModerationCase",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/cases/{case_id}:assign",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "assignToTenants",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/tenant-assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "blockUser",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/social/blocks/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "cancelAssignment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "cancelEventRun",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/events/{event_id}/runs/{run_id}:cancel",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "cancelMatchmakingTicket",
+    "module": "competition",
+    "method": "DELETE",
+    "path": "/competition/matchmaking/tickets/{ticket_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "cancelPartyInvitation",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/invitations/{invitation_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "cancelSchoolEvent",
+    "module": "game",
+    "method": "POST",
+    "path": "/lms/school-events/{event_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "claimEventMilestone",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/events/{event_id}/milestones/{milestone_id}:claim",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "claimSeasonTier",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/season-track/tiers/{tier}:claim",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "completeEfficacyStudy",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}:complete",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "completeLesson",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/lessons/{lesson_id}:complete",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createAdminTenantSchool",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/tenants/{tenant_id}/schools",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createAssignment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createAuthSession",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/session",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createBossEncounter",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/bosses/{boss_id}/encounters",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createChallenge",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/challenges",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createClubEvent",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}/events",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createClubGoal",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}/goals",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsActivity",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/activities",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsAssessmentBlueprint",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/assessment-blueprints",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsAssessmentBlueprintVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsLesson",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/lessons",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsLessonVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/lessons/{lesson_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsQuestionSet",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/question-sets",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsQuestionSetVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/question-sets/{question_set_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCommonTenantStudents",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/common-tenant/students",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createContentImport",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/imports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCountry",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/catalog/countries",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCurriculum",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/curricula",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createDataRequest",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/data-requests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createDuel",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/duels",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createEconomyAdjustment",
+    "module": "game",
+    "method": "POST",
+    "path": "/admin/economy/adjustments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createEfficacyStudy",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createEfficacyStudyReport",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}/reports",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createExamSession",
+    "module": "learning",
+    "method": "POST",
+    "path": "/exams/sessions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createFriendCode",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/friend-codes",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createGameAnalyticsExport",
+    "module": "game",
+    "method": "POST",
+    "path": "/admin/analytics/game/exports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createGameConfig",
+    "module": "game|competition|chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createGamePreviewSession",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/preview/sessions",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createGameSession",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/sessions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createLearningExperiment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/experiments",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createLearningPath",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/courses/{course_id}/paths",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createLearningPreviewSession",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/preview/sessions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createLmsReport",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/reports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createMatchmakingTicket",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/matchmaking/tickets",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createObjective",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/objectives",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createParty",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createPlatformReport",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/reports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createPlatformRole",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createPlatformSisImport",
+    "module": "identity",
+    "method": "POST",
+    "path": "/sis/imports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createProvince",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/catalog/provinces",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createProvinceSuccession",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/catalog/province-successions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createQuestion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/questions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createQuestionVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/questions/{question_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createRealtimeTicket",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/sessions/{game_session_id}/realtime-tickets",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createRegradeRequest",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/regrade-requests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createReport",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/reports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createResearchAgreement",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/research-agreements",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSanction",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/sanctions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createScheduleItem",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/schedules",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSchoolEvent",
+    "module": "game",
+    "method": "POST",
+    "path": "/lms/school-events",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSensitiveAllowlistEntry",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/sensitive-allowlist",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSensitiveCategory",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/sensitive-categories",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSensitiveTerm",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/sensitive-terms",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSisConnection",
+    "module": "identity",
+    "method": "POST",
+    "path": "/sis/connections",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSisImport",
+    "module": "identity",
+    "method": "POST",
+    "path": "/schools/{school_id}/sis-imports",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createStudentCleanupExclusions",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/student-cleanup/exclusions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createStudyGroup",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/schools/{school_id}/study-groups",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createSubject",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/subjects",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenant",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/tenants",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenantClone",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/tenant-clones",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenantReport",
+    "module": "learning",
+    "method": "POST",
+    "path": "/tenant/reports",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenantRole",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenantSensitiveTerm",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/tenant-terms",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTenantUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/users",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTopic",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/topics",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "declineClubInvitation",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/club-invitations/{invitation_id}:decline",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "declineDuel",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/duels/{duel_id}:decline",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deletePlatformRole",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/admin/roles/{role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteQuestion",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/questions/{question_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteScheduleItem",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/lms/schedules/{schedule_item_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteSensitiveAllowlistEntry",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/admin/chat/sensitive-allowlist/{entry_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteSensitiveCategory",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/admin/chat/sensitive-categories/{category_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteSensitiveTerm",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/admin/chat/sensitive-terms/{term_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteStudentCleanupExclusions",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/tenant/student-cleanup/exclusions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteStudyGroup",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteTenantRole",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/tenant/roles/{role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteTenantSensitiveTerm",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/admin/chat/tenant-terms/{term_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "diffContentVersions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/content/{content_type}/{content_id}/versions/{version}:diff",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "diffGameConfigVersions",
+    "module": "game|competition|chat",
+    "method": "GET",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}:diff",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "disbandParty",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}:disband",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "editMessage",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/chat/messages/{message_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "endGameSession",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/sessions/{game_session_id}:end",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "endLevelSession",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/level-sessions/{level_session_id}:end",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "enterWorldArea",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/world/areas/{area_id}:enter",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "excuseAssignmentForStudent",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}/students/{student_id}:excuse",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "exportGameTranslations",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/translations:export",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "exportLearningTranslations",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/translations:export",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "extendAssignmentForStudent",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}/students/{student_id}:extend",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "forgotPortalPassword",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/password:forgot",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "forwardMessage",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/messages/{message_id}:forward",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "gameLogin",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/game/login",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "gameLogout",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/game/logout",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getActivityAttempt",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/activity-attempts/{attempt_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getActivityAttemptReview",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/activity-attempts/{attempt_id}/review",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getAssignment",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/assignments/{assignment_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getBossEncounter",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/boss-encounters/{encounter_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getChatRetentionSettings",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/settings/chat-retention",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getClassDashboard",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/classes/{class_id}/dashboard",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getClientConfig",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/client-config",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "getClub",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs/{club_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsActivity",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/activities/{activity_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsAssessmentBlueprint",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsCurriculum",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula/{curriculum_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsLesson",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/lessons/{lesson_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsQuestion",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/questions/{question_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsQuestionSet",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/question-sets/{question_set_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCollection",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/collections/{collection_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCommunityGoal",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/community-goals/{goal_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getContentImport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/imports/{import_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getContentManifest",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/content-manifest",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCourseResults",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/courses/{course_id}/results",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getDataRequest",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/data-requests/{data_request_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getEfficacyStudy",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/efficacy-studies/{study_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getEfficacyStudyReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/efficacy-studies/{study_id}/reports/{report_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getEventRunStats",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/events/{event_id}/runs/{run_id}/stats",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getExamResult",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/attempts/{attempt_id}/result",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getExamSession",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/sessions/{exam_session_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameChallenge",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/challenges/{challenge_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameChallengeAttempt",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/challenge-attempts/{challenge_attempt_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameConfigVersion",
+    "module": "game|competition|chat",
+    "method": "GET",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameContentStats",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/content-stats",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameEvent",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/events/{event_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameFunnel",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/funnels/{funnel_code}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameMediaAsset",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-media/{asset_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameMetrics",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/metrics",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGamePerformance",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/performance",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameProfile",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/profile",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameRetention",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/retention",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameTranslationJob",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/translations/jobs/{job_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLeaderboard",
+    "module": "competition",
+    "method": "GET",
+    "path": "/leaderboards/{leaderboard_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLearningActivity",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/activities/{activity_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLearningExperiment",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/experiments/{experiment_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLearningExperimentResults",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/experiments/{experiment_id}/results",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLearningTranslationJob",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/translations/jobs/{job_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLesson",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/lessons/{lesson_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLmsReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/reports/{report_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMatch",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/matches/{match_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMatchmakingTicket",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/matchmaking/tickets/{ticket_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMe",
+    "module": "identity",
+    "method": "GET",
+    "path": "/auth/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMediaAsset",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/media/{asset_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMessageReceipts",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/channels/{channel_id}/messages/{message_id}/receipts",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getModerationCase",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/cases/{case_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyLeaderboardPosition",
+    "module": "competition",
+    "method": "GET",
+    "path": "/leaderboards/{leaderboard_id}/me",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyParty",
+    "module": "competition",
+    "method": "GET",
+    "path": "/multiplayer/parties/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyPermissions",
+    "module": "identity",
+    "method": "GET",
+    "path": "/me/permissions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyProgress",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/progress/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyRatings",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/ratings/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyRecommendations",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/recommendations/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getMyStudentProfile",
+    "module": "identity",
+    "method": "GET",
+    "path": "/students/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getNpcDialogue",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/world/npcs/{npc_id}/dialogue",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getParty",
+    "module": "competition",
+    "method": "GET",
+    "path": "/multiplayer/parties/{party_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getPlatformCurfewSettings",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/settings/curfew",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getPlatformLearningSummary",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/analytics/learning/summary",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getPlatformReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/reports/{report_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getPlatformRole",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/roles/{role_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getProgression",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/progression",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getQuest",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/quests/{quest_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getRoom",
+    "module": "competition",
+    "method": "GET",
+    "path": "/multiplayer/rooms/{room_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSchoolAnalyticsSeries",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/analytics/series",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSchoolDashboard",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/dashboards/school",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSchoolEvent",
+    "module": "game",
+    "method": "GET",
+    "path": "/lms/school-events/{event_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSchoolImport",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/school-imports/{import_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSchoolSettings",
+    "module": "identity",
+    "method": "GET",
+    "path": "/schools/{school_id}/settings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSeasonTrack",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/season-track",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSisImport",
+    "module": "identity",
+    "method": "GET",
+    "path": "/schools/{school_id}/sis-imports/{import_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSisSyncRun",
+    "module": "identity",
+    "method": "GET",
+    "path": "/sis/runs/{run_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getStudentCleanupSettings",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/settings/student-cleanup",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getStudentProfile",
+    "module": "identity",
+    "method": "GET",
+    "path": "/students/{student_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getStudentProgress",
+    "module": "learning",
+    "method": "GET",
+    "path": "/students/{student_id}/progress",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getStudyGroup",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantClone",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/tenant-clones/{job_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantGameSummary",
+    "module": "game",
+    "method": "GET",
+    "path": "/tenant/analytics/game/summary",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantLearningSummary",
+    "module": "learning",
+    "method": "GET",
+    "path": "/tenant/analytics/learning/summary",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/tenant/reports/{report_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantRole",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/roles/{role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantSchool",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/schools/{school_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTenantSettings",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/settings",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getWallet",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/wallet",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getWorldExploration",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/world/exploration",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getWorldManifest",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/world/manifest",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getXpStatus",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/xp",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "grantPlatformUserRole",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/user-roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "grantSchoolUserRole",
+    "module": "identity",
+    "method": "POST",
+    "path": "/schools/{school_id}/user-roles",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "grantTenantUserRole",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/user-roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "heartbeatGameSession",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/sessions/{game_session_id}:heartbeat",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "importGameTranslations",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/translations:import",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "importLearningTranslations",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/translations:import",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "importSchools",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/schools:import",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "inviteToClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}/invitations",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "inviteToParty",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}/invitations",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "joinFriendInWorld",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/world/friends/{user_id}:join",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "joinGameEvent",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/events/{event_id}:join",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "joinParty",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}:join",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "kickPartyMember",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}/members/{student_id}:kick",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "leaveBossEncounter",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/boss-encounters/{encounter_id}:leave",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "leaveClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}:leave",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "leaveParty",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}:leave",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAchievements",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/achievements",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listActivityTypes",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/activity-types",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAdminTenantSchools",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/tenants/{tenant_id}/schools",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAllPermissions",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/permissions",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAllUserRoles",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/user-roles",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAssignmentSubmissions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/assignments/{assignment_id}/submissions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAssignments",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listAvatarPresets",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/avatar-presets",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listBlocks",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/blocks",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listBosses",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/bosses",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCatalogSchools",
+    "module": "identity",
+    "method": "GET",
+    "path": "/catalog/schools",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listChallengeTemplates",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/catalog/challenge-templates",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listChallenges",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/challenges",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listChannelMessages",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/channels/{channel_id}/messages",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listChannelPins",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/channels/{channel_id}/pins",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClasses",
+    "module": "identity",
+    "method": "GET",
+    "path": "/schools/{school_id}/classes",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClubEvents",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs/{club_id}/events",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClubGoals",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs/{club_id}/goals",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClubJoinRequests",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs/{club_id}/join-requests",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClubMembers",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs/{club_id}/members",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listClubs",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/clubs",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsActivities",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/activities",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsAssessmentBlueprints",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/assessment-blueprints",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsCurricula",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsLessons",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/lessons",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsObjectives",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/objectives",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsQuestionSets",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/question-sets",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsSubjects",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/subjects",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsTopics",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/topics",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCollections",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/collections",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listContentReleases",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/content/{content_type}/{content_id}/releases",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listContentReviewTasks",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/review-tasks",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listContentVersions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/content/{content_type}/{content_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCountries",
+    "module": "identity",
+    "method": "GET",
+    "path": "/catalog/countries",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCourses",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/courses",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCurricula",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/curricula",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listDataRequests",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/data-requests",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listEfficacyStudies",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/efficacy-studies",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listEfficacyStudyClasses",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/efficacy-studies/{study_id}/classes",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listEfficacyWaves",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/efficacy-studies/{study_id}/waves",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listEventTemplates",
+    "module": "game",
+    "method": "GET",
+    "path": "/lms/event-templates",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listExamSessions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/sessions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listFeatureFlags",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/feature-flags",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listFriendRequests",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/friend-requests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listFriends",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/friends",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameActivities",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/catalog/game-activities",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameChallenges",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/challenges",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameConfigReleases",
+    "module": "game|competition|chat",
+    "method": "GET",
+    "path": "/game-admin/{config_type}/{config_id}/releases",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameConfigVersions",
+    "module": "game|competition|chat",
+    "method": "GET",
+    "path": "/game-admin/{config_type}/{config_id}/versions",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameConfigs",
+    "module": "game|competition|chat",
+    "method": "GET",
+    "path": "/game-admin/{config_type}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGameEvents",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/events",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listGifs",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/gifs",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listInventory",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/inventory",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listInventoryHistory",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/inventory/history",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listLearningExperiments",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/experiments",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listLearningObjectives",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/objectives",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listLearningPaths",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/courses/{course_id}/paths",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listLoginEventsCrossTenant",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/login-events",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMediaAssets",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/media",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listModerationCaseMessages",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/cases/{case_id}/messages",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listModerationCases",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/cases",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listModerationSwitchHistory",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/moderation-switches/history",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listModerationSwitches",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/moderation-switches",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMutes",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/mutes",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyActivityAttempts",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/activity-attempts",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyAssignments",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/my-assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyChannels",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/channels",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyInvitations",
+    "module": "competition",
+    "method": "GET",
+    "path": "/multiplayer/invitations",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyMatches",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/matches",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyTenants",
+    "module": "identity",
+    "method": "GET",
+    "path": "/me/tenants",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyWrongQuestions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/wrong-questions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listNotifications",
+    "module": "chat",
+    "method": "GET",
+    "path": "/notifications",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listPlatformAuditLogs",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/audit-logs",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listPlatformRoles",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/roles",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listPortalMenuCatalog",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/portal-menu-catalog",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listProgressionLevels",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/progression/levels",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listProvinces",
+    "module": "identity",
+    "method": "GET",
+    "path": "/catalog/provinces",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listQuests",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/quests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listQuickMessages",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/quick-messages",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listResearchAgreements",
+    "module": "learning",
+    "method": "GET",
+    "path": "/admin/learning/research-agreements",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSanctions",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/sanctions",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listScheduleItems",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schedules",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSchoolEvents",
+    "module": "game",
+    "method": "GET",
+    "path": "/lms/school-events",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSchoolSafetyNotifications",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/safety/school-notifications",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSchoolSafetyNotificationsPlatform",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/safety/school-notifications",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSchoolUserRoles",
+    "module": "identity",
+    "method": "GET",
+    "path": "/schools/{school_id}/user-roles",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSeasonTrackHistory",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/season-track/history",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSensitiveAllowlist",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/sensitive-allowlist",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSensitiveCatalogVersions",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/sensitive-catalog/versions",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSensitiveCategories",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/sensitive-categories",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSensitiveTerms",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/sensitive-terms",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listShopItems",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/shop/items",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSimulationTemplates",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/simulation-templates",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSisConnectionSchools",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/sis/connections/{connection_id}/schools",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSisConnections",
+    "module": "identity",
+    "method": "GET",
+    "path": "/sis/connections",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSisReconciliationIssues",
+    "module": "identity",
+    "method": "GET",
+    "path": "/sis/reconciliation-issues",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSisSyncRunErrors",
+    "module": "identity",
+    "method": "GET",
+    "path": "/sis/runs/{run_id}/errors",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSisSyncRuns",
+    "module": "identity",
+    "method": "GET",
+    "path": "/sis/connections/{connection_id}/sync-runs",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listStickerPacks",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/stickers",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listStudentCleanupRuns",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/student-cleanup/runs",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listStudyGroups",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/study-groups",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSubjects",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/subjects",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantAssignments",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/tenant-assignments",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantAuditLogs",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/audit-logs",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantPermissions",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/permissions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantRoles",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantSchoolClasses",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/schools/{school_id}/classes",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantSchools",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/schools",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantSensitiveCategories",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/chat/categories",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantSensitiveTerms",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/tenant-terms",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantStudentLoginEvents",
+    "module": "game",
+    "method": "GET",
+    "path": "/tenant/students/{student_id}/login-events",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantTrash",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/trash",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantUserRoles",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/user-roles",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantUsers",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/users",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenants",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/tenants",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTopics",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/topics",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTournaments",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/tournaments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTrash",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/trash",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listUnassignedStudents",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/students/unassigned",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listWalletLedger",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/wallet/ledger",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listWorldAreas",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/world/areas",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listXpHistory",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/progression/xp-history",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "lockUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/users/{user_id}:lock",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "logout",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/logout",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "muteUser",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/social/mutes/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "nextChallengeActivity",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/challenge-attempts/{challenge_attempt_id}/activities:next",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "notifySchoolForCase",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/cases/{case_id}:notify-school",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "pauseActivityAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}:pause",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "pinMessage",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/chat/channels/{channel_id}/pins/{message_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "portalLogin",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/login",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "portalLogout",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/logout",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "postTelemetry",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/telemetry",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "presignGameMediaUpload",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-media:presign-upload",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "presignMediaUpload",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/media:presign-upload",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "previewTenantStudentCleanup",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/student-cleanup/preview",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishAssignment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}:publish",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishContentVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/content/{content_type}/{content_id}/versions/{version}:publish",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishGameConfigVersion",
+    "module": "game|competition|chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}:publish",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishSensitiveCatalog",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/sensitive-catalog:publish",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishTenantSensitiveCatalog",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/tenant-terms:publish",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "purchaseShopItem",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/shop/items/{shop_item_id}:purchase",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putChatRetentionSettings",
+    "module": "identity",
+    "method": "PUT",
+    "path": "/admin/settings/chat-retention",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putFeatureFlag",
+    "module": "identity",
+    "method": "PUT",
+    "path": "/admin/feature-flags/{flag_key}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putPlatformCurfewSettings",
+    "module": "identity",
+    "method": "PUT",
+    "path": "/admin/settings/curfew",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putStudentCleanupSettings",
+    "module": "identity",
+    "method": "PUT",
+    "path": "/admin/settings/student-cleanup",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "recallMessage",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/messages/{message_id}:recall",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "redeemFriendCode",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/friend-codes:redeem",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "refreshGameToken",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/game/token:refresh",
+    "public": true,
+    "tenant_scoped": true,
+    "required": []
+  },
+  {
+    "operation_id": "refreshPortalToken",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/token:refresh",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "rejectClubJoinRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/club-join-requests/{request_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "rejectFriendRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/friend-requests/{request_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "rejectPartyInvitation",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/invitations/{invitation_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "releaseAssignmentResults",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}:release-results",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "releaseExamResults",
+    "module": "learning",
+    "method": "POST",
+    "path": "/exams/sessions/{exam_session_id}:release-results",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "remindAssignment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/assignments/{assignment_id}:remind",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "removeClubMember",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/social/clubs/{club_id}/members/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "removeEfficacyStudyClass",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/admin/learning/efficacy-studies/{study_id}/classes/{class_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "removeFriend",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/social/friends/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "reportActivityProgress",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}/progress",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "reportDiscovery",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/world/areas/{area_id}/discoveries/{interactable_id}:discover",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "reportQuestStep",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/quests/{quest_id}/steps/{step_id}:report",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "requestJoinClub",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/clubs/{club_id}/join-requests",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "resetPortalPassword",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/password:reset",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "resetStudentPassword",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/students/{student_id}/password:reset",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "resolveSisReconciliationIssue",
+    "module": "identity",
+    "method": "POST",
+    "path": "/sis/reconciliation-issues/{issue_id}:resolve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "restoreTenantTrashItem",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/trash/{resource_type}/{resource_id}:restore",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "restoreTrashItem",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/trash/{resource_type}/{resource_id}:restore",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "resumeEventRun",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/events/{event_id}/runs/{run_id}:resume",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revealNextHint",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}/items/{position}/hints:next",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokeAllSessions",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/sessions:revoke-all",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokePlatformUserRole",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/admin/user-roles/{user_role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokeResearchAgreement",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/research-agreements/{agreement_id}:revoke",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokeSanction",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/sanctions/{sanction_id}:revoke",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokeTenantUserRole",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/tenant/user-roles/{user_role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "rollbackContent",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/content/{content_type}/{content_id}:rollback",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "rollbackGameConfig",
+    "module": "game|competition|chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}:rollback",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "saveAvatarPreset",
+    "module": "game",
+    "method": "PUT",
+    "path": "/game/avatar-presets/{slot}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "saveExamAnswer",
+    "module": "learning",
+    "method": "PUT",
+    "path": "/exams/attempts/{attempt_id}/answers/{position}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "scheduleEfficacyWave",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}/waves",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "searchMessages",
+    "module": "chat",
+    "method": "GET",
+    "path": "/chat/search",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "searchQuestions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/questions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "selectGameLoginTenant",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/game/tenant:select",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "selectPartyActivity",
+    "module": "competition",
+    "method": "PUT",
+    "path": "/multiplayer/parties/{party_id}/activity",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "sendChannelMessage",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/channels/{channel_id}/messages",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "sendFriendRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/social/friend-requests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "setModerationSwitches",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/admin/chat/moderation-switches",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "setPartyReady",
+    "module": "competition",
+    "method": "PUT",
+    "path": "/multiplayer/parties/{party_id}/members/me/ready",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "setSisConnectionSchools",
+    "module": "identity",
+    "method": "PUT",
+    "path": "/admin/sis/connections/{connection_id}/schools",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "setupPortalPassword",
+    "module": "identity",
+    "method": "POST",
+    "path": "/auth/portal/setup:password",
+    "public": true,
+    "required": []
+  },
+  {
+    "operation_id": "startActivityAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activities/{activity_id}/attempts",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startAdHocAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startExamAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/exams/sessions/{exam_session_id}/attempts",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startGameChallenge",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/challenges/{challenge_id}:start",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startLearningExperiment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/experiments/{experiment_id}:start",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startLevel",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/levels/{level_id}:start",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startMiniGame",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/minigames/{minigame_config_id}:start",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startPartySession",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}:start",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startQuestActivity",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/quests/{quest_id}/steps/{step_id}/activities:start",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "stopLearningExperiment",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/experiments/{experiment_id}:stop",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "submitActivityAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}:submit",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "submitActivityResponse",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}/responses",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "submitExamAttempt",
+    "module": "learning",
+    "method": "POST",
+    "path": "/exams/attempts/{attempt_id}:submit",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "submitSimulationRun",
+    "module": "learning",
+    "method": "POST",
+    "path": "/learning/activity-attempts/{attempt_id}/simulation-runs",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "suggestNicknames",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/profile/nickname-suggestions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "suspendEventRun",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/events/{event_id}/runs/{run_id}:suspend",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "testSensitiveTerms",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/sensitive-terms:test",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "toggleTenantSensitiveCategory",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/tenant-categories/{code}:toggle",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "transferPartyLeader",
+    "module": "competition",
+    "method": "POST",
+    "path": "/multiplayer/parties/{party_id}:transfer-leader",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "transitionContentVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/content/{content_type}/{content_id}/versions/{version}:transition",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "transitionGameConfigVersion",
+    "module": "game|competition|chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}:transition",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "triggerSisSync",
+    "module": "identity",
+    "method": "POST",
+    "path": "/sis/connections/{connection_id}/sync-runs",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unassignFromTenants",
+    "module": "identity",
+    "method": "DELETE",
+    "path": "/admin/tenant-assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unblockUser",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/social/blocks/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unlockPathNodeForStudent",
+    "module": "learning",
+    "method": "POST",
+    "path": "/lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unmuteUser",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/social/mutes/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unpinMessage",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/chat/channels/{channel_id}/pins/{message_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unpublishContent",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/content/{content_type}/{content_id}:unpublish",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unpublishGameConfig",
+    "module": "game|competition|chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}:unpublish",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateAdminTenantSchool",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/admin/tenants/{tenant_id}/schools/{school_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateAssignment",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/lms/assignments/{assignment_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateAvatar",
+    "module": "game",
+    "method": "PUT",
+    "path": "/game/profile/avatar",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateClub",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/social/clubs/{club_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateClubMemberRole",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/social/clubs/{club_id}/members/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCmsActivityDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/activities/{activity_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCmsAssessmentBlueprintDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCmsLessonDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/lessons/{lesson_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCmsQuestionSetDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/question-sets/{question_set_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCountry",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/admin/catalog/countries/{code}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCourse",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/lms/courses/{course_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCurriculum",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/curricula/{curriculum_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateEfficacyStudy",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/admin/learning/efficacy-studies/{study_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateGameConfigDraft",
+    "module": "game|competition|chat",
+    "method": "PATCH",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateGameProfile",
+    "module": "game",
+    "method": "PATCH",
+    "path": "/game/profile",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateLearningExperiment",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/admin/learning/experiments/{experiment_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateLearningPath",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/lms/courses/{course_id}/paths/{path_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateObjective",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/objectives/{objective_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updatePartySettings",
+    "module": "competition",
+    "method": "PATCH",
+    "path": "/multiplayer/parties/{party_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updatePlatformRole",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/admin/roles/{role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateProvince",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/admin/catalog/provinces/{province_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateQuestionDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/questions/{question_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateScheduleItem",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/lms/schedules/{schedule_item_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSchoolEvent",
+    "module": "game",
+    "method": "PATCH",
+    "path": "/lms/school-events/{event_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSchoolSettings",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/schools/{school_id}/settings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSensitiveCategory",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/admin/chat/sensitive-categories/{category_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSensitiveTerm",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/admin/chat/sensitive-terms/{term_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateStudyGroup",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSubject",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/subjects/{subject_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenant",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/admin/tenants/{tenant_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenantRole",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/tenant/roles/{role_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenantSchool",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/tenant/schools/{school_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenantSensitiveTerm",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/admin/chat/tenant-terms/{term_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenantSettings",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/tenant/settings",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTenantUser",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/tenant/users/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTopic",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/topics/{topic_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "withdrawEfficacyParticipants",
+    "module": "learning",
+    "method": "POST",
+    "path": "/admin/learning/efficacy-studies/{study_id}:withdraw",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  }
+]

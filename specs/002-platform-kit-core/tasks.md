@@ -124,13 +124,13 @@
 ### Tests cho User Story 5
 
 - [x] T046 [P] [US5] Test F002-AC-26, F002-AC-27: fixture module có import cấm → `golangci-lint`/`go-arch-lint` fail — file: `src/backend/tools/lint/testdata/badsvc/internal/domain/bad.go` — phải FAIL trước khi code
-- [ ] T047 [P] [US5] Test F002-AC-28: `routematrix check` fail khi operation thiếu ca tenant A/B hoặc ca role thiếu quyền — file: `src/backend/tools/routematrix/check_test.go`
+- [x] T047 [P] [US5] Test F002-AC-28: `routematrix check` fail khi operation thiếu ca tenant A/B hoặc ca role thiếu quyền — file: `src/backend/tools/routematrix/check_test.go`
 
 ### Implementation cho User Story 5
 
 - [ ] T048 [US5] `.golangci.yml` + `.go-arch-lint.yml` cho 6 module kế thừa base — file: `src/backend/modules/learning/.golangci.yml`
-- [ ] T049 [US5] `routematrix`: đọc spec gộp (`x-service`, `X-Tenant-Id`, path param ID) + internal, xuất `src/backend/test/authz/matrix_gen.json`, lệnh `check` so với test đã đăng ký qua `authztest.Register` — file: `src/backend/tools/routematrix/main.go`
-- [ ] T050 [US5] Harness `authztest`: fixture Principal theo role (tenant A/B, platform, học sinh), helper gọi handler và kỳ vọng 404/403 — file: `src/backend/pkg/authz/authztest/harness.go`
+- [x] T049 [US5] `routematrix`: đọc spec gộp (`x-service`, `X-Tenant-Id`, path param ID) + internal, xuất `src/backend/test/authz/matrix_gen.json`, lệnh `check` so với test đã đăng ký qua `authztest.Register` — file: `src/backend/tools/routematrix/main.go`
+- [x] T050 [US5] Harness `authztest`: fixture Principal theo role (tenant A/B, platform, học sinh), helper gọi handler và kỳ vọng 404/403 — file: `src/backend/pkg/authz/authztest/harness.go`
 
 **Checkpoint**: User Story 5 chạy và kiểm độc lập được.
 
@@ -165,3 +165,4 @@
 - Sửa lỗi YAML trong spec gộp: `TenantCreate.keycloak_org_alias.description` có dấu phẩy không quote trong flow mapping tạo key thừa (kin-openapi `doc.Validate` phát hiện); sinh lại `identity.v1.yaml`.
 - T046/T003: luật F002-AC-26/27 được kiểm bởi `tools/archgen --check` (`make arch-check`, chạy local không cần golangci-lint) và fixture trong `scripts/ci/test-arch-fixtures.sh` (12/12); depguard sinh trong `.golangci.arch.yml` vẫn là lớp phụ cho CI.
 - T057/T058: analyzer `bypassreason` + `scopeguard` chạy bằng `go run ./tools/lint/ewlint` (multichecker, trong `make lint` và `make arch-check`) thay vì plugin golangci; API surface `pkg/tenancy`, `pkg/authz` khóa bằng golden `tools/lint/apisurface/testdata/*.api`.
+- T049/T050: `routematrix gen` sinh `src/backend/test/authz/matrix_gen.json` (484 operation, ca bắt buộc `role_denied` cho mọi operation có xác thực, thêm `cross_tenant` khi có `X-Tenant-Id` hoặc id trong path); `routematrix check` quét AST: operation "đã cài đặt" = literal `httpx.Operation{ID: …}` trong file không phải test dưới `modules/`, `cmd/`; ca được phủ = lời gọi `authztest.Cover(t, "<op>", authztest.CrossTenant|RoleDenied)` với literal (thay cho `authztest.Register` lúc chạy, để CI kiểm tĩnh). Operation facade (spec internal) do facade test (`make test-contract`) phủ.

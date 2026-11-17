@@ -125,6 +125,7 @@ gen: ## Generate code: architecture rules from x-allowed-callers, problem codes 
 	$(GO) run ./tools/archgen
 	$(GO) generate ./pkg/problem
 	$(GO) run ./tools/allowedcallers
+	$(GO) run ./tools/routematrix gen
 
 gen-check: gen ## Fail if generated files differ from the committed ones
 	git diff --exit-code -- $(BACKEND)/.golangci.arch.yml $(BACKEND)/pkg/problem/codes_gen.go
@@ -134,6 +135,7 @@ arch-check: ## Module boundaries: Go internal/, x-allowed-callers, pkg/ and cmd/
 	$(GO) build ./...
 	$(GO) run ./tools/archgen --check
 	$(GO) run ./tools/lint/ewlint ./... # bypassreason + scopeguard (ADR-0089 §3)
+	$(GO) run ./tools/routematrix check # every implemented operation has tenant A/B + role tests (F002-AC-28)
 
 lint: ## gofmt, go vet, golangci-lint + generated depguard rules (MOD=<module> to scope)
 	test -z "$$(gofmt -l $(BACKEND)/$(if $(MOD),modules/$(MOD)))"
