@@ -131,10 +131,12 @@ gen-check: gen ## Fail if generated files differ from the committed ones
 arch-check: ## Module boundaries: Go internal/, x-allowed-callers, pkg/ and cmd/ rules, layers (ADR-0074)
 	$(GO) build ./...
 	$(GO) run ./tools/archgen --check
+	$(GO) run ./tools/lint/ewlint ./... # bypassreason + scopeguard (ADR-0089 §3)
 
 lint: ## gofmt, go vet, golangci-lint + generated depguard rules (MOD=<module> to scope)
 	test -z "$$(gofmt -l $(BACKEND)/$(if $(MOD),modules/$(MOD)))"
 	$(GO) vet -tags integration ./...
+	$(GO) run ./tools/lint/ewlint $(if $(MOD),./modules/$(MOD)/...,./...)
 	cd $(BACKEND) && golangci-lint run $(if $(MOD),./modules/$(MOD)/...,./...)
 	cd $(BACKEND) && golangci-lint run --config .golangci.arch.yml $(if $(MOD),./modules/$(MOD)/...,./...)
 

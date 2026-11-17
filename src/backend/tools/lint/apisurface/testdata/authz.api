@@ -1,0 +1,232 @@
+type CacheOptions struct{Module string; TTL time.Duration; L1TTL time.Duration; L1Size int; Valkey github.com/valkey-io/valkey-go.Client; Clock github.com/tanguyen2020/eduworld-platform/src/backend/pkg/clock.Clock; Registerer github.com/prometheus/client_golang/prometheus.Registerer}
+  field Module string
+  field TTL time.Duration
+  field L1TTL time.Duration
+  field L1Size int
+  field Valkey github.com/valkey-io/valkey-go.Client
+  field Clock github.com/tanguyen2020/eduworld-platform/src/backend/pkg/clock.Clock
+  field Registerer github.com/prometheus/client_golang/prometheus.Registerer
+type CachedResolver struct{next PrincipalResolver; o CacheOptions; l1 *github.com/hashicorp/golang-lru/v2.Cache[string, l1Entry]; mu sync.Mutex; hits *github.com/prometheus/client_golang/prometheus.CounterVec; prefix string}
+  func (*CachedResolver).Resolve(ctx context.Context, req ResolveRequest) (Principal, error)
+  func (*CachedResolver).Invalidate(ctx context.Context, userID github.com/google/uuid.UUID, tenantID *github.com/google/uuid.UUID) error
+func Catalog() []Permission
+type CatalogError struct{Violations []Violation}
+  func (*CatalogError).Error() string
+  field Violations []Violation
+type Channel string
+const ChannelGame Channel
+const ChannelPortal Channel
+const ChannelUnknown Channel
+type Claims struct{Issuer string; Subject string; AZP string; SessionID string; ACR string; AMR []string; AuthTime time.Time; Expiry time.Time}
+  func (Claims).SubjectRef() SubjectRef
+  field Issuer string
+  field Subject string
+  field AZP string
+  field SessionID string
+  field ACR string
+  field AMR []string
+  field AuthTime time.Time
+  field Expiry time.Time
+func ClaimsFrom(ctx context.Context) (Claims, bool)
+func Configure(h Hooks)
+func CrossTenantScope(p Principal, ids []github.com/google/uuid.UUID, reason github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.BypassReason) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.CrossTenantScope, error)
+var ErrNotMember error
+type Grant struct{Role string "json:\"role\""; ScopeKind RoleScopeKind "json:\"scope_kind\""; Permissions []Permission "json:\"permissions\""; SchoolID *github.com/google/uuid.UUID "json:\"school_id,omitempty\""; SubjectID *github.com/google/uuid.UUID "json:\"subject_id,omitempty\""}
+  field Role string
+  field ScopeKind RoleScopeKind
+  field Permissions []Permission
+  field SchoolID *github.com/google/uuid.UUID
+  field SubjectID *github.com/google/uuid.UUID
+type Hooks struct{Recorder github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit.Recorder}
+  field Recorder github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit.Recorder
+func MustValidate(w io.Writer, roles []RoleDef)
+func MustValidateAtStartup()
+func NewCachedResolver(next PrincipalResolver, o CacheOptions) (*CachedResolver, error)
+func NewPrincipal(d PrincipalData) Principal
+const PermAnalyticsClassRead Permission
+const PermAnalyticsSchoolRead Permission
+const PermAnalyticsTenantRead Permission
+const PermChatPolicyToggle Permission
+const PermChatSensitiveTermsRead Permission
+const PermChatSensitiveTermsWrite Permission
+const PermChatTenantCategoryToggle Permission
+const PermChatTenantTermsWrite Permission
+const PermCompetitionConfigLeaderboardWrite Permission
+const PermCompetitionConfigMatchmakingWrite Permission
+const PermCompetitionConfigRankingWrite Permission
+const PermCompetitionConfigRewardWrite Permission
+const PermCompetitionConfigSeasonWrite Permission
+const PermCompetitionConfigTournamentTemplateWrite Permission
+const PermContentReleaseRollback Permission
+const PermCurriculumPublish Permission
+const PermCurriculumRead Permission
+const PermCurriculumWrite Permission
+const PermGameAchievementWrite Permission
+const PermGameAnalyticsRead Permission
+const PermGameBossWrite Permission
+const PermGameChallengeWrite Permission
+const PermGameChatAssetsWrite Permission
+const PermGameCollectionWrite Permission
+const PermGameContentPublish Permission
+const PermGameContentReview Permission
+const PermGameContentTranslate Permission
+const PermGameEconomyAdjust Permission
+const PermGameEconomyWrite Permission
+const PermGameEventOperate Permission
+const PermGameEventWrite Permission
+const PermGameItemWrite Permission
+const PermGameLiveopsRead Permission
+const PermGameMinigameWrite Permission
+const PermGameNpcWrite Permission
+const PermGameProgressionWrite Permission
+const PermGameQuestWrite Permission
+const PermGameRewardRuleWrite Permission
+const PermGameSeasonTrackWrite Permission
+const PermGameShopWrite Permission
+const PermGameWorldEventWrite Permission
+const PermGameWorldWrite Permission
+const PermLearningContentActivityReview Permission
+const PermLearningContentActivityWrite Permission
+const PermLearningContentImport Permission
+const PermLearningContentPublish Permission
+const PermLearningContentReEvaluate Permission
+const PermLearningContentRead Permission
+const PermLearningContentReview Permission
+const PermLearningContentTranslate Permission
+const PermLearningContentWrite Permission
+const PermLmsAssignmentRead Permission
+const PermLmsAssignmentWrite Permission
+const PermLmsChallengeWrite Permission
+const PermLmsClassRead Permission
+const PermLmsCourseWrite Permission
+const PermLmsLearningPathWrite Permission
+const PermLmsReportRead Permission
+const PermLmsResultRelease Permission
+const PermLmsScheduleWrite Permission
+const PermLmsSchoolEventWrite Permission
+const PermLmsStudentActivityRead Permission
+const PermLmsStudentPasswordReset Permission
+const PermLmsStudyGroupWrite Permission
+const PermMediaUpload Permission
+const PermModerationCaseAct Permission
+const PermModerationCaseLead Permission
+const PermModerationCaseMessagesRead Permission
+const PermModerationCaseRead Permission
+const PermModerationSanctionRead Permission
+const PermModerationSanctionWrite Permission
+const PermModerationSchoolNotificationAcknowledge Permission
+const PermModerationSchoolNotificationRead Permission
+const PermModerationSchoolNotificationSend Permission
+const PermPlatformAuditRead Permission
+const PermPlatformBreakGlassApprove Permission
+const PermPlatformBreakGlassRequest Permission
+const PermPlatformCatalogWrite Permission
+const PermPlatformCrossTenantRead Permission
+const PermPlatformDataRequestWrite Permission
+const PermPlatformEfficacyStudyExport Permission
+const PermPlatformEfficacyStudyManage Permission
+const PermPlatformFeatureFlagWrite Permission
+const PermPlatformLearningExperimentManage Permission
+const PermPlatformRoleRead Permission
+const PermPlatformRoleWrite Permission
+const PermPlatformSettingsWrite Permission
+const PermPlatformSisConnectionManage Permission
+const PermPlatformStudentCleanupApprove Permission
+const PermPlatformTenantDataAssign Permission
+const PermPlatformTenantDataClone Permission
+const PermPlatformTenantManage Permission
+const PermPlatformTrashRead Permission
+const PermPlatformTrashRestore Permission
+const PermPlatformUserManage Permission
+const PermPlatformUserRoleWrite Permission
+const PermReportExport Permission
+const PermSchoolPeopleRead Permission
+const PermSchoolSettingsRead Permission
+const PermSchoolSettingsWrite Permission
+const PermSocialClubApprove Permission
+const PermTenantAuditRead Permission
+const PermTenantChatRetentionConfigure Permission
+const PermTenantClassRead Permission
+const PermTenantRoleRead Permission
+const PermTenantRoleWrite Permission
+const PermTenantRolesAssign Permission
+const PermTenantSchoolRead Permission
+const PermTenantSchoolWrite Permission
+const PermTenantSettingsRead Permission
+const PermTenantSettingsWrite Permission
+const PermTenantSisImport Permission
+const PermTenantSisRead Permission
+const PermTenantStudentCleanupConfigure Permission
+const PermTenantStudentCleanupExclude Permission
+const PermTenantStudentCleanupRead Permission
+const PermTenantTrashRead Permission
+const PermTenantTrashRestore Permission
+const PermTenantUserRead Permission
+const PermTenantUserRoleWrite Permission
+const PermTenantUserWrite Permission
+type Permission string
+  func (Permission).Known() bool
+  func (Permission).PlatformOnly() bool
+type PermissionSet map[Permission]struct{}
+  func (PermissionSet).Has(p Permission) bool
+  func (PermissionSet).List() []Permission
+func PlatformScope(p Principal) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.PlatformScope, error)
+type Principal struct{PrincipalData; perms PermissionSet}
+  func (Principal).HasPlatformRole() bool
+  func (Principal).Valid() bool
+  func (Principal).Permissions() PermissionSet
+  func (Principal).Has(perm Permission) bool
+  func (Principal).IsPlatform() bool
+  field PrincipalData PrincipalData
+type PrincipalData struct{UserID github.com/google/uuid.UUID "json:\"user_id\""; UserType UserType "json:\"user_type\""; TenantID *github.com/google/uuid.UUID "json:\"tenant_id,omitempty\""; TenantType TenantType "json:\"tenant_type,omitempty\""; Grants []Grant "json:\"grants,omitempty\""; IsSystemAdmin bool "json:\"is_system_admin,omitempty\""; ClientID string "json:\"-\""; SessionID string "json:\"-\""; Channel Channel "json:\"-\""; MFA bool "json:\"-\""}
+  field UserID github.com/google/uuid.UUID
+  field UserType UserType
+  field TenantID *github.com/google/uuid.UUID
+  field TenantType TenantType
+  field Grants []Grant
+  field IsSystemAdmin bool
+  field ClientID string
+  field SessionID string
+  field Channel Channel
+  field MFA bool
+func PrincipalFrom(ctx context.Context) (Principal, bool)
+type PrincipalResolver interface{Resolve(ctx context.Context, req ResolveRequest) (Principal, error)}
+func RecordDenied(ctx context.Context, reason string, metadata map[string]any)
+func Require(ctx context.Context, p Principal, perm Permission, res Resource) error
+type ResolveRequest struct{Subject SubjectRef; TenantID *github.com/google/uuid.UUID; ClientID string}
+  field Subject SubjectRef
+  field TenantID *github.com/google/uuid.UUID
+  field ClientID string
+type Resource struct{TenantID *github.com/google/uuid.UUID; SchoolID *github.com/google/uuid.UUID; SubjectID *github.com/google/uuid.UUID}
+  field TenantID *github.com/google/uuid.UUID
+  field SchoolID *github.com/google/uuid.UUID
+  field SubjectID *github.com/google/uuid.UUID
+type RoleDef struct{Name string; ScopeKind RoleScopeKind; Permissions []Permission}
+  func (RoleDef).Has(p Permission) bool
+  field Name string
+  field ScopeKind RoleScopeKind
+  field Permissions []Permission
+type RoleScopeKind string
+const RoleScopePlatform RoleScopeKind
+const RoleScopeTenant RoleScopeKind
+func ScopeFor(p Principal) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.TenantScope, error)
+func SetExitForTest(f func(int)) (restore func())
+type SubjectRef struct{Issuer string; Subject string}
+  field Issuer string
+  field Subject string
+func SystemPlatformScope(job string) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.PlatformScope, error)
+func SystemRoles() []RoleDef
+type TenantType string
+const TenantTypeCommon TenantType
+const TenantTypeSchool TenantType
+const TenantTypeUnit TenantType
+type UserType string
+const UserTypeStaff UserType
+const UserTypeStudent UserType
+func ValidateCatalog(roles []RoleDef) error
+type Violation struct{Role string; Permission Permission; Reason string}
+  field Role string
+  field Permission Permission
+  field Reason string
+func WithClaims(ctx context.Context, c Claims) context.Context
+func WithPrincipal(ctx context.Context, p Principal) context.Context

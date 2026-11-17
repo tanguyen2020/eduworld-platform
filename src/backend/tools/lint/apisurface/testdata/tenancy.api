@@ -1,0 +1,64 @@
+func Bypass(ctx context.Context, reason BypassReason, opts ...BypassOption) (context.Context, error)
+func BypassCounter() *github.com/prometheus/client_golang/prometheus.CounterVec
+type BypassOption func(*bypassOptions)
+type BypassReason string
+  func (BypassReason).Valid() bool
+func Bypassed(ctx context.Context) (BypassReason, bool)
+func Configure(h Hooks)
+type CrossTenantScope struct{ids []github.com/google/uuid.UUID; reason BypassReason}
+  func (CrossTenantScope).Valid() bool
+  func (CrossTenantScope).TenantIDs() []github.com/google/uuid.UUID
+  func (CrossTenantScope).SessionTenantID() (github.com/google/uuid.UUID, bool)
+  func (CrossTenantScope).PlatformOnly() bool
+  func (CrossTenantScope).Reason() BypassReason
+var ErrBypassReason error
+type Hooks struct{Recorder github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit.Recorder; Registerer github.com/prometheus/client_golang/prometheus.Registerer}
+  field Recorder github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit.Recorder
+  field Registerer github.com/prometheus/client_golang/prometheus.Registerer
+func HybridResource(resourceType string, idColumn string) RLSOption
+const KindH TableKind
+const KindT TableKind
+const KindTA TableKind
+const KindTAStar TableKind
+const KindTStar TableKind
+func LiveView(table string, module string) (string, error)
+type Mode string
+const ModeRead Mode
+const ModeWrite Mode
+func ModuleFrom(ctx context.Context) string
+func NewCrossTenantScopeForAuthz(ids []github.com/google/uuid.UUID, reason BypassReason) CrossTenantScope
+func NewPlatformScopeForAuthz(actor string) PlatformScope
+func NewTenantScopeForAuthz(id github.com/google/uuid.UUID) TenantScope
+type PlatformScope struct{actor string}
+  func (PlatformScope).Valid() bool
+  func (PlatformScope).TenantIDs() []github.com/google/uuid.UUID
+  func (PlatformScope).SessionTenantID() (github.com/google/uuid.UUID, bool)
+  func (PlatformScope).PlatformOnly() bool
+  func (PlatformScope).Actor() string
+type RLSOption func(*rlsOptions)
+func RLSPolicies(table string, kind TableKind, opts ...RLSOption) (string, error)
+const ReasonAuthLogin BypassReason
+const ReasonBreakGlass BypassReason
+const ReasonEfficacyStudy BypassReason
+const ReasonInactiveCleanup BypassReason
+const ReasonModerationCase BypassReason
+const ReasonPlatformAnalytics BypassReason
+const ReasonPlatformJob BypassReason
+const ReasonReEvaluation BypassReason
+const ReasonSystemAdminCrossTenant BypassReason
+const ReasonTenantClone BypassReason
+const ReasonTrash BypassReason
+func Reasons() []BypassReason
+func RecordCrossTenantScope(ctx context.Context, s CrossTenantScope, mode Mode) error
+type Scope interface{PlatformOnly() bool; SessionTenantID() (github.com/google/uuid.UUID, bool); TenantIDs() []github.com/google/uuid.UUID; Valid() bool; sealed()}
+func ScopeFrom(ctx context.Context) (Scope, bool)
+type TableKind string
+type TenantScope struct{id github.com/google/uuid.UUID}
+  func (TenantScope).Valid() bool
+  func (TenantScope).TenantIDs() []github.com/google/uuid.UUID
+  func (TenantScope).SessionTenantID() (github.com/google/uuid.UUID, bool)
+  func (TenantScope).PlatformOnly() bool
+func WithMode(m Mode) BypassOption
+func WithModule(ctx context.Context, module string) context.Context
+func WithScope(ctx context.Context, s Scope) context.Context
+func WithTenantIDs(ids ...github.com/google/uuid.UUID) BypassOption

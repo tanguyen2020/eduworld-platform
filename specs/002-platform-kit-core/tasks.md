@@ -55,14 +55,14 @@
 - [x] T020 [P] [US2] Test F002-AC-12: `Bypass` lý do rỗng hoặc ngoài danh sách đóng lỗi; lý do hợp lệ ghi audit `cross_tenant.accessed` + tăng `eduworld_tenant_filter_bypass_total{module,reason}` — file: `src/backend/pkg/tenancy/bypass_test.go`
 - [x] T021 [P] [US2] Integration test F002-AC-13: áp SQL sinh cho bảng T/TA/T\*/H trên postgres:17, kiểm 0 dòng khi không set/tenant khác (TC-TEN-005); assert không policy nào chứa `deleted_at` — file: `src/backend/pkg/tenancy/rls_integration_test.go`
 - [x] T056 [P] [US2] Integration test F002-AC-29: bảng T có policy + view `_live` do helper sinh; `UPDATE ... SET deleted_at = now() ... RETURNING` bằng role `_app` thành công; dòng không còn trong truy vấn `deleted_at IS NULL` và view `_live`; role `_readonly` đọc bảng gốc bị từ chối — file: `src/backend/pkg/tenancy/rls_softdelete_integration_test.go`
-- [ ] T057 [P] [US2] Test F002-AC-30: fixture gọi `tenancy.Bypass` với lý do ngoài danh sách → analyzer `bypassreason` fail; test API surface (`apidiff`/golden) của `src/backend/pkg/tenancy`, `src/backend/pkg/authz` — file: `src/backend/tools/lint/bypassreason/analyzer_test.go`
+- [x] T057 [P] [US2] Test F002-AC-30: fixture gọi `tenancy.Bypass` với lý do ngoài danh sách → analyzer `bypassreason` fail; test API surface (`apidiff`/golden) của `src/backend/pkg/tenancy`, `src/backend/pkg/authz` — file: `src/backend/tools/lint/bypassreason/analyzer_test.go`
 
 ### Implementation cho User Story 2
 
 - [x] T022 [P] [US2] `tenancy.TenantScope`, `CrossTenantScope`, `PlatformScope` (người hoặc job), context helpers, constructor nội bộ `tenancy/internal/scopector` — file: `src/backend/pkg/tenancy/scope.go`
 - [x] T023 [P] [US2] `tenancy.Bypass`/`Bypassed`, kiểu `BypassReason` danh sách đóng (ADR-0089 §3), audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{module,reason}` — file: `src/backend/pkg/tenancy/bypass.go`
 - [x] T024 [P] [US2] `tenancy.RLSPolicies(table, kind)` (T/TA/T\*/TA\*/H, chỉ điều kiện tenant) và `tenancy.LiveView(table)` theo DATABASE_DESIGN §4 — file: `src/backend/pkg/tenancy/rls.go`
-- [ ] T058 [P] [US2] Analyzer `bypassreason` (go/analysis) chặn lý do `Bypass` ngoài danh sách, đăng ký vào `golangci.base.yml` — file: `src/backend/tools/lint/bypassreason/analyzer.go`
+- [x] T058 [P] [US2] Analyzer `bypassreason` (go/analysis) chặn lý do `Bypass` ngoài danh sách, đăng ký vào `golangci.base.yml` — file: `src/backend/tools/lint/bypassreason/analyzer.go`
 - [x] T025 [US2] `authz.Principal`, `PrincipalResolver`, `ErrNotMember`, `ScopeFor`, `CrossTenantScope`, `PlatformScope(p)`, `SystemPlatformScope(job)` — file: `src/backend/pkg/authz/principal.go`
 - [x] T026 [US2] Cache hai lớp `principal_cache`/`principal_cache_ttl`, key `ew:<module>:principal:<user>:<tenant>`, `Invalidate` — file: `src/backend/pkg/authz/cache.go`
 - [x] T027 [US2] Middleware `tenant` (parse, miễn trừ) và `principal` (resolve, ánh xạ lỗi, audit) — file: `src/backend/pkg/httpx/tenant.go`
@@ -164,3 +164,4 @@
 - Compose app xuất trace OTLP/HTTP (`otel-collector:4318`, `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`).
 - Sửa lỗi YAML trong spec gộp: `TenantCreate.keycloak_org_alias.description` có dấu phẩy không quote trong flow mapping tạo key thừa (kin-openapi `doc.Validate` phát hiện); sinh lại `identity.v1.yaml`.
 - T046/T003: luật F002-AC-26/27 được kiểm bởi `tools/archgen --check` (`make arch-check`, chạy local không cần golangci-lint) và fixture trong `scripts/ci/test-arch-fixtures.sh` (12/12); depguard sinh trong `.golangci.arch.yml` vẫn là lớp phụ cho CI.
+- T057/T058: analyzer `bypassreason` + `scopeguard` chạy bằng `go run ./tools/lint/ewlint` (multichecker, trong `make lint` và `make arch-check`) thay vì plugin golangci; API surface `pkg/tenancy`, `pkg/authz` khóa bằng golden `tools/lint/apisurface/testdata/*.api`.
