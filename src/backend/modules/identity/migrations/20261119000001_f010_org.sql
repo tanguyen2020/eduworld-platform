@@ -127,7 +127,7 @@ CREATE TABLE catalog.provinces (
   name_i18n jsonb NOT NULL,
   short_name_i18n jsonb,
   province_type varchar(64) NOT NULL,
-  effective_from date NOT NULL,
+  effective_from date,
   effective_to date,
   status varchar(64) NOT NULL DEFAULT 'active',
   PRIMARY KEY (province_id)
@@ -425,7 +425,9 @@ GRANT SELECT ON identity.external_identities_live TO identity_readonly;
 
 -- ---------- Tenant membership (DATABASE_DESIGN §2.1): students from their active enrollment. F012 replaces the
 -- view to add staff from identity.user_roles (CREATE OR REPLACE, same columns). ----------
-CREATE OR REPLACE VIEW identity.tenant_memberships_v WITH (security_barrier = true) AS
+-- security_invoker: RLS of org.enrollments applies to the caller (identity_app: its tenant; identity_platform:
+-- BYPASSRLS for the login path and jobs), not to the view owner.
+CREATE OR REPLACE VIEW identity.tenant_memberships_v WITH (security_invoker = true, security_barrier = true) AS
   SELECT e.tenant_id, e.student_id AS user_id, 'student'::varchar(64) AS member_kind, e.school_id
   FROM org.enrollments e
   WHERE e.status = 'active' AND e.deleted_at IS NULL;

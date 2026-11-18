@@ -6890,7 +6890,7 @@ func (m *ProvinceMutation) EffectiveFrom() (r time.Time, exists bool) {
 // OldEffectiveFrom returns the old "effective_from" field's value of the Province entity.
 // If the Province object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProvinceMutation) OldEffectiveFrom(ctx context.Context) (v time.Time, err error) {
+func (m *ProvinceMutation) OldEffectiveFrom(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldEffectiveFrom is only allowed on UpdateOne operations")
 	}
@@ -6904,9 +6904,22 @@ func (m *ProvinceMutation) OldEffectiveFrom(ctx context.Context) (v time.Time, e
 	return oldValue.EffectiveFrom, nil
 }
 
+// ClearEffectiveFrom clears the value of the "effective_from" field.
+func (m *ProvinceMutation) ClearEffectiveFrom() {
+	m.effective_from = nil
+	m.clearedFields[province.FieldEffectiveFrom] = struct{}{}
+}
+
+// EffectiveFromCleared returns if the "effective_from" field was cleared in this mutation.
+func (m *ProvinceMutation) EffectiveFromCleared() bool {
+	_, ok := m.clearedFields[province.FieldEffectiveFrom]
+	return ok
+}
+
 // ResetEffectiveFrom resets all changes to the "effective_from" field.
 func (m *ProvinceMutation) ResetEffectiveFrom() {
 	m.effective_from = nil
+	delete(m.clearedFields, province.FieldEffectiveFrom)
 }
 
 // SetEffectiveTo sets the "effective_to" field.
@@ -7359,6 +7372,9 @@ func (m *ProvinceMutation) ClearedFields() []string {
 	if m.FieldCleared(province.FieldShortNameI18n) {
 		fields = append(fields, province.FieldShortNameI18n)
 	}
+	if m.FieldCleared(province.FieldEffectiveFrom) {
+		fields = append(fields, province.FieldEffectiveFrom)
+	}
 	if m.FieldCleared(province.FieldEffectiveTo) {
 		fields = append(fields, province.FieldEffectiveTo)
 	}
@@ -7396,6 +7412,9 @@ func (m *ProvinceMutation) ClearField(name string) error {
 		return nil
 	case province.FieldShortNameI18n:
 		m.ClearShortNameI18n()
+		return nil
+	case province.FieldEffectiveFrom:
+		m.ClearEffectiveFrom()
 		return nil
 	case province.FieldEffectiveTo:
 		m.ClearEffectiveTo()

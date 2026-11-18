@@ -183,6 +183,14 @@ func (_c *ProvinceCreate) SetEffectiveFrom(v time.Time) *ProvinceCreate {
 	return _c
 }
 
+// SetNillableEffectiveFrom sets the "effective_from" field if the given value is not nil.
+func (_c *ProvinceCreate) SetNillableEffectiveFrom(v *time.Time) *ProvinceCreate {
+	if v != nil {
+		_c.SetEffectiveFrom(*v)
+	}
+	return _c
+}
+
 // SetEffectiveTo sets the "effective_to" field.
 func (_c *ProvinceCreate) SetEffectiveTo(v time.Time) *ProvinceCreate {
 	_c.mutation.SetEffectiveTo(v)
@@ -342,9 +350,6 @@ func (_c *ProvinceCreate) check() error {
 			return &ValidationError{Name: "province_type", err: fmt.Errorf(`ent: validator failed for field "Province.province_type": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.EffectiveFrom(); !ok {
-		return &ValidationError{Name: "effective_from", err: errors.New(`ent: missing required field "Province.effective_from"`)}
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Province.status"`)}
 	}
@@ -447,7 +452,7 @@ func (_c *ProvinceCreate) createSpec() (*Province, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := _c.mutation.EffectiveFrom(); ok {
 		_spec.SetField(province.FieldEffectiveFrom, field.TypeTime, value)
-		_node.EffectiveFrom = value
+		_node.EffectiveFrom = &value
 	}
 	if value, ok := _c.mutation.EffectiveTo(); ok {
 		_spec.SetField(province.FieldEffectiveTo, field.TypeTime, value)

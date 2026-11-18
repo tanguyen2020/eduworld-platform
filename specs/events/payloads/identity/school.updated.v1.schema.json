@@ -9,7 +9,7 @@
   "properties": {
     "school_id": { "type": "string", "format": "uuid" },
     "tenant_id": { "type": "string", "format": "uuid" },
-    "status": { "type": "string", "enum": ["active", "pending_review", "inactive"] },
+    "status": { "type": "string", "enum": ["active", "pending_review", "disabled"], "description": "Trạng thái trường theo contract School.status (disabled = trường bị tắt)" },
     "name": { "type": "string", "maxLength": 255 },
     "name_i18n": { "type": "object", "additionalProperties": false, "required": ["vi"], "properties": { "vi": { "type": "string", "maxLength": 255, "minLength": 1 }, "en": { "type": "string", "maxLength": 255 } } },
     "province_code": { "type": ["string", "null"], "maxLength": 64 },

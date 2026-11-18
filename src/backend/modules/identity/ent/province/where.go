@@ -845,6 +845,16 @@ func EffectiveFromLTE(v time.Time) predicate.Province {
 	return predicate.Province(sql.FieldLTE(FieldEffectiveFrom, v))
 }
 
+// EffectiveFromIsNil applies the IsNil predicate on the "effective_from" field.
+func EffectiveFromIsNil() predicate.Province {
+	return predicate.Province(sql.FieldIsNull(FieldEffectiveFrom))
+}
+
+// EffectiveFromNotNil applies the NotNil predicate on the "effective_from" field.
+func EffectiveFromNotNil() predicate.Province {
+	return predicate.Province(sql.FieldNotNull(FieldEffectiveFrom))
+}
+
 // EffectiveToEQ applies the EQ predicate on the "effective_to" field.
 func EffectiveToEQ(v time.Time) predicate.Province {
 	return predicate.Province(sql.FieldEQ(FieldEffectiveTo, v))

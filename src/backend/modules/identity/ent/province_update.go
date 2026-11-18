@@ -231,6 +231,12 @@ func (_u *ProvinceUpdate) SetNillableEffectiveFrom(v *time.Time) *ProvinceUpdate
 	return _u
 }
 
+// ClearEffectiveFrom clears the value of the "effective_from" field.
+func (_u *ProvinceUpdate) ClearEffectiveFrom() *ProvinceUpdate {
+	_u.mutation.ClearEffectiveFrom()
+	return _u
+}
+
 // SetEffectiveTo sets the "effective_to" field.
 func (_u *ProvinceUpdate) SetEffectiveTo(v time.Time) *ProvinceUpdate {
 	_u.mutation.SetEffectiveTo(v)
@@ -421,6 +427,9 @@ func (_u *ProvinceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.EffectiveFrom(); ok {
 		_spec.SetField(province.FieldEffectiveFrom, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveFromCleared() {
+		_spec.ClearField(province.FieldEffectiveFrom, field.TypeTime)
 	}
 	if value, ok := _u.mutation.EffectiveTo(); ok {
 		_spec.SetField(province.FieldEffectiveTo, field.TypeTime, value)
@@ -654,6 +663,12 @@ func (_u *ProvinceUpdateOne) SetNillableEffectiveFrom(v *time.Time) *ProvinceUpd
 	return _u
 }
 
+// ClearEffectiveFrom clears the value of the "effective_from" field.
+func (_u *ProvinceUpdateOne) ClearEffectiveFrom() *ProvinceUpdateOne {
+	_u.mutation.ClearEffectiveFrom()
+	return _u
+}
+
 // SetEffectiveTo sets the "effective_to" field.
 func (_u *ProvinceUpdateOne) SetEffectiveTo(v time.Time) *ProvinceUpdateOne {
 	_u.mutation.SetEffectiveTo(v)
@@ -874,6 +889,9 @@ func (_u *ProvinceUpdateOne) sqlSave(ctx context.Context) (_node *Province, err 
 	}
 	if value, ok := _u.mutation.EffectiveFrom(); ok {
 		_spec.SetField(province.FieldEffectiveFrom, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveFromCleared() {
+		_spec.ClearField(province.FieldEffectiveFrom, field.TypeTime)
 	}
 	if value, ok := _u.mutation.EffectiveTo(); ok {
 		_spec.SetField(province.FieldEffectiveTo, field.TypeTime, value)

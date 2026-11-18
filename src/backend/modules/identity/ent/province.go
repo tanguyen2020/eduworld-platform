@@ -48,7 +48,7 @@ type Province struct {
 	// ProvinceType holds the value of the "province_type" field.
 	ProvinceType string `json:"province_type,omitempty"`
 	// EffectiveFrom holds the value of the "effective_from" field.
-	EffectiveFrom time.Time `json:"effective_from,omitempty"`
+	EffectiveFrom *time.Time `json:"effective_from,omitempty"`
 	// EffectiveTo holds the value of the "effective_to" field.
 	EffectiveTo *time.Time `json:"effective_to,omitempty"`
 	// Status holds the value of the "status" field.
@@ -192,7 +192,8 @@ func (_m *Province) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field effective_from", values[i])
 			} else if value.Valid {
-				_m.EffectiveFrom = value.Time
+				_m.EffectiveFrom = new(time.Time)
+				*_m.EffectiveFrom = value.Time
 			}
 		case province.FieldEffectiveTo:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -297,8 +298,10 @@ func (_m *Province) String() string {
 	builder.WriteString("province_type=")
 	builder.WriteString(_m.ProvinceType)
 	builder.WriteString(", ")
-	builder.WriteString("effective_from=")
-	builder.WriteString(_m.EffectiveFrom.Format(time.ANSIC))
+	if v := _m.EffectiveFrom; v != nil {
+		builder.WriteString("effective_from=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	if v := _m.EffectiveTo; v != nil {
 		builder.WriteString("effective_to=")

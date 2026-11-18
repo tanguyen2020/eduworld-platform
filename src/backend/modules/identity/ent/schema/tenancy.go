@@ -85,7 +85,7 @@ func (Province) Fields() []ent.Field {
 		field.JSON("name_i18n", map[string]string{}),
 		field.JSON("short_name_i18n", map[string]string{}).Optional(),
 		field.String("province_type").MaxLen(64),
-		dateField("effective_from"),
+		optionalDate("effective_from"),
 		optionalDate("effective_to"),
 		field.String("status").MaxLen(64).Default("active"),
 	}

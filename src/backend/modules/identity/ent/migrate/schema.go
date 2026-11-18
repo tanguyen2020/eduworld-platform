@@ -219,7 +219,7 @@ var (
 		{Name: "name_i18n", Type: field.TypeJSON},
 		{Name: "short_name_i18n", Type: field.TypeJSON, Nullable: true},
 		{Name: "province_type", Type: field.TypeString, Size: 64},
-		{Name: "effective_from", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "effective_from", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "date"}},
 		{Name: "effective_to", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "date"}},
 		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
 	}
