@@ -423,6 +423,23 @@ func (a *Admin) FindUserByUsername(ctx context.Context, username string) (port.K
 	return port.KCUser{}, port.ErrKCNotFound
 }
 
+// FindUserByAttribute searches users by an attribute (Keycloak q=name:value, exact match).
+func (a *Admin) FindUserByAttribute(ctx context.Context, name, value string) (port.KCUser, error) {
+	var users []userRep
+	q := url.Values{"q": {name + ":" + value}, "exact": {"true"}, "briefRepresentation": {"false"}}
+	if _, err := a.call(ctx, "find_user_attr", http.MethodGet, "/users?"+q.Encode(), nil, &users, true); err != nil {
+		return port.KCUser{}, err
+	}
+	for _, u := range users {
+		for _, v := range u.Attributes[name] {
+			if v == value {
+				return port.KCUser{ID: u.ID, Username: u.Username, Enabled: u.Enabled}, nil
+			}
+		}
+	}
+	return port.KCUser{}, port.ErrKCNotFound
+}
+
 func (a *Admin) CreateUser(ctx context.Context, u port.KCNewUser) (string, error) {
 	loc, err := a.call(ctx, "create_user", http.MethodPost, "/users",
 		userRep{Username: u.Username, Enabled: u.Enabled, FirstName: u.FirstName, Attributes: u.Attributes}, nil, false)

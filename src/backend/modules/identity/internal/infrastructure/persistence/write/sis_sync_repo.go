@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent"
 	entyear "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
 	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
+	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	entlink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
 	entsislink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sislink"
 	entstudent "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/student"
@@ -333,9 +334,12 @@ func (SisSyncRepo) RaiseIssue(ctx context.Context, i write.Issue) (uuid.UUID, er
 	if refs == nil {
 		refs = map[string]any{}
 	}
-	refs["sync_run_id"] = i.RunID.String()
-	c := client(ctx).ReconciliationIssue.Create().SetIssueType(i.Type).SetEntityRefs(refs).SetSisConnectionID(i.ConnectionID).SetSyncRunID(i.RunID).
+	c := client(ctx).ReconciliationIssue.Create().SetIssueType(i.Type).SetEntityRefs(refs).SetSisConnectionID(i.ConnectionID).
 		SetNillableSuggestedAction(optStr(i.Suggested))
+	if i.RunID != uuid.Nil { // provisioning issues have no run
+		refs["sync_run_id"] = i.RunID.String()
+		c = c.SetSyncRunID(i.RunID)
+	}
 	if i.SchoolID != nil {
 		c = c.SetSchoolID(*i.SchoolID)
 	}
@@ -348,3 +352,54 @@ func (SisSyncRepo) RaiseIssue(ctx context.Context, i write.Issue) (uuid.UUID, er
 
 // fmtSscanf parses "YYYY-YYYY".
 func fmtSscanf(s string, from, to *int) (int, error) { return fmt.Sscanf(s, "%d-%d", from, to) }
+
+var _ write.ProvisioningRepository = SisSyncRepo{}
+
+// PendingStudent loads the user, its student row, its active SIS link and its local identity.
+func (SisSyncRepo) PendingStudent(ctx context.Context, userID uuid.UUID, issuer string) (*write.PendingStudent, error) {
+	c := client(ctx)
+	u, err := c.User.Get(ctx, userID)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	s, err := c.Student.Get(ctx, userID)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := &write.PendingStudent{UserID: userID, Username: u.Username, Status: u.Status, TenantID: s.TenantID, SchoolID: s.SchoolID,
+		Grade: int(s.GradeLevel)}
+	if u.DisplayName != nil {
+		out.DisplayName = *u.DisplayName
+	}
+	l, err := c.SisIdentityLink.Query().Where(entlink.UserID(userID), entlink.Status("active")).Only(ctx)
+	switch {
+	case err == nil:
+		out.ConnectionID, out.ExternalID = l.SisConnectionID, l.StudentExternalID
+	case !ent.IsNotFound(err):
+		return nil, err
+	}
+	id, err := c.ExternalIdentity.Query().Where(entext.UserID(userID), entext.Issuer(issuer), entext.Status("active")).Only(ctx)
+	switch {
+	case err == nil:
+		out.Subject = &id.Subject
+	case !ent.IsNotFound(err):
+		return nil, err
+	}
+	return out, nil
+}
+
+// LinkIdentity records the Keycloak account of the user.
+func (SisSyncRepo) LinkIdentity(ctx context.Context, userID uuid.UUID, issuer, subject string) error {
+	c := client(ctx)
+	if _, err := c.ExternalIdentity.Create().SetIssuer(issuer).SetSubject(subject).SetUserID(userID).Save(ctx); err != nil {
+		return mapAccountErr(err)
+	}
+	_, err := c.User.Update().Where(entuser.ID(userID)).SetProvisionedAt(time.Now().UTC()).Save(ctx)
+	return err
+}

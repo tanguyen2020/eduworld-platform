@@ -113,6 +113,17 @@ func (f *fakeKC) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.users = append(f.users, u)
 		w.Header().Set("Location", "http://kc/admin/realms/eduworld/users/"+u.ID)
 		w.WriteHeader(http.StatusCreated)
+	case r.Method == http.MethodGet && p == "/users" && r.URL.Query().Get("q") != "":
+		kv := strings.SplitN(r.URL.Query().Get("q"), ":", 2)
+		out := []userRep{}
+		for _, u := range f.users {
+			for _, v := range u.Attributes[kv[0]] {
+				if v == kv[1] {
+					out = append(out, u)
+				}
+			}
+		}
+		_ = json.NewEncoder(w).Encode(out)
 	case r.Method == http.MethodPut && strings.HasSuffix(p, "/reset-password"):
 		w.WriteHeader(http.StatusNoContent)
 	case r.Method == http.MethodGet && strings.HasPrefix(p, "/roles/"):
@@ -251,6 +262,13 @@ func TestUserAndPassword(t *testing.T) {
 	}
 	if _, err := a.CreateUser(ctx, port.KCNewUser{Username: "hs.tudo"}); !errors.Is(err, port.ErrKCConflict) {
 		t.Fatalf("duplicate = %v", err)
+	}
+	// F011-AC-09 (adapter part): the user is found again by eduworld_user_id.
+	if u, err := a.FindUserByAttribute(ctx, "ew_user_id", "u"); err != nil || u.ID != id {
+		t.Fatalf("find by attribute = %+v %v", u, err)
+	}
+	if _, err := a.FindUserByAttribute(ctx, "ew_user_id", "other"); !errors.Is(err, port.ErrKCNotFound) {
+		t.Fatalf("find unknown = %v", err)
 	}
 	if err := a.SetPassword(ctx, id, "Pw-unique-123", true); err != nil {
 		t.Fatal(err)

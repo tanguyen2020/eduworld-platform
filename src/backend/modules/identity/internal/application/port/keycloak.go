@@ -57,6 +57,8 @@ type KeycloakAdmin interface {
 	FindUserByUsername(ctx context.Context, username string) (KCUser, error)
 	// CreateUser returns ErrKCConflict when the username is taken (never retried).
 	CreateUser(ctx context.Context, u KCNewUser) (string, error)
+	// FindUserByAttribute returns the user whose attribute equals value exactly; ErrKCNotFound otherwise.
+	FindUserByAttribute(ctx context.Context, name, value string) (KCUser, error)
 	// SetPassword sets the password; the value is never logged or traced.
 	SetPassword(ctx context.Context, userID, password string, temporary bool) error
 	AddRealmRoles(ctx context.Context, userID string, roles ...string) error

@@ -52,7 +52,7 @@ type SyncedStudent struct {
 type Issue struct {
 	SchoolID     *uuid.UUID
 	ConnectionID uuid.UUID
-	RunID        uuid.UUID
+	RunID        uuid.UUID // uuid.Nil outside a run (provisioning)
 	Type         string
 	Refs         map[string]any
 	Suggested    string
@@ -102,4 +102,26 @@ type SisSyncRepository interface {
 	ClassSchool(ctx context.Context, classID uuid.UUID) (schoolID uuid.UUID, grade int, err error)
 
 	RaiseIssue(ctx context.Context, i Issue) (uuid.UUID, error)
+}
+
+// PendingStudent is a SIS student waiting for its Keycloak account, with its active SIS link.
+type PendingStudent struct {
+	UserID       uuid.UUID
+	Username     string
+	DisplayName  string
+	Status       string
+	TenantID     uuid.UUID
+	SchoolID     uuid.UUID
+	Grade        int
+	ConnectionID uuid.UUID
+	ExternalID   string
+	Subject      *string // subject of the local issuer when already provisioned
+}
+
+// ProvisioningRepository is the persistence of the keycloak-provisioner (ACCOUNT_PROVISIONING §2).
+type ProvisioningRepository interface {
+	// PendingStudent returns nil when the user no longer exists.
+	PendingStudent(ctx context.Context, userID uuid.UUID, issuer string) (*PendingStudent, error)
+	// LinkIdentity inserts external_identities(issuer, subject) and sets users.provisioned_at.
+	LinkIdentity(ctx context.Context, userID uuid.UUID, issuer, subject string) error
 }

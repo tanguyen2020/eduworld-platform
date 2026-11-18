@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -224,7 +225,7 @@ func (h SisRun) Handle(ctx context.Context, in RunImportInput) (out RunImportRes
 		}
 		t := st.tenantID
 		return h.Events.Publish(ctx, write.Event{Type: "sis.sync_completed", SubjectType: "sync_run", SubjectID: st.run.ID.String(), TenantID: &t,
-			Payload: map[string]any{"sync_run_id": st.run.ID.String(), "stats": st.run.Stats, "issues_count": st.issues}})
+			Payload: map[string]any{"sync_run_id": st.run.ID.String(), "stats": completedStats(st.run.Stats), "issues_count": st.issues}})
 	})
 	return out, err
 }
@@ -348,6 +349,27 @@ func (h SisRun) issue(ctx context.Context, st *runState, typ string, refs map[st
 	t := st.tenantID
 	return h.Events.Publish(ctx, write.Event{Type: "sis.reconciliation_issue_raised", SubjectType: "reconciliation_issue", SubjectID: id.String(),
 		TenantID: &t, Payload: map[string]any{"issue_id": id.String(), "kind": typ, "school_id": school.String(), "sis_connection_id": st.in.ConnectionID.String()}})
+}
+
+// completedStats folds the per-kind run stats into the totals of sis.sync_completed.
+func completedStats(stats map[string]int) map[string]int {
+	out := map[string]int{"fetched": 0, "created": 0, "updated": 0, "unchanged": 0, "errors": stats["errors"]}
+	for k, v := range stats {
+		_, suffix, ok := strings.Cut(k, "_")
+		if !ok {
+			continue
+		}
+		switch suffix {
+		case "created", "updated", "unchanged":
+			out[suffix] += v
+		case "failed", "conflicts":
+			out["errors"] += v
+		}
+		if suffix != "fetched" {
+			out["fetched"] += v
+		}
+	}
+	return out
 }
 
 // recordIssue is a record that is not applied and raises a reconciliation issue (SIS_INTEGRATION §6.3).
@@ -481,6 +503,12 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 			return err
 		}
 		if err := h.Sync.SetLoginKey(ctx, st.in.ConnectionID, it.ExternalID, username); err != nil {
+			return err
+		}
+		t := st.tenantID
+		if err := h.Events.Publish(ctx, write.Event{Type: "student.sis_link_created", SubjectType: "user", SubjectID: userID.String(), TenantID: &t,
+			Payload: map[string]any{"user_id": userID.String(), "tenant_id": t.String(), "school_id": st.in.SchoolID.String(),
+				"sis_connection_id": st.in.ConnectionID.String(), "student_external_id": it.ExternalID, "via": "provisioning"}}); err != nil {
 			return err
 		}
 	} else {

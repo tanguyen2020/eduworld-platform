@@ -43,3 +43,21 @@ func TestKeycloakMembershipDispatch(t *testing.T) {
 		}
 	}
 }
+
+func TestKeycloakProvisionerDispatch(t *testing.T) {
+	s := &spySync{}
+	c := KeycloakProvisioner{Provision: s}
+	id := uuid.New()
+	if err := c.Handle(context.Background(), outbox.Envelope{EventType: "student.provisioning_requested",
+		Payload: []byte(`{"student_id":"` + id.String() + `","tenant_id":"` + uuid.NewString() + `"}`)}); err != nil || len(s.ids) != 1 || s.ids[0] != id {
+		t.Fatalf("dispatch = %v %v", s.ids, err)
+	}
+	for _, e := range []outbox.Envelope{
+		{EventType: "student.provisioning_requested", Payload: []byte(`{}`)},
+		{EventType: "student.synced", Payload: []byte(`{}`)},
+	} {
+		if err := c.Handle(context.Background(), e); !errors.Is(err, outbox.ErrPermanent) {
+			t.Fatalf("%s: %v", e.EventType, err)
+		}
+	}
+}
