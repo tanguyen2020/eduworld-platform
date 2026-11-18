@@ -48,6 +48,8 @@ type KeycloakAdmin interface {
 	EnsureOrganization(ctx context.Context, org KCOrganization) (string, error)
 	UpdateOrganization(ctx context.Context, org KCOrganization) error
 	ListOrganizationMembers(ctx context.Context, orgID string) ([]KCUser, error)
+	// ListMemberOrganizations returns the Organizations the user is a member of.
+	ListMemberOrganizations(ctx context.Context, userID string) ([]KCOrganization, error)
 	// AddOrganizationMember and RemoveOrganizationMember succeed when already in the target state.
 	AddOrganizationMember(ctx context.Context, orgID, userID string) error
 	RemoveOrganizationMember(ctx context.Context, orgID, userID string) error

@@ -370,6 +370,19 @@ func (a *Admin) ListOrganizationMembers(ctx context.Context, orgID string) ([]po
 	}
 }
 
+// ListMemberOrganizations returns the Organizations of a member (Keycloak 26: /organizations/members/{id}/organizations).
+func (a *Admin) ListMemberOrganizations(ctx context.Context, userID string) ([]port.KCOrganization, error) {
+	var orgs []orgRep
+	if _, err := a.call(ctx, "member_organizations", http.MethodGet, "/organizations/members/"+url.PathEscape(userID)+"/organizations?briefRepresentation=false", nil, &orgs, true); err != nil {
+		return nil, err
+	}
+	out := make([]port.KCOrganization, 0, len(orgs))
+	for _, o := range orgs {
+		out = append(out, o.port())
+	}
+	return out, nil
+}
+
 func (a *Admin) AddOrganizationMember(ctx context.Context, orgID, userID string) error {
 	_, err := a.call(ctx, "add_member", http.MethodPost, "/organizations/"+url.PathEscape(orgID)+"/members", userID, nil, true)
 	if errors.Is(err, port.ErrKCConflict) {

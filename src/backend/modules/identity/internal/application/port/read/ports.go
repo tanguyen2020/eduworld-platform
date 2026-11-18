@@ -5,6 +5,8 @@ package read
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 )
@@ -21,4 +23,21 @@ type TenantFilter struct {
 type TenantReadModel interface {
 	// ListTenants returns up to f.Limit+1 rows so the caller knows whether more exist.
 	ListTenants(ctx context.Context, f TenantFilter) ([]dto.Tenant, error)
+}
+
+// TenantOrg is a tenant the user belongs to and its Keycloak Organization (nil until created).
+type TenantOrg struct {
+	TenantID uuid.UUID
+	OrgID    *uuid.UUID
+}
+
+// UserMembership is what Keycloak membership must mirror for one user (F010 US4).
+type UserMembership struct {
+	KeycloakUserID string // subject of the local-realm identity; "" when the user has no Keycloak account
+	Tenants        []TenantOrg
+}
+
+// MembershipReader reads a user's memberships across tenants (platform read, bypass platform_job).
+type MembershipReader interface {
+	MembershipOf(ctx context.Context, userID uuid.UUID) (UserMembership, error)
 }
