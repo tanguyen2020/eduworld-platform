@@ -4,6 +4,7 @@ package write
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -133,4 +134,35 @@ type CatalogWriter interface {
 	GetProvince(ctx context.Context, id uuid.UUID) (*catalog.ProvinceRecord, error)
 	SaveProvince(ctx context.Context, p *catalog.ProvinceRecord) error
 	CreateSuccession(ctx context.Context, s catalog.Succession) error // one successor per former unit → 409
+}
+
+// SisConnection is a SIS connection of a tenant (F011: provider csv_import only).
+type SisConnection struct {
+	ID           uuid.UUID
+	TenantID     uuid.UUID
+	ProviderKind string
+	Status       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+// SisConnectionSchool is one school served by a connection.
+type SisConnectionSchool struct {
+	ConnectionID uuid.UUID
+	SchoolID     uuid.UUID
+	TenantID     uuid.UUID
+	Active       bool
+	AssignedAt   time.Time
+}
+
+// SisConnectionRepository persists SIS connections and their schools (sis.*, T).
+type SisConnectionRepository interface {
+	Create(ctx context.Context, c *SisConnection) error
+	// TenantOf returns the tenant of a connection under a System Admin bypass (the route has no tenant).
+	TenantOf(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	Get(ctx context.Context, id uuid.UUID) (*SisConnection, error)
+	// SetSchools makes schoolIDs exactly the active schools of the connection; a school active on another
+	// connection is problem SIS_SCHOOL_ALREADY_CONNECTED, a school outside the tenant 422.
+	SetSchools(ctx context.Context, c *SisConnection, schoolIDs []uuid.UUID, by uuid.UUID) ([]SisConnectionSchool, error)
+	Schools(ctx context.Context, connectionID uuid.UUID) ([]SisConnectionSchool, error)
 }
