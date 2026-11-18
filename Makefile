@@ -128,14 +128,17 @@ gen: ## Generate code: architecture rules from x-allowed-callers, problem codes 
 	cd $(BACKEND) && go run ./tools/facadegen --oapi=oapi-codegen
 	$(GO) run ./tools/routematrix gen
 	$(GO) run ./tools/infragen
+	$(GO) run ./tools/sisgen
 	cd $(BACKEND)/pkg/testkit/sample/ent && go generate .
+	cd $(BACKEND)/modules/identity/ent && go generate .
 
 gen-check: gen ## Fail if generated files differ from the committed ones
 	git diff --exit-code -- $(BACKEND)/.golangci.arch.yml $(BACKEND)/pkg/problem/codes_gen.go
 	$(GO) run ./tools/allowedcallers --check
 	cd $(BACKEND) && go run ./tools/facadegen --check --oapi=oapi-codegen
 	$(GO) run ./tools/infragen --check
-	git diff --exit-code -- $(BACKEND)/pkg/testkit/sample/ent $(BACKEND)/modules/*/migrations
+	$(GO) run ./tools/sisgen --check
+	git diff --exit-code -- $(BACKEND)/pkg/testkit/sample/ent $(BACKEND)/modules/*/ent $(BACKEND)/modules/*/migrations
 
 arch-check: ## Module boundaries: Go internal/, x-allowed-callers, pkg/ and cmd/ rules, layers (ADR-0074)
 	$(GO) build ./...
