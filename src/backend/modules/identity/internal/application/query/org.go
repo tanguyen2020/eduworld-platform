@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -187,9 +188,9 @@ func (q Org) ListAdminTenantSchools(ctx context.Context, tenantID uuid.UUID, sta
 	if err = authz.Require(ctx, p, authz.PermPlatformTenantManage, authz.Resource{}); err != nil {
 		return out, err
 	}
-	sc, err := authz.CrossTenantScope(p, []uuid.UUID{tenantID}, tenancy.ReasonSystemAdminCrossTenant)
+	sc, err := appscope.TargetTenant(p, tenantID)
 	if err != nil {
-		return out, problem.New(problem.PermissionDenied, "").Wrap(err)
+		return out, err
 	}
 	return q.schools(tenancy.WithScope(ctx, sc), &tenantID, status, in)
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/failsafe-go/failsafe-go"
 	"github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -73,6 +74,13 @@ type Admin struct {
 }
 
 var _ port.KeycloakAdmin = (*Admin)(nil)
+
+// orgSync counts Keycloak Admin calls by operation and result (MONITORING: eduworld_identity_org_sync_total).
+var orgSync = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_identity_org_sync_total",
+	Help: "Keycloak Admin API calls of module identity by operation and result."}, []string{"op", "result"})
+
+// OrgSyncCounter exposes eduworld_identity_org_sync_total for registration by the composition root.
+func OrgSyncCounter() *prometheus.CounterVec { return orgSync }
 
 // errTransient marks responses worth retrying (429, 5xx).
 var errTransient = errors.New("keycloak: transient")
@@ -200,8 +208,10 @@ func (a *Admin) call(ctx context.Context, op, method, path string, body, out any
 			span.SetStatus(codes.Error, op)
 		}
 		span.SetAttributes(attribute.String("error.kind", errKind(err)))
+		orgSync.WithLabelValues(op, errKind(err)).Inc()
 		return "", err
 	}
+	orgSync.WithLabelValues(op, "ok").Inc()
 	span.SetAttributes(attribute.Int("http.response.status_code", res.status))
 	if out != nil {
 		if err := json.Unmarshal(res.body, out); err != nil {

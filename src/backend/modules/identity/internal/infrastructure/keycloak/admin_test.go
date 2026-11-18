@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 )
@@ -284,5 +286,23 @@ func TestRealmRolesAndTokenRefresh(t *testing.T) {
 	}
 	if f.tokens.Load() < 2 {
 		t.Fatalf("token not refreshed (%d fetches)", f.tokens.Load())
+	}
+}
+
+// T040: every Admin API call is counted by operation and result.
+func TestOrgSyncMetric(t *testing.T) {
+	f := newFake()
+	a := newAdmin(t, f)
+	before := testutil.ToFloat64(orgSync.WithLabelValues("logout_user", "ok"))
+	if err := a.LogoutUser(context.Background(), "u1"); err != nil {
+		t.Fatal(err)
+	}
+	if testutil.ToFloat64(orgSync.WithLabelValues("logout_user", "ok")) != before+1 {
+		t.Fatal("ok call not counted")
+	}
+	nf := testutil.ToFloat64(orgSync.WithLabelValues("get_role", "not_found"))
+	_ = a.AddRealmRoles(context.Background(), "u1", "missing")
+	if testutil.ToFloat64(orgSync.WithLabelValues("get_role", "not_found")) != nf+1 {
+		t.Fatal("not_found call not counted")
 	}
 }

@@ -56,6 +56,7 @@ type txState struct {
 	uow          *UnitOfWork
 	beforeCommit []func(ctx context.Context, tx *sql.Tx) error
 	afterCommit  []func(ctx context.Context)
+	savepoints   int
 }
 
 type txKey struct{}
@@ -234,4 +235,29 @@ func (r *ReadSession) Read(ctx context.Context, fn func(ctx context.Context) err
 // InTenantRead is Read with an explicit scope.
 func (r *ReadSession) InTenantRead(ctx context.Context, s tenancy.Scope, fn func(ctx context.Context) error) error {
 	return r.Read(tenancy.WithScope(ctx, s), fn)
+}
+
+// Savepoint runs fn inside a savepoint of the current write transaction: when fn fails, only its work is
+// rolled back and the transaction stays usable (PostgreSQL aborts the whole transaction on any error
+// otherwise). Used for per-row errors of batch commands (F010 ImportSchools).
+func (u *UnitOfWork) Savepoint(ctx context.Context, fn func(ctx context.Context) error) error {
+	s, ok := stateFrom(ctx)
+	if !ok || s.readOnly {
+		return ErrNoTransaction
+	}
+	s.savepoints++
+	name := fmt.Sprintf("ew_sp_%d", s.savepoints)
+	if _, err := s.tx.ExecContext(ctx, "SAVEPOINT "+name); err != nil {
+		return fmt.Errorf("entx: savepoint: %w", err)
+	}
+	if err := fn(ctx); err != nil {
+		if _, rerr := s.tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT "+name); rerr != nil {
+			return fmt.Errorf("entx: rollback to savepoint: %w (after %w)", rerr, err)
+		}
+		return err
+	}
+	if _, err := s.tx.ExecContext(ctx, "RELEASE SAVEPOINT "+name); err != nil {
+		return fmt.Errorf("entx: release savepoint: %w", err)
+	}
+	return nil
 }

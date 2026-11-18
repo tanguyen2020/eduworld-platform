@@ -69,7 +69,7 @@ Review kiến trúc ngày 2026-11-17 tìm thấy các điểm trong tầng dữ 
 - Quyền:
   - `<module>_app`: `INSERT` outbox (cùng transaction trong `UnitOfWork`); `INSERT`, `SELECT` processed events và idempotency; `INSERT` dead letters.
   - `<module>_relay`: `SELECT` outbox và `UPDATE` các cột trạng thái publish (`published_at`, `attempts`).
-  - `<module>_platform`: `SELECT` và `UPDATE` cột xử lý của dead letters (màn xử lý event lỗi).
+  - `<module>_platform`: `SELECT` và `UPDATE` cột xử lý của dead letters (màn xử lý event lỗi); và các quyền ghi như `<module>_app` (`INSERT` outbox, `INSERT`/`SELECT` processed events và idempotency, `INSERT` dead letters) vì `UnitOfWork` chạy transaction `PlatformScope`/`CrossTenantScope`/consumer platform bằng role này.
   - Không role ứng dụng nào có `DELETE`/`TRUNCATE` trên `infra.*`.
 - **Khóa partition ổn định để chống trùng xuyên ngày:**
   - `outbox_events`: partition theo `created_at`, PK `(event_id, created_at)`; `event_id` là UUIDv7 do server sinh.
@@ -104,3 +104,4 @@ Review kiến trúc ngày 2026-11-17 tìm thấy các điểm trong tầng dữ 
 | 2026-11-17 | Tạo ADR (Accepted) từ review kiến trúc | Technical Architect |
 | 2026-11-17 | Làm rõ sau khi áp vào tài liệu: mixin `TenantOptionalAppendOnly`; dòng tenant NULL ghi bằng `_platform`; danh sách reason đầy đủ kèm quyền DB; audit `cross_tenant.accessed`; metric `eduworld_tenant_filter_bypass_total`; hàm `identity.memberships_for_user`; khóa partition ổn định cho processed/idempotency; mẫu ghi idempotency; retention dead letter; phạm vi migration viết tay; tên `<module>` theo ADR-0074 | Technical Architect |
 | 2026-11-17 | Chốt điểm còn treo: reason `platform_analytics`; `SystemPlatformScope` thay `JobPlatformScope` (gồm thành phần hệ thống chưa có Principal); owner hàm membership là role `identity_membership_reader` có `BYPASSRLS`; key sai → `400 BAD_REQUEST`; chỉ lưu response thành công | Technical Architect |
+| 2026-11-19 | Làm rõ (F010, phát hiện khi chạy trên PostgreSQL): `<module>_platform` cũng ghi outbox, processed events, idempotency và dead letters như `<module>_app` — System Admin ghi (`PlatformScope`/`CrossTenantScope`) và consumer platform phải phát event cùng transaction. Migration mới `<version>_infra_platform_grants` (tools/infragen), không sửa migration infra đã áp | Technical Architect (F010) |

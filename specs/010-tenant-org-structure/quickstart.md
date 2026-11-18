@@ -40,3 +40,30 @@ node scripts/specs/validate-reference-data.mjs
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail), trace_id của kịch bản 1 và 9, ảnh Organization trong Keycloak admin console (local), log reconciliation.
+
+## 5. Bằng chứng (2026-11-19, Windows 11 + Docker Desktop 27.1; postgres:17 testcontainers với mọi migration Atlas)
+
+Kịch bản §2 được tự động hóa bằng test (gói `src/backend/modules/identity/...`); kịch bản thủ công trên stack chờ phần nối binary (OQ F010-2 trong spec).
+
+| Kịch bản / tiêu chí | Test | Kết quả |
+|---|---|---|
+| 1, 2, 4 — AC-01, AC-02, AC-03 (Organization), AC-05 | `TestTenantLifecycle`, `command/tenant_test.go`, `command/org_sync_test.go`, `keycloak/admin_test.go` | pass |
+| 3 — AC-04, AC-05 qua HTTP (403 thiếu MFA/role tenant, 428 thiếu key, replay, 422 `maxLength`, 428/412 `If-Match`) | `TestIdentityHTTP` (chuỗi `httpx` thật + `httpxtest`) | pass |
+| 5 — AC-06 | `TestOrgSchema/CatalogSeed` | pass |
+| 6 — AC-08 | `TestImportSchools` (tỉnh cũ → kế thừa + `province_outdated`, thiếu tỉnh → `pending_review`, mã tỉnh sai, trùng mã, dry-run) | pass |
+| 7 — AC-07, AC-09 | `TestSchoolLifecycle`, `command/school_test.go` | pass |
+| 8 — AC-10, AC-17, AC-18, AC-19 | `TestOrgQueries` | pass |
+| 9 — AC-11…AC-15 | `TestTransferStudent`, `TestOrgSchema/EnrollmentInvariants` | pass |
+| AC-16 | `TestOrgSchema/UserChecks` | pass |
+| AC-20 | `TestMembershipSync` | pass |
+| 10 — AC-22 | `TestReconcileOrganizations` | pass |
+| AC-23 | `keycloak/admin_test.go` (`TestRetries`), consumer trả lỗi → Nak/DLQ (`pkg/outbox`) | pass |
+| 11, 11b — AC-24, AC-25, AC-28, AC-29 | `TestCreateCommonStudents`, `TestIdentityHTTP` (`no-store`, replay `password_redacted`) | pass |
+| AC-26 | `tests/contract/no_self_registration_test.go` | pass |
+| 13 — AC-27 | `TestListProjectionSnapshot` | pass |
+| Catalog write (ADMIN_PORTAL §3.16) | `TestCatalogWrites` | pass |
+| Bảng route ↔ spec | `tests/contract/routes_test.go` (24 operation) | pass |
+
+Chưa đủ: AC-03 phần resolve thành viên → `TENANT_ACCESS_DISABLED` và AC-21 (realm role nhân sự theo UserRole) cần resolver/`user_roles` của F012; `importSchools` bất đồng bộ (OQ F010-1, F011); kịch bản 4/10/12 trên stack thật (OQ F010-2).
+
+Lệnh: `go test ./modules/identity/...` (unit + contract) và `TESTCONTAINERS_RYUK_DISABLED=true go test -tags integration -timeout 45m ./modules/identity/...` — 11/11 + 2 test tích hợp mới pass; gate local (vet, golangci-lint, ewlint, archgen, entlint, tenancyguard, gofmt, unit) `CHECK OK`.

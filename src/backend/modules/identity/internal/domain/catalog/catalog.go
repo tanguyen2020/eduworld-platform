@@ -4,6 +4,8 @@ package catalog
 
 import (
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -56,4 +58,96 @@ func RequireActive(p Province) error {
 		return ErrProvinceInactive
 	}
 	return nil
+}
+
+// ErrInvalid is a rule violation on one catalog field (422 VALIDATION_FAILED).
+type ErrInvalid struct{ Field, Reason string }
+
+func (e ErrInvalid) Error() string { return "catalog: " + e.Field + " " + e.Reason }
+
+// Country is a catalog country (ISO 3166-1 alpha-2).
+type Country struct {
+	Code          string
+	Name          map[string]string
+	DefaultLocale string
+	Status        string
+	Version       int64
+}
+
+// ProvinceRecord is the full catalog province (create/update by System Admin).
+type ProvinceRecord struct {
+	Province
+	OfficialCode  *string
+	ShortName     map[string]string
+	ProvinceType  string
+	EffectiveFrom *time.Time
+	EffectiveTo   *time.Time
+	Version       int64
+}
+
+// Succession links a former unit to its successor.
+type Succession struct {
+	OldID, NewID  uuid.UUID
+	EffectiveDate time.Time
+	Kind          string
+}
+
+func checkI18n(field string, m map[string]string) error {
+	if strings.TrimSpace(m["vi"]) == "" || strings.TrimSpace(m["en"]) == "" {
+		return ErrInvalid{Field: field, Reason: "needs vi and en"}
+	}
+	return nil
+}
+
+// Validate checks a country.
+func (c Country) Validate() error {
+	if len(c.Code) != 2 || strings.ToUpper(c.Code) != c.Code {
+		return ErrInvalid{Field: "country_code", Reason: "must be ISO 3166-1 alpha-2"}
+	}
+	if err := checkI18n("name", c.Name); err != nil {
+		return err
+	}
+	if c.Status != StatusActive && c.Status != StatusInactive {
+		return ErrInvalid{Field: "status", Reason: "must be active or inactive"}
+	}
+	return nil
+}
+
+// Validate checks a province: names, type, and inactive ⇔ effective_to set (ADR-0060).
+func (p ProvinceRecord) Validate() error {
+	if err := checkI18n("name", p.Name); err != nil {
+		return err
+	}
+	if err := checkI18n("short_name", p.ShortName); err != nil {
+		return err
+	}
+	if p.ProvinceType != "municipality" && p.ProvinceType != "province" {
+		return ErrInvalid{Field: "province_type", Reason: "must be municipality or province"}
+	}
+	if p.Status != StatusActive && p.Status != StatusInactive {
+		return ErrInvalid{Field: "status", Reason: "must be active or inactive"}
+	}
+	if (p.Status == StatusInactive) != (p.EffectiveTo != nil) {
+		return ErrInvalid{Field: "effective_to", Reason: "set exactly when the unit is inactive"}
+	}
+	if p.EffectiveFrom != nil && p.EffectiveTo != nil && p.EffectiveTo.Before(*p.EffectiveFrom) {
+		return ErrInvalid{Field: "effective_to", Reason: "before effective_from"}
+	}
+	return nil
+}
+
+// NewSuccession checks a succession: distinct units, successor in force.
+func NewSuccession(old, next Province, on time.Time, kind string) (Succession, error) {
+	switch kind {
+	case "merged", "unchanged", "renamed", "split":
+	default:
+		return Succession{}, ErrInvalid{Field: "kind", Reason: "must be merged, unchanged, renamed or split"}
+	}
+	if old.ID == next.ID {
+		return Succession{}, ErrInvalid{Field: "new_province_id", Reason: "must differ from the former unit"}
+	}
+	if !next.Active() {
+		return Succession{}, ErrInvalid{Field: "new_province_id", Reason: "the successor must be in force"}
+	}
+	return Succession{OldID: old.ID, NewID: next.ID, EffectiveDate: on, Kind: kind}, nil
 }

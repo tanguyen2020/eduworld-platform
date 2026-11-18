@@ -2,12 +2,14 @@ package command
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
@@ -21,6 +23,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
+
+// idempotencyRecordMax is the largest response pkg/idempotency stores (infra.idempotency_records).
+const idempotencyRecordMax = 65536
 
 // DefaultCommonStudentBatchMax is common_student_batch_max (CONFIG_DEFAULTS, scope code [Proposed]).
 const DefaultCommonStudentBatchMax = 500
@@ -113,9 +118,9 @@ func (h CreateCommonStudents) Handle(ctx context.Context, in CreateCommonStudent
 	if err != nil {
 		return out, err
 	}
-	sc, err := authz.CrossTenantScope(p, []uuid.UUID{tenant.CommonTenantID}, tenancy.ReasonSystemAdminCrossTenant)
+	sc, err := appscope.TargetTenant(p, tenant.CommonTenantID)
 	if err != nil {
-		return out, problem.New(problem.PermissionDenied, "").Wrap(err)
+		return out, err
 	}
 	ctx = tenancy.WithScope(ctx, sc)
 	var orgID string
@@ -143,8 +148,13 @@ func (h CreateCommonStudents) Handle(ctx context.Context, in CreateCommonStudent
 		}
 		out.Results = append(out.Results, res)
 	}
-	// The idempotency record never holds passwords; a replay returns password_redacted = true.
-	err = h.UoW.Do(ctx, func(ctx context.Context) error { return idempotency.SetResult(ctx, out.Redacted()) })
+	// The idempotency record never holds passwords; a replay returns password_redacted = true. Rows are
+	// already committed: a result above the record limit (64 KiB) is not stored rather than failing the
+	// request — a replay then re-runs and every row reports USERNAME_TAKEN (no duplicate account).
+	red := out.Redacted()
+	if b, merr := json.Marshal(red); merr == nil && len(b) <= idempotencyRecordMax {
+		err = h.UoW.Do(ctx, func(ctx context.Context) error { return idempotency.SetResult(ctx, red) })
+	}
 	return out, err
 }
 

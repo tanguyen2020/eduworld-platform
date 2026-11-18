@@ -19,6 +19,11 @@ type UnitOfWork interface {
 	Do(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
+// Savepoints isolates one step of a transaction: its failure rolls back only that step (batch rows).
+type Savepoints interface {
+	Savepoint(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Event is a domain event written to the outbox. TenantID nil with Platform false takes the session tenant
 // of the scope; every event gets its own idempotency key (several updates of one subject are distinct).
 type Event struct {
@@ -117,4 +122,15 @@ type AccountRepository interface {
 	// CreateStudent inserts the account; a duplicate username is problem USERNAME_TAKEN, a duplicate
 	// identity problem IDENTITY_CONFLICT.
 	CreateStudent(ctx context.Context, a NewStudentAccount) error
+}
+
+// CatalogWriter persists the platform catalog (catalog.*, G tables; System Admin only).
+type CatalogWriter interface {
+	CreateCountry(ctx context.Context, c *catalog.Country) error           // duplicate code → 409
+	GetCountry(ctx context.Context, code string) (*catalog.Country, error) // 404
+	SaveCountry(ctx context.Context, c *catalog.Country) error             // version check → 409
+	CreateProvince(ctx context.Context, p *catalog.ProvinceRecord) error   // duplicate code → 409
+	GetProvince(ctx context.Context, id uuid.UUID) (*catalog.ProvinceRecord, error)
+	SaveProvince(ctx context.Context, p *catalog.ProvinceRecord) error
+	CreateSuccession(ctx context.Context, s catalog.Succession) error // one successor per former unit → 409
 }

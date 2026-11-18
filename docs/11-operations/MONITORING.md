@@ -84,6 +84,8 @@ Nguyên tắc:
 | | `eduworld_tenant_filter_bypass_total` | Counter | `module`, `reason` (danh sách đóng ADR-0089 §3: `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`, `platform_analytics`) | mọi module qua `src/backend/pkg/tenancy.Bypass` (ADR-0039, ADR-0072, ADR-0089) |
 | | `eduworld_usecase_duration_seconds` | Histogram | `module`, `kind` (`command`/`query`/`consumer`), `usecase`, `result` (`ok`/`client_error`/`server_error`) | `src/backend/pkg/observability.UseCase` (F003, ADR-0087) |
 | | `eduworld_idempotency_replays_total` | Counter | `route` | `src/backend/pkg/httpx.Idempotency` (F003) |
+| | `eduworld_identity_org_sync_total` | Counter | `op` (thao tác Keycloak Admin: `create_organization`, `add_member`, `logout_user`…), `result` (`ok`/`not_found`/`conflict`/`rejected`/`circuit_open`/`transient`) | adapter Keycloak Admin của module identity (F010) |
+| | `eduworld_auth_common_tenant_total` | Counter | `result` (`created`/`failed`) | `createCommonTenantStudents` — tài khoản tenant chung do System Admin tạo (F010, ACCOUNT_PROVISIONING §3.4) |
 | | `eduworld_events_consumed_total` | Counter | `module`, `consumer`, `event_type`, `result` (`ok`/`duplicate`/`retry`/`dlq`) | `src/backend/pkg/outbox.Consumer` (F003) |
 | | `eduworld_outbox_unpublished_count`, `eduworld_outbox_lag_seconds` | Gauge | `module` | `src/backend/pkg/outbox.Relay` (F003) |
 | | `eduworld_infra_partition_days_ahead` | Gauge | `module`, `table` | job `infra-partition-maintenance` (F003, ADR-0089 §5) |

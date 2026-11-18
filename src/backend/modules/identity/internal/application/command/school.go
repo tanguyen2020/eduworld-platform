@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/catalog"
@@ -83,10 +84,10 @@ func adminTenantWrite(ctx context.Context, target uuid.UUID) (context.Context, e
 	if err := authz.Require(ctx, p, authz.PermPlatformTenantManage, authz.Resource{}); err != nil {
 		return ctx, err
 	}
-	sc, err := authz.CrossTenantScope(p, []uuid.UUID{target}, tenancy.ReasonSystemAdminCrossTenant)
+	sc, err := appscope.TargetTenant(p, target)
 	if err != nil {
-		authz.RecordDenied(ctx, string(problem.PermissionDenied), map[string]any{"why": "cross_tenant_scope"})
-		return ctx, problem.New(problem.PermissionDenied, "").Wrap(err)
+		authz.RecordDenied(ctx, string(problem.PermissionDenied), map[string]any{"why": "target_tenant_scope"})
+		return ctx, err
 	}
 	return tenancy.WithScope(ctx, sc), nil
 }

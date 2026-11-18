@@ -65,6 +65,12 @@ func validate(route *routers.Route, next http.Handler) http.Handler {
 				}
 			}
 		}
+		// API_DESIGN §7: a missing If-Match on an operation that requires it is 428 PRECONDITION_REQUIRED,
+		// not a validation error (the client must GET the ETag first).
+		if needsIfMatch(route) && strings.TrimSpace(r.Header.Get("If-Match")) == "" {
+			WriteError(w, r, problem.New(problem.PreconditionRequired, ""))
+			return
+		}
 		in := &openapi3filter.RequestValidationInput{Request: r, PathParams: params, Route: route, Options: validateOpts}
 		if err := openapi3filter.ValidateRequest(r.Context(), in); err != nil {
 			WriteError(w, r, toProblem(err))
@@ -170,4 +176,22 @@ func orDefault(s, d string) string {
 		return d
 	}
 	return s
+}
+
+// needsIfMatch reports whether the operation (or its path item) declares a required If-Match header.
+func needsIfMatch(route *routers.Route) bool {
+	if route == nil || route.Operation == nil {
+		return false
+	}
+	params := route.Operation.Parameters
+	if route.PathItem != nil {
+		params = append(append(openapi3.Parameters{}, route.PathItem.Parameters...), params...)
+	}
+	for _, p := range params {
+		if p != nil && p.Value != nil && p.Value.In == openapi3.ParameterInHeader && p.Value.Required &&
+			strings.EqualFold(p.Value.Name, "If-Match") {
+			return true
+		}
+	}
+	return false
 }
