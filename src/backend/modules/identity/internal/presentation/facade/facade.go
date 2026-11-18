@@ -7,9 +7,6 @@ package facade
 import (
 	"context"
 
-	"github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
-
 	identityapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 )
@@ -30,7 +27,7 @@ var _ Snapshots = Facade{}
 func (f Facade) ListProjectionSnapshot(ctx context.Context, req identityapi.ListProjectionSnapshotRequestObject) (identityapi.ListProjectionSnapshotResponseObject, error) {
 	in := query.SnapshotInput{EntityType: string(req.EntityType)}
 	if req.Params.TenantId != nil {
-		t := uuid.UUID(*req.Params.TenantId)
+		t := *req.Params.TenantId
 		in.TenantID = &t
 	}
 	if req.Params.Cursor != nil {
@@ -47,7 +44,7 @@ func (f Facade) ListProjectionSnapshot(ctx context.Context, req identityapi.List
 		Page: identityapi.CommonInternalCommonV1PageInfo{HasMore: p.HasMore, NextCursor: p.NextCursor}}
 	for _, it := range p.Items {
 		out.Items = append(out.Items, identityapi.ProjectionSnapshotItem{EntityType: identityapi.ProjectionSnapshotItemEntityType(it.EntityType),
-			EntityId: openapi_types.UUID(it.EntityID), TenantId: openapi_types.UUID(it.TenantID), SourceVersion: int(it.SourceVersion),
+			EntityId: it.EntityID, TenantId: it.TenantID, SourceVersion: int(it.SourceVersion),
 			Deleted: it.Deleted, Data: it.Data})
 	}
 	return out, nil
