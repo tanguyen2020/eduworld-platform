@@ -164,3 +164,6 @@ func typed(kind string, cols, rec []string, v *contract.Validator, row int) (map
 	}
 	return data, errs
 }
+
+// EntityKind maps a contract DTO kind ("Student") to the entity kind of the sync pipeline ("student").
+func EntityKind(contractKind string) string { return strings.ToLower(contractKind) }

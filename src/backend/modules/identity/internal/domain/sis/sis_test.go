@@ -1,0 +1,61 @@
+package sis
+
+import "testing"
+
+func TestHashIgnoresUpdatedAtAndKeyOrder(t *testing.T) {
+	a := map[string]any{"student_code": "001", "grade_level": 3, "login": map[string]any{"username": "hs.a"}, "updated_at": "2026-01-01T00:00:00Z"}
+	b := map[string]any{"login": map[string]any{"username": "hs.a"}, "grade_level": 3, "student_code": "001", "updated_at": "2026-11-20T00:00:00Z"}
+	if Hash(a) != Hash(b) {
+		t.Fatal("same data with another snapshot time must hash the same (F011-AC-05)")
+	}
+	c := map[string]any{"student_code": "001", "grade_level": 4}
+	if Hash(a) == Hash(c) {
+		t.Fatal("different data, same hash")
+	}
+}
+
+func TestActionFor(t *testing.T) {
+	if ActionFor(false, "", "h") != ActionCreate || ActionFor(true, "h", "h") != ActionNoop || ActionFor(true, "x", "h") != ActionUpdate {
+		t.Fatal("ActionFor")
+	}
+}
+
+// F011-AC-23.
+func TestStatusEffect(t *testing.T) {
+	cases := map[string]StatusChange{
+		"active":          {UserStatus: "active"},
+		"inactive":        {UserStatus: "deactivated", CloseEnrollment: "ended"},
+		"graduated":       {UserStatus: "deactivated", CloseEnrollment: "ended"},
+		"suspended":       {UserStatus: "locked"},
+		"transferred_out": {CloseEnrollment: "transferred"},
+	}
+	for s, want := range cases {
+		got, err := StatusEffect(s)
+		if err != nil || got != want {
+			t.Errorf("%s = %+v %v", s, got, err)
+		}
+	}
+	if _, err := StatusEffect("expelled"); err == nil {
+		t.Fatal("unknown status accepted")
+	}
+}
+
+// F011-AC-24.
+func TestDeactivationReview(t *testing.T) {
+	if above, review := DeactivationReviewNeeded(3, 100, false, 0.05); above || review {
+		t.Fatal("3% is below the threshold")
+	}
+	if above, review := DeactivationReviewNeeded(10, 100, false, 0.05); !above || review {
+		t.Fatal("first run above: mark only")
+	}
+	if above, review := DeactivationReviewNeeded(10, 100, true, 0.05); !above || !review {
+		t.Fatal("second consecutive run above: review")
+	}
+}
+
+func TestFieldHelpers(t *testing.T) {
+	d := map[string]any{"name": " 3A ", "grade_level": 3, "start_date": "2026-09-05", "login": map[string]any{"username": " hs.x "}}
+	if Str(d, "name") != "3A" || Int(d, "grade_level") != 3 || Date(d, "start_date") == nil || Date(d, "end_date") != nil || LoginUsername(d) != "hs.x" {
+		t.Fatal("helpers")
+	}
+}
