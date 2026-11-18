@@ -42,7 +42,7 @@ Database `eduworld_identity`. Cột chung bảng T: `tenant_id` (FK `platform.te
 | `school_level` | `varchar(64)` | `primary`/`lower_secondary`/`multi_level` | |
 | `grade_min`, `grade_max` | smallint | CHECK 1–9 | |
 | `address` | `varchar(500)` | | |
-| `status` | `varchar(64)` | `active`/`pending_review`/`inactive` | |
+| `status` | `varchar(64)` | `active`/`pending_review`/`disabled` | theo contract `School.status` (2026-11-19) |
 | `is_virtual` | boolean | | School ảo tenant `common` |
 | `settings` | jsonb | | nội dung do F015 |
 
@@ -81,7 +81,7 @@ Hợp: học sinh (enrollment active → `tenant_id`) ∪ nhân sự (`identity.
 | Entity | Chuyển trạng thái |
 |---|---|
 | Tenant | `active` ⇄ `disabled` (System Admin); soft-delete chỉ qua Thùng rác (F045) |
-| School | `pending_review` → `active` (duyệt) · `active` → `inactive` |
+| School | `pending_review` → `active` (duyệt) · `active` ⇄ `disabled` |
 | Enrollment | `active` → `transferred` (chuyển lớp/trường) · `active` → `ended` (nghỉ học, F011/F016) |
 
 ## 3. Quy tắc kiểm tra dữ liệu

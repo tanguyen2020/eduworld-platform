@@ -281,7 +281,7 @@ ALTER TABLE catalog.province_successions
 ALTER TABLE org.schools
   ADD CONSTRAINT schools_level_chk CHECK (school_level IN ('primary','lower_secondary','multi_level')),
   ADD CONSTRAINT schools_grades_chk CHECK (grade_min BETWEEN 1 AND 9 AND grade_max BETWEEN 1 AND 9 AND grade_min <= grade_max),
-  ADD CONSTRAINT schools_status_chk CHECK (status IN ('active','pending_review','inactive')),
+  ADD CONSTRAINT schools_status_chk CHECK (status IN ('active','pending_review','disabled')),
   ADD CONSTRAINT schools_province_chk CHECK (is_virtual OR province_id IS NOT NULL OR status = 'pending_review');
 ALTER TABLE org.academic_years
   ADD CONSTRAINT academic_years_period_chk CHECK (end_date > start_date);
