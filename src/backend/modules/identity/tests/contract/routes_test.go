@@ -79,7 +79,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 			t.Errorf("%s: the student self route needs the game_player guard (ADR-0031)", id)
 		}
 	}
-	if len(identityhttp.Operations) != 24 || identityhttp.Operations["listTenants"].Method != http.MethodGet {
-		t.Fatalf("F010 operations = %d", len(identityhttp.Operations))
+	if len(identityhttp.Operations) != 26 || identityhttp.Operations["listTenants"].Method != http.MethodGet {
+		t.Fatalf("F010 + F011 operations = %d", len(identityhttp.Operations))
 	}
 }

@@ -13,6 +13,7 @@ import (
 	entyear "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
 	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	entissue "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
 	entlink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
 	entsislink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sislink"
 	entstudent "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/student"
@@ -402,4 +403,54 @@ func (SisSyncRepo) LinkIdentity(ctx context.Context, userID uuid.UUID, issuer, s
 	}
 	_, err := c.User.Update().Where(entuser.ID(userID)).SetProvisionedAt(time.Now().UTC()).Save(ctx)
 	return err
+}
+
+var _ write.SisIssueRepository = SisSyncRepo{}
+
+// LockIssue loads a reconciliation issue; SaveResolution only applies to an issue still open.
+func (SisSyncRepo) LockIssue(ctx context.Context, id uuid.UUID) (*write.IssueRow, error) {
+	r, err := client(ctx).ReconciliationIssue.Query().Where(entissue.ID(id)).Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, problem.New(problem.NotFound, "")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &write.IssueRow{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, ConnectionID: r.SisConnectionID, Type: r.IssueType, Refs: r.EntityRefs,
+		Status: r.Status, Resolution: r.Resolution, Note: r.ResolutionNote, ResolvedBy: r.ResolvedBy, ResolvedAt: r.ResolvedAt,
+		Suggested: r.SuggestedAction, CreatedAt: r.CreatedAt}, nil
+}
+
+// SaveResolution stores status and resolution.
+func (SisSyncRepo) SaveResolution(ctx context.Context, i *write.IssueRow) error {
+	n, err := client(ctx).ReconciliationIssue.Update().Where(entissue.ID(i.ID), entissue.Status("open")).SetStatus(i.Status).SetNillableResolution(i.Resolution).
+		SetNillableResolutionNote(i.Note).SetNillableResolvedBy(i.ResolvedBy).SetNillableResolvedAt(i.ResolvedAt).AddVersion(1).Save(ctx)
+	if err == nil && n == 0 {
+		return problem.New(problem.Conflict, "the issue is no longer open")
+	}
+	return err
+}
+
+// StudentOf checks the student in the scope tenant and its active SIS link.
+func (SisSyncRepo) StudentOf(ctx context.Context, userID uuid.UUID) (bool, bool, error) {
+	c := client(ctx)
+	found, err := c.Student.Query().Where(entstudent.ID(userID)).Exist(ctx)
+	if err != nil || !found {
+		return false, false, err
+	}
+	linked, err := c.SisIdentityLink.Query().Where(entlink.UserID(userID), entlink.Status("active")).Exist(ctx)
+	return true, linked, err
+}
+
+// LinkExisting links an existing student to a source key.
+func (r SisSyncRepo) LinkExisting(ctx context.Context, userID, tenantID, schoolID, conn uuid.UUID, ext string) error {
+	c := client(ctx)
+	if _, err := c.SisIdentityLink.Create().SetTenantID(tenantID).SetUserID(userID).SetSchoolID(schoolID).SetSisConnectionID(conn).
+		SetStudentExternalID(ext).SetStatus("active").Save(ctx); err != nil {
+		if ent.IsConstraintError(err) {
+			return problem.New(problem.Conflict, "the source key or the student is already linked").Wrap(err)
+		}
+		return err
+	}
+	return r.SaveSyncedStudent(ctx, write.SyncedStudent{ConnectionID: conn, ExternalID: ext, SchoolID: schoolID, RecordStatus: "active"})
 }

@@ -30,6 +30,8 @@ type Handlers struct {
 	CreateCommonStudents command.CreateCommonStudentsHandler
 	Catalog              command.Catalog
 	Org                  query.Org
+	Sis                  query.Sis                      // F011
+	ResolveSisIssue      command.ResolveSisIssueHandler // F011
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -63,6 +65,9 @@ var Operations = map[string]httpx.Operation{
 	"createProvince":             op("createProvince", http.MethodPost, "/admin/catalog/provinces", httpx.TenantOptional, httpx.IdempotencyRequired, 201),
 	"updateProvince":             op("updateProvince", http.MethodPatch, "/admin/catalog/provinces/{province_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	"createProvinceSuccession":   op("createProvinceSuccession", http.MethodPost, "/admin/catalog/province-successions", httpx.TenantOptional, httpx.IdempotencyRequired, 201),
+	// F011
+	"listSisReconciliationIssues":   op("listSisReconciliationIssues", http.MethodGet, "/sis/reconciliation-issues", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+	"resolveSisReconciliationIssue": op("resolveSisReconciliationIssue", http.MethodPost, "/sis/reconciliation-issues/{issue_id}:resolve", httpx.TenantRequired, httpx.IdempotencyRequired, 200),
 }
 
 func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {
@@ -70,7 +75,7 @@ func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {
 	return o
 }
 
-// Register mounts every F010 operation on the server.
+// Register mounts every F010 and F011 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	routes := map[string]http.HandlerFunc{
 		"listCountries":              h.listCountries,
@@ -97,6 +102,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		"createProvince":             h.createProvince,
 		"updateProvince":             h.updateProvince,
 		"createProvinceSuccession":   h.createProvinceSuccession,
+	}
+	for id, fn := range sisOperations {
+		routes[id] = fn(h)
 	}
 	for id, fn := range routes {
 		o, ok := Operations[id]

@@ -125,3 +125,33 @@ type ProvisioningRepository interface {
 	// LinkIdentity inserts external_identities(issuer, subject) and sets users.provisioned_at.
 	LinkIdentity(ctx context.Context, userID uuid.UUID, issuer, subject string) error
 }
+
+// IssueRow is a reconciliation issue loaded for resolution.
+type IssueRow struct {
+	ID           uuid.UUID
+	TenantID     uuid.UUID
+	SchoolID     *uuid.UUID
+	ConnectionID *uuid.UUID
+	Type         string
+	Refs         map[string]any
+	Status       string
+	Resolution   *string
+	Note         *string
+	ResolvedBy   *uuid.UUID
+	ResolvedAt   *time.Time
+	Suggested    *string
+	CreatedAt    time.Time
+}
+
+// SisIssueRepository resolves reconciliation issues (F011-AC-11, AC-17).
+type SisIssueRepository interface {
+	// LockIssue loads the issue (problem NotFound outside the scope).
+	LockIssue(ctx context.Context, id uuid.UUID) (*IssueRow, error)
+	// SaveResolution applies only while the issue is open (problem Conflict otherwise).
+	SaveResolution(ctx context.Context, i *IssueRow) error
+	// StudentOf reports whether userID is a live student of the scope tenant and whether it has an active SIS link.
+	StudentOf(ctx context.Context, userID uuid.UUID) (found, linked bool, err error)
+	// LinkExisting links an existing student to a SIS source key and records the synced student (empty hash so
+	// the next import updates it).
+	LinkExisting(ctx context.Context, userID, tenantID, schoolID, connectionID uuid.UUID, externalID string) error
+}

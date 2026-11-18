@@ -98,3 +98,18 @@ type SnapshotItem struct {
 type SnapshotReader interface {
 	Snapshot(ctx context.Context, entityType string, tenantID *uuid.UUID, afterID *uuid.UUID, limit int) ([]SnapshotItem, error)
 }
+
+// SisIssueFilter filters reconciliation issues of the scope, newest first (issue_id < After).
+type SisIssueFilter struct {
+	SchoolIDs    []uuid.UUID // nil = every school of the scope
+	SchoolID     *uuid.UUID
+	ConnectionID *uuid.UUID
+	Type, Status string
+	After        *page.Cursor
+	Limit        int
+}
+
+// SisIssueReadModel reads sis.reconciliation_issues.
+type SisIssueReadModel interface {
+	Issues(ctx context.Context, f SisIssueFilter) ([]dto.SisIssue, error)
+}

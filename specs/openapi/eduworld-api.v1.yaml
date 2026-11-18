@@ -6789,10 +6789,11 @@ paths:
       x-portal-action: action.platform_admin.tenants.sis_connections
       summary: Danh sách reconciliation issue (xung đột đồng bộ SIS)
       description: |
-        Quyền `tenant.sis.read` (chỉ trường trong scope) hoặc `platform.sis_connection.manage` (lọc `tenant_ids`, audit `cross_tenant.accessed`).
-        Trả `entity_refs` là ID nội bộ/external, không PII thô.
+        Quyền `tenant.sis.read` hoặc `tenant.sis.import` (chỉ trường trong scope, `X-Tenant-Id` = tenant phiên) hoặc `platform.sis_connection.manage` (lọc `tenant_ids`, audit `cross_tenant.accessed`).
+        Trả `entity_refs` là ID nội bộ/external, không PII thô; `entity_refs.user_id` của tài khoản giữ định danh trùng chỉ trả cho nhân sự platform.
       x-internal: true
       parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/TenantIds'
         - name: school_id
           in: query
