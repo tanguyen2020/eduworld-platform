@@ -79,3 +79,22 @@ type OrgReadModel interface {
 	UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, after *page.Cursor, limit int) ([]dto.UnassignedStudent, error)
 	StudentSummary(ctx context.Context, studentID uuid.UUID) (dto.StudentSummary, error)
 }
+
+// SnapshotEntityTypes are the entities of listProjectionSnapshot.
+var SnapshotEntityTypes = map[string]bool{"tenant": true, "school": true, "class": true, "student": true, "enrollment": true}
+
+// SnapshotItem is one ProjectionSnapshotItem: the fields of the projection event payload (no PII beyond
+// them), the aggregate version and whether the source row is soft-deleted.
+type SnapshotItem struct {
+	EntityType    string
+	EntityID      uuid.UUID
+	TenantID      uuid.UUID
+	SourceVersion int64
+	Deleted       bool
+	Data          map[string]any
+}
+
+// SnapshotReader pages the current state of one entity type ordered by id, soft-deleted rows included.
+type SnapshotReader interface {
+	Snapshot(ctx context.Context, entityType string, tenantID *uuid.UUID, afterID *uuid.UUID, limit int) ([]SnapshotItem, error)
+}
