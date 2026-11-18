@@ -71,6 +71,7 @@ type SisRecordError struct {
 	Code       string    `json:"error_code"`
 	Message    string    `json:"message,omitempty"`
 	OccurredAt time.Time `json:"occurred_at"`
+	ID         uuid.UUID `json:"-"` // cursor key
 }
 
 // NewSisImport maps an import (diff and counters from the stats of its processed run).
@@ -94,4 +95,32 @@ func NewSisImport(id, school uuid.UUID, status string, dryRun bool, kinds []stri
 		*dst = &v
 	}
 	return out
+}
+
+// SyncRun is the SyncRun of the spec (kind = mode).
+type SyncRun struct {
+	SyncRunID    uuid.UUID      `json:"sync_run_id"`
+	ConnectionID uuid.UUID      `json:"sis_connection_id"`
+	TenantID     uuid.UUID      `json:"tenant_id"`
+	Kind         string         `json:"kind"`
+	Status       string         `json:"status"`
+	DryRun       bool           `json:"dry_run"`
+	Trigger      string         `json:"trigger,omitempty"`
+	FailureCode  *string        `json:"failure_code"`
+	StartedAt    time.Time      `json:"started_at"`
+	FinishedAt   *time.Time     `json:"finished_at,omitempty"`
+	Stats        map[string]int `json:"stats"`
+}
+
+// SisConnection is the SisConnection of the spec: never a secret_ref or credential (F011-AC-27).
+type SisConnection struct {
+	ConnectionID    uuid.UUID  `json:"sis_connection_id"`
+	TenantID        uuid.UUID  `json:"tenant_id"`
+	ProviderKind    string     `json:"provider_kind"`
+	ContractVersion *string    `json:"contract_version"`
+	Status          string     `json:"status"`
+	SchoolCount     int        `json:"school_count"`
+	LastSyncRun     *SyncRun   `json:"last_sync_run"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
 }

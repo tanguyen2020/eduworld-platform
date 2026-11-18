@@ -103,6 +103,13 @@ func newHTTPEnv(ctx context.Context, t *testing.T, kc *kcUsers) *httpEnv {
 		CreateCommonStudents: command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
 			Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: "http://localhost:8180/realms/eduworld"},
 		Org: query.Org{Model: read.OrgModel{Session: e.read}, Cursors: codec},
+		// F011
+		Sis:             query.Sis{Issues: read.SisIssueModel{Session: e.read}, Cursors: codec},
+		ResolveSisIssue: command.ResolveSisIssue{UoW: e.uow, Issues: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
+		CreateSisImport: command.CreateSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: &memStorage{objects: map[string][]byte{}}, Audit: e.deps.Audit},
+		SisImports:      query.SisImports{Model: read.SisImportModel{Session: e.read}},
+		SisAdmin:        query.SisAdmin{Model: read.SisAdminModel{Session: e.read}, Cursors: codec},
+		SisConnections:  command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit},
 	}
 	if err := identityhttp.Register(srv, h); err != nil {
 		t.Fatal(err)

@@ -121,3 +121,14 @@ type SisImportReadModel interface {
 	// RunErrors returns up to limit record errors of a run, by row.
 	RunErrors(ctx context.Context, runID uuid.UUID, limit int) ([]dto.SisRecordError, error)
 }
+
+// SisAdminReadModel reads connections, runs and run errors for platform staff (gateway nội bộ).
+type SisAdminReadModel interface {
+	Connections(ctx context.Context, providerKind, status string, after *page.Cursor, limit int) ([]dto.SisConnection, error)
+	// ConnectionTenant / RunTenant resolve the tenant of a resource (System Admin bypass) to scope the read.
+	ConnectionTenant(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	RunTenant(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	Runs(ctx context.Context, connectionID uuid.UUID, status string, after *page.Cursor, limit int) ([]dto.SyncRun, error)
+	Run(ctx context.Context, id uuid.UUID) (dto.SyncRun, error)
+	RunErrorPage(ctx context.Context, runID uuid.UUID, after *page.Cursor, limit int) ([]dto.SisRecordError, error)
+}
