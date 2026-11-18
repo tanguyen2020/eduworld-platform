@@ -61,3 +61,57 @@ func (m MembershipModel) MembershipOf(ctx context.Context, userID uuid.UUID) (ou
 	})
 	return out, err
 }
+
+// OrgMembershipModel implements read.OrgMembershipReader under tenancy.Bypass(platform_job).
+type OrgMembershipModel struct {
+	Session     *entx.ReadSession
+	LocalIssuer string
+}
+
+var _ read.OrgMembershipReader = OrgMembershipModel{}
+
+// TenantOrgs returns every live tenant with its Organization id.
+func (m OrgMembershipModel) TenantOrgs(ctx context.Context) (out []read.TenantOrg, err error) {
+	if ctx, err = tenancy.Bypass(ctx, tenancy.ReasonPlatformJob); err != nil {
+		return nil, err
+	}
+	err = m.Session.Read(ctx, func(ctx context.Context) error {
+		rows, err := ent.NewClient(ent.Driver(entx.Driver(ctx))).Tenant.Query().All(ctx)
+		if err != nil {
+			return err
+		}
+		for _, r := range rows {
+			out = append(out, read.TenantOrg{TenantID: r.ID, OrgID: r.KeycloakOrgID})
+		}
+		return nil
+	})
+	return out, err
+}
+
+// ExpectedMembers returns the Keycloak subjects (local issuer) of the users with a membership in the tenant.
+func (m OrgMembershipModel) ExpectedMembers(ctx context.Context, tenantID uuid.UUID) (out map[string]bool, err error) {
+	if ctx, err = tenancy.Bypass(ctx, tenancy.ReasonPlatformJob); err != nil {
+		return nil, err
+	}
+	out = map[string]bool{}
+	err = m.Session.Read(ctx, func(ctx context.Context) error {
+		tx, _ := entx.Tx(ctx)
+		rows, err := tx.QueryContext(ctx, `SELECT ei.subject
+			FROM identity.tenant_memberships_v m
+			JOIN identity.external_identities ei ON ei.user_id = m.user_id AND ei.issuer = $2 AND ei.status = 'active' AND ei.deleted_at IS NULL
+			WHERE m.tenant_id = $1`, tenantID, m.LocalIssuer)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var s string
+			if err := rows.Scan(&s); err != nil {
+				return err
+			}
+			out[s] = true
+		}
+		return rows.Err()
+	})
+	return out, err
+}

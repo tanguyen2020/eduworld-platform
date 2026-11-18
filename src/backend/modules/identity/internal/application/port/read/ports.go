@@ -41,3 +41,10 @@ type UserMembership struct {
 type MembershipReader interface {
 	MembershipOf(ctx context.Context, userID uuid.UUID) (UserMembership, error)
 }
+
+// OrgMembershipReader lists, per tenant, the Organization and the Keycloak subjects that should be members
+// (platform read for the reconciliation job, F010-AC-22).
+type OrgMembershipReader interface {
+	TenantOrgs(ctx context.Context) ([]TenantOrg, error)
+	ExpectedMembers(ctx context.Context, tenantID uuid.UUID) (map[string]bool, error)
+}

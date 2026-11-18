@@ -112,3 +112,51 @@ func TestMembershipSync(t *testing.T) {
 		t.Fatalf("final membership = %v", kc.orgsOf[kcID])
 	}
 }
+
+func (k *kcMembers) ListOrganizationMembers(_ context.Context, org string) ([]port.KCUser, error) {
+	var out []port.KCUser
+	for u, orgs := range k.orgsOf {
+		if orgs[org] {
+			out = append(out, port.KCUser{ID: u})
+		}
+	}
+	return out, nil
+}
+
+// F010-AC-22: the nightly job removes an Organization member without a membership in the tenant (added by
+// hand in Keycloak), keeps real members and audits the removal.
+func TestReconcileOrganizations(t *testing.T) {
+	ctx := context.Background()
+	e := setup(ctx, t)
+	issuer := "http://localhost:8180/realms/eduworld"
+	commonOrg := uuid.New()
+	if _, err := e.platform.ExecContext(ctx, `UPDATE platform.tenants SET keycloak_org_id = $1 WHERE tenant_id = $2 AND deleted_at IS NULL`, commonOrg, tenant.CommonTenantID); err != nil {
+		t.Fatal(err)
+	}
+	kc := &kcMembers{kcUsers: newKCUsers(), orgsOf: map[string]map[string]bool{}, attrs: map[string]map[string][]string{}}
+	create := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+		Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: issuer}
+	if _, err := create.Handle(authztest.Ctx(ctx, authztest.Platform("system_admin")), command.CreateCommonStudentsInput{TenantID: tenant.CommonTenantID,
+		Students: []command.CommonStudentInput{{Username: "hs.that", DisplayName: "Thật", GradeLevel: 2}}}); err != nil {
+		t.Fatal(err)
+	}
+	real := kc.users["hs.that"]
+	intruder := uuid.NewString()
+	kc.orgsOf[intruder] = map[string]bool{commonOrg.String(): true}
+
+	job := command.ReconcileOrganizations{Reader: read.OrgMembershipModel{Session: e.read, LocalIssuer: issuer}, KC: kc, UoW: e.uow, Audit: e.deps.Audit}
+	rep, err := job.Handle(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Removed != 1 || kc.orgsOf[intruder][commonOrg.String()] || !kc.orgsOf[real][commonOrg.String()] {
+		t.Fatalf("report = %+v, intruder member=%v, real member=%v", rep, kc.orgsOf[intruder][commonOrg.String()], kc.orgsOf[real][commonOrg.String()])
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
+		AND envelope->'payload'->>'action' IN ('org_member.removed', 'reconciliation_issue.raised')`); n != 2 {
+		t.Fatalf("audit events = %d, want 2", n)
+	}
+	if rep, err := job.Handle(ctx); err != nil || rep.Removed != 0 {
+		t.Fatalf("second run = %+v %v", rep, err)
+	}
+}
