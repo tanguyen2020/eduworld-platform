@@ -48,3 +48,34 @@ type OrgMembershipReader interface {
 	TenantOrgs(ctx context.Context) ([]TenantOrg, error)
 	ExpectedMembers(ctx context.Context, tenantID uuid.UUID) (map[string]bool, error)
 }
+
+// SchoolFilter selects schools of the scope (the scope decides the visible tenants).
+type SchoolFilter struct {
+	TenantID     *uuid.UUID // restrict to one tenant (System Admin path); nil = every tenant of the scope
+	Status       string
+	ProvinceCode string
+	Level        string
+	Q            string
+	After        *page.Cursor
+	Limit        int
+}
+
+// ClassFilter selects classes of one school.
+type ClassFilter struct {
+	SchoolID       uuid.UUID
+	AcademicYearID *uuid.UUID
+	Grade          int
+	After          *page.Cursor
+	Limit          int // 0 = no paging (listClasses)
+}
+
+// OrgReadModel reads the catalog and the organization of the scope (keyset pages return Limit+1 rows).
+type OrgReadModel interface {
+	Countries(ctx context.Context) ([]dto.Country, error)
+	Provinces(ctx context.Context, country, status string) ([]dto.Province, error)
+	Schools(ctx context.Context, f SchoolFilter) ([]dto.School, error)
+	School(ctx context.Context, id uuid.UUID) (dto.School, error)
+	Classes(ctx context.Context, f ClassFilter) ([]dto.Class, error)
+	UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, after *page.Cursor, limit int) ([]dto.UnassignedStudent, error)
+	StudentSummary(ctx context.Context, studentID uuid.UUID) (dto.StudentSummary, error)
+}
