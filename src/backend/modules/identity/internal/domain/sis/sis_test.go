@@ -59,3 +59,13 @@ func TestFieldHelpers(t *testing.T) {
 		t.Fatal("helpers")
 	}
 }
+
+func TestNationalIDHash(t *testing.T) {
+	k := []byte("k")
+	if NationalIDHash(k, " 0123 456 ") != NationalIDHash(k, "0123456") || len(NationalIDHash(k, "1")) != 64 {
+		t.Fatal("normalization")
+	}
+	if NationalIDHash(nil, "0123456") != "" || NationalIDHash(k, " ") != "" || NationalIDHash([]byte("x"), "1") == NationalIDHash(k, "1") {
+		t.Fatal("key")
+	}
+}

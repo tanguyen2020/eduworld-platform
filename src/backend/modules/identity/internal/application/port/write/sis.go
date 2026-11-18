@@ -165,3 +165,21 @@ type MissingTracker interface {
 	// PreviousRunStats returns the stats of the last finished apply run of the school before runID.
 	PreviousRunStats(ctx context.Context, connectionID, schoolID, runID uuid.UUID) (map[string]int, bool, error)
 }
+
+// TransferCandidate is a synced student of another SIS connection with the same national id hash.
+type TransferCandidate struct {
+	TenantID     uuid.UUID
+	SchoolID     uuid.UUID
+	ConnectionID uuid.UUID
+	ExternalID   string
+	UserID       *uuid.UUID
+}
+
+// TransferMatcher finds and moves SIS links between connections (F011-AC-16, ADR-0046 §6).
+type TransferMatcher interface {
+	// TransferCandidates searches every tenant (platform_job bypass): national id hash → candidate.
+	TransferCandidates(ctx context.Context, hashes []string, excludeConnection uuid.UUID) (map[string]TransferCandidate, error)
+	// SupersedeLink marks the active link of a source key superseded.
+	SupersedeLink(ctx context.Context, connectionID uuid.UUID, externalID string) error
+	LinkExisting(ctx context.Context, userID, tenantID, schoolID, connectionID uuid.UUID, externalID string) error
+}

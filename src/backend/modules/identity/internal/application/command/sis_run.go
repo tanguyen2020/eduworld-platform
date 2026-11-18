@@ -64,9 +64,12 @@ type SisRun struct {
 	Sync        write.SisSyncRepository
 	Enrollments write.EnrollmentRepository
 	Missing     write.MissingTracker
+	Transfers   write.TransferMatcher
+	Students    write.StudentRepository
 	Events      write.EventPublisher
 	Audit       write.Auditor
-	BatchSize   int // default 500 [Proposed]
+	BatchSize   int    // default 500 [Proposed]
+	IDHashKey   []byte // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
 }
 
 // ErrNoLoginUsername: a new student without login.username cannot get an account.
@@ -81,6 +84,9 @@ type runState struct {
 	students map[string]uuid.UUID // student external id → user id (this run)
 	seen     map[string]bool      // students present in the file
 	inactive map[string]bool      // students of the run whose record status is not active (no missing_class)
+	// F011-AC-16: national id hash → synced student of another connection; students moved in this run.
+	candidates  map[string]write.TransferCandidate
+	transferred map[string]bool
 }
 
 // authorize: School Admin with tenant.sis.import on the school, or platform staff managing connections.
@@ -132,7 +138,8 @@ func (h SisRun) Handle(ctx context.Context, in RunImportInput) (out RunImportRes
 	if ctx, err = h.authorize(ctx, in.SchoolID, tenantID); err != nil {
 		return out, err
 	}
-	st := &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{}}
+	st := &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},
+		candidates: map[string]write.TransferCandidate{}, transferred: map[string]bool{}}
 	out = RunImportResult{DryRun: in.DryRun, Diff: map[string]map[string]int{}, Errors: []write.RecordError{}}
 	school := in.SchoolID
 	st.run = &write.SyncRun{ID: ids.New(), TenantID: tenantID, ConnectionID: in.ConnectionID, SchoolID: &school, Mode: "csv_import",
@@ -288,6 +295,11 @@ func (h SisRun) apply(ctx context.Context, st *runState, files []SisFile, staged
 	}
 	for _, kind := range sis.ApplyOrder {
 		items := staged[kind]
+		if kind == sis.KindStudent {
+			if err := h.findTransfers(ctx, st, items); err != nil {
+				return err
+			}
+		}
 		for start := 0; start < len(items); start += size {
 			end := min(start+size, len(items))
 			if err := h.UoW.Do(ctx, func(ctx context.Context) error {
@@ -351,6 +363,55 @@ func (h SisRun) issue(ctx context.Context, st *runState, typ string, refs map[st
 	t := st.tenantID
 	return h.Events.Publish(ctx, write.Event{Type: "sis.reconciliation_issue_raised", SubjectType: "reconciliation_issue", SubjectID: id.String(),
 		TenantID: &t, Payload: map[string]any{"issue_id": id.String(), "kind": typ, "school_id": school.String(), "sis_connection_id": st.in.ConnectionID.String()}})
+}
+
+// findTransfers looks up, across tenants, synced students of other connections with the national id hash
+// of the new students of the run (platform_job bypass, read only).
+func (h SisRun) findTransfers(ctx context.Context, st *runState, items []write.StagingItem) error {
+	if len(h.IDHashKey) == 0 {
+		return nil
+	}
+	var hashes []string
+	for _, it := range items {
+		if it.Action == sis.ActionCreate {
+			if nid := sis.NationalIDHash(h.IDHashKey, sis.Str(it.Payload, "national_student_id")); nid != "" {
+				hashes = append(hashes, nid)
+			}
+		}
+	}
+	if len(hashes) == 0 {
+		return nil
+	}
+	bctx, err := tenancy.Bypass(ctx, tenancy.ReasonPlatformJob)
+	if err != nil {
+		return err
+	}
+	return h.UoW.Do(bctx, func(ctx context.Context) error {
+		var err error
+		st.candidates, err = h.Transfers.TransferCandidates(ctx, hashes, st.in.ConnectionID)
+		return err
+	})
+}
+
+// moveLink moves the SIS link of a student to the new source key in the same tenant (F011-AC-16): the old
+// link is superseded, the User and its learning/game data are kept.
+func (h SisRun) moveLink(ctx context.Context, st *runState, cand write.TransferCandidate, ext string) error {
+	if err := h.Transfers.SupersedeLink(ctx, cand.ConnectionID, cand.ExternalID); err != nil {
+		return err
+	}
+	if err := h.Transfers.LinkExisting(ctx, *cand.UserID, st.tenantID, st.in.SchoolID, st.in.ConnectionID, ext); err != nil {
+		return err
+	}
+	st.transferred[ext] = true
+	t, uid := st.tenantID, cand.UserID.String()
+	if err := h.Events.Publish(ctx, write.Event{Type: "student.sis_link_superseded", SubjectType: "user", SubjectID: uid, TenantID: &t,
+		Payload: map[string]any{"user_id": uid, "old_sis_connection_id": cand.ConnectionID.String(), "old_student_external_id": cand.ExternalID,
+			"new_sis_connection_id": st.in.ConnectionID.String(), "new_student_external_id": ext, "cross_tenant": false}}); err != nil {
+		return err
+	}
+	return h.Events.Publish(ctx, write.Event{Type: "student.sis_link_created", SubjectType: "user", SubjectID: uid, TenantID: &t,
+		Payload: map[string]any{"user_id": uid, "tenant_id": t.String(), "school_id": st.in.SchoolID.String(),
+			"sis_connection_id": st.in.ConnectionID.String(), "student_external_id": ext, "via": "transfer"}})
 }
 
 // markMissing applies F011-AC-24 after a full students file: students of the school missing from the file
@@ -537,9 +598,23 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 		return err
 	}
 	grade, code, name, status := sis.Int(d, "grade_level"), sis.Str(d, "student_code"), sis.Str(d, "full_name"), sis.Str(d, "status")
+	nid := sis.NationalIDHash(h.IDHashKey, sis.Str(d, "national_student_id"))
 	var userID uuid.UUID
 	action := "update"
-	if existing == nil || existing.UserID == nil {
+	cand, transfer := st.candidates[nid]
+	transfer = transfer && nid != "" && cand.UserID != nil && (existing == nil || existing.UserID == nil)
+	if transfer {
+		if cand.TenantID != st.tenantID { // another tenant: confirmation by System Admin (ADR-0046 §6)
+			return conflict(sis.IssueTransferConfirmation, map[string]any{"student_external_id": it.ExternalID, "match": "national_student_id"})
+		}
+		userID = *cand.UserID
+		if err := h.moveLink(ctx, st, cand, it.ExternalID); err != nil {
+			return err
+		}
+		if err := h.Sync.UpdateStudent(ctx, userID, grade, code, name); err != nil {
+			return err
+		}
+	} else if existing == nil || existing.UserID == nil {
 		raw := sis.LoginUsername(d)
 		if raw == "" {
 			return skip(problem.ValidationFailed, codeLoginRequired)
@@ -579,8 +654,12 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 			return err
 		}
 	}
+	var nidPtr *string
+	if nid != "" {
+		nidPtr = &nid
+	}
 	if err := h.Sync.SaveSyncedStudent(ctx, write.SyncedStudent{ConnectionID: st.in.ConnectionID, ExternalID: it.ExternalID, SchoolID: st.in.SchoolID,
-		StudentCode: code, RecordStatus: status, Hash: it.Hash}); err != nil {
+		StudentCode: code, RecordStatus: status, Hash: it.Hash, NationalIDHash: nidPtr}); err != nil {
 		return err
 	}
 	t := st.tenantID
@@ -712,7 +791,7 @@ func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.Stag
 		return err
 	case cur.Placement == target:
 		// already enrolled in this class
-	case cur.TenantID != st.tenantID || cur.SchoolID != st.in.SchoolID:
+	case cur.TenantID != st.tenantID || (cur.SchoolID != st.in.SchoolID && !st.transferred[studentExt]):
 		return conflict(sis.IssueMultiSchoolEnrollment, map[string]any{"student_external_id": studentExt})
 	default:
 		tr, err := enrollment.TransferTo(cur, ids.New(), target, start, enrollment.SourceSIS)
@@ -721,6 +800,16 @@ func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.Stag
 		}
 		if err := h.Enrollments.Close(ctx, tr.Closed); err != nil {
 			return err
+		}
+		if tr.Kind != enrollment.KindClass { // school transfer after a SIS link move (F011-AC-16)
+			if err := h.Students.Move(ctx, userID, target); err != nil {
+				return err
+			}
+			if err := h.Events.Publish(ctx, write.Event{Type: "student.transferred", SubjectType: "student", SubjectID: userID.String(), TenantID: &t,
+				Payload: map[string]string{"student_id": userID.String(), "from_tenant_id": t.String(), "to_tenant_id": t.String(),
+					"from_school_id": tr.Closed.SchoolID.String(), "to_school_id": tr.Opened.SchoolID.String()}}); err != nil {
+				return err
+			}
 		}
 		if err := h.Enrollments.Open(ctx, tr.Opened); err != nil {
 			return err

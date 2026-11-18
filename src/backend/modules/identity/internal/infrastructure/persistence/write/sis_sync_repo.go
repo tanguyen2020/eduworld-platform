@@ -170,7 +170,7 @@ func (SisSyncRepo) SaveSyncedStudent(ctx context.Context, s write.SyncedStudent)
 	c := client(ctx)
 	n, err := c.SyncedStudent.Update().Where(entsynced.SisConnectionID(s.ConnectionID), entsynced.StudentExternalID(s.ExternalID)).
 		SetSchoolID(s.SchoolID).SetStudentCode(s.StudentCode).SetRecordStatus(s.RecordStatus).SetLastHash(s.Hash).
-		SetLastSyncedAt(time.Now().UTC()).SetMissingRuns(0).Save(ctx)
+		SetLastSyncedAt(time.Now().UTC()).SetMissingRuns(0).SetNillableNationalStudentIDHash(s.NationalIDHash).Save(ctx)
 	if err != nil || n > 0 {
 		return err
 	}
@@ -487,4 +487,42 @@ func (SisSyncRepo) PreviousRunStats(ctx context.Context, conn, school, runID uui
 		return nil, false, err
 	}
 	return r.Stats, true, nil
+}
+
+var _ write.TransferMatcher = SisSyncRepo{}
+
+// TransferCandidates returns synced students of other connections by national id hash with their active link.
+func (SisSyncRepo) TransferCandidates(ctx context.Context, hashes []string, exclude uuid.UUID) (map[string]write.TransferCandidate, error) {
+	out := map[string]write.TransferCandidate{}
+	if len(hashes) == 0 {
+		return out, nil
+	}
+	c := client(ctx)
+	rows, err := c.SyncedStudent.Query().Where(entsynced.NationalStudentIDHashIn(hashes...), entsynced.SisConnectionIDNEQ(exclude)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range rows {
+		cand := write.TransferCandidate{TenantID: s.TenantID, SchoolID: s.SchoolID, ConnectionID: s.SisConnectionID, ExternalID: s.StudentExternalID}
+		l, err := c.SisIdentityLink.Query().Where(entlink.SisConnectionID(s.SisConnectionID), entlink.StudentExternalID(s.StudentExternalID),
+			entlink.Status("active")).Only(ctx)
+		switch {
+		case err == nil:
+			id := l.UserID
+			cand.UserID = &id
+		case !ent.IsNotFound(err):
+			return nil, err
+		}
+		if cand.UserID != nil || out[*s.NationalStudentIDHash].UserID == nil {
+			out[*s.NationalStudentIDHash] = cand
+		}
+	}
+	return out, nil
+}
+
+// SupersedeLink marks the active link of a source key superseded.
+func (SisSyncRepo) SupersedeLink(ctx context.Context, conn uuid.UUID, ext string) error {
+	_, err := client(ctx).SisIdentityLink.Update().Where(entlink.SisConnectionID(conn), entlink.StudentExternalID(ext), entlink.Status("active")).
+		SetStatus("superseded").SetSupersededAt(time.Now().UTC()).AddVersion(1).Save(ctx)
+	return err
 }

@@ -265,3 +265,95 @@ func TestSisMissingInSource(t *testing.T) {
 		t.Fatalf("deactivated = %d", n)
 	}
 }
+
+// F011-AC-16: a student moving between two SIS connections of the same unit tenant keeps its User (link
+// moved, old link superseded, enrollment transferred); a match in another tenant needs a confirmation.
+func TestSisTransferBetweenConnections(t *testing.T) {
+	ctx := context.Background()
+	e := setup(ctx, t)
+	a := seedTenant(ctx, t, e.platform, "pgd-trf-a")
+	b := seedTenant(ctx, t, e.platform, "pgd-trf-b")
+	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
+	conns := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
+	connect := func(tenant, school string) uuid.UUID {
+		t.Helper()
+		c, err := conns.Create(sa, uuid.MustParse(tenant), "csv_import", "pilot")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := conns.SetSchools(sa, c.ID, []uuid.UUID{uuid.MustParse(school)}, "pilot"); err != nil {
+			t.Fatal(err)
+		}
+		return c.ID
+	}
+	c1, c2, c3 := connect(a.tenant, a.school), connect(a.tenant, a.otherSchool), connect(b.tenant, b.school)
+	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Events: e.deps.Events, Audit: e.deps.Audit, IDHashKey: []byte("test-only-key")}
+	run := func(tenant, school string, conn uuid.UUID, files map[string]string) command.RunImportResult {
+		t.Helper()
+		ctx := authztest.Ctx(ctx, authztest.Staff(uuid.MustParse(tenant), "school_admin"))
+		res, err := h.Handle(ctx, command.RunImportInput{ConnectionID: conn, SchoolID: uuid.MustParse(school), Files: sisFiles(t, files)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	student := func(ext, school, username string) string {
+		return "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username,national_student_id\n" +
+			ext + "," + school + ",001,Nguyen An,3,active," + username + ",0123 4567 8901\n"
+	}
+	files := func(ext, school, class, username string) map[string]string {
+		return map[string]string{
+			"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\n" + class + "," + school + ",2026-2027,3," + class + "\n",
+			"students.csv":    student(ext, school, username),
+			"enrollments.csv": "student_external_id,class_external_id,start_date,status\n" + ext + "," + class + ",2026-09-05,active\n",
+		}
+	}
+	if r := run(a.tenant, a.school, c1, files("HS-1", "TH-A", "C-A3", "hs.t.an")); r.Issues != 0 {
+		t.Fatalf("first school = %+v", r)
+	}
+	var an uuid.UUID
+	if err := e.platform.QueryRowContext(ctx, `SELECT user_id FROM identity.users WHERE username = 'hs.t.an'`).Scan(&an); err != nil {
+		t.Fatal(err)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.synced_students WHERE national_student_id_hash IS NOT NULL
+		AND national_student_id_hash NOT LIKE '%0123%' AND tenant_id = $1`, a.tenant); n != 1 {
+		t.Fatal("the national id must be stored as a keyed hash only")
+	}
+
+	// Same unit tenant, other SIS: link moved, user kept, enrollment transferred to the new school.
+	if r := run(a.tenant, a.otherSchool, c2, files("HS-77", "TH-B", "C-B3", "hs.t.an.new")); r.Issues != 0 || r.Status != "succeeded" {
+		t.Fatalf("second school = %+v", r)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.t.an.new'`); n != 0 {
+		t.Fatal("a second account was created")
+	}
+	for q, want := range map[string]int{
+		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'superseded' AND student_external_id = 'HS-1' AND superseded_at IS NOT NULL`: 1,
+		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'active' AND student_external_id = 'HS-77'`:                                  1,
+		`SELECT count(*) FROM org.students WHERE student_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                            1,
+		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND school_id = '` + a.otherSchool + `'`:                                    1,
+		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'transferred'`:                                                                      1,
+	} {
+		if n := count(ctx, t, e.platform, q, an); n != want {
+			t.Fatalf("%s = %d", q, n)
+		}
+	}
+	for typ, want := range map[string]int{"student.sis_link_superseded": 1, "student.transferred": 1} {
+		if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = $1`, typ); n != want {
+			t.Fatalf("%s = %d", typ, n)
+		}
+	}
+
+	// Another tenant: no automatic move, transfer_confirmation, no account.
+	if r := run(b.tenant, b.school, c3, files("HS-5", "TH-C", "C-C3", "hs.t.an.other")); r.Issues < 1 {
+		t.Fatalf("other tenant = %+v", r)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'transfer_confirmation' AND tenant_id = $1`, b.tenant); n != 1 {
+		t.Fatalf("transfer_confirmation = %d", n)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.t.an.other'`); n != 0 {
+		t.Fatal("an account was created for a cross-tenant match")
+	}
+}

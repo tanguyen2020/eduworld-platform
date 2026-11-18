@@ -4,6 +4,7 @@
 package sis
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -172,4 +173,17 @@ func DeactivationReviewNeeded(missing, total int, previousRunAbove bool, ratio f
 	}
 	above = float64(missing)/float64(total) > ratio
 	return above, above && previousRunAbove
+}
+
+// NationalIDHash is the keyed hash of a national student id (EduWorld never stores the id itself,
+// SIS_INTEGRATION §2): HMAC-SHA256 over the id without spaces, upper-cased. A keyless hash of a short
+// numeric id could be reversed by enumeration, so no key means no hash (transfer matching off).
+func NationalIDHash(key []byte, id string) string {
+	id = strings.ToUpper(strings.Join(strings.Fields(id), ""))
+	if len(key) == 0 || id == "" {
+		return ""
+	}
+	m := hmac.New(sha256.New, key)
+	m.Write([]byte(id))
+	return hex.EncodeToString(m.Sum(nil))
 }
