@@ -23,7 +23,7 @@ func TestScan(t *testing.T) {
 			t.Errorf("missing %q in:\n%s", want, joined)
 		}
 	}
-	for _, unwanted := range []string{"content.items has tenant_id", "infra.outbox_like", "repo.go:3:", "repo.go:6:", "repo.go:9:", "purge.go", "0001.sql:6:"} {
+	for _, unwanted := range []string{"content.items has tenant_id", "platform.registry", "infra.outbox_like", "repo.go:3:", "repo.go:6:", "repo.go:9:", "purge.go", "0001.sql:6:"} {
 		if strings.Contains(joined, unwanted) {
 			t.Errorf("unexpected %q in:\n%s", unwanted, joined)
 		}

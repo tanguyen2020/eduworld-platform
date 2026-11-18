@@ -24,7 +24,7 @@ var (
 	ErrTenantOutOfScope = errors.New("entx: tenant_id outside the scope")
 )
 
-type hybrid struct{ resourceType string }
+type hybrid struct{ resourceType, idColumn string }
 
 type wherer interface{ WhereP(...func(*sql.Selector)) }
 
@@ -68,7 +68,7 @@ func predicates(ctx context.Context, k Kind, h *hybrid) ([]func(*sql.Selector), 
 		a := sql.Table("tenant_resource_assignments").Schema("infra").As("ra")
 		assigned := sql.Select("1").From(a).Where(sql.And(
 			sql.EQ(a.C("resource_type"), h.resourceType),
-			sql.ColumnsEQ(a.C("resource_id"), s.C("id")),
+			sql.ColumnsEQ(a.C("resource_id"), s.C(h.idColumn)),
 			sql.In(a.C("tenant_id"), tenants...),
 			sql.IsNull(a.C("deleted_at")),
 		))

@@ -33,7 +33,9 @@ var (
 	deleteStmt = regexp.MustCompile(`(?im)^\s*(DELETE\s+FROM|TRUNCATE)\b`)
 	tableUseRe = regexp.MustCompile(`(?i)\b(FROM|UPDATE|JOIN)\s+([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)`)
 	tenantCol  = regexp.MustCompile(`(^|[\s,(])tenant_id\s+uuid`)
-	commentRe  = regexp.MustCompile(`--[^\n]*`)
+	// The tenant registry (platform.tenants) has tenant_id as its primary key: a G table, not tenant-scoped.
+	tenantPK  = regexp.MustCompile(`(?i)PRIMARY KEY\s*\(\s*tenant_id\s*\)|tenant_id\s+uuid\s+(NOT NULL\s+)?PRIMARY KEY`)
+	commentRe = regexp.MustCompile(`--[^\n]*`)
 )
 
 // Schemas whose explicit SQL is exempt from rule 4 (no business rows): infra tables, Atlas, catalog.
@@ -109,7 +111,7 @@ func scanMigrations(files []string) []string {
 		src := commentRe.ReplaceAllStringFunc(raw, func(s string) string { return strings.Repeat(" ", len(s)) })
 		for _, m := range createRe.FindAllStringSubmatchIndex(src, -1) {
 			table, body := src[m[2]:m[3]], src[m[4]:m[5]]
-			if tenantCol.MatchString(body) && !strings.HasPrefix(table, "infra.") {
+			if tenantCol.MatchString(body) && !tenantPK.MatchString(body) && !strings.HasPrefix(table, "infra.") {
 				tables[table] = fmt.Sprintf("%s:%d", path, line(src, m[0]))
 			}
 		}

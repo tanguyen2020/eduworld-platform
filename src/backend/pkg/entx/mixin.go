@@ -34,7 +34,36 @@ func (k Kind) softDelete() bool { return k == KindT || k == KindTStar || k == Ki
 // Kinded is implemented by every entx mixin (mixin coverage test, ADR-0089 §2).
 type Kinded interface{ TableKind() Kind }
 
-func idField() ent.Field { return field.UUID("id", uuid.UUID{}).Default(ids.New).Immutable() }
+// PK names the primary-key column of an entity when it is not "id" (DATABASE_DESIGN names keys per
+// table: school_id, tenant_id, …). StringLen > 0 makes it a varchar(StringLen) key without default
+// (catalog.countries.country_code); otherwise it is a UUIDv7 defaulting to ids.New.
+type PK struct {
+	Column    string
+	StringLen int
+}
+
+// column returns the storage column of the key ("id" by default).
+func (p PK) column() string {
+	if p.Column == "" {
+		return "id"
+	}
+	return p.Column
+}
+
+func idField(p PK) ent.Field {
+	if p.StringLen > 0 {
+		f := field.String("id").MaxLen(p.StringLen).NotEmpty().Immutable()
+		if p.Column != "" {
+			f = f.StorageKey(p.Column)
+		}
+		return f
+	}
+	f := field.UUID("id", uuid.UUID{}).Default(ids.New).Immutable()
+	if p.Column != "" {
+		f = f.StorageKey(p.Column)
+	}
+	return f
+}
 
 func auditCreate() []ent.Field {
 	return []ent.Field{
@@ -64,8 +93,8 @@ func tenantField(nullable bool) ent.Field {
 	return f
 }
 
-func fields(k Kind) []ent.Field {
-	out := []ent.Field{idField()}
+func fields(k Kind, p PK) []ent.Field {
+	out := []ent.Field{idField(p)}
 	if k.tenant() {
 		out = append(out, tenantField(k.nullable()))
 	}
@@ -77,38 +106,50 @@ func fields(k Kind) []ent.Field {
 }
 
 // Base is the mixin of T tables (tenant-scoped, soft-delete, optimistic version).
-type Base struct{ mixin.Schema }
+type Base struct {
+	mixin.Schema
+	PK PK
+}
 
 func (Base) TableKind() Kind                 { return KindT }
-func (Base) Fields() []ent.Field             { return fields(KindT) }
+func (m Base) Fields() []ent.Field           { return fields(KindT, m.PK) }
 func (Base) Interceptors() []ent.Interceptor { return []ent.Interceptor{filter(KindT, nil)} }
 func (Base) Hooks() []ent.Hook               { return []ent.Hook{mutationHook(KindT, nil)} }
 
 // TenantAppendOnly is the mixin of TA tables (tenant-scoped, append-only).
-type TenantAppendOnly struct{ mixin.Schema }
+type TenantAppendOnly struct {
+	mixin.Schema
+	PK PK
+}
 
-func (TenantAppendOnly) TableKind() Kind     { return KindTA }
-func (TenantAppendOnly) Fields() []ent.Field { return fields(KindTA) }
+func (TenantAppendOnly) TableKind() Kind       { return KindTA }
+func (m TenantAppendOnly) Fields() []ent.Field { return fields(KindTA, m.PK) }
 func (TenantAppendOnly) Interceptors() []ent.Interceptor {
 	return []ent.Interceptor{filter(KindTA, nil)}
 }
 func (TenantAppendOnly) Hooks() []ent.Hook { return []ent.Hook{mutationHook(KindTA, nil)} }
 
 // TenantOptional is the mixin of T* tables: tenant_id nullable; NULL rows only under PlatformScope.
-type TenantOptional struct{ mixin.Schema }
+type TenantOptional struct {
+	mixin.Schema
+	PK PK
+}
 
-func (TenantOptional) TableKind() Kind     { return KindTStar }
-func (TenantOptional) Fields() []ent.Field { return fields(KindTStar) }
+func (TenantOptional) TableKind() Kind       { return KindTStar }
+func (m TenantOptional) Fields() []ent.Field { return fields(KindTStar, m.PK) }
 func (TenantOptional) Interceptors() []ent.Interceptor {
 	return []ent.Interceptor{filter(KindTStar, nil)}
 }
 func (TenantOptional) Hooks() []ent.Hook { return []ent.Hook{mutationHook(KindTStar, nil)} }
 
 // TenantOptionalAppendOnly is the mixin of TA* tables.
-type TenantOptionalAppendOnly struct{ mixin.Schema }
+type TenantOptionalAppendOnly struct {
+	mixin.Schema
+	PK PK
+}
 
-func (TenantOptionalAppendOnly) TableKind() Kind     { return KindTAStar }
-func (TenantOptionalAppendOnly) Fields() []ent.Field { return fields(KindTAStar) }
+func (TenantOptionalAppendOnly) TableKind() Kind       { return KindTAStar }
+func (m TenantOptionalAppendOnly) Fields() []ent.Field { return fields(KindTAStar, m.PK) }
 func (TenantOptionalAppendOnly) Interceptors() []ent.Interceptor {
 	return []ent.Interceptor{filter(KindTAStar, nil)}
 }
@@ -120,32 +161,39 @@ func (TenantOptionalAppendOnly) Hooks() []ent.Hook { return []ent.Hook{mutationH
 type HybridContent struct {
 	mixin.Schema
 	ResourceType string
+	PK           PK
 }
 
 func (HybridContent) TableKind() Kind { return KindH }
 
 // Fields adds owner_scope (platform/tenant) to the T* fields.
-func (HybridContent) Fields() []ent.Field {
-	return append(fields(KindH), field.String("owner_scope").MaxLen(64).Default("tenant"))
+func (h HybridContent) Fields() []ent.Field {
+	return append(fields(KindH, h.PK), field.String("owner_scope").MaxLen(64).Default("tenant"))
 }
 func (h HybridContent) Interceptors() []ent.Interceptor {
-	return []ent.Interceptor{filter(KindH, &hybrid{resourceType: h.ResourceType})}
+	return []ent.Interceptor{filter(KindH, &hybrid{resourceType: h.ResourceType, idColumn: h.PK.column()})}
 }
 func (h HybridContent) Hooks() []ent.Hook {
-	return []ent.Hook{mutationHook(KindH, &hybrid{resourceType: h.ResourceType})}
+	return []ent.Hook{mutationHook(KindH, &hybrid{resourceType: h.ResourceType, idColumn: h.PK.column()})}
 }
 
 // GlobalBase is the mixin of G tables (no tenant, soft-delete); no scope needed.
-type GlobalBase struct{ mixin.Schema }
+type GlobalBase struct {
+	mixin.Schema
+	PK PK
+}
 
 func (GlobalBase) TableKind() Kind                 { return KindG }
-func (GlobalBase) Fields() []ent.Field             { return fields(KindG) }
+func (m GlobalBase) Fields() []ent.Field           { return fields(KindG, m.PK) }
 func (GlobalBase) Interceptors() []ent.Interceptor { return []ent.Interceptor{filter(KindG, nil)} }
 func (GlobalBase) Hooks() []ent.Hook               { return []ent.Hook{mutationHook(KindG, nil)} }
 
 // AppendOnly is the mixin of GA tables (no tenant, no soft-delete): no filter; delete is forbidden.
-type AppendOnly struct{ mixin.Schema }
+type AppendOnly struct {
+	mixin.Schema
+	PK PK
+}
 
-func (AppendOnly) TableKind() Kind     { return KindGA }
-func (AppendOnly) Fields() []ent.Field { return fields(KindGA) }
-func (AppendOnly) Hooks() []ent.Hook   { return []ent.Hook{mutationHook(KindGA, nil)} }
+func (AppendOnly) TableKind() Kind       { return KindGA }
+func (m AppendOnly) Fields() []ent.Field { return fields(KindGA, m.PK) }
+func (AppendOnly) Hooks() []ent.Hook     { return []ent.Hook{mutationHook(KindGA, nil)} }
