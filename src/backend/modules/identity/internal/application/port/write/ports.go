@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/catalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -70,4 +71,23 @@ type CatalogRepository interface {
 	ProvinceByCode(ctx context.Context, code string) (catalog.Province, error)
 	// Successor returns the successor of a former province, nil when none.
 	Successor(ctx context.Context, provinceID uuid.UUID) (*catalog.Province, error)
+}
+
+// EnrollmentRepository persists enrollments (org.enrollments, T): history kept, at most one active.
+type EnrollmentRepository interface {
+	// LockActive returns the active enrollment of the student locked FOR UPDATE (404 when none), so
+	// concurrent transfers of one student serialize (F010-AC-11).
+	LockActive(ctx context.Context, studentID uuid.UUID) (*enrollment.Enrollment, error)
+	// Close saves the closed enrollment (status, end_date) where version matches.
+	Close(ctx context.Context, e *enrollment.Enrollment) error
+	// Open inserts an active enrollment; a second active one violates enrollments_one_active_uq → 409.
+	Open(ctx context.Context, e *enrollment.Enrollment) error
+	// Placement returns the tenant and school of a live class (404 when unknown in the scope).
+	Placement(ctx context.Context, classID uuid.UUID) (enrollment.Placement, error)
+}
+
+// StudentRepository moves students between schools/tenants (org.students and identity.users).
+type StudentRepository interface {
+	// Move sets the school (and tenant) of the student and the user's primary tenant/school; user_id is kept.
+	Move(ctx context.Context, studentID uuid.UUID, to enrollment.Placement) error
 }
