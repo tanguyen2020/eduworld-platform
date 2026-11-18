@@ -155,3 +155,13 @@ type SisIssueRepository interface {
 	// the next import updates it).
 	LinkExisting(ctx context.Context, userID, tenantID, schoolID, connectionID uuid.UUID, externalID string) error
 }
+
+// MissingTracker records students missing from full imports (F011-AC-24).
+type MissingTracker interface {
+	// MarkMissing increments missing_runs of a synced student and returns the new value.
+	MarkMissing(ctx context.Context, connectionID uuid.UUID, externalID string) (int, error)
+	// ResetMissing sets missing_runs to 0 (the student is back in the source).
+	ResetMissing(ctx context.Context, connectionID uuid.UUID, externalID string) error
+	// PreviousRunStats returns the stats of the last finished apply run of the school before runID.
+	PreviousRunStats(ctx context.Context, connectionID, schoolID, runID uuid.UUID) (map[string]int, bool, error)
+}

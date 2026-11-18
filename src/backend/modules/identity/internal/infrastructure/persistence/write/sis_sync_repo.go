@@ -454,3 +454,37 @@ func (r SisSyncRepo) LinkExisting(ctx context.Context, userID, tenantID, schoolI
 	}
 	return r.SaveSyncedStudent(ctx, write.SyncedStudent{ConnectionID: conn, ExternalID: ext, SchoolID: schoolID, RecordStatus: "active"})
 }
+
+var _ write.MissingTracker = SisSyncRepo{}
+
+// MarkMissing increments missing_runs.
+func (SisSyncRepo) MarkMissing(ctx context.Context, conn uuid.UUID, ext string) (int, error) {
+	c := client(ctx)
+	if _, err := c.SyncedStudent.Update().Where(entsynced.SisConnectionID(conn), entsynced.StudentExternalID(ext)).AddMissingRuns(1).Save(ctx); err != nil {
+		return 0, err
+	}
+	s, err := c.SyncedStudent.Query().Where(entsynced.SisConnectionID(conn), entsynced.StudentExternalID(ext)).Only(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return int(s.MissingRuns), nil
+}
+
+// ResetMissing clears missing_runs.
+func (SisSyncRepo) ResetMissing(ctx context.Context, conn uuid.UUID, ext string) error {
+	_, err := client(ctx).SyncedStudent.Update().Where(entsynced.SisConnectionID(conn), entsynced.StudentExternalID(ext)).SetMissingRuns(0).Save(ctx)
+	return err
+}
+
+// PreviousRunStats returns the stats of the last finished, applied run of the school.
+func (SisSyncRepo) PreviousRunStats(ctx context.Context, conn, school, runID uuid.UUID) (map[string]int, bool, error) {
+	r, err := client(ctx).SyncRun.Query().Where(entrun.SisConnectionID(conn), entrun.SchoolID(school), entrun.DryRun(false),
+		entrun.IDNEQ(runID), entrun.FinishedAtNotNil()).Order(ent.Desc(entrun.FieldID)).First(ctx)
+	if ent.IsNotFound(err) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return r.Stats, true, nil
+}

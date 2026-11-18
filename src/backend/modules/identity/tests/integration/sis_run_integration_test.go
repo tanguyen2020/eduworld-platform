@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -79,7 +80,7 @@ func TestSisImportRun(t *testing.T) {
 	}
 	enrolled(ctx, t, e.platform, a, "hs.taken") // owner of the username of HS-4
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2}
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	users := func() int {
 		return count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username LIKE 'hs.sis.%'`)
@@ -191,4 +192,76 @@ func TestSisImportRun(t *testing.T) {
 		_, err := h.Handle(authztest.Ctx(ctx, authztest.Staff(ta, "academic_manager")), command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: files})
 		return err
 	}())
+}
+
+// F011-AC-24: students missing from full imports are marked missing_in_source, never deactivated; a
+// student missing twice in a row gets a review; above 5% in two consecutive runs one school review.
+func TestSisMissingInSource(t *testing.T) {
+	ctx := context.Background()
+	e := setup(ctx, t)
+	a := seedTenant(ctx, t, e.platform, "pgd-miss")
+	ta, school := uuid.MustParse(a.tenant), uuid.MustParse(a.school)
+	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
+	conns := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
+	conn, err := conns.Create(sa, ta, "csv_import", "pilot")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := conns.SetSchools(sa, conn.ID, []uuid.UUID{school}, "pilot"); err != nil {
+		t.Fatal(err)
+	}
+	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
+	students := func(n int) string {
+		var b strings.Builder
+		b.WriteString("student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n")
+		for i := 1; i <= n; i++ {
+			id := fmt.Sprintf("%02d", i)
+			b.WriteString("HS-" + id + ",TH-A," + id + ",Hoc Sinh " + id + ",3,active,hs.m." + id + "\n")
+		}
+		return b.String()
+	}
+	importN := func(n int) command.RunImportResult {
+		t.Helper()
+		res, err := h.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: sisFiles(t, map[string]string{"students.csv": students(n)})})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	reviews := func() int {
+		return count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'deactivation_review' AND tenant_id = $1`, a.tenant)
+	}
+	missingRuns := func(ext string) int {
+		return count(ctx, t, e.platform, `SELECT missing_runs FROM sis.synced_students WHERE student_external_id = $1 AND tenant_id = $2`, ext, a.tenant)
+	}
+
+	importN(21)
+	if r := importN(20); r.Issues != 0 || missingRuns("HS-21") != 1 { // 1/21 < 5%: mark only
+		t.Fatalf("first miss = %+v runs=%d", r, missingRuns("HS-21"))
+	}
+	if r := importN(20); r.Issues != 1 || reviews() != 1 || missingRuns("HS-21") != 2 {
+		t.Fatalf("second miss = %+v reviews=%d", r, reviews())
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.m.21' AND status = 'deactivated'`); n != 0 {
+		t.Fatal("a missing student was deactivated")
+	}
+	importN(21) // back in the source, unchanged
+	if missingRuns("HS-21") != 0 {
+		t.Fatalf("missing_runs after return = %d", missingRuns("HS-21"))
+	}
+	if r := importN(18); r.Issues != 0 { // 3/21 > 5%, first run above: mark only
+		t.Fatalf("first run above = %+v", r)
+	}
+	if r := importN(18); r.Issues != 1 || reviews() != 2 {
+		t.Fatalf("second run above = %+v reviews=%d", r, reviews())
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'deactivation_review'
+		AND entity_refs->>'scope' = 'school' AND entity_refs->>'missing_count' = '3' AND tenant_id = $1`, a.tenant); n != 1 {
+		t.Fatalf("school review = %d", n)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username LIKE 'hs.m.%' AND status = 'deactivated'`); n != 0 {
+		t.Fatalf("deactivated = %d", n)
+	}
 }

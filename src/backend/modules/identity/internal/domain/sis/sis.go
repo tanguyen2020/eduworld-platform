@@ -159,6 +159,10 @@ func LoginUsername(d map[string]any) string {
 	return ""
 }
 
+// MissingReviewRatio is the share of missing records above which deactivation needs a review
+// (sis_missing_review_ratio, CONFIG_DEFAULTS; SIS_INTEGRATION §5) [Proposed].
+const MissingReviewRatio = 0.05
+
 // DeactivationReviewNeeded applies the missing_in_source rule (SIS_INTEGRATION §5, F011-AC-24): records
 // missing from a full import are only marked; after two consecutive runs above the ratio a review issue
 // is raised instead of deactivating.

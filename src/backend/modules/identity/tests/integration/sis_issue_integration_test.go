@@ -37,7 +37,7 @@ func TestSisIssues(t *testing.T) {
 	}
 	dup := enrolled(ctx, t, e.platform, a, "hs.dup") // the same child, created by hand before the SIS import
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	files := map[string]string{
 		"classes.csv": "class_external_id,school_external_id,academic_year,grade_level,name\nC-3B,TH-A,2026-2027,3,3B\n",

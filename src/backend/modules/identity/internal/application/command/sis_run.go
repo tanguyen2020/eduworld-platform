@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -62,6 +63,7 @@ type SisRun struct {
 	Connections write.SisConnectionRepository
 	Sync        write.SisSyncRepository
 	Enrollments write.EnrollmentRepository
+	Missing     write.MissingTracker
 	Events      write.EventPublisher
 	Audit       write.Auditor
 	BatchSize   int // default 500 [Proposed]
@@ -351,6 +353,66 @@ func (h SisRun) issue(ctx context.Context, st *runState, typ string, refs map[st
 		TenantID: &t, Payload: map[string]any{"issue_id": id.String(), "kind": typ, "school_id": school.String(), "sis_connection_id": st.in.ConnectionID.String()}})
 }
 
+// markMissing applies F011-AC-24 after a full students file: students of the school missing from the file
+// are marked missing_in_source (missing_runs+1), never deactivated; when the missing share is above
+// MissingReviewRatio in two consecutive runs one deactivation_review issue is raised, otherwise a student
+// missing twice in a row gets its own review issue.
+func (h SisRun) markMissing(ctx context.Context, st *runState) error {
+	synced, err := h.Sync.StudentsOfSchool(ctx, st.in.ConnectionID, st.in.SchoolID)
+	if err != nil {
+		return err
+	}
+	type miss struct {
+		ext  string
+		runs int
+	}
+	var missing []miss
+	total := 0
+	for _, s := range synced {
+		if s.RecordStatus != "active" {
+			continue
+		}
+		total++
+		if st.seen[s.ExternalID] {
+			if s.MissingRuns > 0 { // back in the source (an unchanged record is not saved by the apply)
+				if err := h.Missing.ResetMissing(ctx, st.in.ConnectionID, s.ExternalID); err != nil {
+					return err
+				}
+			}
+			continue
+		}
+		n, err := h.Missing.MarkMissing(ctx, st.in.ConnectionID, s.ExternalID)
+		if err != nil {
+			return err
+		}
+		missing = append(missing, miss{s.ExternalID, n})
+	}
+	prev, _, err := h.Missing.PreviousRunStats(ctx, st.in.ConnectionID, st.in.SchoolID, st.run.ID)
+	if err != nil {
+		return err
+	}
+	above, review := sis.DeactivationReviewNeeded(len(missing), total, prev["missing_above"] == 1, sis.MissingReviewRatio)
+	st.stats["missing"] = len(missing)
+	if above {
+		st.stats["missing_above"] = 1
+	}
+	if review {
+		return h.issue(ctx, st, sis.IssueDeactivationReview, map[string]any{"missing_count": strconv.Itoa(len(missing)),
+			"total_count": strconv.Itoa(total), "scope": "school"})
+	}
+	if above {
+		return nil // first run above the ratio: mark only
+	}
+	for _, m := range missing {
+		if m.runs == 2 {
+			if err := h.issue(ctx, st, sis.IssueDeactivationReview, map[string]any{"student_external_id": m.ext, "missing_runs": "2"}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // completedStats folds the per-kind run stats into the totals of sis.sync_completed.
 func completedStats(stats map[string]int) map[string]int {
 	out := map[string]int{"fetched": 0, "created": 0, "updated": 0, "unchanged": 0, "errors": stats["errors"]}
@@ -364,10 +426,10 @@ func completedStats(stats map[string]int) map[string]int {
 			out[suffix] += v
 		case "failed", "conflicts":
 			out["errors"] += v
+		default:
+			continue
 		}
-		if suffix != "fetched" {
-			out["fetched"] += v
-		}
+		out["fetched"] += v
 	}
 	return out
 }
@@ -677,7 +739,16 @@ func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.Stag
 }
 
 // afterApply raises missing_class for students of the run without an active enrollment (F011-AC-15).
-func (h SisRun) afterApply(ctx context.Context, st *runState, _ []SisFile) error {
+func (h SisRun) afterApply(ctx context.Context, st *runState, files []SisFile) error {
+	full := false
+	for _, f := range files {
+		full = full || f.Kind == sis.KindStudent
+	}
+	if full {
+		if err := h.UoW.Do(ctx, func(ctx context.Context) error { return h.markMissing(ctx, st) }); err != nil {
+			return err
+		}
+	}
 	return h.UoW.Do(ctx, func(ctx context.Context) error {
 		for ext, userID := range st.students {
 			if st.inactive[ext] {
