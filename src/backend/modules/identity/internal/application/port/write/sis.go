@@ -204,3 +204,34 @@ type LoginStateReader interface {
 	// LoginStateBySource loads the state of a source key (login_refresh jobs).
 	LoginStateBySource(ctx context.Context, connectionID uuid.UUID, externalID string) (*LoginState, error)
 }
+
+// SisImportRow is a CSV import of a school (sis.sis_imports).
+type SisImportRow struct {
+	ID           uuid.UUID
+	TenantID     uuid.UUID
+	SchoolID     uuid.UUID
+	ConnectionID uuid.UUID // the csv_import connection serving the school (not stored; resolved on load)
+	RequestedBy  uuid.UUID
+	StorageKey   string
+	SHA256       *string
+	Size         int64
+	Kinds        []string // one entity kind of the API (students, classes, enrollments, schools)
+	Status       string
+	DryRun       bool
+	RunID        *uuid.UUID
+	Stats        map[string]int
+	CreatedAt    time.Time
+	Version      int64
+}
+
+// SisImportRepository stores CSV imports (F011 T014).
+type SisImportRepository interface {
+	CreateImport(ctx context.Context, r *SisImportRow) error
+	// GetImport loads an import of the scope (problem NotFound otherwise).
+	GetImport(ctx context.Context, id uuid.UUID) (*SisImportRow, error)
+	SaveImport(ctx context.Context, r *SisImportRow) error
+	// AwaitingUploads lists imports waiting for their file, oldest first (platform_job scope).
+	AwaitingUploads(ctx context.Context, limit int) ([]SisImportRow, error)
+	// CsvConnectionOf returns the active csv_import connection serving the school (problem NotFound otherwise).
+	CsvConnectionOf(ctx context.Context, schoolID uuid.UUID) (uuid.UUID, error)
+}

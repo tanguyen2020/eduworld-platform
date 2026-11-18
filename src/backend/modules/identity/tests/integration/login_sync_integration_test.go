@@ -22,8 +22,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
 // lookupStub is a TEST DOUBLE (R17) of SisLookupPort: the contract_v1 adapter is F017.
@@ -140,11 +140,11 @@ func TestLoginSync(t *testing.T) {
 	jctx, cancel := context.WithCancel(ctx)
 	var handled atomic.Int32
 	go func() {
-		_ = messaging.ConsumeSisJobs(jctx, js, func(ctx context.Context, job port.LoginRefreshJob) error {
+		_ = messaging.ConsumeSisJobs(jctx, js, messaging.SisJobHandlers{LoginRefresh: func(ctx context.Context, job port.LoginRefreshJob) error {
 			handled.Add(1)
 			sc, _ := authz.EventScope(job.TenantID)
 			return ls.Refresh(tenancy.WithScope(ctx, sc), job)
-		})
+		}})
 	}()
 	deadline := time.Now().Add(20 * time.Second)
 	for handled.Load() == 0 && time.Now().Before(deadline) {

@@ -109,3 +109,31 @@ func (q Sis) ListSisIssues(ctx context.Context, in SisIssuesInput) (out SisIssue
 }
 
 func (q Sis) cursor(s string) (*page.Cursor, error) { return Org{Cursors: q.Cursors}.cursor(s) }
+
+// SisImports holds getSisImport.
+type SisImports struct{ Model read.SisImportReadModel }
+
+// maxImportErrors is the cap of errors returned with an import (spec maxItems).
+const maxImportErrors = 1000
+
+// Get is getSisImport (F011-AC-07): tenant.sis.import on the school of the path; an import of another
+// school or tenant is 404. Returns the diff and up to 1000 contract violations by row.
+func (q SisImports) Get(ctx context.Context, schoolID, importID uuid.UUID) (out dto.SisImport, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.query.GetSisImport")
+	defer func() { done(err) }()
+	if ctx, _, err = tenantRead(ctx, authz.PermTenantSisImport, &schoolID); err != nil {
+		return out, err
+	}
+	if out, err = q.Model.Import(ctx, importID); err != nil {
+		return out, err
+	}
+	if out.SchoolID != schoolID {
+		return dto.SisImport{}, problem.New(problem.NotFound, "")
+	}
+	if out.SyncRunID != nil {
+		if out.Errors, err = q.Model.RunErrors(ctx, *out.SyncRunID, maxImportErrors); err != nil {
+			return dto.SisImport{}, err
+		}
+	}
+	return out, nil
+}

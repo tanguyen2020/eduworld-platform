@@ -113,3 +113,11 @@ type SisIssueFilter struct {
 type SisIssueReadModel interface {
 	Issues(ctx context.Context, f SisIssueFilter) ([]dto.SisIssue, error)
 }
+
+// SisImportReadModel reads sis.sis_imports and the record errors of their run.
+type SisImportReadModel interface {
+	// Import returns an import of the scope (problem NotFound otherwise).
+	Import(ctx context.Context, id uuid.UUID) (dto.SisImport, error)
+	// RunErrors returns up to limit record errors of a run, by row.
+	RunErrors(ctx context.Context, runID uuid.UUID, limit int) ([]dto.SisRecordError, error)
+}

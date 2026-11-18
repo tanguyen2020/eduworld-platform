@@ -15,7 +15,9 @@ import (
 	entenroll "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	entissue "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
+	entconnschool "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
 	entlink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
+	entimport "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisimport"
 	entsislink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sislink"
 	entstudent "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/student"
 	entkey "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/studentloginkey"
@@ -597,4 +599,94 @@ func hasCapability(config map[string]any, name string) bool {
 		}
 	}
 	return false
+}
+
+var _ write.SisImportRepository = SisSyncRepo{}
+
+func importRow(r *ent.SisImport) *write.SisImportRow {
+	out := &write.SisImportRow{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, RequestedBy: r.RequestedBy, SHA256: r.FileSha256,
+		Size: r.SizeBytes, Kinds: r.EntityKinds, Status: r.Status, DryRun: r.DryRun, RunID: r.SyncRunID, Stats: r.Stats, CreatedAt: r.CreatedAt,
+		Version: r.Version}
+	if r.StorageKey != nil {
+		out.StorageKey = *r.StorageKey
+	}
+	if out.Stats == nil {
+		out.Stats = map[string]int{}
+	}
+	return out
+}
+
+// CreateImport inserts the import.
+func (SisSyncRepo) CreateImport(ctx context.Context, r *write.SisImportRow) error {
+	row, err := client(ctx).SisImport.Create().SetID(r.ID).SetTenantID(r.TenantID).SetSchoolID(r.SchoolID).SetRequestedBy(r.RequestedBy).
+		SetStorageKey(r.StorageKey).SetNillableFileSha256(r.SHA256).SetSizeBytes(r.Size).SetEntityKinds(r.Kinds).SetStatus(r.Status).
+		SetDryRun(r.DryRun).SetStats(map[string]int{}).Save(ctx)
+	if err != nil {
+		return err
+	}
+	r.CreatedAt, r.Version = row.CreatedAt, row.Version
+	return nil
+}
+
+// GetImport loads an import of the scope.
+func (SisSyncRepo) GetImport(ctx context.Context, id uuid.UUID) (*write.SisImportRow, error) {
+	r, err := client(ctx).SisImport.Get(ctx, id)
+	if ent.IsNotFound(err) {
+		return nil, problem.New(problem.NotFound, "")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return importRow(r), nil
+}
+
+// SaveImport stores status, run and stats (optimistic on version).
+func (SisSyncRepo) SaveImport(ctx context.Context, r *write.SisImportRow) error {
+	u := client(ctx).SisImport.Update().Where(entimport.ID(r.ID), entimport.Version(r.Version)).SetStatus(r.Status).SetStats(r.Stats).AddVersion(1)
+	if r.RunID != nil {
+		u = u.SetSyncRunID(*r.RunID)
+	}
+	n, err := u.Save(ctx)
+	if err == nil && n == 0 {
+		return problem.New(problem.VersionMismatch, "the import changed concurrently")
+	}
+	if err == nil {
+		r.Version++
+	}
+	return err
+}
+
+// AwaitingUploads lists imports waiting for their file.
+func (SisSyncRepo) AwaitingUploads(ctx context.Context, limit int) ([]write.SisImportRow, error) {
+	rows, err := client(ctx).SisImport.Query().Where(entimport.Status("awaiting_upload")).Order(ent.Asc(entimport.FieldID)).Limit(limit).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]write.SisImportRow, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, *importRow(r))
+	}
+	return out, nil
+}
+
+// CsvConnectionOf returns the active csv_import connection serving the school.
+func (SisSyncRepo) CsvConnectionOf(ctx context.Context, school uuid.UUID) (uuid.UUID, error) {
+	c := client(ctx)
+	links, err := c.SisConnectionSchool.Query().Where(entconnschool.SchoolID(school), entconnschool.Active(true)).All(ctx)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	for _, l := range links {
+		conn, err := c.SisConnection.Get(ctx, l.SisConnectionID)
+		if ent.IsNotFound(err) {
+			continue
+		}
+		if err != nil {
+			return uuid.Nil, err
+		}
+		if conn.Status == "active" && conn.ProviderKind == "csv_import" {
+			return conn.ID, nil
+		}
+	}
+	return uuid.Nil, problem.New(problem.NotFound, "no active csv_import connection serves this school")
 }

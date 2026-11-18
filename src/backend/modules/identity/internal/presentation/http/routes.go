@@ -32,6 +32,8 @@ type Handlers struct {
 	Org                  query.Org
 	Sis                  query.Sis                      // F011
 	ResolveSisIssue      command.ResolveSisIssueHandler // F011
+	CreateSisImport      command.CreateSisImportHandler // F011
+	SisImports           query.SisImports               // F011
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -68,6 +70,9 @@ var Operations = map[string]httpx.Operation{
 	// F011
 	"listSisReconciliationIssues":   op("listSisReconciliationIssues", http.MethodGet, "/sis/reconciliation-issues", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	"resolveSisReconciliationIssue": op("resolveSisReconciliationIssue", http.MethodPost, "/sis/reconciliation-issues/{issue_id}:resolve", httpx.TenantRequired, httpx.IdempotencyRequired, 200),
+	"createSisImport":               op("createSisImport", http.MethodPost, "/schools/{school_id}/sis-imports", httpx.TenantRequired, httpx.IdempotencyRequired, 202),
+	"getSisImport":                  op("getSisImport", http.MethodGet, "/schools/{school_id}/sis-imports/{import_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"createPlatformSisImport":       op("createPlatformSisImport", http.MethodPost, "/sis/imports", httpx.TenantRequired, httpx.IdempotencyRequired, 202),
 }
 
 func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {

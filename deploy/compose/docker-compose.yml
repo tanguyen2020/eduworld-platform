@@ -140,7 +140,7 @@ services:
       - |
         set -e
         S3="aws --endpoint-url http://floci:4566"
-        for b in ew-media-quarantine ew-media-public ew-media-private ew-game-bundles ew-exports; do
+        for b in ew-media-quarantine ew-media-public ew-media-private ew-game-bundles ew-exports ew-sis-imports; do
           $$S3 s3api head-bucket --bucket "$$b" 2>/dev/null || $$S3 s3 mb "s3://$$b"
         done
         for b in ew-media-public ew-media-private ew-game-bundles; do

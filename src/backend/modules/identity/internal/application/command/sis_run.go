@@ -156,6 +156,18 @@ func (h SisRun) ApplyLookup(ctx context.Context, tenantID, connectionID, schoolI
 	return h.execute(tenancy.WithScope(ctx, sc), tenantID, in, "delta")
 }
 
+// RunImportSystem runs a csv_import of an uploaded file as the system actor (sis-jobs worker): the School
+// Admin was authorized when the import was created.
+func (h SisRun) RunImportSystem(ctx context.Context, tenantID uuid.UUID, in RunImportInput) (out RunImportResult, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.SisRunImportJob")
+	defer func() { done(err) }()
+	sc, err := authz.EventScope(tenantID)
+	if err != nil {
+		return out, err
+	}
+	return h.execute(tenancy.WithScope(ctx, sc), tenantID, in, "csv_import")
+}
+
 // execute runs the pipeline in the scope already set on ctx.
 func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInput, mode string) (out RunImportResult, err error) {
 	st := &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},

@@ -41,3 +41,14 @@ type LoginRefreshJob struct {
 type LoginSyncMetrics interface {
 	Observe(branch, result string, d time.Duration)
 }
+
+// CsvImportJob is the payload of a csv_import job (subject ew.job.identity.sis.csv_import).
+type CsvImportJob struct {
+	TenantID uuid.UUID `json:"tenant_id"`
+	ImportID uuid.UUID `json:"import_id"`
+}
+
+// SisImportJobQueue enqueues csv_import jobs (Nats-Msg-Id import:<import_id>).
+type SisImportJobQueue interface {
+	EnqueueCsvImport(ctx context.Context, job CsvImportJob) error
+}

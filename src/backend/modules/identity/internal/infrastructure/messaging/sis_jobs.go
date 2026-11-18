@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -21,6 +22,7 @@ const (
 	SisJobsStream      = "IDENTITY_SIS_JOBS"
 	SisJobsSubjects    = "ew.job.identity.sis.>"
 	LoginRefreshSubj   = "ew.job.identity.sis.login_refresh"
+	CsvImportSubj      = "ew.job.identity.sis.csv_import"
 	SisJobsDuplicates  = 10 * time.Minute // Nats-Msg-Id dedupe window of login_refresh (F011-AC-21)
 	sisJobsConsumer    = "identity_sis_jobs"
 	sisJobsMaxDeliver  = 3
@@ -45,7 +47,20 @@ func EnsureSisJobsStream(ctx context.Context, js jetstream.JetStream, replicas i
 // JobQueue implements port.SisJobQueue.
 type JobQueue struct{ JS jetstream.JetStream }
 
-var _ port.SisJobQueue = JobQueue{}
+var (
+	_ port.SisJobQueue       = JobQueue{}
+	_ port.SisImportJobQueue = JobQueue{}
+)
+
+// EnqueueCsvImport publishes a csv_import job deduplicated by import id.
+func (q JobQueue) EnqueueCsvImport(ctx context.Context, job port.CsvImportJob) error {
+	b, err := json.Marshal(job)
+	if err != nil {
+		return err
+	}
+	_, err = q.JS.PublishMsg(ctx, &nats.Msg{Subject: CsvImportSubj, Data: b, Header: nats.Header{}}, jetstream.WithMsgID("import:"+job.ImportID.String()))
+	return err
+}
 
 // LoginRefreshMsgID is the dedupe key of a login_refresh job.
 func LoginRefreshMsgID(job port.LoginRefreshJob) string {
@@ -63,28 +78,42 @@ func (q JobQueue) EnqueueLoginRefresh(ctx context.Context, job port.LoginRefresh
 	return err
 }
 
-// LoginRefreshHandler handles one login_refresh job.
-type LoginRefreshHandler func(ctx context.Context, job port.LoginRefreshJob) error
+// SisJobHandlers handle the SIS jobs (nil = not handled by this worker: the job is terminated).
+type SisJobHandlers struct {
+	LoginRefresh func(ctx context.Context, job port.LoginRefreshJob) error
+	CsvImport    func(ctx context.Context, job port.CsvImportJob) error
+}
 
 // ConsumeSisJobs runs the durable pull consumer of IDENTITY_SIS_JOBS until ctx ends: a malformed job is
 // terminated, a failing one is redelivered up to MaxDeliver.
-func ConsumeSisJobs(ctx context.Context, js jetstream.JetStream, refresh LoginRefreshHandler) error {
+func ConsumeSisJobs(ctx context.Context, js jetstream.JetStream, h SisJobHandlers) error {
 	cons, err := js.CreateOrUpdateConsumer(ctx, SisJobsStream, jetstream.ConsumerConfig{Durable: sisJobsConsumer,
 		AckPolicy: jetstream.AckExplicitPolicy, AckWait: sisJobsAckWait, MaxDeliver: sisJobsMaxDeliver, FilterSubject: SisJobsSubjects})
 	if err != nil {
 		return fmt.Errorf("messaging: consumer %s: %w", sisJobsConsumer, err)
 	}
 	cc, err := cons.Consume(func(m jetstream.Msg) {
-		if m.Subject() != LoginRefreshSubj {
+		var run func() error
+		switch {
+		case m.Subject() == LoginRefreshSubj && h.LoginRefresh != nil:
+			var job port.LoginRefreshJob
+			if err := json.Unmarshal(m.Data(), &job); err != nil || job.StudentExternalID == "" {
+				_ = m.Term()
+				return
+			}
+			run = func() error { return h.LoginRefresh(ctx, job) }
+		case m.Subject() == CsvImportSubj && h.CsvImport != nil:
+			var job port.CsvImportJob
+			if err := json.Unmarshal(m.Data(), &job); err != nil || job.ImportID == uuid.Nil {
+				_ = m.Term()
+				return
+			}
+			run = func() error { return h.CsvImport(ctx, job) }
+		default:
 			_ = m.Term() // scheduled_sync / webhook_batch belong to F017
 			return
 		}
-		var job port.LoginRefreshJob
-		if err := json.Unmarshal(m.Data(), &job); err != nil || job.StudentExternalID == "" {
-			_ = m.Term()
-			return
-		}
-		if err := refresh(ctx, job); err != nil {
+		if err := run(); err != nil {
 			slog.WarnContext(ctx, "sis job failed", "subject", m.Subject(), "error", err)
 			_ = m.Nak()
 			return
