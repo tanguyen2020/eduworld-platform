@@ -450,6 +450,17 @@ func (a *Admin) RemoveRealmRoles(ctx context.Context, userID string, roles ...st
 	return err
 }
 
+// DisableUser sets enabled=false on the user (idempotent PUT of the representation).
+func (a *Admin) DisableUser(ctx context.Context, userID string) error {
+	var cur map[string]any
+	if _, err := a.call(ctx, "get_user", http.MethodGet, "/users/"+url.PathEscape(userID), nil, &cur, true); err != nil {
+		return err
+	}
+	cur["enabled"] = false
+	_, err := a.call(ctx, "disable_user", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
+	return err
+}
+
 func (a *Admin) LogoutUser(ctx context.Context, userID string) error {
 	_, err := a.call(ctx, "logout_user", http.MethodPost, "/users/"+url.PathEscape(userID)+"/logout", nil, nil, true)
 	return err

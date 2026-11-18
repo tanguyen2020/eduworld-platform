@@ -91,3 +91,30 @@ type StudentRepository interface {
 	// Move sets the school (and tenant) of the student and the user's primary tenant/school; user_id is kept.
 	Move(ctx context.Context, studentID uuid.UUID, to enrollment.Placement) error
 }
+
+// NewStudentAccount is a platform-created student of the common tenant (ACCOUNT_PROVISIONING §3.4).
+type NewStudentAccount struct {
+	UserID       uuid.UUID
+	Username     string // normalized
+	DisplayName  string
+	TenantID     uuid.UUID
+	SchoolID     uuid.UUID
+	ClassID      uuid.UUID
+	Grade        int
+	Issuer       string // OIDC issuer of the local Keycloak realm
+	Subject      string // Keycloak user id
+	ExternalRef  string // optional, stored as issuer platform_common
+	EnrollmentID uuid.UUID
+}
+
+// AccountRepository creates platform-provisioned accounts (identity.users, org.students,
+// identity.external_identities, org.enrollments) in the current transaction.
+type AccountRepository interface {
+	// UsernameTaken reports whether lower(username) exists on any row, soft-deleted included (ADR-0069).
+	UsernameTaken(ctx context.Context, username string) (bool, error)
+	// ExternalRefTaken reports whether a live (issuer, subject) exists.
+	ExternalRefTaken(ctx context.Context, issuer, subject string) (bool, error)
+	// CreateStudent inserts the account; a duplicate username is problem USERNAME_TAKEN, a duplicate
+	// identity problem IDENTITY_CONFLICT.
+	CreateStudent(ctx context.Context, a NewStudentAccount) error
+}

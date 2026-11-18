@@ -59,6 +59,8 @@ type KeycloakAdmin interface {
 	SetPassword(ctx context.Context, userID, password string, temporary bool) error
 	AddRealmRoles(ctx context.Context, userID string, roles ...string) error
 	RemoveRealmRoles(ctx context.Context, userID string, roles ...string) error
+	// DisableUser sets enabled=false (compensation of a provisioning that failed after the user was created).
+	DisableUser(ctx context.Context, userID string) error
 	// LogoutUser revokes every Keycloak session of the user.
 	LogoutUser(ctx context.Context, userID string) error
 }
