@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent"
 	entyear "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
 	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
+	entenroll "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	entissue "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
 	entlink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
@@ -525,4 +526,75 @@ func (SisSyncRepo) SupersedeLink(ctx context.Context, conn uuid.UUID, ext string
 	_, err := client(ctx).SisIdentityLink.Update().Where(entlink.SisConnectionID(conn), entlink.StudentExternalID(ext), entlink.Status("active")).
 		SetStatus("superseded").SetSupersededAt(time.Now().UTC()).AddVersion(1).Save(ctx)
 	return err
+}
+
+var _ write.LoginStateReader = SisSyncRepo{}
+
+// LoginState loads the login sync state from the active SIS link of the user.
+func (r SisSyncRepo) LoginState(ctx context.Context, userID uuid.UUID) (*write.LoginState, error) {
+	l, err := client(ctx).SisIdentityLink.Query().Where(entlink.UserID(userID), entlink.Status("active")).Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return r.loginState(ctx, l)
+}
+
+// LoginStateBySource loads the state of a source key.
+func (r SisSyncRepo) LoginStateBySource(ctx context.Context, conn uuid.UUID, ext string) (*write.LoginState, error) {
+	l, err := client(ctx).SisIdentityLink.Query().Where(entlink.SisConnectionID(conn), entlink.StudentExternalID(ext), entlink.Status("active")).Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return r.loginState(ctx, l)
+}
+
+func (SisSyncRepo) loginState(ctx context.Context, l *ent.SisIdentityLink) (*write.LoginState, error) {
+	c := client(ctx)
+	out := &write.LoginState{UserID: l.UserID, TenantID: l.TenantID, SchoolID: l.SchoolID, ConnectionID: l.SisConnectionID, ExternalID: l.StudentExternalID}
+	u, err := c.User.Get(ctx, l.UserID)
+	if err != nil {
+		return nil, err
+	}
+	out.Username = u.Username
+	s, err := c.SyncedStudent.Query().Where(entsynced.SisConnectionID(l.SisConnectionID), entsynced.StudentExternalID(l.StudentExternalID)).Only(ctx)
+	switch {
+	case err == nil:
+		t := s.LastSyncedAt
+		out.LastSyncedAt = &t
+	case !ent.IsNotFound(err):
+		return nil, err
+	}
+	sl, err := c.SisLink.Query().Where(entsislink.SisConnectionID(l.SisConnectionID), entsislink.EntityType("school"), entsislink.EntityID(l.SchoolID)).First(ctx)
+	switch {
+	case err == nil:
+		out.SchoolExternalID = sl.ExternalID
+	case !ent.IsNotFound(err):
+		return nil, err
+	}
+	if out.ActiveEnrollment, err = c.Enrollment.Query().Where(entenroll.StudentID(l.UserID), entenroll.Status("active")).Exist(ctx); err != nil {
+		return nil, err
+	}
+	conn, err := c.SisConnection.Get(ctx, l.SisConnectionID)
+	if err != nil {
+		return nil, err
+	}
+	out.StudentLookup = conn.Status == "active" && conn.ProviderKind == "contract_v1" && hasCapability(conn.Config, "student_lookup")
+	return out, nil
+}
+
+// hasCapability reads config.capabilities (Health.capabilities of the SIS contract, stored by F017).
+func hasCapability(config map[string]any, name string) bool {
+	caps, _ := config["capabilities"].([]any)
+	for _, c := range caps {
+		if c == name {
+			return true
+		}
+	}
+	return false
 }

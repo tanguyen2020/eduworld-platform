@@ -183,3 +183,24 @@ type TransferMatcher interface {
 	SupersedeLink(ctx context.Context, connectionID uuid.UUID, externalID string) error
 	LinkExisting(ctx context.Context, userID, tenantID, schoolID, connectionID uuid.UUID, externalID string) error
 }
+
+// LoginState is what login sync needs to choose its branch (SIS_INTEGRATION §4.5).
+type LoginState struct {
+	UserID           uuid.UUID
+	TenantID         uuid.UUID
+	SchoolID         uuid.UUID
+	ConnectionID     uuid.UUID
+	ExternalID       string
+	SchoolExternalID string // "" when the school has no source key yet
+	Username         string
+	LastSyncedAt     *time.Time
+	ActiveEnrollment bool // active enrollment with school and class
+	StudentLookup    bool // the connection is active and declares the student_lookup capability
+}
+
+// LoginStateReader loads the login sync state of a SIS student (nil when the user has no active SIS link).
+type LoginStateReader interface {
+	LoginState(ctx context.Context, userID uuid.UUID) (*LoginState, error)
+	// LoginStateBySource loads the state of a source key (login_refresh jobs).
+	LoginStateBySource(ctx context.Context, connectionID uuid.UUID, externalID string) (*LoginState, error)
+}

@@ -138,18 +138,38 @@ func (h SisRun) Handle(ctx context.Context, in RunImportInput) (out RunImportRes
 	if ctx, err = h.authorize(ctx, in.SchoolID, tenantID); err != nil {
 		return out, err
 	}
+	return h.execute(ctx, tenantID, in, "csv_import")
+}
+
+// ApplyLookup applies one Student record returned by a SIS lookup (login sync, SIS_INTEGRATION §4.5) as
+// the system actor in the tenant of the connection: a one-record run of mode delta through the same
+// validate → staging → reconcile → apply pipeline; it never marks other students missing.
+func (h SisRun) ApplyLookup(ctx context.Context, tenantID, connectionID, schoolID uuid.UUID, record map[string]any) (out RunImportResult, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.SisApplyLookup")
+	defer func() { done(err) }()
+	sc, err := authz.EventScope(tenantID)
+	if err != nil {
+		return out, err
+	}
+	in := RunImportInput{ConnectionID: connectionID, SchoolID: schoolID,
+		Files: []SisFile{{Kind: sis.KindStudent, Records: []SisRecord{{Row: 1, Data: record}}}}}
+	return h.execute(tenancy.WithScope(ctx, sc), tenantID, in, "delta")
+}
+
+// execute runs the pipeline in the scope already set on ctx.
+func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInput, mode string) (out RunImportResult, err error) {
 	st := &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},
 		candidates: map[string]write.TransferCandidate{}, transferred: map[string]bool{}}
 	out = RunImportResult{DryRun: in.DryRun, Diff: map[string]map[string]int{}, Errors: []write.RecordError{}}
 	school := in.SchoolID
-	st.run = &write.SyncRun{ID: ids.New(), TenantID: tenantID, ConnectionID: in.ConnectionID, SchoolID: &school, Mode: "csv_import",
+	st.run = &write.SyncRun{ID: ids.New(), TenantID: tenantID, ConnectionID: in.ConnectionID, SchoolID: &school, Mode: mode,
 		DryRun: in.DryRun, Status: "running", Stats: map[string]int{}}
 	if err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		c, err := h.Connections.Get(ctx, in.ConnectionID)
 		if err != nil {
 			return err
 		}
-		if c.Status != "active" || c.ProviderKind != "csv_import" {
+		if c.Status != "active" || (mode == "csv_import" && c.ProviderKind != "csv_import") {
 			return problem.Invalid("connection_id", problem.SubInvalid, "an active csv_import connection is required")
 		}
 		schools, err := h.Connections.Schools(ctx, in.ConnectionID)
@@ -829,9 +849,9 @@ func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.Stag
 
 // afterApply raises missing_class for students of the run without an active enrollment (F011-AC-15).
 func (h SisRun) afterApply(ctx context.Context, st *runState, files []SisFile) error {
-	full := false
+	full := false // a full students file of a csv_import (a lookup run has one record)
 	for _, f := range files {
-		full = full || f.Kind == sis.KindStudent
+		full = full || (f.Kind == sis.KindStudent && st.run.Mode == "csv_import")
 	}
 	if full {
 		if err := h.UoW.Do(ctx, func(ctx context.Context) error { return h.markMissing(ctx, st) }); err != nil {

@@ -332,9 +332,9 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 	for q, want := range map[string]int{
 		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'superseded' AND student_external_id = 'HS-1' AND superseded_at IS NOT NULL`: 1,
 		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'active' AND student_external_id = 'HS-77'`:                                  1,
-		`SELECT count(*) FROM org.students WHERE student_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                            1,
-		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND school_id = '` + a.otherSchool + `'`:                                    1,
-		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'transferred'`:                                                                      1,
+		`SELECT count(*) FROM org.students WHERE student_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                              1,
+		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND school_id = '` + a.otherSchool + `'`:                                     1,
+		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'transferred'`:                                                                        1,
 	} {
 		if n := count(ctx, t, e.platform, q, an); n != want {
 			t.Fatalf("%s = %d", q, n)
