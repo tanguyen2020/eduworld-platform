@@ -262,6 +262,46 @@ var (
 		Columns:    ProvinceSuccessionsColumns,
 		PrimaryKey: []*schema.Column{ProvinceSuccessionsColumns[0]},
 	}
+	// ReconciliationIssuesColumns holds the columns for the "reconciliation_issues" table.
+	ReconciliationIssuesColumns = []*schema.Column{
+		{Name: "issue_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "sis_connection_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "sync_run_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "issue_type", Type: field.TypeString, Size: 64},
+		{Name: "entity_refs", Type: field.TypeJSON},
+		{Name: "suggested_action", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
+		{Name: "resolution", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "resolution_note", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "resolved_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ReconciliationIssuesTable holds the schema information for the "reconciliation_issues" table.
+	ReconciliationIssuesTable = &schema.Table{
+		Name:       "reconciliation_issues",
+		Columns:    ReconciliationIssuesColumns,
+		PrimaryKey: []*schema.Column{ReconciliationIssuesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "reconciliation_issues_open_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ReconciliationIssuesColumns[1], ReconciliationIssuesColumns[16], ReconciliationIssuesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// SchoolsColumns holds the columns for the "schools" table.
 	SchoolsColumns = []*schema.Column{
 		{Name: "school_id", Type: field.TypeUUID},
@@ -334,6 +374,205 @@ var (
 			},
 		},
 	}
+	// SisConnectionsColumns holds the columns for the "sis_connections" table.
+	SisConnectionsColumns = []*schema.Column{
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "provider_kind", Type: field.TypeString, Size: 64},
+		{Name: "contract_version", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "config", Type: field.TypeJSON, Nullable: true},
+		{Name: "secret_ref", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
+		{Name: "delta_watermark", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "schedule", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// SisConnectionsTable holds the schema information for the "sis_connections" table.
+	SisConnectionsTable = &schema.Table{
+		Name:       "sis_connections",
+		Columns:    SisConnectionsColumns,
+		PrimaryKey: []*schema.Column{SisConnectionsColumns[0]},
+	}
+	// SisConnectionSchoolsColumns holds the columns for the "sis_connection_schools" table.
+	SisConnectionSchoolsColumns = []*schema.Column{
+		{Name: "connection_school_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "assigned_by", Type: field.TypeUUID},
+		{Name: "assigned_at", Type: field.TypeTime},
+	}
+	// SisConnectionSchoolsTable holds the schema information for the "sis_connection_schools" table.
+	SisConnectionSchoolsTable = &schema.Table{
+		Name:       "sis_connection_schools",
+		Columns:    SisConnectionSchoolsColumns,
+		PrimaryKey: []*schema.Column{SisConnectionSchoolsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sis_connection_schools_pair_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SisConnectionSchoolsColumns[10], SisConnectionSchoolsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "sis_connection_schools_one_active",
+				Unique:  true,
+				Columns: []*schema.Column{SisConnectionSchoolsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "active AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SisIdentityLinksColumns holds the columns for the "sis_identity_links" table.
+	SisIdentityLinksColumns = []*schema.Column{
+		{Name: "link_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "student_external_id", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "active"},
+		{Name: "linked_at", Type: field.TypeTime},
+		{Name: "superseded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "superseded_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// SisIdentityLinksTable holds the schema information for the "sis_identity_links" table.
+	SisIdentityLinksTable = &schema.Table{
+		Name:       "sis_identity_links",
+		Columns:    SisIdentityLinksColumns,
+		PrimaryKey: []*schema.Column{SisIdentityLinksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sis_identity_links_one_active",
+				Unique:  true,
+				Columns: []*schema.Column{SisIdentityLinksColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'active' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "sis_identity_links_source_active",
+				Unique:  true,
+				Columns: []*schema.Column{SisIdentityLinksColumns[12], SisIdentityLinksColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'active' AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SisImportsColumns holds the columns for the "sis_imports" table.
+	SisImportsColumns = []*schema.Column{
+		{Name: "import_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "requested_by", Type: field.TypeUUID},
+		{Name: "storage_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "file_sha256", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "size_bytes", Type: field.TypeInt64, Default: 0},
+		{Name: "entity_kinds", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "awaiting_upload"},
+		{Name: "dry_run", Type: field.TypeBool, Default: true},
+		{Name: "sync_run_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "stats", Type: field.TypeJSON},
+		{Name: "idempotency_key", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// SisImportsTable holds the schema information for the "sis_imports" table.
+	SisImportsTable = &schema.Table{
+		Name:       "sis_imports",
+		Columns:    SisImportsColumns,
+		PrimaryKey: []*schema.Column{SisImportsColumns[0]},
+	}
+	// SisLinksColumns holds the columns for the "sis_links" table.
+	SisLinksColumns = []*schema.Column{
+		{Name: "sis_link_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "entity_type", Type: field.TypeString, Size: 64},
+		{Name: "entity_id", Type: field.TypeUUID},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "external_id", Type: field.TypeString, Size: 64},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "last_hash", Type: field.TypeString, Size: 128},
+		{Name: "last_synced_at", Type: field.TypeTime},
+	}
+	// SisLinksTable holds the schema information for the "sis_links" table.
+	SisLinksTable = &schema.Table{
+		Name:       "sis_links",
+		Columns:    SisLinksColumns,
+		PrimaryKey: []*schema.Column{SisLinksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sis_links_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SisLinksColumns[12], SisLinksColumns[10], SisLinksColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// StagingRecordsColumns holds the columns for the "staging_records" table.
+	StagingRecordsColumns = []*schema.Column{
+		{Name: "staging_record_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "sync_run_id", Type: field.TypeUUID},
+		{Name: "entity_kind", Type: field.TypeString, Size: 64},
+		{Name: "external_id", Type: field.TypeString, Size: 64},
+		{Name: "row_no", Type: field.TypeInt, Nullable: true},
+		{Name: "payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "raw_hash", Type: field.TypeString, Size: 128},
+		{Name: "action", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "pending"},
+	}
+	// StagingRecordsTable holds the schema information for the "staging_records" table.
+	StagingRecordsTable = &schema.Table{
+		Name:       "staging_records",
+		Columns:    StagingRecordsColumns,
+		PrimaryKey: []*schema.Column{StagingRecordsColumns[0]},
+	}
 	// StudentsColumns holds the columns for the "students" table.
 	StudentsColumns = []*schema.Column{
 		{Name: "student_id", Type: field.TypeUUID},
@@ -366,6 +605,135 @@ var (
 				Columns: []*schema.Column{StudentsColumns[10], StudentsColumns[12]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "student_code IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// StudentLoginKeysColumns holds the columns for the "student_login_keys" table.
+	StudentLoginKeysColumns = []*schema.Column{
+		{Name: "login_key_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "login_type", Type: field.TypeString, Size: 16},
+		{Name: "idp_alias", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "login_key", Type: field.TypeString, Size: 255},
+		{Name: "student_external_id", Type: field.TypeString, Size: 64},
+	}
+	// StudentLoginKeysTable holds the schema information for the "student_login_keys" table.
+	StudentLoginKeysTable = &schema.Table{
+		Name:       "student_login_keys",
+		Columns:    StudentLoginKeysColumns,
+		PrimaryKey: []*schema.Column{StudentLoginKeysColumns[0]},
+	}
+	// SyncRecordErrorsColumns holds the columns for the "sync_record_errors" table.
+	SyncRecordErrorsColumns = []*schema.Column{
+		{Name: "sync_record_error_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "sync_run_id", Type: field.TypeUUID},
+		{Name: "entity_kind", Type: field.TypeString, Size: 64},
+		{Name: "external_id", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "row_no", Type: field.TypeInt, Nullable: true},
+		{Name: "column_name", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "error_code", Type: field.TypeString, Size: 64},
+		{Name: "message", Type: field.TypeString, Size: 1000},
+		{Name: "occurred_at", Type: field.TypeTime},
+	}
+	// SyncRecordErrorsTable holds the schema information for the "sync_record_errors" table.
+	SyncRecordErrorsTable = &schema.Table{
+		Name:       "sync_record_errors",
+		Columns:    SyncRecordErrorsColumns,
+		PrimaryKey: []*schema.Column{SyncRecordErrorsColumns[0]},
+	}
+	// SyncRunsColumns holds the columns for the "sync_runs" table.
+	SyncRunsColumns = []*schema.Column{
+		{Name: "sync_run_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "trigger", Type: field.TypeString, Size: 64, Default: "manual"},
+		{Name: "dry_run", Type: field.TypeBool, Default: false},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "running"},
+		{Name: "failure_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "stats", Type: field.TypeJSON},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+	}
+	// SyncRunsTable holds the schema information for the "sync_runs" table.
+	SyncRunsTable = &schema.Table{
+		Name:       "sync_runs",
+		Columns:    SyncRunsColumns,
+		PrimaryKey: []*schema.Column{SyncRunsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sync_runs_connection_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SyncRunsColumns[10], SyncRunsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SyncedStudentsColumns holds the columns for the "synced_students" table.
+	SyncedStudentsColumns = []*schema.Column{
+		{Name: "synced_student_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "sis_connection_id", Type: field.TypeUUID},
+		{Name: "student_external_id", Type: field.TypeString, Size: 64},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_code", Type: field.TypeString, Size: 32},
+		{Name: "record_status", Type: field.TypeString, Size: 32},
+		{Name: "national_student_id_hash", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "last_hash", Type: field.TypeString, Size: 64},
+		{Name: "last_synced_at", Type: field.TypeTime},
+		{Name: "missing_runs", Type: field.TypeInt16, Default: 0},
+	}
+	// SyncedStudentsTable holds the schema information for the "synced_students" table.
+	SyncedStudentsTable = &schema.Table{
+		Name:       "synced_students",
+		Columns:    SyncedStudentsColumns,
+		PrimaryKey: []*schema.Column{SyncedStudentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "synced_students_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SyncedStudentsColumns[10], SyncedStudentsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "synced_students_school_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SyncedStudentsColumns[1], SyncedStudentsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
 				},
 			},
 		},
@@ -488,8 +856,19 @@ var (
 		ExternalIdentitiesTable,
 		ProvincesTable,
 		ProvinceSuccessionsTable,
+		ReconciliationIssuesTable,
 		SchoolsTable,
+		SisConnectionsTable,
+		SisConnectionSchoolsTable,
+		SisIdentityLinksTable,
+		SisImportsTable,
+		SisLinksTable,
+		StagingRecordsTable,
 		StudentsTable,
+		StudentLoginKeysTable,
+		SyncRecordErrorsTable,
+		SyncRunsTable,
+		SyncedStudentsTable,
 		TenantsTable,
 		UsersTable,
 	}
@@ -517,11 +896,44 @@ func init() {
 	ProvinceSuccessionsTable.Annotation = &entsql.Annotation{
 		Table: "province_successions",
 	}
+	ReconciliationIssuesTable.Annotation = &entsql.Annotation{
+		Table: "reconciliation_issues",
+	}
 	SchoolsTable.Annotation = &entsql.Annotation{
 		Table: "schools",
 	}
+	SisConnectionsTable.Annotation = &entsql.Annotation{
+		Table: "sis_connections",
+	}
+	SisConnectionSchoolsTable.Annotation = &entsql.Annotation{
+		Table: "sis_connection_schools",
+	}
+	SisIdentityLinksTable.Annotation = &entsql.Annotation{
+		Table: "sis_identity_links",
+	}
+	SisImportsTable.Annotation = &entsql.Annotation{
+		Table: "sis_imports",
+	}
+	SisLinksTable.Annotation = &entsql.Annotation{
+		Table: "sis_links",
+	}
+	StagingRecordsTable.Annotation = &entsql.Annotation{
+		Table: "staging_records",
+	}
 	StudentsTable.Annotation = &entsql.Annotation{
 		Table: "students",
+	}
+	StudentLoginKeysTable.Annotation = &entsql.Annotation{
+		Table: "student_login_keys",
+	}
+	SyncRecordErrorsTable.Annotation = &entsql.Annotation{
+		Table: "sync_record_errors",
+	}
+	SyncRunsTable.Annotation = &entsql.Annotation{
+		Table: "sync_runs",
+	}
+	SyncedStudentsTable.Annotation = &entsql.Annotation{
+		Table: "synced_students",
 	}
 	TenantsTable.Annotation = &entsql.Annotation{
 		Table: "tenants",

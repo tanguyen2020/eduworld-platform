@@ -13,9 +13,20 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisimport"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sislink"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/stagingrecord"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/student"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/studentloginkey"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncedstudent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrecorderror"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
 )
@@ -411,6 +422,63 @@ func init() {
 	provincesuccessionDescID := provincesuccessionMixinFields0[0].Descriptor()
 	// provincesuccession.DefaultID holds the default value on creation for the id field.
 	provincesuccession.DefaultID = provincesuccessionDescID.Default.(func() uuid.UUID)
+	reconciliationissueMixin := schema.ReconciliationIssue{}.Mixin()
+	reconciliationissueMixinHooks0 := reconciliationissueMixin[0].Hooks()
+	reconciliationissue.Hooks[0] = reconciliationissueMixinHooks0[0]
+	reconciliationissueMixinInters0 := reconciliationissueMixin[0].Interceptors()
+	reconciliationissue.Interceptors[0] = reconciliationissueMixinInters0[0]
+	reconciliationissueMixinFields0 := reconciliationissueMixin[0].Fields()
+	_ = reconciliationissueMixinFields0
+	reconciliationissueFields := schema.ReconciliationIssue{}.Fields()
+	_ = reconciliationissueFields
+	// reconciliationissueDescCreatedAt is the schema descriptor for created_at field.
+	reconciliationissueDescCreatedAt := reconciliationissueMixinFields0[2].Descriptor()
+	// reconciliationissue.DefaultCreatedAt holds the default value on creation for the created_at field.
+	reconciliationissue.DefaultCreatedAt = reconciliationissueDescCreatedAt.Default.(func() time.Time)
+	// reconciliationissueDescUpdatedAt is the schema descriptor for updated_at field.
+	reconciliationissueDescUpdatedAt := reconciliationissueMixinFields0[4].Descriptor()
+	// reconciliationissue.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	reconciliationissue.DefaultUpdatedAt = reconciliationissueDescUpdatedAt.Default.(func() time.Time)
+	// reconciliationissue.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	reconciliationissue.UpdateDefaultUpdatedAt = reconciliationissueDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// reconciliationissueDescDeleteReason is the schema descriptor for delete_reason field.
+	reconciliationissueDescDeleteReason := reconciliationissueMixinFields0[8].Descriptor()
+	// reconciliationissue.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	reconciliationissue.DeleteReasonValidator = reconciliationissueDescDeleteReason.Validators[0].(func(string) error)
+	// reconciliationissueDescVersion is the schema descriptor for version field.
+	reconciliationissueDescVersion := reconciliationissueMixinFields0[9].Descriptor()
+	// reconciliationissue.DefaultVersion holds the default value on creation for the version field.
+	reconciliationissue.DefaultVersion = reconciliationissueDescVersion.Default.(int64)
+	// reconciliationissueDescIssueType is the schema descriptor for issue_type field.
+	reconciliationissueDescIssueType := reconciliationissueFields[3].Descriptor()
+	// reconciliationissue.IssueTypeValidator is a validator for the "issue_type" field. It is called by the builders before save.
+	reconciliationissue.IssueTypeValidator = reconciliationissueDescIssueType.Validators[0].(func(string) error)
+	// reconciliationissueDescEntityRefs is the schema descriptor for entity_refs field.
+	reconciliationissueDescEntityRefs := reconciliationissueFields[4].Descriptor()
+	// reconciliationissue.DefaultEntityRefs holds the default value on creation for the entity_refs field.
+	reconciliationissue.DefaultEntityRefs = reconciliationissueDescEntityRefs.Default.(map[string]interface{})
+	// reconciliationissueDescSuggestedAction is the schema descriptor for suggested_action field.
+	reconciliationissueDescSuggestedAction := reconciliationissueFields[5].Descriptor()
+	// reconciliationissue.SuggestedActionValidator is a validator for the "suggested_action" field. It is called by the builders before save.
+	reconciliationissue.SuggestedActionValidator = reconciliationissueDescSuggestedAction.Validators[0].(func(string) error)
+	// reconciliationissueDescStatus is the schema descriptor for status field.
+	reconciliationissueDescStatus := reconciliationissueFields[6].Descriptor()
+	// reconciliationissue.DefaultStatus holds the default value on creation for the status field.
+	reconciliationissue.DefaultStatus = reconciliationissueDescStatus.Default.(string)
+	// reconciliationissue.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	reconciliationissue.StatusValidator = reconciliationissueDescStatus.Validators[0].(func(string) error)
+	// reconciliationissueDescResolution is the schema descriptor for resolution field.
+	reconciliationissueDescResolution := reconciliationissueFields[7].Descriptor()
+	// reconciliationissue.ResolutionValidator is a validator for the "resolution" field. It is called by the builders before save.
+	reconciliationissue.ResolutionValidator = reconciliationissueDescResolution.Validators[0].(func(string) error)
+	// reconciliationissueDescResolutionNote is the schema descriptor for resolution_note field.
+	reconciliationissueDescResolutionNote := reconciliationissueFields[8].Descriptor()
+	// reconciliationissue.ResolutionNoteValidator is a validator for the "resolution_note" field. It is called by the builders before save.
+	reconciliationissue.ResolutionNoteValidator = reconciliationissueDescResolutionNote.Validators[0].(func(string) error)
+	// reconciliationissueDescID is the schema descriptor for id field.
+	reconciliationissueDescID := reconciliationissueMixinFields0[0].Descriptor()
+	// reconciliationissue.DefaultID holds the default value on creation for the id field.
+	reconciliationissue.DefaultID = reconciliationissueDescID.Default.(func() uuid.UUID)
 	schoolMixin := schema.School{}.Mixin()
 	schoolMixinHooks0 := schoolMixin[0].Hooks()
 	school.Hooks[0] = schoolMixinHooks0[0]
@@ -512,6 +580,292 @@ func init() {
 	schoolDescID := schoolMixinFields0[0].Descriptor()
 	// school.DefaultID holds the default value on creation for the id field.
 	school.DefaultID = schoolDescID.Default.(func() uuid.UUID)
+	sisconnectionMixin := schema.SisConnection{}.Mixin()
+	sisconnectionMixinHooks0 := sisconnectionMixin[0].Hooks()
+	sisconnection.Hooks[0] = sisconnectionMixinHooks0[0]
+	sisconnectionMixinInters0 := sisconnectionMixin[0].Interceptors()
+	sisconnection.Interceptors[0] = sisconnectionMixinInters0[0]
+	sisconnectionMixinFields0 := sisconnectionMixin[0].Fields()
+	_ = sisconnectionMixinFields0
+	sisconnectionFields := schema.SisConnection{}.Fields()
+	_ = sisconnectionFields
+	// sisconnectionDescCreatedAt is the schema descriptor for created_at field.
+	sisconnectionDescCreatedAt := sisconnectionMixinFields0[2].Descriptor()
+	// sisconnection.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sisconnection.DefaultCreatedAt = sisconnectionDescCreatedAt.Default.(func() time.Time)
+	// sisconnectionDescUpdatedAt is the schema descriptor for updated_at field.
+	sisconnectionDescUpdatedAt := sisconnectionMixinFields0[4].Descriptor()
+	// sisconnection.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sisconnection.DefaultUpdatedAt = sisconnectionDescUpdatedAt.Default.(func() time.Time)
+	// sisconnection.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sisconnection.UpdateDefaultUpdatedAt = sisconnectionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sisconnectionDescDeleteReason is the schema descriptor for delete_reason field.
+	sisconnectionDescDeleteReason := sisconnectionMixinFields0[8].Descriptor()
+	// sisconnection.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sisconnection.DeleteReasonValidator = sisconnectionDescDeleteReason.Validators[0].(func(string) error)
+	// sisconnectionDescVersion is the schema descriptor for version field.
+	sisconnectionDescVersion := sisconnectionMixinFields0[9].Descriptor()
+	// sisconnection.DefaultVersion holds the default value on creation for the version field.
+	sisconnection.DefaultVersion = sisconnectionDescVersion.Default.(int64)
+	// sisconnectionDescProviderKind is the schema descriptor for provider_kind field.
+	sisconnectionDescProviderKind := sisconnectionFields[0].Descriptor()
+	// sisconnection.ProviderKindValidator is a validator for the "provider_kind" field. It is called by the builders before save.
+	sisconnection.ProviderKindValidator = sisconnectionDescProviderKind.Validators[0].(func(string) error)
+	// sisconnectionDescContractVersion is the schema descriptor for contract_version field.
+	sisconnectionDescContractVersion := sisconnectionFields[1].Descriptor()
+	// sisconnection.ContractVersionValidator is a validator for the "contract_version" field. It is called by the builders before save.
+	sisconnection.ContractVersionValidator = sisconnectionDescContractVersion.Validators[0].(func(string) error)
+	// sisconnectionDescSecretRef is the schema descriptor for secret_ref field.
+	sisconnectionDescSecretRef := sisconnectionFields[3].Descriptor()
+	// sisconnection.SecretRefValidator is a validator for the "secret_ref" field. It is called by the builders before save.
+	sisconnection.SecretRefValidator = sisconnectionDescSecretRef.Validators[0].(func(string) error)
+	// sisconnectionDescStatus is the schema descriptor for status field.
+	sisconnectionDescStatus := sisconnectionFields[4].Descriptor()
+	// sisconnection.DefaultStatus holds the default value on creation for the status field.
+	sisconnection.DefaultStatus = sisconnectionDescStatus.Default.(string)
+	// sisconnection.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	sisconnection.StatusValidator = sisconnectionDescStatus.Validators[0].(func(string) error)
+	// sisconnectionDescDeltaWatermark is the schema descriptor for delta_watermark field.
+	sisconnectionDescDeltaWatermark := sisconnectionFields[5].Descriptor()
+	// sisconnection.DeltaWatermarkValidator is a validator for the "delta_watermark" field. It is called by the builders before save.
+	sisconnection.DeltaWatermarkValidator = sisconnectionDescDeltaWatermark.Validators[0].(func(string) error)
+	// sisconnectionDescSchedule is the schema descriptor for schedule field.
+	sisconnectionDescSchedule := sisconnectionFields[6].Descriptor()
+	// sisconnection.ScheduleValidator is a validator for the "schedule" field. It is called by the builders before save.
+	sisconnection.ScheduleValidator = sisconnectionDescSchedule.Validators[0].(func(string) error)
+	// sisconnectionDescID is the schema descriptor for id field.
+	sisconnectionDescID := sisconnectionMixinFields0[0].Descriptor()
+	// sisconnection.DefaultID holds the default value on creation for the id field.
+	sisconnection.DefaultID = sisconnectionDescID.Default.(func() uuid.UUID)
+	sisconnectionschoolMixin := schema.SisConnectionSchool{}.Mixin()
+	sisconnectionschoolMixinHooks0 := sisconnectionschoolMixin[0].Hooks()
+	sisconnectionschool.Hooks[0] = sisconnectionschoolMixinHooks0[0]
+	sisconnectionschoolMixinInters0 := sisconnectionschoolMixin[0].Interceptors()
+	sisconnectionschool.Interceptors[0] = sisconnectionschoolMixinInters0[0]
+	sisconnectionschoolMixinFields0 := sisconnectionschoolMixin[0].Fields()
+	_ = sisconnectionschoolMixinFields0
+	sisconnectionschoolFields := schema.SisConnectionSchool{}.Fields()
+	_ = sisconnectionschoolFields
+	// sisconnectionschoolDescCreatedAt is the schema descriptor for created_at field.
+	sisconnectionschoolDescCreatedAt := sisconnectionschoolMixinFields0[2].Descriptor()
+	// sisconnectionschool.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sisconnectionschool.DefaultCreatedAt = sisconnectionschoolDescCreatedAt.Default.(func() time.Time)
+	// sisconnectionschoolDescUpdatedAt is the schema descriptor for updated_at field.
+	sisconnectionschoolDescUpdatedAt := sisconnectionschoolMixinFields0[4].Descriptor()
+	// sisconnectionschool.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sisconnectionschool.DefaultUpdatedAt = sisconnectionschoolDescUpdatedAt.Default.(func() time.Time)
+	// sisconnectionschool.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sisconnectionschool.UpdateDefaultUpdatedAt = sisconnectionschoolDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sisconnectionschoolDescDeleteReason is the schema descriptor for delete_reason field.
+	sisconnectionschoolDescDeleteReason := sisconnectionschoolMixinFields0[8].Descriptor()
+	// sisconnectionschool.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sisconnectionschool.DeleteReasonValidator = sisconnectionschoolDescDeleteReason.Validators[0].(func(string) error)
+	// sisconnectionschoolDescVersion is the schema descriptor for version field.
+	sisconnectionschoolDescVersion := sisconnectionschoolMixinFields0[9].Descriptor()
+	// sisconnectionschool.DefaultVersion holds the default value on creation for the version field.
+	sisconnectionschool.DefaultVersion = sisconnectionschoolDescVersion.Default.(int64)
+	// sisconnectionschoolDescActive is the schema descriptor for active field.
+	sisconnectionschoolDescActive := sisconnectionschoolFields[2].Descriptor()
+	// sisconnectionschool.DefaultActive holds the default value on creation for the active field.
+	sisconnectionschool.DefaultActive = sisconnectionschoolDescActive.Default.(bool)
+	// sisconnectionschoolDescAssignedAt is the schema descriptor for assigned_at field.
+	sisconnectionschoolDescAssignedAt := sisconnectionschoolFields[4].Descriptor()
+	// sisconnectionschool.DefaultAssignedAt holds the default value on creation for the assigned_at field.
+	sisconnectionschool.DefaultAssignedAt = sisconnectionschoolDescAssignedAt.Default.(func() time.Time)
+	// sisconnectionschoolDescID is the schema descriptor for id field.
+	sisconnectionschoolDescID := sisconnectionschoolMixinFields0[0].Descriptor()
+	// sisconnectionschool.DefaultID holds the default value on creation for the id field.
+	sisconnectionschool.DefaultID = sisconnectionschoolDescID.Default.(func() uuid.UUID)
+	sisidentitylinkMixin := schema.SisIdentityLink{}.Mixin()
+	sisidentitylinkMixinHooks0 := sisidentitylinkMixin[0].Hooks()
+	sisidentitylink.Hooks[0] = sisidentitylinkMixinHooks0[0]
+	sisidentitylinkMixinInters0 := sisidentitylinkMixin[0].Interceptors()
+	sisidentitylink.Interceptors[0] = sisidentitylinkMixinInters0[0]
+	sisidentitylinkMixinFields0 := sisidentitylinkMixin[0].Fields()
+	_ = sisidentitylinkMixinFields0
+	sisidentitylinkFields := schema.SisIdentityLink{}.Fields()
+	_ = sisidentitylinkFields
+	// sisidentitylinkDescCreatedAt is the schema descriptor for created_at field.
+	sisidentitylinkDescCreatedAt := sisidentitylinkMixinFields0[2].Descriptor()
+	// sisidentitylink.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sisidentitylink.DefaultCreatedAt = sisidentitylinkDescCreatedAt.Default.(func() time.Time)
+	// sisidentitylinkDescUpdatedAt is the schema descriptor for updated_at field.
+	sisidentitylinkDescUpdatedAt := sisidentitylinkMixinFields0[4].Descriptor()
+	// sisidentitylink.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sisidentitylink.DefaultUpdatedAt = sisidentitylinkDescUpdatedAt.Default.(func() time.Time)
+	// sisidentitylink.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sisidentitylink.UpdateDefaultUpdatedAt = sisidentitylinkDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sisidentitylinkDescDeleteReason is the schema descriptor for delete_reason field.
+	sisidentitylinkDescDeleteReason := sisidentitylinkMixinFields0[8].Descriptor()
+	// sisidentitylink.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sisidentitylink.DeleteReasonValidator = sisidentitylinkDescDeleteReason.Validators[0].(func(string) error)
+	// sisidentitylinkDescVersion is the schema descriptor for version field.
+	sisidentitylinkDescVersion := sisidentitylinkMixinFields0[9].Descriptor()
+	// sisidentitylink.DefaultVersion holds the default value on creation for the version field.
+	sisidentitylink.DefaultVersion = sisidentitylinkDescVersion.Default.(int64)
+	// sisidentitylinkDescStudentExternalID is the schema descriptor for student_external_id field.
+	sisidentitylinkDescStudentExternalID := sisidentitylinkFields[3].Descriptor()
+	// sisidentitylink.StudentExternalIDValidator is a validator for the "student_external_id" field. It is called by the builders before save.
+	sisidentitylink.StudentExternalIDValidator = sisidentitylinkDescStudentExternalID.Validators[0].(func(string) error)
+	// sisidentitylinkDescStatus is the schema descriptor for status field.
+	sisidentitylinkDescStatus := sisidentitylinkFields[4].Descriptor()
+	// sisidentitylink.DefaultStatus holds the default value on creation for the status field.
+	sisidentitylink.DefaultStatus = sisidentitylinkDescStatus.Default.(string)
+	// sisidentitylink.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	sisidentitylink.StatusValidator = sisidentitylinkDescStatus.Validators[0].(func(string) error)
+	// sisidentitylinkDescLinkedAt is the schema descriptor for linked_at field.
+	sisidentitylinkDescLinkedAt := sisidentitylinkFields[5].Descriptor()
+	// sisidentitylink.DefaultLinkedAt holds the default value on creation for the linked_at field.
+	sisidentitylink.DefaultLinkedAt = sisidentitylinkDescLinkedAt.Default.(func() time.Time)
+	// sisidentitylinkDescID is the schema descriptor for id field.
+	sisidentitylinkDescID := sisidentitylinkMixinFields0[0].Descriptor()
+	// sisidentitylink.DefaultID holds the default value on creation for the id field.
+	sisidentitylink.DefaultID = sisidentitylinkDescID.Default.(func() uuid.UUID)
+	sisimportMixin := schema.SisImport{}.Mixin()
+	sisimportMixinHooks0 := sisimportMixin[0].Hooks()
+	sisimport.Hooks[0] = sisimportMixinHooks0[0]
+	sisimportMixinInters0 := sisimportMixin[0].Interceptors()
+	sisimport.Interceptors[0] = sisimportMixinInters0[0]
+	sisimportMixinFields0 := sisimportMixin[0].Fields()
+	_ = sisimportMixinFields0
+	sisimportFields := schema.SisImport{}.Fields()
+	_ = sisimportFields
+	// sisimportDescCreatedAt is the schema descriptor for created_at field.
+	sisimportDescCreatedAt := sisimportMixinFields0[2].Descriptor()
+	// sisimport.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sisimport.DefaultCreatedAt = sisimportDescCreatedAt.Default.(func() time.Time)
+	// sisimportDescUpdatedAt is the schema descriptor for updated_at field.
+	sisimportDescUpdatedAt := sisimportMixinFields0[4].Descriptor()
+	// sisimport.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sisimport.DefaultUpdatedAt = sisimportDescUpdatedAt.Default.(func() time.Time)
+	// sisimport.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sisimport.UpdateDefaultUpdatedAt = sisimportDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sisimportDescDeleteReason is the schema descriptor for delete_reason field.
+	sisimportDescDeleteReason := sisimportMixinFields0[8].Descriptor()
+	// sisimport.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sisimport.DeleteReasonValidator = sisimportDescDeleteReason.Validators[0].(func(string) error)
+	// sisimportDescVersion is the schema descriptor for version field.
+	sisimportDescVersion := sisimportMixinFields0[9].Descriptor()
+	// sisimport.DefaultVersion holds the default value on creation for the version field.
+	sisimport.DefaultVersion = sisimportDescVersion.Default.(int64)
+	// sisimportDescStorageKey is the schema descriptor for storage_key field.
+	sisimportDescStorageKey := sisimportFields[2].Descriptor()
+	// sisimport.StorageKeyValidator is a validator for the "storage_key" field. It is called by the builders before save.
+	sisimport.StorageKeyValidator = sisimportDescStorageKey.Validators[0].(func(string) error)
+	// sisimportDescFileSha256 is the schema descriptor for file_sha256 field.
+	sisimportDescFileSha256 := sisimportFields[3].Descriptor()
+	// sisimport.FileSha256Validator is a validator for the "file_sha256" field. It is called by the builders before save.
+	sisimport.FileSha256Validator = sisimportDescFileSha256.Validators[0].(func(string) error)
+	// sisimportDescSizeBytes is the schema descriptor for size_bytes field.
+	sisimportDescSizeBytes := sisimportFields[4].Descriptor()
+	// sisimport.DefaultSizeBytes holds the default value on creation for the size_bytes field.
+	sisimport.DefaultSizeBytes = sisimportDescSizeBytes.Default.(int64)
+	// sisimportDescStatus is the schema descriptor for status field.
+	sisimportDescStatus := sisimportFields[6].Descriptor()
+	// sisimport.DefaultStatus holds the default value on creation for the status field.
+	sisimport.DefaultStatus = sisimportDescStatus.Default.(string)
+	// sisimport.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	sisimport.StatusValidator = sisimportDescStatus.Validators[0].(func(string) error)
+	// sisimportDescDryRun is the schema descriptor for dry_run field.
+	sisimportDescDryRun := sisimportFields[7].Descriptor()
+	// sisimport.DefaultDryRun holds the default value on creation for the dry_run field.
+	sisimport.DefaultDryRun = sisimportDescDryRun.Default.(bool)
+	// sisimportDescStats is the schema descriptor for stats field.
+	sisimportDescStats := sisimportFields[9].Descriptor()
+	// sisimport.DefaultStats holds the default value on creation for the stats field.
+	sisimport.DefaultStats = sisimportDescStats.Default.(map[string]int)
+	// sisimportDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	sisimportDescIdempotencyKey := sisimportFields[10].Descriptor()
+	// sisimport.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	sisimport.IdempotencyKeyValidator = sisimportDescIdempotencyKey.Validators[0].(func(string) error)
+	// sisimportDescID is the schema descriptor for id field.
+	sisimportDescID := sisimportMixinFields0[0].Descriptor()
+	// sisimport.DefaultID holds the default value on creation for the id field.
+	sisimport.DefaultID = sisimportDescID.Default.(func() uuid.UUID)
+	sislinkMixin := schema.SisLink{}.Mixin()
+	sislinkMixinHooks0 := sislinkMixin[0].Hooks()
+	sislink.Hooks[0] = sislinkMixinHooks0[0]
+	sislinkMixinInters0 := sislinkMixin[0].Interceptors()
+	sislink.Interceptors[0] = sislinkMixinInters0[0]
+	sislinkMixinFields0 := sislinkMixin[0].Fields()
+	_ = sislinkMixinFields0
+	sislinkFields := schema.SisLink{}.Fields()
+	_ = sislinkFields
+	// sislinkDescCreatedAt is the schema descriptor for created_at field.
+	sislinkDescCreatedAt := sislinkMixinFields0[2].Descriptor()
+	// sislink.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sislink.DefaultCreatedAt = sislinkDescCreatedAt.Default.(func() time.Time)
+	// sislinkDescUpdatedAt is the schema descriptor for updated_at field.
+	sislinkDescUpdatedAt := sislinkMixinFields0[4].Descriptor()
+	// sislink.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sislink.DefaultUpdatedAt = sislinkDescUpdatedAt.Default.(func() time.Time)
+	// sislink.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sislink.UpdateDefaultUpdatedAt = sislinkDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sislinkDescDeleteReason is the schema descriptor for delete_reason field.
+	sislinkDescDeleteReason := sislinkMixinFields0[8].Descriptor()
+	// sislink.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sislink.DeleteReasonValidator = sislinkDescDeleteReason.Validators[0].(func(string) error)
+	// sislinkDescVersion is the schema descriptor for version field.
+	sislinkDescVersion := sislinkMixinFields0[9].Descriptor()
+	// sislink.DefaultVersion holds the default value on creation for the version field.
+	sislink.DefaultVersion = sislinkDescVersion.Default.(int64)
+	// sislinkDescEntityType is the schema descriptor for entity_type field.
+	sislinkDescEntityType := sislinkFields[0].Descriptor()
+	// sislink.EntityTypeValidator is a validator for the "entity_type" field. It is called by the builders before save.
+	sislink.EntityTypeValidator = sislinkDescEntityType.Validators[0].(func(string) error)
+	// sislinkDescExternalID is the schema descriptor for external_id field.
+	sislinkDescExternalID := sislinkFields[3].Descriptor()
+	// sislink.ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
+	sislink.ExternalIDValidator = sislinkDescExternalID.Validators[0].(func(string) error)
+	// sislinkDescLastHash is the schema descriptor for last_hash field.
+	sislinkDescLastHash := sislinkFields[5].Descriptor()
+	// sislink.LastHashValidator is a validator for the "last_hash" field. It is called by the builders before save.
+	sislink.LastHashValidator = sislinkDescLastHash.Validators[0].(func(string) error)
+	// sislinkDescLastSyncedAt is the schema descriptor for last_synced_at field.
+	sislinkDescLastSyncedAt := sislinkFields[6].Descriptor()
+	// sislink.DefaultLastSyncedAt holds the default value on creation for the last_synced_at field.
+	sislink.DefaultLastSyncedAt = sislinkDescLastSyncedAt.Default.(func() time.Time)
+	// sislinkDescID is the schema descriptor for id field.
+	sislinkDescID := sislinkMixinFields0[0].Descriptor()
+	// sislink.DefaultID holds the default value on creation for the id field.
+	sislink.DefaultID = sislinkDescID.Default.(func() uuid.UUID)
+	stagingrecordMixin := schema.StagingRecord{}.Mixin()
+	stagingrecordMixinHooks0 := stagingrecordMixin[0].Hooks()
+	stagingrecord.Hooks[0] = stagingrecordMixinHooks0[0]
+	stagingrecordMixinFields0 := stagingrecordMixin[0].Fields()
+	_ = stagingrecordMixinFields0
+	stagingrecordFields := schema.StagingRecord{}.Fields()
+	_ = stagingrecordFields
+	// stagingrecordDescCreatedAt is the schema descriptor for created_at field.
+	stagingrecordDescCreatedAt := stagingrecordMixinFields0[1].Descriptor()
+	// stagingrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	stagingrecord.DefaultCreatedAt = stagingrecordDescCreatedAt.Default.(func() time.Time)
+	// stagingrecordDescEntityKind is the schema descriptor for entity_kind field.
+	stagingrecordDescEntityKind := stagingrecordFields[1].Descriptor()
+	// stagingrecord.EntityKindValidator is a validator for the "entity_kind" field. It is called by the builders before save.
+	stagingrecord.EntityKindValidator = stagingrecordDescEntityKind.Validators[0].(func(string) error)
+	// stagingrecordDescExternalID is the schema descriptor for external_id field.
+	stagingrecordDescExternalID := stagingrecordFields[2].Descriptor()
+	// stagingrecord.ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
+	stagingrecord.ExternalIDValidator = stagingrecordDescExternalID.Validators[0].(func(string) error)
+	// stagingrecordDescRawHash is the schema descriptor for raw_hash field.
+	stagingrecordDescRawHash := stagingrecordFields[5].Descriptor()
+	// stagingrecord.RawHashValidator is a validator for the "raw_hash" field. It is called by the builders before save.
+	stagingrecord.RawHashValidator = stagingrecordDescRawHash.Validators[0].(func(string) error)
+	// stagingrecordDescAction is the schema descriptor for action field.
+	stagingrecordDescAction := stagingrecordFields[6].Descriptor()
+	// stagingrecord.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	stagingrecord.ActionValidator = stagingrecordDescAction.Validators[0].(func(string) error)
+	// stagingrecordDescStatus is the schema descriptor for status field.
+	stagingrecordDescStatus := stagingrecordFields[7].Descriptor()
+	// stagingrecord.DefaultStatus holds the default value on creation for the status field.
+	stagingrecord.DefaultStatus = stagingrecordDescStatus.Default.(string)
+	// stagingrecord.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	stagingrecord.StatusValidator = stagingrecordDescStatus.Validators[0].(func(string) error)
+	// stagingrecordDescID is the schema descriptor for id field.
+	stagingrecordDescID := stagingrecordMixinFields0[0].Descriptor()
+	// stagingrecord.DefaultID holds the default value on creation for the id field.
+	stagingrecord.DefaultID = stagingrecordDescID.Default.(func() uuid.UUID)
 	studentMixin := schema.Student{}.Mixin()
 	studentMixinHooks0 := studentMixin[0].Hooks()
 	student.Hooks[0] = studentMixinHooks0[0]
@@ -561,6 +915,214 @@ func init() {
 	studentDescID := studentMixinFields0[0].Descriptor()
 	// student.DefaultID holds the default value on creation for the id field.
 	student.DefaultID = studentDescID.Default.(func() uuid.UUID)
+	studentloginkeyMixin := schema.StudentLoginKey{}.Mixin()
+	studentloginkeyMixinHooks0 := studentloginkeyMixin[0].Hooks()
+	studentloginkey.Hooks[0] = studentloginkeyMixinHooks0[0]
+	studentloginkeyMixinInters0 := studentloginkeyMixin[0].Interceptors()
+	studentloginkey.Interceptors[0] = studentloginkeyMixinInters0[0]
+	studentloginkeyMixinFields0 := studentloginkeyMixin[0].Fields()
+	_ = studentloginkeyMixinFields0
+	studentloginkeyFields := schema.StudentLoginKey{}.Fields()
+	_ = studentloginkeyFields
+	// studentloginkeyDescCreatedAt is the schema descriptor for created_at field.
+	studentloginkeyDescCreatedAt := studentloginkeyMixinFields0[2].Descriptor()
+	// studentloginkey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	studentloginkey.DefaultCreatedAt = studentloginkeyDescCreatedAt.Default.(func() time.Time)
+	// studentloginkeyDescUpdatedAt is the schema descriptor for updated_at field.
+	studentloginkeyDescUpdatedAt := studentloginkeyMixinFields0[4].Descriptor()
+	// studentloginkey.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	studentloginkey.DefaultUpdatedAt = studentloginkeyDescUpdatedAt.Default.(func() time.Time)
+	// studentloginkey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	studentloginkey.UpdateDefaultUpdatedAt = studentloginkeyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// studentloginkeyDescDeleteReason is the schema descriptor for delete_reason field.
+	studentloginkeyDescDeleteReason := studentloginkeyMixinFields0[8].Descriptor()
+	// studentloginkey.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	studentloginkey.DeleteReasonValidator = studentloginkeyDescDeleteReason.Validators[0].(func(string) error)
+	// studentloginkeyDescVersion is the schema descriptor for version field.
+	studentloginkeyDescVersion := studentloginkeyMixinFields0[9].Descriptor()
+	// studentloginkey.DefaultVersion holds the default value on creation for the version field.
+	studentloginkey.DefaultVersion = studentloginkeyDescVersion.Default.(int64)
+	// studentloginkeyDescLoginType is the schema descriptor for login_type field.
+	studentloginkeyDescLoginType := studentloginkeyFields[1].Descriptor()
+	// studentloginkey.LoginTypeValidator is a validator for the "login_type" field. It is called by the builders before save.
+	studentloginkey.LoginTypeValidator = studentloginkeyDescLoginType.Validators[0].(func(string) error)
+	// studentloginkeyDescIdpAlias is the schema descriptor for idp_alias field.
+	studentloginkeyDescIdpAlias := studentloginkeyFields[2].Descriptor()
+	// studentloginkey.IdpAliasValidator is a validator for the "idp_alias" field. It is called by the builders before save.
+	studentloginkey.IdpAliasValidator = studentloginkeyDescIdpAlias.Validators[0].(func(string) error)
+	// studentloginkeyDescLoginKey is the schema descriptor for login_key field.
+	studentloginkeyDescLoginKey := studentloginkeyFields[3].Descriptor()
+	// studentloginkey.LoginKeyValidator is a validator for the "login_key" field. It is called by the builders before save.
+	studentloginkey.LoginKeyValidator = studentloginkeyDescLoginKey.Validators[0].(func(string) error)
+	// studentloginkeyDescStudentExternalID is the schema descriptor for student_external_id field.
+	studentloginkeyDescStudentExternalID := studentloginkeyFields[4].Descriptor()
+	// studentloginkey.StudentExternalIDValidator is a validator for the "student_external_id" field. It is called by the builders before save.
+	studentloginkey.StudentExternalIDValidator = studentloginkeyDescStudentExternalID.Validators[0].(func(string) error)
+	// studentloginkeyDescID is the schema descriptor for id field.
+	studentloginkeyDescID := studentloginkeyMixinFields0[0].Descriptor()
+	// studentloginkey.DefaultID holds the default value on creation for the id field.
+	studentloginkey.DefaultID = studentloginkeyDescID.Default.(func() uuid.UUID)
+	syncrecorderrorMixin := schema.SyncRecordError{}.Mixin()
+	syncrecorderrorMixinHooks0 := syncrecorderrorMixin[0].Hooks()
+	syncrecorderror.Hooks[0] = syncrecorderrorMixinHooks0[0]
+	syncrecorderrorMixinFields0 := syncrecorderrorMixin[0].Fields()
+	_ = syncrecorderrorMixinFields0
+	syncrecorderrorFields := schema.SyncRecordError{}.Fields()
+	_ = syncrecorderrorFields
+	// syncrecorderrorDescCreatedAt is the schema descriptor for created_at field.
+	syncrecorderrorDescCreatedAt := syncrecorderrorMixinFields0[1].Descriptor()
+	// syncrecorderror.DefaultCreatedAt holds the default value on creation for the created_at field.
+	syncrecorderror.DefaultCreatedAt = syncrecorderrorDescCreatedAt.Default.(func() time.Time)
+	// syncrecorderrorDescEntityKind is the schema descriptor for entity_kind field.
+	syncrecorderrorDescEntityKind := syncrecorderrorFields[1].Descriptor()
+	// syncrecorderror.EntityKindValidator is a validator for the "entity_kind" field. It is called by the builders before save.
+	syncrecorderror.EntityKindValidator = syncrecorderrorDescEntityKind.Validators[0].(func(string) error)
+	// syncrecorderrorDescExternalID is the schema descriptor for external_id field.
+	syncrecorderrorDescExternalID := syncrecorderrorFields[2].Descriptor()
+	// syncrecorderror.ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
+	syncrecorderror.ExternalIDValidator = syncrecorderrorDescExternalID.Validators[0].(func(string) error)
+	// syncrecorderrorDescColumnName is the schema descriptor for column_name field.
+	syncrecorderrorDescColumnName := syncrecorderrorFields[4].Descriptor()
+	// syncrecorderror.ColumnNameValidator is a validator for the "column_name" field. It is called by the builders before save.
+	syncrecorderror.ColumnNameValidator = syncrecorderrorDescColumnName.Validators[0].(func(string) error)
+	// syncrecorderrorDescErrorCode is the schema descriptor for error_code field.
+	syncrecorderrorDescErrorCode := syncrecorderrorFields[5].Descriptor()
+	// syncrecorderror.ErrorCodeValidator is a validator for the "error_code" field. It is called by the builders before save.
+	syncrecorderror.ErrorCodeValidator = syncrecorderrorDescErrorCode.Validators[0].(func(string) error)
+	// syncrecorderrorDescMessage is the schema descriptor for message field.
+	syncrecorderrorDescMessage := syncrecorderrorFields[6].Descriptor()
+	// syncrecorderror.MessageValidator is a validator for the "message" field. It is called by the builders before save.
+	syncrecorderror.MessageValidator = syncrecorderrorDescMessage.Validators[0].(func(string) error)
+	// syncrecorderrorDescOccurredAt is the schema descriptor for occurred_at field.
+	syncrecorderrorDescOccurredAt := syncrecorderrorFields[7].Descriptor()
+	// syncrecorderror.DefaultOccurredAt holds the default value on creation for the occurred_at field.
+	syncrecorderror.DefaultOccurredAt = syncrecorderrorDescOccurredAt.Default.(func() time.Time)
+	// syncrecorderrorDescID is the schema descriptor for id field.
+	syncrecorderrorDescID := syncrecorderrorMixinFields0[0].Descriptor()
+	// syncrecorderror.DefaultID holds the default value on creation for the id field.
+	syncrecorderror.DefaultID = syncrecorderrorDescID.Default.(func() uuid.UUID)
+	syncrunMixin := schema.SyncRun{}.Mixin()
+	syncrunMixinHooks0 := syncrunMixin[0].Hooks()
+	syncrun.Hooks[0] = syncrunMixinHooks0[0]
+	syncrunMixinInters0 := syncrunMixin[0].Interceptors()
+	syncrun.Interceptors[0] = syncrunMixinInters0[0]
+	syncrunMixinFields0 := syncrunMixin[0].Fields()
+	_ = syncrunMixinFields0
+	syncrunFields := schema.SyncRun{}.Fields()
+	_ = syncrunFields
+	// syncrunDescCreatedAt is the schema descriptor for created_at field.
+	syncrunDescCreatedAt := syncrunMixinFields0[2].Descriptor()
+	// syncrun.DefaultCreatedAt holds the default value on creation for the created_at field.
+	syncrun.DefaultCreatedAt = syncrunDescCreatedAt.Default.(func() time.Time)
+	// syncrunDescUpdatedAt is the schema descriptor for updated_at field.
+	syncrunDescUpdatedAt := syncrunMixinFields0[4].Descriptor()
+	// syncrun.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	syncrun.DefaultUpdatedAt = syncrunDescUpdatedAt.Default.(func() time.Time)
+	// syncrun.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	syncrun.UpdateDefaultUpdatedAt = syncrunDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// syncrunDescDeleteReason is the schema descriptor for delete_reason field.
+	syncrunDescDeleteReason := syncrunMixinFields0[8].Descriptor()
+	// syncrun.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	syncrun.DeleteReasonValidator = syncrunDescDeleteReason.Validators[0].(func(string) error)
+	// syncrunDescVersion is the schema descriptor for version field.
+	syncrunDescVersion := syncrunMixinFields0[9].Descriptor()
+	// syncrun.DefaultVersion holds the default value on creation for the version field.
+	syncrun.DefaultVersion = syncrunDescVersion.Default.(int64)
+	// syncrunDescMode is the schema descriptor for mode field.
+	syncrunDescMode := syncrunFields[2].Descriptor()
+	// syncrun.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	syncrun.ModeValidator = syncrunDescMode.Validators[0].(func(string) error)
+	// syncrunDescTrigger is the schema descriptor for trigger field.
+	syncrunDescTrigger := syncrunFields[3].Descriptor()
+	// syncrun.DefaultTrigger holds the default value on creation for the trigger field.
+	syncrun.DefaultTrigger = syncrunDescTrigger.Default.(string)
+	// syncrun.TriggerValidator is a validator for the "trigger" field. It is called by the builders before save.
+	syncrun.TriggerValidator = syncrunDescTrigger.Validators[0].(func(string) error)
+	// syncrunDescDryRun is the schema descriptor for dry_run field.
+	syncrunDescDryRun := syncrunFields[4].Descriptor()
+	// syncrun.DefaultDryRun holds the default value on creation for the dry_run field.
+	syncrun.DefaultDryRun = syncrunDescDryRun.Default.(bool)
+	// syncrunDescStatus is the schema descriptor for status field.
+	syncrunDescStatus := syncrunFields[5].Descriptor()
+	// syncrun.DefaultStatus holds the default value on creation for the status field.
+	syncrun.DefaultStatus = syncrunDescStatus.Default.(string)
+	// syncrun.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	syncrun.StatusValidator = syncrunDescStatus.Validators[0].(func(string) error)
+	// syncrunDescFailureCode is the schema descriptor for failure_code field.
+	syncrunDescFailureCode := syncrunFields[6].Descriptor()
+	// syncrun.FailureCodeValidator is a validator for the "failure_code" field. It is called by the builders before save.
+	syncrun.FailureCodeValidator = syncrunDescFailureCode.Validators[0].(func(string) error)
+	// syncrunDescStats is the schema descriptor for stats field.
+	syncrunDescStats := syncrunFields[7].Descriptor()
+	// syncrun.DefaultStats holds the default value on creation for the stats field.
+	syncrun.DefaultStats = syncrunDescStats.Default.(map[string]int)
+	// syncrunDescStartedAt is the schema descriptor for started_at field.
+	syncrunDescStartedAt := syncrunFields[8].Descriptor()
+	// syncrun.DefaultStartedAt holds the default value on creation for the started_at field.
+	syncrun.DefaultStartedAt = syncrunDescStartedAt.Default.(func() time.Time)
+	// syncrunDescID is the schema descriptor for id field.
+	syncrunDescID := syncrunMixinFields0[0].Descriptor()
+	// syncrun.DefaultID holds the default value on creation for the id field.
+	syncrun.DefaultID = syncrunDescID.Default.(func() uuid.UUID)
+	syncedstudentMixin := schema.SyncedStudent{}.Mixin()
+	syncedstudentMixinHooks0 := syncedstudentMixin[0].Hooks()
+	syncedstudent.Hooks[0] = syncedstudentMixinHooks0[0]
+	syncedstudentMixinInters0 := syncedstudentMixin[0].Interceptors()
+	syncedstudent.Interceptors[0] = syncedstudentMixinInters0[0]
+	syncedstudentMixinFields0 := syncedstudentMixin[0].Fields()
+	_ = syncedstudentMixinFields0
+	syncedstudentFields := schema.SyncedStudent{}.Fields()
+	_ = syncedstudentFields
+	// syncedstudentDescCreatedAt is the schema descriptor for created_at field.
+	syncedstudentDescCreatedAt := syncedstudentMixinFields0[2].Descriptor()
+	// syncedstudent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	syncedstudent.DefaultCreatedAt = syncedstudentDescCreatedAt.Default.(func() time.Time)
+	// syncedstudentDescUpdatedAt is the schema descriptor for updated_at field.
+	syncedstudentDescUpdatedAt := syncedstudentMixinFields0[4].Descriptor()
+	// syncedstudent.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	syncedstudent.DefaultUpdatedAt = syncedstudentDescUpdatedAt.Default.(func() time.Time)
+	// syncedstudent.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	syncedstudent.UpdateDefaultUpdatedAt = syncedstudentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// syncedstudentDescDeleteReason is the schema descriptor for delete_reason field.
+	syncedstudentDescDeleteReason := syncedstudentMixinFields0[8].Descriptor()
+	// syncedstudent.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	syncedstudent.DeleteReasonValidator = syncedstudentDescDeleteReason.Validators[0].(func(string) error)
+	// syncedstudentDescVersion is the schema descriptor for version field.
+	syncedstudentDescVersion := syncedstudentMixinFields0[9].Descriptor()
+	// syncedstudent.DefaultVersion holds the default value on creation for the version field.
+	syncedstudent.DefaultVersion = syncedstudentDescVersion.Default.(int64)
+	// syncedstudentDescStudentExternalID is the schema descriptor for student_external_id field.
+	syncedstudentDescStudentExternalID := syncedstudentFields[1].Descriptor()
+	// syncedstudent.StudentExternalIDValidator is a validator for the "student_external_id" field. It is called by the builders before save.
+	syncedstudent.StudentExternalIDValidator = syncedstudentDescStudentExternalID.Validators[0].(func(string) error)
+	// syncedstudentDescStudentCode is the schema descriptor for student_code field.
+	syncedstudentDescStudentCode := syncedstudentFields[3].Descriptor()
+	// syncedstudent.StudentCodeValidator is a validator for the "student_code" field. It is called by the builders before save.
+	syncedstudent.StudentCodeValidator = syncedstudentDescStudentCode.Validators[0].(func(string) error)
+	// syncedstudentDescRecordStatus is the schema descriptor for record_status field.
+	syncedstudentDescRecordStatus := syncedstudentFields[4].Descriptor()
+	// syncedstudent.RecordStatusValidator is a validator for the "record_status" field. It is called by the builders before save.
+	syncedstudent.RecordStatusValidator = syncedstudentDescRecordStatus.Validators[0].(func(string) error)
+	// syncedstudentDescNationalStudentIDHash is the schema descriptor for national_student_id_hash field.
+	syncedstudentDescNationalStudentIDHash := syncedstudentFields[5].Descriptor()
+	// syncedstudent.NationalStudentIDHashValidator is a validator for the "national_student_id_hash" field. It is called by the builders before save.
+	syncedstudent.NationalStudentIDHashValidator = syncedstudentDescNationalStudentIDHash.Validators[0].(func(string) error)
+	// syncedstudentDescLastHash is the schema descriptor for last_hash field.
+	syncedstudentDescLastHash := syncedstudentFields[6].Descriptor()
+	// syncedstudent.LastHashValidator is a validator for the "last_hash" field. It is called by the builders before save.
+	syncedstudent.LastHashValidator = syncedstudentDescLastHash.Validators[0].(func(string) error)
+	// syncedstudentDescLastSyncedAt is the schema descriptor for last_synced_at field.
+	syncedstudentDescLastSyncedAt := syncedstudentFields[7].Descriptor()
+	// syncedstudent.DefaultLastSyncedAt holds the default value on creation for the last_synced_at field.
+	syncedstudent.DefaultLastSyncedAt = syncedstudentDescLastSyncedAt.Default.(func() time.Time)
+	// syncedstudentDescMissingRuns is the schema descriptor for missing_runs field.
+	syncedstudentDescMissingRuns := syncedstudentFields[8].Descriptor()
+	// syncedstudent.DefaultMissingRuns holds the default value on creation for the missing_runs field.
+	syncedstudent.DefaultMissingRuns = syncedstudentDescMissingRuns.Default.(int16)
+	// syncedstudentDescID is the schema descriptor for id field.
+	syncedstudentDescID := syncedstudentMixinFields0[0].Descriptor()
+	// syncedstudent.DefaultID holds the default value on creation for the id field.
+	syncedstudent.DefaultID = syncedstudentDescID.Default.(func() uuid.UUID)
 	tenantMixin := schema.Tenant{}.Mixin()
 	tenantMixinHooks0 := tenantMixin[0].Hooks()
 	tenant.Hooks[0] = tenantMixinHooks0[0]

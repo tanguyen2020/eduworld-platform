@@ -93,6 +93,18 @@ func (f ProvinceSuccessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProvinceSuccessionMutation", m)
 }
 
+// The ReconciliationIssueFunc type is an adapter to allow the use of ordinary
+// function as ReconciliationIssue mutator.
+type ReconciliationIssueFunc func(context.Context, *ent.ReconciliationIssueMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReconciliationIssueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ReconciliationIssueMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReconciliationIssueMutation", m)
+}
+
 // The SchoolFunc type is an adapter to allow the use of ordinary
 // function as School mutator.
 type SchoolFunc func(context.Context, *ent.SchoolMutation) (ent.Value, error)
@@ -105,6 +117,78 @@ func (f SchoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SchoolMutation", m)
 }
 
+// The SisConnectionFunc type is an adapter to allow the use of ordinary
+// function as SisConnection mutator.
+type SisConnectionFunc func(context.Context, *ent.SisConnectionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SisConnectionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SisConnectionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SisConnectionMutation", m)
+}
+
+// The SisConnectionSchoolFunc type is an adapter to allow the use of ordinary
+// function as SisConnectionSchool mutator.
+type SisConnectionSchoolFunc func(context.Context, *ent.SisConnectionSchoolMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SisConnectionSchoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SisConnectionSchoolMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SisConnectionSchoolMutation", m)
+}
+
+// The SisIdentityLinkFunc type is an adapter to allow the use of ordinary
+// function as SisIdentityLink mutator.
+type SisIdentityLinkFunc func(context.Context, *ent.SisIdentityLinkMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SisIdentityLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SisIdentityLinkMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SisIdentityLinkMutation", m)
+}
+
+// The SisImportFunc type is an adapter to allow the use of ordinary
+// function as SisImport mutator.
+type SisImportFunc func(context.Context, *ent.SisImportMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SisImportFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SisImportMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SisImportMutation", m)
+}
+
+// The SisLinkFunc type is an adapter to allow the use of ordinary
+// function as SisLink mutator.
+type SisLinkFunc func(context.Context, *ent.SisLinkMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SisLinkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SisLinkMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SisLinkMutation", m)
+}
+
+// The StagingRecordFunc type is an adapter to allow the use of ordinary
+// function as StagingRecord mutator.
+type StagingRecordFunc func(context.Context, *ent.StagingRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StagingRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StagingRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StagingRecordMutation", m)
+}
+
 // The StudentFunc type is an adapter to allow the use of ordinary
 // function as Student mutator.
 type StudentFunc func(context.Context, *ent.StudentMutation) (ent.Value, error)
@@ -115,6 +199,54 @@ func (f StudentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudentMutation", m)
+}
+
+// The StudentLoginKeyFunc type is an adapter to allow the use of ordinary
+// function as StudentLoginKey mutator.
+type StudentLoginKeyFunc func(context.Context, *ent.StudentLoginKeyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StudentLoginKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StudentLoginKeyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudentLoginKeyMutation", m)
+}
+
+// The SyncRecordErrorFunc type is an adapter to allow the use of ordinary
+// function as SyncRecordError mutator.
+type SyncRecordErrorFunc func(context.Context, *ent.SyncRecordErrorMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SyncRecordErrorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SyncRecordErrorMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SyncRecordErrorMutation", m)
+}
+
+// The SyncRunFunc type is an adapter to allow the use of ordinary
+// function as SyncRun mutator.
+type SyncRunFunc func(context.Context, *ent.SyncRunMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SyncRunFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SyncRunMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SyncRunMutation", m)
+}
+
+// The SyncedStudentFunc type is an adapter to allow the use of ordinary
+// function as SyncedStudent mutator.
+type SyncedStudentFunc func(context.Context, *ent.SyncedStudentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SyncedStudentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SyncedStudentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SyncedStudentMutation", m)
 }
 
 // The TenantFunc type is an adapter to allow the use of ordinary

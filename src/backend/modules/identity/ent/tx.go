@@ -26,10 +26,32 @@ type Tx struct {
 	Province *ProvinceClient
 	// ProvinceSuccession is the client for interacting with the ProvinceSuccession builders.
 	ProvinceSuccession *ProvinceSuccessionClient
+	// ReconciliationIssue is the client for interacting with the ReconciliationIssue builders.
+	ReconciliationIssue *ReconciliationIssueClient
 	// School is the client for interacting with the School builders.
 	School *SchoolClient
+	// SisConnection is the client for interacting with the SisConnection builders.
+	SisConnection *SisConnectionClient
+	// SisConnectionSchool is the client for interacting with the SisConnectionSchool builders.
+	SisConnectionSchool *SisConnectionSchoolClient
+	// SisIdentityLink is the client for interacting with the SisIdentityLink builders.
+	SisIdentityLink *SisIdentityLinkClient
+	// SisImport is the client for interacting with the SisImport builders.
+	SisImport *SisImportClient
+	// SisLink is the client for interacting with the SisLink builders.
+	SisLink *SisLinkClient
+	// StagingRecord is the client for interacting with the StagingRecord builders.
+	StagingRecord *StagingRecordClient
 	// Student is the client for interacting with the Student builders.
 	Student *StudentClient
+	// StudentLoginKey is the client for interacting with the StudentLoginKey builders.
+	StudentLoginKey *StudentLoginKeyClient
+	// SyncRecordError is the client for interacting with the SyncRecordError builders.
+	SyncRecordError *SyncRecordErrorClient
+	// SyncRun is the client for interacting with the SyncRun builders.
+	SyncRun *SyncRunClient
+	// SyncedStudent is the client for interacting with the SyncedStudent builders.
+	SyncedStudent *SyncedStudentClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
@@ -172,8 +194,19 @@ func (tx *Tx) init() {
 	tx.ExternalIdentity = NewExternalIdentityClient(tx.config)
 	tx.Province = NewProvinceClient(tx.config)
 	tx.ProvinceSuccession = NewProvinceSuccessionClient(tx.config)
+	tx.ReconciliationIssue = NewReconciliationIssueClient(tx.config)
 	tx.School = NewSchoolClient(tx.config)
+	tx.SisConnection = NewSisConnectionClient(tx.config)
+	tx.SisConnectionSchool = NewSisConnectionSchoolClient(tx.config)
+	tx.SisIdentityLink = NewSisIdentityLinkClient(tx.config)
+	tx.SisImport = NewSisImportClient(tx.config)
+	tx.SisLink = NewSisLinkClient(tx.config)
+	tx.StagingRecord = NewStagingRecordClient(tx.config)
 	tx.Student = NewStudentClient(tx.config)
+	tx.StudentLoginKey = NewStudentLoginKeyClient(tx.config)
+	tx.SyncRecordError = NewSyncRecordErrorClient(tx.config)
+	tx.SyncRun = NewSyncRunClient(tx.config)
+	tx.SyncedStudent = NewSyncedStudentClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

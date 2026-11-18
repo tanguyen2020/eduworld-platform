@@ -27,11 +27,44 @@ type Province func(*sql.Selector)
 // ProvinceSuccession is the predicate function for provincesuccession builders.
 type ProvinceSuccession func(*sql.Selector)
 
+// ReconciliationIssue is the predicate function for reconciliationissue builders.
+type ReconciliationIssue func(*sql.Selector)
+
 // School is the predicate function for school builders.
 type School func(*sql.Selector)
 
+// SisConnection is the predicate function for sisconnection builders.
+type SisConnection func(*sql.Selector)
+
+// SisConnectionSchool is the predicate function for sisconnectionschool builders.
+type SisConnectionSchool func(*sql.Selector)
+
+// SisIdentityLink is the predicate function for sisidentitylink builders.
+type SisIdentityLink func(*sql.Selector)
+
+// SisImport is the predicate function for sisimport builders.
+type SisImport func(*sql.Selector)
+
+// SisLink is the predicate function for sislink builders.
+type SisLink func(*sql.Selector)
+
+// StagingRecord is the predicate function for stagingrecord builders.
+type StagingRecord func(*sql.Selector)
+
 // Student is the predicate function for student builders.
 type Student func(*sql.Selector)
+
+// StudentLoginKey is the predicate function for studentloginkey builders.
+type StudentLoginKey func(*sql.Selector)
+
+// SyncRecordError is the predicate function for syncrecorderror builders.
+type SyncRecordError func(*sql.Selector)
+
+// SyncRun is the predicate function for syncrun builders.
+type SyncRun func(*sql.Selector)
+
+// SyncedStudent is the predicate function for syncedstudent builders.
+type SyncedStudent func(*sql.Selector)
 
 // Tenant is the predicate function for tenant builders.
 type Tenant func(*sql.Selector)

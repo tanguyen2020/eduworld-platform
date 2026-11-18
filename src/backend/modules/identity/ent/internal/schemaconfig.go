@@ -7,17 +7,28 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	AcademicYear       string // AcademicYear table.
-	Class              string // Class table.
-	Country            string // Country table.
-	Enrollment         string // Enrollment table.
-	ExternalIdentity   string // ExternalIdentity table.
-	Province           string // Province table.
-	ProvinceSuccession string // ProvinceSuccession table.
-	School             string // School table.
-	Student            string // Student table.
-	Tenant             string // Tenant table.
-	User               string // User table.
+	AcademicYear        string // AcademicYear table.
+	Class               string // Class table.
+	Country             string // Country table.
+	Enrollment          string // Enrollment table.
+	ExternalIdentity    string // ExternalIdentity table.
+	Province            string // Province table.
+	ProvinceSuccession  string // ProvinceSuccession table.
+	ReconciliationIssue string // ReconciliationIssue table.
+	School              string // School table.
+	SisConnection       string // SisConnection table.
+	SisConnectionSchool string // SisConnectionSchool table.
+	SisIdentityLink     string // SisIdentityLink table.
+	SisImport           string // SisImport table.
+	SisLink             string // SisLink table.
+	StagingRecord       string // StagingRecord table.
+	Student             string // Student table.
+	StudentLoginKey     string // StudentLoginKey table.
+	SyncRecordError     string // SyncRecordError table.
+	SyncRun             string // SyncRun table.
+	SyncedStudent       string // SyncedStudent table.
+	Tenant              string // Tenant table.
+	User                string // User table.
 }
 
 type schemaCtxKey struct{}

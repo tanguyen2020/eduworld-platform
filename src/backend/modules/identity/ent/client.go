@@ -22,8 +22,19 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisimport"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sislink"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/stagingrecord"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/student"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/studentloginkey"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncedstudent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrecorderror"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
 
@@ -49,10 +60,32 @@ type Client struct {
 	Province *ProvinceClient
 	// ProvinceSuccession is the client for interacting with the ProvinceSuccession builders.
 	ProvinceSuccession *ProvinceSuccessionClient
+	// ReconciliationIssue is the client for interacting with the ReconciliationIssue builders.
+	ReconciliationIssue *ReconciliationIssueClient
 	// School is the client for interacting with the School builders.
 	School *SchoolClient
+	// SisConnection is the client for interacting with the SisConnection builders.
+	SisConnection *SisConnectionClient
+	// SisConnectionSchool is the client for interacting with the SisConnectionSchool builders.
+	SisConnectionSchool *SisConnectionSchoolClient
+	// SisIdentityLink is the client for interacting with the SisIdentityLink builders.
+	SisIdentityLink *SisIdentityLinkClient
+	// SisImport is the client for interacting with the SisImport builders.
+	SisImport *SisImportClient
+	// SisLink is the client for interacting with the SisLink builders.
+	SisLink *SisLinkClient
+	// StagingRecord is the client for interacting with the StagingRecord builders.
+	StagingRecord *StagingRecordClient
 	// Student is the client for interacting with the Student builders.
 	Student *StudentClient
+	// StudentLoginKey is the client for interacting with the StudentLoginKey builders.
+	StudentLoginKey *StudentLoginKeyClient
+	// SyncRecordError is the client for interacting with the SyncRecordError builders.
+	SyncRecordError *SyncRecordErrorClient
+	// SyncRun is the client for interacting with the SyncRun builders.
+	SyncRun *SyncRunClient
+	// SyncedStudent is the client for interacting with the SyncedStudent builders.
+	SyncedStudent *SyncedStudentClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
@@ -75,8 +108,19 @@ func (c *Client) init() {
 	c.ExternalIdentity = NewExternalIdentityClient(c.config)
 	c.Province = NewProvinceClient(c.config)
 	c.ProvinceSuccession = NewProvinceSuccessionClient(c.config)
+	c.ReconciliationIssue = NewReconciliationIssueClient(c.config)
 	c.School = NewSchoolClient(c.config)
+	c.SisConnection = NewSisConnectionClient(c.config)
+	c.SisConnectionSchool = NewSisConnectionSchoolClient(c.config)
+	c.SisIdentityLink = NewSisIdentityLinkClient(c.config)
+	c.SisImport = NewSisImportClient(c.config)
+	c.SisLink = NewSisLinkClient(c.config)
+	c.StagingRecord = NewStagingRecordClient(c.config)
 	c.Student = NewStudentClient(c.config)
+	c.StudentLoginKey = NewStudentLoginKeyClient(c.config)
+	c.SyncRecordError = NewSyncRecordErrorClient(c.config)
+	c.SyncRun = NewSyncRunClient(c.config)
+	c.SyncedStudent = NewSyncedStudentClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -172,19 +216,30 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		AcademicYear:       NewAcademicYearClient(cfg),
-		Class:              NewClassClient(cfg),
-		Country:            NewCountryClient(cfg),
-		Enrollment:         NewEnrollmentClient(cfg),
-		ExternalIdentity:   NewExternalIdentityClient(cfg),
-		Province:           NewProvinceClient(cfg),
-		ProvinceSuccession: NewProvinceSuccessionClient(cfg),
-		School:             NewSchoolClient(cfg),
-		Student:            NewStudentClient(cfg),
-		Tenant:             NewTenantClient(cfg),
-		User:               NewUserClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		AcademicYear:        NewAcademicYearClient(cfg),
+		Class:               NewClassClient(cfg),
+		Country:             NewCountryClient(cfg),
+		Enrollment:          NewEnrollmentClient(cfg),
+		ExternalIdentity:    NewExternalIdentityClient(cfg),
+		Province:            NewProvinceClient(cfg),
+		ProvinceSuccession:  NewProvinceSuccessionClient(cfg),
+		ReconciliationIssue: NewReconciliationIssueClient(cfg),
+		School:              NewSchoolClient(cfg),
+		SisConnection:       NewSisConnectionClient(cfg),
+		SisConnectionSchool: NewSisConnectionSchoolClient(cfg),
+		SisIdentityLink:     NewSisIdentityLinkClient(cfg),
+		SisImport:           NewSisImportClient(cfg),
+		SisLink:             NewSisLinkClient(cfg),
+		StagingRecord:       NewStagingRecordClient(cfg),
+		Student:             NewStudentClient(cfg),
+		StudentLoginKey:     NewStudentLoginKeyClient(cfg),
+		SyncRecordError:     NewSyncRecordErrorClient(cfg),
+		SyncRun:             NewSyncRunClient(cfg),
+		SyncedStudent:       NewSyncedStudentClient(cfg),
+		Tenant:              NewTenantClient(cfg),
+		User:                NewUserClient(cfg),
 	}, nil
 }
 
@@ -202,19 +257,30 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		AcademicYear:       NewAcademicYearClient(cfg),
-		Class:              NewClassClient(cfg),
-		Country:            NewCountryClient(cfg),
-		Enrollment:         NewEnrollmentClient(cfg),
-		ExternalIdentity:   NewExternalIdentityClient(cfg),
-		Province:           NewProvinceClient(cfg),
-		ProvinceSuccession: NewProvinceSuccessionClient(cfg),
-		School:             NewSchoolClient(cfg),
-		Student:            NewStudentClient(cfg),
-		Tenant:             NewTenantClient(cfg),
-		User:               NewUserClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		AcademicYear:        NewAcademicYearClient(cfg),
+		Class:               NewClassClient(cfg),
+		Country:             NewCountryClient(cfg),
+		Enrollment:          NewEnrollmentClient(cfg),
+		ExternalIdentity:    NewExternalIdentityClient(cfg),
+		Province:            NewProvinceClient(cfg),
+		ProvinceSuccession:  NewProvinceSuccessionClient(cfg),
+		ReconciliationIssue: NewReconciliationIssueClient(cfg),
+		School:              NewSchoolClient(cfg),
+		SisConnection:       NewSisConnectionClient(cfg),
+		SisConnectionSchool: NewSisConnectionSchoolClient(cfg),
+		SisIdentityLink:     NewSisIdentityLinkClient(cfg),
+		SisImport:           NewSisImportClient(cfg),
+		SisLink:             NewSisLinkClient(cfg),
+		StagingRecord:       NewStagingRecordClient(cfg),
+		Student:             NewStudentClient(cfg),
+		StudentLoginKey:     NewStudentLoginKeyClient(cfg),
+		SyncRecordError:     NewSyncRecordErrorClient(cfg),
+		SyncRun:             NewSyncRunClient(cfg),
+		SyncedStudent:       NewSyncedStudentClient(cfg),
+		Tenant:              NewTenantClient(cfg),
+		User:                NewUserClient(cfg),
 	}, nil
 }
 
@@ -245,7 +311,10 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Province, c.ProvinceSuccession, c.School, c.Student, c.Tenant, c.User,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.School,
+		c.SisConnection, c.SisConnectionSchool, c.SisIdentityLink, c.SisImport,
+		c.SisLink, c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError,
+		c.SyncRun, c.SyncedStudent, c.Tenant, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -256,7 +325,10 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Province, c.ProvinceSuccession, c.School, c.Student, c.Tenant, c.User,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.School,
+		c.SisConnection, c.SisConnectionSchool, c.SisIdentityLink, c.SisImport,
+		c.SisLink, c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError,
+		c.SyncRun, c.SyncedStudent, c.Tenant, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -279,10 +351,32 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Province.mutate(ctx, m)
 	case *ProvinceSuccessionMutation:
 		return c.ProvinceSuccession.mutate(ctx, m)
+	case *ReconciliationIssueMutation:
+		return c.ReconciliationIssue.mutate(ctx, m)
 	case *SchoolMutation:
 		return c.School.mutate(ctx, m)
+	case *SisConnectionMutation:
+		return c.SisConnection.mutate(ctx, m)
+	case *SisConnectionSchoolMutation:
+		return c.SisConnectionSchool.mutate(ctx, m)
+	case *SisIdentityLinkMutation:
+		return c.SisIdentityLink.mutate(ctx, m)
+	case *SisImportMutation:
+		return c.SisImport.mutate(ctx, m)
+	case *SisLinkMutation:
+		return c.SisLink.mutate(ctx, m)
+	case *StagingRecordMutation:
+		return c.StagingRecord.mutate(ctx, m)
 	case *StudentMutation:
 		return c.Student.mutate(ctx, m)
+	case *StudentLoginKeyMutation:
+		return c.StudentLoginKey.mutate(ctx, m)
+	case *SyncRecordErrorMutation:
+		return c.SyncRecordError.mutate(ctx, m)
+	case *SyncRunMutation:
+		return c.SyncRun.mutate(ctx, m)
+	case *SyncedStudentMutation:
+		return c.SyncedStudent.mutate(ctx, m)
 	case *TenantMutation:
 		return c.Tenant.mutate(ctx, m)
 	case *UserMutation:
@@ -1237,6 +1331,141 @@ func (c *ProvinceSuccessionClient) mutate(ctx context.Context, m *ProvinceSucces
 	}
 }
 
+// ReconciliationIssueClient is a client for the ReconciliationIssue schema.
+type ReconciliationIssueClient struct {
+	config
+}
+
+// NewReconciliationIssueClient returns a client for the ReconciliationIssue from the given config.
+func NewReconciliationIssueClient(c config) *ReconciliationIssueClient {
+	return &ReconciliationIssueClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `reconciliationissue.Hooks(f(g(h())))`.
+func (c *ReconciliationIssueClient) Use(hooks ...Hook) {
+	c.hooks.ReconciliationIssue = append(c.hooks.ReconciliationIssue, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `reconciliationissue.Intercept(f(g(h())))`.
+func (c *ReconciliationIssueClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ReconciliationIssue = append(c.inters.ReconciliationIssue, interceptors...)
+}
+
+// Create returns a builder for creating a ReconciliationIssue entity.
+func (c *ReconciliationIssueClient) Create() *ReconciliationIssueCreate {
+	mutation := newReconciliationIssueMutation(c.config, OpCreate)
+	return &ReconciliationIssueCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ReconciliationIssue entities.
+func (c *ReconciliationIssueClient) CreateBulk(builders ...*ReconciliationIssueCreate) *ReconciliationIssueCreateBulk {
+	return &ReconciliationIssueCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ReconciliationIssueClient) MapCreateBulk(slice any, setFunc func(*ReconciliationIssueCreate, int)) *ReconciliationIssueCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ReconciliationIssueCreateBulk{err: fmt.Errorf("calling to ReconciliationIssueClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ReconciliationIssueCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ReconciliationIssueCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ReconciliationIssue.
+func (c *ReconciliationIssueClient) Update() *ReconciliationIssueUpdate {
+	mutation := newReconciliationIssueMutation(c.config, OpUpdate)
+	return &ReconciliationIssueUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReconciliationIssueClient) UpdateOne(_m *ReconciliationIssue) *ReconciliationIssueUpdateOne {
+	mutation := newReconciliationIssueMutation(c.config, OpUpdateOne, withReconciliationIssue(_m))
+	return &ReconciliationIssueUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReconciliationIssueClient) UpdateOneID(id uuid.UUID) *ReconciliationIssueUpdateOne {
+	mutation := newReconciliationIssueMutation(c.config, OpUpdateOne, withReconciliationIssueID(id))
+	return &ReconciliationIssueUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ReconciliationIssue.
+func (c *ReconciliationIssueClient) Delete() *ReconciliationIssueDelete {
+	mutation := newReconciliationIssueMutation(c.config, OpDelete)
+	return &ReconciliationIssueDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReconciliationIssueClient) DeleteOne(_m *ReconciliationIssue) *ReconciliationIssueDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReconciliationIssueClient) DeleteOneID(id uuid.UUID) *ReconciliationIssueDeleteOne {
+	builder := c.Delete().Where(reconciliationissue.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReconciliationIssueDeleteOne{builder}
+}
+
+// Query returns a query builder for ReconciliationIssue.
+func (c *ReconciliationIssueClient) Query() *ReconciliationIssueQuery {
+	return &ReconciliationIssueQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeReconciliationIssue},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ReconciliationIssue entity by its id.
+func (c *ReconciliationIssueClient) Get(ctx context.Context, id uuid.UUID) (*ReconciliationIssue, error) {
+	return c.Query().Where(reconciliationissue.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReconciliationIssueClient) GetX(ctx context.Context, id uuid.UUID) *ReconciliationIssue {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ReconciliationIssueClient) Hooks() []Hook {
+	hooks := c.hooks.ReconciliationIssue
+	return append(hooks[:len(hooks):len(hooks)], reconciliationissue.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReconciliationIssueClient) Interceptors() []Interceptor {
+	inters := c.inters.ReconciliationIssue
+	return append(inters[:len(inters):len(inters)], reconciliationissue.Interceptors[:]...)
+}
+
+func (c *ReconciliationIssueClient) mutate(ctx context.Context, m *ReconciliationIssueMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReconciliationIssueCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReconciliationIssueUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReconciliationIssueUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReconciliationIssueDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ReconciliationIssue mutation op: %q", m.Op())
+	}
+}
+
 // SchoolClient is a client for the School schema.
 type SchoolClient struct {
 	config
@@ -1372,6 +1601,815 @@ func (c *SchoolClient) mutate(ctx context.Context, m *SchoolMutation) (Value, er
 	}
 }
 
+// SisConnectionClient is a client for the SisConnection schema.
+type SisConnectionClient struct {
+	config
+}
+
+// NewSisConnectionClient returns a client for the SisConnection from the given config.
+func NewSisConnectionClient(c config) *SisConnectionClient {
+	return &SisConnectionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sisconnection.Hooks(f(g(h())))`.
+func (c *SisConnectionClient) Use(hooks ...Hook) {
+	c.hooks.SisConnection = append(c.hooks.SisConnection, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sisconnection.Intercept(f(g(h())))`.
+func (c *SisConnectionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SisConnection = append(c.inters.SisConnection, interceptors...)
+}
+
+// Create returns a builder for creating a SisConnection entity.
+func (c *SisConnectionClient) Create() *SisConnectionCreate {
+	mutation := newSisConnectionMutation(c.config, OpCreate)
+	return &SisConnectionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SisConnection entities.
+func (c *SisConnectionClient) CreateBulk(builders ...*SisConnectionCreate) *SisConnectionCreateBulk {
+	return &SisConnectionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SisConnectionClient) MapCreateBulk(slice any, setFunc func(*SisConnectionCreate, int)) *SisConnectionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SisConnectionCreateBulk{err: fmt.Errorf("calling to SisConnectionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SisConnectionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SisConnectionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SisConnection.
+func (c *SisConnectionClient) Update() *SisConnectionUpdate {
+	mutation := newSisConnectionMutation(c.config, OpUpdate)
+	return &SisConnectionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SisConnectionClient) UpdateOne(_m *SisConnection) *SisConnectionUpdateOne {
+	mutation := newSisConnectionMutation(c.config, OpUpdateOne, withSisConnection(_m))
+	return &SisConnectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SisConnectionClient) UpdateOneID(id uuid.UUID) *SisConnectionUpdateOne {
+	mutation := newSisConnectionMutation(c.config, OpUpdateOne, withSisConnectionID(id))
+	return &SisConnectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SisConnection.
+func (c *SisConnectionClient) Delete() *SisConnectionDelete {
+	mutation := newSisConnectionMutation(c.config, OpDelete)
+	return &SisConnectionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SisConnectionClient) DeleteOne(_m *SisConnection) *SisConnectionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SisConnectionClient) DeleteOneID(id uuid.UUID) *SisConnectionDeleteOne {
+	builder := c.Delete().Where(sisconnection.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SisConnectionDeleteOne{builder}
+}
+
+// Query returns a query builder for SisConnection.
+func (c *SisConnectionClient) Query() *SisConnectionQuery {
+	return &SisConnectionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSisConnection},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SisConnection entity by its id.
+func (c *SisConnectionClient) Get(ctx context.Context, id uuid.UUID) (*SisConnection, error) {
+	return c.Query().Where(sisconnection.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SisConnectionClient) GetX(ctx context.Context, id uuid.UUID) *SisConnection {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SisConnectionClient) Hooks() []Hook {
+	hooks := c.hooks.SisConnection
+	return append(hooks[:len(hooks):len(hooks)], sisconnection.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SisConnectionClient) Interceptors() []Interceptor {
+	inters := c.inters.SisConnection
+	return append(inters[:len(inters):len(inters)], sisconnection.Interceptors[:]...)
+}
+
+func (c *SisConnectionClient) mutate(ctx context.Context, m *SisConnectionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SisConnectionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SisConnectionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SisConnectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SisConnectionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SisConnection mutation op: %q", m.Op())
+	}
+}
+
+// SisConnectionSchoolClient is a client for the SisConnectionSchool schema.
+type SisConnectionSchoolClient struct {
+	config
+}
+
+// NewSisConnectionSchoolClient returns a client for the SisConnectionSchool from the given config.
+func NewSisConnectionSchoolClient(c config) *SisConnectionSchoolClient {
+	return &SisConnectionSchoolClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sisconnectionschool.Hooks(f(g(h())))`.
+func (c *SisConnectionSchoolClient) Use(hooks ...Hook) {
+	c.hooks.SisConnectionSchool = append(c.hooks.SisConnectionSchool, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sisconnectionschool.Intercept(f(g(h())))`.
+func (c *SisConnectionSchoolClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SisConnectionSchool = append(c.inters.SisConnectionSchool, interceptors...)
+}
+
+// Create returns a builder for creating a SisConnectionSchool entity.
+func (c *SisConnectionSchoolClient) Create() *SisConnectionSchoolCreate {
+	mutation := newSisConnectionSchoolMutation(c.config, OpCreate)
+	return &SisConnectionSchoolCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SisConnectionSchool entities.
+func (c *SisConnectionSchoolClient) CreateBulk(builders ...*SisConnectionSchoolCreate) *SisConnectionSchoolCreateBulk {
+	return &SisConnectionSchoolCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SisConnectionSchoolClient) MapCreateBulk(slice any, setFunc func(*SisConnectionSchoolCreate, int)) *SisConnectionSchoolCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SisConnectionSchoolCreateBulk{err: fmt.Errorf("calling to SisConnectionSchoolClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SisConnectionSchoolCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SisConnectionSchoolCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SisConnectionSchool.
+func (c *SisConnectionSchoolClient) Update() *SisConnectionSchoolUpdate {
+	mutation := newSisConnectionSchoolMutation(c.config, OpUpdate)
+	return &SisConnectionSchoolUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SisConnectionSchoolClient) UpdateOne(_m *SisConnectionSchool) *SisConnectionSchoolUpdateOne {
+	mutation := newSisConnectionSchoolMutation(c.config, OpUpdateOne, withSisConnectionSchool(_m))
+	return &SisConnectionSchoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SisConnectionSchoolClient) UpdateOneID(id uuid.UUID) *SisConnectionSchoolUpdateOne {
+	mutation := newSisConnectionSchoolMutation(c.config, OpUpdateOne, withSisConnectionSchoolID(id))
+	return &SisConnectionSchoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SisConnectionSchool.
+func (c *SisConnectionSchoolClient) Delete() *SisConnectionSchoolDelete {
+	mutation := newSisConnectionSchoolMutation(c.config, OpDelete)
+	return &SisConnectionSchoolDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SisConnectionSchoolClient) DeleteOne(_m *SisConnectionSchool) *SisConnectionSchoolDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SisConnectionSchoolClient) DeleteOneID(id uuid.UUID) *SisConnectionSchoolDeleteOne {
+	builder := c.Delete().Where(sisconnectionschool.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SisConnectionSchoolDeleteOne{builder}
+}
+
+// Query returns a query builder for SisConnectionSchool.
+func (c *SisConnectionSchoolClient) Query() *SisConnectionSchoolQuery {
+	return &SisConnectionSchoolQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSisConnectionSchool},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SisConnectionSchool entity by its id.
+func (c *SisConnectionSchoolClient) Get(ctx context.Context, id uuid.UUID) (*SisConnectionSchool, error) {
+	return c.Query().Where(sisconnectionschool.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SisConnectionSchoolClient) GetX(ctx context.Context, id uuid.UUID) *SisConnectionSchool {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SisConnectionSchoolClient) Hooks() []Hook {
+	hooks := c.hooks.SisConnectionSchool
+	return append(hooks[:len(hooks):len(hooks)], sisconnectionschool.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SisConnectionSchoolClient) Interceptors() []Interceptor {
+	inters := c.inters.SisConnectionSchool
+	return append(inters[:len(inters):len(inters)], sisconnectionschool.Interceptors[:]...)
+}
+
+func (c *SisConnectionSchoolClient) mutate(ctx context.Context, m *SisConnectionSchoolMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SisConnectionSchoolCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SisConnectionSchoolUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SisConnectionSchoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SisConnectionSchoolDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SisConnectionSchool mutation op: %q", m.Op())
+	}
+}
+
+// SisIdentityLinkClient is a client for the SisIdentityLink schema.
+type SisIdentityLinkClient struct {
+	config
+}
+
+// NewSisIdentityLinkClient returns a client for the SisIdentityLink from the given config.
+func NewSisIdentityLinkClient(c config) *SisIdentityLinkClient {
+	return &SisIdentityLinkClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sisidentitylink.Hooks(f(g(h())))`.
+func (c *SisIdentityLinkClient) Use(hooks ...Hook) {
+	c.hooks.SisIdentityLink = append(c.hooks.SisIdentityLink, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sisidentitylink.Intercept(f(g(h())))`.
+func (c *SisIdentityLinkClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SisIdentityLink = append(c.inters.SisIdentityLink, interceptors...)
+}
+
+// Create returns a builder for creating a SisIdentityLink entity.
+func (c *SisIdentityLinkClient) Create() *SisIdentityLinkCreate {
+	mutation := newSisIdentityLinkMutation(c.config, OpCreate)
+	return &SisIdentityLinkCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SisIdentityLink entities.
+func (c *SisIdentityLinkClient) CreateBulk(builders ...*SisIdentityLinkCreate) *SisIdentityLinkCreateBulk {
+	return &SisIdentityLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SisIdentityLinkClient) MapCreateBulk(slice any, setFunc func(*SisIdentityLinkCreate, int)) *SisIdentityLinkCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SisIdentityLinkCreateBulk{err: fmt.Errorf("calling to SisIdentityLinkClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SisIdentityLinkCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SisIdentityLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SisIdentityLink.
+func (c *SisIdentityLinkClient) Update() *SisIdentityLinkUpdate {
+	mutation := newSisIdentityLinkMutation(c.config, OpUpdate)
+	return &SisIdentityLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SisIdentityLinkClient) UpdateOne(_m *SisIdentityLink) *SisIdentityLinkUpdateOne {
+	mutation := newSisIdentityLinkMutation(c.config, OpUpdateOne, withSisIdentityLink(_m))
+	return &SisIdentityLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SisIdentityLinkClient) UpdateOneID(id uuid.UUID) *SisIdentityLinkUpdateOne {
+	mutation := newSisIdentityLinkMutation(c.config, OpUpdateOne, withSisIdentityLinkID(id))
+	return &SisIdentityLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SisIdentityLink.
+func (c *SisIdentityLinkClient) Delete() *SisIdentityLinkDelete {
+	mutation := newSisIdentityLinkMutation(c.config, OpDelete)
+	return &SisIdentityLinkDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SisIdentityLinkClient) DeleteOne(_m *SisIdentityLink) *SisIdentityLinkDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SisIdentityLinkClient) DeleteOneID(id uuid.UUID) *SisIdentityLinkDeleteOne {
+	builder := c.Delete().Where(sisidentitylink.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SisIdentityLinkDeleteOne{builder}
+}
+
+// Query returns a query builder for SisIdentityLink.
+func (c *SisIdentityLinkClient) Query() *SisIdentityLinkQuery {
+	return &SisIdentityLinkQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSisIdentityLink},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SisIdentityLink entity by its id.
+func (c *SisIdentityLinkClient) Get(ctx context.Context, id uuid.UUID) (*SisIdentityLink, error) {
+	return c.Query().Where(sisidentitylink.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SisIdentityLinkClient) GetX(ctx context.Context, id uuid.UUID) *SisIdentityLink {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SisIdentityLinkClient) Hooks() []Hook {
+	hooks := c.hooks.SisIdentityLink
+	return append(hooks[:len(hooks):len(hooks)], sisidentitylink.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SisIdentityLinkClient) Interceptors() []Interceptor {
+	inters := c.inters.SisIdentityLink
+	return append(inters[:len(inters):len(inters)], sisidentitylink.Interceptors[:]...)
+}
+
+func (c *SisIdentityLinkClient) mutate(ctx context.Context, m *SisIdentityLinkMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SisIdentityLinkCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SisIdentityLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SisIdentityLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SisIdentityLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SisIdentityLink mutation op: %q", m.Op())
+	}
+}
+
+// SisImportClient is a client for the SisImport schema.
+type SisImportClient struct {
+	config
+}
+
+// NewSisImportClient returns a client for the SisImport from the given config.
+func NewSisImportClient(c config) *SisImportClient {
+	return &SisImportClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sisimport.Hooks(f(g(h())))`.
+func (c *SisImportClient) Use(hooks ...Hook) {
+	c.hooks.SisImport = append(c.hooks.SisImport, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sisimport.Intercept(f(g(h())))`.
+func (c *SisImportClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SisImport = append(c.inters.SisImport, interceptors...)
+}
+
+// Create returns a builder for creating a SisImport entity.
+func (c *SisImportClient) Create() *SisImportCreate {
+	mutation := newSisImportMutation(c.config, OpCreate)
+	return &SisImportCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SisImport entities.
+func (c *SisImportClient) CreateBulk(builders ...*SisImportCreate) *SisImportCreateBulk {
+	return &SisImportCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SisImportClient) MapCreateBulk(slice any, setFunc func(*SisImportCreate, int)) *SisImportCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SisImportCreateBulk{err: fmt.Errorf("calling to SisImportClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SisImportCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SisImportCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SisImport.
+func (c *SisImportClient) Update() *SisImportUpdate {
+	mutation := newSisImportMutation(c.config, OpUpdate)
+	return &SisImportUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SisImportClient) UpdateOne(_m *SisImport) *SisImportUpdateOne {
+	mutation := newSisImportMutation(c.config, OpUpdateOne, withSisImport(_m))
+	return &SisImportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SisImportClient) UpdateOneID(id uuid.UUID) *SisImportUpdateOne {
+	mutation := newSisImportMutation(c.config, OpUpdateOne, withSisImportID(id))
+	return &SisImportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SisImport.
+func (c *SisImportClient) Delete() *SisImportDelete {
+	mutation := newSisImportMutation(c.config, OpDelete)
+	return &SisImportDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SisImportClient) DeleteOne(_m *SisImport) *SisImportDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SisImportClient) DeleteOneID(id uuid.UUID) *SisImportDeleteOne {
+	builder := c.Delete().Where(sisimport.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SisImportDeleteOne{builder}
+}
+
+// Query returns a query builder for SisImport.
+func (c *SisImportClient) Query() *SisImportQuery {
+	return &SisImportQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSisImport},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SisImport entity by its id.
+func (c *SisImportClient) Get(ctx context.Context, id uuid.UUID) (*SisImport, error) {
+	return c.Query().Where(sisimport.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SisImportClient) GetX(ctx context.Context, id uuid.UUID) *SisImport {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SisImportClient) Hooks() []Hook {
+	hooks := c.hooks.SisImport
+	return append(hooks[:len(hooks):len(hooks)], sisimport.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SisImportClient) Interceptors() []Interceptor {
+	inters := c.inters.SisImport
+	return append(inters[:len(inters):len(inters)], sisimport.Interceptors[:]...)
+}
+
+func (c *SisImportClient) mutate(ctx context.Context, m *SisImportMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SisImportCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SisImportUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SisImportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SisImportDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SisImport mutation op: %q", m.Op())
+	}
+}
+
+// SisLinkClient is a client for the SisLink schema.
+type SisLinkClient struct {
+	config
+}
+
+// NewSisLinkClient returns a client for the SisLink from the given config.
+func NewSisLinkClient(c config) *SisLinkClient {
+	return &SisLinkClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sislink.Hooks(f(g(h())))`.
+func (c *SisLinkClient) Use(hooks ...Hook) {
+	c.hooks.SisLink = append(c.hooks.SisLink, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sislink.Intercept(f(g(h())))`.
+func (c *SisLinkClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SisLink = append(c.inters.SisLink, interceptors...)
+}
+
+// Create returns a builder for creating a SisLink entity.
+func (c *SisLinkClient) Create() *SisLinkCreate {
+	mutation := newSisLinkMutation(c.config, OpCreate)
+	return &SisLinkCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SisLink entities.
+func (c *SisLinkClient) CreateBulk(builders ...*SisLinkCreate) *SisLinkCreateBulk {
+	return &SisLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SisLinkClient) MapCreateBulk(slice any, setFunc func(*SisLinkCreate, int)) *SisLinkCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SisLinkCreateBulk{err: fmt.Errorf("calling to SisLinkClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SisLinkCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SisLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SisLink.
+func (c *SisLinkClient) Update() *SisLinkUpdate {
+	mutation := newSisLinkMutation(c.config, OpUpdate)
+	return &SisLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SisLinkClient) UpdateOne(_m *SisLink) *SisLinkUpdateOne {
+	mutation := newSisLinkMutation(c.config, OpUpdateOne, withSisLink(_m))
+	return &SisLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SisLinkClient) UpdateOneID(id uuid.UUID) *SisLinkUpdateOne {
+	mutation := newSisLinkMutation(c.config, OpUpdateOne, withSisLinkID(id))
+	return &SisLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SisLink.
+func (c *SisLinkClient) Delete() *SisLinkDelete {
+	mutation := newSisLinkMutation(c.config, OpDelete)
+	return &SisLinkDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SisLinkClient) DeleteOne(_m *SisLink) *SisLinkDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SisLinkClient) DeleteOneID(id uuid.UUID) *SisLinkDeleteOne {
+	builder := c.Delete().Where(sislink.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SisLinkDeleteOne{builder}
+}
+
+// Query returns a query builder for SisLink.
+func (c *SisLinkClient) Query() *SisLinkQuery {
+	return &SisLinkQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSisLink},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SisLink entity by its id.
+func (c *SisLinkClient) Get(ctx context.Context, id uuid.UUID) (*SisLink, error) {
+	return c.Query().Where(sislink.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SisLinkClient) GetX(ctx context.Context, id uuid.UUID) *SisLink {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SisLinkClient) Hooks() []Hook {
+	hooks := c.hooks.SisLink
+	return append(hooks[:len(hooks):len(hooks)], sislink.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SisLinkClient) Interceptors() []Interceptor {
+	inters := c.inters.SisLink
+	return append(inters[:len(inters):len(inters)], sislink.Interceptors[:]...)
+}
+
+func (c *SisLinkClient) mutate(ctx context.Context, m *SisLinkMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SisLinkCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SisLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SisLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SisLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SisLink mutation op: %q", m.Op())
+	}
+}
+
+// StagingRecordClient is a client for the StagingRecord schema.
+type StagingRecordClient struct {
+	config
+}
+
+// NewStagingRecordClient returns a client for the StagingRecord from the given config.
+func NewStagingRecordClient(c config) *StagingRecordClient {
+	return &StagingRecordClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `stagingrecord.Hooks(f(g(h())))`.
+func (c *StagingRecordClient) Use(hooks ...Hook) {
+	c.hooks.StagingRecord = append(c.hooks.StagingRecord, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `stagingrecord.Intercept(f(g(h())))`.
+func (c *StagingRecordClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StagingRecord = append(c.inters.StagingRecord, interceptors...)
+}
+
+// Create returns a builder for creating a StagingRecord entity.
+func (c *StagingRecordClient) Create() *StagingRecordCreate {
+	mutation := newStagingRecordMutation(c.config, OpCreate)
+	return &StagingRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StagingRecord entities.
+func (c *StagingRecordClient) CreateBulk(builders ...*StagingRecordCreate) *StagingRecordCreateBulk {
+	return &StagingRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StagingRecordClient) MapCreateBulk(slice any, setFunc func(*StagingRecordCreate, int)) *StagingRecordCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StagingRecordCreateBulk{err: fmt.Errorf("calling to StagingRecordClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StagingRecordCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StagingRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StagingRecord.
+func (c *StagingRecordClient) Update() *StagingRecordUpdate {
+	mutation := newStagingRecordMutation(c.config, OpUpdate)
+	return &StagingRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StagingRecordClient) UpdateOne(_m *StagingRecord) *StagingRecordUpdateOne {
+	mutation := newStagingRecordMutation(c.config, OpUpdateOne, withStagingRecord(_m))
+	return &StagingRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StagingRecordClient) UpdateOneID(id uuid.UUID) *StagingRecordUpdateOne {
+	mutation := newStagingRecordMutation(c.config, OpUpdateOne, withStagingRecordID(id))
+	return &StagingRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StagingRecord.
+func (c *StagingRecordClient) Delete() *StagingRecordDelete {
+	mutation := newStagingRecordMutation(c.config, OpDelete)
+	return &StagingRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StagingRecordClient) DeleteOne(_m *StagingRecord) *StagingRecordDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StagingRecordClient) DeleteOneID(id uuid.UUID) *StagingRecordDeleteOne {
+	builder := c.Delete().Where(stagingrecord.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StagingRecordDeleteOne{builder}
+}
+
+// Query returns a query builder for StagingRecord.
+func (c *StagingRecordClient) Query() *StagingRecordQuery {
+	return &StagingRecordQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStagingRecord},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StagingRecord entity by its id.
+func (c *StagingRecordClient) Get(ctx context.Context, id uuid.UUID) (*StagingRecord, error) {
+	return c.Query().Where(stagingrecord.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StagingRecordClient) GetX(ctx context.Context, id uuid.UUID) *StagingRecord {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *StagingRecordClient) Hooks() []Hook {
+	hooks := c.hooks.StagingRecord
+	return append(hooks[:len(hooks):len(hooks)], stagingrecord.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *StagingRecordClient) Interceptors() []Interceptor {
+	return c.inters.StagingRecord
+}
+
+func (c *StagingRecordClient) mutate(ctx context.Context, m *StagingRecordMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StagingRecordCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StagingRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StagingRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StagingRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StagingRecord mutation op: %q", m.Op())
+	}
+}
+
 // StudentClient is a client for the Student schema.
 type StudentClient struct {
 	config
@@ -1504,6 +2542,545 @@ func (c *StudentClient) mutate(ctx context.Context, m *StudentMutation) (Value, 
 		return (&StudentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Student mutation op: %q", m.Op())
+	}
+}
+
+// StudentLoginKeyClient is a client for the StudentLoginKey schema.
+type StudentLoginKeyClient struct {
+	config
+}
+
+// NewStudentLoginKeyClient returns a client for the StudentLoginKey from the given config.
+func NewStudentLoginKeyClient(c config) *StudentLoginKeyClient {
+	return &StudentLoginKeyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `studentloginkey.Hooks(f(g(h())))`.
+func (c *StudentLoginKeyClient) Use(hooks ...Hook) {
+	c.hooks.StudentLoginKey = append(c.hooks.StudentLoginKey, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `studentloginkey.Intercept(f(g(h())))`.
+func (c *StudentLoginKeyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StudentLoginKey = append(c.inters.StudentLoginKey, interceptors...)
+}
+
+// Create returns a builder for creating a StudentLoginKey entity.
+func (c *StudentLoginKeyClient) Create() *StudentLoginKeyCreate {
+	mutation := newStudentLoginKeyMutation(c.config, OpCreate)
+	return &StudentLoginKeyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StudentLoginKey entities.
+func (c *StudentLoginKeyClient) CreateBulk(builders ...*StudentLoginKeyCreate) *StudentLoginKeyCreateBulk {
+	return &StudentLoginKeyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StudentLoginKeyClient) MapCreateBulk(slice any, setFunc func(*StudentLoginKeyCreate, int)) *StudentLoginKeyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StudentLoginKeyCreateBulk{err: fmt.Errorf("calling to StudentLoginKeyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StudentLoginKeyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StudentLoginKeyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StudentLoginKey.
+func (c *StudentLoginKeyClient) Update() *StudentLoginKeyUpdate {
+	mutation := newStudentLoginKeyMutation(c.config, OpUpdate)
+	return &StudentLoginKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StudentLoginKeyClient) UpdateOne(_m *StudentLoginKey) *StudentLoginKeyUpdateOne {
+	mutation := newStudentLoginKeyMutation(c.config, OpUpdateOne, withStudentLoginKey(_m))
+	return &StudentLoginKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StudentLoginKeyClient) UpdateOneID(id uuid.UUID) *StudentLoginKeyUpdateOne {
+	mutation := newStudentLoginKeyMutation(c.config, OpUpdateOne, withStudentLoginKeyID(id))
+	return &StudentLoginKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StudentLoginKey.
+func (c *StudentLoginKeyClient) Delete() *StudentLoginKeyDelete {
+	mutation := newStudentLoginKeyMutation(c.config, OpDelete)
+	return &StudentLoginKeyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StudentLoginKeyClient) DeleteOne(_m *StudentLoginKey) *StudentLoginKeyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StudentLoginKeyClient) DeleteOneID(id uuid.UUID) *StudentLoginKeyDeleteOne {
+	builder := c.Delete().Where(studentloginkey.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StudentLoginKeyDeleteOne{builder}
+}
+
+// Query returns a query builder for StudentLoginKey.
+func (c *StudentLoginKeyClient) Query() *StudentLoginKeyQuery {
+	return &StudentLoginKeyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStudentLoginKey},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StudentLoginKey entity by its id.
+func (c *StudentLoginKeyClient) Get(ctx context.Context, id uuid.UUID) (*StudentLoginKey, error) {
+	return c.Query().Where(studentloginkey.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StudentLoginKeyClient) GetX(ctx context.Context, id uuid.UUID) *StudentLoginKey {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *StudentLoginKeyClient) Hooks() []Hook {
+	hooks := c.hooks.StudentLoginKey
+	return append(hooks[:len(hooks):len(hooks)], studentloginkey.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *StudentLoginKeyClient) Interceptors() []Interceptor {
+	inters := c.inters.StudentLoginKey
+	return append(inters[:len(inters):len(inters)], studentloginkey.Interceptors[:]...)
+}
+
+func (c *StudentLoginKeyClient) mutate(ctx context.Context, m *StudentLoginKeyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StudentLoginKeyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StudentLoginKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StudentLoginKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StudentLoginKeyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StudentLoginKey mutation op: %q", m.Op())
+	}
+}
+
+// SyncRecordErrorClient is a client for the SyncRecordError schema.
+type SyncRecordErrorClient struct {
+	config
+}
+
+// NewSyncRecordErrorClient returns a client for the SyncRecordError from the given config.
+func NewSyncRecordErrorClient(c config) *SyncRecordErrorClient {
+	return &SyncRecordErrorClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `syncrecorderror.Hooks(f(g(h())))`.
+func (c *SyncRecordErrorClient) Use(hooks ...Hook) {
+	c.hooks.SyncRecordError = append(c.hooks.SyncRecordError, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `syncrecorderror.Intercept(f(g(h())))`.
+func (c *SyncRecordErrorClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SyncRecordError = append(c.inters.SyncRecordError, interceptors...)
+}
+
+// Create returns a builder for creating a SyncRecordError entity.
+func (c *SyncRecordErrorClient) Create() *SyncRecordErrorCreate {
+	mutation := newSyncRecordErrorMutation(c.config, OpCreate)
+	return &SyncRecordErrorCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SyncRecordError entities.
+func (c *SyncRecordErrorClient) CreateBulk(builders ...*SyncRecordErrorCreate) *SyncRecordErrorCreateBulk {
+	return &SyncRecordErrorCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SyncRecordErrorClient) MapCreateBulk(slice any, setFunc func(*SyncRecordErrorCreate, int)) *SyncRecordErrorCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SyncRecordErrorCreateBulk{err: fmt.Errorf("calling to SyncRecordErrorClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SyncRecordErrorCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SyncRecordErrorCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SyncRecordError.
+func (c *SyncRecordErrorClient) Update() *SyncRecordErrorUpdate {
+	mutation := newSyncRecordErrorMutation(c.config, OpUpdate)
+	return &SyncRecordErrorUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SyncRecordErrorClient) UpdateOne(_m *SyncRecordError) *SyncRecordErrorUpdateOne {
+	mutation := newSyncRecordErrorMutation(c.config, OpUpdateOne, withSyncRecordError(_m))
+	return &SyncRecordErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SyncRecordErrorClient) UpdateOneID(id uuid.UUID) *SyncRecordErrorUpdateOne {
+	mutation := newSyncRecordErrorMutation(c.config, OpUpdateOne, withSyncRecordErrorID(id))
+	return &SyncRecordErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SyncRecordError.
+func (c *SyncRecordErrorClient) Delete() *SyncRecordErrorDelete {
+	mutation := newSyncRecordErrorMutation(c.config, OpDelete)
+	return &SyncRecordErrorDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SyncRecordErrorClient) DeleteOne(_m *SyncRecordError) *SyncRecordErrorDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SyncRecordErrorClient) DeleteOneID(id uuid.UUID) *SyncRecordErrorDeleteOne {
+	builder := c.Delete().Where(syncrecorderror.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SyncRecordErrorDeleteOne{builder}
+}
+
+// Query returns a query builder for SyncRecordError.
+func (c *SyncRecordErrorClient) Query() *SyncRecordErrorQuery {
+	return &SyncRecordErrorQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSyncRecordError},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SyncRecordError entity by its id.
+func (c *SyncRecordErrorClient) Get(ctx context.Context, id uuid.UUID) (*SyncRecordError, error) {
+	return c.Query().Where(syncrecorderror.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SyncRecordErrorClient) GetX(ctx context.Context, id uuid.UUID) *SyncRecordError {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SyncRecordErrorClient) Hooks() []Hook {
+	hooks := c.hooks.SyncRecordError
+	return append(hooks[:len(hooks):len(hooks)], syncrecorderror.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SyncRecordErrorClient) Interceptors() []Interceptor {
+	return c.inters.SyncRecordError
+}
+
+func (c *SyncRecordErrorClient) mutate(ctx context.Context, m *SyncRecordErrorMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SyncRecordErrorCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SyncRecordErrorUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SyncRecordErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SyncRecordErrorDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SyncRecordError mutation op: %q", m.Op())
+	}
+}
+
+// SyncRunClient is a client for the SyncRun schema.
+type SyncRunClient struct {
+	config
+}
+
+// NewSyncRunClient returns a client for the SyncRun from the given config.
+func NewSyncRunClient(c config) *SyncRunClient {
+	return &SyncRunClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `syncrun.Hooks(f(g(h())))`.
+func (c *SyncRunClient) Use(hooks ...Hook) {
+	c.hooks.SyncRun = append(c.hooks.SyncRun, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `syncrun.Intercept(f(g(h())))`.
+func (c *SyncRunClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SyncRun = append(c.inters.SyncRun, interceptors...)
+}
+
+// Create returns a builder for creating a SyncRun entity.
+func (c *SyncRunClient) Create() *SyncRunCreate {
+	mutation := newSyncRunMutation(c.config, OpCreate)
+	return &SyncRunCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SyncRun entities.
+func (c *SyncRunClient) CreateBulk(builders ...*SyncRunCreate) *SyncRunCreateBulk {
+	return &SyncRunCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SyncRunClient) MapCreateBulk(slice any, setFunc func(*SyncRunCreate, int)) *SyncRunCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SyncRunCreateBulk{err: fmt.Errorf("calling to SyncRunClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SyncRunCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SyncRunCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SyncRun.
+func (c *SyncRunClient) Update() *SyncRunUpdate {
+	mutation := newSyncRunMutation(c.config, OpUpdate)
+	return &SyncRunUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SyncRunClient) UpdateOne(_m *SyncRun) *SyncRunUpdateOne {
+	mutation := newSyncRunMutation(c.config, OpUpdateOne, withSyncRun(_m))
+	return &SyncRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SyncRunClient) UpdateOneID(id uuid.UUID) *SyncRunUpdateOne {
+	mutation := newSyncRunMutation(c.config, OpUpdateOne, withSyncRunID(id))
+	return &SyncRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SyncRun.
+func (c *SyncRunClient) Delete() *SyncRunDelete {
+	mutation := newSyncRunMutation(c.config, OpDelete)
+	return &SyncRunDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SyncRunClient) DeleteOne(_m *SyncRun) *SyncRunDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SyncRunClient) DeleteOneID(id uuid.UUID) *SyncRunDeleteOne {
+	builder := c.Delete().Where(syncrun.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SyncRunDeleteOne{builder}
+}
+
+// Query returns a query builder for SyncRun.
+func (c *SyncRunClient) Query() *SyncRunQuery {
+	return &SyncRunQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSyncRun},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SyncRun entity by its id.
+func (c *SyncRunClient) Get(ctx context.Context, id uuid.UUID) (*SyncRun, error) {
+	return c.Query().Where(syncrun.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SyncRunClient) GetX(ctx context.Context, id uuid.UUID) *SyncRun {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SyncRunClient) Hooks() []Hook {
+	hooks := c.hooks.SyncRun
+	return append(hooks[:len(hooks):len(hooks)], syncrun.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SyncRunClient) Interceptors() []Interceptor {
+	inters := c.inters.SyncRun
+	return append(inters[:len(inters):len(inters)], syncrun.Interceptors[:]...)
+}
+
+func (c *SyncRunClient) mutate(ctx context.Context, m *SyncRunMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SyncRunCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SyncRunUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SyncRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SyncRunDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SyncRun mutation op: %q", m.Op())
+	}
+}
+
+// SyncedStudentClient is a client for the SyncedStudent schema.
+type SyncedStudentClient struct {
+	config
+}
+
+// NewSyncedStudentClient returns a client for the SyncedStudent from the given config.
+func NewSyncedStudentClient(c config) *SyncedStudentClient {
+	return &SyncedStudentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `syncedstudent.Hooks(f(g(h())))`.
+func (c *SyncedStudentClient) Use(hooks ...Hook) {
+	c.hooks.SyncedStudent = append(c.hooks.SyncedStudent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `syncedstudent.Intercept(f(g(h())))`.
+func (c *SyncedStudentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SyncedStudent = append(c.inters.SyncedStudent, interceptors...)
+}
+
+// Create returns a builder for creating a SyncedStudent entity.
+func (c *SyncedStudentClient) Create() *SyncedStudentCreate {
+	mutation := newSyncedStudentMutation(c.config, OpCreate)
+	return &SyncedStudentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SyncedStudent entities.
+func (c *SyncedStudentClient) CreateBulk(builders ...*SyncedStudentCreate) *SyncedStudentCreateBulk {
+	return &SyncedStudentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SyncedStudentClient) MapCreateBulk(slice any, setFunc func(*SyncedStudentCreate, int)) *SyncedStudentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SyncedStudentCreateBulk{err: fmt.Errorf("calling to SyncedStudentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SyncedStudentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SyncedStudentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SyncedStudent.
+func (c *SyncedStudentClient) Update() *SyncedStudentUpdate {
+	mutation := newSyncedStudentMutation(c.config, OpUpdate)
+	return &SyncedStudentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SyncedStudentClient) UpdateOne(_m *SyncedStudent) *SyncedStudentUpdateOne {
+	mutation := newSyncedStudentMutation(c.config, OpUpdateOne, withSyncedStudent(_m))
+	return &SyncedStudentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SyncedStudentClient) UpdateOneID(id uuid.UUID) *SyncedStudentUpdateOne {
+	mutation := newSyncedStudentMutation(c.config, OpUpdateOne, withSyncedStudentID(id))
+	return &SyncedStudentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SyncedStudent.
+func (c *SyncedStudentClient) Delete() *SyncedStudentDelete {
+	mutation := newSyncedStudentMutation(c.config, OpDelete)
+	return &SyncedStudentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SyncedStudentClient) DeleteOne(_m *SyncedStudent) *SyncedStudentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SyncedStudentClient) DeleteOneID(id uuid.UUID) *SyncedStudentDeleteOne {
+	builder := c.Delete().Where(syncedstudent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SyncedStudentDeleteOne{builder}
+}
+
+// Query returns a query builder for SyncedStudent.
+func (c *SyncedStudentClient) Query() *SyncedStudentQuery {
+	return &SyncedStudentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSyncedStudent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SyncedStudent entity by its id.
+func (c *SyncedStudentClient) Get(ctx context.Context, id uuid.UUID) (*SyncedStudent, error) {
+	return c.Query().Where(syncedstudent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SyncedStudentClient) GetX(ctx context.Context, id uuid.UUID) *SyncedStudent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SyncedStudentClient) Hooks() []Hook {
+	hooks := c.hooks.SyncedStudent
+	return append(hooks[:len(hooks):len(hooks)], syncedstudent.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SyncedStudentClient) Interceptors() []Interceptor {
+	inters := c.inters.SyncedStudent
+	return append(inters[:len(inters):len(inters)], syncedstudent.Interceptors[:]...)
+}
+
+func (c *SyncedStudentClient) mutate(ctx context.Context, m *SyncedStudentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SyncedStudentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SyncedStudentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SyncedStudentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SyncedStudentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SyncedStudent mutation op: %q", m.Op())
 	}
 }
 
@@ -1781,30 +3358,47 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Province,
-		ProvinceSuccession, School, Student, Tenant, User []ent.Hook
+		ProvinceSuccession, ReconciliationIssue, School, SisConnection,
+		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
+		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
+		User []ent.Hook
 	}
 	inters struct {
 		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Province,
-		ProvinceSuccession, School, Student, Tenant, User []ent.Interceptor
+		ProvinceSuccession, ReconciliationIssue, School, SisConnection,
+		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
+		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
+		User []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		AcademicYear:       tableSchemas[2],
-		Class:              tableSchemas[2],
-		Country:            tableSchemas[0],
-		Enrollment:         tableSchemas[2],
-		ExternalIdentity:   tableSchemas[1],
-		Province:           tableSchemas[0],
-		ProvinceSuccession: tableSchemas[0],
-		School:             tableSchemas[2],
-		Student:            tableSchemas[2],
-		Tenant:             tableSchemas[3],
-		User:               tableSchemas[1],
+		AcademicYear:        tableSchemas[2],
+		Class:               tableSchemas[2],
+		Country:             tableSchemas[0],
+		Enrollment:          tableSchemas[2],
+		ExternalIdentity:    tableSchemas[1],
+		Province:            tableSchemas[0],
+		ProvinceSuccession:  tableSchemas[0],
+		ReconciliationIssue: tableSchemas[4],
+		School:              tableSchemas[2],
+		SisConnection:       tableSchemas[4],
+		SisConnectionSchool: tableSchemas[4],
+		SisIdentityLink:     tableSchemas[1],
+		SisImport:           tableSchemas[4],
+		SisLink:             tableSchemas[4],
+		StagingRecord:       tableSchemas[4],
+		Student:             tableSchemas[2],
+		StudentLoginKey:     tableSchemas[4],
+		SyncRecordError:     tableSchemas[4],
+		SyncRun:             tableSchemas[4],
+		SyncedStudent:       tableSchemas[4],
+		Tenant:              tableSchemas[3],
+		User:                tableSchemas[1],
 	}
-	tableSchemas = [...]string{"catalog", "identity", "org", "platform"}
+	tableSchemas = [...]string{"catalog", "identity", "org", "platform", "sis"}
 )
 
 // SchemaConfig represents alternative schema names for all tables
