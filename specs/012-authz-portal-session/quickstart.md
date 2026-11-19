@@ -50,3 +50,18 @@ make test-contract
 
 - Kết quả test (pass/fail), bảng ma trận authorization sinh từ OpenAPI, trace_id kịch bản 7 và 11, log khởi động thất bại kịch bản 1.
 - Header `Set-Cookie` kịch bản 13, kết quả quét log kịch bản 17, bảng operation bị chặn bởi `featuregate` kịch bản 23.
+
+## Bằng chứng (2026-11-19, local)
+
+Chạy tự động trên PostgreSQL thật (một cụm mỗi package, database sao chép theo test), httpx thật với JWT của IDP giả và Principal dựng từ DB qua facade; Keycloak/Valkey/SMTP dùng test double có nhãn hoặc testcontainers. Các bước gọi binary chưa chạy được vì `cmd/core-api`/`cmd/worker` chưa gắn handler của identity (OQ F010-2).
+
+| Phần | Test |
+|---|---|
+| Catalog, role hệ thống, trigger lớp 2 | `TestAuthzCatalogAndTriggers` |
+| Phiên portal, đổi tenant, `PORTAL_ACCESS_STAFF_ONLY` | `TestPortalSession`, `tests/contract/portal_guard_test.go` |
+| Principal, `checkMemberships` | `TestResolvePrincipal` |
+| Role tùy biến/dùng chung | `TestRoles` |
+| Gán/thu hồi/hết hạn UserRole | `TestUserRoleGrants`, `TestUserRoleExpiry` |
+| Nhân sự thủ công | `TestTenantStaff` |
+| Đăng nhập portal, thiết lập tài khoản, đặt lại mật khẩu | `TestPortalLoginIntegration`, `TestPortalAccountSetupIntegration`, unit `presentation/http/auth_portal*_test.go` |
+| `featuregate`, `disabled_menus` | `pkg/httpx/featuregate/*_test.go`, `query/me_test.go` |

@@ -27,6 +27,14 @@
 - Q: Tên hiển thị permission/role trong `identity.permissions`/`roles`? → A: [Proposed] Bằng chính mã (`name_vi = name_en = code`), `group_code` = tiền tố trước dấu chấm; portal dịch mã qua file dịch. Chưa có bảng tên trong ADMIN_PORTAL §2.2.
 - Q: Đồng bộ catalog chạy ở đâu? → A: `cmd/migrate` gọi `identity.SyncAuthzCatalog` ngay sau Atlas của module identity, một transaction, idempotent: id role hệ thống tất định (UUID v5 theo mã), permission/quyền rời catalog bị soft-delete, `catalog_version` = băm catalog. Trigger chặn `identity_app`/`identity_platform` sửa role hệ thống và quyền của nó (lớp 2 của F012-AC-17).
 - Q: Membership nhân sự? → A: `identity.tenant_memberships_v` thêm nhánh `member_kind = staff` từ UserRole tenant còn hiệu lực (một dòng mỗi tenant/user); consumer `keycloak-membership` của F010 dùng lại view này.
+- Q: `version` của Principal? → A: `users.version`; gán/thu hồi/hết hạn UserRole và đổi trạng thái tăng version trong cùng transaction.
+- Q: Kiểm tra "role vượt quyền người gán" (F012-AC-22) áp cho ai? → A: Chỉ người gán có `tenant.user_role.write` giới hạn theo trường (School Admin); grant toàn tenant (`tenant_admin`) gán mọi role tenant của ADMIN_PORTAL §2.3 (role này không có đủ `lms.*` của `school_admin`).
+- Q: UserRole hết hạn? → A: [Proposed] Job `user-role-expiry` soft-delete dòng quá `valid_to` (`delete_reason = expired`) và phát `user_role.changed` op `expired` (`actor_id` null).
+- Q: Tạo nhân sự đặt mật khẩu thế nào? → A: [Proposed] Không đặt mật khẩu; sau khi tạo, gửi email action Keycloak `UPDATE_PASSWORD`; lỗi gửi chỉ ghi log (đặt lại qua quên mật khẩu). `updateTenantUser` chưa đổi username/email (cần đồng bộ Keycloak) — OQ F012-1.
+- Q: `createAuthSession`, `logout` (T015/T016)? → A: Không làm trong F012: portal không dùng `createAuthSession` (F012-AC-08) và `PlayerBootstrap` cần hồ sơ người chơi của module game — OQ F012-2 [Proposed: F013/F014].
+- Q: `featuregate.Source`? → A: Port và middleware ở `pkg/httpx/featuregate` (F012); hiện thực Source, consumer `platform_settings.changed` → `Gate.Invalidate` và cache Valkey `ew:fg:*` do F015; `getMyPermissions` trả `503` khi Source lỗi.
+- Q: Đăng nhập portal (US7/US8) — điểm lệch? → A: `auth_time` của phiên MFA lưu Valkey theo `sid` (token direct grant không có `auth_time`); rate limit fail-open khi Valkey lỗi (APISIX + brute-force Keycloak vẫn chặn); email quên mật khẩu gửi từ goroutine giới hạn (chưa có hạ tầng thông báo dùng outbox) [Proposed]; tên audit theo plan (`auth.portal_logout`…), mô tả OpenAPI cần thống nhất.
+- Q: Gắn binary? → A: Vẫn theo OQ F010-2: F012 cung cấp `Register`, `RegisterPortalAuth`, facade, job và adapter; composition root `cmd/core-api`/`cmd/worker` chưa gắn.
 - Q: Song song hóa F012? → A: Data model (Pha 0) làm trước; `featuregate` (`pkg/httpx`) và đăng nhập portal (US7/US8) làm song song trên nhánh riêng, merge sau gate.
 
 ## User Scenarios & Testing *(bắt buộc)*
