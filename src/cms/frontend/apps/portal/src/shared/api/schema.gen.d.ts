@@ -2389,6 +2389,41 @@ export interface paths {
         patch: operations["updateCmsAssessmentBlueprintDraft"];
         trace?: never;
     };
+    "/cms/learning/competencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh mục năng lực/phẩm chất của một curriculum version (curriculum.read) */
+        get: operations["listCmsCompetencies"];
+        put?: never;
+        /** Thêm năng lực/phẩm chất vào version draft — curriculum.write */
+        post: operations["createCompetency"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/competencies/{competency_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Sửa tên năng lực/phẩm chất của version draft (If-Match) — curriculum.write */
+        patch: operations["updateCompetency"];
+        trace?: never;
+    };
     "/cms/learning/content/{content_type}/{content_id}:rollback": {
         parameters: {
             query?: never;
@@ -2515,10 +2550,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách curriculum (chương trình theo môn × khối, có version) (curriculum.read) */
+        /** Danh sách curriculum của tenant phiên và curriculum platform được gán (curriculum.read) */
         get: operations["listCmsCurricula"];
         put?: never;
-        /** Tạo curriculum (chương trình theo môn × khối, có version) — curriculum.write (content_admin; academic_manager trong scope tenant) */
+        /** Tạo curriculum kèm version 1 ở draft — curriculum.write (content_admin platform; academic_manager trong tenant phiên) */
         post: operations["createCurriculum"];
         delete?: never;
         options?: never;
@@ -2533,15 +2568,125 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Chi tiết curriculum (chương trình theo môn × khối, có version) */
+        /** Chi tiết curriculum (curriculum.read) */
         get: operations["getCmsCurriculum"];
+        put?: never;
+        post?: never;
+        /** Xóa curriculum chưa từng publish = soft-delete vào Thùng rác (ADR-0028); đã có version published thì chỉ archive (409) — curriculum.write */
+        delete: operations["deleteCurriculum"];
+        options?: never;
+        head?: never;
+        /** Sửa tên/khung của curriculum (If-Match) — curriculum.write */
+        patch: operations["updateCurriculum"];
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Các version của curriculum, mới nhất trước (curriculum.read) */
+        get: operations["listCurriculumVersions"];
+        put?: never;
+        /** Tạo version draft mới sao sâu từ một version (môn × khối, topic, LO, competency); chỉ một version draft/in_review mở (409) — curriculum.write */
+        post: operations["createCurriculumVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết một version của curriculum (curriculum.read) */
+        get: operations["getCurriculumVersion"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Sửa curriculum (chương trình theo môn × khối, có version) (If-Match) — curriculum.write (content_admin; academic_manager trong scope tenant) */
-        patch: operations["updateCurriculum"];
+        /** Sửa version ở draft (nhãn, hiệu lực, ghi chú, môn × khối) (If-Match); version không ở draft → 409 CONTENT_NOT_EDITABLE — curriculum.write */
+        patch: operations["updateCurriculumVersionDraft"];
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions/{version}:export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xuất cây của một version (YAML theo specs/schemas/curriculum-import.schema.json hoặc CSV) để rà soát/import lại (curriculum.read) */
+        get: operations["exportCurriculumVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions/{version}:publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish version approved trong một transaction (con trỏ current_version_id, content_releases, audit, outbox curriculum.version_published) — curriculum.publish
+         * @description Chặn với 422 VALIDATION_FAILED khi curriculum GDPT2018 còn LO thiếu yccd_ref (F021-AC-14) hoặc version có
+         *     supersedes_version_id còn LO cũ chưa có mapping (F021-AC-26); version không ở approved → 422 INVALID_STATE_TRANSITION.
+         */
+        post: operations["publishCurriculumVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions/{version}:transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Workflow CurriculumVersion (submit_review, revise — curriculum.write; approve, reject, archive — curriculum.publish); người duyệt khác tác giả, reject cần note; chuyển sai → 422 INVALID_STATE_TRANSITION */
+        post: operations["transitionCurriculumVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/curricula/{curriculum_id}/versions/{version}/lo-mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bảng mapping LO từ version bị thay thế sang version này, kèm LO cũ chưa có mapping (curriculum.read) */
+        get: operations["getCurriculumVersionLoMappings"];
+        /** Thay toàn bộ mapping LO của version draft (If-Match của version) — curriculum.write */
+        put: operations["putCurriculumVersionLoMappings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/cms/learning/imports": {
@@ -2654,10 +2799,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách learning objective (có yccd_ref GDPT 2018, competency_ids) (curriculum.read) */
+        /** Learning objective (có yccd_ref GDPT 2018, competency_ids, prerequisite_ids) theo version/chủ đề/bài sách (curriculum.read) */
         get: operations["listCmsObjectives"];
         put?: never;
-        /** Tạo learning objective (có yccd_ref GDPT 2018, competency_ids) — curriculum.write (content_admin, academic_manager) */
+        /** Tạo learning objective trong version draft (mã chuẩn, yccd_ref, competency_ids, prerequisite_ids không chu trình) — curriculum.write */
         post: operations["createObjective"];
         delete?: never;
         options?: never;
@@ -2675,10 +2820,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Xóa learning objective của version draft = soft-delete (đang là tiên quyết của LO khác → 422 liệt kê LO phụ thuộc) — curriculum.write */
+        delete: operations["deleteObjective"];
         options?: never;
         head?: never;
-        /** Sửa learning objective (có yccd_ref GDPT 2018, competency_ids) (If-Match) — curriculum.write (content_admin, academic_manager) */
+        /** Sửa learning objective trong version draft (If-Match) — curriculum.write */
         patch: operations["updateObjective"];
         trace?: never;
     };
@@ -2901,10 +3047,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách môn học (curriculum.read) */
+        /** Danh sách môn học (danh mục platform) (curriculum.read) */
         get: operations["listCmsSubjects"];
         put?: never;
-        /** Tạo môn học — curriculum.write (content_admin) */
+        /** Tạo môn học (danh mục platform) — curriculum.write, chỉ nhân sự platform (người dùng tenant → 403) */
         post: operations["createSubject"];
         delete?: never;
         options?: never;
@@ -2925,8 +3071,96 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Sửa môn học (If-Match) — curriculum.write (content_admin) */
+        /** Sửa môn học (If-Match) — curriculum.write, chỉ nhân sự platform */
         patch: operations["updateSubject"];
+        trace?: never;
+    };
+    "/cms/learning/textbook-sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bài trong một tập sách, kèm LO đã gán thấy được (curriculum.read) */
+        get: operations["listTextbookSections"];
+        put?: never;
+        /** Tạo bài sách (chỉ metadata) — curriculum.write, chỉ nhân sự platform */
+        post: operations["createTextbookSection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/textbook-sections/{section_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Sửa bài sách (If-Match) — curriculum.write, chỉ nhân sự platform */
+        patch: operations["updateTextbookSection"];
+        trace?: never;
+    };
+    "/cms/learning/textbook-sections/{section_id}/objectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Thay danh sách LO gán cho bài sách (n–n) — curriculum.write, chỉ nhân sự platform */
+        put: operations["putTextbookSectionObjectives"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/textbook-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bộ sách giáo khoa (danh mục platform, chỉ metadata) (curriculum.read) */
+        get: operations["listTextbookSeries"];
+        put?: never;
+        /** Tạo bộ sách — curriculum.write, chỉ nhân sự platform */
+        post: operations["createTextbookSeries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/textbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tập sách theo bộ sách/môn/khối (curriculum.read) */
+        get: operations["listTextbooks"];
+        put?: never;
+        /** Tạo tập sách — curriculum.write, chỉ nhân sự platform */
+        post: operations["createTextbook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/cms/learning/topics": {
@@ -2936,10 +3170,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách chủ đề (cây) (curriculum.read) */
+        /** Chủ đề của một curriculum version, theo môn × khối (curriculum.read) */
         get: operations["listCmsTopics"];
         put?: never;
-        /** Tạo chủ đề (cây) — curriculum.write (content_admin, academic_manager) */
+        /** Tạo chủ đề trong version draft (topic cha cùng version/môn/khối, không vòng) — curriculum.write */
         post: operations["createTopic"];
         delete?: never;
         options?: never;
@@ -2957,10 +3191,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Xóa chủ đề của version draft = soft-delete (còn chủ đề con hoặc LO → 422) — curriculum.write */
+        delete: operations["deleteTopic"];
         options?: never;
         head?: never;
-        /** Sửa chủ đề (cây) (If-Match) — curriculum.write (content_admin, academic_manager) */
+        /** Sửa chủ đề trong version draft (If-Match) — curriculum.write */
         patch: operations["updateTopic"];
         trace?: never;
     };
@@ -5019,8 +5254,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách learning objective */
+        /** Learning objective của version đang áp dụng cho trường */
         get: operations["listLearningObjectives"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learning/objectives/{objective_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết một LO đã publish theo ID, kể cả LO của version cũ (lịch sử attempt, F021-AC-21) */
+        get: operations["getLearningObjective"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5087,7 +5339,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Cây chủ đề theo môn và khối */
+        /** Cây chủ đề theo môn và khối của version đang áp dụng cho trường (F021-AC-19, AC-20) */
         get: operations["listTopics"];
         put?: never;
         post?: never;
@@ -7873,6 +8125,8 @@ export interface components {
             avatar_config: components["schemas"]["AvatarConfig"];
             name?: string;
         };
+        /** @enum {string} */
+        BloomLevel: "remember" | "understand" | "apply" | "analyze" | "evaluate" | "create";
         BossEncounter: {
             boss_id: components["schemas"]["Uuid"];
             boss_version: number;
@@ -8278,6 +8532,27 @@ export interface components {
             target: number;
             updated_at?: components["schemas"]["Timestamp"];
         };
+        Competency: {
+            code: string;
+            competency_id: components["schemas"]["Uuid"];
+            curriculum_version_id: components["schemas"]["Uuid"];
+            kind: components["schemas"]["CompetencyKind"];
+            name: components["schemas"]["LearningName"];
+            subject_id?: components["schemas"]["Uuid"];
+        };
+        CompetencyInput: {
+            code: string;
+            curriculum_version_id: components["schemas"]["Uuid"];
+            kind: components["schemas"]["CompetencyKind"];
+            name: components["schemas"]["LearningName"];
+            /** @description Chỉ với kind = subject_competency */
+            subject_id?: components["schemas"]["Uuid"];
+        };
+        /** @enum {string} */
+        CompetencyKind: "general_competency" | "subject_competency" | "quality";
+        CompetencyPatch: {
+            name?: components["schemas"]["LearningName"];
+        };
         ContentBundle: {
             bundle_id: string;
             platforms?: ("windows" | "android" | "ios" | "web" | "macos" | "linux")[];
@@ -8301,7 +8576,13 @@ export interface components {
             }[];
             finished_at?: components["schemas"]["Timestamp"];
             import_id: components["schemas"]["Uuid"];
+            kind?: string;
             rejected_count?: number;
+            /** @description Bản ghi đã tạo (import curriculum, F021) */
+            result?: {
+                curriculum_id?: components["schemas"]["Uuid"];
+                curriculum_version_id?: components["schemas"]["Uuid"];
+            };
             /** @enum {string} */
             status: "queued" | "running" | "succeeded" | "failed";
         };
@@ -8311,8 +8592,11 @@ export interface components {
             /** @default false */
             dry_run: boolean;
             grade_level?: components["schemas"]["GradeLevel"];
-            /** @enum {string} */
-            kind: "questions_xlsx" | "questions_csv" | "lessons_docx";
+            /**
+             * @description curriculum_yaml/curriculum_csv cần curriculum.write (F021); file theo specs/schemas/curriculum-import.schema.json
+             * @enum {string}
+             */
+            kind: "questions_xlsx" | "questions_csv" | "lessons_docx" | "curriculum_yaml" | "curriculum_csv";
             subject_id?: components["schemas"]["Uuid"];
         };
         /**
@@ -8514,31 +8798,119 @@ export interface components {
             reason_code: "reward" | "shop_purchase" | "adjustment" | "refund" | "duplicate_conversion";
             source_label?: string;
         };
-        Curriculum: components["schemas"]["CurriculumInput"] & {
+        Curriculum: {
+            code: string;
+            created_at?: components["schemas"]["Timestamp"];
+            /** @description Version đang phát hành (con trỏ current_version_id); null khi chưa publish */
+            current_version?: components["schemas"]["CurriculumVersionRef"] | null;
             curriculum_id: components["schemas"]["Uuid"];
-            status: components["schemas"]["ContentStatus"];
+            framework?: string;
+            latest_version?: components["schemas"]["CurriculumVersionRef"];
+            latest_version_no: number;
+            name: components["schemas"]["LearningName"];
+            /** @enum {string} */
+            owner_scope: "platform" | "tenant";
+            tenant_id?: components["schemas"]["Uuid"] | null;
             updated_at?: components["schemas"]["Timestamp"];
-            version: number;
         };
+        /** @description Curriculum (CURRICULUM_MODEL §3.1, F021): tạo kèm version 1 ở draft (initial_version, nhãn mặc định 1.0) */
         CurriculumInput: {
+            /** @description UPPER_SNAKE, duy nhất trong phạm vi sở hữu */
             code: string;
             /** @description vd. GDPT_2018 */
             framework?: string;
-            grade_level: components["schemas"]["GradeLevel"];
+            initial_version?: components["schemas"]["CurriculumVersionInput"];
             name: components["schemas"]["LearningName"];
-            subject_id: components["schemas"]["Uuid"];
-            /** @description Tenant đích khi System Admin/content_admin tạo cho tenant; vắng = platform */
+            /** @description Tenant đích khi System Admin tạo curriculum của tenant; vắng = platform (người dùng tenant luôn tạo cho tenant phiên) */
             tenant_id?: components["schemas"]["Uuid"];
-            textbook_series_id?: components["schemas"]["Uuid"];
+        };
+        CurriculumPatch: {
+            framework?: string;
+            name?: components["schemas"]["LearningName"];
         };
         CurriculumSummary: {
             code: string;
             curriculum_id: components["schemas"]["Uuid"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
             grade_level?: components["schemas"]["GradeLevel"];
             name: components["schemas"]["LearningName"];
             subject_id?: components["schemas"]["Uuid"];
             /** @description Version đang áp dụng cho trường (ADR-0043) */
             version: number;
+            version_label?: string;
+        };
+        CurriculumTransitionRequest: {
+            /**
+             * @description submit_review, revise: curriculum.write; approve, reject, archive: curriculum.publish. Publish dùng :publish
+             * @enum {string}
+             */
+            action: "submit_review" | "approve" | "reject" | "revise" | "archive";
+            /** @description Bắt buộc với reject */
+            note?: string;
+        };
+        CurriculumVersion: {
+            author_id?: components["schemas"]["Uuid"];
+            based_on_version_id?: components["schemas"]["Uuid"];
+            change_note?: string;
+            /** @enum {string} */
+            content_language?: "vi" | "en";
+            curriculum_id: components["schemas"]["Uuid"];
+            curriculum_version_id: components["schemas"]["Uuid"];
+            /** Format: date */
+            effective_from?: string;
+            /** Format: date */
+            effective_to?: string;
+            /** @description Version là con trỏ current_version_id */
+            is_current?: boolean;
+            published_at?: components["schemas"]["Timestamp"];
+            reviewer_id?: components["schemas"]["Uuid"];
+            status: components["schemas"]["ContentStatus"];
+            subject_grades?: components["schemas"]["SubjectGrade"][];
+            supersedes_version_id?: components["schemas"]["Uuid"];
+            updated_at?: components["schemas"]["Timestamp"];
+            version: number;
+            version_label: string;
+            /** @description Cảnh báo không chặn (vd. EFFECTIVE_RANGE_OVERLAP khi submit_review) */
+            warnings?: {
+                code: string;
+                message?: string;
+            }[];
+        };
+        /** @description Tạo version draft mới sao sâu từ from_version (F021-AC-17); supersedes_version_id = version nguồn */
+        CurriculumVersionCreateRequest: {
+            change_note?: string;
+            /** Format: date */
+            effective_from?: string;
+            /** Format: date */
+            effective_to?: string;
+            from_version: number;
+            version_label: string;
+        };
+        CurriculumVersionInput: {
+            /** @description Biên bản rà soát (CURRICULUM_MODEL §7) */
+            change_note?: string;
+            /** @enum {string} */
+            content_language?: "vi" | "en";
+            /** Format: date */
+            effective_from?: string;
+            /** Format: date */
+            effective_to?: string;
+            /** @description MAJOR.MINOR */
+            version_label?: string;
+        };
+        CurriculumVersionPatch: {
+            change_note?: string;
+            effective_from?: string | null;
+            effective_to?: string | null;
+            /** @description Thay toàn bộ danh sách môn × khối của version draft (môn × khối còn topic thì không gỡ được) */
+            subject_grades?: components["schemas"]["SubjectGrade"][];
+            version_label?: string;
+        };
+        CurriculumVersionRef: {
+            curriculum_version_id: components["schemas"]["Uuid"];
+            status: components["schemas"]["ContentStatus"];
+            version: number;
+            version_label: string;
         };
         /** @enum {string} */
         DashboardGrain: "day" | "week" | "month";
@@ -9465,26 +9837,43 @@ export interface components {
             vi?: string;
         };
         LearningObjective: {
-            bloom_level?: string;
+            bloom_level?: components["schemas"]["BloomLevel"];
             /** @example MATH.G3.NUM.MUL_TABLE */
             code: string;
             competency_ids?: components["schemas"]["Uuid"][];
+            curriculum_version_id?: components["schemas"]["Uuid"];
             description: string;
             objective_id: components["schemas"]["Uuid"];
             prerequisite_ids?: components["schemas"]["Uuid"][];
+            sort_order?: number;
+            /** @description Khóa ổn định qua các version (CURRICULUM_MODEL §4) */
+            readonly stable_key?: string;
             topic_id?: components["schemas"]["Uuid"];
             /** @description Mã yêu cầu cần đạt GDPT 2018 */
             yccd_ref?: string;
         };
         LearningObjectiveInput: {
-            bloom_level?: string;
+            bloom_level?: components["schemas"]["BloomLevel"];
+            /** @description <SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>] (CURRICULUM_MODEL §4) */
             code: string;
             competency_ids?: components["schemas"]["Uuid"][];
             description: string;
             prerequisite_ids?: components["schemas"]["Uuid"][];
+            sort_order?: number;
             topic_id: components["schemas"]["Uuid"];
             /** @description Mã yêu cầu cần đạt GDPT 2018 (CURRICULUM_MODEL) */
             yccd_ref?: string;
+        };
+        /** @description Lỗi chu trình tiên quyết: 422 với errors[].code = PREREQUISITE_CYCLE và danh sách mã LO trên chu trình (F021-AC-12) */
+        LearningObjectivePatch: {
+            bloom_level?: components["schemas"]["BloomLevel"];
+            code?: string;
+            competency_ids?: components["schemas"]["Uuid"][];
+            description?: string;
+            prerequisite_ids?: components["schemas"]["Uuid"][];
+            sort_order?: number;
+            topic_id?: components["schemas"]["Uuid"];
+            yccd_ref?: string | null;
         };
         LearningPath: components["schemas"]["LearningPathInput"] & {
             course_id: components["schemas"]["Uuid"];
@@ -9690,6 +10079,24 @@ export interface components {
             data: components["schemas"]["LoginEvent"][];
             page: components["schemas"]["PageInfo"];
         };
+        LoMapping: {
+            from_lo_id: components["schemas"]["Uuid"];
+            relation: components["schemas"]["LoMappingRelation"];
+            /** @description NULL khi và chỉ khi relation = removed */
+            to_lo_id?: components["schemas"]["Uuid"] | null;
+        };
+        LoMappingList: {
+            curriculum_version_id: components["schemas"]["Uuid"];
+            items: components["schemas"]["LoMapping"][];
+            supersedes_version_id?: components["schemas"]["Uuid"];
+            /** @description LO của version bị thay thế chưa có mapping (publish bị chặn khi khác rỗng, F021-AC-26) */
+            unmapped_lo_ids?: components["schemas"]["Uuid"][];
+        };
+        LoMappingPut: {
+            items: components["schemas"]["LoMapping"][];
+        };
+        /** @enum {string} */
+        LoMappingRelation: "same" | "split" | "merge" | "replaces" | "removed";
         /** @enum {string} */
         MasteryLevel: "not_started" | "beginning" | "developing" | "proficient" | "mastered";
         Match: {
@@ -11549,9 +11956,15 @@ export interface components {
         Subject: {
             code: string;
             grade_levels?: components["schemas"]["GradeLevel"][];
+            icon_key?: string;
             /** Format: uri */
             icon_url?: string;
             name: components["schemas"]["LearningName"];
+            subject_id: components["schemas"]["Uuid"];
+        };
+        SubjectGrade: {
+            grade_level: components["schemas"]["GradeLevel"];
+            periods_per_year?: number;
             subject_id: components["schemas"]["Uuid"];
         };
         SubjectInput: {
@@ -11559,6 +11972,11 @@ export interface components {
             grade_levels: components["schemas"]["GradeLevel"][];
             icon_key?: string;
             name: components["schemas"]["LearningName"];
+        };
+        SubjectPatch: {
+            grade_levels?: components["schemas"]["GradeLevel"][];
+            icon_key?: string;
+            name?: components["schemas"]["LearningName"];
         };
         /** @description Lỗi theo bản ghi của sync run (sis.sync_record_errors); không chứa payload thô. */
         SyncRecordError: {
@@ -11811,22 +12229,83 @@ export interface components {
             status?: "active" | "locked" | "deactivated";
             username?: string;
         };
+        Textbook: {
+            grade_level: components["schemas"]["GradeLevel"];
+            series_id: components["schemas"]["Uuid"];
+            subject_id: components["schemas"]["Uuid"];
+            textbook_id: components["schemas"]["Uuid"];
+            volume: number;
+        };
+        TextbookInput: {
+            grade_level: components["schemas"]["GradeLevel"];
+            series_id: components["schemas"]["Uuid"];
+            subject_id: components["schemas"]["Uuid"];
+            volume: number;
+        };
+        TextbookSection: {
+            chapter?: string;
+            lesson_no: number;
+            objective_ids?: components["schemas"]["Uuid"][];
+            page_range?: string;
+            section_id: components["schemas"]["Uuid"];
+            textbook_id: components["schemas"]["Uuid"];
+            title: string;
+        };
+        /** @description Chỉ metadata bài sách (CURRICULUM_MODEL §6) — không có trường lưu nguyên văn sách */
+        TextbookSectionInput: {
+            chapter?: string;
+            lesson_no: number;
+            page_range?: string;
+            textbook_id: components["schemas"]["Uuid"];
+            title: string;
+        };
+        TextbookSectionObjectives: {
+            objective_ids: components["schemas"]["Uuid"][];
+        };
+        TextbookSectionPatch: {
+            chapter?: string;
+            lesson_no?: number;
+            page_range?: string;
+            title?: string;
+        };
+        TextbookSeries: {
+            code: string;
+            name: string;
+            publisher?: string;
+            series_id: components["schemas"]["Uuid"];
+        };
+        TextbookSeriesInput: {
+            code: string;
+            name: string;
+            publisher?: string;
+        };
         /** Format: date-time */
         Timestamp: string;
         Topic: {
+            code?: string;
+            curriculum_version_id?: components["schemas"]["Uuid"];
             grade_level?: components["schemas"]["GradeLevel"];
             name: string;
             parent_topic_id?: components["schemas"]["Uuid"];
+            sort_order?: number;
             subject_id?: components["schemas"]["Uuid"];
             topic_id: components["schemas"]["Uuid"];
         };
         TopicInput: {
-            curriculum_id?: components["schemas"]["Uuid"];
+            /** @description Duy nhất trong curriculum version */
+            code: string;
+            curriculum_version_id: components["schemas"]["Uuid"];
             grade_level: components["schemas"]["GradeLevel"];
             name: string;
             parent_topic_id?: components["schemas"]["Uuid"];
-            position?: number;
+            sort_order?: number;
             subject_id: components["schemas"]["Uuid"];
+        };
+        TopicPatch: {
+            code?: string;
+            name?: string;
+            parent_topic_id?: components["schemas"]["Uuid"] | null;
+            sort_order?: number;
         };
         Tournament: components["schemas"]["TournamentCreate"] & {
             entry_count?: number;
@@ -12322,6 +12801,7 @@ export interface components {
         ScheduleItemIdPath: components["schemas"]["Uuid"];
         SchoolId: components["schemas"]["Uuid"];
         SeasonTierPath: number;
+        SectionIdPath: components["schemas"]["Uuid"];
         StepId: string;
         StudentId: components["schemas"]["Uuid"];
         StudyGroupIdPath: components["schemas"]["Uuid"];
@@ -18296,6 +18776,129 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    listCmsCompetencies: {
+        parameters: {
+            query: {
+                curriculum_version_id: components["schemas"]["Uuid"];
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Competency"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createCompetency: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompetencyInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Competency"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    updateCompetency: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                competency_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["CompetencyPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Competency"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
     rollbackContent: {
         parameters: {
             query?: never;
@@ -18619,9 +19222,8 @@ export interface operations {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
-                grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
-                subject_id?: components["parameters"]["SubjectIdQuery"];
+                owner_scope?: "platform" | "tenant";
             };
             header?: {
                 /**
@@ -18724,7 +19326,48 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCurriculum: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     updateCurriculum: {
@@ -18746,7 +19389,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["CurriculumInput"];
+                "application/merge-patch+json": components["schemas"]["CurriculumPatch"];
             };
         };
         responses: {
@@ -18763,6 +19406,375 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    listCurriculumVersions: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurriculumVersion"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createCurriculumVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurriculumVersionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurriculumVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getCurriculumVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurriculumVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateCurriculumVersionDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["CurriculumVersionPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurriculumVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    exportCurriculumVersion: {
+        parameters: {
+            query?: {
+                format?: "yaml" | "csv";
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File xuất */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/yaml": string;
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    publishCurriculumVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã publish */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurriculumVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    transitionCurriculumVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurriculumTransitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Trạng thái mới */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurriculumVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getCurriculumVersionLoMappings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoMappingList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    putCurriculumVersionLoMappings: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                curriculum_id: components["parameters"]["CurriculumIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoMappingPut"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoMappingList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
@@ -19051,11 +20063,13 @@ export interface operations {
     listCmsObjectives: {
         parameters: {
             query?: {
+                curriculum_version_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
+                textbook_section_id?: components["schemas"]["Uuid"];
                 topic_id?: components["schemas"]["Uuid"];
                 yccd_ref?: string;
             };
@@ -19086,6 +20100,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     createObjective: {
@@ -19127,8 +20142,50 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    deleteObjective: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                objective_id: components["parameters"]["ObjectiveIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     updateObjective: {
@@ -19150,7 +20207,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["LearningObjectiveInput"];
+                "application/merge-patch+json": components["schemas"]["LearningObjectivePatch"];
             };
         };
         responses: {
@@ -19167,6 +20224,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
@@ -19881,7 +20939,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["SubjectInput"];
+                "application/merge-patch+json": components["schemas"]["SubjectPatch"];
             };
         };
         responses: {
@@ -19903,10 +20961,337 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
-    listCmsTopics: {
+    listTextbookSections: {
+        parameters: {
+            query: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                textbook_id: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TextbookSection"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createTextbookSection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextbookSectionInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookSection"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    updateTextbookSection: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                section_id: components["parameters"]["SectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["TextbookSectionPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookSection"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    putTextbookSectionObjectives: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                section_id: components["parameters"]["SectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextbookSectionObjectives"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookSection"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listTextbookSeries: {
         parameters: {
             query?: {
-                curriculum_id?: components["schemas"]["Uuid"];
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TextbookSeries"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createTextbookSeries: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextbookSeriesInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookSeries"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listTextbooks: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                grade_level?: components["parameters"]["GradeLevelQuery"];
+                limit?: components["parameters"]["Limit"];
+                series_id?: components["schemas"]["Uuid"];
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Textbook"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createTextbook: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextbookInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Textbook"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listCmsTopics: {
+        parameters: {
+            query: {
+                curriculum_version_id: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -19981,8 +21366,50 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    deleteTopic: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                topic_id: components["parameters"]["TopicIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     updateTopic: {
@@ -20004,7 +21431,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["TopicInput"];
+                "application/merge-patch+json": components["schemas"]["TopicPatch"];
             };
         };
         responses: {
@@ -20021,6 +21448,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
@@ -24715,6 +26143,7 @@ export interface operations {
     listLearningObjectives: {
         parameters: {
             query?: {
+                curriculum_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -24751,6 +26180,40 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+        };
+    };
+    getLearningObjective: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                objective_id: components["parameters"]["ObjectiveIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningObjective"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["NotFound"];
         };
     };
     getMyProgress: {
@@ -24855,6 +26318,7 @@ export interface operations {
     listTopics: {
         parameters: {
             query?: {
+                curriculum_id?: components["schemas"]["Uuid"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
             };
