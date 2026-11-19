@@ -1,6 +1,6 @@
 # Feature Specification: F053 — Workspace B — cây curriculum, editor nội dung, công thức, song ngữ, trình soạn câu hỏi
 
-**Feature Branch**: `053-content-studio-editor` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace `content_studio`) + `src/cms/frontend/packages/ops-ui` · **Mốc**: M-C2 · **Phụ thuộc**: F021, F022, F027, F051
+**Feature Branch**: `053-content-studio-editor` · **Created**: 2026-11-16 · **Status**: Done · **Hoàn tất**: 2026-11-19 · **Module**: `src/cms/frontend/apps/portal` (workspace `content_studio`) + `src/cms/frontend/packages/ops-ui` · **Mốc**: M-C2 · **Phụ thuộc**: F021, F022, F027, F051
 **Input**: Phần soạn thảo của Learning Content Studio: cây curriculum (môn, curriculum, chủ đề, LO), khung editor dùng chung `ContentEditorShell` (autosave, khóa lạc quan, thanh trạng thái, thao tác workflow cơ bản), công thức (MathLive nhập, MathJax 4 hiển thị, SVG render trên trình duyệt), biên tập song ngữ, trình soạn 11 dạng câu hỏi (phản hồi theo phương án, gợi ý nhiều cấp, lồng tiếng `g1_3`), khối `worked_example`. FR nguồn: FR-CMS-002, FR-CMS-003, FR-CNT-017, FR-CNT-018, FR-CNT-020, FR-QB-001, FR-QB-013.
 
 ## Clarifications
@@ -12,6 +12,43 @@
 - Q: `hints[]`, `worked_example_ref`, `audio_exempt_reason` trong `QuestionAuthoringInput`? → A: Theo `specs/schemas/question.schema.json`; contract authoring cần khai báo tường minh → "Cần sửa".
 - Q: Lỗi thiếu lồng tiếng `g1_3`? → A: [CONTENT_MODEL §8.1](../../docs/02-learning/CONTENT_MODEL.md) dùng `422 AUDIO_REQUIRED`; enum `ProblemCode` chưa có → "Cần thêm".
 - Q: Curriculum version, gửi duyệt/xuất bản curriculum, import YAML/CSV? → A: Contract CMS chưa có (CURRICULUM_MODEL §9) → "Cần thêm", backend F021.
+
+### Session 2026-11-19 (triển khai — câu hỏi mở và quyết định [Proposed])
+
+- Q: Delta contract T005–T009 khi triển khai? → A: `hints`, `worked_example_ref`, `math_assets` (QuestionAuthoringInput), `AUDIO_REQUIRED`, `listCurriculumVersions`/`transitionCurriculumVersion`/`publishCurriculumVersion` đã có sẵn trên main (F021/F022/F027). F053 thêm: `QuestionAuthoringInput.audio_exempt_reason` (≤ 255), `LessonAuthoringInput.math_assets[]`, `ContentVersion.outdated_fields[]` (readOnly, ≤ 500 × 256). [Proposed] **Không** thay `stem`/`render_payload`/`answer_key` bằng `$ref` ngoài tới `question.schema.json` (công cụ tách spec/sinh type không xử lý `$ref` ngoài file); portal kiểm từng phần bằng ajv trên bản sao sinh của schema (research R2), server kiểm lại (F022). Backend điền `outdated_fields`, nhận `audio_exempt_reason` thuộc F025; `LessonAuthoringInput.math_assets` thuộc F024.
+- Q: `CurriculumVersion.missing_yccd_objective_ids[]` (contracts §6)? → A: [Proposed] không thêm: F021 đã trả `422 VALIDATION_FAILED` với `errors[].field = yccd_ref` và danh sách mã LO trong `message` (F021-AC-14); portal tách mã LO từ đó. Trường có cấu trúc để lại cho F021 nếu cần.
+- Q: Kéo-thả chủ đề cần `If-Match` nhưng danh sách topic/LO không có ETag từng dòng? → A: Delta mới (Cần thêm, backend F021): `Topic.row_version`, `LearningObjective.row_version` (readOnly) — portal gửi `If-Match: W/"<row_version>"`. Tới khi F021 trả trường này, server trả `428` và cây hoàn tác + báo lỗi (đúng F053-AC-27).
+- Q: ETag nào cho `updateQuestionDraft`? → A: ETag của **version** (`getCmsQuestionVersion`); ETag của `getCmsQuestion` chỉ dùng cho `deleteQuestion` (hiện thực F022). Portal đọc question rồi version.
+- Q: Speech text tiếng Việt cho công thức? → A: [Proposed] speech-rule-engine của MathJax 4 không có locale `vi`; portal sinh `speech_text` bằng bộ đọc quy tắc nhỏ (vi/en) trên cây MathML của MathJax 4 (phân số, căn, lũy thừa, chỉ số, quan hệ, mũi tên mhchem). Đổi engine khi có TTS/SRE tiếng Việt.
+- Q: "feedback/misconception lưu ở phần đáp án" so với contract? → A: Theo contract (`QuestionAuthoringInput`, `question.schema.json#/$defs/option`), `feedback`/`misconception_tag` nằm trong `render_payload.options[]` khi gửi lên, server tách khỏi DTO học sinh; preview "như học sinh thấy" không bao giờ hiển thị chúng.
+- Q: `question.schema.json` khai báo `worked_example_ref` là uuid, OpenAPI là `{content_item_id, block_id}`? → A: F024 (trên main) đã đổi schema thành `{content_item_id, block_id}` với `block_id` `^we_[a-z0-9_]{1,40}# Feature Specification: F053 — Workspace B — cây curriculum, editor nội dung, công thức, song ngữ, trình soạn câu hỏi
+
+**Feature Branch**: `053-content-studio-editor` · **Created**: 2026-11-16 · **Status**: Done · **Hoàn tất**: 2026-11-19 · **Module**: `src/cms/frontend/apps/portal` (workspace `content_studio`) + `src/cms/frontend/packages/ops-ui` · **Mốc**: M-C2 · **Phụ thuộc**: F021, F022, F027, F051
+**Input**: Phần soạn thảo của Learning Content Studio: cây curriculum (môn, curriculum, chủ đề, LO), khung editor dùng chung `ContentEditorShell` (autosave, khóa lạc quan, thanh trạng thái, thao tác workflow cơ bản), công thức (MathLive nhập, MathJax 4 hiển thị, SVG render trên trình duyệt), biên tập song ngữ, trình soạn 11 dạng câu hỏi (phản hồi theo phương án, gợi ý nhiều cấp, lồng tiếng `g1_3`), khối `worked_example`. FR nguồn: FR-CMS-002, FR-CMS-003, FR-CNT-017, FR-CNT-018, FR-CNT-020, FR-QB-001, FR-QB-013.
+
+## Clarifications
+
+### Session 2026-11-16
+
+- Q: M-C2 cần "soạn → duyệt → publish" trên portal nhưng hàng đợi duyệt, lịch sử version, rollback thuộc F054 (M-C3)? → A: F053 đưa vào thanh trạng thái của editor các thao tác trên **một item**: Gửi duyệt, Duyệt, Từ chối, Xuất bản ngay, Tạo bản nháp từ version đã publish. Hàng đợi duyệt, hẹn giờ, lịch sử/diff, rollback, gỡ xuất bản, archive thuộc F054.
+- Q: Gửi SVG công thức cho câu hỏi/bài học bằng trường nào? → A: `ActivityDefinitionInput.math_assets` đã có; `QuestionAuthoringInput`, `LessonAuthoringInput` chưa có → "Cần sửa" ([contracts](contracts/README.md) §6).
+- Q: `hints[]`, `worked_example_ref`, `audio_exempt_reason` trong `QuestionAuthoringInput`? → A: Theo `specs/schemas/question.schema.json`; contract authoring cần khai báo tường minh → "Cần sửa".
+- Q: Lỗi thiếu lồng tiếng `g1_3`? → A: [CONTENT_MODEL §8.1](../../docs/02-learning/CONTENT_MODEL.md) dùng `422 AUDIO_REQUIRED`; enum `ProblemCode` chưa có → "Cần thêm".
+- Q: Curriculum version, gửi duyệt/xuất bản curriculum, import YAML/CSV? → A: Contract CMS chưa có (CURRICULUM_MODEL §9) → "Cần thêm", backend F021.
+
+### Session 2026-11-19 (triển khai — câu hỏi mở và quyết định [Proposed])
+
+- Q: Delta contract T005–T009 khi triển khai? → A: `hints`, `worked_example_ref`, `math_assets` (QuestionAuthoringInput), `AUDIO_REQUIRED`, `listCurriculumVersions`/`transitionCurriculumVersion`/`publishCurriculumVersion` đã có sẵn trên main (F021/F022/F027). F053 thêm: `QuestionAuthoringInput.audio_exempt_reason` (≤ 255), `LessonAuthoringInput.math_assets[]`, `ContentVersion.outdated_fields[]` (readOnly, ≤ 500 × 256). [Proposed] **Không** thay `stem`/`render_payload`/`answer_key` bằng `$ref` ngoài tới `question.schema.json` (công cụ tách spec/sinh type không xử lý `$ref` ngoài file); portal kiểm từng phần bằng ajv trên bản sao sinh của schema (research R2), server kiểm lại (F022). Backend điền `outdated_fields`, nhận `audio_exempt_reason` thuộc F025; `LessonAuthoringInput.math_assets` thuộc F024.
+- Q: `CurriculumVersion.missing_yccd_objective_ids[]` (contracts §6)? → A: [Proposed] không thêm: F021 đã trả `422 VALIDATION_FAILED` với `errors[].field = yccd_ref` và danh sách mã LO trong `message` (F021-AC-14); portal tách mã LO từ đó. Trường có cấu trúc để lại cho F021 nếu cần.
+- Q: Kéo-thả chủ đề cần `If-Match` nhưng danh sách topic/LO không có ETag từng dòng? → A: Delta mới (Cần thêm, backend F021): `Topic.row_version`, `LearningObjective.row_version` (readOnly) — portal gửi `If-Match: W/"<row_version>"`. Tới khi F021 trả trường này, server trả `428` và cây hoàn tác + báo lỗi (đúng F053-AC-27).
+- Q: ETag nào cho `updateQuestionDraft`? → A: ETag của **version** (`getCmsQuestionVersion`); ETag của `getCmsQuestion` chỉ dùng cho `deleteQuestion` (hiện thực F022). Portal đọc question rồi version.
+- Q: Speech text tiếng Việt cho công thức? → A: [Proposed] speech-rule-engine của MathJax 4 không có locale `vi`; portal sinh `speech_text` bằng bộ đọc quy tắc nhỏ (vi/en) trên cây MathML của MathJax 4 (phân số, căn, lũy thừa, chỉ số, quan hệ, mũi tên mhchem). Đổi engine khi có TTS/SRE tiếng Việt.
+- Q: "feedback/misconception lưu ở phần đáp án" so với contract? → A: Theo contract (`QuestionAuthoringInput`, `question.schema.json#/$defs/option`), `feedback`/`misconception_tag` nằm trong `render_payload.options[]` khi gửi lên, server tách khỏi DTO học sinh; preview "như học sinh thấy" không bao giờ hiển thị chúng.
+; portal theo đúng shape này, id khối `worked_example` sinh theo cùng pattern và đọc từ `block.id` (lesson.schema.json).
+- Q: Kéo-thả? → A: [Proposed] dùng Tree kéo-thả của Ant Design thay `@dnd-kit` (cùng kết quả, không thêm phụ thuộc); khối nội dung chuyển bằng nút Lên/Xuống (dùng được bàn phím).
+- Q: `assets_per_version_max` là platform setting không đọc được từ portal? → A: dùng 50 = `media_refs.maxItems` của contract; server quyết định.
+- Q: Màn danh sách/tìm kiếm câu hỏi? → A: thuộc F054; màn "Ngân hàng câu hỏi" của F053 có "Tạo câu hỏi" và "Mở câu hỏi theo mã".
+- Q: E2E Playwright với backend thật (T004, T024–T026, T035, T042, T049, T056, T060, T064)? → A: Như F051 (OQ F051-9), backend chưa nối route vào binary (OQ F020-3): mọi F053-AC-* được kiểm ở mức unit/integration với MOCK backend hợp đồng (`src/test/mock-content.ts`); E2E backend thật và baseline visual cho story mới chờ chạy ở CI/khi backend nối xong.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
