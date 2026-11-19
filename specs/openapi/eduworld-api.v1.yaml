@@ -10871,6 +10871,164 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ---------------------------------------------------------------- game-admin (internal, platform-only — ADR-0027)
+  /admin/users/{user_id}:unlock:
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: unlockUser
+      x-portal-action: action.platform_admin.access_control.lock_user
+      summary: Mở khóa tài khoản người dùng
+      description: Đặt lại `active`, phát `user.access_restored`; worker bật lại user Keycloak (F016-AC-04). System Admin, tenant đích qua `X-Tenant-Id`.
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã mở khóa, phát user.access_restored
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/users/{user_id}:deactivate:
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: deactivateUser
+      x-portal-action: action.platform_admin.access_control.lock_user
+      summary: Vô hiệu hóa tài khoản người dùng
+      description: Đặt `deactivated` (giữ dữ liệu đến hết retention), phát `user.status_changed` + `user.access_revoked` (F016-AC-01).
+      x-internal: true
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã vô hiệu hóa, phát user.access_revoked
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /tenant/users/{user_id}:lock:
+    post:
+      x-service: identity
+      tags:
+        - tenant
+      operationId: lockTenantUser
+      x-portal-action: action.school_lms.classes.lock_student
+      summary: Khóa tài khoản học sinh của tenant/trường
+      description: School Admin (trường của học sinh) hoặc Tenant Admin khóa học sinh (`tenant.user.lock`); nhân sự, trường khác → 403, tenant khác → 404 (F016-AC-05). Học sinh chỉ thấy thông điệp trung tính (F016-AC-06).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã khóa, phát user.access_revoked
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /tenant/users/{user_id}:unlock:
+    post:
+      x-service: identity
+      tags:
+        - tenant
+      operationId: unlockTenantUser
+      x-portal-action: action.school_lms.classes.lock_student
+      summary: Mở khóa tài khoản học sinh của tenant/trường
+      description: Cùng quyền và phạm vi như `lockTenantUser`; phát `user.access_restored` (F016-AC-04).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã mở khóa, phát user.access_restored
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}:
     get:
       x-service: [game, competition, chat]

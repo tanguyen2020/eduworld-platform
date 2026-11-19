@@ -68,7 +68,7 @@ func SystemRoles() []RoleDef {
 			"report.export",
 		}, PermLearningContentReEvaluate)},
 		{Name: "school_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"school.*", "tenant.user.read", "tenant.user_role.write", "lms.*", "learning_content.read",
+			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.user_role.write", "lms.*", "learning_content.read",
 			"learning_content.write", "learning_content.review", "learning_content.publish", "analytics.school.read",
 			"analytics.class.read", "moderation.school_notification.read", "moderation.school_notification.acknowledge",
 			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export",

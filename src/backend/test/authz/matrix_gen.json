@@ -1164,6 +1164,18 @@
     ]
   },
   {
+    "operation_id": "deactivateUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/users/{user_id}:deactivate",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "declineClubInvitation",
     "module": "chat",
     "method": "POST",
@@ -4120,6 +4132,18 @@
     ]
   },
   {
+    "operation_id": "lockTenantUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/users/{user_id}:lock",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "lockUser",
     "module": "identity",
     "method": "POST",
@@ -5205,6 +5229,30 @@
     "module": "learning",
     "method": "POST",
     "path": "/lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unlockTenantUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/tenant/users/{user_id}:unlock",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "unlockUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/users/{user_id}:unlock",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

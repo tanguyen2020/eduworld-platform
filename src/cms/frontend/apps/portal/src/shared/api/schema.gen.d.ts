@@ -1606,6 +1606,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/users/{user_id}:deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vô hiệu hóa tài khoản người dùng
+         * @description Đặt `deactivated` (giữ dữ liệu đến hết retention), phát `user.status_changed` + `user.access_revoked` (F016-AC-01).
+         */
+        post: operations["deactivateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/users/{user_id}:lock": {
         parameters: {
             query?: never;
@@ -1617,6 +1637,26 @@ export interface paths {
         put?: never;
         /** Khóa tài khoản người dùng */
         post: operations["lockUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{user_id}:unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mở khóa tài khoản người dùng
+         * @description Đặt lại `active`, phát `user.access_restored`; worker bật lại user Keycloak (F016-AC-04). System Admin, tenant đích qua `X-Tenant-Id`.
+         */
+        post: operations["unlockUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2921,7 +2961,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tìm kiếm question bank */
+        /** Tìm kiếm question bank (version mới nhất của mỗi câu) theo môn, khối, chủ đề, LO, độ khó, trạng thái, loại, nguồn (learning_content.read) */
         get: operations["searchQuestions"];
         put?: never;
         /** Tạo question (version 1, draft) */
@@ -2974,7 +3014,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Một version của câu hỏi kèm answer_key, phản hồi phương án, gợi ý (chỉ role CMS có learning_content.read trong scope) */
+        get: operations["getCmsQuestionVersion"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7589,6 +7630,46 @@ export interface paths {
         patch: operations["updateTenantUser"];
         trace?: never;
     };
+    "/tenant/users/{user_id}:lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Khóa tài khoản học sinh của tenant/trường
+         * @description School Admin (trường của học sinh) hoặc Tenant Admin khóa học sinh (`tenant.user.lock`); nhân sự, trường khác → 403, tenant khác → 404 (F016-AC-05). Học sinh chỉ thấy thông điệp trung tính (F016-AC-06).
+         */
+        post: operations["lockTenantUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenant/users/{user_id}:unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mở khóa tài khoản học sinh của tenant/trường
+         * @description Cùng quyền và phạm vi như `lockTenantUser`; phát `user.access_restored` (F016-AC-04).
+         */
+        post: operations["unlockTenantUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -10998,13 +11079,20 @@ export interface components {
             }[];
         };
         QuestionAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["QuestionAuthoringInput"];
-        /** @description Dạng soạn thảo — chỉ dùng trong CMS, có answer_key */
+        /**
+         * @description Dạng soạn thảo — chỉ dùng trong CMS, có answer_key (F022). stem, render_payload, answer_key, scoring_rule, explanation,
+         *     hints được kiểm theo specs/schemas/question.schema.json theo `type` rồi validator ngữ nghĩa của loại (lỗi trả JSON
+         *     pointer trong errors[].field); options[].feedback và options[].misconception_tag được tách khỏi render payload khi lưu
+         *     (chỉ server). Loại chưa bật (short_answer, image_based, interactive — F023) → 422 errors[].code = TYPE_NOT_ENABLED.
+         */
         QuestionAuthoringInput: {
             answer_key?: {
                 [key: string]: unknown;
             };
+            change_note?: string;
             /** @description Ngôn ngữ gốc của câu hỏi; stem/explanation dùng khóa vi/en (specs/schemas/question.schema.json) */
             content_language?: components["schemas"]["ContentLanguage"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
             difficulty?: number;
             /**
              * @description Câu đo hiệu quả (F035) — chỉ owner_scope = platform, exam_only = true, không tham số hóa (ngược lại 422 VALIDATION_FAILED); bị loại khỏi mọi lần chọn câu; chỉ đổi bằng version mới
@@ -11016,11 +11104,25 @@ export interface components {
              * @default false
              */
             exam_only: boolean;
+            /** @description richContent */
             explanation?: {
                 [key: string]: unknown;
             };
-            grade_level?: components["schemas"]["GradeLevel"];
+            grade_levels?: components["schemas"]["GradeLevel"][];
+            /** @description Gợi ý theo cấp (richContent), chỉ server */
+            hints?: {
+                [key: string]: unknown;
+            }[];
+            /** @description Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay) */
+            math_assets?: {
+                latex: string;
+                speech_text: string;
+                svg_asset: string;
+            }[];
+            /** @default 1 */
+            max_score: number;
             media_refs?: components["schemas"]["Uuid"][];
+            min_response_ms?: number;
             objective_ids?: components["schemas"]["Uuid"][];
             /**
              * @default tenant
@@ -11033,14 +11135,21 @@ export interface components {
             scoring_rule?: {
                 [key: string]: unknown;
             };
+            /** @description richContent (question.schema.json#/$defs/richContent) */
             stem?: {
                 [key: string]: unknown;
             };
             subject_id?: components["schemas"]["Uuid"];
+            tags?: string[];
             /** @description Tenant đích — bắt buộc khi người gọi là System Admin và owner_scope = tenant; người dùng tenant bỏ trống (khác tenant phiên → TENANT_MISMATCH) */
             tenant_id?: components["schemas"]["Uuid"];
             topic_id?: components["schemas"]["Uuid"];
             type?: components["schemas"]["QuestionType"];
+            /** @description Khối worked_example trong lesson/learning material cùng LO (CONTENT_MODEL §9.2); kiểm tồn tại ở F024 */
+            worked_example_ref?: {
+                block_id: string;
+                content_item_id: components["schemas"]["Uuid"];
+            };
         };
         /** @description Render payload — KHÔNG chứa đáp án, scoring rule hay giải thích (ADR-0016) */
         QuestionRender: {
@@ -17226,6 +17335,49 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    deactivateUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã vô hiệu hóa, phát user.access_revoked */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     lockUser: {
         parameters: {
             query?: never;
@@ -17266,6 +17418,49 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    unlockUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã mở khóa, phát user.access_restored */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     gameLogin: {
@@ -20618,10 +20813,13 @@ export interface operations {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                difficulty?: number[];
                 /** @description Lọc câu đo hiệu quả (F035; chỉ có ở dữ liệu platform) */
                 efficacy_instrument?: boolean;
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
+                objective_id?: components["schemas"]["Uuid"];
+                /** @description Tìm full-text — F024 (bỏ qua ở F022) */
                 q?: string;
                 /** @description own = dữ liệu của tenant; assigned = dữ liệu platform được gán cho tenant (chỉ đọc); platform = dữ liệu platform (chỉ role platform) */
                 source?: "own" | "assigned" | "platform";
@@ -20632,6 +20830,7 @@ export interface operations {
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
                  */
                 tenant_ids?: components["parameters"]["TenantIds"];
+                topic_id?: components["schemas"]["Uuid"];
                 type?: components["schemas"]["QuestionType"];
             };
             header?: {
@@ -20699,6 +20898,7 @@ export interface operations {
                     "application/json": components["schemas"]["QuestionAuthoring"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationFailed"];
         };
@@ -20768,9 +20968,12 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     createQuestionVersion: {
@@ -20815,7 +21018,42 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getCmsQuestionVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                question_id: components["parameters"]["QuestionIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionAuthoring"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     updateQuestionDraft: {
@@ -20852,8 +21090,12 @@ export interface operations {
                     "application/json": components["schemas"]["QuestionAuthoring"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
         };
     };
@@ -32446,6 +32688,92 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    lockTenantUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã khóa, phát user.access_revoked */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    unlockTenantUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã mở khóa, phát user.access_restored */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
 }

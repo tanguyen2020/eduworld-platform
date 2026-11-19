@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.cleanup_scheduled.v1.schema.json",
+  "title": "Payload student.cleanup_scheduled v1 (module identity, owner F016, ADR-0032)",
+  "description": "Học sinh vào cửa sổ báo trước của đợt dọn (theo lô). Consumer: NTF (danh sách sắp bị dọn), AUD. Chỉ định danh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "student_ids",
+    "scheduled_cleanup_at",
+    "cutoff_days"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "scheduled_cleanup_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cutoff_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3650
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "student_ids": [
+        "0193a5f4-6c1e-7b2a-9d1f-000000000005"
+      ],
+      "scheduled_cleanup_at": "2026-12-03T02:00:00Z",
+      "cutoff_days": 180
+    }
+  ]
+}

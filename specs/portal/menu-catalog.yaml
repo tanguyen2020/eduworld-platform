@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.17.3"
+catalog_version: "2026.11.19.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -84,6 +84,12 @@ workspaces:
             title: Đặt lại mật khẩu học sinh (mật khẩu mới hiển thị một lần để in thẻ đăng nhập)
             required_permissions: [lms.student.password_reset]
             operation_ids: [resetStudentPassword]
+            can_disable: true
+          - key: action.school_lms.classes.lock_student
+            label_key: portal.action.school_lms.classes.lock_student
+            title: Khóa/mở khóa tài khoản học sinh (lý do bắt buộc, học sinh thấy thông điệp trung tính)
+            required_permissions: [tenant.user.lock]
+            operation_ids: [lockTenantUser, unlockTenantUser]
             can_disable: true
       - key: menu.school_lms.sis_sync
         label_key: portal.menu.school_lms.sis_sync
@@ -2062,7 +2068,7 @@ workspaces:
             label_key: portal.action.platform_admin.access_control.lock_user
             title: Khóa tài khoản
             required_permissions: [platform.user.manage]
-            operation_ids: [lockUser]
+            operation_ids: [lockUser, unlockUser, deactivateUser]
             can_disable: false
       - key: menu.platform_admin.tenant_data
         label_key: portal.menu.platform_admin.tenant_data

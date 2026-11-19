@@ -32,7 +32,8 @@
 - Q: Job `partition-maintainer` cho `sis.staging_records`, `sis.sync_record_errors`? → A: F015 tạo partition tháng cho `audit.audit_logs` (không DEFAULT) và `identity.login_events` (tháng đã có dòng trong DEFAULT của F013 bị bỏ qua có cảnh báo); bảng `sis.*` giữ partition DEFAULT của F011 — OQ F015-7.
 - Q: Nối binary? → A: Consumer `identity.audit_sink` (mỗi stream `EVT_*`), `identity.feature_toggle_cache`, job `partition-maintainer`/`audit-retention`, `RegisterSettings` và `featuretoggle.Source` cho `featuregate` chưa nối vào `core-api`/`worker` (cùng OQ F010-2).
 - Q: Ghi đè flag theo tenant của System Admin? → A: `X-Tenant-Id` là tenant đích (R20); Principal của System Admin mang tenant đó vẫn được ghi.
- *(bắt buộc)*
+
+## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)
 

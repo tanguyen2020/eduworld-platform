@@ -130,6 +130,7 @@ const (
 	PermTenantTrashRestore                       Permission = "tenant.trash.restore"
 	PermTenantUserRead                           Permission = "tenant.user.read"
 	PermTenantUserWrite                          Permission = "tenant.user.write"
+	PermTenantUserLock                           Permission = "tenant.user.lock"
 	PermTenantUserRoleWrite                      Permission = "tenant.user_role.write"
 )
 
@@ -254,6 +255,7 @@ var catalog = []Permission{
 	PermTenantTrashRestore,
 	PermTenantUserRead,
 	PermTenantUserWrite,
+	PermTenantUserLock,
 	PermTenantUserRoleWrite,
 }
 

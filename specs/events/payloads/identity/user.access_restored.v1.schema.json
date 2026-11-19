@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.access_restored.v1.schema.json",
+  "title": "Payload user.access_restored v1 (module identity, owner F016)",
+  "description": "Mở khóa tài khoản (F016-AC-04): worker identity bật lại user Keycloak. Consumer: identity (keycloak-provisioner), AUD, NTF. Không PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "user_id",
+    "reason"
+  ],
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "unlocked",
+        "reactivated"
+      ]
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  },
+  "examples": [
+    {
+      "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "reason": "unlocked",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001"
+    }
+  ]
+}

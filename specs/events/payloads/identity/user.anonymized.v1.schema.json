@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/user.anonymized.v1.schema.json",
+  "title": "Payload user.anonymized v1 (module identity, owner F016)",
+  "description": "Saga user_anonymize hoàn tất (F016-AC-20): mọi module ẩn danh hóa projection ref.* và dữ liệu của mình. Không chứa PII cũ.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "user_id",
+    "user_type",
+    "trigger",
+    "anonymized_at"
+  ],
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "student",
+        "staff"
+      ]
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "data_request",
+        "retention"
+      ]
+    },
+    "data_request_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "anonymized_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "user_type": "student",
+      "trigger": "data_request",
+      "data_request_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "anonymized_at": "2027-01-10T02:00:00Z"
+    }
+  ]
+}
