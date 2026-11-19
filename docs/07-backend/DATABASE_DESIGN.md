@@ -1665,12 +1665,16 @@ CREATE TABLE audit.audit_logs (
   metadata      jsonb NOT NULL DEFAULT '{}',  -- không chứa PII/nội dung chat
   trace_id      varchar(64),
   ip_hash       bytea,
+  producer      varchar(64) NOT NULL,          -- <module>/<thành phần> của envelope (F015)
   PRIMARY KEY (audit_id, occurred_at)
-) PARTITION BY RANGE (occurred_at);
+) PARTITION BY RANGE (occurred_at);              -- partition tháng, KHÔNG có partition DEFAULT (F015-AC-03)
 CREATE INDEX audit_tenant_time_idx ON audit.audit_logs (tenant_id, occurred_at DESC);
 CREATE INDEX audit_target_idx ON audit.audit_logs (target_type, target_id);
 
 REVOKE UPDATE, DELETE ON audit.audit_logs FROM identity_app, identity_platform; -- append-only (audit nằm trong eduworld_identity)
+-- F015: RLS (identity_app đọc tenant của mình; sink và System Admin qua identity_platform: SELECT, INSERT). Partition tháng và
+-- ẩn danh hóa theo retention chạy bằng hàm SECURITY DEFINER audit.ensure_monthly_partitions, audit.monthly_partitions_ahead,
+-- audit.anonymize_expired (EXECUTE cho identity_partition_admin) — không role nào khác có UPDATE trên bảng.
 ```
 
 ## 4. Row-Level Security

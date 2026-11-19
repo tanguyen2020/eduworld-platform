@@ -21,7 +21,18 @@
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Cài đặt giờ giới nghiêm `platform_curfew` và khung giới nghiêm của trường (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
-## User Scenarios & Testing *(bắt buộc)*
+### Session 2026-11-19 (triển khai)
+
+- Q: Cột `settings_version` cho `platform.tenants`, `org.schools`? → A: [Proposed] Dùng cột `version` (optimistic concurrency) sẵn có của dòng tenant/trường làm ETag cài đặt (thay đổi tên/trạng thái cũng tăng version) — không đổi bảng ent của F010 — OQ F015-1. Khóa `platform_settings` chưa cấu hình có ETag `W/"0"`.
+- Q: Role `identity_retention`? → A: [Proposed] Thay bằng hàm `SECURITY DEFINER` `audit.anonymize_expired` (và `audit.ensure_monthly_partitions`, `audit.monthly_partitions_ahead`) chạy bằng `identity_partition_admin`: `identity_app`/`identity_platform` không có quyền UPDATE nào trên nhật ký — OQ F015-2.
+- Q: F015-AC-05 so `tenant_id` của envelope với payload — payload `audit.recorded` v1 không có `tenant_id`? → A: Sink kiểm `school_id` của payload thuộc đúng tenant của envelope; khác → lỗi vĩnh viễn (DLQ) + cảnh báo bảo mật trong log + metric `eduworld_audit_records_total{result="tenant_mismatch"}` — OQ F015-3.
+- Q: Quyền đọc cài đặt platform/feature flag? → A: Catalog chỉ có `platform.settings.write`/`platform.feature_flag.write`; đọc dùng chính quyền ghi [Proposed] — OQ F015-4.
+- Q: `X-Tenant-Id` (tùy chọn) ở `putStudentCleanupSettings`/`putChatRetentionSettings`? → A: [Proposed] Bỏ qua; ghi đè theo tenant đi qua `updateTenantSettings` — OQ F015-5.
+- Q: `getTenant` (facade internal, F015-AC-14)? → A: Chưa hiện thực (facade identity mới có nhóm Principal); module khác nhận thay đổi qua `tenant.updated`/`platform_settings.changed` — OQ F015-6.
+- Q: Job `partition-maintainer` cho `sis.staging_records`, `sis.sync_record_errors`? → A: F015 tạo partition tháng cho `audit.audit_logs` (không DEFAULT) và `identity.login_events` (tháng đã có dòng trong DEFAULT của F013 bị bỏ qua có cảnh báo); bảng `sis.*` giữ partition DEFAULT của F011 — OQ F015-7.
+- Q: Nối binary? → A: Consumer `identity.audit_sink` (mỗi stream `EVT_*`), `identity.feature_toggle_cache`, job `partition-maintainer`/`audit-retention`, `RegisterSettings` và `featuretoggle.Source` cho `featuregate` chưa nối vào `core-api`/`worker` (cùng OQ F010-2).
+- Q: Ghi đè flag theo tenant của System Admin? → A: `X-Tenant-Id` là tenant đích (R20); Principal của System Admin mang tenant đó vẫn được ghi.
+ *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)
 

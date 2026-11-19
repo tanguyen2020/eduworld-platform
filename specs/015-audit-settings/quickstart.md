@@ -44,3 +44,18 @@ make test-integration MOD=identity
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (pass/fail), truy vấn `pg_partitions` cho audit, trace_id kịch bản 7 và 10.
+
+## 5. Bằng chứng (2026-11-19, local)
+
+Lệnh tương đương target `make` (chưa có `make` trên Windows): `go test ./modules/identity/... ./pkg/outbox/ ./pkg/audit/`, `go test -tags integration ./modules/identity/tests/integration/` (PostgreSQL + Valkey thật, testcontainers).
+
+| Phần | Test | Kết quả |
+|---|---|---|
+| US1 (AC-01…AC-06) | `TestAuditSettingsSchema`, `TestAuditSink`, `domain/audit` | PASS |
+| US2 (AC-07…AC-10) | `TestAuditLogQueries` | PASS |
+| US3 (AC-11…AC-15, AC-21) | `TestPlatformAndTenantSettings` | PASS |
+| US4 (AC-16…AC-19, AC-22) | `TestSchoolSettings`, `TestGameLoginSchoolPolicy`, `domain/settings` | PASS |
+| US5 (AC-20, AC-23…AC-29) | `TestFeatureFlagsAndMenuCatalog`, `TestAuditSettingsSchema`, `domain/settings` `TestToggles` | PASS |
+| Contract | `tests/contract/settings_routes_test.go` | PASS |
+
+Chưa làm (cần binary đã nối — OQ F010-2): gọi qua APISIX, đo SC-003 trên dữ liệu 12 tháng, tải SC-001.
