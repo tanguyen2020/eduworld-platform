@@ -1,0 +1,24 @@
+{
+  "type": "https://example.invalid/resource",
+  "title": "sample",
+  "status": 1,
+  "code": "BAD_REQUEST",
+  "detail": "sample",
+  "instance": "sample",
+  "trace_id": "sample",
+  "retryable": false,
+  "policy_reason": "sample",
+  "feature_key": "sample",
+  "reopen_at": "2026-11-15T07:30:00Z",
+  "choices": [
+    {
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "tenant_type": "school",
+      "name": "sample",
+      "school_name": "sample",
+      "logo_url": "https://example.invalid/resource"
+    }
+  ],
+  "login_ticket": "sample",
+  "login_ticket_expires_at": "2026-11-15T07:30:00Z"
+}

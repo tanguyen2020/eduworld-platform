@@ -18,8 +18,12 @@ const yaml = require(path.join(root, 'scripts', 'node_modules', 'js-yaml'));
 const SPEC = 'specs/openapi/eduworld-api.v1.yaml';
 const EXAMPLES_DIR = 'specs/examples';
 const OUT_DIR = path.join(root, 'src/game/tests/fixtures/contract');
-// Component schemas the F060 frame parses (F061 adds its login/bootstrap schemas here).
-const SCHEMAS = ['ClientConfig', 'Problem'];
+// Component schemas the client parses: F060 frame + F061 login, refresh, tenant choice, game session, takeover.
+const SCHEMAS = [
+  'ClientConfig', 'Problem',
+  'GameLoginResponse', 'GameTokenRefreshResponse', 'GameLoginProblem', 'ClientVersionProblem', 'GameSession',
+  'ActiveSessionConflict',
+];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];

@@ -1,0 +1,152 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/auth/login.gd" id="1_login"]
+
+[node name="Login" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_login")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Center" type="CenterContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Card" type="PanelContainer" parent="Scroll/Center"]
+custom_minimum_size = Vector2(480, 0)
+layout_mode = 2
+
+[node name="Box" type="VBoxContainer" parent="Scroll/Center/Card"]
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Scroll/Center/Card/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Scroll/Center/Card/Box/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.login.title"
+autowrap_mode = 3
+
+[node name="LangVi" type="Button" parent="Scroll/Center/Card/Box/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.language_vi"
+autowrap_mode = 3
+
+[node name="LangEn" type="Button" parent="Scroll/Center/Card/Box/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.language_en"
+autowrap_mode = 3
+
+[node name="Banner" type="Label" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+autowrap_mode = 3
+
+[node name="UsernameLabel" type="Label" parent="Scroll/Center/Card/Box"]
+layout_mode = 2
+text = "ui.login.username_label"
+autowrap_mode = 3
+
+[node name="Username" type="LineEdit" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+max_length = 128
+context_menu_enabled = false
+clear_button_enabled = true
+
+[node name="PasswordLabel" type="Label" parent="Scroll/Center/Card/Box"]
+layout_mode = 2
+text = "ui.login.password_label"
+autowrap_mode = 3
+
+[node name="PasswordRow" type="HBoxContainer" parent="Scroll/Center/Card/Box"]
+layout_mode = 2
+
+[node name="Password" type="LineEdit" parent="Scroll/Center/Card/Box/PasswordRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 256
+context_menu_enabled = false
+shortcut_keys_enabled = false
+virtual_keyboard_type = 6
+secret = true
+
+[node name="ShowPassword" type="Button" parent="Scroll/Center/Card/Box/PasswordRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+toggle_mode = true
+text = "ui.login.show_password"
+autowrap_mode = 3
+
+[node name="Error" type="Label" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="SignIn" type="Button" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "ui.login.button_sign_in"
+autowrap_mode = 3
+
+[node name="Remember" type="CheckBox" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "ui.login.remember_username"
+autowrap_mode = 3
+
+[node name="Forgot" type="Button" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintButton"
+text = "ui.login.forgot_password_hint"
+autowrap_mode = 3
+
+[node name="ForgotHint" type="Label" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.login.forgot_password_dialog"
+autowrap_mode = 3
+
+[node name="Version" type="Label" parent="Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 2
+autowrap_mode = 3

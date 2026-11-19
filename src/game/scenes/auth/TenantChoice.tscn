@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/auth/tenant_choice.gd" id="1_script"]
+
+[node name="TenantChoice" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.15
+anchor_top = 0.5
+anchor_right = 0.85
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Card"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Card/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.login.tenant_choice.title"
+autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="Card/Box"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.login.tenant_choice.hint"
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Card/Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 240)
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Card/Box/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Actions" type="HBoxContainer" parent="Card/Box"]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="Card/Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.tenant_choice.back"
+autowrap_mode = 3
+
+[node name="Enter" type="Button" parent="Card/Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+size_flags_horizontal = 3
+text = "ui.login.tenant_choice.enter"
+autowrap_mode = 3

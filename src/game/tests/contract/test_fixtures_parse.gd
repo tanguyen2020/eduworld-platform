@@ -32,6 +32,27 @@ func test_problem_parses_and_maps_to_a_message() -> void:
 	assert_object(ApiProblem.from_dict({"title": "x"})).is_null()
 
 
+## F061: login, refresh, tenant choice, takeover and game session samples parse into the client models.
+func test_game_login_fixtures_parse() -> void:
+	var login: Dictionary = _json(FIXTURES.path_join("openapi/GameLoginResponse.json")) as Dictionary
+	var tokens: TokenStore = TokenStore.new()
+	assert_bool(tokens.apply(login["tokens"] as Dictionary, 0)).is_true()
+	assert_bool(Uuid.is_valid(String((login["bootstrap"] as Dictionary)["tenant_id"]))).is_true()
+	assert_bool(login.has("game_session_id")).is_false()
+	var refresh: Dictionary = _json(FIXTURES.path_join("openapi/GameTokenRefreshResponse.json")) as Dictionary
+	assert_bool(TokenStore.new().apply(refresh, 0)).is_true()
+	assert_bool(refresh.get("bootstrap") is Dictionary).is_true()
+	var choice: ApiProblem = ApiProblem.from_dict(_json(FIXTURES.path_join("openapi/GameLoginProblem.json")) as Dictionary)
+	assert_int(choice.choices.size()).is_greater_equal(1)
+	assert_str(choice.login_ticket).is_not_empty()
+	var version: ApiProblem = ApiProblem.from_dict(_json(FIXTURES.path_join("openapi/ClientVersionProblem.json")) as Dictionary)
+	assert_str(version.min_client_version).is_not_empty()
+	var conflict: ApiProblem = ApiProblem.from_dict(_json(FIXTURES.path_join("openapi/ActiveSessionConflict.json")) as Dictionary)
+	assert_object(conflict.other_device).is_not_null()
+	var session: Dictionary = _json(FIXTURES.path_join("openapi/GameSession.json")) as Dictionary
+	assert_bool(Uuid.is_valid(String(session["game_session_id"]))).is_true()
+
+
 func test_every_example_document_parses_and_localized_text_is_pickable() -> void:
 	var manifest: Dictionary = (_json(FIXTURES.path_join("manifest.json")) as Dictionary)["fixtures"] as Dictionary
 	var examples: int = 0

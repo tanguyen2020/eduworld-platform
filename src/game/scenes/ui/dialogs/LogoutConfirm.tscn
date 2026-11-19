@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/dialogs/logout_confirm.gd" id="1_script"]
+
+[node name="LogoutConfirm" type="PanelContainer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+custom_minimum_size = Vector2(420, 0)
+script = ExtResource("1_script")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Body" type="Label" parent="Box"]
+layout_mode = 2
+text = "ui.settings.logout_confirm"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Cancel" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.logout_cancel"
+autowrap_mode = 3
+
+[node name="Confirm" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.settings.logout"
+autowrap_mode = 3

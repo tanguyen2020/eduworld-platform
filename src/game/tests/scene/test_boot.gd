@@ -3,8 +3,20 @@ extends GdUnitTestSuite
 
 const BootScript := preload("res://scenes/bootstrap/boot.gd")
 const EXPECTED_ORDER: PackedStringArray = [
-	"Config", "Log", "EventBus", "AppState", "SceneRouter", "AudioDirector", "Settings",
+	"Config", "Log", "EventBus", "AppState", "AuthService", "ApiClient", "SceneRouter", "AudioDirector", "Settings",
 ]
+
+var _autostart: bool = true
+
+
+func before() -> void:
+	# Splash would start the F061 entry flow (network); scene tests only check the F060 boot path.
+	_autostart = AuthService.autostart
+	AuthService.autostart = false
+
+
+func after() -> void:
+	AuthService.autostart = _autostart
 
 
 func test_autoload_order_follows_architecture() -> void:

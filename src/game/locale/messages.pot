@@ -99,6 +99,9 @@ msgstr ""
 msgid "ui.error.UNAVAILABLE"
 msgstr ""
 
+msgid "ui.error.VALIDATION_FAILED"
+msgstr ""
+
 msgid "ui.error.generic"
 msgstr ""
 
@@ -238,4 +241,196 @@ msgid "ui.gallery.title"
 msgstr ""
 
 msgid "ui.gallery.toast.message"
+msgstr ""
+
+msgid "ui.login.button_sign_in"
+msgstr ""
+
+msgid "ui.login.cancel"
+msgstr ""
+
+msgid "ui.login.connecting"
+msgstr ""
+
+msgid "ui.login.curfew"
+msgstr ""
+
+msgid "ui.login.curfew_close"
+msgstr ""
+
+msgid "ui.login.curfew_warning"
+msgstr ""
+
+msgid "ui.login.forgot_password_dialog"
+msgstr ""
+
+msgid "ui.login.forgot_password_hint"
+msgstr ""
+
+msgid "ui.login.hide_password"
+msgstr ""
+
+msgid "ui.login.invalid_credentials"
+msgstr ""
+
+msgid "ui.login.language_en"
+msgstr ""
+
+msgid "ui.login.language_vi"
+msgstr ""
+
+msgid "ui.login.maintenance"
+msgstr ""
+
+msgid "ui.login.maintenance_retry"
+msgstr ""
+
+msgid "ui.login.not_provisioned"
+msgstr ""
+
+msgid "ui.login.offline"
+msgstr ""
+
+msgid "ui.login.other_account"
+msgstr ""
+
+msgid "ui.login.password_label"
+msgstr ""
+
+msgid "ui.login.platform.android"
+msgstr ""
+
+msgid "ui.login.platform.ios"
+msgstr ""
+
+msgid "ui.login.platform.linux"
+msgstr ""
+
+msgid "ui.login.platform.macos"
+msgstr ""
+
+msgid "ui.login.platform.unknown"
+msgstr ""
+
+msgid "ui.login.platform.web"
+msgstr ""
+
+msgid "ui.login.platform.windows"
+msgstr ""
+
+msgid "ui.login.queue_busy"
+msgstr ""
+
+msgid "ui.login.queue_eta"
+msgstr ""
+
+msgid "ui.login.rate_limited"
+msgstr ""
+
+msgid "ui.login.relogin"
+msgstr ""
+
+msgid "ui.login.remember_username"
+msgstr ""
+
+msgid "ui.login.replaced.body"
+msgstr ""
+
+msgid "ui.login.replaced.ok"
+msgstr ""
+
+msgid "ui.login.replaced.title"
+msgstr ""
+
+msgid "ui.login.resolving_tenant"
+msgstr ""
+
+msgid "ui.login.resume_confirm.continue"
+msgstr ""
+
+msgid "ui.login.resume_confirm.not_me"
+msgstr ""
+
+msgid "ui.login.resume_confirm.title"
+msgstr ""
+
+msgid "ui.login.resume_confirm.title_generic"
+msgstr ""
+
+msgid "ui.login.resuming"
+msgstr ""
+
+msgid "ui.login.session_expired"
+msgstr ""
+
+msgid "ui.login.show_password"
+msgstr ""
+
+msgid "ui.login.signing_in"
+msgstr ""
+
+msgid "ui.login.staff_account"
+msgstr ""
+
+msgid "ui.login.takeover.body"
+msgstr ""
+
+msgid "ui.login.takeover.continue"
+msgstr ""
+
+msgid "ui.login.takeover.stay"
+msgstr ""
+
+msgid "ui.login.takeover.title"
+msgstr ""
+
+msgid "ui.login.tenant_choice.back"
+msgstr ""
+
+msgid "ui.login.tenant_choice.enter"
+msgstr ""
+
+msgid "ui.login.tenant_choice.hint"
+msgstr ""
+
+msgid "ui.login.tenant_choice.title"
+msgstr ""
+
+msgid "ui.login.ticket_expired"
+msgstr ""
+
+msgid "ui.login.title"
+msgstr ""
+
+msgid "ui.login.update_body"
+msgstr ""
+
+msgid "ui.login.update_open_store"
+msgstr ""
+
+msgid "ui.login.update_required"
+msgstr ""
+
+msgid "ui.login.use_other_account"
+msgstr ""
+
+msgid "ui.login.username_label"
+msgstr ""
+
+msgid "ui.login.version"
+msgstr ""
+
+msgid "ui.login.wait_hint"
+msgstr ""
+
+msgid "ui.settings.logout"
+msgstr ""
+
+msgid "ui.settings.logout_cancel"
+msgstr ""
+
+msgid "ui.settings.logout_confirm"
+msgstr ""
+
+msgid "ui.world.placeholder"
 msgstr ""

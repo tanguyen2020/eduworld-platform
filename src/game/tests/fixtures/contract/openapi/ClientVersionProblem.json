@@ -1,0 +1,15 @@
+{
+  "type": "https://example.invalid/resource",
+  "title": "sample",
+  "status": 1,
+  "code": "BAD_REQUEST",
+  "detail": "sample",
+  "instance": "sample",
+  "trace_id": "sample",
+  "retryable": false,
+  "policy_reason": "sample",
+  "feature_key": "sample",
+  "reopen_at": "2026-11-15T07:30:00Z",
+  "min_client_version": "sample",
+  "store_url": "https://example.invalid/resource"
+}

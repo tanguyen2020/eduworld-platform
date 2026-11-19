@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## F060-AC-17 (NFR-I18N-003, DESIGN_SYSTEM §5.5, TC-I18N-006 frame part): under the pseudo-locale every visible
-## string of the frame screens is translated (no hard-coded text) and no text control can overflow: it wraps, or
+## string of the frame and F061 entry screens is translated (no hard-coded text) and no text control can overflow: it wraps, or
 ## it ellipsises with a tooltip, and its minimum width fits the window.
 
 const Pseudo := preload("res://tools/lib/pseudo.gd")
@@ -8,10 +8,35 @@ const SCENES: PackedStringArray = [
 	"res://scenes/ui/debug/UiGallery.tscn",
 	"res://scenes/bootstrap/Splash.tscn",
 	"res://scenes/bootstrap/ConfigError.tscn",
+	"res://scenes/bootstrap/ForceUpdate.tscn",
+	"res://scenes/bootstrap/Maintenance.tscn",
+	"res://scenes/auth/Login.tscn",
+	"res://scenes/auth/LoginWaiting.tscn",
+	"res://scenes/auth/ResumeSplash.tscn",
+	"res://scenes/auth/ResumeConfirm.tscn",
+	"res://scenes/auth/TenantChoice.tscn",
+	"res://scenes/auth/NotStudent.tscn",
+	"res://scenes/auth/AccountNotProvisioned.tscn",
+	"res://scenes/auth/AccountBlocked.tscn",
+	"res://scenes/auth/CurfewNotice.tscn",
+	"res://scenes/ui/dialogs/TakeoverConfirm.tscn",
+	"res://scenes/ui/dialogs/ReplacedNotice.tscn",
+	"res://scenes/world/WorldPlaceholder.tscn",
 ]
 const LETTER_PATTERN: String = "[A-Za-z\\x{00C0}-\\x{024F}\\x{1E00}-\\x{1EFF}]"
 
 var _locale: String = ""
+var _autostart: bool = true
+
+
+func before() -> void:
+	# Splash would start the F061 entry flow (network); these tests only render screens.
+	_autostart = AuthService.autostart
+	AuthService.autostart = false
+
+
+func after() -> void:
+	AuthService.autostart = _autostart
 
 
 func before_test() -> void:

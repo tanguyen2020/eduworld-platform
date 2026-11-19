@@ -1,7 +1,8 @@
 extends Node
 ## Autoload #11 `Settings` (GODOT_ARCHITECTURE §4, §10, F060-AC-09, F060-AC-14, F060-AC-15).
 ## Per-device user preferences in `user://settings.cfg`: language, font scale (3 levels), high contrast, reduced
-## motion, volumes. Only the keys in SCHEMA are ever written — never business data, tokens or passwords.
+## motion, volumes, and (F061) the remembered login username `last_username` (F061-AC-12, ADR-0086). Only the keys
+## in SCHEMA are ever written — never business data, tokens or passwords.
 
 signal font_scale_changed(level: int)
 signal high_contrast_changed(enabled: bool)
@@ -11,12 +12,16 @@ signal volume_changed(bus_name: String, value: float)
 const DEFAULT_PATH: String = "user://settings.cfg"
 const SECTION_UI: String = "ui"
 const SECTION_AUDIO: String = "audio"
+const SECTION_LOGIN: String = "login"
+## `GameLoginRequest.username` maxLength (specs/openapi).
+const USERNAME_MAX_LENGTH: int = 128
 const FONT_SCALE_MAX: int = 2
 const AUDIO_KEYS: PackedStringArray = ["music", "sfx", "voice"]
 ## Allowed keys per section; anything else in the file is ignored and never written back.
 const SCHEMA: Dictionary = {
 	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion"],
 	"audio": ["music", "sfx", "voice"],
+	"login": ["remember_username", "last_username"],
 }
 
 var path: String = DEFAULT_PATH
@@ -25,6 +30,9 @@ var font_scale: int = 0
 var high_contrast: bool = false
 var reduce_motion: bool = false
 var volumes: Dictionary = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
+## "Nhớ tên đăng nhập" (CONFIG_DEFAULTS `game_remember_username`: on; AuthService never stores it on a shared device).
+var remember_username: bool = true
+var last_username: String = ""
 
 
 func _ready() -> void:
@@ -67,6 +75,11 @@ func load_from(file_path: String) -> void:
 		var value: Variant = cfg.get_value(SECTION_AUDIO, bus_key, 1.0)
 		if value is float or value is int:
 			volumes[bus_key] = clampf(float(value), 0.0, 1.0)
+	var remember: Variant = cfg.get_value(SECTION_LOGIN, "remember_username", true)
+	remember_username = not (remember is bool) or (remember as bool)
+	var username: Variant = cfg.get_value(SECTION_LOGIN, "last_username", "")
+	if username is String and remember_username:
+		last_username = (username as String).strip_edges().left(USERNAME_MAX_LENGTH)
 
 
 ## Writes only the SCHEMA keys (fresh ConfigFile, so stray keys never survive).
@@ -78,6 +91,9 @@ func save() -> Error:
 	cfg.set_value(SECTION_UI, "reduce_motion", reduce_motion)
 	for bus_key: String in AUDIO_KEYS:
 		cfg.set_value(SECTION_AUDIO, bus_key, float(volumes[bus_key]))
+	cfg.set_value(SECTION_LOGIN, "remember_username", remember_username)
+	if remember_username and not last_username.is_empty():
+		cfg.set_value(SECTION_LOGIN, "last_username", last_username)
 	var err: Error = cfg.save(path)
 	if err != OK:
 		_log_warn("settings_save_failed", {"error": err})
@@ -138,6 +154,13 @@ func set_volume(bus_key: String, value: float) -> void:
 	volume_changed.emit(bus_key, float(volumes[bus_key]))
 
 
+## Remembered username (F061-AC-12): kept only while `remember` is on; the password is never stored.
+func set_login_memory(remember: bool, username: String) -> void:
+	remember_username = remember
+	last_username = username.strip_edges().left(USERNAME_MAX_LENGTH) if remember else ""
+	save()
+
+
 func get_volume(bus_key: String) -> float:
 	return float(volumes.get(bus_key, 1.0))
 
@@ -148,6 +171,8 @@ func _reset() -> void:
 	high_contrast = false
 	reduce_motion = false
 	volumes = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
+	remember_username = true
+	last_username = ""
 
 
 func _log_warn(event: String, fields: Dictionary) -> void:

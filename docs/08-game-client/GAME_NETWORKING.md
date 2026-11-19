@@ -147,9 +147,9 @@ stateDiagram-v2
 
 ### 4.5. Takeover từ thiết bị mới (ADR-0031, ADR-0083)
 
-`/auth/game/login` (`gameLogin`) và `/auth/game/tenant:select` chỉ trả `tokens.*` + `bootstrap`, không tạo game session, không trả `game_session_id`, không có `409` takeover ([ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)). Ngay sau khi có token, `SessionService` gọi `POST /game/sessions` (`createGameSession`; header `X-Tenant-Id` = `bootstrap.tenant_id`, `X-Device-Id`, `Idempotency-Key`). Quy tắc một thiết bị chỉ thực thi ở endpoint này.
+`/auth/game/login` (`gameLogin`) và `/auth/game/tenant:select` chỉ trả `tokens.*` + `bootstrap`, không tạo game session, không trả `game_session_id`, không có `409` takeover ([ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)). Ngay sau khi có token, `GameSessionService` gọi `POST /game/sessions` (`createGameSession`; header `X-Tenant-Id` = `bootstrap.tenant_id`, `X-Device-Id`, `Idempotency-Key`). Quy tắc một thiết bị chỉ thực thi ở endpoint này.
 
-1. `POST /game/sessions` trả `409 ACTIVE_SESSION_ON_OTHER_DEVICE` (kèm `other_device`) → `SessionService` phát signal `takeover_required(other_device)`; UI hiện hộp thoại xác nhận.
+1. `POST /game/sessions` trả `409 ACTIVE_SESSION_ON_OTHER_DEVICE` (kèm `other_device`) → `AuthService` phát signal `takeover_required(other_device)`; UI hiện hộp thoại xác nhận.
 2. Đồng ý → gọi lại `POST /game/sessions` với `{takeover: true}` và `Idempotency-Key` **mới** (body khác nên không dùng lại key cũ — tránh `409 IDEMPOTENCY_KEY_REUSED`); **không** nhập lại mật khẩu, token hiện có vẫn dùng được, client không giữ mật khẩu sau lời gọi login. Từ chối → `AuthService.logout()` (`/auth/game/logout`, chưa có game session nên không gọi `:end`; xóa `SecureStorage`). Takeover cũng áp dụng khi tự vào lại bằng token đã lưu (ADR-0086).
 3. Sau khi tạo session, nếu bootstrap báo đang có trận/quest co-op/bài kiểm tra dở (`active_activity` trong `PlayerBootstrap` hoặc `GET /competition/matches/active`), client **rejoin** bằng REST resync + ticket mới (resume_token của thiết bị cũ không dùng được). Trong thời gian grace của mode, chỗ của học sinh được giữ; hết grace → xử lý như rời trận.
 4. Thiết bị cũ không còn heartbeat quá `game_session_heartbeat_timeout` (45 s; tắt máy, mất mạng) → server tự kết thúc session cũ; thiết bị mới vào thẳng, không hỏi.

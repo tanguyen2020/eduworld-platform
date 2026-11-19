@@ -1,0 +1,106 @@
+{
+  "access_token": "sample",
+  "refresh_token": "sample",
+  "token_type": "Bearer",
+  "expires_in": 1,
+  "refresh_expires_in": 1,
+  "bootstrap": {
+    "user": {
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "user_type": "student",
+      "status": "pending",
+      "display_name": "sample",
+      "roles": [
+        {
+          "role": "SAMPLE1",
+          "scope_type": "platform",
+          "tenant_id": "00000000-0000-4000-8000-000000000001",
+          "scope_id": "00000000-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+    "tenant_id": "00000000-0000-4000-8000-000000000001",
+    "tenant_type": "school",
+    "is_common_tenant": false,
+    "tenant_name": "sample",
+    "student": {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "display_name": "sample",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "school_name": "sample",
+      "grade_level": 1,
+      "class_id": "00000000-0000-4000-8000-000000000001",
+      "class_name": "sample"
+    },
+    "school": {
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "name": {
+        "vi": "sample",
+        "en": "sample"
+      },
+      "province": {
+        "code": "sample",
+        "name": {
+          "vi": "sample",
+          "en": "sample"
+        }
+      },
+      "school_level": "primary",
+      "is_virtual": false
+    },
+    "class": {
+      "class_id": "00000000-0000-4000-8000-000000000001",
+      "name": "sample",
+      "grade_level": 1,
+      "academic_year": "2026-2027"
+    },
+    "game_profile": {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "nickname": "sample",
+      "level": 1,
+      "xp_total": 0,
+      "avatar_config": {
+        "body": "sample",
+        "skin_tone": "sample",
+        "hair_item_id": "00000000-0000-4000-8000-000000000001",
+        "outfit_item_id": "00000000-0000-4000-8000-000000000001",
+        "accessory_item_ids": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "emote_item_ids": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
+      },
+      "last_area_id": "sample",
+      "settings": {},
+      "preferred_language": "vi-VN"
+    },
+    "grade_band": "g1_3",
+    "policies": {
+      "chat": {
+        "allowed_kinds_by_channel": {},
+        "direct_message_enabled": false
+      },
+      "party": {
+        "max_members": 4,
+        "cross_class_allowed": false
+      },
+      "play_time": {
+        "break_reminder_minutes": 1,
+        "access_window": "sample",
+        "curfew": {
+          "start": "21:30",
+          "end": "06:30",
+          "warning_minutes": 0
+        }
+      }
+    },
+    "feature_flags": {},
+    "content_manifest_version": "sample",
+    "server_time": "2026-11-15T07:30:00Z",
+    "preferred_language": "vi-VN",
+    "supported_locales": [
+      "vi-VN"
+    ]
+  }
+}

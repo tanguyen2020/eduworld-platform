@@ -101,6 +101,9 @@ msgstr "[!! Pĺëášë çĥööšë ýöüŕ šçĥööĺ ţö çöñţïñüë
 msgid "ui.error.UNAVAILABLE"
 msgstr "[!! Ţĥë šëŕvëŕ ïš ƀüšý. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.VALIDATION_FAILED"
+msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë çĥëçķ ïţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.generic"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -241,3 +244,195 @@ msgstr "[!! ÜÏ çöɱþöñëñţ ğáĺĺëŕý ~~~~~~~~ !!]"
 
 msgid "ui.gallery.toast.message"
 msgstr "[!! Šëţţïñğš šávëđ ~~~~~~ !!]"
+
+msgid "ui.login.button_sign_in"
+msgstr "[!! Šïğñ ïñ ~~~ !!]"
+
+msgid "ui.login.cancel"
+msgstr "[!! Çáñçëĺ ~~~ !!]"
+
+msgid "ui.login.connecting"
+msgstr "[!! Çöññëçţïñğ… ~~~~~ !!]"
+
+msgid "ui.login.curfew"
+msgstr "[!! Ïţ ïš ŕëšţ ţïɱë! ẸđüŴöŕĺđ öþëñš áğáïñ áţ {time}. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.curfew_close"
+msgstr "[!! Çĺöšë ~~ !!]"
+
+msgid "ui.login.curfew_warning"
+msgstr "[!! {minutes} ɱïñüţëš ĺëƒţ ƀëƒöŕë ŕëšţ ţïɱë ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.forgot_password_dialog"
+msgstr "[!! Åšķ ýöüŕ ţëáçĥëŕ öŕ šçĥööĺ šţáƒƒ ţö ŕëšëţ ýöüŕ þáššŵöŕđ. ẸđüŴöŕĺđ ñëvëŕ šëñđš þáššŵöŕđš ƀý ëɱáïĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.forgot_password_hint"
+msgstr "[!! Föŕğöţ ýöüŕ þáššŵöŕđ? Çöñţáçţ ýöüŕ šçĥööĺ ţö ŕëšëţ ïţ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.hide_password"
+msgstr "[!! Ĥïđë ~~ !!]"
+
+msgid "ui.login.invalid_credentials"
+msgstr "[!! Üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕëçţ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.language_en"
+msgstr "[!! Ẹñğĺïšĥ ~~~ !!]"
+
+msgid "ui.login.language_vi"
+msgstr "[!! Ţïếñğ Vïệţ ~~~~ !!]"
+
+msgid "ui.login.maintenance"
+msgstr "[!! ẸđüŴöŕĺđ ïš üñđëŕ ɱáïñţëñáñçë ~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.maintenance_retry"
+msgstr "[!! Ţĥë ğáɱë ŵïĺĺ çĥëçķ áğáïñ ïñ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.not_provisioned"
+msgstr "[!! Ýöüŕ áççöüñţ ïš ñöţ áçţïváţëđ ïñ ẸđüŴöŕĺđ ýëţ. Pĺëášë ášķ ýöüŕ šçĥööĺ ţö çĥëçķ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.offline"
+msgstr "[!! Ñö Ïñţëŕñëţ çöññëçţïöñ. Çĥëçķ ţĥë ñëţŵöŕķ áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.other_account"
+msgstr "[!! Šïğñ ïñ ŵïţĥ áñöţĥëŕ áççöüñţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.password_label"
+msgstr "[!! Páššŵöŕđ ~~~~ !!]"
+
+msgid "ui.login.platform.android"
+msgstr "[!! Åñđŕöïđ đëvïçë ~~~~~~ !!]"
+
+msgid "ui.login.platform.ios"
+msgstr "[!! ïPĥöñë/ïPáđ ~~~~~ !!]"
+
+msgid "ui.login.platform.linux"
+msgstr "[!! Ĺïñüx çöɱþüţëŕ ~~~~~~ !!]"
+
+msgid "ui.login.platform.macos"
+msgstr "[!! Máç çöɱþüţëŕ ~~~~~ !!]"
+
+msgid "ui.login.platform.unknown"
+msgstr "[!! áñöţĥëŕ đëvïçë ~~~~~~ !!]"
+
+msgid "ui.login.platform.web"
+msgstr "[!! Ŵëƀ ƀŕöŵšëŕ ~~~~~ !!]"
+
+msgid "ui.login.platform.windows"
+msgstr "[!! Ŵïñđöŵš çöɱþüţëŕ ~~~~~~~ !!]"
+
+msgid "ui.login.queue_busy"
+msgstr "[!! Ĵöïñïñğ çĺášš… ɱáñý ƒŕïëñđš áŕë ĵöïñïñğ áţ ţĥë šáɱë ţïɱë ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.queue_eta"
+msgstr "[!! Åƀöüţ {seconds} šëçöñđš ~~~~~~~~~~ !!]"
+
+msgid "ui.login.rate_limited"
+msgstr "[!! Ţöö ɱáñý ţŕïëš. Pĺëášë ŵáïţ {seconds} šëçöñđš áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.relogin"
+msgstr "[!! Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~ !!]"
+
+msgid "ui.login.remember_username"
+msgstr "[!! Ŕëɱëɱƀëŕ ɱý üšëŕñáɱë öñ ţĥïš đëvïçë ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.replaced.body"
+msgstr "[!! Ýöü ŵëŕë šïğñëđ öüţ ƀëçáüšë ýöüŕ áççöüñţ ĵüšţ šïğñëđ ïñ öñ áñöţĥëŕ đëvïçë. Ïƒ ïţ ŵáš ñöţ ýöü, ţëĺĺ ýöüŕ šçĥööĺ öŕ ýöüŕ þáŕëñţš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.replaced.ok"
+msgstr "[!! ÖĶ ~ !!]"
+
+msgid "ui.login.replaced.title"
+msgstr "[!! Ýöü ĥávë ƀëëñ šïğñëđ öüţ ~~~~~~~~~~ !!]"
+
+msgid "ui.login.resolving_tenant"
+msgstr "[!! Ẹñţëŕïñğ ţĥë ŵöŕĺđ… ~~~~~~~~ !!]"
+
+msgid "ui.login.resume_confirm.continue"
+msgstr "[!! Çöñţïñüë ~~~~ !!]"
+
+msgid "ui.login.resume_confirm.not_me"
+msgstr "[!! Ñöţ ɱë ~~~ !!]"
+
+msgid "ui.login.resume_confirm.title"
+msgstr "[!! Çöñţïñüë áš {nickname}? ~~~~~~~~~~ !!]"
+
+msgid "ui.login.resume_confirm.title_generic"
+msgstr "[!! Çöñţïñüë ţö ẸđüŴöŕĺđ? ~~~~~~~~~ !!]"
+
+msgid "ui.login.resuming"
+msgstr "[!! Ĵöïñïñğ çĺášš… ~~~~~~ !!]"
+
+msgid "ui.login.session_expired"
+msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ. Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.show_password"
+msgstr "[!! Šĥöŵ ~~ !!]"
+
+msgid "ui.login.signing_in"
+msgstr "[!! Šïğñïñğ ïñ… ~~~~~ !!]"
+
+msgid "ui.login.staff_account"
+msgstr "[!! Ţĥïš áççöüñţ çáññöţ ƀë üšëđ ţö þĺáý. Šçĥööĺ šţáƒƒ, þĺëášë üšë ţĥë ẸđüŴöŕĺđ áđɱïñ þöŕţáĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.takeover.body"
+msgstr "[!! Ýöüŕ áççöüñţ ïš ƀëïñğ üšëđ öñ {device} (áţ {time}). Ïƒ ýöü çöñţïñüë ĥëŕë, ţĥë öţĥëŕ đëvïçë ŵïĺĺ ƀë šïğñëđ öüţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.takeover.continue"
+msgstr "[!! Çöñţïñüë ĥëŕë ~~~~~~ !!]"
+
+msgid "ui.login.takeover.stay"
+msgstr "[!! Šţáý öñ ţĥë öţĥëŕ đëvïçë ~~~~~~~~~~ !!]"
+
+msgid "ui.login.takeover.title"
+msgstr "[!! Ýöüŕ áççöüñţ ïš ïñ üšë öñ áñöţĥëŕ đëvïçë ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.tenant_choice.back"
+msgstr "[!! Šïğñ öüţ ~~~~ !!]"
+
+msgid "ui.login.tenant_choice.enter"
+msgstr "[!! Ẹñţëŕ ţĥë ğáɱë ~~~~~~ !!]"
+
+msgid "ui.login.tenant_choice.hint"
+msgstr "[!! Pĺëášë çĥööšë ŵïţĥïñ 2 ɱïñüţëš. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.tenant_choice.title"
+msgstr "[!! Ŵĥïçĥ šçĥööĺ áŕë ýöü þĺáýïñğ ïñ ţöđáý? ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.ticket_expired"
+msgstr "[!! Ţĥë šçĥööĺ çĥöïçë ĥáš ëxþïŕëđ. Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.title"
+msgstr "[!! Šïğñ ïñ ţö ẸđüŴöŕĺđ ~~~~~~~~ !!]"
+
+msgid "ui.login.update_body"
+msgstr "[!! Pĺëášë üþđáţë ẸđüŴöŕĺđ ţö vëŕšïöñ {version} öŕ ĺáţëŕ ţö çöñţïñüë. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.update_open_store"
+msgstr "[!! Üþđáţë ~~~ !!]"
+
+msgid "ui.login.update_required"
+msgstr "[!! Å ñëŵ vëŕšïöñ ïš áváïĺáƀĺë ~~~~~~~~~~~ !!]"
+
+msgid "ui.login.use_other_account"
+msgstr "[!! Šïğñ ïñ ŵïţĥ áñöţĥëŕ áççöüñţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.username_label"
+msgstr "[!! Üšëŕñáɱë ~~~~ !!]"
+
+msgid "ui.login.version"
+msgstr "[!! Vëŕšïöñ {version} ~~~~~~~ !!]"
+
+msgid "ui.login.wait_hint"
+msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáïţ á ƒëŵ ɱïñüţëš áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.logout"
+msgstr "[!! Šïğñ öüţ ~~~~ !!]"
+
+msgid "ui.settings.logout_cancel"
+msgstr "[!! Šţáý ~~ !!]"
+
+msgid "ui.settings.logout_confirm"
+msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ? Ñëxţ ţïɱë ýöü ŵïĺĺ ñëëđ ýöüŕ þáššŵöŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.placeholder"
+msgstr "[!! Ýöü áŕë ïñ ẸđüŴöŕĺđ. (Ţëɱþöŕáŕý šçŕëëñ — ţĥë ɱáïñ ĥüƀ çöɱëš ïñ á ĺáţëŕ ƀüïĺđ.) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"

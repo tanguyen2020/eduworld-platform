@@ -2,6 +2,7 @@
 # Scans exported game artifacts (.pck, .exe, .apk, .aab, or a folder of them) for content that must never ship
 # (F060-AC-03 TC-AUTH-010, F060-AC-21, AGENTS R3/R4/R17, ADR-0068):
 #   - client secrets / OIDC configuration keys or a Keycloak token endpoint URL;
+#   - an OAuth callback (redirect URI / AppAuth intent filter) — the game logs in through its own form (F061-AC-11);
 #   - the mock configuration (config/env/mock.json, "is_mock": true, the Prism mock port 4011).
 # Usage: bash src/game/tools/scan_artifact.sh <artifact|dir> [...]   → exit 1 when anything is found.
 set -euo pipefail
@@ -11,6 +12,11 @@ PATTERNS=(
   '"oidc_issuer"[[:space:]]*:'
   '"oidc_client_id"[[:space:]]*:'
   '/realms/[A-Za-z0-9_.-]+/protocol/openid-connect/token'
+  '/protocol/openid-connect/token'
+  'oidc_(issuer|client_id|redirect)'
+  'redirect_uri'
+  'oauth2redirect'
+  'net.openid.appauth'
   'config/env/mock\.json'
   '"is_mock"[[:space:]]*:[[:space:]]*true'
   'localhost:4011'

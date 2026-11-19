@@ -1,5 +1,5 @@
 ; EduWorld game client (F060). Godot version is pinned in .godot-version (minor) and in config/features.
-; Autoload order follows GODOT_ARCHITECTURE §4 (AuthService/ApiClient: F061, RealtimeClient: F092,
+; Autoload order follows GODOT_ARCHITECTURE §4 (AuthService #5 / ApiClient #6: F061, RealtimeClient: F092,
 ; ContentCache/QualityManager: F062 insert themselves at their numbered position).
 
 config_version=5
@@ -21,6 +21,8 @@ Config="*res://scripts/core/config.gd"
 Log="*res://scripts/core/logger.gd"
 EventBus="*res://scripts/core/event_bus.gd"
 AppState="*res://scripts/core/app_state.gd"
+AuthService="*res://scripts/authentication/auth_service.gd"
+ApiClient="*res://scripts/networking/api_client.gd"
 SceneRouter="*res://scripts/core/scene_router.gd"
 AudioDirector="*res://scripts/core/audio_director.gd"
 Settings="*res://scripts/core/settings.gd"

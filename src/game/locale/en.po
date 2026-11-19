@@ -102,6 +102,9 @@ msgstr "Please choose your school to continue."
 msgid "ui.error.UNAVAILABLE"
 msgstr "The server is busy. Please try again later."
 
+msgid "ui.error.VALIDATION_FAILED"
+msgstr "Some information is not valid. Please check it."
+
 msgid "ui.error.generic"
 msgstr "Something went wrong. Please try again later."
 
@@ -242,3 +245,195 @@ msgstr "UI component gallery"
 
 msgid "ui.gallery.toast.message"
 msgstr "Settings saved"
+
+msgid "ui.login.button_sign_in"
+msgstr "Sign in"
+
+msgid "ui.login.cancel"
+msgstr "Cancel"
+
+msgid "ui.login.connecting"
+msgstr "Connecting…"
+
+msgid "ui.login.curfew"
+msgstr "It is rest time! EduWorld opens again at {time}."
+
+msgid "ui.login.curfew_close"
+msgstr "Close"
+
+msgid "ui.login.curfew_warning"
+msgstr "{minutes} minutes left before rest time"
+
+msgid "ui.login.forgot_password_dialog"
+msgstr "Ask your teacher or school staff to reset your password. EduWorld never sends passwords by email."
+
+msgid "ui.login.forgot_password_hint"
+msgstr "Forgot your password? Contact your school to reset it"
+
+msgid "ui.login.hide_password"
+msgstr "Hide"
+
+msgid "ui.login.invalid_credentials"
+msgstr "Username or password is not correct"
+
+msgid "ui.login.language_en"
+msgstr "English"
+
+msgid "ui.login.language_vi"
+msgstr "Tiếng Việt"
+
+msgid "ui.login.maintenance"
+msgstr "EduWorld is under maintenance"
+
+msgid "ui.login.maintenance_retry"
+msgstr "The game will check again in a moment."
+
+msgid "ui.login.not_provisioned"
+msgstr "Your account is not activated in EduWorld yet. Please ask your school to check."
+
+msgid "ui.login.offline"
+msgstr "No Internet connection. Check the network and try again."
+
+msgid "ui.login.other_account"
+msgstr "Sign in with another account"
+
+msgid "ui.login.password_label"
+msgstr "Password"
+
+msgid "ui.login.platform.android"
+msgstr "Android device"
+
+msgid "ui.login.platform.ios"
+msgstr "iPhone/iPad"
+
+msgid "ui.login.platform.linux"
+msgstr "Linux computer"
+
+msgid "ui.login.platform.macos"
+msgstr "Mac computer"
+
+msgid "ui.login.platform.unknown"
+msgstr "another device"
+
+msgid "ui.login.platform.web"
+msgstr "Web browser"
+
+msgid "ui.login.platform.windows"
+msgstr "Windows computer"
+
+msgid "ui.login.queue_busy"
+msgstr "Joining class… many friends are joining at the same time"
+
+msgid "ui.login.queue_eta"
+msgstr "About {seconds} seconds"
+
+msgid "ui.login.rate_limited"
+msgstr "Too many tries. Please wait {seconds} seconds and try again."
+
+msgid "ui.login.relogin"
+msgstr "Please sign in again."
+
+msgid "ui.login.remember_username"
+msgstr "Remember my username on this device"
+
+msgid "ui.login.replaced.body"
+msgstr "You were signed out because your account just signed in on another device. If it was not you, tell your school or your parents."
+
+msgid "ui.login.replaced.ok"
+msgstr "OK"
+
+msgid "ui.login.replaced.title"
+msgstr "You have been signed out"
+
+msgid "ui.login.resolving_tenant"
+msgstr "Entering the world…"
+
+msgid "ui.login.resume_confirm.continue"
+msgstr "Continue"
+
+msgid "ui.login.resume_confirm.not_me"
+msgstr "Not me"
+
+msgid "ui.login.resume_confirm.title"
+msgstr "Continue as {nickname}?"
+
+msgid "ui.login.resume_confirm.title_generic"
+msgstr "Continue to EduWorld?"
+
+msgid "ui.login.resuming"
+msgstr "Joining class…"
+
+msgid "ui.login.session_expired"
+msgstr "Your session has ended. Please sign in again."
+
+msgid "ui.login.show_password"
+msgstr "Show"
+
+msgid "ui.login.signing_in"
+msgstr "Signing in…"
+
+msgid "ui.login.staff_account"
+msgstr "This account cannot be used to play. School staff, please use the EduWorld admin portal."
+
+msgid "ui.login.takeover.body"
+msgstr "Your account is being used on {device} (at {time}). If you continue here, the other device will be signed out."
+
+msgid "ui.login.takeover.continue"
+msgstr "Continue here"
+
+msgid "ui.login.takeover.stay"
+msgstr "Stay on the other device"
+
+msgid "ui.login.takeover.title"
+msgstr "Your account is in use on another device"
+
+msgid "ui.login.tenant_choice.back"
+msgstr "Sign out"
+
+msgid "ui.login.tenant_choice.enter"
+msgstr "Enter the game"
+
+msgid "ui.login.tenant_choice.hint"
+msgstr "Please choose within 2 minutes."
+
+msgid "ui.login.tenant_choice.title"
+msgstr "Which school are you playing in today?"
+
+msgid "ui.login.ticket_expired"
+msgstr "The school choice has expired. Please sign in again."
+
+msgid "ui.login.title"
+msgstr "Sign in to EduWorld"
+
+msgid "ui.login.update_body"
+msgstr "Please update EduWorld to version {version} or later to continue."
+
+msgid "ui.login.update_open_store"
+msgstr "Update"
+
+msgid "ui.login.update_required"
+msgstr "A new version is available"
+
+msgid "ui.login.use_other_account"
+msgstr "Sign in with another account"
+
+msgid "ui.login.username_label"
+msgstr "Username"
+
+msgid "ui.login.version"
+msgstr "Version {version}"
+
+msgid "ui.login.wait_hint"
+msgstr "If you got it wrong several times, wait a few minutes and try again."
+
+msgid "ui.settings.logout"
+msgstr "Sign out"
+
+msgid "ui.settings.logout_cancel"
+msgstr "Stay"
+
+msgid "ui.settings.logout_confirm"
+msgstr "Do you want to sign out? Next time you will need your password."
+
+msgid "ui.world.placeholder"
+msgstr "You are in EduWorld. (Temporary screen — the main hub comes in a later build.)"

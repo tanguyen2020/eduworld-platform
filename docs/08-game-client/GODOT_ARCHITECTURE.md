@@ -92,9 +92,13 @@ src/game/
 ├── scripts/
 │   ├── core/            app_state.gd, event_bus.gd, scene_router.gd, service_locator.gd, config.gd, logger.gd, result.gd, play_time_service.gd,
 │   │                    settings.gd, audio_director.gd, theme_service.gd, l10n.gd, locale_format.gd, models/{api_problem,client_config}.gd,
+│   │                    version_check.gd, device_identity.gd, lifecycle_watcher.gd, game_state_machine.gd, uuid.gd (F061),
 │   │                    ui_tokens.gd (class_name UiTokens — SINH TỪ design/game-tokens)
-│   ├── networking/      api_client.gd, http_request_pool.gd, realtime_client.gd, ws_envelope.gd, backoff.gd
-│   ├── authentication/  auth_service.gd, session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd
+│   ├── networking/      api_client.gd, api_request.gd, api_result.gd, http_transport.gd, http_request_pool.gd, client_clock.gd, trace_context.gd,
+│   │                    backoff.gd, realtime_client.gd, ws_envelope.gd
+│   ├── authentication/  auth_service.gd, game_session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd,
+│   │                    token_store.gd, session_store.gd (SecureStorage `eduworld.game.session`), password_buffer.gd
+│   ├── services/        curfew_watcher.gd (cảnh báo giờ giới nghiêm từ bootstrap, ADR-0078)
 │   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{file_cipher,dpapi,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086)
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
@@ -142,7 +146,7 @@ Thứ tự khai báo trong `project.godot` (phụ thuộc từ trên xuống):
 | 2 | `Log` | Node | Structured log, ring buffer 500 dòng gửi kèm crash report, lọc PII | Gửi log liên tục lên server |
 | 3 | `EventBus` | Node | Signal toàn cục cho sự kiện cắt ngang (`session_expired`, `network_state_changed`, `notification_received`, `zone_changed`) | Truyền dữ liệu lớn, thay thế signal cục bộ |
 | 4 | `AppState` | Node | Store trạng thái phiên: `player` (bootstrap), `school_policies`, `feature_flags`, `party`, `current_zone`, `connectivity` | Gọi mạng |
-| 5 | `AuthService` | Node | Đăng nhập username/password bằng form trong game, gọi `POST /auth/game/login` của module identity (ADR-0068; không trình duyệt, không PKCE/loopback), không chọn trường (ADR-0063); chọn tenant bằng `login_ticket` khi thuộc nhiều tenant; refresh qua `/auth/game/token:refresh`, logout qua `/auth/game/logout`; lưu `tenant_id` của phiên cho `ApiClient` gắn `X-Tenant-Id` (ADR-0065); khi khởi động, nếu `SecureStorage` có refresh token thì tự vào lại bằng `token:refresh` `mode=resume` (ADR-0086); access token chỉ trong RAM, refresh token + `tenant_id` lưu qua `SecureStorage` (thiết bị cá nhân) hoặc chỉ RAM (Web, `shared_device`); refresh single-flight (rotation, ghi đè token đã lưu), reconnect, Đăng xuất + revoke; đọc token từ `GameLoginResponse.tokens` hoặc trực tiếp từ `GameTokenRefreshResponse` (cùng trường `GameTokenSet`, thêm `bootstrap` khi `resume`); cung cấp access token hợp lệ cho `ApiClient`. Game session do `SessionService` tạo sau đăng nhập (§5, ADR-0083) | Lưu mật khẩu hoặc access token xuống đĩa; lưu refresh token ngoài `SecureStorage` (file rõ, `user://`, localStorage); dùng embedded WebView, tạo game session, giữ mật khẩu sau lời gọi login |
+| 5 | `AuthService` | Node | Đăng nhập username/password bằng form trong game, gọi `POST /auth/game/login` của module identity (ADR-0068; không trình duyệt, không PKCE/loopback), không chọn trường (ADR-0063); chọn tenant bằng `login_ticket` khi thuộc nhiều tenant; refresh qua `/auth/game/token:refresh`, logout qua `/auth/game/logout`; lưu `tenant_id` của phiên cho `ApiClient` gắn `X-Tenant-Id` (ADR-0065); khi khởi động, nếu `SecureStorage` có refresh token thì tự vào lại bằng `token:refresh` `mode=resume` (ADR-0086); access token chỉ trong RAM, refresh token + `tenant_id` lưu qua `SecureStorage` (thiết bị cá nhân) hoặc chỉ RAM (Web, `shared_device`); refresh single-flight (rotation, ghi đè token đã lưu), reconnect, Đăng xuất + revoke; đọc token từ `GameLoginResponse.tokens` hoặc trực tiếp từ `GameTokenRefreshResponse` (cùng trường `GameTokenSet`, thêm `bootstrap` khi `resume`); cung cấp access token hợp lệ cho `ApiClient`. Game session do `GameSessionService` tạo sau đăng nhập (§5, ADR-0083) | Lưu mật khẩu hoặc access token xuống đĩa; lưu refresh token ngoài `SecureStorage` (file rõ, `user://`, localStorage); dùng embedded WebView, tạo game session, giữ mật khẩu sau lời gọi login |
 | 6 | `ApiClient` | Node | HTTP REST: pool `HTTPRequest`, header chuẩn (`Authorization`, **`X-Tenant-Id`** — tenant của phiên từ bootstrap, gửi ở mọi request trừ `client-config` và `/auth/game/login`, `tenant:select` (ADR-0065), `Idempotency-Key`, `X-Client-Version`, `X-Device-Id` — UUID sinh lần đầu cài, lưu `user://device_id`, ADR-0031, `traceparent`), parse Problem Details, retry/backoff | Logic nghiệp vụ |
 | 7 | `RealtimeClient` | Node | WebSocket `/realtime/v1`, ticket, heartbeat, reconnect/resume, phân phối message theo `type` | Quyết định kết quả trận |
 | 8 | `ContentCache` | Node | Cache nội dung data-driven (quest/minigame/dialogue/catalog) theo `version`, tải asset PCK từ CDN, kiểm tra checksum | Cache câu hỏi chấm điểm hay answer key (không tồn tại phía client) |
@@ -203,7 +207,7 @@ stateDiagram-v2
 | Resume (ADR-0086) | Chỉ khi `SecureStorage` có bản ghi `eduworld.game.session`: `POST /api/v1/auth/game/token:refresh` `{refresh_token, device_id, client_version, mode: "resume"}` + `X-Tenant-Id` = `tenant_id` đã lưu → `GameTokenRefreshResponse` (token mới + `bootstrap`); ghi đè refresh token mới vào `SecureStorage` ngay, rồi hiện **ResumeConfirm** (S01b "Tiếp tục là <nickname>?", nickname từ `bootstrap`, `resume_confirm_screen`, [Confirmed — Technical Architect 2026-11-17]): "Tiếp tục" → Bootstrap/SessionStart, không hiện S01; "Không phải tôi" → `POST /auth/game/logout`, xóa `SecureStorage` + RAM, S01. Lỗi giờ giới nghiêm (`platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) → màn "giờ mở lại", giữ token. `401 REFRESH_TOKEN_INVALID`/`REFRESH_TOKEN_REUSED`/`REFRESH_TOKEN_DEVICE_MISMATCH` hoặc `403` tài khoản/tenant → xóa bản ghi, S01 kèm thông điệp; lỗi mạng/5xx/`429` → giữ token, màn "Đang kết nối…" thử lại; `426` → ForceUpdate |
 | Login | Form Godot (S01) → `POST /api/v1/auth/game/login` `{username, password, device_id, client_version, locale}` ([KEYCLOAK_SSO §6](../09-identity/KEYCLOAK_SSO.md#6-luồng-đăng-nhập-game--form-trong-godot-qua-backend-adr-0068), ADR-0068); không trình duyệt, không PKCE; lỗi `401 INVALID_CREDENTIALS`, `426 CLIENT_VERSION_UNSUPPORTED`, `429 RATE_LIMITED`/`LOGIN_QUEUE_BUSY` |
 | Bootstrap | Trả cùng response `/auth/game/login` (hoặc `/auth/game/tenant:select`) — `GameLoginResponse {tokens, bootstrap}`, không có `game_session_id`: `tokens.access_token`/`tokens.refresh_token`/`tokens.expires_in` + player bootstrap (`tenant_id`, `tenant_type`, `is_common_tenant`, profile, school, class, grade, policies, flags); `ApiClient` lưu `tenant_id` để gắn `X-Tenant-Id`. Lỗi `TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket`, `ACCOUNT_NOT_PROVISIONED` (phiên Keycloak đã bị backend thu hồi) |
-| SessionStart | `SessionService.start()` → `POST /api/v1/game/sessions` (`createGameSession`; header `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key`) → `game_session_id`; 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → `ConfirmTakeover` → đồng ý thì gọi lại với `takeover: true` và `Idempotency-Key` mới, không nhập lại mật khẩu (ADR-0083); `POST /api/v1/game/sessions/{id}/realtime-tickets` → ticket |
+| SessionStart | `GameSessionService.create()` → `POST /api/v1/game/sessions` (`createGameSession`; header `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key`) → `game_session_id`; 409 `ACTIVE_SESSION_ON_OTHER_DEVICE` → `ConfirmTakeover` → đồng ý thì gọi lại với `takeover: true` và `Idempotency-Key` mới, không nhập lại mật khẩu (ADR-0083); `POST /api/v1/game/sessions/{id}/realtime-tickets` → ticket |
 | Đăng xuất / thoát | **Đăng xuất** (nút trong menu Cài đặt của hub, STUDENT_GAME_UX_CORE): `POST /game/sessions/{id}:end` (best effort, gọi trước) → `POST /auth/game/logout` (module identity chỉ thu hồi refresh token + phiên Keycloak, không đóng game session — ADR-0083) → xóa `SecureStorage` + RAM → S01. **Thoát game** (`NOTIFICATION_WM_CLOSE_REQUEST`) trên thiết bị cá nhân: chỉ `:end` game session (best effort), **giữ** refresh token đã lưu để lần sau tự vào (ADR-0086); máy `shared_device: true`: thoát = Đăng xuất. Không gọi được `:end` → module game đóng phiên theo heartbeat timeout. Mobile: app vào nền quá 5 phút → kết thúc game session (best effort); quay lại → refresh (`renew`) + tạo game session mới, không hỏi mật khẩu khi phiên Keycloak còn hạn; bị hệ điều hành đóng → mở lại đi đường Resume. Máy phòng tin học không nhớ username, 30 phút không hoạt động → đăng xuất (`shared_device_idle_logout`) |
 | Thế giới | `GET /api/v1/game/world/areas`, `GET /api/v1/game/profile`, `GET /api/v1/game/quests?status=active` |
 
@@ -608,7 +612,7 @@ func resume() -> Dictionary:
 		_clear()                                          # REFRESH_TOKEN_* / tài khoản / tenant → xóa, hiện S01
 	return { "ok": false, "code": code }              # lỗi mạng/5xx/429/426: giữ token
 
-## Trả { ok, code, choices, login_ticket, retry_after }. Không tạo game session (ADR-0083) — gọi SessionService.start() sau khi ok.
+## Trả { ok, code, choices, login_ticket, retry_after }. Không tạo game session (ADR-0083) — gọi GameSessionService.create() sau khi ok.
 func login(username: String, password: String) -> Dictionary:
 	var body := {
 		"username": username.strip_edges(),
@@ -655,7 +659,7 @@ func refresh() -> bool:                                 # single-flight; gọi q
 	return ok
 
 func logout() -> void:                                  # nút Đăng xuất; thoát game trên thiết bị cá nhân KHÔNG gọi hàm này
-	await _session_service.end()                        # SessionService (RefCounted, §4): :end game session trước (best effort); logout không đóng game session
+	await _session_service.end()                        # GameSessionService (RefCounted, §4): :end game session trước (best effort); logout không đóng game session
 	await Api.post_public("/api/v1/auth/game/logout", { "refresh_token": _refresh_token })  # best effort
 	_clear()
 
@@ -684,7 +688,7 @@ func _clear() -> void:
 ```
 
 ```gdscript
-# scripts/authentication/session_service.gd (trích) — POST /game/sessions sau đăng nhập (ADR-0031, ADR-0083)
+# scripts/authentication/game_session_service.gd (trích) — POST /game/sessions sau đăng nhập (ADR-0031, ADR-0083)
 signal takeover_required(other_device: Dictionary)
 var game_session_id := ""
 

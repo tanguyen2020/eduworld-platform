@@ -102,6 +102,9 @@ msgstr "Em hãy chọn trường để tiếp tục."
 msgid "ui.error.UNAVAILABLE"
 msgstr "Máy chủ đang bận, em thử lại sau nhé."
 
+msgid "ui.error.VALIDATION_FAILED"
+msgstr "Thông tin chưa hợp lệ. Em kiểm tra lại nhé."
+
 msgid "ui.error.generic"
 msgstr "Có lỗi xảy ra. Em thử lại sau nhé."
 
@@ -242,3 +245,195 @@ msgstr "Bộ thành phần giao diện"
 
 msgid "ui.gallery.toast.message"
 msgstr "Đã lưu cài đặt"
+
+msgid "ui.login.button_sign_in"
+msgstr "Đăng nhập"
+
+msgid "ui.login.cancel"
+msgstr "Hủy"
+
+msgid "ui.login.connecting"
+msgstr "Đang kết nối…"
+
+msgid "ui.login.curfew"
+msgstr "Đã đến giờ nghỉ rồi! EduWorld mở lại lúc {time}."
+
+msgid "ui.login.curfew_close"
+msgstr "Đóng"
+
+msgid "ui.login.curfew_warning"
+msgstr "Còn {minutes} phút nữa là giờ nghỉ"
+
+msgid "ui.login.forgot_password_dialog"
+msgstr "Em hãy nhờ thầy cô hoặc cán bộ nhà trường đặt lại mật khẩu. EduWorld không gửi mật khẩu qua email."
+
+msgid "ui.login.forgot_password_hint"
+msgstr "Quên mật khẩu? Liên hệ nhà trường để đặt lại"
+
+msgid "ui.login.hide_password"
+msgstr "Ẩn"
+
+msgid "ui.login.invalid_credentials"
+msgstr "Tên đăng nhập hoặc mật khẩu chưa đúng"
+
+msgid "ui.login.language_en"
+msgstr "English"
+
+msgid "ui.login.language_vi"
+msgstr "Tiếng Việt"
+
+msgid "ui.login.maintenance"
+msgstr "EduWorld đang bảo trì"
+
+msgid "ui.login.maintenance_retry"
+msgstr "Trò chơi sẽ tự kiểm tra lại sau ít phút."
+
+msgid "ui.login.not_provisioned"
+msgstr "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy báo nhà trường kiểm tra nhé."
+
+msgid "ui.login.offline"
+msgstr "Chưa có kết nối Internet. Em kiểm tra mạng rồi thử lại nhé."
+
+msgid "ui.login.other_account"
+msgstr "Đăng nhập tài khoản khác"
+
+msgid "ui.login.password_label"
+msgstr "Mật khẩu"
+
+msgid "ui.login.platform.android"
+msgstr "Thiết bị Android"
+
+msgid "ui.login.platform.ios"
+msgstr "iPhone/iPad"
+
+msgid "ui.login.platform.linux"
+msgstr "Máy tính Linux"
+
+msgid "ui.login.platform.macos"
+msgstr "Máy Mac"
+
+msgid "ui.login.platform.unknown"
+msgstr "một thiết bị khác"
+
+msgid "ui.login.platform.web"
+msgstr "Trình duyệt web"
+
+msgid "ui.login.platform.windows"
+msgstr "Máy tính Windows"
+
+msgid "ui.login.queue_busy"
+msgstr "Đang vào lớp… nhiều bạn đang vào cùng lúc"
+
+msgid "ui.login.queue_eta"
+msgstr "Khoảng {seconds} giây nữa"
+
+msgid "ui.login.rate_limited"
+msgstr "Em thử nhiều lần quá. Hãy đợi {seconds} giây rồi thử lại nhé."
+
+msgid "ui.login.relogin"
+msgstr "Em hãy đăng nhập lại."
+
+msgid "ui.login.remember_username"
+msgstr "Nhớ tên đăng nhập trên máy này"
+
+msgid "ui.login.replaced.body"
+msgstr "Em đã được đăng xuất vì tài khoản vừa đăng nhập trên thiết bị khác. Nếu không phải em, hãy báo nhà trường hoặc bố mẹ."
+
+msgid "ui.login.replaced.ok"
+msgstr "Đã hiểu"
+
+msgid "ui.login.replaced.title"
+msgstr "Em đã được đăng xuất"
+
+msgid "ui.login.resolving_tenant"
+msgstr "Đang vào thế giới…"
+
+msgid "ui.login.resume_confirm.continue"
+msgstr "Tiếp tục"
+
+msgid "ui.login.resume_confirm.not_me"
+msgstr "Không phải tôi"
+
+msgid "ui.login.resume_confirm.title"
+msgstr "Tiếp tục là {nickname}?"
+
+msgid "ui.login.resume_confirm.title_generic"
+msgstr "Tiếp tục vào EduWorld?"
+
+msgid "ui.login.resuming"
+msgstr "Đang vào lớp…"
+
+msgid "ui.login.session_expired"
+msgstr "Phiên đăng nhập đã hết, em đăng nhập lại nhé."
+
+msgid "ui.login.show_password"
+msgstr "Hiện"
+
+msgid "ui.login.signing_in"
+msgstr "Đang vào…"
+
+msgid "ui.login.staff_account"
+msgstr "Tài khoản này không dùng để vào game. Cán bộ nhà trường vui lòng dùng trang quản trị EduWorld."
+
+msgid "ui.login.takeover.body"
+msgstr "Tài khoản của em đang được dùng trên {device} (lúc {time}). Nếu tiếp tục ở đây, thiết bị kia sẽ bị đăng xuất."
+
+msgid "ui.login.takeover.continue"
+msgstr "Tiếp tục ở đây"
+
+msgid "ui.login.takeover.stay"
+msgstr "Ở lại máy kia"
+
+msgid "ui.login.takeover.title"
+msgstr "Tài khoản đang dùng trên thiết bị khác"
+
+msgid "ui.login.tenant_choice.back"
+msgstr "Đăng xuất"
+
+msgid "ui.login.tenant_choice.enter"
+msgstr "Vào game"
+
+msgid "ui.login.tenant_choice.hint"
+msgstr "Em hãy chọn trong 2 phút."
+
+msgid "ui.login.tenant_choice.title"
+msgstr "Em muốn vào trường nào hôm nay?"
+
+msgid "ui.login.ticket_expired"
+msgstr "Phiên chọn trường đã hết, em đăng nhập lại nhé."
+
+msgid "ui.login.title"
+msgstr "Đăng nhập EduWorld"
+
+msgid "ui.login.update_body"
+msgstr "Em cần cập nhật EduWorld lên phiên bản {version} hoặc mới hơn để tiếp tục."
+
+msgid "ui.login.update_open_store"
+msgstr "Cập nhật"
+
+msgid "ui.login.update_required"
+msgstr "Có phiên bản mới"
+
+msgid "ui.login.use_other_account"
+msgstr "Đăng nhập bằng tài khoản khác"
+
+msgid "ui.login.username_label"
+msgstr "Tên đăng nhập"
+
+msgid "ui.login.version"
+msgstr "Phiên bản {version}"
+
+msgid "ui.login.wait_hint"
+msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại."
+
+msgid "ui.settings.logout"
+msgstr "Đăng xuất"
+
+msgid "ui.settings.logout_cancel"
+msgstr "Ở lại"
+
+msgid "ui.settings.logout_confirm"
+msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
+
+msgid "ui.world.placeholder"
+msgstr "Em đã vào EduWorld. (Màn tạm — Quảng trường chính có ở bản sau.)"

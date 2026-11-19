@@ -1,7 +1,7 @@
 extends Node
 ## Autoload #4 `AppState` (GODOT_ARCHITECTURE §4, plan F060): session state store. Never calls the network.
-## Holds the player bootstrap (filled by F061), policies, feature flags, connectivity, the telemetry queue
-## (sent by F061 through /game/telemetry) and the ThemeService. Shows the MOCK badge when `Config.is_mock`.
+## Holds the player bootstrap and game session id (filled by F061), policies, feature flags, connectivity, the telemetry queue
+## (flushed to /game/telemetry by a later feature) and the ThemeService. Shows the MOCK badge when `Config.is_mock`.
 
 signal player_changed(player: Dictionary)
 signal grade_band_changed(band: String)
@@ -15,6 +15,8 @@ var school_policies: Dictionary = {}
 var feature_flags: Dictionary = {}
 var connectivity: int = 0
 var pending_telemetry: Array[Dictionary] = []
+## Game session of this device (F061, `GameSession.game_session_id`, ADR-0083); RAM only.
+var game_session_id: String = ""
 var theme_service: ThemeService = null
 var mock_badge: CanvasLayer = null
 

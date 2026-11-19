@@ -3,6 +3,17 @@ extends GdUnitTestSuite
 ## of every screen and survives scene changes; without it there is no badge.
 
 var _env: String = ""
+var _autostart: bool = true
+
+
+func before() -> void:
+	# Splash would start the F061 entry flow (network); these tests only render screens.
+	_autostart = AuthService.autostart
+	AuthService.autostart = false
+
+
+func after() -> void:
+	AuthService.autostart = _autostart
 
 
 func before_test() -> void:
