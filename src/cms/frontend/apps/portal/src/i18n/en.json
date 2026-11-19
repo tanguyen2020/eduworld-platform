@@ -1,34 +1,166 @@
 {
   "app": {
     "title": "EduWorld — Admin Portal",
+    "shortTitle": "Admin Portal",
     "loading": "Loading…",
-    "home": {
-      "title": "Choose a workspace",
-      "description": "Workspaces open according to your account permissions; the server makes the actual decision."
-    },
     "configError": {
       "title": "Missing environment configuration",
-      "description": "Could not read /config.json or missing variables: {{missing}}."
+      "description": "Cannot read /config.json or missing variables: {{missing}}."
     },
     "notFound": "Page not found."
   },
-  "workspace": {
-    "school-lms": {
-      "title": "School & Learning Management"
+  "shell": {
+    "locale": {
+      "label": "Language",
+      "vi-VN": "Tiếng Việt",
+      "en-US": "English"
     },
-    "content-studio": {
-      "title": "Content Studio"
+    "login": {
+      "title": "Sign in",
+      "username": "Username or email",
+      "usernameRequired": "Enter your username or email.",
+      "password": "Password",
+      "passwordRequired": "Enter your password.",
+      "otp": "6-digit authentication code",
+      "otpHelp": "Required for platform operations accounts; leave empty if not set up.",
+      "otpRemembered": "Last time you signed in with an authentication code.",
+      "otpFormat": "The authentication code has exactly 6 digits.",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "audience": "For school staff and the operations team. Students, please sign in inside the EduWorld game.",
+      "invalidCredentials": "The username, password or authentication code is not correct.",
+      "rateLimited": "Too many attempts, please wait {{seconds}} seconds.",
+      "rateLimitedNoTime": "Too many attempts, please wait a few minutes.",
+      "accountDeactivated": "This account has been deactivated. Please contact an administrator.",
+      "cookiesBlocked": "Your browser blocks the cookies of the admin portal: reloading the page will ask you to sign in again. Allow cookies for this site.",
+      "notice": {
+        "sessionExpired": "Your session has ended, please sign in again.",
+        "setupTicketExpired": "The account setup has expired. Please sign in again.",
+        "passwordChanged": "Password changed. Sign in with your new password.",
+        "passwordReset": "Password reset. Sign in with your new password."
+      }
     },
-    "game-ops": {
-      "title": "Game Operations Console"
+    "setup": {
+      "title": "Set a new password",
+      "description": "This is your first sign-in: replace the temporary password given by your administrator.",
+      "newPassword": "New password",
+      "confirmPassword": "Repeat the new password",
+      "policyHint": "The password must meet the password policy (length, upper case, lower case, digits).",
+      "policyViolation": "The password does not meet the password policy.",
+      "mismatch": "The two passwords do not match.",
+      "submit": "Save and sign in again",
+      "checkEmailTitle": "Check your email to set up the authenticator app",
+      "checkEmailDescription": "Open the link in the email, scan the QR code with an authenticator app, then come back to the sign-in page.",
+      "backToLogin": "Back to sign in"
     },
-    "live-ops": {
-      "title": "Game Live Operations"
+    "forgot": {
+      "title": "Forgot password",
+      "description": "Enter the username or email of your staff account. Students, please ask the school administrator to reset the password.",
+      "submit": "Send instructions",
+      "sent": "If the account exists, an email with instructions has been sent.",
+      "backToLogin": "Back to sign in"
     },
-    "platform-admin": {
-      "title": "Platform Administration"
+    "reset": {
+      "title": "Reset password",
+      "submit": "Reset password",
+      "invalidTitle": "This password reset link is no longer valid",
+      "invalidDescription": "The link has expired or has already been used.",
+      "requestAgain": "Send the email again"
     },
-    "placeholder": "This workspace is filled in by later features."
+    "tenantSelect": {
+      "title": "Choose your working organization",
+      "search": "Search by name or code",
+      "remember": "Remember my choice",
+      "enter": "Continue",
+      "empty": "No organization found."
+    },
+    "tenantType": {
+      "school": "School",
+      "unit": "Unit",
+      "common": "Common tenant"
+    },
+    "noAccess": {
+      "title": "This account has no admin access yet",
+      "description": "Please contact your school administrator.",
+      "studentTitle": "Student accounts cannot use the admin portal",
+      "studentDescription": "Please sign in inside the game."
+    },
+    "session": {
+      "restoring": "Restoring your session…",
+      "expiredTitle": "Session ended",
+      "expiredDescription": "Your session has ended, please sign in again.",
+      "loginAgain": "Sign in again",
+      "scopeError": "Cannot load your working organizations.",
+      "retry": "Retry",
+      "logout": "Sign out"
+    },
+    "relogin": {
+      "title": "Sign in again",
+      "description": "This action needs a new sign-in with your authentication code.",
+      "submit": "Confirm",
+      "cancel": "Cancel"
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "description": "Your account is not allowed to open this page.",
+      "home": "Back to the home page"
+    },
+    "featureDisabled": {
+      "title": "Feature turned off",
+      "description": "This feature is temporarily turned off.",
+      "featureKey": "Feature key: {{key}}"
+    },
+    "vpn": {
+      "title": "Admin network connection (VPN) required",
+      "description": "This area is only reachable from the admin network. Connect to the VPN and try again."
+    },
+    "largeScreen": {
+      "title": "This task needs a larger screen",
+      "description": "Open it on a computer or a tablet with a wider screen. You can still view it read-only."
+    },
+    "layout": {
+      "openMenu": "Open menu",
+      "navigation": "Navigation menu",
+      "banner": "System notices",
+      "breadcrumb": "Breadcrumb",
+      "skipToContent": "Skip to main content",
+      "workspace": "Workspace"
+    },
+    "tenantSwitcher": {
+      "label": "Working organization",
+      "unsavedTitle": "Unsaved changes",
+      "unsavedContent": "Switching organization discards your unsaved changes. Continue?",
+      "confirm": "Switch",
+      "cancel": "Stay"
+    },
+    "tenantFilter": {
+      "label": "Filter tenants",
+      "all": "All tenants"
+    },
+    "tenantTarget": {
+      "label": "Tenant",
+      "required": "Choose a target tenant.",
+      "platform": "Platform (shared data)",
+      "selectOne": "Choose exactly one tenant to view the data of this screen."
+    },
+    "userMenu": {
+      "label": "Account",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "compact": "Compact density",
+      "logout": "Sign out"
+    },
+    "menuPlaceholder": "This screen arrives with a later feature.",
+    "problem": {
+      "traceId": "Trace ID: {{traceId}}"
+    },
+    "reason": {
+      "label": "Reason",
+      "required": "Enter a reason.",
+      "ok": "Confirm",
+      "cancel": "Cancel"
+    }
   },
   "error": {
     "generic": "Something went wrong. Please try again.",
@@ -45,7 +177,8 @@
     "MFA_REQUIRED": "This action requires two-factor authentication.",
     "TENANT_HEADER_REQUIRED": "No working organization selected.",
     "TENANT_NOT_SELECTED": "No working organization selected.",
-    "TENANT_MISMATCH": "The working organization does not match your session.",
+    "TENANT_MISMATCH": "Your access to the working organization has changed.",
+    "TENANT_ACCESS_DISABLED": "Your access to the working organization has changed.",
     "NOT_FOUND": "Not found.",
     "CONFLICT": "The data changed or already exists.",
     "VALIDATION_FAILED": "Some fields are not valid. Check the highlighted fields.",
@@ -54,8 +187,17 @@
     "IDEMPOTENCY_KEY_REUSED": "This action repeats an earlier request with different content.",
     "IDEMPOTENCY_IN_PROGRESS": "The earlier action is still being processed.",
     "RATE_LIMITED": "Too many actions. Please wait and try again.",
-    "FEATURE_DISABLED": "This feature is turned off.",
+    "FEATURE_DISABLED": "This feature is temporarily turned off.",
     "PORTAL_ACCESS_STAFF_ONLY": "The admin portal is for staff only.",
+    "INVALID_CREDENTIALS": "The username, password or authentication code is not correct.",
+    "ACCOUNT_SETUP_REQUIRED": "The account setup must be completed.",
+    "SETUP_TICKET_INVALID": "The account setup has expired. Please sign in again.",
+    "PASSWORD_RESET_TOKEN_INVALID": "This password reset link is no longer valid.",
+    "CSRF_TOKEN_INVALID": "Your session has ended, please sign in again.",
+    "REFRESH_TOKEN_INVALID": "Your session has ended, please sign in again.",
+    "ACCOUNT_DEACTIVATED": "This account has been deactivated. Please contact an administrator.",
+    "ACCOUNT_LOCKED": "This account is locked. Please contact an administrator.",
+    "ACCOUNT_NOT_PROVISIONED": "This account has no admin access yet.",
     "INTERNAL": "System error. Please try again later.",
     "UNAVAILABLE": "The service is temporarily unavailable. Please try again later.",
     "MAINTENANCE": "The system is under maintenance."

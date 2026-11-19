@@ -8,9 +8,9 @@ import type { RuntimeConfig } from './types';
 export const TEST_CONFIG: RuntimeConfig = {
   apiBaseUrl: 'https://public.gateway.test/api/v1',
   apiInternalBaseUrl: 'https://internal.gateway.test/api/v1',
-  oidcIssuer: 'https://idp.test/realms/eduworld',
-  oidcClientId: 'eduworld-portal',
   env: 'test',
+  principalCacheTtlSeconds: 60,
+  sessionIdleTimeoutSeconds: 1800,
 };
 
 export const PUBLIC = TEST_CONFIG.apiBaseUrl;

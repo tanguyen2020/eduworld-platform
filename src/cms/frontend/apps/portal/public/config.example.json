@@ -1,7 +1,7 @@
 {
   "apiBaseUrl": "http://localhost:9080/api/v1",
   "apiInternalBaseUrl": "http://localhost:9180/api/v1",
-  "oidcIssuer": "http://localhost:8180/realms/eduworld",
-  "oidcClientId": "eduworld-portal",
-  "env": "local"
+  "env": "local",
+  "principalCacheTtlSeconds": 60,
+  "sessionIdleTimeoutSeconds": 1800
 }

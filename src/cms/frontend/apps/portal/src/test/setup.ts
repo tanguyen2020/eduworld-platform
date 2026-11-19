@@ -1,9 +1,12 @@
 // Vitest setup (portal). Test doubles below are labelled MOCK (AGENTS R17): jsdom lacks matchMedia.
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
 afterEach(() => cleanup());
+
+// whole-portal tests render the router + Ant Design on a shared, throttled CI/dev CPU: allow 10 s for async queries
+configure({ asyncUtilTimeout: 10_000 });
 
 if (typeof window !== 'undefined' && !window.matchMedia) {
   // MOCK (test only): Ant Design responsive utilities call matchMedia, which jsdom does not implement.

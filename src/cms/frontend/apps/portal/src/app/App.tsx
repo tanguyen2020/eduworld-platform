@@ -1,47 +1,40 @@
-// Portal root (F050): runtime config → i18n → OpsThemeProvider → TanStack Query → router.
+// Portal root (F050, F051 T008/T019): runtime config → i18n → preferences (theme, density, locale — live) → portal
+// runtime (token in memory, refresh, working tenant, apiClient) → TanStack Query → router (session inside).
 // TanStack Query retries are off: the apiClient owns the retry policy (F050-AC-16).
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { OpsThemeProvider } from '@eduworld/ops-ui';
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { i18n as I18n } from 'i18next';
-import { createContext, useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import type { Locale } from '../i18n';
 import type { RuntimeConfig } from '../shared/api/types';
-import { createRoutes } from './router';
+import { TenantContextProvider } from '../shared/auth/TenantContext';
+import { PreferencesProvider } from './PreferencesProvider';
 import type { UserPreference } from './preferences';
-
-/** Runtime config for the shell and the apiClient (F051 creates the client from it). */
-const RuntimeConfigContext = createContext<RuntimeConfig | null>(null);
-
-export function useRuntimeConfig(): RuntimeConfig {
-  const c = useContext(RuntimeConfigContext);
-  if (!c) throw new Error('RuntimeConfig not provided');
-  return c;
-}
-
-export function createQueryClient(): QueryClient {
-  return new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false }, mutations: { retry: false } } });
-}
+import { createRoutes } from './router';
+import { createPortalRuntime, PortalRuntimeContext, type PortalRuntime } from './runtime';
 
 export interface AppProps {
   config: RuntimeConfig;
   i18n: I18n;
   preferences: UserPreference;
+  /** Tests inject a runtime with MOCK fetch; production builds it from the config. */
+  runtime?: PortalRuntime;
 }
 
-export function App({ config, i18n, preferences }: AppProps) {
+export function App({ config, i18n, preferences, runtime }: AppProps) {
+  const rt = useMemo(() => runtime ?? createPortalRuntime(config, i18n), [runtime, config, i18n]);
   const router = useMemo(() => createBrowserRouter(createRoutes()), []);
-  const queryClient = useMemo(() => createQueryClient(), []);
   return (
     <I18nextProvider i18n={i18n}>
-      <OpsThemeProvider mode={preferences.theme} density={preferences.density} locale={preferences.locale as Locale}>
-        <RuntimeConfigContext.Provider value={config}>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </RuntimeConfigContext.Provider>
-      </OpsThemeProvider>
+      <PreferencesProvider initial={preferences} i18n={i18n}>
+        <PortalRuntimeContext.Provider value={rt}>
+          <TenantContextProvider source={rt.tenant}>
+            <QueryClientProvider client={rt.queryClient}>
+              <RouterProvider router={router} />
+            </QueryClientProvider>
+          </TenantContextProvider>
+        </PortalRuntimeContext.Provider>
+      </PreferencesProvider>
     </I18nextProvider>
   );
 }

@@ -1,11 +1,15 @@
-// apiClient events (F050 plan): session_expired, tenant_mismatch, mfa_required, vpn_required. The shell (F051)
-// listens and reacts (back to login, tenant picker, MFA prompt, VPN banner). Payloads never carry tokens.
+// apiClient events (F050 plan, extended by F051): the shell listens and reacts (back to login, tenant picker, MFA
+// re-login, VPN banner, staff-only page, feature-disabled notice, permission refresh). Payloads never carry tokens.
 import type { ApiEventType } from './types';
 
 export interface ApiEventDetail {
   operationId?: string;
   status?: number;
+  /** Problem `code` that raised the event. */
+  code?: string;
   traceId?: string;
+  /** Problem `feature_key` of `403 FEATURE_DISABLED` (ADR-0090). */
+  featureKey?: string;
 }
 
 export class ApiEvents {

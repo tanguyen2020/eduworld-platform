@@ -1,34 +1,166 @@
 {
   "app": {
     "title": "EduWorld — Cổng quản trị",
+    "shortTitle": "Cổng quản trị",
     "loading": "Đang tải…",
-    "home": {
-      "title": "Chọn khu vực làm việc",
-      "description": "Mỗi khu vực mở theo quyền của tài khoản; quyền thật do máy chủ quyết định."
-    },
     "configError": {
       "title": "Thiếu cấu hình môi trường",
       "description": "Không đọc được /config.json hoặc thiếu biến: {{missing}}."
     },
     "notFound": "Không tìm thấy trang."
   },
-  "workspace": {
-    "school-lms": {
-      "title": "Quản lý trường và học tập"
+  "shell": {
+    "locale": {
+      "label": "Ngôn ngữ",
+      "vi-VN": "Tiếng Việt",
+      "en-US": "English"
     },
-    "content-studio": {
-      "title": "Content Studio"
+    "login": {
+      "title": "Đăng nhập",
+      "username": "Tên đăng nhập hoặc email",
+      "usernameRequired": "Vui lòng nhập tên đăng nhập hoặc email.",
+      "password": "Mật khẩu",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
+      "otp": "Mã xác thực 6 số",
+      "otpHelp": "Bắt buộc với tài khoản vận hành platform; để trống nếu chưa cài.",
+      "otpRemembered": "Lần trước bạn đã đăng nhập bằng mã xác thực.",
+      "otpFormat": "Mã xác thực gồm đúng 6 chữ số.",
+      "submit": "Đăng nhập",
+      "forgot": "Quên mật khẩu?",
+      "audience": "Dành cho cán bộ nhà trường và đội vận hành. Học sinh vui lòng đăng nhập trong game EduWorld.",
+      "invalidCredentials": "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.",
+      "rateLimited": "Bạn đã thử quá nhiều lần, vui lòng đợi {{seconds}} giây.",
+      "rateLimitedNoTime": "Bạn đã thử quá nhiều lần, vui lòng đợi ít phút.",
+      "accountDeactivated": "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị.",
+      "cookiesBlocked": "Trình duyệt đang chặn cookie của cổng quản trị: tải lại trang sẽ phải đăng nhập lại. Hãy bật cookie cho trang này.",
+      "notice": {
+        "sessionExpired": "Phiên làm việc đã hết, vui lòng đăng nhập lại.",
+        "setupTicketExpired": "Phiên thiết lập tài khoản đã hết hạn. Vui lòng đăng nhập lại.",
+        "passwordChanged": "Đã đổi mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.",
+        "passwordReset": "Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới."
+      }
     },
-    "game-ops": {
-      "title": "Game Operations Console"
+    "setup": {
+      "title": "Đặt mật khẩu mới",
+      "description": "Lần đầu đăng nhập, hãy đổi mật khẩu tạm do quản trị cấp.",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Nhập lại mật khẩu mới",
+      "policyHint": "Mật khẩu phải đạt chính sách mật khẩu của hệ thống (độ dài, chữ hoa, chữ thường, chữ số).",
+      "policyViolation": "Mật khẩu chưa đạt chính sách mật khẩu.",
+      "mismatch": "Hai mật khẩu chưa khớp.",
+      "submit": "Lưu và đăng nhập lại",
+      "checkEmailTitle": "Kiểm tra email để cài ứng dụng xác thực",
+      "checkEmailDescription": "Mở link trong email, quét mã QR bằng ứng dụng xác thực rồi quay lại trang đăng nhập.",
+      "backToLogin": "Về trang đăng nhập"
     },
-    "live-ops": {
-      "title": "Game Live Operations"
+    "forgot": {
+      "title": "Quên mật khẩu",
+      "description": "Nhập tên đăng nhập hoặc email của nhân sự. Học sinh vui lòng nhờ quản trị trường đặt lại mật khẩu.",
+      "submit": "Gửi hướng dẫn",
+      "sent": "Nếu tài khoản tồn tại, email hướng dẫn đã được gửi.",
+      "backToLogin": "Về trang đăng nhập"
     },
-    "platform-admin": {
-      "title": "Quản trị nền tảng"
+    "reset": {
+      "title": "Đặt lại mật khẩu",
+      "submit": "Đặt lại mật khẩu",
+      "invalidTitle": "Link đặt lại mật khẩu không còn hiệu lực",
+      "invalidDescription": "Link đã hết hạn hoặc đã được dùng.",
+      "requestAgain": "Gửi lại email"
     },
-    "placeholder": "Nội dung khu vực này được bổ sung ở các tính năng sau."
+    "tenantSelect": {
+      "title": "Chọn đơn vị làm việc",
+      "search": "Tìm theo tên hoặc mã",
+      "remember": "Nhớ lựa chọn cho lần sau",
+      "enter": "Vào",
+      "empty": "Không tìm thấy đơn vị."
+    },
+    "tenantType": {
+      "school": "Trường",
+      "unit": "Đơn vị",
+      "common": "Tenant chung"
+    },
+    "noAccess": {
+      "title": "Tài khoản chưa được cấp quyền quản trị",
+      "description": "Vui lòng liên hệ quản trị trường.",
+      "studentTitle": "Tài khoản học sinh không dùng được cổng quản trị",
+      "studentDescription": "Em hãy đăng nhập trong game nhé."
+    },
+    "session": {
+      "restoring": "Đang khôi phục phiên làm việc…",
+      "expiredTitle": "Phiên làm việc đã hết",
+      "expiredDescription": "Phiên làm việc đã hết, vui lòng đăng nhập lại.",
+      "loginAgain": "Đăng nhập lại",
+      "scopeError": "Không tải được danh sách đơn vị làm việc.",
+      "retry": "Thử lại",
+      "logout": "Đăng xuất"
+    },
+    "relogin": {
+      "title": "Đăng nhập lại",
+      "description": "Thao tác này cần đăng nhập lại với mã xác thực.",
+      "submit": "Xác nhận",
+      "cancel": "Hủy"
+    },
+    "forbidden": {
+      "title": "Không có quyền truy cập",
+      "description": "Tài khoản của bạn không có quyền mở trang này.",
+      "home": "Về trang chính"
+    },
+    "featureDisabled": {
+      "title": "Tính năng đang tắt",
+      "description": "Tính năng này đang tạm tắt.",
+      "featureKey": "Khóa tính năng: {{key}}"
+    },
+    "vpn": {
+      "title": "Cần kết nối mạng quản trị (VPN)",
+      "description": "Khu vực này chỉ mở qua mạng quản trị. Kết nối VPN rồi thử lại."
+    },
+    "largeScreen": {
+      "title": "Tác vụ này cần màn hình lớn hơn",
+      "description": "Hãy mở trên máy tính hoặc máy tính bảng có màn hình rộng hơn. Bạn vẫn xem được ở chế độ chỉ đọc."
+    },
+    "layout": {
+      "openMenu": "Mở menu",
+      "navigation": "Menu điều hướng",
+      "banner": "Thông báo hệ thống",
+      "breadcrumb": "Đường dẫn",
+      "skipToContent": "Bỏ qua đến nội dung chính",
+      "workspace": "Khu vực làm việc"
+    },
+    "tenantSwitcher": {
+      "label": "Đơn vị làm việc",
+      "unsavedTitle": "Có thay đổi chưa lưu",
+      "unsavedContent": "Đổi đơn vị sẽ bỏ các thay đổi chưa lưu. Tiếp tục?",
+      "confirm": "Đổi đơn vị",
+      "cancel": "Ở lại"
+    },
+    "tenantFilter": {
+      "label": "Lọc tenant",
+      "all": "Tất cả tenant"
+    },
+    "tenantTarget": {
+      "label": "Tenant",
+      "required": "Chọn một tenant đích.",
+      "platform": "Platform (dữ liệu dùng chung)",
+      "selectOne": "Chọn đúng một tenant để xem dữ liệu của màn này."
+    },
+    "userMenu": {
+      "label": "Tài khoản",
+      "theme": "Giao diện",
+      "light": "Sáng",
+      "dark": "Tối",
+      "compact": "Mật độ gọn",
+      "logout": "Đăng xuất"
+    },
+    "menuPlaceholder": "Màn hình này được bổ sung ở tính năng sau.",
+    "problem": {
+      "traceId": "Mã truy vết: {{traceId}}"
+    },
+    "reason": {
+      "label": "Lý do",
+      "required": "Vui lòng nhập lý do.",
+      "ok": "Xác nhận",
+      "cancel": "Hủy"
+    }
   },
   "error": {
     "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
@@ -45,7 +177,8 @@
     "MFA_REQUIRED": "Thao tác này cần xác thực hai lớp.",
     "TENANT_HEADER_REQUIRED": "Chưa chọn đơn vị làm việc.",
     "TENANT_NOT_SELECTED": "Chưa chọn đơn vị làm việc.",
-    "TENANT_MISMATCH": "Đơn vị làm việc không khớp với phiên đăng nhập.",
+    "TENANT_MISMATCH": "Đơn vị làm việc đã thay đổi quyền truy cập.",
+    "TENANT_ACCESS_DISABLED": "Đơn vị làm việc đã thay đổi quyền truy cập.",
     "NOT_FOUND": "Không tìm thấy dữ liệu.",
     "CONFLICT": "Dữ liệu đã thay đổi hoặc bị trùng.",
     "VALIDATION_FAILED": "Dữ liệu nhập chưa hợp lệ. Kiểm tra các trường được đánh dấu.",
@@ -54,8 +187,17 @@
     "IDEMPOTENCY_KEY_REUSED": "Thao tác trùng với một yêu cầu trước đó có nội dung khác.",
     "IDEMPOTENCY_IN_PROGRESS": "Thao tác trước đó đang được xử lý.",
     "RATE_LIMITED": "Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại.",
-    "FEATURE_DISABLED": "Chức năng này đang tắt.",
+    "FEATURE_DISABLED": "Tính năng này đang tạm tắt.",
     "PORTAL_ACCESS_STAFF_ONLY": "Cổng quản trị chỉ dành cho nhân sự.",
+    "INVALID_CREDENTIALS": "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.",
+    "ACCOUNT_SETUP_REQUIRED": "Tài khoản cần hoàn tất thiết lập.",
+    "SETUP_TICKET_INVALID": "Phiên thiết lập tài khoản đã hết hạn. Vui lòng đăng nhập lại.",
+    "PASSWORD_RESET_TOKEN_INVALID": "Link đặt lại mật khẩu không còn hiệu lực.",
+    "CSRF_TOKEN_INVALID": "Phiên làm việc đã hết, vui lòng đăng nhập lại.",
+    "REFRESH_TOKEN_INVALID": "Phiên làm việc đã hết, vui lòng đăng nhập lại.",
+    "ACCOUNT_DEACTIVATED": "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị.",
+    "ACCOUNT_LOCKED": "Tài khoản đang bị khóa. Vui lòng liên hệ quản trị.",
+    "ACCOUNT_NOT_PROVISIONED": "Tài khoản chưa được cấp quyền quản trị.",
     "INTERNAL": "Lỗi hệ thống. Vui lòng thử lại sau.",
     "UNAVAILABLE": "Dịch vụ tạm thời không sẵn sàng. Vui lòng thử lại sau.",
     "MAINTENANCE": "Hệ thống đang bảo trì."

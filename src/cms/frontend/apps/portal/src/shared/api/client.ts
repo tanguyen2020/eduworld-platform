@@ -11,9 +11,9 @@ import { apiPath, targetUrl } from './middleware/gateway';
 import { applyIdempotency, IdempotencyKeys } from './middleware/idempotency';
 import { applyIfMatch, EtagCache } from './middleware/ifmatch';
 import { applyLanguage } from './middleware/language';
-import { ApiError, i18nKeyFor, peekProblemCode, toApiError, type HasTranslation } from './middleware/problem';
+import { ApiError, i18nKeyFor, peekProblem, peekProblemCode, toApiError, type HasTranslation } from './middleware/problem';
 import { backoffMs, isRetryable, MAX_RETRIES, MAX_RETRY_AFTER_MS, parseRetryAfter, RETRYABLE_STATUS } from './middleware/retry';
-import { applyTenant } from './middleware/tenant';
+import { applyTenant, scopeSearch } from './middleware/tenant';
 import { findOperation, gatewayForPath } from './operations';
 import type { paths } from './schema.gen';
 import type { RuntimeConfig } from './types';
@@ -31,6 +31,11 @@ export interface ApiClientOptions {
   random?: () => number;
   now?: () => number;
   events?: ApiEvents;
+  /**
+   * F051-AC-13: on `403 MFA_REQUIRED` the shell opens the re-login dialog (password + code, `portalLogin`); resolves
+   * true when a new access token is in place — the request is then retried once. Shared by concurrent requests.
+   */
+  reauthenticate?: () => Promise<boolean>;
 }
 
 export interface ApiClient {
@@ -56,6 +61,17 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
   const idempotencyKeys = new IdempotencyKeys(now);
   const etags = new EtagCache();
   const refresh = createRefresher(tokenProvider);
+  let reauthInFlight: Promise<boolean> | null = null;
+  const reauthenticate = (): Promise<boolean> => {
+    if (!opts.reauthenticate) return Promise.resolve(false);
+    reauthInFlight ??= opts
+      .reauthenticate()
+      .catch(() => false)
+      .finally(() => {
+        reauthInFlight = null;
+      });
+    return reauthInFlight;
+  };
 
   async function pipeline(input: Request): Promise<Response> {
     const url = new URL(input.url);
@@ -67,16 +83,18 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
 
     const headers = new Headers(input.headers);
     applyLanguage(headers, opts.getLocale());
-    applyTenant(headers, meta?.tenantHeader ?? 'none', tenant.getTenantId());
+    const sessionTenant = tenant.getTenantId();
+    applyTenant(headers, meta?.tenantHeader ?? 'none', sessionTenant);
     const intent = applyIdempotency(headers, meta?.idempotency ?? false, idempotencyKeys, now);
     applyIfMatch(headers, meta?.ifMatch ?? false, path, etags);
     headers.set('traceparent', traceparent());
-    const target = targetUrl(gateway, path, url.search, config);
+    const target = targetUrl(gateway, path, scopeSearch(url.search, sessionTenant), config);
     const body = method === 'GET' || method === 'HEAD' ? undefined : await input.arrayBuffer();
     const retryable = isRetryable(method, headers);
 
     let token = await tokenProvider.getAccessToken();
     let refreshed = false;
+    let reauthenticated = false;
     let attempt = 0;
     for (;;) {
       applyAuth(headers, token);
@@ -125,9 +143,22 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         return res;
       }
       if (res.status === 403) {
-        const code = await peekProblemCode(res);
-        if (code === 'TENANT_MISMATCH') events.emit('tenant_mismatch', { operationId, status: 403 });
-        if (code === 'MFA_REQUIRED') events.emit('mfa_required', { operationId, status: 403 });
+        const { code, traceId, featureKey } = await peekProblem(res);
+        const detail = { operationId, status: 403, code, traceId };
+        if (code === 'MFA_REQUIRED') {
+          events.emit('mfa_required', detail);
+          if (!reauthenticated && opts.reauthenticate) {
+            reauthenticated = true;
+            if (await reauthenticate()) {
+              token = await tokenProvider.getAccessToken();
+              continue;
+            }
+          }
+        }
+        if (code === 'TENANT_MISMATCH' || code === 'TENANT_ACCESS_DISABLED') events.emit('tenant_mismatch', detail);
+        if (code === 'PORTAL_ACCESS_STAFF_ONLY') events.emit('staff_only', detail);
+        if (code === 'FEATURE_DISABLED') events.emit('feature_disabled', { ...detail, featureKey });
+        if (code === 'PERMISSION_DENIED') events.emit('permission_denied', detail);
         return res;
       }
       if (res.ok) {

@@ -1,0 +1,10 @@
+/* Shell (F051 T031, F051-AC-18): skip link visible only on keyboard focus (WCAG 2.4.1). No design value here. */
+.ew-skip-link {
+  position: absolute;
+  inset-inline-start: -10000px;
+  inset-block-start: auto;
+}
+
+.ew-skip-link:focus {
+  position: static;
+}

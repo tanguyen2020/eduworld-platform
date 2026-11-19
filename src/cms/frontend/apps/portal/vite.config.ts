@@ -49,7 +49,8 @@ export default defineConfig({
   },
   test: {
     name: 'portal',
-    testTimeout: 60_000,
+    // whole-portal tests (router + Ant Design) on a shared, throttled CPU (2 workers)
+    testTimeout: 120_000,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],

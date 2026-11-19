@@ -1,4 +1,4 @@
-// Portal entry (F050). Loads the runtime config first (AGENTS R3); a missing config shows a translated error.
+// Portal entry (F050, F051). Loads the runtime config first (AGENTS R3); a missing config shows a translated error.
 import { OpsThemeProvider } from '@eduworld/ops-ui';
 import { Result } from 'antd';
 import { StrictMode } from 'react';

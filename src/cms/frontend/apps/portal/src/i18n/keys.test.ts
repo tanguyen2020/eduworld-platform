@@ -7,6 +7,9 @@ import yaml from 'js-yaml';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import en from './en.json';
+import catalogEn from './catalog.en.json';
+import catalogVi from './catalog.vi.json';
+import { WORKSPACE_CATALOG } from '../generated/menu-catalog';
 import vi from './vi.json';
 import { createI18n } from './index';
 
@@ -25,6 +28,24 @@ describe('translation files', () => {
 
   it('ops-ui: vi ⊆ en and en ⊆ vi', () => {
     expect(keys(opsUiResources.en).sort()).toEqual(keys(opsUiResources.vi).sort());
+  });
+
+  it('F051-AC-16: catalog labels (vi/en) cover exactly the workspaces and menus of the catalog', async () => {
+    expect(keys(catalogEn).sort()).toEqual(keys(catalogVi).sort());
+    const expected = WORKSPACE_CATALOG.flatMap((w) => [w.labelKey, ...w.menus.map((m) => m.labelKey)]).map((k) => k.replace(/^portal\./, '')).sort();
+    expect(keys(catalogVi).sort()).toEqual(expected);
+    for (const locale of ['vi-VN', 'en-US'] as const) {
+      const i18n = await createI18n(locale);
+      for (const w of WORKSPACE_CATALOG) for (const k of [w.labelKey, ...w.menus.map((m) => m.labelKey)]) expect(i18n.exists(k), `${locale} ${k}`).toBe(true);
+    }
+  });
+
+  it('F051-AC-16: switching the language needs no reload (same i18n instance)', async () => {
+    const i18n = await createI18n('vi-VN');
+    expect(i18n.t('shell.login.title')).toBe('Đăng nhập');
+    await i18n.changeLanguage('en-US');
+    expect(i18n.t('shell.login.title')).toBe('Sign in');
+    expect(i18n.t('portal.workspace.platform_admin')).toBe('Platform Administration');
   });
 
   it('no empty translation', () => {

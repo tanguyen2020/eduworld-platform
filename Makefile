@@ -210,11 +210,14 @@ design-tokens-check: ## Fail if generated theme files drift from design/; aliase
 
 # ---------- web: Admin Portal + ops-ui (F050, ADR-0022, ADR-0047) ----------
 WEB_DIR := src/cms/frontend
-.PHONY: web-install web-lint web-test web-build storybook web-storybook-check web-visual
+.PHONY: web-install web-lint web-test web-build storybook web-storybook-check web-visual portal-catalog
 web-install: ## Install the pnpm workspace of src/cms/frontend (frozen lockfile)
 	cd $(WEB_DIR) && $(PNPM) install --frozen-lockfile
 
-web-lint: web-install ## ESLint + stylelint (no hardcoded style/game import/env URL, i18n), typecheck, gen:check of the API client
+portal-catalog: web-install ## Generate apps/portal/src/generated/menu-catalog.ts from specs/portal/menu-catalog.yaml (F051, ADR-0090)
+	cd $(WEB_DIR) && $(PNPM) gen:catalog
+
+web-lint: web-install ## ESLint + stylelint (no hardcoded style/game import/env URL, i18n), typecheck, gen:check of the API client and the menu catalog
 	cd $(WEB_DIR) && $(PNPM) lint && $(PNPM) typecheck && $(PNPM) gen:check
 
 web-test: web-install ## Vitest with one worker: portal (apiClient, routes, i18n), ops-ui, ESLint rules

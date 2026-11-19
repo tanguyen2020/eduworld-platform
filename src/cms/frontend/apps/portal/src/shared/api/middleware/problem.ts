@@ -97,10 +97,15 @@ export function toApiError(
 
 /** Reads the `code` of a Problem response without consuming the original body. */
 export async function peekProblemCode(res: Response): Promise<string | undefined> {
+  return (await peekProblem(res)).code;
+}
+
+/** Reads `code`, `trace_id` and `feature_key` (ADR-0090) of a Problem response without consuming the body. */
+export async function peekProblem(res: Response): Promise<{ code?: string; traceId?: string; featureKey?: string }> {
   try {
-    const body = (await res.clone().json()) as ProblemBody;
-    return str(body?.code);
+    const body = (await res.clone().json()) as ProblemBody & { feature_key?: unknown };
+    return { code: str(body?.code), traceId: str(body?.trace_id), featureKey: str(body?.feature_key) };
   } catch {
-    return undefined;
+    return {};
   }
 }

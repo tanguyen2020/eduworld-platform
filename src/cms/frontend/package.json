@@ -12,6 +12,7 @@
     "build": "pnpm --filter @eduworld/portal build",
     "gen:api": "pnpm --filter @eduworld/portal gen:api",
     "gen:check": "pnpm --filter @eduworld/portal gen:check",
+    "gen:catalog": "pnpm --filter @eduworld/portal gen:catalog",
     "lint": "eslint . --max-warnings=0 && stylelint \"**/*.css\"",
     "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
     "test": "vitest run --maxWorkers=1 --minWorkers=1",
