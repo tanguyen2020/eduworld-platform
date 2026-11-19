@@ -39,6 +39,8 @@ type Handlers struct {
 	Me                   query.Me                       // F012
 	UserRoles            command.UserRoles              // F012
 	UserRoleList         query.UserRoles                // F012
+	Roles                command.Roles                  // F012
+	RoleList             query.Roles                    // F012
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -95,6 +97,18 @@ var Operations = map[string]httpx.Operation{
 	"listAllUserRoles":       op("listAllUserRoles", http.MethodGet, "/admin/user-roles", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"grantPlatformUserRole":  op("grantPlatformUserRole", http.MethodPost, "/admin/user-roles", httpx.TenantOptional, httpx.IdempotencyRequired, 201),
 	"revokePlatformUserRole": op("revokePlatformUserRole", http.MethodDelete, "/admin/user-roles/{user_role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 204),
+	"listTenantPermissions":  withGuard(op("listTenantPermissions", http.MethodGet, "/tenant/permissions", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"listTenantRoles":        withGuard(op("listTenantRoles", http.MethodGet, "/tenant/roles", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"createTenantRole":       withGuard(op("createTenantRole", http.MethodPost, "/tenant/roles", httpx.TenantRequired, httpx.IdempotencyRequired, 201), httpx.GuardPortalStaff),
+	"getTenantRole":          withGuard(op("getTenantRole", http.MethodGet, "/tenant/roles/{role_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"updateTenantRole":       withGuard(op("updateTenantRole", http.MethodPatch, "/tenant/roles/{role_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"deleteTenantRole":       withGuard(op("deleteTenantRole", http.MethodDelete, "/tenant/roles/{role_id}", httpx.TenantRequired, httpx.IdempotencyNone, 204), httpx.GuardPortalStaff),
+	"listPlatformRoles":      op("listPlatformRoles", http.MethodGet, "/admin/roles", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"createPlatformRole":     op("createPlatformRole", http.MethodPost, "/admin/roles", httpx.TenantOptional, httpx.IdempotencyRequired, 201),
+	"getPlatformRole":        op("getPlatformRole", http.MethodGet, "/admin/roles/{role_id}", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"updatePlatformRole":     op("updatePlatformRole", http.MethodPatch, "/admin/roles/{role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+	"deletePlatformRole":     op("deletePlatformRole", http.MethodDelete, "/admin/roles/{role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 204),
+	"listAllPermissions":     op("listAllPermissions", http.MethodGet, "/admin/permissions", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"getMe":                  withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"listSisSyncRunErrors":   op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
@@ -142,6 +156,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn(h)
 	}
 	for id, fn := range userRoleOperations {
+		routes[id] = fn(h)
+	}
+	for id, fn := range roleOperations {
 		routes[id] = fn(h)
 	}
 	for id, fn := range routes {

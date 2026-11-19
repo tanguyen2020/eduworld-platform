@@ -183,7 +183,9 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
 	h := identityhttp.Handlers{Me: query.Me{Model: model, Workspaces: ws},
 		UserRoles:    command.UserRoles{UoW: e.uow, Repo: write.UserRoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
-		UserRoleList: query.UserRoles{Model: model, Cursors: codec}}
+		UserRoleList: query.UserRoles{Model: model, Cursors: codec},
+		Roles:        command.Roles{UoW: e.uow, Repo: write.RoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
+		RoleList:     query.Roles{Model: model, Cursors: codec}}
 	if err := identityhttp.Register(srv, h); err != nil {
 		t.Fatal(err)
 	}

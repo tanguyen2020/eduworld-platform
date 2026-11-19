@@ -61,3 +61,35 @@ type UserRoleRepository interface {
 	// BumpUserVersion increments users.version (the Principal version, F012-AC-11).
 	BumpUserVersion(ctx context.Context, userID uuid.UUID) error
 }
+
+// RoleRow is an identity.roles row with its live permissions.
+type RoleRow struct {
+	ID          uuid.UUID
+	TenantID    *uuid.UUID
+	Code        string
+	NameVi      string
+	NameEn      *string
+	Description *string
+	ScopeKind   string
+	IsSystem    bool
+	Permissions []string
+	Version     int64
+	UpdatedAt   time.Time
+}
+
+// RoleRepository persists roles and their permissions (F012 US4).
+type RoleRepository interface {
+	// PermissionScopes returns the scope kind of each known live permission code (unknown codes are absent).
+	PermissionScopes(ctx context.Context, codes []string) (map[string]string, error)
+	// Load returns a live role that is shared or belongs to tenant (nil tenant: any); problem NotFound otherwise.
+	Load(ctx context.Context, id uuid.UUID, tenant *uuid.UUID) (*RoleRow, error)
+	// Create inserts the role and its permissions (duplicate code: problem Conflict).
+	Create(ctx context.Context, r *RoleRow, actor uuid.UUID) error
+	// Update stores name/description and the permission changes when the version matches (problem
+	// VersionMismatch otherwise) and returns the new version.
+	Update(ctx context.Context, r *RoleRow, add, remove []string, actor uuid.UUID) (int64, error)
+	// ActiveUserRoles counts valid, live user roles of the role.
+	ActiveUserRoles(ctx context.Context, id uuid.UUID) (int, error)
+	// SoftDelete deletes the role when the version matches.
+	SoftDelete(ctx context.Context, id uuid.UUID, version int64, actor uuid.UUID, reason string) error
+}

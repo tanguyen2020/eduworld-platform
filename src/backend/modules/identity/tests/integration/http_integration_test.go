@@ -58,7 +58,7 @@ func (h *httpEnv) do(t *testing.T, method, path, token string, hdr map[string]st
 	req.Header.Set("Authorization", "Bearer "+token)
 	if body != nil {
 		ct := "application/json"
-		if method == http.MethodPatch && strings.HasPrefix(path, "/admin/") {
+		if method == http.MethodPatch && strings.HasPrefix(path, "/admin/") && !strings.HasPrefix(path, "/admin/roles") {
 			ct = "application/merge-patch+json" // JSON Merge Patch operations of the spec
 		}
 		req.Header.Set("Content-Type", ct)
