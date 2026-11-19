@@ -246,7 +246,7 @@ func (r *Registry) Consumer(name string, build ConsumerFactory) {
 			return err
 		}
 		o := build(js)
-		if o.Name != name {
+		if base, _, _ := strings.Cut(name, "@"); o.Name != base { // "<consumer>@<stream>": one durable per stream
 			return fmt.Errorf("consumer %s: options name %s", name, o.Name)
 		}
 		if o.Registerer == nil {

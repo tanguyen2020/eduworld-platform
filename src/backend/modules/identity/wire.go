@@ -386,7 +386,12 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		return err
 	}
 	sink := consumer.AuditSink{Sink: command.AuditSink{UoW: core.UoW, Repo: write.AuditRepo{}, Metrics: am}}
+	// One durable per stream EVT_<MODULE> whose producer runs an outbox relay in this release. EVT_REALTIME has no
+	// producer yet (module realtime has no database or relay): its audit sink is wired with that relay [Proposed].
 	for _, producer := range consumer.AuditSinkModules {
+		if producer == "realtime" {
+			continue
+		}
 		subject := consumer.AuditSinkSubject(producer)
 		stream := natsx.EventStream(producer)
 		r.Consumer(consumer.AuditSinkName+"@"+stream, func(js jetstream.JetStream) outbox.ConsumerOptions {

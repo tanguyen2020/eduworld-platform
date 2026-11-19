@@ -26,5 +26,10 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
+	// Outbox relay (worker events): EVT_COMPETITION exists for the identity audit sink even before the first competition feature
+	// writes events (OQ F010-2).
+	if err := r.Relay(Name); err != nil {
+		return nil, fmt.Errorf("competition: %w", err)
+	}
 	return &Module{}, nil
 }
