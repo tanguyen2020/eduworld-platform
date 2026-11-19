@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	portwrite "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/saga"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/settingscfg"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/consumer"
@@ -37,11 +39,18 @@ func (r *revokeRecorder) RevokeSessions(_ context.Context, f portwrite.SessionFi
 }
 
 // kcAccess is a TEST DOUBLE of port.KeycloakAccessAdmin.
-type kcAccess struct{ disabled, enabled, logouts map[string]int }
+type kcAccess struct{ disabled, enabled, logouts, anonymized map[string]int }
 
 func (k *kcAccess) DisableUser(_ context.Context, id string) error { k.disabled[id]++; return nil }
 func (k *kcAccess) EnableUser(_ context.Context, id string) error  { k.enabled[id]++; return nil }
 func (k *kcAccess) LogoutUser(_ context.Context, id string) error  { k.logouts[id]++; return nil }
+func (k *kcAccess) AnonymizeUser(_ context.Context, id string) error {
+	if k.anonymized == nil {
+		k.anonymized = map[string]int{}
+	}
+	k.anonymized[id]++
+	return nil
+}
 
 const localIssuer = "http://kc/realms/eduworld"
 
@@ -57,6 +66,10 @@ func lifecycleHandlers(e *env, kc *kcUsers, rec *revokeRecorder, codec *page.Cod
 		// The HTTP side of cleanup (preview, exclusions, runs, approve); the run itself is driven by TestStudentCleanup.
 		Cleanup: command.StudentCleanup{UoW: e.uow, Repo: write.CleanupRepo{}, Settings: write.SettingsRepo{}, Defaults: defaults,
 			Lifecycle: write.LifecycleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, Cursors: codec},
+		// F016 US5: participants are the recording TEST DOUBLES of anonymizeUserData (facades tested in their modules).
+		Anonymize: command.UserAnonymize{UoW: e.uow, Repo: write.AnonymizeRepo{}, Saga: saga.Engine{UoW: e.uow, Repo: write.SagaRepo{}},
+			Participants: []port.UserDataAnonymizer{recordingAnonymizer{"game"}, recordingAnonymizer{"learning"}}, Lifecycle: write.LifecycleRepo{},
+			Events: e.deps.Events, Audit: e.deps.Audit},
 	}
 }
 

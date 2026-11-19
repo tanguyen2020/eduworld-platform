@@ -41,3 +41,17 @@ make test-contract
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (pass/fail), đo độ trễ thu hồi (REST, Keycloak), log saga chaos, log truy vấn chứng minh không có `DELETE`.
+
+## 5. Bằng chứng (2026-11-19, máy local, GOMAXPROCS ≤ 4, Docker Desktop)
+
+| Lệnh | Kết quả |
+|---|---|
+| `go test -tags integration -timeout 40m ./modules/identity/tests/integration/` (toàn bộ suite identity) | ok (1640 s), 0 FAIL |
+| Chạy lại sau khi sửa thứ tự khôi phục: `TestStudentRestore`, `TestStudentCleanup`, `TestUserAnonymize`, `TestSisStatusPropagation`, `TestUserLifecycle` | 5/5 PASS |
+| `TestSagaEngine`, `TestLifecycleOperationsMatchSpec` | PASS |
+| Facade test: `TestParticipantsFacade` (identity), `TestStudentLifecycleFacade` (game), `TestPlatformStudentsFacade` (learning) | PASS |
+| `go test ./modules/identity/... ./modules/game/... ./modules/learning/... ./pkg/authz/...` | 0 FAIL |
+| `golangci-lint` (mặc định + `.golangci.arch.yml`), `tenancyguard`, `ewlint`, `archgen --check` (0 violations), `routematrix check` (519 operation, 0 problem) | 0 issues |
+
+- Không `DELETE`: tenancyguard chặn `DELETE`/`TRUNCATE`; test kiểm dòng còn nguyên sau dọn (TestStudentCleanup) và ẩn danh hóa (TestUserAnonymize).
+- Kịch bản thủ công §2 (bước 2, 10, 13 đo độ trễ ≤ 1 phút qua core-api + worker) chờ nối binary (OQ F010-2, OQ F016-7); từng chặng đã kiểm bằng test integration.

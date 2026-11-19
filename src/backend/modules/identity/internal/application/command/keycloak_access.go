@@ -20,7 +20,8 @@ type KeycloakAccess struct {
 	UoW     write.UnitOfWork
 	Repo    write.LifecycleRepository
 	KC      port.KeycloakAccessAdmin
-	Issuers []string // the local realm issuer first (EW_OIDC_ISSUERS)
+	Anon    port.KeycloakAnonymizer // F016 US5 (nil = disable and logout only)
+	Issuers []string                // the local realm issuer first (EW_OIDC_ISSUERS)
 }
 
 func (h KeycloakAccess) subject(ctx context.Context, userID uuid.UUID) (sub string, err error) {
@@ -74,4 +75,25 @@ func (h KeycloakAccess) CleanedUp(ctx context.Context, userID uuid.UUID) (err er
 		return err
 	}
 	return h.KC.LogoutUser(ctx, sub)
+}
+
+// Anonymized handles user.anonymized (F016-AC-20): the Keycloak user is disabled, its sessions end and its
+// profile is cleared.
+func (h KeycloakAccess) Anonymized(ctx context.Context, userID uuid.UUID) (err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.KeycloakAccessAnonymized")
+	defer func() { done(err) }()
+	sub, err := h.subject(ctx, userID)
+	if err != nil || sub == "" {
+		return err
+	}
+	if err := h.KC.DisableUser(ctx, sub); err != nil {
+		return err
+	}
+	if err := h.KC.LogoutUser(ctx, sub); err != nil {
+		return err
+	}
+	if h.Anon == nil {
+		return nil
+	}
+	return h.Anon.AnonymizeUser(ctx, sub)
 }

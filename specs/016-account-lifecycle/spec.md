@@ -1,6 +1,6 @@
 # Feature Specification: F016 — Vòng đời tài khoản: khóa, thu hồi truy cập, dọn học sinh không đăng nhập, ẩn danh hóa
 
-**Feature Branch**: `016-account-lifecycle` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `identity` (+ phần nhận saga ở module `game`, module `learning`) · **Mốc**: M-C3 · **Phụ thuộc**: F011, F014, F015
+**Feature Branch**: `016-account-lifecycle` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `identity` (+ phần nhận saga ở module `game`, module `learning`) · **Mốc**: M-C3 · **Phụ thuộc**: F011, F014, F015
 **Input**: Khóa/mở khóa/vô hiệu hóa tài khoản và thu hồi truy cập ở REST, realtime, Keycloak trong giới hạn thời gian; lan truyền trạng thái từ SIS; worker dọn (soft-delete) học sinh lâu không vào game có báo trước, loại trừ, ngưỡng duyệt, khôi phục; ẩn danh hóa theo retention/yêu cầu, không xóa vật lý. FR nguồn: FR-AUTH-010, FR-AUTH-024, FR-SIS-008, FR-ORG-014, NFR-PRIV-002, NFR-PRIV-003.
 
 ## Clarifications
@@ -18,6 +18,22 @@
 - Q: Ai khôi phục học sinh từ Thùng rác tenant? → A: Chỉ Tenant Admin (`tenant.trash.read/restore`, [ADMIN_PORTAL §3.8](../../docs/04-admin-portal/ADMIN_PORTAL.md), RB-112); School Admin không có Thùng rác.
 - Q: Consumer thu hồi phiên game/kết thúc session thuộc feature nào khi F013/F014 (M-C1) làm trước F016 (M-C3)? → A: Đã chốt theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý): payload schema `user.access_revoked`, `user.status_changed`, `student.cleaned_up` là contract-first (F013 T045, F016 duyệt nội dung); F013/F014 hiện thực consumer và test bằng fixture (F013-AC-29, F014-AC-24); F016 phát event đúng schema và chịu kiểm end-to-end (F016-AC-24).
 - Q: Học sinh quên mật khẩu (kể cả tenant `common`) thì ai đặt lại, mật khẩu giao thế nào? → A (Technical Architect 2026-11-17): `resetStudentPassword` thuộc F016 — School Admin/Tenant Admin/System Admin (permission `lms.student.password_reset`), mật khẩu sinh ngẫu nhiên trả một lần, thu hồi phiên game (`password_changed`), phát `user.access_revoked` (`reason = password_changed`, không tắt user); quy tắc ở [ACCOUNT_PROVISIONING §6d](../../docs/09-identity/ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh) (F016-AC-25…27).
+
+### Session 2026-11-19 (triển khai — câu hỏi mở, mặc định [Proposed])
+
+- OQ F016-1: Lý do/nguồn của mỗi lần đổi trạng thái lưu ở bảng append-only `identity.user_status_history` (`source`: staff, sis, cleanup, restore, anonymize, retention) thay vì thêm cột `users.status_reason` [Proposed].
+- OQ F016-2: Facade `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData` của module game và learning trả `nothing_to_do` vì chưa có dữ liệu riêng của học sinh (game chỉ trả `blocked: active_game_session` khi có session active). Feature thêm dữ liệu (F030+, F070+) mở rộng các operation này; competition/chat tham gia saga ở F100/F115.
+- OQ F016-3: Gỡ/thêm membership Keycloak Organization khi dọn/khôi phục đi qua `tenant_membership.changed` (worker membership F010), không gọi Keycloak trực tiếp từ saga [Proposed].
+- OQ F016-4: Bảng của F016 (saga, dọn, loại trừ, yêu cầu dữ liệu, erasure log, lịch sử trạng thái) viết bằng SQL tay trong migration (có RLS) thay vì ent schema; các use case đọc của dọn/yêu cầu dữ liệu (preview, danh sách lần chạy, danh sách yêu cầu) nằm ở command, đọc trong platform/tenant scope [Proposed].
+- OQ F016-5: `Idempotency-Key` của mỗi bước saga là UUIDv7 tất định (thời điểm bắt đầu saga + hash bước); TTL idempotency của facade giới hạn lần thử lại muộn [Proposed].
+- OQ F016-6: `resetStudentPassword` thu hồi phiên game trong transaction riêng sau khi ghi event [Proposed].
+- OQ F016-7: Binary chưa nối route/consumer/job của F016 (OQ F010-2). F016-AC-24 đã kiểm từng chặng (payload đọc từ outbox đúng schema và đưa vào consumer thật; consumer F013/F014 có test fixture); kiểm end-to-end core-api + worker làm khi nối binary.
+- OQ F016-8: "Còn hợp lệ trong SIS" khi khôi phục lúc đăng nhập = link SIS active của user trỏ tới bản ghi `sis.synced_students` `record_status = active`; user không có link SIS (tenant chung, tài khoản tạo tay) coi là hợp lệ [Proposed].
+- OQ F016-9: Tenant Admin khôi phục từ Thùng rác không kiểm SIS (người dùng quyết định) [Proposed].
+- OQ F016-10: Realm đặt `editUsernameAllowed: false` nên khi ẩn danh hóa, user Keycloak bị tắt và xóa email/họ tên/thuộc tính nhưng giữ username; username trong `identity.users` đổi thành `anon.<user_id>`. Cần quyết định có bật sửa username hay đặt quy ước username không chứa tên thật.
+- OQ F016-11: `createDataRequest` do System Admin (MFA) ghi nhận được coi là đã duyệt và chạy saga ngay (không có bước duyệt riêng trong contract); `request_type = export` trả `422` vì xuất dữ liệu ngoài phạm vi (ADR-0082). Ánh xạ trạng thái: pending→received, approved→in_progress, executed→completed.
+- OQ F016-12: Job `retention-anonymizer` tính `student_data_retention` (365 ngày, CONFIG_DEFAULTS) từ lần đổi sang `deactivated` gần nhất trong lịch sử trạng thái, không có lịch sử thì dùng `users.updated_at`; mỗi lần chạy tối đa 100 học sinh [Proposed].
+- OQ F016-13: Khi khôi phục lúc đăng nhập, identity được khôi phục trước; nếu facade một module tạm lỗi, đăng nhập vẫn thành công, saga thử lại bước đó và module tự khôi phục khi nhận `student.restored` (ACCOUNT_PROVISIONING §6b.1).
 
 ## User Scenarios & Testing *(bắt buộc)*
 

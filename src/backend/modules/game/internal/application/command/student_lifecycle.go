@@ -60,3 +60,10 @@ func (h StudentLifecycle) Restore(ctx context.Context, _ uuid.UUID) (string, err
 	done(nil)
 	return LifecycleNothingToDo, nil
 }
+
+// Anonymize answers anonymizeUserData: no personal data of module game to overwrite yet (F070+ extends it).
+func (h StudentLifecycle) Anonymize(ctx context.Context, _ uuid.UUID) (string, error) {
+	_, done := observability.UseCase(ctx, "game.command.AnonymizeUserData")
+	done(nil)
+	return LifecycleNothingToDo, nil
+}

@@ -66,3 +66,18 @@ func (a *Admin) EnableUser(ctx context.Context, userID string) error {
 	_, err := a.call(ctx, "enable_user", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
 	return err
 }
+
+// AnonymizeUser disables the user and clears its profile (F016 US5): email, first/last name and attributes.
+// The username stays (realm editUsernameAllowed false, OQ F016-10); the user is never deleted.
+func (a *Admin) AnonymizeUser(ctx context.Context, userID string) error {
+	var cur map[string]any
+	if _, err := a.call(ctx, "get_user", http.MethodGet, "/users/"+url.PathEscape(userID), nil, &cur, true); err != nil {
+		return err
+	}
+	cur["enabled"] = false
+	cur["email"], cur["firstName"], cur["lastName"] = "", "", ""
+	cur["emailVerified"] = false
+	cur["attributes"] = map[string]any{}
+	_, err := a.call(ctx, "anonymize_user", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
+	return err
+}

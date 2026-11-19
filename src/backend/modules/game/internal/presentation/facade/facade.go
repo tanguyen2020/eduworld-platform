@@ -37,3 +37,14 @@ func (f Facade) RestoreStudentData(ctx context.Context, req api.RestoreStudentDa
 	}
 	return api.RestoreStudentData200JSONResponse{StudentId: req.StudentId, Status: api.CommonInternalCommonV1StudentLifecycleResultStatus(status)}, nil
 }
+
+// AnonymizeUserData implements gameapi.StrictServerInterface (x-allowed-callers: identity, F016 US5). Module
+// game keeps no personal data of a student yet (nickname, avatar and inventory arrive with F070+; the login
+// events are anonymized by their own retention, DATA_PRIVACY §2), so the step has nothing to do.
+func (f Facade) AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error) {
+	status, err := f.Lifecycle.Anonymize(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return api.AnonymizeUserData200JSONResponse{UserId: req.UserId, Status: api.CommonInternalCommonV1UserLifecycleResultStatus(status)}, nil
+}

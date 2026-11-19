@@ -16,7 +16,7 @@ const KeycloakAccessName = "identity.keycloak_access"
 
 // KeycloakAccessSubjects are the events it handles.
 var KeycloakAccessSubjects = []string{"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.access_restored",
-	"ew.evt.identity.student.cleaned_up"}
+	"ew.evt.identity.student.cleaned_up", "ew.evt.identity.user.anonymized"}
 
 // KeycloakAccess dispatches the events to command.KeycloakAccess.
 type KeycloakAccess struct {
@@ -44,6 +44,8 @@ func (c KeycloakAccess) Handle(ctx context.Context, e outbox.Envelope) error {
 		return c.Access.Restored(ctx, p.UserID)
 	case "student.cleaned_up":
 		return c.Access.CleanedUp(ctx, p.UserID)
+	case "user.anonymized":
+		return c.Access.Anonymized(ctx, p.UserID)
 	}
 	return outbox.Permanent(fmt.Errorf("unexpected event %s", e.EventType))
 }

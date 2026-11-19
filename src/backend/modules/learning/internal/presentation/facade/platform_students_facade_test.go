@@ -24,7 +24,11 @@ func TestPlatformStudentsFacade(t *testing.T) {
 	if v, ok := r.(learningapi.RestoreStudentData200JSONResponse); err != nil || !ok || v.Status != "nothing_to_do" {
 		t.Fatalf("restore: %+v %v", r, err)
 	}
-	for _, o := range []string{"cleanupStudentData", "restoreStudentData"} {
+	a, err := f.AnonymizeUserData(context.Background(), learningapi.AnonymizeUserDataRequestObject{UserId: id, Body: &learningapi.AnonymizeUserDataJSONRequestBody{ErasureRequestId: uuid.New(), Reason: "legal_order"}})
+	if v, ok := a.(learningapi.AnonymizeUserData200JSONResponse); err != nil || !ok || v.Status != "nothing_to_do" {
+		t.Fatalf("anonymize: %+v %v", a, err)
+	}
+	for _, o := range []string{"cleanupStudentData", "restoreStudentData", "anonymizeUserData"} {
 		if c := learningapi.AllowedCallers[o]; len(c) != 1 || c[0] != "identity" {
 			t.Fatalf("x-allowed-callers %s: %v", o, c)
 		}

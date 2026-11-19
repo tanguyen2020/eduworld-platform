@@ -18,6 +18,7 @@ type LifecycleHandlers struct {
 	Lifecycle     command.UserLifecycle
 	ResetPassword command.ResetStudentPassword
 	Cleanup       command.StudentCleanup
+	Anonymize     command.UserAnonymize
 }
 
 func lifecycleOp(id, method, pattern string, tenant httpx.TenantMode, status int) httpx.Operation {
@@ -37,6 +38,9 @@ var LifecycleOperations = map[string]httpx.Operation{
 	"deleteStudentCleanupExclusions": portalOp2("deleteStudentCleanupExclusions", http.MethodDelete, "/tenant/student-cleanup/exclusions", httpx.TenantRequired, httpx.IdempotencyNone, 204),
 	"listStudentCleanupRuns":         portalOp2("listStudentCleanupRuns", http.MethodGet, "/admin/student-cleanup/runs", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"approveStudentCleanupRun":       lifecycleOp("approveStudentCleanupRun", http.MethodPost, "/admin/student-cleanup/runs/{run_id}:approve", httpx.TenantOptional, 202),
+	"createDataRequest":              lifecycleOp("createDataRequest", http.MethodPost, "/admin/data-requests", httpx.TenantRequired, 202),
+	"listDataRequests":               portalOp2("listDataRequests", http.MethodGet, "/admin/data-requests", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"getDataRequest":                 portalOp2("getDataRequest", http.MethodGet, "/admin/data-requests/{data_request_id}", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 
 // RegisterLifecycle mounts the F016 operations.
@@ -56,6 +60,9 @@ func RegisterLifecycle(s *httpx.Server, h LifecycleHandlers) error {
 		"deleteStudentCleanupExclusions": h.exclusions(true),
 		"listStudentCleanupRuns":         h.listStudentCleanupRuns,
 		"approveStudentCleanupRun":       h.approveStudentCleanupRun,
+		"createDataRequest":              h.createDataRequest,
+		"listDataRequests":               h.listDataRequests,
+		"getDataRequest":                 h.getDataRequest,
 	}
 	for id, fn := range routes {
 		o, ok := LifecycleOperations[id]
@@ -189,4 +196,49 @@ func (h LifecycleHandlers) approveStudentCleanupRun(w http.ResponseWriter, r *ht
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func (h LifecycleHandlers) createDataRequest(w http.ResponseWriter, r *http.Request) {
+	var b command.DataRequestInput
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.Anonymize.CreateDataRequest(r.Context(), b)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusAccepted, out)
+}
+
+func (h LifecycleHandlers) listDataRequests(w http.ResponseWriter, r *http.Request) {
+	tenants, err := uuidsParam(r, "tenant_ids")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	data, err := h.Anonymize.ListDataRequests(r.Context(), tenants, r.URL.Query().Get("status"), queryInt(r, "limit"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, struct {
+		Data []command.DataRequestView `json:"data"`
+		Page page.Info                 `json:"page"`
+	}{Data: data, Page: page.Info{Limit: page.Limit(queryInt(r, "limit"))}})
+}
+
+func (h LifecycleHandlers) getDataRequest(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "data_request_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.Anonymize.GetDataRequest(r.Context(), id)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }

@@ -30,7 +30,7 @@ const (
 
 // CleanupMetrics records eduworld_student_cleanup_total{result} and the large-batch alert.
 type CleanupMetrics interface {
-	Cleanup(result string, n int)
+	Cleanup(tenant uuid.UUID, result string, n int)
 	LargeBatch(tenant uuid.UUID)
 }
 
@@ -245,8 +245,8 @@ func (h StudentCleanup) RunTenant(ctx context.Context, tenant uuid.UUID) (out *w
 		}
 	}
 	if h.Metrics != nil {
-		h.Metrics.Cleanup("cleaned", run.Cleaned)
-		h.Metrics.Cleanup("skipped_active", run.SkippedActive)
+		h.Metrics.Cleanup(tenant, "cleaned", run.Cleaned)
+		h.Metrics.Cleanup(tenant, "skipped_active", run.SkippedActive)
 	}
 	finished := h.now()
 	run.Status, run.FinishedAt = "completed", &finished

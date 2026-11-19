@@ -113,3 +113,18 @@ type StudentDataParticipant interface {
 	Cleanup(ctx context.Context, studentID, runID uuid.UUID, lastLogin *time.Time) (StudentDataResult, error)
 	Restore(ctx context.Context, studentID uuid.UUID, viaLogin bool) (StudentDataResult, error)
 }
+
+// UserDataAnonymizer is a module taking part in the user_anonymize saga through its facade
+// (anonymizeUserData, F016-AC-20, AC-21). The tenant scope and the step Idempotency-Key are on ctx; reason is
+// data_subject_request | retention_expired | legal_order.
+type UserDataAnonymizer interface {
+	Name() string
+	Anonymize(ctx context.Context, userID, erasureID uuid.UUID, reason string) (StudentDataResult, error)
+}
+
+// KeycloakAnonymizer disables a Keycloak user and clears its profile (email, first and last name,
+// attributes) after an anonymization; the username stays because the realm does not allow editing it
+// (editUsernameAllowed false, [Proposed] OQ F016-10).
+type KeycloakAnonymizer interface {
+	AnonymizeUser(ctx context.Context, userID string) error
+}

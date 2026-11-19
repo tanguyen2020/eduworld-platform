@@ -27,3 +27,12 @@ func (f Facade) RestoreStudentData(ctx context.Context, req learningapi.RestoreS
 	return learningapi.RestoreStudentData200JSONResponse{StudentId: req.StudentId,
 		Status: learningapi.CommonInternalCommonV1StudentLifecycleResultStatus("nothing_to_do")}, nil
 }
+
+// AnonymizeUserData implements learningapi.StrictServerInterface (x-allowed-callers: identity, F016 US5):
+// no attempt, answer or mastery row exists yet (F030+), the ref.* projections follow user.anonymized.
+func (f Facade) AnonymizeUserData(ctx context.Context, req learningapi.AnonymizeUserDataRequestObject) (learningapi.AnonymizeUserDataResponseObject, error) {
+	_, done := observability.UseCase(ctx, "learning.facade.AnonymizeUserData")
+	done(nil)
+	return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId,
+		Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("nothing_to_do")}, nil
+}

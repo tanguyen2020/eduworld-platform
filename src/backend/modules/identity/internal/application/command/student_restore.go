@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -76,57 +77,60 @@ func (h StudentRestore) Definition() saga.Definition {
 				return saga.Result{Outcome: r.Status, Response: map[string]any{"status": r.Status}}, err
 			}})
 	}
-	def.Finish = func(ctx context.Context, run write.SagaRun) error {
-		s, err := subj(run)
-		if err != nil {
-			return problem.New(problem.ValidationFailed, "saga subject").Wrap(err)
-		}
-		tctx, err := tenantCtx(ctx, s.TenantID)
-		if err != nil {
-			return err
-		}
-		return h.UoW.Do(tctx, func(ctx context.Context) error {
-			at, err := h.Repo.RestoreStudent(ctx, s.StudentID)
-			if err != nil || at == nil {
-				return err // already restored: idempotent
-			}
-			tenant := s.TenantID
-			if err := h.Lifecycle.RecordStatusChange(ctx, write.StatusChange{UserID: s.StudentID, TenantID: &tenant, From: "cleaned_up",
-				To: "active", Source: "restore", Reason: "restored_via_" + s.Via}); err != nil {
-				return err
-			}
-			if err := h.Events.Publish(ctx, write.Event{Type: "student.restored", SubjectType: "student", SubjectID: s.StudentID.String(),
-				TenantID: &tenant, Payload: map[string]any{"student_id": s.StudentID, "tenant_id": tenant,
-					"cleaned_up_at": at.UTC().Format(time.RFC3339), "restored_via": s.Via}}); err != nil {
-				return err
-			}
-			if err := h.Events.Publish(ctx, write.Event{Type: "tenant_membership.changed", SubjectType: "user", SubjectID: s.StudentID.String(),
-				TenantID: &tenant, Payload: map[string]any{"user_id": s.StudentID, "tenant_id": tenant, "op": "added",
-					"source": "inactive_cleanup_restore", "user_type": "student"}}); err != nil {
-				return err
-			}
-			return h.Audit.Record(ctx, audit.Event{Action: "student.restored", TargetType: "student", TargetID: s.StudentID.String(),
-				Result: audit.ResultSuccess, Reason: "inactive_cleanup_restore", Metadata: map[string]any{"restored_via": s.Via, "saga_id": run.ID.String()}})
-		})
-	}
+	// Identity is restored before the saga starts (restoreIdentity); nothing is left for the end of the saga.
+	def.Finish = func(context.Context, write.SagaRun) error { return nil }
 	return def
 }
 
-// run starts (or joins) the restore saga of one cleanup of the student: the idempotency key carries the
-// cleanup time, so concurrent logins share one run and a later cleanup gets a new one.
+// restoreIdentity clears the inactive_cleanup soft-delete of the student in one transaction of its tenant and
+// publishes student.restored + tenant_membership.changed (added); false when it was already restored.
+func (h StudentRestore) restoreIdentity(ctx context.Context, tenant, student uuid.UUID, via string, by *uuid.UUID) (bool, error) {
+	tctx, err := tenantCtx(ctx, tenant)
+	if err != nil {
+		return false, err
+	}
+	restored := false
+	err = h.UoW.Do(tctx, func(ctx context.Context) error {
+		at, err := h.Repo.RestoreStudent(ctx, student)
+		if err != nil || at == nil {
+			return err // already restored: idempotent
+		}
+		restored = true
+		if err := h.Lifecycle.RecordStatusChange(ctx, write.StatusChange{UserID: student, TenantID: &tenant, From: "cleaned_up",
+			To: "active", Source: "restore", Reason: "restored_via_" + via, By: by}); err != nil {
+			return err
+		}
+		if err := h.Events.Publish(ctx, write.Event{Type: "student.restored", SubjectType: "student", SubjectID: student.String(),
+			TenantID: &tenant, Payload: map[string]any{"student_id": student, "tenant_id": tenant,
+				"cleaned_up_at": at.UTC().Format(time.RFC3339), "restored_via": via}}); err != nil {
+			return err
+		}
+		if err := h.Events.Publish(ctx, write.Event{Type: "tenant_membership.changed", SubjectType: "user", SubjectID: student.String(),
+			TenantID: &tenant, Payload: map[string]any{"user_id": student, "tenant_id": tenant, "op": "added",
+				"source": "inactive_cleanup_restore", "user_type": "student"}}); err != nil {
+			return err
+		}
+		return h.Audit.Record(ctx, audit.Event{Action: "student.restored", TargetType: "student", TargetID: student.String(),
+			Result: audit.ResultSuccess, Reason: "inactive_cleanup_restore", Metadata: map[string]any{"restored_via": via}})
+	})
+	return restored, err
+}
+
+// run restores identity, then starts (or joins) the restore saga over the participants. The idempotency key
+// carries the cleanup time, so concurrent logins share one run and a later cleanup gets a new one. A
+// participant that is temporarily unavailable does not fail the restore (OQ F016-13): the saga-retry job
+// resumes the run and every module also reacts to student.restored.
 func (h StudentRestore) run(ctx context.Context, tenant, student uuid.UUID, cleanedAt time.Time, via string, by *uuid.UUID) error {
+	if _, err := h.restoreIdentity(ctx, tenant, student, via, by); err != nil {
+		return err
+	}
 	subject := restoreSubject{StudentID: student, TenantID: tenant, CleanedUpAt: cleanedAt.UTC(), Via: via}
 	key := fmt.Sprintf("restore:%s:%d", student, cleanedAt.UnixMicro())
 	o, err := h.Saga.Start(ctx, h.Definition(), &tenant, subject, key, by)
-	switch {
-	case err != nil:
-		return err
-	case o.Status == saga.StatusSucceeded:
-		return nil
-	case o.Status == saga.StatusRunning:
-		return problem.New(problem.Unavailable, "").Retry().Wrap(fmt.Errorf("student restore %s retries later", o.Run.ID))
+	if err != nil || o.Status != saga.StatusSucceeded {
+		slog.WarnContext(ctx, "student restore saga not finished", "saga_status", o.Status, "error", err)
 	}
-	return problem.New(problem.Unavailable, "").Wrap(fmt.Errorf("student restore %s ended %s", o.Run.ID, o.Status))
+	return nil
 }
 
 // RestoreStudentByAdmin restores a cleaned-up student from the tenant trash (F016-AC-19). The caller

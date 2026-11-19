@@ -22,3 +22,6 @@ func StudentInactiveCleanup(c command.StudentCleanup) RunOnce { return c.RunAll 
 func SagaRetry(e saga.Engine, defs map[string]saga.Definition) RunOnce {
 	return func(ctx context.Context) (int, error) { return e.ResumeDue(ctx, defs, 100, SagaStuckAfter) }
 }
+
+// RetentionAnonymizer is the job retention-anonymizer (F016 US5, NFR-PRIV-003).
+func RetentionAnonymizer(c command.UserAnonymize) RunOnce { return c.RunRetention }

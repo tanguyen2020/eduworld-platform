@@ -141,3 +141,63 @@ func (l Learning) Restore(ctx context.Context, student uuid.UUID, viaLogin bool)
 	}
 	return result(string(v.Status), nil), nil
 }
+
+// GameAnonymizer is the subset of the game facade used by the user_anonymize saga.
+type GameAnonymizer interface {
+	AnonymizeUserData(ctx context.Context, req gameapi.AnonymizeUserDataRequestObject) (gameapi.AnonymizeUserDataResponseObject, error)
+}
+
+// LearningAnonymizer is the subset of the learning facade used by the user_anonymize saga.
+type LearningAnonymizer interface {
+	AnonymizeUserData(ctx context.Context, req learningapi.AnonymizeUserDataRequestObject) (learningapi.AnonymizeUserDataResponseObject, error)
+}
+
+// GameAnonymize adapts anonymizeUserData of the game facade (F016 US5).
+type GameAnonymize struct{ F GameAnonymizer }
+
+var _ port.UserDataAnonymizer = GameAnonymize{}
+
+// Name implements port.UserDataAnonymizer.
+func (GameAnonymize) Name() string { return "game" }
+
+// Anonymize implements port.UserDataAnonymizer.
+func (g GameAnonymize) Anonymize(ctx context.Context, user, erasure uuid.UUID, reason string) (port.StudentDataResult, error) {
+	body := gameapi.AnonymizeUserDataJSONRequestBody{ErasureRequestId: erasure, Reason: gameapi.CommonInternalCommonV1UserAnonymizeRequestReason(reason)}
+	resp, err := modcall.Call(ctx, op("game", "anonymizeUserData", gameapi.AllowedCallers, gameapi.ContextRequired),
+		func(ctx context.Context) (gameapi.AnonymizeUserDataResponseObject, error) {
+			return g.F.AnonymizeUserData(ctx, gameapi.AnonymizeUserDataRequestObject{UserId: user, Body: &body})
+		})
+	if err != nil {
+		return port.StudentDataResult{}, err
+	}
+	v, ok := resp.(gameapi.AnonymizeUserData200JSONResponse)
+	if !ok {
+		return port.StudentDataResult{}, fmt.Errorf("game anonymizeUserData: unexpected response %T", resp)
+	}
+	return result(string(v.Status), v.BlockedReason), nil
+}
+
+// LearningAnonymize adapts anonymizeUserData of the learning facade (F016 US5).
+type LearningAnonymize struct{ F LearningAnonymizer }
+
+var _ port.UserDataAnonymizer = LearningAnonymize{}
+
+// Name implements port.UserDataAnonymizer.
+func (LearningAnonymize) Name() string { return "learning" }
+
+// Anonymize implements port.UserDataAnonymizer.
+func (l LearningAnonymize) Anonymize(ctx context.Context, user, erasure uuid.UUID, reason string) (port.StudentDataResult, error) {
+	body := learningapi.AnonymizeUserDataJSONRequestBody{ErasureRequestId: erasure, Reason: learningapi.CommonInternalCommonV1UserAnonymizeRequestReason(reason)}
+	resp, err := modcall.Call(ctx, op("learning", "anonymizeUserData", learningapi.AllowedCallers, learningapi.ContextRequired),
+		func(ctx context.Context) (learningapi.AnonymizeUserDataResponseObject, error) {
+			return l.F.AnonymizeUserData(ctx, learningapi.AnonymizeUserDataRequestObject{UserId: user, Body: &body})
+		})
+	if err != nil {
+		return port.StudentDataResult{}, err
+	}
+	v, ok := resp.(learningapi.AnonymizeUserData200JSONResponse)
+	if !ok {
+		return port.StudentDataResult{}, fmt.Errorf("learning anonymizeUserData: unexpected response %T", resp)
+	}
+	return result(string(v.Status), v.BlockedReason), nil
+}

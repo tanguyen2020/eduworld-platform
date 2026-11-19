@@ -138,7 +138,7 @@ Metric bổ sung:
 | `eduworld_game_access_denied_total` (`reason`: not_student) | Tài khoản không phải học sinh cố vào game |
 | `eduworld_game_session_start_total` (`result`: created/takeover/conflict/denied/curfew/client_version_unsupported/maintenance/not_projected/error), `eduworld_game_session_start_duration_seconds` (histogram) | Kết quả và thời gian `createGameSession` (SLO `login_slo` phía module game, F014) |
 | `eduworld_game_projection_lag_seconds` (`table`), `eduworld_game_consumer_rejected_total` (`consumer`, `reason`) | Projection `ref.*` và consumer của module game (F014; tên riêng module vì `eduworld_projection_lag_seconds` đã được module learning đăng ký với label khác — OQ F014-6) |
-| `eduworld_student_cleanup_total` (`tenant`, `result`: cleaned/excluded/skipped_active/restored), `eduworld_student_cleanup_candidates` (gauge, `tenant`) | Worker dọn học sinh (ADR-0032) |
+| `eduworld_student_cleanup_total` (`tenant`, `result`: cleaned/excluded/skipped_active/restored), `eduworld_student_cleanup_candidates` (gauge, `tenant`), `eduworld_student_cleanup_large_batch_total` (`tenant`; lần chạy vượt ngưỡng chờ duyệt — F016) | Worker dọn học sinh (ADR-0032) |
 | `eduworld_chat_purge_total` (`tenant`, `kind`: gameplay/ephemeral), `eduworld_chat_purge_backlog_days` (gauge), `eduworld_chat_purge_last_success_timestamp` | Purge chat gameplay (ADR-0033) |
 | `eduworld_ratelimit_rejected_total` (`policy`) | Lạm dụng |
 | `eduworld_anticheat_flags_total` (`rule`) | Anti-cheat ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)) |
@@ -245,7 +245,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `ChatModerationDisabled` | `eduworld_chat_policy_disabled == 1` cho bất kỳ tenant/bước nào | Warning (ngay khi tắt) | Xác nhận với System Admin đã tắt, kiểm tra lý do và `expires_at` (ADR-0030) |
 | `ChatModerationDisabledLong` | `eduworld_chat_policy_disabled == 1` liên tục > 24 h, hoặc bước `pii` tắt > 4 h | Critical | Báo quản lý vận hành và Tenant Admin; đề xuất bật lại |
 | `SensitiveCatalogVersionSkew` | Các node chạy `catalog_version` khác nhau > 5 phút | Warning | Kiểm tra pub/sub `ew:chat:sensitive:version`, reload lỗi |
-| `StudentCleanupLargeBatch` | Một lần chạy dọn > 10% học sinh của tenant (`status = awaiting_approval`) | Warning | System Admin xem và xác nhận/hủy (ADR-0032) |
+| `StudentCleanupLargeBatch` | Một lần chạy dọn > 10% học sinh của tenant (`status = awaiting_approval`) — `increase(eduworld_student_cleanup_large_batch_total[1h]) > 0` | Warning | System Admin xem và xác nhận/hủy (ADR-0032) |
 | `StudentCleanupJobFailed` | Job lỗi hoặc không chạy thành công > 48 h | Warning | Kiểm tra `worker-jobs` |
 | `ChatJetStreamUnavailable` | `rate(eduworld_chat_jetstream_publish_errors_total[5m]) > 0.05 * rate(eduworld_chat_messages_total[5m])` trong 5' hoặc NATS cluster mất quorum | Critical | Chat không gửi được (`CHAT_TEMPORARILY_UNAVAILABLE`); kiểm tra NATS cluster |
 | `ChatPersistLagHigh` | `histogram_quantile(0.95, eduworld_chat_persist_lag_seconds) > 5` trong 10' hoặc `nats_consumer_num_pending{consumer="persister"} > 10000` | Warning | Kiểm tra `chat-persister`, PostgreSQL; JetStream giữ 72 h nên còn thời gian xử lý |

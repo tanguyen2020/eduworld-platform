@@ -77,9 +77,26 @@ func TestParticipantsFacade(t *testing.T) {
 	if _, err := (Game{F: failing}).Cleanup(ctx, student, run, nil); problem.From(err, "").Code != problem.Unavailable {
 		t.Fatalf("facade error: %v", err)
 	}
+	// anonymizeUserData: erasure id and reason passed through, status mapped.
+	erasure := uuid.New()
+	gameAnon := &gameapi.Fake{AnonymizeUserDataFunc: func(_ context.Context, r gameapi.AnonymizeUserDataRequestObject) (gameapi.AnonymizeUserDataResponseObject, error) {
+		if r.UserId != student || r.Body.ErasureRequestId != erasure || r.Body.Reason != "retention_expired" {
+			t.Fatalf("anonymize request: %+v", r.Body)
+		}
+		return gameapi.AnonymizeUserData200JSONResponse{UserId: student, Status: "done"}, nil
+	}}
+	if r, err := (GameAnonymize{F: gameAnon}).Anonymize(ctx, student, erasure, "retention_expired"); err != nil || r.Status != "done" {
+		t.Fatalf("game anonymize: %+v %v", r, err)
+	}
+	learnAnon := &learningapi.Fake{AnonymizeUserDataFunc: func(_ context.Context, _ learningapi.AnonymizeUserDataRequestObject) (learningapi.AnonymizeUserDataResponseObject, error) {
+		return learningapi.AnonymizeUserData200JSONResponse{UserId: student, Status: "nothing_to_do"}, nil
+	}}
+	if r, err := (LearningAnonymize{F: learnAnon}).Anonymize(ctx, student, erasure, "data_subject_request"); err != nil || r.Status != "nothing_to_do" {
+		t.Fatalf("learning anonymize: %+v %v", r, err)
+	}
 	// Only module identity may call the lifecycle operations of game and learning.
 	for _, ops := range []map[string][]string{gameapi.AllowedCallers, learningapi.AllowedCallers} {
-		for _, o := range []string{"cleanupStudentData", "restoreStudentData"} {
+		for _, o := range []string{"cleanupStudentData", "restoreStudentData", "anonymizeUserData"} {
 			if len(ops[o]) != 1 || ops[o][0] != "identity" {
 				t.Fatalf("x-allowed-callers %s: %v", o, ops[o])
 			}

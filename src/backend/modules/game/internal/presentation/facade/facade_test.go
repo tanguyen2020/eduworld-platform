@@ -65,7 +65,11 @@ func TestStudentLifecycleFacade(t *testing.T) {
 	if v, ok := r.(api.RestoreStudentData200JSONResponse); err != nil || !ok || v.Status != "nothing_to_do" {
 		t.Fatalf("restore: %+v %v", r, err)
 	}
-	for _, o := range []string{"cleanupStudentData", "restoreStudentData"} {
+	a, err := f.AnonymizeUserData(ctx, api.AnonymizeUserDataRequestObject{UserId: idle, Body: &api.AnonymizeUserDataJSONRequestBody{ErasureRequestId: uuid.New(), Reason: "data_subject_request"}})
+	if v, ok := a.(api.AnonymizeUserData200JSONResponse); err != nil || !ok || v.Status != "nothing_to_do" {
+		t.Fatalf("anonymize: %+v %v", a, err)
+	}
+	for _, o := range []string{"cleanupStudentData", "restoreStudentData", "anonymizeUserData"} {
 		if c := api.AllowedCallers[o]; len(c) != 1 || c[0] != "identity" {
 			t.Fatalf("x-allowed-callers %s: %v", o, c)
 		}
