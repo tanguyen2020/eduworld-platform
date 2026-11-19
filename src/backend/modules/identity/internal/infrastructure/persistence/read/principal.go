@@ -271,3 +271,58 @@ func (m PrincipalModel) CheckMembers(ctx context.Context, tenantID uuid.UUID, us
 	})
 	return out, err
 }
+
+var _ read.MeReadModel = PrincipalModel{}
+
+// MyTenants returns the memberships of one user in every active tenant (the user's own data on the login
+// path; explicit user condition) with its valid tenant role codes.
+func (m PrincipalModel) MyTenants(ctx context.Context, userID uuid.UUID) (out []read.MyTenantRow, platform bool, err error) {
+	err = m.read(ctx, func(tx *sql.Tx) error {
+		// tenancyguard:ok the session user's own memberships across tenants (ADR-0067); explicit user, status and deleted_at conditions
+		rows, err := tx.QueryContext(ctx, `SELECT t.tenant_id, t.code, t.name, t.tenant_type, t.status,
+				coalesce((SELECT string_agg(DISTINCT r.code, ',') FROM identity.user_roles ur
+					JOIN identity.roles r ON r.role_id = ur.role_id AND r.deleted_at IS NULL
+					WHERE ur.user_id = $1 AND ur.tenant_id = t.tenant_id AND ur.deleted_at IS NULL
+					  AND ur.valid_from <= now() AND (ur.valid_to IS NULL OR ur.valid_to > now())), '')
+			FROM (SELECT DISTINCT tenant_id FROM identity.tenant_memberships_v WHERE user_id = $1) m
+			JOIN platform.tenants t ON t.tenant_id = m.tenant_id AND t.status = 'active' AND t.deleted_at IS NULL
+			ORDER BY t.name, t.tenant_id`, userID)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var r read.MyTenantRow
+			var roles string
+			if err := rows.Scan(&r.TenantID, &r.Code, &r.Name, &r.TenantType, &r.Status, &roles); err != nil {
+				return err
+			}
+			if roles != "" {
+				r.RoleCodes = strings.Split(roles, ",")
+			}
+			out = append(out, r)
+		}
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		// tenancyguard:ok platform user roles have tenant_id NULL; explicit user, validity and deleted_at conditions
+		return tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM identity.user_roles WHERE user_id = $1 AND tenant_id IS NULL
+			AND deleted_at IS NULL AND valid_from <= now() AND (valid_to IS NULL OR valid_to > now()))`, userID).Scan(&platform)
+	})
+	return out, platform, err
+}
+
+// DisplayName returns the display name of a live user.
+func (m PrincipalModel) DisplayName(ctx context.Context, userID uuid.UUID) (out string, err error) {
+	err = m.read(ctx, func(tx *sql.Tx) error {
+		var name sql.NullString
+		// tenancyguard:ok identity.users is global (G, no tenant_id)
+		err := tx.QueryRowContext(ctx, `SELECT display_name FROM identity.users WHERE user_id = $1 AND deleted_at IS NULL`, userID).Scan(&name)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		out = name.String
+		return err
+	})
+	return out, err
+}

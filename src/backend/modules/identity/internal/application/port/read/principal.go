@@ -64,3 +64,22 @@ type MemberRow struct {
 type MembershipChecker interface {
 	CheckMembers(ctx context.Context, tenantID uuid.UUID, userIDs []uuid.UUID, schoolID, classID *uuid.UUID) ([]MemberRow, error)
 }
+
+// MyTenantRow is one tenant of the session user (listMyTenants).
+type MyTenantRow struct {
+	TenantID   uuid.UUID
+	Code       string
+	Name       string
+	TenantType string
+	Status     string
+	RoleCodes  []string
+}
+
+// MeReadModel reads the session user's own data across tenants (the login path, ADR-0067).
+type MeReadModel interface {
+	// MyTenants returns the active tenants where the user is a member, with its valid tenant role codes,
+	// and whether it holds a valid platform role.
+	MyTenants(ctx context.Context, userID uuid.UUID) (rows []MyTenantRow, hasPlatformRole bool, err error)
+	// DisplayName returns the display name of a live user ("" when unknown).
+	DisplayName(ctx context.Context, userID uuid.UUID) (string, error)
+}

@@ -36,6 +36,7 @@ type Handlers struct {
 	SisImports           query.SisImports               // F011
 	SisAdmin             query.SisAdmin                 // F011
 	SisConnections       SisConnectionsHandler          // F011 (command.SisConnections)
+	Me                   query.Me                       // F012
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -81,7 +82,11 @@ var Operations = map[string]httpx.Operation{
 	"setSisConnectionSchools":       op("setSisConnectionSchools", http.MethodPut, "/admin/sis/connections/{connection_id}/schools", httpx.TenantOptional, httpx.IdempotencyRequired, 200),
 	"listSisSyncRuns":               op("listSisSyncRuns", http.MethodGet, "/sis/connections/{connection_id}/sync-runs", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"getSisSyncRun":                 op("getSisSyncRun", http.MethodGet, "/sis/runs/{run_id}", httpx.TenantNone, httpx.IdempotencyNone, 200),
-	"listSisSyncRunErrors":          op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	// F012
+	"listMyTenants":        op("listMyTenants", http.MethodGet, "/me/tenants", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"getMyPermissions":     withGuard(op("getMyPermissions", http.MethodGet, "/me/permissions", httpx.TenantOptional, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"getMe":                withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"listSisSyncRunErrors": op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 
 func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {
@@ -121,6 +126,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn(h)
 	}
 	for id, fn := range sisAdminOperations {
+		routes[id] = fn(h)
+	}
+	for id, fn := range meOperations {
 		routes[id] = fn(h)
 	}
 	for id, fn := range routes {
