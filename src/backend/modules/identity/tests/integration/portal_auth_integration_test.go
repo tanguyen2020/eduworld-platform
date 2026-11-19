@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/keycloak"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
@@ -44,7 +46,9 @@ type fakeKeycloak struct {
 	sidAMR  map[string][]string
 	seq     int
 	logouts int
-	setup   map[string]bool // username → required actions pending
+	actions map[string][]string // username → Keycloak required actions (setup pending when not empty)
+	emails  int                 // execute-actions-email CONFIGURE_TOTP
+	kicked  int                 // Admin logout of every session of a user
 }
 
 type fakeKCUser struct {
@@ -80,6 +84,15 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, _ := url.ParseQuery(string(raw))
 	k.mu.Lock()
 	defer k.mu.Unlock()
+	if f.Get("grant_type") == "client_credentials" && f.Get("client_id") == "svc-identity" && f.Get("client_secret") == "svc-secret" {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "admin-tok", "expires_in": 300})
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/admin/realms/eduworld/") {
+		k.adminAPI(w, r, raw)
+		return
+	}
 	if f.Get("client_id") != "eduworld-portal" || f.Get("client_secret") != "portal-secret" {
 		oauthErr(w, 401, "invalid_client", "Invalid client or Invalid client credentials")
 		return
@@ -116,7 +129,7 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			oauthErr(w, 401, "invalid_grant", "Invalid user credentials")
 			return
 		}
-		if k.setup[f.Get("username")] {
+		if len(k.actions[f.Get("username")]) > 0 {
 			oauthErr(w, 400, "invalid_grant", "Account is not fully set up")
 			return
 		}
@@ -140,6 +153,92 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// adminAPI is the TEST FAKE Admin API of svc-identity (Keycloak 26 paths): users by username/email, required
+// actions, reset-password with a minimum-length realm policy, execute-actions-email, logout of a user.
+// Keycloak user ids are "kc-<username>"; staff emails are "<username>@test.vn" (staffUser).
+func (k *fakeKeycloak) adminAPI(w http.ResponseWriter, r *http.Request, body []byte) {
+	if r.Header.Get("Authorization") != "Bearer admin-tok" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	p := strings.TrimPrefix(r.URL.Path, "/admin/realms/eduworld")
+	rep := func(u string) map[string]any {
+		return map[string]any{"id": "kc-" + u, "username": u, "email": u + "@test.vn", "enabled": true, "requiredActions": k.actions[u]}
+	}
+	switch {
+	case r.Method == http.MethodGet && p == "/users":
+		out := []map[string]any{}
+		q := r.URL.Query()
+		for u := range k.users {
+			if q.Get("username") == u || q.Get("email") == u+"@test.vn" {
+				out = append(out, rep(u))
+			}
+		}
+		_ = json.NewEncoder(w).Encode(out)
+		return
+	case !strings.HasPrefix(p, "/users/kc-"):
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	rest := strings.TrimPrefix(p, "/users/kc-")
+	user, action, _ := strings.Cut(rest, "/")
+	if _, ok := k.users[user]; !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	switch {
+	case action == "" && r.Method == http.MethodGet:
+		_ = json.NewEncoder(w).Encode(rep(user))
+	case action == "" && r.Method == http.MethodPut:
+		var u struct {
+			RequiredActions []string `json:"requiredActions"`
+		}
+		_ = json.Unmarshal(body, &u)
+		k.actions[user] = u.RequiredActions
+		w.WriteHeader(http.StatusNoContent)
+	case action == "reset-password":
+		var c struct {
+			Value     string `json:"value"`
+			Temporary bool   `json:"temporary"`
+		}
+		_ = json.Unmarshal(body, &c)
+		if len(c.Value) < 10 || c.Temporary {
+			oauthErr(w, 400, "invalidPasswordMinLengthMessage", "Invalid password: minimum length 10.")
+			return
+		}
+		u := k.users[user]
+		u.password = c.Value
+		k.users[user] = u
+		w.WriteHeader(http.StatusNoContent)
+	case action == "execute-actions-email":
+		k.emails++
+		w.WriteHeader(http.StatusNoContent)
+	case action == "logout":
+		k.kicked++
+		for rt, sid := range k.refresh {
+			if k.sidUser[sid] == user {
+				delete(k.refresh, rt)
+			}
+		}
+		w.WriteHeader(http.StatusNoContent)
+	default:
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+// captureMailer is a TEST FAKE of port.Mailer (the SMTP adapter is tested against a fake SMTP server).
+type captureMailer struct {
+	mu   sync.Mutex
+	sent []port.PasswordResetMail
+}
+
+func (m *captureMailer) SendPasswordReset(_ context.Context, mail port.PasswordResetMail) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.sent = append(m.sent, mail)
+	return nil
+}
+
 type portalIntegration struct {
 	*env
 	kc      *fakeKeycloak
@@ -148,6 +247,7 @@ type portalIntegration struct {
 	srv     *httptest.Server
 	metrics *portalmetrics.Metrics
 	auth    *command.PortalAuth
+	mailer  *captureMailer
 }
 
 func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration {
@@ -160,7 +260,7 @@ func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration 
 	}
 	t.Cleanup(vk.Close)
 	kc := &fakeKeycloak{users: map[string]fakeKCUser{}, refresh: map[string]string{}, sidUser: map[string]string{},
-		sidAMR: map[string][]string{}, setup: map[string]bool{}}
+		sidAMR: map[string][]string{}, actions: map[string][]string{}}
 	kcSrv := httptest.NewServer(kc)
 	t.Cleanup(kcSrv.Close)
 	tokens, err := keycloak.NewPortalTokens(keycloak.PortalConfig{TokenURL: kcSrv.URL + "/realms/eduworld/protocol/openid-connect/token",
@@ -172,7 +272,14 @@ func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration 
 	m, _ := portalmetrics.New(nil)
 	auth := &command.PortalAuth{UoW: e.uow, Accounts: write.PortalAccountRepo{}, Audit: e.deps.Audit, IdP: tokens,
 		Tickets: cache.SetupTickets{C: vk}, Sessions: cache.PortalSessions{C: vk}, Limiter: cache.RateLimiter{C: vk}, Metrics: m,
-		Cfg: command.PortalAuthConfig{Issuers: []string{kcIssuer}}}
+		Cfg: command.PortalAuthConfig{Issuers: []string{kcIssuer}, PortalBaseURL: "https://portal.eduworld.test"}}
+	admin, err := keycloak.New(keycloak.Config{BaseURL: kcSrv.URL + "/admin/realms/eduworld", ClientID: "svc-identity", ClientSecret: "svc-secret",
+		Timeout: 2 * time.Second, MaxRetries: 1, FailureRatio: 0.9}, kcSrv.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+	mailer := &captureMailer{}
+	auth.KC, auth.Resets, auth.Mailer, auth.Background = admin, write.PortalResetTokenRepo{}, mailer, func(f func()) { f() }
 	spec, err := httpx.LoadSpec(ctx, filepath.Join(testkit.RepoRoot(t), "specs", "openapi", "eduworld-api.v1.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +289,7 @@ func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration 
 	if err != nil {
 		t.Fatal(err)
 	}
-	p := &portalIntegration{env: e, kc: kc, kcSrv: kcSrv, vk: vk, metrics: m, auth: auth}
+	p := &portalIntegration{env: e, kc: kc, kcSrv: kcSrv, vk: vk, metrics: m, auth: auth, mailer: mailer}
 	if err := identityhttp.RegisterPortalAuth(s, p.handlers()); err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +299,7 @@ func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration 
 }
 
 func (p *portalIntegration) handlers() identityhttp.PortalAuthHandlers {
-	return identityhttp.PortalAuthHandlers{Session: p.auth, Metrics: p.metrics}
+	return identityhttp.PortalAuthHandlers{Session: p.auth, Setup: p.auth, Metrics: p.metrics}
 }
 
 type portalResp struct {
@@ -360,5 +467,145 @@ func TestPortalLoginIntegration(t *testing.T) {
 		if strings.Contains(k, "portal.") || strings.Contains(k, "sid-") {
 			t.Fatalf("raw identifier in Valkey key %q", k)
 		}
+	}
+}
+
+// F012-AC-33..AC-37 through the real chain: setup ticket in Valkey (GETDEL), Keycloak Admin adapter against
+// the fake Admin API, reset tokens in PostgreSQL (hash only, superseded by soft-delete, atomic used_at).
+func TestPortalAccountSetupIntegration(t *testing.T) {
+	ctx := context.Background()
+	p := newPortalIntegration(ctx, t)
+	a := seedTenant(ctx, t, p.platform, "pgd-portal-setup")
+	const tmp, fresh = "Temp-Passw0rd-1", "Fresh-Passw0rd-2"
+	moi := staffUser(ctx, t, p.env, "nv.portal.moi", &a.tenant)
+	grantRole(ctx, t, p.env, moi, "school_admin", &a.tenant, "tenant", nil, "NULL")
+	p.kc.users["nv.portal.moi"] = fakeKCUser{password: tmp}
+	p.kc.actions["nv.portal.moi"] = []string{"UPDATE_PASSWORD", "CONFIGURE_TOTP"}
+
+	// AC-33: password right, required actions left → 403 + ticket + steps, no token, no cookie.
+	r := p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", tmp, ""), nil, nil)
+	if r.code != 403 || r.body["code"] != "ACCOUNT_SETUP_REQUIRED" || len(r.cookies) != 0 || r.body["otp_setup_email_sent"] != false {
+		t.Fatalf("login = %d %v", r.code, r.body)
+	}
+	ticket, _ := r.body["setup_ticket"].(string)
+	keys, _ := p.vk.Do(ctx, p.vk.B().Keys().Pattern("ew:identity:portal_setup:*").Build()).AsStrSlice()
+	if len(ticket) < 32 || len(keys) != 1 || strings.Contains(keys[0], ticket) {
+		t.Fatalf("ticket %q keys %v", ticket, keys)
+	}
+	// AC-34: policy violation keeps the ticket; success removes UPDATE_PASSWORD; AC-35: CONFIGURE_TOTP email.
+	setupBody := func(pw string) map[string]any { return map[string]any{"setup_ticket": ticket, "new_password": pw} }
+	if r = p.post(t, "/auth/portal/setup:password", setupBody("short"), nil, nil); r.code != 422 {
+		t.Fatalf("weak = %d %v", r.code, r.body)
+	}
+	if r = p.post(t, "/auth/portal/setup:password", setupBody(fresh), nil, nil); r.code != 200 || r.body["otp_setup_email_sent"] != true {
+		t.Fatalf("setup = %d %v", r.code, r.body)
+	}
+	if steps, _ := r.body["remaining_steps"].([]any); len(steps) != 1 || steps[0] != "configure_otp" || p.kc.emails != 1 {
+		t.Fatalf("remaining = %v emails = %d", r.body, p.kc.emails)
+	}
+	if r = p.post(t, "/auth/portal/setup:password", setupBody(fresh), nil, nil); r.code != 401 || r.body["code"] != "SETUP_TICKET_INVALID" {
+		t.Fatalf("reuse = %d %v", r.code, r.body)
+	}
+	if r = p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", fresh, ""), nil, nil); r.code != 403 || p.kc.emails != 1 {
+		t.Fatalf("otp-only login = %d %v emails=%d (one email per window)", r.code, r.body, p.kc.emails)
+	}
+	// The user scans the QR on the Keycloak action-token page; then the new password works.
+	p.kc.actions["nv.portal.moi"] = nil
+	if r = p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", fresh, ""), nil, nil); r.code != 200 {
+		t.Fatalf("login after setup = %d %v", r.code, r.body)
+	}
+
+	// AC-36: forgot → 202 for staff (by email, any case), student and unknown; only staff gets the link.
+	ad := staffUser(ctx, t, p.env, "ad.portal.reset", &a.tenant)
+	grantRole(ctx, t, p.env, ad, "school_admin", &a.tenant, "tenant", nil, "NULL")
+	p.kc.users["ad.portal.reset"] = fakeKCUser{password: tmp}
+	var student string
+	if err := inTenant(ctx, t, p.app, a.tenant, true, func(tx *sql.Tx) error {
+		var err error
+		student, err = insertStudent(ctx, tx, a, "hs.portal.reset")
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := p.platform.ExecContext(ctx, `UPDATE identity.users SET email = 'hs.portal.reset@test.vn' WHERE user_id = $1`, student); err != nil {
+		t.Fatal(err)
+	}
+	forgot := func(id string) {
+		t.Helper()
+		if r := p.post(t, "/auth/portal/password:forgot", map[string]any{"identifier": id, "device_id": uuid.NewString()}, nil, nil); r.code != 202 {
+			t.Fatalf("forgot %s = %d %v", id, r.code, r.body)
+		}
+	}
+	forgot("AD.Portal.Reset@Test.VN")
+	forgot("hs.portal.reset@test.vn")
+	forgot("khong.co.ai")
+	if len(p.mailer.sent) != 1 || p.mailer.sent[0].To != "ad.portal.reset@test.vn" {
+		t.Fatalf("mails = %+v", p.mailer.sent)
+	}
+	tokenOf := func(i int) string {
+		tok, ok := strings.CutPrefix(p.mailer.sent[i].Link, "https://portal.eduworld.test/reset-password?token=")
+		if !ok {
+			t.Fatalf("link %q", p.mailer.sent[i].Link)
+		}
+		return tok
+	}
+	first := tokenOf(0)
+	if n := count(ctx, t, p.platform, `SELECT count(*) FROM identity.portal_password_reset_tokens WHERE user_id = $1 AND token_hash = encode(sha256($2::bytea), 'hex')`, ad, first); n != 1 {
+		t.Fatalf("hashed rows = %d", n)
+	}
+	if n := count(ctx, t, p.platform, `SELECT count(*) FROM identity.portal_password_reset_tokens WHERE token_hash = $1`, first); n != 0 {
+		t.Fatal("the raw token must never be stored")
+	}
+	forgot("ad.portal.reset")
+	second := tokenOf(1)
+	if n := count(ctx, t, p.platform, `SELECT count(*) FROM identity.portal_password_reset_tokens WHERE user_id = $1 AND deleted_at IS NOT NULL AND delete_reason = 'superseded'`, ad); n != 1 {
+		t.Fatalf("superseded = %d", n)
+	}
+	// AC-37: superseded → 401; weak → 422 and the token survives; two concurrent uses → exactly one 204.
+	reset := func(tok, pw string) portalResp {
+		return p.post(t, "/auth/portal/password:reset", map[string]any{"token": tok, "new_password": pw, "device_id": uuid.NewString()}, nil, nil)
+	}
+	if r = reset(first, fresh); r.code != 401 || r.body["code"] != "PASSWORD_RESET_TOKEN_INVALID" {
+		t.Fatalf("superseded = %d %v", r.code, r.body)
+	}
+	if r = reset(second, "short"); r.code != 422 {
+		t.Fatalf("weak = %d %v", r.code, r.body)
+	}
+	session := p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", tmp, ""), nil, nil)
+	if session.code != 200 {
+		t.Fatalf("login before reset = %d", session.code)
+	}
+	codes := make(chan int, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			codes <- reset(second, fresh).code
+		}()
+	}
+	wg.Wait()
+	close(codes)
+	got := map[int]int{}
+	for c := range codes {
+		got[c]++
+	}
+	if got[204] != 1 || got[401] != 1 {
+		t.Fatalf("concurrent uses = %v", got)
+	}
+	if n := count(ctx, t, p.platform, `SELECT count(*) FROM identity.portal_password_reset_tokens WHERE user_id = $1 AND used_at IS NOT NULL`, ad); n != 1 {
+		t.Fatalf("used rows = %d", n)
+	}
+	// Every portal session of the user is revoked; the new password works.
+	ck := cookiesOf(session)
+	if r = p.post(t, "/auth/portal/token:refresh", nil, ck, map[string]string{identityhttp.PortalCSRFHeader: ck[identityhttp.PortalCSRFCookie]}); r.code != 401 || p.kc.kicked != 1 {
+		t.Fatalf("refresh after reset = %d kicked=%d", r.code, p.kc.kicked)
+	}
+	if r = p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", fresh, ""), nil, nil); r.code != 200 {
+		t.Fatalf("login with the new password = %d", r.code)
+	}
+	if n := count(ctx, t, p.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
+		AND envelope->'payload'->>'action' IN ('auth.portal_setup_password', 'auth.portal_password_reset_requested', 'auth.portal_password_reset', 'auth.portal_otp_setup_email_sent')`); n != 5 {
+		t.Fatalf("setup/reset audits = %d", n)
 	}
 }

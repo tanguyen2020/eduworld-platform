@@ -18,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	identityhttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 )
 
 const (
@@ -407,5 +408,19 @@ func TestPortalLoginRate(t *testing.T) {
 	}
 	if !limited {
 		t.Fatal("refresh limit per session not applied")
+	}
+}
+
+func TestPortalAuthConfigFrom(t *testing.T) {
+	t.Setenv("EW_OIDC_ISSUERS", "http://localhost:8180/realms/eduworld")
+	t.Setenv("EW_PORTAL_BASE_URL", "http://localhost:5173/")
+	c, err := identityhttp.PortalAuthConfigFrom(config.Load())
+	if err != nil || c.PortalBaseURL != "http://localhost:5173" || c.SetupTicketTTL != 10*time.Minute || c.ResetTTL != 30*time.Minute ||
+		c.Limits.LoginPerUsername.N != 10 || c.MaxAuthAge != 8*time.Hour {
+		t.Fatalf("config = %+v %v", c, err)
+	}
+	t.Setenv("EW_PORTAL_BASE_URL", "http://portal.example.test")
+	if _, err := identityhttp.PortalAuthConfigFrom(config.Load()); err == nil {
+		t.Fatal("plain http portal URL accepted")
 	}
 }

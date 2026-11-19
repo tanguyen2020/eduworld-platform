@@ -48,8 +48,12 @@ type PortalAuth struct {
 	Sessions port.PortalSessionStore
 	Limiter  port.RateLimiter
 	Metrics  port.PortalAuthMetrics
+	Resets   write.PortalResetTokenRepository // F012 US8
+	Mailer   port.Mailer                      // F012 US8
 	Cfg      PortalAuthConfig
 	Clock    func() time.Time
+	// Background runs the forgotPortalPassword job; nil = bounded goroutines (tests set a synchronous runner).
+	Background func(func())
 }
 
 var _ PortalSessionHandler = PortalAuth{}

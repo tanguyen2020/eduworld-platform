@@ -28,6 +28,8 @@ const (
 // traced or audited (F012-AC-31): the handlers read them into memory only, and errors carry codes only.
 type PortalAuthHandlers struct {
 	Session command.PortalSessionHandler
+	// Setup serves setupPortalPassword, forgotPortalPassword and resetPortalPassword (F012 US8).
+	Setup   command.PortalAccountSetupHandler
 	Metrics port.PortalAuthMetrics
 }
 
@@ -50,13 +52,16 @@ var PortalAuthOperations = map[string]httpx.Operation{
 // RegisterPortalAuth mounts the portal login operations. refreshPortalToken and portalLogout check the
 // CSRF double-submit before contract validation and before any Keycloak call (F012-AC-30).
 func RegisterPortalAuth(s *httpx.Server, h PortalAuthHandlers) error {
-	if h.Session == nil {
-		return errors.New("identity: portal auth needs the session use cases")
+	if h.Session == nil || h.Setup == nil {
+		return errors.New("identity: portal auth needs the session and setup use cases")
 	}
 	routes := map[string]http.HandlerFunc{
-		"portalLogin":        h.portalLogin,
-		"refreshPortalToken": h.refreshPortalToken,
-		"portalLogout":       h.portalLogout,
+		"portalLogin":          h.portalLogin,
+		"refreshPortalToken":   h.refreshPortalToken,
+		"portalLogout":         h.portalLogout,
+		"setupPortalPassword":  h.setupPortalPassword,
+		"forgotPortalPassword": h.forgotPortalPassword,
+		"resetPortalPassword":  h.resetPortalPassword,
 	}
 	for id, fn := range routes {
 		o, ok := PortalAuthOperations[id]
@@ -191,4 +196,63 @@ func clearPortalCookies(w http.ResponseWriter) {
 		HttpOnly: true, Secure: true, SameSite: http.SameSiteStrictMode})
 	http.SetCookie(w, &http.Cookie{Name: PortalCSRFCookie, Value: "", Path: "/", MaxAge: -1,
 		Secure: true, SameSite: http.SameSiteStrictMode})
+}
+
+func (h PortalAuthHandlers) setupPortalPassword(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		SetupTicket string `json:"setup_ticket"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	in := dto.PortalSetupPassword{SetupTicket: b.SetupTicket, NewPassword: []byte(b.NewPassword)}
+	b.NewPassword = ""
+	out, err := h.Setup.SetupPassword(r.Context(), in)
+	if err != nil {
+		portalFail(w, r, err, false)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, http.StatusOK, struct {
+		RemainingSteps    []string `json:"remaining_steps"`
+		OTPSetupEmailSent bool     `json:"otp_setup_email_sent"`
+	}{out.RemainingSteps, out.OTPSetupEmailSent})
+}
+
+func (h PortalAuthHandlers) forgotPortalPassword(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		Identifier string    `json:"identifier"`
+		DeviceID   uuid.UUID `json:"device_id"`
+		Locale     string    `json:"locale"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	if err := h.Setup.ForgotPassword(r.Context(), dto.PortalForgotPassword{Identifier: b.Identifier, DeviceID: b.DeviceID, Locale: b.Locale}); err != nil {
+		portalFail(w, r, err, false)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func (h PortalAuthHandlers) resetPortalPassword(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		Token       string    `json:"token"`
+		NewPassword string    `json:"new_password"`
+		DeviceID    uuid.UUID `json:"device_id"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	in := dto.PortalResetPassword{Token: b.Token, NewPassword: []byte(b.NewPassword), DeviceID: b.DeviceID}
+	b.NewPassword = ""
+	if err := h.Setup.ResetPassword(r.Context(), in); err != nil {
+		portalFail(w, r, err, false)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

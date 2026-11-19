@@ -3,12 +3,14 @@ package http_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -294,6 +296,10 @@ type portalEnv struct {
 	metrics  *portalmetrics.Metrics
 	logs     *bytes.Buffer
 	auth     *command.PortalAuth
+	kc       *fakeKCAdmin
+	tickets  *memTickets
+	resets   *fakeResets
+	mailer   *fakeMailer
 }
 
 func specPath() string {
@@ -316,7 +322,14 @@ func newPortalEnv(t *testing.T) *portalEnv {
 	}
 	e.auth = &command.PortalAuth{UoW: fakeUoW{}, Accounts: e.accounts, Audit: e.audit, IdP: e.idp, Sessions: e.sessions,
 		Limiter: &memLimiter{clock: clk.now, win: map[string]time.Time{}, n: map[string]int{}}, Metrics: e.metrics,
-		Cfg: command.PortalAuthConfig{Issuers: []string{testIssuer}}, Clock: clk.now}
+		Cfg: command.PortalAuthConfig{Issuers: []string{testIssuer}, PortalBaseURL: "https://portal.eduworld.test/"}, Clock: clk.now,
+		Background: func(f func()) { f() }}
+	e.kc = &fakeKCAdmin{actions: map[string][]string{}, passwords: map[string]string{}, policyMin: 8}
+	e.tickets = &memTickets{clock: clk.now, m: map[string]port.SetupTicket{}, otp: map[uuid.UUID]time.Time{}}
+	e.resets = &fakeResets{}
+	e.mailer = &fakeMailer{}
+	e.auth.KC, e.auth.Tickets, e.auth.Resets, e.auth.Mailer = e.kc, e.tickets, e.resets, e.mailer
+	e.auth.UoW = txUoW{r: e.resets}
 	spec, err := httpx.LoadSpec(context.Background(), specPath())
 	if err != nil {
 		t.Fatal(err)
@@ -336,7 +349,7 @@ func newPortalEnv(t *testing.T) *portalEnv {
 }
 
 func (e *portalEnv) handlers() identityhttp.PortalAuthHandlers {
-	return identityhttp.PortalAuthHandlers{Session: e.auth, Metrics: e.metrics}
+	return identityhttp.PortalAuthHandlers{Session: e.auth, Setup: e.auth, Metrics: e.metrics}
 }
 
 type result struct {
@@ -364,4 +377,168 @@ func (e *portalEnv) post(path, body string, cookies map[string]string, hdr map[s
 		out.cookies[c.Name] = c
 	}
 	return out
+}
+
+// fakeKCAdmin is a TEST FAKE of the Keycloak Admin API calls of the setup/reset (svc-identity).
+type fakeKCAdmin struct {
+	mu         sync.Mutex
+	logins     map[string]string   // login → Keycloak id (set by tests)
+	actions    map[string][]string // Keycloak id → required actions
+	passwords  map[string]string   // Keycloak id → password set through the Admin API
+	policyMin  int                 // realm password policy: minimum length
+	emails     []string            // Keycloak ids that received execute-actions-email CONFIGURE_TOTP
+	loggedOut  []string
+	failLogout bool
+}
+
+func (k *fakeKCAdmin) FindUserByLogin(_ context.Context, login string) (port.KCUser, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if id, ok := k.logins[login]; ok {
+		return port.KCUser{ID: id, Username: login, Enabled: true}, nil
+	}
+	return port.KCUser{}, port.ErrKCNotFound
+}
+func (k *fakeKCAdmin) RequiredActions(_ context.Context, id string) ([]string, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	return slices.Clone(k.actions[id]), nil
+}
+func (k *fakeKCAdmin) ResetPassword(_ context.Context, id string, pw []byte) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if len(pw) < k.policyMin {
+		return port.ErrKCPasswordPolicy
+	}
+	k.passwords[id] = string(pw)
+	return nil
+}
+func (k *fakeKCAdmin) RemoveRequiredAction(_ context.Context, id, action string) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	k.actions[id] = slices.DeleteFunc(k.actions[id], func(a string) bool { return a == action })
+	return nil
+}
+func (k *fakeKCAdmin) ExecuteActionsEmail(_ context.Context, id string, actions ...string) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if len(actions) == 1 && actions[0] == port.KCActionConfigureTOTP {
+		k.emails = append(k.emails, id)
+	}
+	return nil
+}
+func (k *fakeKCAdmin) LogoutUser(_ context.Context, id string) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if k.failLogout {
+		return errors.New("keycloak down")
+	}
+	k.loggedOut = append(k.loggedOut, id)
+	return nil
+}
+
+// memTickets is a TEST FAKE of the Valkey setup ticket store (GETDEL semantics, expiry by the test clock).
+type memTickets struct {
+	mu    sync.Mutex
+	clock func() time.Time
+	m     map[string]port.SetupTicket
+	otp   map[uuid.UUID]time.Time
+}
+
+func (s *memTickets) Save(_ context.Context, h string, t port.SetupTicket) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.m[h] = t
+	return nil
+}
+func (s *memTickets) Take(_ context.Context, h string) (port.SetupTicket, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	t, ok := s.m[h]
+	delete(s.m, h)
+	if !ok || !t.ExpiresAt.After(s.clock()) {
+		return port.SetupTicket{}, port.ErrSetupTicketInvalid
+	}
+	return t, nil
+}
+func (s *memTickets) MarkOTPEmail(_ context.Context, id uuid.UUID, window time.Duration) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if until, ok := s.otp[id]; ok && until.After(s.clock()) {
+		return false, nil
+	}
+	s.otp[id] = s.clock().Add(window)
+	return true, nil
+}
+func (s *memTickets) UnmarkOTPEmail(_ context.Context, id uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.otp, id)
+	return nil
+}
+
+// fakeResets is a TEST FAKE of identity.portal_password_reset_tokens (hash only, one live token per user).
+type fakeResets struct {
+	mu   sync.Mutex
+	rows []fakeResetRow
+}
+
+type fakeResetRow struct {
+	write.PortalResetToken
+	used, deleted bool
+}
+
+func (f *fakeResets) Issue(_ context.Context, t write.PortalResetToken) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	n := 0
+	for i := range f.rows {
+		if f.rows[i].UserID == t.UserID && !f.rows[i].used && !f.rows[i].deleted {
+			f.rows[i].deleted = true
+			n++
+		}
+	}
+	f.rows = append(f.rows, fakeResetRow{PortalResetToken: t})
+	return n, nil
+}
+func (f *fakeResets) Use(_ context.Context, hash string, now time.Time) (uuid.UUID, bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for i := range f.rows {
+		r := &f.rows[i]
+		if r.TokenHash == hash && !r.used && !r.deleted && r.ExpiresAt.After(now) {
+			r.used = true
+			return r.UserID, true, nil
+		}
+	}
+	return uuid.Nil, false, nil
+}
+
+// fakeMailer is a TEST FAKE of port.Mailer.
+type fakeMailer struct {
+	mu   sync.Mutex
+	sent []port.PasswordResetMail
+}
+
+func (m *fakeMailer) SendPasswordReset(_ context.Context, mail port.PasswordResetMail) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.sent = append(m.sent, mail)
+	return nil
+}
+
+// txUoW is a TEST FAKE unit of work whose rollback restores the reset tokens (the only fake with writes).
+type txUoW struct{ r *fakeResets }
+
+func (u txUoW) Do(ctx context.Context, fn func(ctx context.Context) error) error {
+	u.r.mu.Lock()
+	snap := slices.Clone(u.r.rows)
+	u.r.mu.Unlock()
+	if err := fn(ctx); err != nil {
+		u.r.mu.Lock()
+		u.r.rows = snap
+		u.r.mu.Unlock()
+		return err
+	}
+	return nil
 }
