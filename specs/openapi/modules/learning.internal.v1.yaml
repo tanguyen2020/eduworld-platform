@@ -510,7 +510,10 @@ components:
       type: object
       required: [content_type, content_id]
       properties:
-        content_type: { type: string, enum: [question_set, assessment_blueprint, minigame_question_source] }
+        content_type:
+          type: string
+          enum: [activity, question_set, assessment_blueprint, minigame_question_source]
+          description: activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish
         content_id: { type: string, format: uuid }
         content_version_id: { type: [string, 'null'], format: uuid, description: Bỏ trống = version published hiện hành }
         question_count: { type: [integer, 'null'], minimum: 1, maximum: 50 }
@@ -529,12 +532,16 @@ components:
           type: object
           required: [context_type, context_id]
           properties:
-            context_type: { type: string, enum: [quest_step, minigame_session] }
+            context_type:
+              type: string
+              enum: [quest_step, minigame_session, challenge_attempt, boss_encounter]
+              description: challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
             context_id: { type: string, format: uuid }
             quest_version_id: { type: [string, 'null'], format: uuid }
             step_id: { type: [string, 'null'], maxLength: 64 }
             game_session_id: { type: [string, 'null'], format: uuid }
             party_id: { type: [string, 'null'], format: uuid }
+            phase: { type: [integer, 'null'], minimum: 1, maximum: 10, description: Phase của boss_encounter (F103) }
 
     AttemptCreated:
       type: object

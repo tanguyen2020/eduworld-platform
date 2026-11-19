@@ -31,3 +31,9 @@ type ContentSchema interface {
 	ValidateBlueprintDefinition(def json.RawMessage) contentmodel.Violations
 	ValidateBlocks(blocks json.RawMessage) contentmodel.Violations
 }
+
+// ActivitySchema validates the config of an activity version against the JSON Schema of its activity_type
+// (specs/schemas/activities, ADR-0048): content, interaction, evaluation, feedback, completion_rule.
+type ActivitySchema interface {
+	ValidateConfig(activityType string, config json.RawMessage) contentmodel.Violations
+}

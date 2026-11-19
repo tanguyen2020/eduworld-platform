@@ -1,6 +1,6 @@
 # Feature Specification: F030 — Activity Registry và Attempt API (`quiz`, `interactive_exercise`)
 
-**Feature Branch**: `030-activity-attempt-api` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` · **Mốc**: M-C2 · **Phụ thuộc**: F026
+**Feature Branch**: `030-activity-attempt-api` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `learning` · **Mốc**: M-C2 · **Phụ thuộc**: F026
 **Input**: Activity Registry với interface plugin chung (ADR-0048) và hai plugin đầu `quiz`, `interactive_exercise`; một họ API attempt `/api/v1/learning/activity-attempts` (ADR-0059): start (ghim version), trả lời, tạm dừng, resume, nộp idempotent, xem lại; chấm server-side, answer key không rời server (ADR-0016). FR nguồn: FR-CNT-013, FR-EXR-002, FR-EXR-004…007, FR-EXR-016, FR-QB-003.
 
 ## Clarifications
@@ -15,6 +15,31 @@
 ### Session 2026-11-17
 
 - Q: Tên event khi attempt bị bỏ dở và nhóm `exercise.*` trong learning event? → A: Domain event `activity.abandoned` (EVENT_DESIGN, RB-206); `learning-event.schema.json` còn `exercise.started`/`exercise.submitted` → delta contract đổi sang `activity.*` (task T052). Mode `challenge` dùng `context_type` `challenge_attempt` (F076) hoặc `boss_encounter` (+ `phase`, boss F103) [Proposed].
+
+### Session 2026-11-20 (triển khai — Foundation + US4)
+
+- Q: Lưu activity thế nào? → A: Activity là **loại nội dung ghép** như F024: `content.activities` (item, H, con trỏ release) + `content.activity_versions` (cột chung bảng version F024, `ContentVersionMixin`, `WorkflowFields`); `activity_type`, `instructions`, `difficulty`, `time_limit_seconds`, `reward_rule_id`, `config`, `math_assets` nằm trong `body`, `description` là cột `summary`; cột sinh `activity_type` (CHECK `ActivityType`) phục vụ lọc. Bảng H (không G như DATABASE_DESIGN cũ): activity tenant + activity platform gán qua `resource_type = activity` [Proposed]. Workflow (F025) và release (F026) dùng chung endpoint `/cms/learning/content/activity/...`.
+- Q: Gán activity platform cho tenant? → A: CHECK `tra_resource_type_ck` thêm `activity`; `ResourceType` của facade/API platform-ops chưa có `activity` → **Câu hỏi mở** (F029/F045 bổ sung); test dùng dòng gán trực tiếp.
+- Q: `speaking`/`written_response` khi tạo? → A: Bị chặn ở tầng contract (enum `ActivityType`) với `422 VALIDATION_FAILED`; `422 ACTIVITY_TYPE_NOT_SUPPORTED` cho loại trong enum chưa có plugin (`video_lesson`, `audio_lesson`, `simulation`, `minigame`) [Proposed].
+- Q: `ActivityDefinitionInput` không có `curriculum_version_id`? → A: Lấy curriculum version của LO đầu tiên [Proposed].
+- Q: `updateCmsActivityDraft`? → A: Body `application/json` là `ActivityDefinitionInput` đầy đủ (contract), sửa version mới nhất khi còn `draft` (`If-Match` = ETag của version đó); version khác `draft` → `409 CONTENT_NOT_EDITABLE`; đổi `activity_type` → `422`.
+- Q: `feedback.timing = after_close` cho activity? → A: Từ chối (`ACTIVITY_CONFIG_INVALID`): cần cửa sổ bài giao/đề (F041, F042) [Proposed].
+- Q: Readiness thiếu plugin? → A: `infrastructure/health.RegistryCheck` + `SQLPublishedTypes` (pool `learning_platform`); đăng ký vào `/health/ready` thuộc `module.go` (agent wiring); `min_client_version` lấy từ registry thay bảng tạm của F026.
+- Q: Partition `learning_events`, `attempt_answers`? → A: Migration tạo sẵn partition tháng 2026-11 → 2027-12; job duy trì là F031-AC-04.
+
+### Session 2026-11-20 (triển khai — US1, US2, US3, US5, US6)
+
+- Q: `school_id` của attempt? → A: Lấy từ projection `ref.students` (F020); học sinh chưa có trong projection của tenant → `403 PERMISSION_DENIED` [Proposed].
+- Q: Thứ tự item và `presentation`? → A: Item xáo theo `seed` khi `interaction.shuffle_items` (mặc định true); `presentation` (thứ tự phương án, tham số) lưu ở `attempt_items`; resume render lại bằng cùng `seed` trên version ghim. `max_score` của attempt = Σ `max_score` item (§7.2); `config.evaluation.max_score` chưa dùng để quy đổi [Proposed].
+- Q: Lượt thử? → A: `FeedbackTiming = immediate`: lần đầu tính điểm, thử lại `is_scored = false` khi `allow_unscored_retry` (mặc định true); phản hồi trì hoãn: mọi lần đều tính điểm, lần cuối có hiệu lực. Tổng số lần mỗi item ≤ `attempts_per_question` theo khối (g1_3: 3, khác: 2; khối từ `ref.students`). `answer_rate` chưa áp dụng (Câu hỏi mở, cần cơ chế rate limit dùng chung).
+- Q: Learning event `question.answered`? → A: Ghi cho mọi lần trả lời (kể cả `is_scored = false`), khóa `qa:<attempt>:<position>:<attempt_no>`; `class_id` snapshot từ `ref.enrollments` đang active. `hints_used = 0`, `rapid_guess = false` tới F032.
+- Q: `getActivityAttempt` có kết thúc pause? → A: Không (query không ghi); pause kết thúc ở lệnh ghi kế tiếp (trả lời/nộp), thời gian pause cộng vào `paused_ms`. Idle: job đặt `paused_at = last_activity_at + attempt_idle_timeout`.
+- Q: Hết hạn không có câu trả lời? → A: `expired`, không chấm, không phát event; có ≥ 1 câu → nộp `timeout`, `submitted_at = deadline_at`.
+- Q: Mode/ngữ cảnh public? → A: `startActivityAttempt`: `practice` (`free_play`/`lesson`/`learning_path`/`recommendation`) và `minigame` (`minigame_session`); `startAdHocAttempt`: `practice` với `question_set` (bộ tĩnh; bộ theo quy tắc → Câu hỏi mở) hoặc `selection`; mode khác → `422 VALIDATION_FAILED` (F032, F041).
+- Q: Attempt ad-hoc: `activity_type`, `source_version_id`? → A: `quiz` khi mọi câu là loại quiz, ngược lại `interactive_exercise`; `source_kind` (`activity`/`question_set`/`selection`), `source_version_id` = version bộ câu hỏi, hoặc chính `attempt_id` với `selection` (câu ghim ở item) [Proposed].
+- Q: Facade `createAttempt`? → A: `ActivityRef.content_type` thêm `activity`; principal của lời gọi là học sinh (on-behalf, `student_id` phải trùng); `mode` ∈ {quest, minigame} với `context_type` tương ứng; `getAttemptResult` theo `TenantScope` (tenant khác → `404 ATTEMPT_NOT_FOUND`). Adapter phía module game và facade test bên gọi thuộc feature game tiêu thụ (F072) [Proposed].
+- Q: Version mới của activity? → A: Contract chưa có `createCmsActivityVersion`; `command.Docs.NewVersion` dùng được (test), endpoint → **Câu hỏi mở** (F053).
+- Q: Review khi `feedback_timing` `never`/`after_close`? → A: `403 PERMISSION_DENIED` [Proposed]; review trả `explanation` (richContent theo ngôn ngữ attempt), `feedback` của phương án đã chọn ở lần trả lời cuối, `weak_objectives` = LO của item sai/bỏ trống.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

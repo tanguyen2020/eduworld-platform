@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/blueprint"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/lesson"
@@ -40,6 +41,17 @@ var BodyKeys = map[contentmodel.ContentType][]string{
 	contentmodel.TypeLesson:              {"blocks", "completion_rule", "estimated_minutes", "math_assets"},
 	contentmodel.TypeLearningMaterial:    {"blocks", "material_kind"},
 	contentmodel.TypeAssessmentBlueprint: {"definition", "exam_type", "feedback_timing", "result_release", "efficacy_instrument"},
+	// F030: the activity fields of ActivityDefinitionInput that are not shared metadata columns.
+	contentmodel.TypeActivity: {"activity_type", "instructions", "difficulty", "time_limit_seconds", "reward_rule_id", "config",
+		"math_assets"},
+}
+
+// writePerm is the permission to author a content type: activities have their own (learning_content.activity.write).
+func writePerm(t contentmodel.ContentType) authz.Permission {
+	if t == contentmodel.TypeActivity {
+		return authz.PermLearningContentActivityWrite
+	}
+	return authz.PermLearningContentWrite
 }
 
 // Docs holds the collaborators of the commands of the composed content types (F024 US1–US3, US6).
@@ -62,6 +74,9 @@ type Docs struct {
 	ActivityEnabled bool
 	// MaxMeanPDiff is variant_balance_max_mean_p_diff (0 = blueprint.DefaultMaxMeanPDiff).
 	MaxMeanPDiff float64
+	// Activities is the Activity Registry and ActivitySchema the JSON Schemas of its types (F030); nil refuses activities.
+	Activities     *activity.Registry
+	ActivitySchema port.ActivitySchema
 }
 
 func (h Docs) trash() TrashDeps {
@@ -185,7 +200,7 @@ func (h Docs) record(ctx context.Context, t contentmodel.ContentType, o contentm
 func (h Docs) Create(ctx context.Context, t contentmodel.ContentType, f DocFields) (out DocResult, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.Create."+string(t))
 	defer func() { done(err) }()
-	p, err := authorize(ctx, authz.PermLearningContentWrite)
+	p, err := authorize(ctx, writePerm(t))
 	if err != nil {
 		return out, err
 	}
@@ -249,7 +264,7 @@ type UpdateDocDraftInput struct {
 func (h Docs) UpdateDraft(ctx context.Context, in UpdateDocDraftInput) (out DocResult, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.UpdateDraft."+string(in.Type))
 	defer func() { done(err) }()
-	p, err := authorize(ctx, authz.PermLearningContentWrite)
+	p, err := authorize(ctx, writePerm(in.Type))
 	if err != nil {
 		return out, err
 	}
@@ -258,7 +273,7 @@ func (h Docs) UpdateDraft(ctx context.Context, in UpdateDocDraftInput) (out DocR
 		if err != nil {
 			return err
 		}
-		if err := writable(ctx, p, authz.PermLearningContentWrite, cur.Doc.Owner); err != nil {
+		if err := writable(ctx, p, writePerm(in.Type), cur.Doc.Owner); err != nil {
 			return err
 		}
 		if cur.Version.Status != contentmodel.StatusDraft {
@@ -273,6 +288,9 @@ func (h Docs) UpdateDraft(ctx context.Context, in UpdateDocDraftInput) (out DocR
 		v := cur.Version
 		if err := in.Fields.apply(&v); err != nil {
 			return problem.Invalid("/", problem.SubInvalid, "invalid body")
+		}
+		if in.Type == contentmodel.TypeActivity && bodyString(v, "activity_type") != bodyString(cur.Version, "activity_type") {
+			return problem.Invalid("/activity_type", problem.SubInvalid, "cannot change on an activity")
 		}
 		if err := h.prepare(ctx, &v); err != nil {
 			return err
@@ -302,7 +320,7 @@ type NewDocVersionInput struct {
 func (h Docs) NewVersion(ctx context.Context, in NewDocVersionInput) (out DocResult, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.NewVersion."+string(in.Type))
 	defer func() { done(err) }()
-	p, err := authorize(ctx, authz.PermLearningContentWrite)
+	p, err := authorize(ctx, writePerm(in.Type))
 	if err != nil {
 		return out, err
 	}
@@ -314,7 +332,7 @@ func (h Docs) NewVersion(ctx context.Context, in NewDocVersionInput) (out DocRes
 		if err != nil {
 			return err
 		}
-		if err := writable(ctx, p, authz.PermLearningContentWrite, d.Owner); err != nil {
+		if err := writable(ctx, p, writePerm(in.Type), d.Owner); err != nil {
 			return err
 		}
 		vs, err := h.Store.DocVersions(ctx, in.Type, d.ID)
@@ -467,6 +485,10 @@ func (h Docs) prepare(ctx context.Context, v *dto.DocVersion) error {
 			return err
 		}
 		all = append(all, vs...)
+	case contentmodel.TypeActivity:
+		if err := h.prepareActivity(ctx, v, body); err != nil {
+			return err
+		}
 	}
 	if len(all) > 0 {
 		return problemOfViolations(all)
@@ -742,7 +764,7 @@ func DocJSON(r DocResult, sessionTenant *uuid.UUID) map[string]any {
 		out["cloned_from_id"], out["cloned_from_tenant_id"] = *d.ClonedFromID, d.ClonedFromTenantID
 	}
 	summaryKey := "summary"
-	if d.Type == contentmodel.TypeQuestionSet {
+	if d.Type == contentmodel.TypeQuestionSet || d.Type == contentmodel.TypeActivity {
 		summaryKey = "description"
 	}
 	if !isNull(v.Summary) {

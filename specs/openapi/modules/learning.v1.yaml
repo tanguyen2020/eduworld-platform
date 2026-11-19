@@ -6633,8 +6633,12 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /learning/activities/{activity_id}/attempts:
@@ -6668,10 +6672,16 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /learning/activity-attempts:
     get:
       x-service: learning
@@ -6721,6 +6731,8 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       x-service: learning
       tags:
@@ -6755,6 +6767,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /learning/activity-attempts/{attempt_id}:
     get:
       x-service: learning
@@ -6776,8 +6790,12 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
   /learning/activity-attempts/{attempt_id}/progress:
     post:
       x-service: learning
@@ -6839,10 +6857,20 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /learning/activity-attempts/{attempt_id}/items/{position}/hints:next:
     post:
       x-service: learning
@@ -6940,10 +6968,20 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /learning/activity-attempts/{attempt_id}:pause:
     post:
       x-service: learning
@@ -6968,10 +7006,16 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /learning/activity-attempts/{attempt_id}/review:
     get:
       x-service: learning
@@ -6997,6 +7041,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
   /learning/wrong-questions:
     get:
       x-service: learning
@@ -13958,10 +14006,13 @@ components:
           $ref: '#/components/schemas/ContentLanguage'
     ActivityTypeInfo:
       type: object
+      description: Mỗi loại đã đăng ký trong Activity Registry (F030); min_client_version bắt buộc (registry khai báo cho mọi loại)
       required:
         - activity_type
         - schema_url
         - evaluation_strategies
+        - min_client_version
+        - status
       properties:
         activity_type:
           $ref: '#/components/schemas/ActivityType'
@@ -14119,6 +14170,12 @@ components:
             $ref: '#/components/schemas/Problem'
     Problem:
       description: Lỗi (RFC 9457)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Gone:
+      description: Tài nguyên hết hạn (PARTY_INVITATION_EXPIRED)
       content:
         application/problem+json:
           schema:

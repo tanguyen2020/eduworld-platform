@@ -10,6 +10,7 @@ const types = [
   { Go: "QuestionSet", lower: "questionSet", pkg: "questionset", file: "question_set", ct: "TypeQuestionSet" },
   { Go: "LearningMaterial", lower: "learningMaterial", pkg: "learningmaterial", file: "learning_material", ct: "TypeLearningMaterial" },
   { Go: "AssessmentBlueprint", lower: "assessmentBlueprint", pkg: "assessmentblueprint", file: "assessment_blueprint", ct: "TypeAssessmentBlueprint" },
+  { Go: "Activity", lower: "activity", pkg: "activity", file: "activity", ct: "TypeActivity" },
 ];
 for (const t of types) {
   let s = src;

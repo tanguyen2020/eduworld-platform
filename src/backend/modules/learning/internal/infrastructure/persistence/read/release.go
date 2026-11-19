@@ -3,6 +3,7 @@ package read
 import (
 	"context"
 	"encoding/json"
+	entactv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activityversion"
 	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -90,6 +91,14 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 	case contentmodel.TypeAssessmentBlueprint:
 		rows, err := cl.AssessmentBlueprintVersion.Query().Where(entabv.AssessmentBlueprintID(itemID)).
 			Order(ent.Desc(entabv.FieldVersionNo)).All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range rows {
+			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
+		}
+	case contentmodel.TypeActivity:
+		rows, err := cl.ActivityVersion.Query().Where(entactv.ActivityID(itemID)).Order(ent.Desc(entactv.FieldVersionNo)).All(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -9,6 +9,106 @@ import (
 )
 
 var (
+	// ActivitiesColumns holds the columns for the "activities" table.
+	ActivitiesColumns = []*schema.Column{
+		{Name: "activity_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+		{Name: "cloned_from_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// ActivitiesTable holds the schema information for the "activities" table.
+	ActivitiesTable = &schema.Table{
+		Name:       "activities",
+		Columns:    ActivitiesColumns,
+		PrimaryKey: []*schema.Column{ActivitiesColumns[0]},
+	}
+	// ActivityVersionsColumns holds the columns for the "activity_versions" table.
+	ActivityVersionsColumns = []*schema.Column{
+		{Name: "activity_version_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "draft"},
+		{Name: "author_id", Type: field.TypeUUID},
+		{Name: "reviewer_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "content_language", Type: field.TypeString, Size: 64, Default: "vi"},
+		{Name: "curriculum_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "publish_at", Type: field.TypeTime, Nullable: true},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_from_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "activity_id", Type: field.TypeUUID},
+		{Name: "title", Type: field.TypeJSON},
+		{Name: "summary", Type: field.TypeJSON, Nullable: true},
+		{Name: "subject_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "topic_ids", Type: field.TypeJSON},
+		{Name: "objective_ids", Type: field.TypeJSON},
+		{Name: "media_refs", Type: field.TypeJSON},
+		{Name: "worked_example_ids", Type: field.TypeJSON},
+		{Name: "body", Type: field.TypeJSON},
+	}
+	// ActivityVersionsTable holds the schema information for the "activity_versions" table.
+	ActivityVersionsTable = &schema.Table{
+		Name:       "activity_versions",
+		Columns:    ActivityVersionsColumns,
+		PrimaryKey: []*schema.Column{ActivityVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "activity_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ActivityVersionsColumns[32], ActivityVersionsColumns[11]},
+			},
+			{
+				Name:    "activity_versions_open_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ActivityVersionsColumns[32]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "activity_versions_subject_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ActivityVersionsColumns[1], ActivityVersionsColumns[35]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// AssessmentBlueprintsColumns holds the columns for the "assessment_blueprints" table.
 	AssessmentBlueprintsColumns = []*schema.Column{
 		{Name: "assessment_blueprint_id", Type: field.TypeUUID},
@@ -106,6 +206,147 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// AttemptsColumns holds the columns for the "attempts" table.
+	AttemptsColumns = []*schema.Column{
+		{Name: "attempt_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "context_type", Type: field.TypeString, Size: 64},
+		{Name: "context_id", Type: field.TypeUUID},
+		{Name: "activity_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "activity_type", Type: field.TypeString, Size: 32},
+		{Name: "source_kind", Type: field.TypeString, Size: 32},
+		{Name: "source_version_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "in_progress"},
+		{Name: "seed", Type: field.TypeInt64},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "deadline_at", Type: field.TypeTime, Nullable: true},
+		{Name: "submitted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "graded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paused_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paused_ms", Type: field.TypeInt64, Default: 0},
+		{Name: "last_activity_at", Type: field.TypeTime},
+		{Name: "feedback_timing", Type: field.TypeString, Size: 64},
+		{Name: "display_language", Type: field.TypeString, Size: 64},
+		{Name: "submit_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "max_score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "duration_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "client_elapsed_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "item_count", Type: field.TypeInt},
+		{Name: "objective_ids", Type: field.TypeJSON},
+		{Name: "recommendation_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+	}
+	// AttemptsTable holds the schema information for the "attempts" table.
+	AttemptsTable = &schema.Table{
+		Name:       "attempts",
+		Columns:    AttemptsColumns,
+		PrimaryKey: []*schema.Column{AttemptsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "attempts_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{AttemptsColumns[1], AttemptsColumns[11], AttemptsColumns[21]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "attempts_context_idx",
+				Unique:  false,
+				Columns: []*schema.Column{AttemptsColumns[1], AttemptsColumns[13], AttemptsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "attempts_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AttemptsColumns[11], AttemptsColumns[38]},
+			},
+			{
+				Name:    "attempts_practice_open_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AttemptsColumns[11], AttemptsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'in_progress' AND mode = 'practice' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "attempts_one_open_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AttemptsColumns[11], AttemptsColumns[13], AttemptsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'in_progress' AND mode IN ('exam','assignment') AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "attempts_deadline_idx",
+				Unique:  false,
+				Columns: []*schema.Column{AttemptsColumns[19], AttemptsColumns[22]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'in_progress' AND deadline_at IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "attempts_activity_idx",
+				Unique:  false,
+				Columns: []*schema.Column{AttemptsColumns[19], AttemptsColumns[27]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'in_progress' AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// AttemptItemsColumns holds the columns for the "attempt_items" table.
+	AttemptItemsColumns = []*schema.Column{
+		{Name: "attempt_item_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "attempt_id", Type: field.TypeUUID},
+		{Name: "position", Type: field.TypeInt},
+		{Name: "question_version_id", Type: field.TypeUUID},
+		{Name: "question_type", Type: field.TypeString, Size: 64},
+		{Name: "objective_ids", Type: field.TypeJSON},
+		{Name: "presentation", Type: field.TypeJSON},
+		{Name: "presented_payload_hash", Type: field.TypeString, Size: 64},
+		{Name: "max_score", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(6,2)"}},
+		{Name: "answer_count", Type: field.TypeInt, Default: 0},
+		{Name: "final_is_correct", Type: field.TypeBool, Nullable: true},
+		{Name: "final_score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(6,2)"}},
+		{Name: "hints_revealed", Type: field.TypeInt, Default: 0},
+	}
+	// AttemptItemsTable holds the schema information for the "attempt_items" table.
+	AttemptItemsTable = &schema.Table{
+		Name:       "attempt_items",
+		Columns:    AttemptItemsColumns,
+		PrimaryKey: []*schema.Column{AttemptItemsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "attempt_items_position_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AttemptItemsColumns[10], AttemptItemsColumns[11]},
 			},
 		},
 	}
@@ -293,6 +534,56 @@ var (
 				Name:    "curriculum_versions_label_uq",
 				Unique:  true,
 				Columns: []*schema.Column{CurriculumVersionsColumns[11], CurriculumVersionsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// EvaluationsColumns holds the columns for the "evaluations" table.
+	EvaluationsColumns = []*schema.Column{
+		{Name: "evaluation_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "attempt_id", Type: field.TypeUUID},
+		{Name: "source", Type: field.TypeString, Size: 16},
+		{Name: "regrade_request_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "supersedes_evaluation_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "details", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "final"},
+		{Name: "score", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "max_score", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "passed", Type: field.TypeBool, Nullable: true},
+		{Name: "feedback", Type: field.TypeString, Nullable: true, Size: 4000},
+		{Name: "triggered_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "effective", Type: field.TypeBool, Default: true},
+	}
+	// EvaluationsTable holds the schema information for the "evaluations" table.
+	EvaluationsTable = &schema.Table{
+		Name:       "evaluations",
+		Columns:    EvaluationsColumns,
+		PrimaryKey: []*schema.Column{EvaluationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "evaluations_effective_uq",
+				Unique:  true,
+				Columns: []*schema.Column{EvaluationsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "effective AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "evaluations_attempt_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EvaluationsColumns[1], EvaluationsColumns[10]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -1483,13 +1774,18 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ActivitiesTable,
+		ActivityVersionsTable,
 		AssessmentBlueprintsTable,
 		AssessmentBlueprintVersionsTable,
+		AttemptsTable,
+		AttemptItemsTable,
 		CompetenciesTable,
 		ContentReleasesTable,
 		ContentTransitionsTable,
 		CurriculaTable,
 		CurriculumVersionsTable,
+		EvaluationsTable,
 		ImportJobsTable,
 		LearningMaterialsTable,
 		LearningMaterialVersionsTable,
@@ -1521,11 +1817,23 @@ var (
 )
 
 func init() {
+	ActivitiesTable.Annotation = &entsql.Annotation{
+		Table: "activities",
+	}
+	ActivityVersionsTable.Annotation = &entsql.Annotation{
+		Table: "activity_versions",
+	}
 	AssessmentBlueprintsTable.Annotation = &entsql.Annotation{
 		Table: "assessment_blueprints",
 	}
 	AssessmentBlueprintVersionsTable.Annotation = &entsql.Annotation{
 		Table: "assessment_blueprint_versions",
+	}
+	AttemptsTable.Annotation = &entsql.Annotation{
+		Table: "attempts",
+	}
+	AttemptItemsTable.Annotation = &entsql.Annotation{
+		Table: "attempt_items",
 	}
 	CompetenciesTable.Annotation = &entsql.Annotation{
 		Table: "competencies",
@@ -1541,6 +1849,9 @@ func init() {
 	}
 	CurriculumVersionsTable.Annotation = &entsql.Annotation{
 		Table: "curriculum_versions",
+	}
+	EvaluationsTable.Annotation = &entsql.Annotation{
+		Table: "evaluations",
 	}
 	ImportJobsTable.Annotation = &entsql.Annotation{
 		Table: "import_jobs",

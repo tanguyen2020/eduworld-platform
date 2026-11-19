@@ -41,6 +41,7 @@ var docTables = map[contentmodel.ContentType]docTable{
 	contentmodel.TypeLesson:              lessonTable{},
 	contentmodel.TypeLearningMaterial:    learningMaterialTable{},
 	contentmodel.TypeAssessmentBlueprint: assessmentBlueprintTable{},
+	contentmodel.TypeActivity:            activityTable{},
 }
 
 // DocRepo implements write.DocStore with ent (entx.HybridContent filter of the scope of ctx).

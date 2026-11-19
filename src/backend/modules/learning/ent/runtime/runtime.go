@@ -6,13 +6,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activityversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprint"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprintversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/attempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/attemptitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -47,6 +52,148 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	activityMixin := schema.Activity{}.Mixin()
+	activityMixinHooks0 := activityMixin[0].Hooks()
+	activity.Hooks[0] = activityMixinHooks0[0]
+	activityMixinInters0 := activityMixin[0].Interceptors()
+	activity.Interceptors[0] = activityMixinInters0[0]
+	activityMixinFields0 := activityMixin[0].Fields()
+	_ = activityMixinFields0
+	activityMixinFields1 := activityMixin[1].Fields()
+	_ = activityMixinFields1
+	activityFields := schema.Activity{}.Fields()
+	_ = activityFields
+	// activityDescCreatedAt is the schema descriptor for created_at field.
+	activityDescCreatedAt := activityMixinFields0[2].Descriptor()
+	// activity.DefaultCreatedAt holds the default value on creation for the created_at field.
+	activity.DefaultCreatedAt = activityDescCreatedAt.Default.(func() time.Time)
+	// activityDescUpdatedAt is the schema descriptor for updated_at field.
+	activityDescUpdatedAt := activityMixinFields0[4].Descriptor()
+	// activity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	activity.DefaultUpdatedAt = activityDescUpdatedAt.Default.(func() time.Time)
+	// activity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	activity.UpdateDefaultUpdatedAt = activityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// activityDescDeleteReason is the schema descriptor for delete_reason field.
+	activityDescDeleteReason := activityMixinFields0[8].Descriptor()
+	// activity.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	activity.DeleteReasonValidator = activityDescDeleteReason.Validators[0].(func(string) error)
+	// activityDescVersion is the schema descriptor for version field.
+	activityDescVersion := activityMixinFields0[9].Descriptor()
+	// activity.DefaultVersion holds the default value on creation for the version field.
+	activity.DefaultVersion = activityDescVersion.Default.(int64)
+	// activityDescOwnerScope is the schema descriptor for owner_scope field.
+	activityDescOwnerScope := activityMixinFields0[10].Descriptor()
+	// activity.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	activity.DefaultOwnerScope = activityDescOwnerScope.Default.(string)
+	// activity.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	activity.OwnerScopeValidator = activityDescOwnerScope.Validators[0].(func(string) error)
+	// activityDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	activityDescLatestVersionNo := activityMixinFields1[1].Descriptor()
+	// activity.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	activity.DefaultLatestVersionNo = activityDescLatestVersionNo.Default.(int)
+	// activity.LatestVersionNoValidator is a validator for the "latest_version_no" field. It is called by the builders before save.
+	activity.LatestVersionNoValidator = activityDescLatestVersionNo.Validators[0].(func(int) error)
+	// activityDescID is the schema descriptor for id field.
+	activityDescID := activityMixinFields0[0].Descriptor()
+	// activity.DefaultID holds the default value on creation for the id field.
+	activity.DefaultID = activityDescID.Default.(func() uuid.UUID)
+	activityversionMixin := schema.ActivityVersion{}.Mixin()
+	activityversionMixinHooks0 := activityversionMixin[0].Hooks()
+	activityversion.Hooks[0] = activityversionMixinHooks0[0]
+	activityversionMixinInters0 := activityversionMixin[0].Interceptors()
+	activityversion.Interceptors[0] = activityversionMixinInters0[0]
+	activityversionMixinFields0 := activityversionMixin[0].Fields()
+	_ = activityversionMixinFields0
+	activityversionMixinFields1 := activityversionMixin[1].Fields()
+	_ = activityversionMixinFields1
+	activityversionMixinFields2 := activityversionMixin[2].Fields()
+	_ = activityversionMixinFields2
+	activityversionFields := schema.ActivityVersion{}.Fields()
+	_ = activityversionFields
+	// activityversionDescCreatedAt is the schema descriptor for created_at field.
+	activityversionDescCreatedAt := activityversionMixinFields0[2].Descriptor()
+	// activityversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	activityversion.DefaultCreatedAt = activityversionDescCreatedAt.Default.(func() time.Time)
+	// activityversionDescUpdatedAt is the schema descriptor for updated_at field.
+	activityversionDescUpdatedAt := activityversionMixinFields0[4].Descriptor()
+	// activityversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	activityversion.DefaultUpdatedAt = activityversionDescUpdatedAt.Default.(func() time.Time)
+	// activityversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	activityversion.UpdateDefaultUpdatedAt = activityversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// activityversionDescDeleteReason is the schema descriptor for delete_reason field.
+	activityversionDescDeleteReason := activityversionMixinFields0[8].Descriptor()
+	// activityversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	activityversion.DeleteReasonValidator = activityversionDescDeleteReason.Validators[0].(func(string) error)
+	// activityversionDescVersion is the schema descriptor for version field.
+	activityversionDescVersion := activityversionMixinFields0[9].Descriptor()
+	// activityversion.DefaultVersion holds the default value on creation for the version field.
+	activityversion.DefaultVersion = activityversionDescVersion.Default.(int64)
+	// activityversionDescOwnerScope is the schema descriptor for owner_scope field.
+	activityversionDescOwnerScope := activityversionMixinFields0[10].Descriptor()
+	// activityversion.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	activityversion.DefaultOwnerScope = activityversionDescOwnerScope.Default.(string)
+	// activityversion.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	activityversion.OwnerScopeValidator = activityversionDescOwnerScope.Validators[0].(func(string) error)
+	// activityversionDescVersionNo is the schema descriptor for version_no field.
+	activityversionDescVersionNo := activityversionMixinFields1[0].Descriptor()
+	// activityversion.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	activityversion.VersionNoValidator = activityversionDescVersionNo.Validators[0].(func(int) error)
+	// activityversionDescStatus is the schema descriptor for status field.
+	activityversionDescStatus := activityversionMixinFields1[1].Descriptor()
+	// activityversion.DefaultStatus holds the default value on creation for the status field.
+	activityversion.DefaultStatus = activityversionDescStatus.Default.(string)
+	// activityversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	activityversion.StatusValidator = activityversionDescStatus.Validators[0].(func(string) error)
+	// activityversionDescContentLanguage is the schema descriptor for content_language field.
+	activityversionDescContentLanguage := activityversionMixinFields1[5].Descriptor()
+	// activityversion.DefaultContentLanguage holds the default value on creation for the content_language field.
+	activityversion.DefaultContentLanguage = activityversionDescContentLanguage.Default.(string)
+	// activityversion.ContentLanguageValidator is a validator for the "content_language" field. It is called by the builders before save.
+	activityversion.ContentLanguageValidator = activityversionDescContentLanguage.Validators[0].(func(string) error)
+	// activityversionDescChangeNote is the schema descriptor for change_note field.
+	activityversionDescChangeNote := activityversionMixinFields1[7].Descriptor()
+	// activityversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	activityversion.ChangeNoteValidator = activityversionDescChangeNote.Validators[0].(func(string) error)
+	// activityversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	activityversionDescSnapshotKey := activityversionMixinFields1[9].Descriptor()
+	// activityversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	activityversion.SnapshotKeyValidator = activityversionDescSnapshotKey.Validators[0].(func(string) error)
+	// activityversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	activityversionDescSnapshotSha256 := activityversionMixinFields1[10].Descriptor()
+	// activityversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	activityversion.SnapshotSha256Validator = activityversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// activityversionDescTranslationStatus is the schema descriptor for translation_status field.
+	activityversionDescTranslationStatus := activityversionMixinFields2[0].Descriptor()
+	// activityversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	activityversion.TranslationStatusValidator = activityversionDescTranslationStatus.Validators[0].(func(string) error)
+	// activityversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	activityversionDescAudioExemptReason := activityversionMixinFields2[2].Descriptor()
+	// activityversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	activityversion.AudioExemptReasonValidator = activityversionDescAudioExemptReason.Validators[0].(func(string) error)
+	// activityversionDescGradeLevels is the schema descriptor for grade_levels field.
+	activityversionDescGradeLevels := activityversionFields[4].Descriptor()
+	// activityversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
+	activityversion.DefaultGradeLevels = activityversionDescGradeLevels.Default.([]int)
+	// activityversionDescTopicIds is the schema descriptor for topic_ids field.
+	activityversionDescTopicIds := activityversionFields[5].Descriptor()
+	// activityversion.DefaultTopicIds holds the default value on creation for the topic_ids field.
+	activityversion.DefaultTopicIds = activityversionDescTopicIds.Default.([]uuid.UUID)
+	// activityversionDescObjectiveIds is the schema descriptor for objective_ids field.
+	activityversionDescObjectiveIds := activityversionFields[6].Descriptor()
+	// activityversion.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	activityversion.DefaultObjectiveIds = activityversionDescObjectiveIds.Default.([]uuid.UUID)
+	// activityversionDescMediaRefs is the schema descriptor for media_refs field.
+	activityversionDescMediaRefs := activityversionFields[7].Descriptor()
+	// activityversion.DefaultMediaRefs holds the default value on creation for the media_refs field.
+	activityversion.DefaultMediaRefs = activityversionDescMediaRefs.Default.([]uuid.UUID)
+	// activityversionDescWorkedExampleIds is the schema descriptor for worked_example_ids field.
+	activityversionDescWorkedExampleIds := activityversionFields[8].Descriptor()
+	// activityversion.DefaultWorkedExampleIds holds the default value on creation for the worked_example_ids field.
+	activityversion.DefaultWorkedExampleIds = activityversionDescWorkedExampleIds.Default.([]string)
+	// activityversionDescID is the schema descriptor for id field.
+	activityversionDescID := activityversionMixinFields0[0].Descriptor()
+	// activityversion.DefaultID holds the default value on creation for the id field.
+	activityversion.DefaultID = activityversionDescID.Default.(func() uuid.UUID)
 	assessmentblueprintMixin := schema.AssessmentBlueprint{}.Mixin()
 	assessmentblueprintMixinHooks0 := assessmentblueprintMixin[0].Hooks()
 	assessmentblueprint.Hooks[0] = assessmentblueprintMixinHooks0[0]
@@ -189,6 +336,146 @@ func init() {
 	assessmentblueprintversionDescID := assessmentblueprintversionMixinFields0[0].Descriptor()
 	// assessmentblueprintversion.DefaultID holds the default value on creation for the id field.
 	assessmentblueprintversion.DefaultID = assessmentblueprintversionDescID.Default.(func() uuid.UUID)
+	attemptMixin := schema.Attempt{}.Mixin()
+	attemptMixinHooks0 := attemptMixin[0].Hooks()
+	attempt.Hooks[0] = attemptMixinHooks0[0]
+	attemptMixinInters0 := attemptMixin[0].Interceptors()
+	attempt.Interceptors[0] = attemptMixinInters0[0]
+	attemptMixinFields0 := attemptMixin[0].Fields()
+	_ = attemptMixinFields0
+	attemptFields := schema.Attempt{}.Fields()
+	_ = attemptFields
+	// attemptDescCreatedAt is the schema descriptor for created_at field.
+	attemptDescCreatedAt := attemptMixinFields0[2].Descriptor()
+	// attempt.DefaultCreatedAt holds the default value on creation for the created_at field.
+	attempt.DefaultCreatedAt = attemptDescCreatedAt.Default.(func() time.Time)
+	// attemptDescUpdatedAt is the schema descriptor for updated_at field.
+	attemptDescUpdatedAt := attemptMixinFields0[4].Descriptor()
+	// attempt.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	attempt.DefaultUpdatedAt = attemptDescUpdatedAt.Default.(func() time.Time)
+	// attempt.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	attempt.UpdateDefaultUpdatedAt = attemptDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// attemptDescDeleteReason is the schema descriptor for delete_reason field.
+	attemptDescDeleteReason := attemptMixinFields0[8].Descriptor()
+	// attempt.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	attempt.DeleteReasonValidator = attemptDescDeleteReason.Validators[0].(func(string) error)
+	// attemptDescVersion is the schema descriptor for version field.
+	attemptDescVersion := attemptMixinFields0[9].Descriptor()
+	// attempt.DefaultVersion holds the default value on creation for the version field.
+	attempt.DefaultVersion = attemptDescVersion.Default.(int64)
+	// attemptDescMode is the schema descriptor for mode field.
+	attemptDescMode := attemptFields[2].Descriptor()
+	// attempt.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	attempt.ModeValidator = attemptDescMode.Validators[0].(func(string) error)
+	// attemptDescContextType is the schema descriptor for context_type field.
+	attemptDescContextType := attemptFields[3].Descriptor()
+	// attempt.ContextTypeValidator is a validator for the "context_type" field. It is called by the builders before save.
+	attempt.ContextTypeValidator = attemptDescContextType.Validators[0].(func(string) error)
+	// attemptDescActivityType is the schema descriptor for activity_type field.
+	attemptDescActivityType := attemptFields[6].Descriptor()
+	// attempt.ActivityTypeValidator is a validator for the "activity_type" field. It is called by the builders before save.
+	attempt.ActivityTypeValidator = attemptDescActivityType.Validators[0].(func(string) error)
+	// attemptDescSourceKind is the schema descriptor for source_kind field.
+	attemptDescSourceKind := attemptFields[7].Descriptor()
+	// attempt.SourceKindValidator is a validator for the "source_kind" field. It is called by the builders before save.
+	attempt.SourceKindValidator = attemptDescSourceKind.Validators[0].(func(string) error)
+	// attemptDescStatus is the schema descriptor for status field.
+	attemptDescStatus := attemptFields[9].Descriptor()
+	// attempt.DefaultStatus holds the default value on creation for the status field.
+	attempt.DefaultStatus = attemptDescStatus.Default.(string)
+	// attempt.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	attempt.StatusValidator = attemptDescStatus.Validators[0].(func(string) error)
+	// attemptDescPausedMs is the schema descriptor for paused_ms field.
+	attemptDescPausedMs := attemptFields[16].Descriptor()
+	// attempt.DefaultPausedMs holds the default value on creation for the paused_ms field.
+	attempt.DefaultPausedMs = attemptDescPausedMs.Default.(int64)
+	// attemptDescFeedbackTiming is the schema descriptor for feedback_timing field.
+	attemptDescFeedbackTiming := attemptFields[18].Descriptor()
+	// attempt.FeedbackTimingValidator is a validator for the "feedback_timing" field. It is called by the builders before save.
+	attempt.FeedbackTimingValidator = attemptDescFeedbackTiming.Validators[0].(func(string) error)
+	// attemptDescDisplayLanguage is the schema descriptor for display_language field.
+	attemptDescDisplayLanguage := attemptFields[19].Descriptor()
+	// attempt.DisplayLanguageValidator is a validator for the "display_language" field. It is called by the builders before save.
+	attempt.DisplayLanguageValidator = attemptDescDisplayLanguage.Validators[0].(func(string) error)
+	// attemptDescSubmitReason is the schema descriptor for submit_reason field.
+	attemptDescSubmitReason := attemptFields[20].Descriptor()
+	// attempt.SubmitReasonValidator is a validator for the "submit_reason" field. It is called by the builders before save.
+	attempt.SubmitReasonValidator = attemptDescSubmitReason.Validators[0].(func(string) error)
+	// attemptDescItemCount is the schema descriptor for item_count field.
+	attemptDescItemCount := attemptFields[25].Descriptor()
+	// attempt.ItemCountValidator is a validator for the "item_count" field. It is called by the builders before save.
+	attempt.ItemCountValidator = attemptDescItemCount.Validators[0].(func(int) error)
+	// attemptDescObjectiveIds is the schema descriptor for objective_ids field.
+	attemptDescObjectiveIds := attemptFields[26].Descriptor()
+	// attempt.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	attempt.DefaultObjectiveIds = attemptDescObjectiveIds.Default.([]uuid.UUID)
+	// attemptDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	attemptDescIdempotencyKey := attemptFields[28].Descriptor()
+	// attempt.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	attempt.IdempotencyKeyValidator = attemptDescIdempotencyKey.Validators[0].(func(string) error)
+	// attemptDescID is the schema descriptor for id field.
+	attemptDescID := attemptMixinFields0[0].Descriptor()
+	// attempt.DefaultID holds the default value on creation for the id field.
+	attempt.DefaultID = attemptDescID.Default.(func() uuid.UUID)
+	attemptitemMixin := schema.AttemptItem{}.Mixin()
+	attemptitemMixinHooks0 := attemptitemMixin[0].Hooks()
+	attemptitem.Hooks[0] = attemptitemMixinHooks0[0]
+	attemptitemMixinInters0 := attemptitemMixin[0].Interceptors()
+	attemptitem.Interceptors[0] = attemptitemMixinInters0[0]
+	attemptitemMixinFields0 := attemptitemMixin[0].Fields()
+	_ = attemptitemMixinFields0
+	attemptitemFields := schema.AttemptItem{}.Fields()
+	_ = attemptitemFields
+	// attemptitemDescCreatedAt is the schema descriptor for created_at field.
+	attemptitemDescCreatedAt := attemptitemMixinFields0[2].Descriptor()
+	// attemptitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	attemptitem.DefaultCreatedAt = attemptitemDescCreatedAt.Default.(func() time.Time)
+	// attemptitemDescUpdatedAt is the schema descriptor for updated_at field.
+	attemptitemDescUpdatedAt := attemptitemMixinFields0[4].Descriptor()
+	// attemptitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	attemptitem.DefaultUpdatedAt = attemptitemDescUpdatedAt.Default.(func() time.Time)
+	// attemptitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	attemptitem.UpdateDefaultUpdatedAt = attemptitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// attemptitemDescDeleteReason is the schema descriptor for delete_reason field.
+	attemptitemDescDeleteReason := attemptitemMixinFields0[8].Descriptor()
+	// attemptitem.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	attemptitem.DeleteReasonValidator = attemptitemDescDeleteReason.Validators[0].(func(string) error)
+	// attemptitemDescVersion is the schema descriptor for version field.
+	attemptitemDescVersion := attemptitemMixinFields0[9].Descriptor()
+	// attemptitem.DefaultVersion holds the default value on creation for the version field.
+	attemptitem.DefaultVersion = attemptitemDescVersion.Default.(int64)
+	// attemptitemDescPosition is the schema descriptor for position field.
+	attemptitemDescPosition := attemptitemFields[1].Descriptor()
+	// attemptitem.PositionValidator is a validator for the "position" field. It is called by the builders before save.
+	attemptitem.PositionValidator = attemptitemDescPosition.Validators[0].(func(int) error)
+	// attemptitemDescQuestionType is the schema descriptor for question_type field.
+	attemptitemDescQuestionType := attemptitemFields[3].Descriptor()
+	// attemptitem.QuestionTypeValidator is a validator for the "question_type" field. It is called by the builders before save.
+	attemptitem.QuestionTypeValidator = attemptitemDescQuestionType.Validators[0].(func(string) error)
+	// attemptitemDescObjectiveIds is the schema descriptor for objective_ids field.
+	attemptitemDescObjectiveIds := attemptitemFields[4].Descriptor()
+	// attemptitem.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	attemptitem.DefaultObjectiveIds = attemptitemDescObjectiveIds.Default.([]uuid.UUID)
+	// attemptitemDescPresentedPayloadHash is the schema descriptor for presented_payload_hash field.
+	attemptitemDescPresentedPayloadHash := attemptitemFields[6].Descriptor()
+	// attemptitem.PresentedPayloadHashValidator is a validator for the "presented_payload_hash" field. It is called by the builders before save.
+	attemptitem.PresentedPayloadHashValidator = attemptitemDescPresentedPayloadHash.Validators[0].(func(string) error)
+	// attemptitemDescAnswerCount is the schema descriptor for answer_count field.
+	attemptitemDescAnswerCount := attemptitemFields[8].Descriptor()
+	// attemptitem.DefaultAnswerCount holds the default value on creation for the answer_count field.
+	attemptitem.DefaultAnswerCount = attemptitemDescAnswerCount.Default.(int)
+	// attemptitem.AnswerCountValidator is a validator for the "answer_count" field. It is called by the builders before save.
+	attemptitem.AnswerCountValidator = attemptitemDescAnswerCount.Validators[0].(func(int) error)
+	// attemptitemDescHintsRevealed is the schema descriptor for hints_revealed field.
+	attemptitemDescHintsRevealed := attemptitemFields[11].Descriptor()
+	// attemptitem.DefaultHintsRevealed holds the default value on creation for the hints_revealed field.
+	attemptitem.DefaultHintsRevealed = attemptitemDescHintsRevealed.Default.(int)
+	// attemptitem.HintsRevealedValidator is a validator for the "hints_revealed" field. It is called by the builders before save.
+	attemptitem.HintsRevealedValidator = attemptitemDescHintsRevealed.Validators[0].(func(int) error)
+	// attemptitemDescID is the schema descriptor for id field.
+	attemptitemDescID := attemptitemMixinFields0[0].Descriptor()
+	// attemptitem.DefaultID holds the default value on creation for the id field.
+	attemptitem.DefaultID = attemptitemDescID.Default.(func() uuid.UUID)
 	competencyMixin := schema.Competency{}.Mixin()
 	competencyMixinHooks0 := competencyMixin[0].Hooks()
 	competency.Hooks[0] = competencyMixinHooks0[0]
@@ -430,6 +717,59 @@ func init() {
 	curriculumversionDescID := curriculumversionMixinFields0[0].Descriptor()
 	// curriculumversion.DefaultID holds the default value on creation for the id field.
 	curriculumversion.DefaultID = curriculumversionDescID.Default.(func() uuid.UUID)
+	evaluationMixin := schema.Evaluation{}.Mixin()
+	evaluationMixinHooks0 := evaluationMixin[0].Hooks()
+	evaluation.Hooks[0] = evaluationMixinHooks0[0]
+	evaluationMixinInters0 := evaluationMixin[0].Interceptors()
+	evaluation.Interceptors[0] = evaluationMixinInters0[0]
+	evaluationMixinFields0 := evaluationMixin[0].Fields()
+	_ = evaluationMixinFields0
+	evaluationFields := schema.Evaluation{}.Fields()
+	_ = evaluationFields
+	// evaluationDescCreatedAt is the schema descriptor for created_at field.
+	evaluationDescCreatedAt := evaluationMixinFields0[2].Descriptor()
+	// evaluation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	evaluation.DefaultCreatedAt = evaluationDescCreatedAt.Default.(func() time.Time)
+	// evaluationDescUpdatedAt is the schema descriptor for updated_at field.
+	evaluationDescUpdatedAt := evaluationMixinFields0[4].Descriptor()
+	// evaluation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	evaluation.DefaultUpdatedAt = evaluationDescUpdatedAt.Default.(func() time.Time)
+	// evaluation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	evaluation.UpdateDefaultUpdatedAt = evaluationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// evaluationDescDeleteReason is the schema descriptor for delete_reason field.
+	evaluationDescDeleteReason := evaluationMixinFields0[8].Descriptor()
+	// evaluation.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	evaluation.DeleteReasonValidator = evaluationDescDeleteReason.Validators[0].(func(string) error)
+	// evaluationDescVersion is the schema descriptor for version field.
+	evaluationDescVersion := evaluationMixinFields0[9].Descriptor()
+	// evaluation.DefaultVersion holds the default value on creation for the version field.
+	evaluation.DefaultVersion = evaluationDescVersion.Default.(int64)
+	// evaluationDescSource is the schema descriptor for source field.
+	evaluationDescSource := evaluationFields[1].Descriptor()
+	// evaluation.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	evaluation.SourceValidator = evaluationDescSource.Validators[0].(func(string) error)
+	// evaluationDescStatus is the schema descriptor for status field.
+	evaluationDescStatus := evaluationFields[5].Descriptor()
+	// evaluation.DefaultStatus holds the default value on creation for the status field.
+	evaluation.DefaultStatus = evaluationDescStatus.Default.(string)
+	// evaluation.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	evaluation.StatusValidator = evaluationDescStatus.Validators[0].(func(string) error)
+	// evaluationDescFeedback is the schema descriptor for feedback field.
+	evaluationDescFeedback := evaluationFields[9].Descriptor()
+	// evaluation.FeedbackValidator is a validator for the "feedback" field. It is called by the builders before save.
+	evaluation.FeedbackValidator = evaluationDescFeedback.Validators[0].(func(string) error)
+	// evaluationDescReason is the schema descriptor for reason field.
+	evaluationDescReason := evaluationFields[11].Descriptor()
+	// evaluation.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	evaluation.ReasonValidator = evaluationDescReason.Validators[0].(func(string) error)
+	// evaluationDescEffective is the schema descriptor for effective field.
+	evaluationDescEffective := evaluationFields[12].Descriptor()
+	// evaluation.DefaultEffective holds the default value on creation for the effective field.
+	evaluation.DefaultEffective = evaluationDescEffective.Default.(bool)
+	// evaluationDescID is the schema descriptor for id field.
+	evaluationDescID := evaluationMixinFields0[0].Descriptor()
+	// evaluation.DefaultID holds the default value on creation for the id field.
+	evaluation.DefaultID = evaluationDescID.Default.(func() uuid.UUID)
 	importjobMixin := schema.ImportJob{}.Mixin()
 	importjobMixinHooks0 := importjobMixin[0].Hooks()
 	importjob.Hooks[0] = importjobMixinHooks0[0]

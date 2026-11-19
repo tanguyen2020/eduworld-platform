@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"errors"
+	entact "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activity"
 	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -82,6 +83,9 @@ func (ReleaseRepo) SetCurrentVersion(ctx context.Context, t contentmodel.Content
 	case contentmodel.TypeAssessmentBlueprint:
 		n, err = movePointer(ctx, cl.AssessmentBlueprint.Update().Where(entab.ID(id), entab.Version(ifRow)), current)
 		exists = func() (bool, error) { return cl.AssessmentBlueprint.Query().Where(entab.ID(id)).Exist(ctx) }
+	case contentmodel.TypeActivity:
+		n, err = movePointer(ctx, cl.Activity.Update().Where(entact.ID(id), entact.Version(ifRow)), current)
+		exists = func() (bool, error) { return cl.Activity.Query().Where(entact.ID(id)).Exist(ctx) }
 	default:
 		return problem.New(problem.Internal, "no item table for content type "+string(t))
 	}

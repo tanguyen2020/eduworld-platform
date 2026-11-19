@@ -21,6 +21,7 @@ var versionTables = map[string][2]string{
 	"question": {"question_versions", "question_id"}, "question_set": {"question_set_versions", "question_set_id"},
 	"lesson": {"lesson_versions", "lesson_id"}, "learning_material": {"learning_material_versions", "learning_material_id"},
 	"assessment_blueprint": {"assessment_blueprint_versions", "assessment_blueprint_id"},
+	"activity":             {"activity_versions", "activity_id"},
 }
 
 // rowTag reads the ETag of a version from the database (learning_platform).

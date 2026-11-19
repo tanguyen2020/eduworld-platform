@@ -242,9 +242,9 @@ Bảng con của version (`subject_grades`, `topics`, `learning_objectives`, `co
 
 | Bảng | Cột chính | Ràng buộc / index |
 |---|---|---|
-| `attempts` | `attempt_id`, `school_id`, `student_id`, `mode`, `context_type`, `context_id`, `source_version_id`, `status`, `seed`, `started_at`, `deadline_at`, `submitted_at`, `graded_at`, `score numeric(7,2)`, `max_score`, `duration_ms`, `version` | idx `(student_id, started_at DESC)`; idx `(context_type, context_id)`; partial UNIQUE `(student_id, context_type, context_id) WHERE status='in_progress' AND mode IN ('exam','assignment')` (một attempt đang mở) |
-| `attempt_items` | `attempt_id`, `position`, `question_version_id`, `presented_payload_hash`, `max_score` | PK `(attempt_id, position)` |
-| `attempt_answers` (P) | `attempt_answer_id`, `attempt_id`, `position`, `school_id`, `response jsonb`, `is_correct`, `score`, `answered_at`, `client_elapsed_ms`, `idempotency_key` | append-only; idx `(attempt_id, position, answered_at DESC)` |
+| `attempts` | `attempt_id`, `school_id`, `student_id`, `mode`, `context_type`, `context_id`, `activity_id` (NULL với ad-hoc), `activity_type`, `source_kind` (`activity`/`question_set`/`selection`, F030 [Proposed]), `source_version_id`, `status`, `seed`, `started_at`, `deadline_at`, `submitted_at`, `graded_at`, `paused_at`, `paused_ms`, `last_activity_at`, `feedback_timing`, `display_language`, `submit_reason`, `score numeric(7,2)`, `max_score`, `duration_ms`, `client_elapsed_ms`, `item_count`, `objective_ids jsonb` (≤ 50), `recommendation_id`, `idempotency_key varchar(64)`, `version` (F030) | idx `(student_id, started_at DESC)`; idx `(context_type, context_id)`; partial UNIQUE `(student_id, context_type, context_id) WHERE status='in_progress' AND mode IN ('exam','assignment')` (một attempt đang mở); UNIQUE `(student_id, idempotency_key)`; partial UNIQUE `(student_id, source_version_id) WHERE status='in_progress' AND mode='practice'` (F030-AC-04); idx `(status, deadline_at)`, `(status, last_activity_at)` WHERE `in_progress` (job `attempt-lifecycle`) |
+| `attempt_items` | `attempt_item_id` (khóa thay thế, F030), `attempt_id`, `position`, `question_version_id`, `question_type`, `objective_ids jsonb` (snapshot ≤ 50), `presentation jsonb` (thứ tự đã xáo, tham số; ≤ 16 KB), `presented_payload_hash`, `max_score numeric(6,2)`, `answer_count`, `final_is_correct`, `final_score`, `hints_revealed` | UNIQUE `(attempt_id, position)` |
+| `attempt_answers` (P) | `attempt_answer_id`, `attempt_id`, `position`, `school_id`, `question_version_id`, `response jsonb` (≤ 32 KB), `is_correct`, `score`, `answered_at`, `client_elapsed_ms`, `response_ms`, `attempt_no`, `is_scored`, `hints_used`, `rapid_guess`, `idempotency_key varchar(64)` | append-only (role chỉ INSERT/SELECT), partition tháng; idx `(attempt_id, position, answered_at DESC)`; DDL §3.5 |
 | `exam_sessions` | `exam_session_id`, `school_id`, `blueprint_version_id` (ghim lúc tạo, ADR-0043), `title varchar(255)`, `subject_id`, `grade_level`, `exam_type` (`practice_test`/`mock`/`chapter`/`semester`/`subject`/`custom`, [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md)), `is_official`, `window_start`, `window_end`, `duration_sec int`, `status` (`scheduled`/`open`/`closed`/`results_released`/`cancelled`), `target jsonb` (≤ 64 KB), `created_by` | CHECK `window_end > window_start`, `duration_sec > 0` |
 | `exam_papers` | `exam_paper_id`, `exam_session_id`, `seed`, `items jsonb` | đề đã sinh (phục vụ truy vết) |
 
@@ -254,8 +254,8 @@ Mọi bảng có cột chung `tenant_id`, `created_at/by`, `updated_at/by`, `del
 
 | Bảng (schema) | Loại | Cột chính | Ràng buộc / ghi chú |
 |---|---|---|---|
-| `content.activities` | G | `activity_id`, `owner_scope`, `activity_type varchar(32)`, `current_version_id` (ADR-0043) | |
-| `content.activity_versions` | G | `activity_version_id`, `activity_id`, `version`, `status`, `title jsonb`, `grade_levels smallint[]`, `subject_id`, `topic_id`, `objective_ids uuid[]`, `difficulty smallint`, `config jsonb` (content/interaction/evaluation/feedback/completion theo [schema loại](../../specs/schemas/activities/activity-base.schema.json), CHECK ≤ 256 KB), `math_assets jsonb`, `published_at` | UNIQUE `(activity_id, version)`; trigger chặn sửa khi `published` |
+| `content.activities` | H | `activity_id`, `owner_scope`, `current_version_id` (ADR-0043) — F030: loại nội dung ghép như F024 (bảng item + version cột chung); `activity_type` nằm trong `body` của version | assignment `resource_type = activity` [Proposed] |
+| `content.activity_versions` | H | cột chung bảng version F024 (`title`, `summary` = description, `subject_id`, `grade_levels`, `topic_ids`, `objective_ids` ≤ 20, `media_refs`, `body`) + `ContentVersionMixin`, `WorkflowFields`; `body` = `activity_type`, `instructions`, `difficulty`, `time_limit_seconds`, `reward_rule_id`, `config` (content/interaction/evaluation/feedback/completion theo [schema loại](../../specs/schemas/activities/activity-base.schema.json)), `math_assets` — CHECK ≤ 256 KB; cột sinh `activity_type varchar(32)` (CHECK `ActivityType`) | UNIQUE `(activity_id, version_no)`; trigger `forbid_published_update`, release target; F030 [Proposed: H thay vì G — nội dung tenant và platform gán như lesson] |
 | `content.simulation_templates` | G | `template_code varchar(64)`, `template_version`, `simulation_kind varchar(32)`, `parameter_schema jsonb`, `checker_available bool`, `status` | PK `(template_code, template_version)`; platform đăng ký |
 | `content.math_svgs` | G | `sha256 char(64)` PK, `storage_key varchar(128)` (`math/<sha256>.svg`), `latex varchar(2000)`, `speech_text varchar(1000)`, `size_bytes`, `sanitized_at` | SVG do portal render (MathJax 4), server sanitize; bất biến (ADR-0055) |
 | `assessment.activity_attempt_responses` | P | `response_id`, `attempt_id`, `part_id varchar(64)` (bước tương tác, nhánh, mục tiêu — không phải câu hỏi: câu hỏi chèn trong video/audio là item của `attempt_items` + `attempt_answers`, mỗi cue một item theo `at_ms`), `response jsonb` (≤ 32 KB), `result jsonb`, `answered_at`, `client_seq` | append-only; UNIQUE `(attempt_id, part_id, client_seq, answered_at)` |
@@ -270,7 +270,7 @@ Tự luận, bài nói, dự án, rubric và hàng đợi chấm ngoài version 
 
 | Bảng | Loại | Cột chính | Ghi chú |
 |---|---|---|---|
-| `learning_events` | **P** | xem DDL §3.6 | LRS nội bộ; UNIQUE idempotency theo partition |
+| `learning_events` | **P** | xem DDL §3.6 (+ `actor_type` `student`/`system`/`staff`, F030) | LRS nội bộ; UNIQUE idempotency theo partition; ghi ở F030 (`activity.*`, `question.answered`), partition tháng tạo sẵn tới 2027-12, job duy trì ở F031 |
 | `objective_masteries` | T | `student_id`, `objective_id`, `school_id`, `value numeric(4,3)`, `level`, `evidence_count`, `distinct_days`, `last_evidence_at`, `model_version`, `updated_at` | PK `(student_id, objective_id)` |
 | `mastery_history` | P | snapshot thay đổi mastery | phục vụ biểu đồ tiến bộ |
 | `progress_daily` | T, P (tháng) | `student_id`, `class_id` (snapshot lúc event), `subject_id`, `school_id`, `bucket_date`, `metric_version`, `activities_completed`, `items_answered`, `items_correct`, `items_rapid_guess`, `items_with_hint`, `active_seconds`, `lessons_completed`, `is_final`, `computed_at` | rollup bởi worker; PK `(tenant_id, student_id, subject_id, bucket_date, metric_version)`; không `deleted_at` (dữ liệu dẫn xuất) |
@@ -936,7 +936,7 @@ CREATE TABLE assessment.attempts (
   student_id        uuid NOT NULL,
   mode              varchar(64) NOT NULL CHECK (mode IN ('practice','assignment','quest','minigame','challenge','exam','competition','retry_wrong','diagnostic')),
   context_type      varchar(64) NOT NULL CHECK (context_type IN ('free_play','lesson','learning_path','recommendation','question_set',
-                      'selection','assignment','quest_step','minigame_session','exam_session','match')),  -- theo OpenAPI learning
+                      'selection','assignment','quest_step','minigame_session','exam_session','match','challenge_attempt','boss_encounter')),  -- theo OpenAPI learning (+ mode challenge [Proposed], F030)
   context_id        uuid NOT NULL,
   source_version_id uuid NOT NULL,          -- version nội dung nguồn
   status            varchar(64) NOT NULL CHECK (status IN ('in_progress','submitted','graded','expired','abandoned')),

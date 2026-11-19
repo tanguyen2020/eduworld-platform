@@ -175,7 +175,7 @@ Resume trả về item (render payload + `presentation`), phản hồi đã lưu
 
 | Yêu cầu | Lưu ở |
 |---|---|
-| Attempt | `assessment.attempts`; ngữ cảnh khởi tạo ở `context_type` + `context_id` với `context_type` ∈ {`free_play`, `lesson`, `learning_path`, `recommendation`, `question_set`, `selection`, `assignment`, `quest_step`, `minigame_session`, `exam_session`, `match`} — hợp các giá trị của request start trong OpenAPI (`ActivityAttemptStart`, `AdHocAttemptStart`, internal `AttemptCreateRequest`) |
+| Attempt | `assessment.attempts`; ngữ cảnh khởi tạo ở `context_type` + `context_id` với `context_type` ∈ {`free_play`, `lesson`, `learning_path`, `recommendation`, `question_set`, `selection`, `assignment`, `quest_step`, `minigame_session`, `exam_session`, `match`, `challenge_attempt`, `boss_encounter` (mode `challenge`, [Proposed])} — hợp các giá trị của request start trong OpenAPI (`ActivityAttemptStart`, `AdHocAttemptStart`, internal `AttemptCreateRequest`) |
 | Phản hồi | `assessment.attempt_answers` (append-only); phản hồi không phải câu hỏi (video progress, simulation run) ở bảng riêng của từng loại |
 | Đúng/sai, điểm | `attempt_answers.is_correct/score`, `attempt_items.final_*`, `attempts.score/max_score`, `evaluations` |
 | Gợi ý, thời gian trả lời, đoán bừa [Proposed] | `attempt_items.hints_revealed` (số cấp đã mở), `attempt_answers.hints_used` (số gợi ý đã mở **trước** lần trả lời đó), `attempt_answers.response_ms`, `attempt_answers.rapid_guess` (§11.1) |
@@ -323,7 +323,7 @@ sequenceDiagram
   LS-->>GS: event qua NATS → cập nhật quest/boss, cấp thưởng
 ```
 
-Lỗi: `ATTEMPT_NOT_FOUND`, `ATTEMPT_NOT_IN_PROGRESS`, `ATTEMPT_ALREADY_SUBMITTED`, `ATTEMPT_EXPIRED` (`410`, trả lời sau hạn hoặc attempt đã `abandoned`), `ATTEMPT_DEADLINE_PASSED` (`422`, nộp sau hạn), `VALIDATION_FAILED` (`422`, gồm vị trí item không tồn tại), `INVALID_RESPONSE`, `ANSWER_LIMIT_REACHED`, `HINTS_NOT_ALLOWED`, `HINTS_EXHAUSTED`, `ASSIGNMENT_NOT_OPEN`, `ASSIGNMENT_MAX_ATTEMPTS`, `QUESTION_POOL_INSUFFICIENT`, `ACTIVITY_TYPE_NOT_SUPPORTED`, `ACTIVITY_CONFIG_INVALID`, `ACTIVITY_NOT_PUBLISHED`, `EVALUATION_NOT_EDITABLE`, `PERMISSION_DENIED` (`403`, gồm thao tác ngoài phạm vi UserRole).
+Lỗi: `ATTEMPT_NOT_FOUND`, `ATTEMPT_NOT_IN_PROGRESS`, `ATTEMPT_ALREADY_SUBMITTED`, `ATTEMPT_EXPIRED` (`410`, trả lời sau hạn hoặc attempt đã `abandoned`), `ATTEMPT_DEADLINE_PASSED` (`422`, nộp sau hạn), `VALIDATION_FAILED` (`422`, gồm vị trí item không tồn tại), `INVALID_RESPONSE`, `ANSWER_LIMIT_REACHED`, `HINTS_NOT_ALLOWED`, `HINTS_EXHAUSTED`, `ASSIGNMENT_NOT_OPEN`, `ASSIGNMENT_MAX_ATTEMPTS`, `QUESTION_POOL_INSUFFICIENT`, `ACTIVITY_TYPE_NOT_SUPPORTED`, `ACTIVITY_CONFIG_INVALID`, `CONTENT_NOT_PUBLISHED` (`409`, activity chưa publish hoặc đã gỡ), `EVALUATION_NOT_EDITABLE`, `PERMISSION_DENIED` (`403`, gồm thao tác ngoài phạm vi UserRole).
 
 ## 10. Domain events
 

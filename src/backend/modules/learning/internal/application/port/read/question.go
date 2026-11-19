@@ -56,6 +56,8 @@ type DeliveryReader interface {
 	Grading(ctx context.Context, versionID uuid.UUID) (question.Content, error)
 	// Explanation returns the explanation of a published version (sent after grading, FeedbackTiming of F030).
 	Explanation(ctx context.Context, versionID uuid.UUID) (json.RawMessage, error)
+	// OptionFeedback returns the feedback of each option of a version (sent after grading only, ACTIVITY_ENGINE §8.2).
+	OptionFeedback(ctx context.Context, versionID uuid.UUID) (map[string]question.OptionFeedback, error)
 }
 
 // PoolCache caches the pool of a tenant (Valkey ew:learning:qb:pool:<tenant_id>:<filter_hash>, 5 minutes); a miss

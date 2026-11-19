@@ -48,3 +48,18 @@ make migrate-lint MOD=learning
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo F030-AC-*, trace_id bước 1 và 9, kết quả contract test quét DTO (SC-001).
+
+## 5. Bằng chứng (2026-11-20, local, testcontainers — route/job chưa nối binary: agent wiring)
+
+| Kịch bản | Test tự động | Kết quả |
+|---|---|---|
+| 1–5, 15 | `tests/integration/attempt_test.go` TestAttemptStart | pass |
+| 6–12 | TestAttemptRespondSubmitReview | pass |
+| 8, 13, 14 | TestAttemptPauseResumeExpire (clock giả) | pass |
+| 16, 17, 19 | `tests/integration/activity_cms_test.go` TestActivityRegistryAndConfig, TestActivityCmsAuthzTenant | pass |
+| 18 | `tests/contract/plugin_contract_test.go`, `internal/infrastructure/health/registry_check_test.go` | pass |
+| 20 | `tests/integration/attempt_facade_test.go` TestAttemptFacade (+ `archgen --check` 0 vi phạm) | pass |
+| 21 | TestAttemptAdHoc | pass |
+| Domain | `internal/domain/activity` (registry), `internal/domain/attempt` (start, chấm §7.2, feedback, vòng đời) | pass |
+
+SC-001: quét khóa đáp án trên mọi response attempt/activity của học sinh trong test (0 khóa). trace_id kịch bản 1 và 9 lấy khi chạy trên stack thật sau wiring.

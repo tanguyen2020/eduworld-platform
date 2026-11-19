@@ -80,7 +80,7 @@ type TransitionContentInput struct {
 
 // WorkflowTypes are the content types with a workflow in this release (activity: F030; learning_path: F040).
 var WorkflowTypes = []contentmodel.ContentType{contentmodel.TypeQuestion, contentmodel.TypeQuestionSet, contentmodel.TypeLesson,
-	contentmodel.TypeLearningMaterial, contentmodel.TypeAssessmentBlueprint}
+	contentmodel.TypeLearningMaterial, contentmodel.TypeAssessmentBlueprint, contentmodel.TypeActivity}
 
 // ActionPermission is the permission of a workflow action on a content type (plan.md "Module và tầng").
 func ActionPermission(t contentmodel.ContentType, a contentmodel.Action) authz.Permission {
@@ -234,6 +234,9 @@ func docSubject(d dto.Doc, v dto.DocVersion) Subject {
 		AudioExemptReason: deref(v.AudioExemptReason), ExemptApprovedBy: v.AudioExemptApprovedBy, TranslationStatus: v.TranslationStatus,
 		PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt, ItemRowVersion: d.RowVersion, SnapshotDoc: b, SnapshotSHA: v.SnapshotSHA256,
 		SubjectID: v.SubjectID, ObjectiveIDs: v.ObjectiveIDs}
+	if v.Type == contentmodel.TypeActivity {
+		s.ActivityType = bodyString(v, "activity_type")
+	}
 	s.OutdatedFields = i18ntext.OutdatedFields(b, v.ContentLanguage, i18ntext.ParseMeta(v.TranslationMeta))
 	if len(v.GradeLevels) == 0 {
 		s.Meta = append(s.Meta, contentmodel.Violation{Field: "/grade_levels", Required: true, Reason: "is required before review"})

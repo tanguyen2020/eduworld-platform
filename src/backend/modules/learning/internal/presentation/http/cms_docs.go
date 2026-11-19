@@ -123,7 +123,7 @@ func readDoc(r *http.Request, t contentmodel.ContentType) (command.DocFields, er
 		f.Title = p["title"]
 	}
 	summaryKey := "summary"
-	if t == contentmodel.TypeQuestionSet {
+	if t == contentmodel.TypeQuestionSet || t == contentmodel.TypeActivity {
 		summaryKey = "description"
 	}
 	if p.has(summaryKey) {

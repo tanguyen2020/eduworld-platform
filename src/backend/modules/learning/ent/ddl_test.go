@@ -27,8 +27,9 @@ var migrations = map[string][]string{
 	"20261126000001_f027_media.sql":         {"media_assets", "media_usages", "math_svgs"},
 	"20261127000001_f024_content_types.sql": {"question_sets", "question_set_versions", "question_set_items", "lessons", "lesson_versions",
 		"learning_materials", "learning_material_versions", "assessment_blueprints", "assessment_blueprint_versions"},
-	"20261128000001_f025_workflow.sql": {"review_tasks", "translation_jobs"},
-	"20261129000001_f026_release.sql":  {"scheduled_publications"},
+	"20261128000001_f025_workflow.sql":         {"review_tasks", "translation_jobs"},
+	"20261129000001_f026_release.sql":          {"scheduled_publications"},
+	"20261130000001_f030_activity_attempt.sql": {"activities", "activity_versions", "attempts", "attempt_items", "evaluations"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -89,6 +90,7 @@ func schemas() map[string]string {
 		"lessons": c.Lesson, "lesson_versions": c.LessonVersion, "learning_materials": c.LearningMaterial,
 		"learning_material_versions": c.LearningMaterialVersion, "assessment_blueprints": c.AssessmentBlueprint,
 		"assessment_blueprint_versions": c.AssessmentBlueprintVersion, "review_tasks": c.ReviewTask, "translation_jobs": c.TranslationJob, "scheduled_publications": c.ScheduledPublication,
+		"activities": c.Activity, "activity_versions": c.ActivityVersion, "attempts": c.Attempt, "attempt_items": c.AttemptItem, "evaluations": c.Evaluation,
 	}
 }
 

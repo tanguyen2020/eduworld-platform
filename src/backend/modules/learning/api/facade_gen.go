@@ -22,6 +22,7 @@ import (
 
 // Defines values for ActivityRefContentType.
 const (
+	ActivityRefContentTypeActivity               ActivityRefContentType = "activity"
 	ActivityRefContentTypeAssessmentBlueprint    ActivityRefContentType = "assessment_blueprint"
 	ActivityRefContentTypeMinigameQuestionSource ActivityRefContentType = "minigame_question_source"
 	ActivityRefContentTypeQuestionSet            ActivityRefContentType = "question_set"
@@ -30,6 +31,8 @@ const (
 // Valid indicates whether the value is a known member of the ActivityRefContentType enum.
 func (e ActivityRefContentType) Valid() bool {
 	switch e {
+	case ActivityRefContentTypeActivity:
+		return true
 	case ActivityRefContentTypeAssessmentBlueprint:
 		return true
 	case ActivityRefContentTypeMinigameQuestionSource:
@@ -43,13 +46,19 @@ func (e ActivityRefContentType) Valid() bool {
 
 // Defines values for AttemptCreateRequestContextContextType.
 const (
-	MinigameSession AttemptCreateRequestContextContextType = "minigame_session"
-	QuestStep       AttemptCreateRequestContextContextType = "quest_step"
+	BossEncounter    AttemptCreateRequestContextContextType = "boss_encounter"
+	ChallengeAttempt AttemptCreateRequestContextContextType = "challenge_attempt"
+	MinigameSession  AttemptCreateRequestContextContextType = "minigame_session"
+	QuestStep        AttemptCreateRequestContextContextType = "quest_step"
 )
 
 // Valid indicates whether the value is a known member of the AttemptCreateRequestContextContextType enum.
 func (e AttemptCreateRequestContextContextType) Valid() bool {
 	switch e {
+	case BossEncounter:
+		return true
+	case ChallengeAttempt:
+		return true
 	case MinigameSession:
 		return true
 	case QuestStep:
@@ -445,7 +454,9 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 
 // ActivityRef defines model for ActivityRef.
 type ActivityRef struct {
-	ContentId   openapi_types.UUID     `json:"content_id"`
+	ContentId openapi_types.UUID `json:"content_id"`
+
+	// ContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish
 	ContentType ActivityRefContentType `json:"content_type"`
 
 	// ContentVersionId Bỏ trống = version published hiện hành
@@ -454,19 +465,24 @@ type ActivityRef struct {
 	TimeLimitSeconds *int                `json:"time_limit_seconds,omitempty"`
 }
 
-// ActivityRefContentType defines model for ActivityRef.ContentType.
+// ActivityRefContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish
 type ActivityRefContentType string
 
 // AttemptCreateRequest defines model for AttemptCreateRequest.
 type AttemptCreateRequest struct {
 	Activity ActivityRef `json:"activity"`
 	Context  struct {
-		ContextId      openapi_types.UUID                     `json:"context_id"`
-		ContextType    AttemptCreateRequestContextContextType `json:"context_type"`
-		GameSessionId  *openapi_types.UUID                    `json:"game_session_id,omitempty"`
-		PartyId        *openapi_types.UUID                    `json:"party_id,omitempty"`
-		QuestVersionId *openapi_types.UUID                    `json:"quest_version_id,omitempty"`
-		StepId         *string                                `json:"step_id,omitempty"`
+		ContextId openapi_types.UUID `json:"context_id"`
+
+		// ContextType challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
+		ContextType   AttemptCreateRequestContextContextType `json:"context_type"`
+		GameSessionId *openapi_types.UUID                    `json:"game_session_id,omitempty"`
+		PartyId       *openapi_types.UUID                    `json:"party_id,omitempty"`
+
+		// Phase Phase của boss_encounter (F103)
+		Phase          *int                `json:"phase,omitempty"`
+		QuestVersionId *openapi_types.UUID `json:"quest_version_id,omitempty"`
+		StepId         *string             `json:"step_id,omitempty"`
 	} `json:"context"`
 
 	// Mode module game chỉ được mở `quest` hoặc `minigame` (giá trị khác → 422)
@@ -474,7 +490,7 @@ type AttemptCreateRequest struct {
 	StudentId openapi_types.UUID `json:"student_id"`
 }
 
-// AttemptCreateRequestContextContextType defines model for AttemptCreateRequest.Context.ContextType.
+// AttemptCreateRequestContextContextType challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
 type AttemptCreateRequestContextContextType string
 
 // AttemptCreated defines model for AttemptCreated.

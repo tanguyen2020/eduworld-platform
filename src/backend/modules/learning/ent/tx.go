@@ -12,10 +12,18 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Activity is the client for interacting with the Activity builders.
+	Activity *ActivityClient
+	// ActivityVersion is the client for interacting with the ActivityVersion builders.
+	ActivityVersion *ActivityVersionClient
 	// AssessmentBlueprint is the client for interacting with the AssessmentBlueprint builders.
 	AssessmentBlueprint *AssessmentBlueprintClient
 	// AssessmentBlueprintVersion is the client for interacting with the AssessmentBlueprintVersion builders.
 	AssessmentBlueprintVersion *AssessmentBlueprintVersionClient
+	// Attempt is the client for interacting with the Attempt builders.
+	Attempt *AttemptClient
+	// AttemptItem is the client for interacting with the AttemptItem builders.
+	AttemptItem *AttemptItemClient
 	// Competency is the client for interacting with the Competency builders.
 	Competency *CompetencyClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
@@ -26,6 +34,8 @@ type Tx struct {
 	Curriculum *CurriculumClient
 	// CurriculumVersion is the client for interacting with the CurriculumVersion builders.
 	CurriculumVersion *CurriculumVersionClient
+	// Evaluation is the client for interacting with the Evaluation builders.
+	Evaluation *EvaluationClient
 	// ImportJob is the client for interacting with the ImportJob builders.
 	ImportJob *ImportJobClient
 	// LearningMaterial is the client for interacting with the LearningMaterial builders.
@@ -211,13 +221,18 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Activity = NewActivityClient(tx.config)
+	tx.ActivityVersion = NewActivityVersionClient(tx.config)
 	tx.AssessmentBlueprint = NewAssessmentBlueprintClient(tx.config)
 	tx.AssessmentBlueprintVersion = NewAssessmentBlueprintVersionClient(tx.config)
+	tx.Attempt = NewAttemptClient(tx.config)
+	tx.AttemptItem = NewAttemptItemClient(tx.config)
 	tx.Competency = NewCompetencyClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.ContentTransition = NewContentTransitionClient(tx.config)
 	tx.Curriculum = NewCurriculumClient(tx.config)
 	tx.CurriculumVersion = NewCurriculumVersionClient(tx.config)
+	tx.Evaluation = NewEvaluationClient(tx.config)
 	tx.ImportJob = NewImportJobClient(tx.config)
 	tx.LearningMaterial = NewLearningMaterialClient(tx.config)
 	tx.LearningMaterialVersion = NewLearningMaterialVersionClient(tx.config)
@@ -254,7 +269,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: AssessmentBlueprint.QueryXXX(), the query will be executed
+// applies a query, for example: Activity.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

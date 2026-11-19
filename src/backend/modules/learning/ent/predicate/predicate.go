@@ -6,11 +6,23 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Activity is the predicate function for activity builders.
+type Activity func(*sql.Selector)
+
+// ActivityVersion is the predicate function for activityversion builders.
+type ActivityVersion func(*sql.Selector)
+
 // AssessmentBlueprint is the predicate function for assessmentblueprint builders.
 type AssessmentBlueprint func(*sql.Selector)
 
 // AssessmentBlueprintVersion is the predicate function for assessmentblueprintversion builders.
 type AssessmentBlueprintVersion func(*sql.Selector)
+
+// Attempt is the predicate function for attempt builders.
+type Attempt func(*sql.Selector)
+
+// AttemptItem is the predicate function for attemptitem builders.
+type AttemptItem func(*sql.Selector)
 
 // Competency is the predicate function for competency builders.
 type Competency func(*sql.Selector)
@@ -26,6 +38,9 @@ type Curriculum func(*sql.Selector)
 
 // CurriculumVersion is the predicate function for curriculumversion builders.
 type CurriculumVersion func(*sql.Selector)
+
+// Evaluation is the predicate function for evaluation builders.
+type Evaluation func(*sql.Selector)
 
 // ImportJob is the predicate function for importjob builders.
 type ImportJob func(*sql.Selector)

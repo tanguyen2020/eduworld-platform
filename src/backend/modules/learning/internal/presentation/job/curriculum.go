@@ -147,3 +147,25 @@ func Seed(ctx context.Context, h Seeder, dir string) (SeedResult, error) {
 	}
 	return out, nil
 }
+
+// AttemptLifecycleRunner runs the attempt lifecycle (command.Attempts, F030 T035).
+type AttemptLifecycleRunner interface {
+	RunLifecycle(ctx context.Context, limit int) (command.LifecycleReport, error)
+}
+
+// AttemptLifecycle is the job attempt-lifecycle of the worker profile events (every minute, F030-AC-17…AC-19): idle
+// attempts are paused, attempts past the resume window abandoned, timed attempts past their deadline expired and
+// submitted. Each attempt is handled under its own row version, so two workers never apply the same change twice.
+type AttemptLifecycle struct {
+	Runner AttemptLifecycleRunner
+	Batch  int
+}
+
+// RunOnce handles up to Batch due attempts.
+func (w AttemptLifecycle) RunOnce(ctx context.Context) (command.LifecycleReport, error) {
+	batch := w.Batch
+	if batch <= 0 {
+		batch = 200
+	}
+	return w.Runner.RunLifecycle(ctx, batch)
+}

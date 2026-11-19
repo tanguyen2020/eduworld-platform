@@ -8246,16 +8246,17 @@ export interface components {
          * @enum {string}
          */
         ActivityType: "quiz" | "interactive_exercise" | "minigame" | "video_lesson" | "audio_lesson" | "simulation";
+        /** @description Mỗi loại đã đăng ký trong Activity Registry (F030); min_client_version bắt buộc (registry khai báo cho mọi loại) */
         ActivityTypeInfo: {
             activity_type: components["schemas"]["ActivityType"];
             evaluation_strategies: components["schemas"]["EvaluationStrategy"][];
             label?: string;
-            min_client_version?: string;
+            min_client_version: string;
             /** @description Đường dẫn JSON Schema cấu hình của loại */
             schema_url: string;
             schema_version?: number;
             /** @enum {string} */
-            status?: "enabled" | "preview" | "disabled";
+            status: "enabled" | "preview" | "disabled";
         };
         /** @description Attempt không gắn activity cố định (thay POST /exercises/attempts — ADR-0059) */
         AdHocAttemptStart: {
@@ -27623,7 +27624,9 @@ export interface operations {
                     "application/json": components["schemas"]["ActivityRender"];
                 };
             };
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -27669,8 +27672,11 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            429: components["responses"]["RateLimited"];
         };
     };
     listMyActivityAttempts: {
@@ -27712,6 +27718,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     startAdHocAttempt: {
@@ -27756,6 +27763,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+            429: components["responses"]["RateLimited"];
         };
     };
     getActivityAttempt: {
@@ -27788,7 +27796,9 @@ export interface operations {
                     "application/json": components["schemas"]["Attempt"];
                 };
             };
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            410: components["responses"]["Gone"];
         };
     };
     pauseActivityAttempt: {
@@ -27828,8 +27838,11 @@ export interface operations {
                     "application/json": components["schemas"]["Attempt"];
                 };
             };
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            410: components["responses"]["Gone"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     submitActivityAttempt: {
@@ -27869,8 +27882,13 @@ export interface operations {
                     "application/json": components["schemas"]["Attempt"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            410: components["responses"]["Gone"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            429: components["responses"]["RateLimited"];
         };
     };
     revealNextHint: {
@@ -27998,8 +28016,13 @@ export interface operations {
                     "application/json": components["schemas"]["ActivityResponseResult"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            410: components["responses"]["Gone"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            429: components["responses"]["RateLimited"];
         };
     };
     getActivityAttemptReview: {
@@ -28034,6 +28057,8 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            410: components["responses"]["Gone"];
         };
     };
     submitSimulationRun: {

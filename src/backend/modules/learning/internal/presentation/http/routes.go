@@ -90,6 +90,10 @@ type Handlers struct {
 	TranslationJobs  TranslationQueries  // F025 US5
 	Releases         ReleaseCommands     // F026
 	ReleaseQueries   ReleaseQueries      // F026
+	CmsActivities    CmsActivityQueries  // F030 US4
+	ActivityTypes    ActivityTypeQueries // F030 US4
+	Attempts         AttemptCommands     // F030 US1–US3, US6
+	AttemptQueries   AttemptQueries      // F030 US1–US3
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -173,6 +177,14 @@ func Register(s *httpx.Server, h Handlers) error {
 	for id, fn := range workflowRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
 	}
+	attemptsWired := h.Attempts != nil && h.AttemptQueries != nil
+	for id, fn := range attemptRoutes {
+		routes[id] = wiredOr(attemptsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	activitiesWired := h.CmsActivities != nil && h.ActivityTypes != nil
+	for id, fn := range cmsActivityRoutes {
+		routes[id] = wiredOr(activitiesWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
 	}
@@ -189,6 +201,17 @@ func Register(s *httpx.Server, h Handlers) error {
 		return problem.New(problem.Internal, "an operation of module learning has no handler")
 	}
 	return nil
+}
+
+// wiredOr serves fn when its use cases are wired into the binary, otherwise 503 (a route of the contract is never a
+// nil-handler panic while the composition root has not wired a feature yet).
+func wiredOr(wired bool, fn http.HandlerFunc) http.HandlerFunc {
+	if wired {
+		return fn
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		fail(w, r, problem.New(problem.Unavailable, "this operation is not wired in this binary yet"))
+	}
 }
 
 // ---------- encoding helpers

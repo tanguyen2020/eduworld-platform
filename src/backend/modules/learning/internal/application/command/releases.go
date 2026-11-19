@@ -3,7 +3,9 @@ package command
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"slices"
 	"strconv"
 	"time"
@@ -43,9 +45,9 @@ const (
 // learning reads platform settings.
 const ScheduledPublishMinLead = 5 * time.Minute
 
-// MinClientVersions is the min_client_version of each activity_type until the Activity Registry of F030 provides it
-// (F026 assumption) [Proposed].
-var MinClientVersions = map[string]string{"quiz": "0.1.0", "interactive_exercise": "0.1.0"}
+// minClientVersion is the min_client_version of an activity_type from the Activity Registry (F030 T042: replaces the
+// temporary table of F026).
+func (h Releases) minClientVersion(t string) string { return h.Activities.MinClientVersion(t) }
 
 // ReleaseMetrics counts releases (eduworld_content_releases_total{action}); nil = not counted.
 type ReleaseMetrics interface {
@@ -69,6 +71,10 @@ type Releases struct {
 	Clock   func() time.Time
 	Metrics ReleaseMetrics
 	MinLead time.Duration
+	// Activities is the Activity Registry (min_client_version, publish check of the activity types, F030) and
+	// ActivitySchema the JSON Schemas of their config.
+	Activities     *activity.Registry
+	ActivitySchema port.ActivitySchema
 }
 
 func (h Releases) now() time.Time { return now(h.Clock) }
@@ -200,6 +206,11 @@ func (h Releases) ready(ctx context.Context, s Subject) error {
 	}
 	if _, err := h.Workflow.Readiness(ctx, s); err != nil {
 		return err
+	}
+	if s.Type == contentmodel.TypeActivity {
+		if err := h.activityReady(s); err != nil {
+			return err
+		}
 	}
 	var missing []string
 	for _, c := range s.Children {
@@ -359,7 +370,7 @@ func (h Releases) apply(ctx context.Context, actor uuid.UUID, s Subject, key str
 		SubjectID: s.SubjectID, ObjectiveIDs: s.ObjectiveIDs, SnapshotURL: snapshotURL, SnapshotSHA256: sha, CDNEligible: &eligible,
 		Scheduled: &scheduled, PublishedBy: &actor, ReleasedAt: at}
 	if s.ActivityType != "" {
-		pl.ActivityType, pl.MinClientVersion = s.ActivityType, MinClientVersions[s.ActivityType]
+		pl.ActivityType, pl.MinClientVersion = s.ActivityType, h.minClientVersion(s.ActivityType)
 	}
 	if err := h.emit(ctx, s, EventContentPublished, pl); err != nil {
 		return out, err
@@ -519,7 +530,7 @@ func (h Releases) move(ctx context.Context, actor uuid.UUID, cur Subject, action
 		if err == nil {
 			pl.SnapshotSHA256 = deref(tgt.SnapshotSHA)
 			if tgt.ActivityType != "" {
-				pl.ActivityType, pl.MinClientVersion = tgt.ActivityType, MinClientVersions[tgt.ActivityType]
+				pl.ActivityType, pl.MinClientVersion = tgt.ActivityType, h.minClientVersion(tgt.ActivityType)
 			}
 		}
 	}
@@ -665,3 +676,33 @@ func (h Releases) runSchedule(ctx context.Context, sc write.Schedule) (bool, err
 }
 
 func itoa(n int) string { return strconv.Itoa(n) }
+
+// activityReady checks an activity version again at publish (F030-AC-20, AC-21): its type has a plugin of the release and
+// its config matches the JSON Schema and the rules of the plugin.
+func (h Releases) activityReady(s Subject) error {
+	var b struct {
+		ActivityType string          `json:"activity_type"`
+		Config       json.RawMessage `json:"config"`
+	}
+	_ = json.Unmarshal(s.Doc, &b)
+	if b.ActivityType == "" {
+		b.ActivityType = s.ActivityType
+	}
+	p, err := ActivityPlugin(h.Activities, b.ActivityType)
+	if err != nil {
+		return err
+	}
+	if h.ActivitySchema != nil {
+		if vs := h.ActivitySchema.ValidateConfig(b.ActivityType, b.Config); len(vs) > 0 {
+			return configProblem(vs)
+		}
+	}
+	cfg, err := activity.ParseConfig(b.Config)
+	if err != nil {
+		return configProblem(contentmodel.Violations{{Field: "/config", Reason: "is invalid"}})
+	}
+	if vs := p.ValidateConfig(cfg); len(vs) > 0 {
+		return configProblem(vs)
+	}
+	return nil
+}

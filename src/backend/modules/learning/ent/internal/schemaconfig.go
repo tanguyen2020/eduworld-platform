@@ -7,13 +7,18 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
+	Activity                   string // Activity table.
+	ActivityVersion            string // ActivityVersion table.
 	AssessmentBlueprint        string // AssessmentBlueprint table.
 	AssessmentBlueprintVersion string // AssessmentBlueprintVersion table.
+	Attempt                    string // Attempt table.
+	AttemptItem                string // AttemptItem table.
 	Competency                 string // Competency table.
 	ContentRelease             string // ContentRelease table.
 	ContentTransition          string // ContentTransition table.
 	Curriculum                 string // Curriculum table.
 	CurriculumVersion          string // CurriculumVersion table.
+	Evaluation                 string // Evaluation table.
 	ImportJob                  string // ImportJob table.
 	LearningMaterial           string // LearningMaterial table.
 	LearningMaterialVersion    string // LearningMaterialVersion table.

@@ -18,8 +18,10 @@ type DocFilter struct {
 	TopicID     *uuid.UUID
 	ObjectiveID *uuid.UUID
 	Status      string
-	After       *uuid.UUID
-	Limit       int
+	// ActivityType filters activity versions on their generated column activity_type (F030).
+	ActivityType string
+	After        *uuid.UUID
+	Limit        int
 }
 
 // DocHit is an item with its newest version.

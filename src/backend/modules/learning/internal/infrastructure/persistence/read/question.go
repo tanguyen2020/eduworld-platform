@@ -283,7 +283,7 @@ func (Delivery) Deliverable(ctx context.Context, versionIDs []uuid.UUID) ([]ques
 
 // Grading implements read.DeliveryReader: the only reader of answer_key and scoring_rule (ADR-0016).
 func (Delivery) Grading(ctx context.Context, versionID uuid.UUID) (question.Content, error) {
-	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(versionID), entqv.Status(string(contentmodel.StatusPublished))).Only(ctx)
+	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(versionID), entqv.StatusIn(pinnable...)).Only(ctx)
 	if err != nil {
 		return question.Content{}, notFound(err)
 	}
@@ -296,9 +296,27 @@ func (Delivery) Grading(ctx context.Context, versionID uuid.UUID) (question.Cont
 	return c, nil
 }
 
+// pinnable are the statuses of a version an attempt may still grade: published, or archived after it was pinned (R31).
+var pinnable = []string{string(contentmodel.StatusPublished), string(contentmodel.StatusArchived)}
+
+// OptionFeedback implements read.DeliveryReader: the server-only feedback of each option (given after grading only).
+func (Delivery) OptionFeedback(ctx context.Context, versionID uuid.UUID) (map[string]question.OptionFeedback, error) {
+	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(versionID), entqv.StatusIn(pinnable...)).Only(ctx)
+	if err != nil {
+		return nil, notFound(err)
+	}
+	out := map[string]question.OptionFeedback{}
+	if len(r.OptionFeedback) > 0 {
+		if err := json.Unmarshal(r.OptionFeedback, &out); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
 // Explanation implements read.DeliveryReader.
 func (Delivery) Explanation(ctx context.Context, versionID uuid.UUID) (json.RawMessage, error) {
-	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(versionID), entqv.Status(string(contentmodel.StatusPublished))).Only(ctx)
+	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(versionID), entqv.StatusIn(pinnable...)).Only(ctx)
 	if err != nil {
 		return nil, notFound(err)
 	}

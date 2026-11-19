@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/activity.abandoned.v1.schema.json",
+  "title": "Payload activity.abandoned v1 (module learning, ACTIVITY_ENGINE §6.2, RB-206, F030)",
+  "description": "Attempt bị bỏ dở: tạm dừng/không hoạt động quá attempt_resume_window (reason expired), học sinh bỏ (user) hoặc bị thay thế (superseded). Không phát activity.submitted cho attempt này; mọi lệnh sau đó nhận 410 ATTEMPT_EXPIRED. Consumer: learning analytics, LMS.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt_id", "student_id", "mode", "reason"],
+  "properties": {
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "activity_id": { "type": ["string", "null"], "format": "uuid" },
+    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
+    "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
+    "context_type": { "type": ["string", "null"], "maxLength": 64 },
+    "context_id": { "type": ["string", "null"], "format": "uuid" },
+    "content_version_id": { "type": "string", "format": "uuid" },
+    "answered_count": { "type": "integer", "minimum": 0 },
+    "reason": { "type": "string", "enum": ["expired", "user", "superseded"] }
+  }
+}

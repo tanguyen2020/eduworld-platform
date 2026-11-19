@@ -15357,7 +15357,9 @@ paths:
               schema: { $ref: '#/components/schemas/ActivityRender' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
   /learning/activities/{activity_id}/attempts:
     post:
@@ -15384,8 +15386,11 @@ paths:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /learning/activity-attempts:
     post:
       x-service: learning
@@ -15413,6 +15418,7 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '429': { $ref: '#/components/responses/RateLimited' }
     get:
       x-service: learning
       tags: [learning]
@@ -15451,6 +15457,7 @@ paths:
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /learning/activity-attempts/{attempt_id}:
     get:
       x-service: learning
@@ -15469,7 +15476,9 @@ paths:
               schema: { $ref: '#/components/schemas/Attempt' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '410': { $ref: '#/components/responses/Gone' }
   /learning/activity-attempts/{attempt_id}/progress:
     post:
       x-service: learning
@@ -15520,8 +15529,13 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/Gone' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /learning/activity-attempts/{attempt_id}/items/{position}/hints:next:
     post:
       x-service: learning
@@ -15599,8 +15613,13 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/Gone' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /learning/activity-attempts/{attempt_id}:pause:
     post:
       x-service: learning
@@ -15621,8 +15640,11 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/Gone' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /learning/activity-attempts/{attempt_id}/review:
     get:
       x-service: learning
@@ -15643,6 +15665,8 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410': { $ref: '#/components/responses/Gone' }
   /learning/wrong-questions:
     get:
       x-service: learning
@@ -22022,7 +22046,8 @@ components:
         translation_status: { $ref: '#/components/schemas/TranslationStatus', readOnly: true }
     ActivityTypeInfo:
       type: object
-      required: [activity_type, schema_url, evaluation_strategies]
+      description: Mỗi loại đã đăng ký trong Activity Registry (F030); min_client_version bắt buộc (registry khai báo cho mọi loại)
+      required: [activity_type, schema_url, evaluation_strategies, min_client_version, status]
       properties:
         activity_type: { $ref: '#/components/schemas/ActivityType' }
         label: { type: string, maxLength: 128 }

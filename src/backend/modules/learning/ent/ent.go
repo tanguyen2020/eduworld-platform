@@ -12,13 +12,18 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activityversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprint"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprintversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/attempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/attemptitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -106,13 +111,18 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			activity.Table:                   activity.ValidColumn,
+			activityversion.Table:            activityversion.ValidColumn,
 			assessmentblueprint.Table:        assessmentblueprint.ValidColumn,
 			assessmentblueprintversion.Table: assessmentblueprintversion.ValidColumn,
+			attempt.Table:                    attempt.ValidColumn,
+			attemptitem.Table:                attemptitem.ValidColumn,
 			competency.Table:                 competency.ValidColumn,
 			contentrelease.Table:             contentrelease.ValidColumn,
 			contenttransition.Table:          contenttransition.ValidColumn,
 			curriculum.Table:                 curriculum.ValidColumn,
 			curriculumversion.Table:          curriculumversion.ValidColumn,
+			evaluation.Table:                 evaluation.ValidColumn,
 			importjob.Table:                  importjob.ValidColumn,
 			learningmaterial.Table:           learningmaterial.ValidColumn,
 			learningmaterialversion.Table:    learningmaterialversion.ValidColumn,

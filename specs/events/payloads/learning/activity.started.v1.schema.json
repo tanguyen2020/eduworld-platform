@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/activity.started.v1.schema.json",
+  "title": "Payload activity.started v1 (module learning, ADR-0048, F030)",
+  "description": "Học sinh bắt đầu một attempt (mọi activity_type trong Release, mọi mode trừ exam; attempt ad-hoc có activity_id null). Version nội dung đã ghim (ADR-0043). Consumer: learning analytics, LMS, gợi ý tự học (F032). Không chứa PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt_id", "student_id", "mode", "content_version_id"],
+  "properties": {
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "activity_id": { "type": ["string", "null"], "format": "uuid", "description": "null với attempt ad-hoc (question_set/selection)" },
+    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
+    "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
+    "context_type": { "type": ["string", "null"], "maxLength": 64, "description": "free_play, lesson, quest_step, minigame_session, question_set, selection…" },
+    "context_id": { "type": ["string", "null"], "format": "uuid" },
+    "content_version_id": { "type": "string", "format": "uuid", "description": "Version đã ghim khi bắt đầu (ADR-0043)" },
+    "item_count": { "type": "integer", "minimum": 0 },
+    "deadline_at": { "type": ["string", "null"], "format": "date-time" },
+    "recommendation_id": { "type": ["string", "null"], "format": "uuid", "description": "Gợi ý ôn tập dẫn tới attempt (F032)" }
+  }
+}

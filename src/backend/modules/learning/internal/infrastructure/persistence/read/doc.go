@@ -26,6 +26,7 @@ var docModels = map[contentmodel.ContentType]docModel{
 	contentmodel.TypeLesson:              lessonModel{},
 	contentmodel.TypeLearningMaterial:    learningMaterialModel{},
 	contentmodel.TypeAssessmentBlueprint: assessmentBlueprintModel{},
+	contentmodel.TypeActivity:            activityModel{},
 }
 
 // DocModel implements read.DocReadModel with ent (entx.HybridContent filter of the scope of ctx). Full-text search
@@ -144,6 +145,10 @@ func docFilters[P ~func(*entsql.Selector)](f read.DocFilter) []P {
 	}
 	if f.ObjectiveID != nil {
 		contains("objective_ids", f.ObjectiveID.String())
+	}
+	if f.ActivityType != "" {
+		at := f.ActivityType
+		out = append(out, func(s *entsql.Selector) { s.Where(entsql.EQ(s.C("activity_type"), at)) })
 	}
 	if f.Q != "" {
 		q := f.Q

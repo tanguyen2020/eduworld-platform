@@ -28,6 +28,9 @@ type Facade struct {
 	Trash       query.ListTrashHandler
 	Restore     command.RestoreResourceHandler
 	Clone       command.ExecuteCloneStepHandler
+	// AttemptOpener and AttemptResults serve createAttempt / getAttemptResult for module game (F030 US5).
+	AttemptOpener  AttemptOpener
+	AttemptResults AttemptResults
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

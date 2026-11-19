@@ -3,6 +3,7 @@ package write
 import (
 	"context"
 	"encoding/json"
+	entactv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/activityversion"
 	"time"
 
 	"github.com/google/uuid"
@@ -119,6 +120,9 @@ func (WorkflowRepo) SetVersionStatus(ctx context.Context, c write.StatusChange) 
 		exists = func() (bool, error) {
 			return cl.AssessmentBlueprintVersion.Query().Where(entab.ID(c.VersionID)).Exist(ctx)
 		}
+	case contentmodel.TypeActivity:
+		n, err = applyStatus(ctx, cl.ActivityVersion.Update().Where(entactv.ID(c.VersionID), entactv.Version(c.IfRow)), c)
+		exists = func() (bool, error) { return cl.ActivityVersion.Query().Where(entactv.ID(c.VersionID)).Exist(ctx) }
 	default:
 		return 0, problem.New(problem.Internal, "no version table for content type "+string(c.Type))
 	}

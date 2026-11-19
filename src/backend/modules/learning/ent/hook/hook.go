@@ -9,6 +9,30 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
 )
 
+// The ActivityFunc type is an adapter to allow the use of ordinary
+// function as Activity mutator.
+type ActivityFunc func(context.Context, *ent.ActivityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActivityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ActivityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActivityMutation", m)
+}
+
+// The ActivityVersionFunc type is an adapter to allow the use of ordinary
+// function as ActivityVersion mutator.
+type ActivityVersionFunc func(context.Context, *ent.ActivityVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActivityVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ActivityVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActivityVersionMutation", m)
+}
+
 // The AssessmentBlueprintFunc type is an adapter to allow the use of ordinary
 // function as AssessmentBlueprint mutator.
 type AssessmentBlueprintFunc func(context.Context, *ent.AssessmentBlueprintMutation) (ent.Value, error)
@@ -31,6 +55,30 @@ func (f AssessmentBlueprintVersionFunc) Mutate(ctx context.Context, m ent.Mutati
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssessmentBlueprintVersionMutation", m)
+}
+
+// The AttemptFunc type is an adapter to allow the use of ordinary
+// function as Attempt mutator.
+type AttemptFunc func(context.Context, *ent.AttemptMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttemptFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AttemptMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttemptMutation", m)
+}
+
+// The AttemptItemFunc type is an adapter to allow the use of ordinary
+// function as AttemptItem mutator.
+type AttemptItemFunc func(context.Context, *ent.AttemptItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttemptItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AttemptItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttemptItemMutation", m)
 }
 
 // The CompetencyFunc type is an adapter to allow the use of ordinary
@@ -91,6 +139,18 @@ func (f CurriculumVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CurriculumVersionMutation", m)
+}
+
+// The EvaluationFunc type is an adapter to allow the use of ordinary
+// function as Evaluation mutator.
+type EvaluationFunc func(context.Context, *ent.EvaluationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EvaluationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EvaluationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EvaluationMutation", m)
 }
 
 // The ImportJobFunc type is an adapter to allow the use of ordinary

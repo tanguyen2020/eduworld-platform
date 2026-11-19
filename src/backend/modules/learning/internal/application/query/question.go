@@ -294,6 +294,15 @@ func (d Delivery) Grade(ctx context.Context, versionID uuid.UUID, pres question.
 	return out, err
 }
 
+// OptionFeedback returns the option feedback of a pinned version (given after grading by F030, ACTIVITY_ENGINE §8.2).
+func (d Delivery) OptionFeedback(ctx context.Context, versionID uuid.UUID) (out map[string]question.OptionFeedback, err error) {
+	err = d.Session.Read(ctx, func(ctx context.Context) error {
+		out, err = d.Reader.OptionFeedback(ctx, versionID)
+		return err
+	})
+	return out, err
+}
+
 // Explanation returns the explanation of a published version (given after grading by F030).
 func (d Delivery) Explanation(ctx context.Context, versionID uuid.UUID) (out json.RawMessage, err error) {
 	err = d.Session.Read(ctx, func(ctx context.Context) error {

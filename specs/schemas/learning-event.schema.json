@@ -41,8 +41,7 @@
         "video.progressed",
         "video.cue_answered",
         "simulation.goal_met",
-        "exercise.started",
-        "exercise.submitted",
+        "activity.abandoned",
         "exam.started",
         "exam.submitted",
         "exam.graded",
@@ -97,7 +96,7 @@
     "content_id": { "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
     "content_version_id": {
       "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }],
-      "description": "Bắt buộc khác null với question.*, lesson.*, exercise.*, exam.*, activity.submitted/graded (ADR-0015)."
+      "description": "Bắt buộc khác null với question.*, lesson.*, exam.*, activity.started/submitted/graded/abandoned (ADR-0015)."
     },
     "context": { "$ref": "#/$defs/context" },
     "objective_ids": {
@@ -193,7 +192,7 @@
       "then": { "properties": { "payload": { "$ref": "#/$defs/payload_simulation_goal_met" } } }
     },
     {
-      "if": { "properties": { "event_type": { "enum": ["exercise.started", "exam.started"] } } },
+      "if": { "properties": { "event_type": { "const": "exam.started" } } },
       "then": {
         "properties": {
           "payload": { "$ref": "#/$defs/payload_attempt_started" },
@@ -202,10 +201,19 @@
       }
     },
     {
-      "if": { "properties": { "event_type": { "enum": ["exercise.submitted", "exam.submitted"] } } },
+      "if": { "properties": { "event_type": { "const": "exam.submitted" } } },
       "then": {
         "properties": {
           "payload": { "$ref": "#/$defs/payload_attempt_submitted" },
+          "content_version_id": { "$ref": "#/$defs/uuid" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "activity.abandoned" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "#/$defs/payload_activity_abandoned" },
           "content_version_id": { "$ref": "#/$defs/uuid" }
         }
       }
@@ -459,6 +467,18 @@
         "attempt_id": { "$ref": "#/$defs/uuid" },
         "run_id": { "$ref": "#/$defs/uuid" },
         "goal_id": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "payload_activity_abandoned": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "reason"],
+      "description": "activity.abandoned (ACTIVITY_ENGINE §6.2, RB-206): attempt bỏ dở quá attempt_resume_window; không có activity.submitted.",
+      "properties": {
+        "attempt_id": { "$ref": "#/$defs/uuid" },
+        "activity_type": { "$ref": "#/$defs/activity_type" },
+        "answered_count": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string", "enum": ["expired", "user", "superseded"] }
       }
     },
     "payload_attempt_started": {

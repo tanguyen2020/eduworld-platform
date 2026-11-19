@@ -21,6 +21,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
@@ -89,6 +90,9 @@ type curEnv struct {
 	users  map[string]authz.PrincipalData
 	tokens map[string]string
 	media  *mediaKit // F027 (newCurEnv(..., withMedia))
+	att    command.Attempts // F030
+	attq   query.Attempts   // F030
+	clk    *testClock       // F030
 }
 
 // envOpt configures newCurEnv.
@@ -157,8 +161,14 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	if err != nil {
 		t.Fatal(err)
 	}
+	actSchema, err := qbschema.NewActivities()
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry := plugins.Registry()
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
-		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
+		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
+		Activities: registry, ActivitySchema: actSchema}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
 	wf := command.Workflow{UoW: e.uow, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{}, Docs: write.DocRepo{},
 		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}
@@ -183,7 +193,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	}
 	tr.Questions, tr.Docs = qcmd, dcmd
 	rel := command.Releases{UoW: e.uow, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: write.Publisher{W: e.writer},
-		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}}
+		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}, Activities: registry, ActivitySchema: actSchema}
 	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}}
 	if mk != nil {
 		rel.Cache, rel.CDN, rel.Signer, reader.Cache = mk.cache, mk.s3, mk.signer, mk.cache
@@ -191,6 +201,17 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Releases = rel
 	handlers.ReleaseQueries = query.Releases{Session: e.read, Model: read.ReleaseModel{}, Reader: reader, Cursors: codec}
 	handlers.Translations = tr
+	handlers.CmsActivities = query.CmsActivities{Docs: dqry}
+	handlers.ActivityTypes = query.ActivityTypes{Registry: registry}
+	// F030: the attempt engine with an adjustable clock (TEST clock, never in a binary).
+	clk := &testClock{t: time.Now().UTC()}
+	delivery := query.Delivery{Session: e.read, Reader: read.Delivery{}, Registry: question.Full(), Schema: schema}
+	att := command.Attempts{UoW: e.uow, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: write.Publisher{W: e.writer},
+		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: registry,
+		Clock: clk.Now, Metrics: observability.AttemptCounter{}}
+	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
+		Clock: clk.Now}
+	handlers.Attempts, handlers.AttemptQueries = att, attq
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {
@@ -199,7 +220,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}, media: mk}
+		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

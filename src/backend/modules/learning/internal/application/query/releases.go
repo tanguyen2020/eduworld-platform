@@ -22,7 +22,7 @@ import (
 
 // releaseTypes are the content types with versions and releases in this release (activity: F030).
 var releaseTypes = []contentmodel.ContentType{contentmodel.TypeQuestion, contentmodel.TypeQuestionSet, contentmodel.TypeLesson,
-	contentmodel.TypeLearningMaterial, contentmodel.TypeAssessmentBlueprint}
+	contentmodel.TypeLearningMaterial, contentmodel.TypeAssessmentBlueprint, contentmodel.TypeActivity}
 
 // ContentReader reads items, versions and snapshots of every learning content type in the scope of ctx: the shared
 // read side of the CMS history (Releases) and the ReleaseResolver/VersionReader ports of the learning use cases (F030).
