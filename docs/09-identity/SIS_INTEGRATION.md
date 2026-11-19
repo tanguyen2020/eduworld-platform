@@ -78,7 +78,7 @@ Enum (`status`, `role`, `subject_code`…) dùng **giá trị của EduWorld**. 
 
 ### 2.6. Onboarding một trường
 
-1. EduWorld cung cấp cho trường: file spec, tài liệu này, **bộ conformance test** và mock server sinh từ spec (Postman collection chạy bằng Postman CLI hoặc tương đương, ở `specs/postman/sis-conformance/`).
+1. EduWorld cung cấp cho trường: file spec, tài liệu này, **bộ conformance test** và mock server sinh từ spec: Postman collection sinh từ contract (`specs/postman/sis-conformance/`, hướng dẫn trong `README.md` cùng thư mục, chạy bằng Postman CLI) và `sis-mock` (Prism static mock, dữ liệu demo TH Demo A trong `examples` của contract). CI chạy cùng bộ test vào `sis-mock` ở mọi thay đổi `specs/sis/` (F017).
 2. Trường/nhà cung cấp SIS dựng facade theo contract trên môi trường test, chạy conformance test đến khi pass.
 3. Platform Admin tạo `sis_connection` (base URL, phương thức auth, `secret_ref`, `contract_version`, lịch sync), chạy `HealthCheck` + full sync **dry-run**, rồi School Admin duyệt diff.
 4. Bật lịch đồng bộ. Chưa có facade thì dùng `csv_import` song song.
@@ -167,6 +167,7 @@ Bước `mapping` chỉ chuyển DTO contract → entity domain (`org`, `identit
 - Cấu hình connection: `base_url`, `auth_type` (`oauth2_client_credentials` | `api_key` | `mtls`), `token_url` (nếu OAuth2), `secret_ref`, `contract_version`, `schools[]` (danh sách `school_external_id` thuộc connection).
 - Client giới hạn tốc độ `sis_client_rate`: 10 req/s mỗi connection, timeout 15 s/request, tôn trọng `Retry-After` [Confirmed — Technical Architect 2026-11-16].
 - Mỗi response được validate theo JSON Schema trích từ spec trước khi vào staging (§2.5).
+- Credential theo `auth_type` [Proposed, F017]: `api_key` = giá trị khóa (header `X-Api-Key`); `oauth2_client_credentials` = JSON `{client_id, client_secret}`, token lấy lại một lần khi hết hạn giữa run; `mtls` = một file PEM chứng chỉ + khóa. Ánh xạ trường: `config.schools[]` = `{school_external_id, school_id}` (chỉ dùng trường đang active trên connection). Webhook dùng `webhook_secret_ref` riêng.
 
 ### 4.3. `csv_import`: cho trường chưa có API [Proposed, Phase 1]
 
@@ -363,7 +364,9 @@ Quyền sở hữu trường: SIS sở hữu `full_name`, `student_code`, `date_
 | 401/403 | Credential | Dừng run, `status=failed`, cảnh báo ops + School Admin; connection `status=auth_error` |
 | Payload sai schema | Data | Ghi `sync_record_errors`, tiếp tục bản ghi khác |
 | Lỗi apply DB | Bug/ràng buộc | Rollback lô, ghi lỗi, tiếp tục lô sau; > 10% lô lỗi → dừng run (`sis_contract_violation_threshold`) |
-| Webhook xử lý lỗi | — | Giữ trong JetStream work-queue `IDENTITY_SIS_JOBS` (ack sau khi xử lý xong), redeliver sau 5 phút, tối đa 5 lần → `DLQ_IDENTITY` |
+| Webhook xử lý lỗi | — | Giữ trong JetStream work-queue `IDENTITY_SIS_JOBS` (ack sau khi xử lý xong), redeliver sau 5 phút, tối đa 5 lần → `DLQ_IDENTITY` (`ew.dlq.identity.sis_jobs`); job chờ lock của connection giao lại sau 30 giây, không tính vào DLQ |
+| 410 khi delta | Watermark hết hạn | Run delta `failed` (`SIS_WATERMARK_EXPIRED`, không tính circuit breaker), watermark giữ nguyên, xếp một full sync `trigger = fallback_full` |
+| `has_more` không kèm `next_cursor` mới | Contract | Dừng run `failed` (`SIS_PAGINATION_INVALID`), không lặp vô hạn |
 
 Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp thất bại → tạm dừng lịch, chỉ chạy khi admin kích hoạt lại. Các giá trị trong mục này [Confirmed — Technical Architect 2026-11-16].
 
@@ -377,6 +380,10 @@ Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp
   - `eduworld_sis_record_errors_total{connection,entity,code}`
   - `eduworld_sis_reconciliation_issues_open{connection,type}`
   - `eduworld_sis_last_success_timestamp{connection}` → alert nếu > 26 giờ
+  - `eduworld_sis_contract_unknown_fields_total{connection,entity}` (trường lạ bị bỏ, §2.5)
+  - `eduworld_sis_http_requests_total{connection,operation,status}` (client `contract_v1`, `status` = `2xx`/`4xx`/`429`/`5xx`/`error`)
+  - `eduworld_sis_webhook_total{result}` (`accepted`/`replay`/`unauthorized`/`not_found`/`invalid`/`unavailable`)
+  - `eduworld_sis_sync_runs_skipped_total{connection,reason}` (`locked`/`not_active`/`circuit_open`)
 - Dashboard CMS cho School Admin: lần đồng bộ gần nhất, số lỗi, danh sách issue cần xử lý.
 
 ## 9. Bảo mật
@@ -394,7 +401,10 @@ Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp
 | POST | `/api/v1/schools/{school_id}/sis-imports` (+ `dry_run`) | school_admin (scope trường) |
 | GET | `/api/v1/schools/{school_id}/sis-imports/{import_id}` | school_admin |
 | POST | `/api/v1/sis/imports` | system_admin (`X-Tenant-Id` tenant đích) |
-| POST | `/api/v1/sis/connections/{connection_id}/sync-runs` | school_admin (scope trường), system_admin (Idempotency-Key) |
+| POST | `/api/v1/sis/connections` | system_admin (`X-Tenant-Id`, Idempotency-Key; `csv_import` hoặc `contract_v1`) |
+| PATCH | `/api/v1/sis/connections/{connection_id}` | system_admin (JSON Merge Patch, If-Match; kích hoạt lại chạy health check) |
+| POST | `/api/v1/sis/connections/{connection_id}:health-check` | system_admin |
+| POST | `/api/v1/sis/connections/{connection_id}/sync-runs` | school_admin (scope trường, `school_id` bắt buộc), system_admin (Idempotency-Key; `dry_run`) |
 | GET | `/api/v1/sis/connections/{connection_id}/sync-runs` · `/api/v1/sis/runs/{run_id}` · `/errors` | school_admin |
 | PUT | `/api/v1/admin/sis/connections/{connection_id}/schools` | system_admin (bảng nối `sis_connection_schools`) |
 | GET | `/api/v1/sis/reconciliation-issues` | school_admin |

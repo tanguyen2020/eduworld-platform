@@ -145,6 +145,16 @@ func FinishedAt(v time.Time) predicate.SyncRun {
 	return predicate.SyncRun(sql.FieldEQ(FieldFinishedAt, v))
 }
 
+// RequestedBy applies equality check predicate on the "requested_by" field. It's identical to RequestedByEQ.
+func RequestedBy(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldEQ(FieldRequestedBy, v))
+}
+
+// DeliveryID applies equality check predicate on the "delivery_id" field. It's identical to DeliveryIDEQ.
+func DeliveryID(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldEQ(FieldDeliveryID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.SyncRun {
 	return predicate.SyncRun(sql.FieldEQ(FieldTenantID, v))
@@ -1038,6 +1048,106 @@ func FinishedAtIsNil() predicate.SyncRun {
 // FinishedAtNotNil applies the NotNil predicate on the "finished_at" field.
 func FinishedAtNotNil() predicate.SyncRun {
 	return predicate.SyncRun(sql.FieldNotNull(FieldFinishedAt))
+}
+
+// RequestedByEQ applies the EQ predicate on the "requested_by" field.
+func RequestedByEQ(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldEQ(FieldRequestedBy, v))
+}
+
+// RequestedByNEQ applies the NEQ predicate on the "requested_by" field.
+func RequestedByNEQ(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNEQ(FieldRequestedBy, v))
+}
+
+// RequestedByIn applies the In predicate on the "requested_by" field.
+func RequestedByIn(vs ...uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldIn(FieldRequestedBy, vs...))
+}
+
+// RequestedByNotIn applies the NotIn predicate on the "requested_by" field.
+func RequestedByNotIn(vs ...uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNotIn(FieldRequestedBy, vs...))
+}
+
+// RequestedByGT applies the GT predicate on the "requested_by" field.
+func RequestedByGT(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldGT(FieldRequestedBy, v))
+}
+
+// RequestedByGTE applies the GTE predicate on the "requested_by" field.
+func RequestedByGTE(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldGTE(FieldRequestedBy, v))
+}
+
+// RequestedByLT applies the LT predicate on the "requested_by" field.
+func RequestedByLT(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldLT(FieldRequestedBy, v))
+}
+
+// RequestedByLTE applies the LTE predicate on the "requested_by" field.
+func RequestedByLTE(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldLTE(FieldRequestedBy, v))
+}
+
+// RequestedByIsNil applies the IsNil predicate on the "requested_by" field.
+func RequestedByIsNil() predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldIsNull(FieldRequestedBy))
+}
+
+// RequestedByNotNil applies the NotNil predicate on the "requested_by" field.
+func RequestedByNotNil() predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNotNull(FieldRequestedBy))
+}
+
+// DeliveryIDEQ applies the EQ predicate on the "delivery_id" field.
+func DeliveryIDEQ(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldEQ(FieldDeliveryID, v))
+}
+
+// DeliveryIDNEQ applies the NEQ predicate on the "delivery_id" field.
+func DeliveryIDNEQ(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNEQ(FieldDeliveryID, v))
+}
+
+// DeliveryIDIn applies the In predicate on the "delivery_id" field.
+func DeliveryIDIn(vs ...uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldIn(FieldDeliveryID, vs...))
+}
+
+// DeliveryIDNotIn applies the NotIn predicate on the "delivery_id" field.
+func DeliveryIDNotIn(vs ...uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNotIn(FieldDeliveryID, vs...))
+}
+
+// DeliveryIDGT applies the GT predicate on the "delivery_id" field.
+func DeliveryIDGT(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldGT(FieldDeliveryID, v))
+}
+
+// DeliveryIDGTE applies the GTE predicate on the "delivery_id" field.
+func DeliveryIDGTE(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldGTE(FieldDeliveryID, v))
+}
+
+// DeliveryIDLT applies the LT predicate on the "delivery_id" field.
+func DeliveryIDLT(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldLT(FieldDeliveryID, v))
+}
+
+// DeliveryIDLTE applies the LTE predicate on the "delivery_id" field.
+func DeliveryIDLTE(v uuid.UUID) predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldLTE(FieldDeliveryID, v))
+}
+
+// DeliveryIDIsNil applies the IsNil predicate on the "delivery_id" field.
+func DeliveryIDIsNil() predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldIsNull(FieldDeliveryID))
+}
+
+// DeliveryIDNotNil applies the NotNil predicate on the "delivery_id" field.
+func DeliveryIDNotNil() predicate.SyncRun {
+	return predicate.SyncRun(sql.FieldNotNull(FieldDeliveryID))
 }
 
 // And groups predicates with the AND operator between them.

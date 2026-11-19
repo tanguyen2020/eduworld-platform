@@ -2,16 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/identity/sis.sync_completed.v1.schema.json",
   "title": "Payload sis.sync_completed v1 (module identity, owner F011)",
-  "description": "Kết thúc một sync run (CSV ở F011). F017 bổ sung trường tương thích (mode, status, dry_run, connection_status, failure_code — F017 T007) qua delta trên schema này. Consumer: AUD, NTF (admin).",
+  "description": "Kết thúc một sync run (CSV ở F011; full/delta/webhook của contract_v1 ở F017). F017 T007 bổ sung các trường tùy chọn tương thích: sis_connection_id, mode, status, dry_run, connection_status, failure_code. Consumer: AUD, NTF (admin).",
   "type": "object",
   "additionalProperties": false,
   "required": ["sync_run_id", "stats", "issues_count"],
   "properties": {
     "sync_run_id": { "type": "string", "format": "uuid" },
+    "sis_connection_id": { "type": "string", "format": "uuid" },
+    "mode": { "type": "string", "enum": ["full", "delta", "webhook", "csv_import"] },
+    "status": { "type": "string", "enum": ["succeeded", "partially_failed", "failed"] },
+    "dry_run": { "type": "boolean" },
+    "connection_status": { "type": "string", "enum": ["active", "auth_error", "contract_error", "paused"] },
+    "failure_code": { "type": ["string", "null"], "maxLength": 64 },
     "stats": { "type": "object", "additionalProperties": false, "properties": { "fetched": { "type": "integer", "minimum": 0 }, "created": { "type": "integer", "minimum": 0 }, "updated": { "type": "integer", "minimum": 0 }, "unchanged": { "type": "integer", "minimum": 0 }, "errors": { "type": "integer", "minimum": 0 } } },
     "issues_count": { "type": "integer", "minimum": 0 }
   },
   "examples": [
-    { "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "stats": { "fetched": 120, "created": 3, "updated": 5, "unchanged": 112, "errors": 0 }, "issues_count": 1 }
+    { "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "stats": { "fetched": 120, "created": 3, "updated": 5, "unchanged": 112, "errors": 0 }, "issues_count": 1 },
+    { "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "sis_connection_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1", "mode": "full", "status": "failed", "dry_run": false, "connection_status": "auth_error", "failure_code": "SIS_AUTH_FAILED", "stats": { "fetched": 0, "created": 0, "updated": 0, "unchanged": 0, "errors": 0 }, "issues_count": 0 }
   ]
 }

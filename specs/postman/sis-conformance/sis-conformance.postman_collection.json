@@ -1,0 +1,1473 @@
+{
+  "info": {
+    "name": "EduWorld SIS Contract v1 — conformance",
+    "_postman_id": "6f3c7a3e-17f0-4c2b-9e5a-0f017c0f0f17",
+    "description": "Bộ conformance test sinh từ specs/sis/eduworld-sis-contract.v1.yaml (contract 1.2.1). KHÔNG SỬA TAY: chạy node specs/postman/sis-conformance/generate.mjs. Hướng dẫn: README.md cùng thư mục.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.globals.set('ew_sis_contract', '1.2.1');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "capabilities",
+      "value": "[]"
+    },
+    {
+      "key": "webhook_signature_ok",
+      "value": "false"
+    }
+  ],
+  "item": [
+    {
+      "name": "Bắt buộc (full_sync)",
+      "item": [
+        {
+          "name": "getHealth — contract_version major 1, capabilities",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "pm.test('HTTP 200 + JSON Schema Health', function () { pm.response.to.have.status(200); pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"status\",\"contract_version\",\"capabilities\"],\"additionalProperties\":false,\"properties\":{\"status\":{\"type\":\"string\",\"enum\":[\"ok\",\"degraded\"]},\"contract_version\":{\"type\":\"string\",\"maxLength\":64,\"pattern\":\"^1\\\\.[0-9]+\\\\.[0-9]+$\"},\"capabilities\":{\"type\":\"array\",\"uniqueItems\":true,\"items\":{\"type\":\"string\",\"enum\":[\"full_sync\",\"delta\",\"webhook\",\"student_lookup\"]}},\"server_time\":{\"type\":\"string\"}}}); });",
+                  "const h = ew.json() || {};",
+                  "pm.collectionVariables.set('capabilities', JSON.stringify(h.capabilities || []));",
+                  "pm.test('contract_version cùng major với EduWorld (1.x)', function () { pm.expect(String(h.contract_version)).to.match(/^1\\./); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/health",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "getHealth thiếu credential → 401 problem+json",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.mock(401);",
+                  "pm.request.headers.remove('X-Api-Key'); pm.request.headers.remove('Authorization');",
+                  "if (pm.environment.get('auth_type') === 'mtls') { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.problem(401);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/health",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "listSchools — trang đầu",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.page({\"type\":\"object\",\"required\":[\"data\",\"page\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"school_external_id\",\"school_code\",\"name\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_code\":{\"type\":\"string\",\"maxLength\":32},\"name\":{\"type\":\"string\",\"maxLength\":255},\"organization_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"province_code\":{\"type\":\"string\",\"maxLength\":64,\"pattern\":\"^[a-z]{2}\\\\.[a-z0-9-]+$\"},\"moet_code\":{\"type\":\"string\",\"maxLength\":32},\"school_level\":{\"type\":\"string\",\"enum\":[\"primary\",\"lower_secondary\",\"multi_level\"]},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"inactive\"]},\"updated_at\":{\"type\":\"string\"}}}},\"page\":{\"type\":\"object\",\"required\":[\"has_more\"],\"additionalProperties\":false,\"properties\":{\"next_cursor\":{\"type\":[\"string\",\"null\"],\"maxLength\":512},\"has_more\":{\"type\":\"boolean\"}}}}}, 1000);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools?limit=1000",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "listSchools limit > 1000 → 400 problem+json",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.mock(400);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.problem(400);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools?limit=1001",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1001"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "listAcademicYears",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "pm.test('HTTP 200 + JSON Schema', function () { pm.response.to.have.status(200); pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"data\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"academic_year\",\"start_date\",\"end_date\",\"is_current\"],\"additionalProperties\":false,\"properties\":{\"academic_year\":{\"type\":\"string\",\"maxLength\":32,\"pattern\":\"^[0-9]{4}-[0-9]{4}$\"},\"start_date\":{\"type\":\"string\"},\"end_date\":{\"type\":\"string\"},\"is_current\":{\"type\":\"boolean\"}}}}}}); });",
+                  "pm.test('Có đúng một năm học hiện hành', function () { pm.expect(((ew.json() || {}).data || []).filter(function (y) { return y.is_current; }).length).to.equal(1); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/academic-years",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "academic-years"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "listClasses",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.page({\"type\":\"object\",\"required\":[\"data\",\"page\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"class_external_id\",\"school_external_id\",\"academic_year\",\"grade_level\",\"name\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"class_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"academic_year\":{\"type\":\"string\",\"maxLength\":32,\"pattern\":\"^[0-9]{4}-[0-9]{4}$\"},\"grade_level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":9},\"name\":{\"type\":\"string\",\"maxLength\":32},\"updated_at\":{\"type\":\"string\"}}}},\"page\":{\"type\":\"object\",\"required\":[\"has_more\"],\"additionalProperties\":false,\"properties\":{\"next_cursor\":{\"type\":[\"string\",\"null\"],\"maxLength\":512},\"has_more\":{\"type\":\"boolean\"}}}}}, Number(pm.environment.get('page_limit')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/classes?academic_year={{academic_year}}&limit={{page_limit}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "classes"
+              ],
+              "query": [
+                {
+                  "key": "academic_year",
+                  "value": "{{academic_year}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "{{page_limit}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "listStudents — trang đầu và trang kế theo next_cursor",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "const b = ew.page({\"type\":\"object\",\"required\":[\"data\",\"page\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"student_external_id\",\"school_external_id\",\"student_code\",\"full_name\",\"grade_level\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"student_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"student_code\":{\"type\":\"string\",\"maxLength\":32},\"full_name\":{\"type\":\"string\",\"maxLength\":128},\"date_of_birth\":{\"type\":\"string\"},\"grade_level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":9},\"national_student_id\":{\"type\":\"string\",\"maxLength\":32},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"inactive\",\"transferred_out\",\"graduated\",\"suspended\"]},\"login\":{\"type\":\"object\",\"required\":[\"username\"],\"additionalProperties\":false,\"properties\":{\"username\":{\"type\":\"string\",\"maxLength\":128},\"idp_alias\":{\"type\":\"string\",\"maxLength\":64},\"idp_subject\":{\"type\":\"string\",\"maxLength\":255}}},\"updated_at\":{\"type\":\"string\"}}}},\"page\":{\"type\":\"object\",\"required\":[\"has_more\"],\"additionalProperties\":false,\"properties\":{\"next_cursor\":{\"type\":[\"string\",\"null\"],\"maxLength\":512},\"has_more\":{\"type\":\"boolean\"}}}}}, Number(pm.environment.get('page_limit')));",
+                  "if (b.page && b.page.has_more) {",
+                  "  const url = pm.request.url.toString().replace(/([?&])cursor=[^&]*/, '$1') + '&cursor=' + encodeURIComponent(b.page.next_cursor);",
+                  "  pm.sendRequest({ url: url, method: 'GET', header: pm.request.headers.toObject() }, function (err, res) {",
+                  "    pm.test('Trang kế theo next_cursor: HTTP 200', function () { pm.expect(err).to.equal(null); pm.expect(res.code).to.equal(200); });",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/students?limit={{page_limit}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{page_limit}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "listEnrollments",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.page({\"type\":\"object\",\"required\":[\"data\",\"page\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"student_external_id\",\"class_external_id\",\"start_date\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"student_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"class_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"start_date\":{\"type\":\"string\"},\"end_date\":{\"type\":[\"string\",\"null\"]},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"transferred\",\"ended\"]},\"updated_at\":{\"type\":\"string\"}}}},\"page\":{\"type\":\"object\",\"required\":[\"has_more\"],\"additionalProperties\":false,\"properties\":{\"next_cursor\":{\"type\":[\"string\",\"null\"],\"maxLength\":512},\"has_more\":{\"type\":\"boolean\"}}}}}, Number(pm.environment.get('page_limit')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/enrollments?academic_year={{academic_year}}&limit={{page_limit}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "enrollments"
+              ],
+              "query": [
+                {
+                  "key": "academic_year",
+                  "value": "{{academic_year}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "{{page_limit}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tùy chọn theo capability (delta, student_lookup, webhook)",
+      "item": [
+        {
+          "name": "listChanges (delta) — thứ tự sequence, watermark",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.needs('delta');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "const b = ew.page({\"type\":\"object\",\"required\":[\"data\",\"page\"],\"additionalProperties\":false,\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"sequence\",\"entity_kind\",\"operation\",\"external_id\",\"occurred_at\"],\"additionalProperties\":false,\"properties\":{\"sequence\":{\"type\":\"integer\",\"minimum\":0},\"entity_kind\":{\"type\":\"string\",\"enum\":[\"school\",\"class\",\"student\",\"enrollment\"]},\"operation\":{\"type\":\"string\",\"enum\":[\"upsert\",\"delete\"]},\"external_id\":{\"type\":\"string\",\"maxLength\":200},\"occurred_at\":{\"type\":\"string\"},\"record\":{\"oneOf\":[{\"type\":\"object\",\"required\":[\"school_external_id\",\"school_code\",\"name\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_code\":{\"type\":\"string\",\"maxLength\":32},\"name\":{\"type\":\"string\",\"maxLength\":255},\"organization_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"province_code\":{\"type\":\"string\",\"maxLength\":64,\"pattern\":\"^[a-z]{2}\\\\.[a-z0-9-]+$\"},\"moet_code\":{\"type\":\"string\",\"maxLength\":32},\"school_level\":{\"type\":\"string\",\"enum\":[\"primary\",\"lower_secondary\",\"multi_level\"]},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"inactive\"]},\"updated_at\":{\"type\":\"string\"}}},{\"type\":\"object\",\"required\":[\"class_external_id\",\"school_external_id\",\"academic_year\",\"grade_level\",\"name\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"class_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"academic_year\":{\"type\":\"string\",\"maxLength\":32,\"pattern\":\"^[0-9]{4}-[0-9]{4}$\"},\"grade_level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":9},\"name\":{\"type\":\"string\",\"maxLength\":32},\"updated_at\":{\"type\":\"string\"}}},{\"type\":\"object\",\"required\":[\"student_external_id\",\"school_external_id\",\"student_code\",\"full_name\",\"grade_level\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"student_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"student_code\":{\"type\":\"string\",\"maxLength\":32},\"full_name\":{\"type\":\"string\",\"maxLength\":128},\"date_of_birth\":{\"type\":\"string\"},\"grade_level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":9},\"national_student_id\":{\"type\":\"string\",\"maxLength\":32},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"inactive\",\"transferred_out\",\"graduated\",\"suspended\"]},\"login\":{\"type\":\"object\",\"required\":[\"username\"],\"additionalProperties\":false,\"properties\":{\"username\":{\"type\":\"string\",\"maxLength\":128},\"idp_alias\":{\"type\":\"string\",\"maxLength\":64},\"idp_subject\":{\"type\":\"string\",\"maxLength\":255}}},\"updated_at\":{\"type\":\"string\"}}},{\"type\":\"object\",\"required\":[\"student_external_id\",\"class_external_id\",\"start_date\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"student_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"class_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"start_date\":{\"type\":\"string\"},\"end_date\":{\"type\":[\"string\",\"null\"]},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"transferred\",\"ended\"]},\"updated_at\":{\"type\":\"string\"}}}]}}}},\"page\":{\"type\":\"object\",\"required\":[\"has_more\"],\"additionalProperties\":false,\"properties\":{\"next_cursor\":{\"type\":[\"string\",\"null\"],\"maxLength\":512},\"has_more\":{\"type\":\"boolean\"}}}}}, Number(pm.environment.get('page_limit')));",
+                  "pm.test('sequence tăng dần, record khi upsert', function () {",
+                  "  const d = b.data || [];",
+                  "  for (let i = 1; i < d.length; i++) { pm.expect(d[i].sequence).to.be.above(d[i - 1].sequence); }",
+                  "  d.forEach(function (c) { if (c.operation === 'upsert') { pm.expect(c.record).to.be.an('object'); } });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/changes?limit={{page_limit}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{page_limit}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "listChanges watermark hết hạn → 410 problem+json",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.needs('delta');",
+                  "ew.mock(410);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.problem(410);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/changes?since={{expired_watermark}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "{{expired_watermark}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "lookupStudent — tìm thấy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.needs('student_lookup');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "pm.test('HTTP 200 + JSON Schema Student', function () { pm.response.to.have.status(200); pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"student_external_id\",\"school_external_id\",\"student_code\",\"full_name\",\"grade_level\",\"status\",\"updated_at\"],\"additionalProperties\":false,\"properties\":{\"student_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"school_external_id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9._:-]+$\"},\"student_code\":{\"type\":\"string\",\"maxLength\":32},\"full_name\":{\"type\":\"string\",\"maxLength\":128},\"date_of_birth\":{\"type\":\"string\"},\"grade_level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":9},\"national_student_id\":{\"type\":\"string\",\"maxLength\":32},\"status\":{\"type\":\"string\",\"enum\":[\"active\",\"inactive\",\"transferred_out\",\"graduated\",\"suspended\"]},\"login\":{\"type\":\"object\",\"required\":[\"username\"],\"additionalProperties\":false,\"properties\":{\"username\":{\"type\":\"string\",\"maxLength\":128},\"idp_alias\":{\"type\":\"string\",\"maxLength\":64},\"idp_subject\":{\"type\":\"string\",\"maxLength\":255}}},\"updated_at\":{\"type\":\"string\"}}}); });",
+                  "pm.test('Trả lời trong 3 giây (sis_login_sync_timeout_ms)', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/students/lookup?login_username={{lookup_username}}",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "students",
+                "lookup"
+              ],
+              "query": [
+                {
+                  "key": "login_username",
+                  "value": "{{lookup_username}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "lookupStudent — không tìm thấy → 404 problem+json",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "if (pm.environment.get('auth_type') === 'oauth2_client_credentials') {",
+                  "  pm.request.headers.remove('X-Api-Key');",
+                  "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.environment.get('access_token') });",
+                  "} else if (pm.environment.get('auth_type') === 'mtls') { pm.request.headers.remove('X-Api-Key'); }",
+                  "ew.needs('student_lookup');",
+                  "ew.mock(404);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.problem(404);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "disabled": false,
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{sis_base_url}}/schools/{{school_external_id}}/students/lookup?login_username=__eduworld_conformance_unknown__",
+              "host": [
+                "{{sis_base_url}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_external_id}}",
+                "students",
+                "lookup"
+              ],
+              "query": [
+                {
+                  "key": "login_username",
+                  "value": "__eduworld_conformance_unknown__"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Webhook mẫu ký HMAC (receiveSisChanges) — kiểm thuật toán chữ ký",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const ew = {",
+                  "  json: function () { try { return pm.response.json(); } catch (e) { return null; } },",
+                  "  problem: function (status) {",
+                  "    pm.test('HTTP ' + status + ' application/problem+json', function () {",
+                  "      pm.response.to.have.status(status);",
+                  "      pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/problem+json');",
+                  "      pm.response.to.have.jsonSchema({\"type\":\"object\",\"required\":[\"type\",\"title\",\"status\"],\"properties\":{\"type\":{\"type\":\"string\",\"maxLength\":64},\"title\":{\"type\":\"string\",\"maxLength\":255},\"status\":{\"type\":\"integer\"},\"detail\":{\"type\":\"string\",\"maxLength\":1000},\"code\":{\"type\":\"string\",\"maxLength\":64}}});",
+                  "    });",
+                  "  },",
+                  "  page: function (schema, limit) {",
+                  "    pm.test('HTTP 200 + JSON Schema của contract', function () {",
+                  "      pm.response.to.have.status(200);",
+                  "      pm.response.to.have.jsonSchema(schema);",
+                  "    });",
+                  "    const b = ew.json() || {};",
+                  "    pm.test('Phân trang cursor: has_more ⇒ next_cursor mới, số bản ghi ≤ limit', function () {",
+                  "      pm.expect(b.page).to.be.an('object');",
+                  "      if (b.page.has_more) { pm.expect(b.page.next_cursor).to.be.a('string').and.not.empty; pm.expect(b.page.next_cursor).to.not.equal(pm.request.url.query.get('cursor')); }",
+                  "      pm.expect((b.data || []).length).to.be.at.most(limit);",
+                  "    });",
+                  "    return b;",
+                  "  },",
+                  "  needs: function (cap) {",
+                  "    const caps = JSON.parse(pm.collectionVariables.get('capabilities') || '[]');",
+                  "    if (caps.indexOf(cap) < 0) { console.log('capability ' + cap + ' không khai báo: bỏ qua'); pm.execution.skipRequest(); }",
+                  "  },",
+                  "  mock: function (code) { if (pm.environment.get('mock_prefer') === 'true') { pm.request.headers.upsert({ key: 'Prefer', value: 'code=' + code }); } }",
+                  "};",
+                  "ew.needs('webhook');",
+                  "const v = {\"secret\":\"whsec-conformance\",\"timestamp\":\"1800000000\",\"body\":\"{\\\"delivery_id\\\":\\\"0193a5f4-6c1e-7b2a-9d1f-0000000000d1\\\",\\\"contract_version\\\":\\\"1.2.1\\\",\\\"changes\\\":[{\\\"sequence\\\":1,\\\"entity_kind\\\":\\\"enrollment\\\",\\\"operation\\\":\\\"delete\\\",\\\"external_id\\\":\\\"HS-DEMO-0002|C-3A-2026\\\",\\\"occurred_at\\\":\\\"2026-11-01T08:00:00Z\\\"}]}\",\"signature\":\"sha256=2e05db68ac856b01d438f92935f0aed15394cbff73f0467ccd59f66da424f1ca\"};",
+                  "const CryptoJS = require('crypto-js');",
+                  "const sig = 'sha256=' + CryptoJS.HmacSHA256(v.timestamp + '.' + v.body, v.secret).toString(CryptoJS.enc.Hex);",
+                  "pm.collectionVariables.set('webhook_signature_ok', String(sig === v.signature));",
+                  "if (!pm.environment.get('eduworld_webhook_url')) { pm.request.url = pm.environment.get('sis_base_url') + '/health'; pm.request.method = 'GET'; }",
+                  "pm.request.headers.upsert({ key: 'X-EduWorld-Timestamp', value: v.timestamp });",
+                  "pm.request.headers.upsert({ key: 'X-EduWorld-Signature', value: sig });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HMAC-SHA256(secret, timestamp + \".\" + raw_body) khớp vector của EduWorld', function () { pm.expect(pm.collectionVariables.get('webhook_signature_ok')).to.equal('true'); });",
+                  "if (pm.environment.get('eduworld_webhook_url')) { pm.test('EduWorld nhận lô (202) hoặc báo replay (409)', function () { pm.expect([202, 409]).to.include(pm.response.code); }); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"delivery_id\":\"0193a5f4-6c1e-7b2a-9d1f-0000000000d1\",\"contract_version\":\"1.2.1\",\"changes\":[{\"sequence\":1,\"entity_kind\":\"enrollment\",\"operation\":\"delete\",\"external_id\":\"HS-DEMO-0002|C-3A-2026\",\"occurred_at\":\"2026-11-01T08:00:00Z\"}]}"
+            },
+            "url": {
+              "raw": "{{eduworld_webhook_url}}",
+              "host": [
+                "{{eduworld_webhook_url}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

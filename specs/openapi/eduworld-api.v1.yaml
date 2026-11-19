@@ -7316,7 +7316,8 @@ paths:
       description: |
         Quyền `platform.sis_connection.manage`; header `X-Tenant-Id` = tenant đích, `Idempotency-Key` bắt buộc. Connection `csv_import` không cần
         `config`/`secret_ref`; gán trường bằng `setSisConnectionSchools` (một trường chỉ một connection active → `409 SIS_SCHOOL_ALREADY_CONNECTED`).
-        Ghi audit (F011-AC-26). Nhánh `contract_v1` do F017 mở rộng (`SisConnectionCreate` thành `oneOf` theo `provider_kind`).
+        Ghi audit (F011-AC-26). Nhánh `contract_v1` (F017-AC-01): `config` (`base_url` https, `auth_type`, `token_url` khi OAuth2, `schools[]`),
+        `secret_ref`, `contract_version` major 1; không lưu secret hay field-mapping; response chỉ có cờ `has_secret`/`has_webhook_secret` (F017-AC-04).
       x-internal: true
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
@@ -7370,7 +7371,12 @@ paths:
       tags: [sis]
       operationId: triggerSisSync
       x-portal-action: action.platform_admin.tenants.sis_connections
-      summary: Kích hoạt đồng bộ SIS (full/delta)
+      summary: Kích hoạt đồng bộ SIS (full/delta) của connection contract_v1 — xử lý bất đồng bộ trong worker
+      description: |
+        Quyền `platform.sis_connection.manage` (mọi trường của connection) hoặc `tenant.sis.import` khi `school_id` (bắt buộc) thuộc scope trường của người gọi
+        và thuộc connection (F017-AC-28); tenant/trường khác → `404`. `Idempotency-Key` bắt buộc. Connection không `active` → `409 SIS_CONNECTION_NOT_ACTIVE`;
+        connection đang có run → `409 SIS_SYNC_ALREADY_RUNNING` (F017-AC-07, F017-AC-14). `dry_run = true`: pull + validate + staging + reconcile, không apply,
+        không phát event nghiệp vụ (F017-AC-03). Run được tạo ở trạng thái `queued` và chạy trong worker (job `scheduled_sync` của `IDENTITY_SIS_JOBS`).
       x-internal: true
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
@@ -7385,10 +7391,12 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [kind]
               properties:
                 kind: { type: string, enum: [full, delta] }
                 school_id: { $ref: '#/components/schemas/Uuid' }
+                dry_run: { type: boolean, default: false }
       responses:
         '202':
           description: Đã xếp hàng
@@ -7398,7 +7406,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncRun'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /sis/connections/{connection_id}:
+    patch:
+      x-service: identity
+      tags: [sis]
+      operationId: updateSisConnection
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Sửa cấu hình/trạng thái SIS connection (JSON Merge Patch, If-Match) — không trả credential
+      description: |
+        Quyền `platform.sis_connection.manage` (F017-AC-28). Sửa `config`, `secret_ref`, `webhook_secret_ref`, `schedule` (chỉ connection `contract_v1`) hoặc
+        `status` (`active`/`paused`, bắt buộc `reason`). Kích hoạt lại (`status = active`) chạy health check trước: major `contract_version` khác →
+        `422 SIS_CONTRACT_VERSION_UNSUPPORTED`, facade lỗi → `502 SIS_UNAVAILABLE`; đạt thì đặt `consecutive_failed_runs = 0` (F017-AC-13). Ghi audit
+        `sis_connection.updated`/`sis_connection.status_changed` (không ghi tham chiếu secret, F017-AC-04).
+      x-internal: true
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/ConnectionIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema: { $ref: '#/components/schemas/SisConnectionUpdate' }
+      responses:
+        '200':
+          description: Đã cập nhật
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SisConnection' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+  /sis/connections/{connection_id}:health-check:
+    post:
+      x-service: identity
+      tags: [sis]
+      operationId: checkSisConnectionHealth
+      x-portal-action: action.platform_admin.tenants.sis_connections
+      summary: Kiểm tra kết nối facade SIS (getHealth) và lưu capabilities
+      description: |
+        Quyền `platform.sis_connection.manage`. Gọi `getHealth` của facade, lưu `capabilities` và `last_health_at` (F017-AC-02). Major `contract_version` khác major
+        của connection → connection `contract_error` và `422 SIS_CONTRACT_VERSION_UNSUPPORTED`; facade không trả lời/lỗi → `502 SIS_UNAVAILABLE`;
+        credential bị từ chối → connection `auth_error`, `502 SIS_UNAVAILABLE`. Không trả credential.
+      x-internal: true
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/ConnectionIdPath'
+      responses:
+        '200':
+          description: Kết quả kiểm tra
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SisConnectionHealth' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '502': { $ref: '#/components/responses/BadGateway' }
 
   /sis/runs/{run_id}:
     get:
@@ -15428,7 +15505,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -15448,7 +15525,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     ValidationFailed:
-      description: VALIDATION_FAILED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/ValidationProblem' }
@@ -15466,6 +15543,11 @@ components:
       description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
       headers:
         Retry-After: { $ref: '#/components/headers/RetryAfter' }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    BadGateway:
+      description: SIS_UNAVAILABLE — hệ thống ngoài (facade SIS của trường) không trả lời, lỗi 5xx hoặc từ chối credential
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -15583,6 +15665,10 @@ components:
         - MEDIA_NOT_READY
         - AUDIO_REQUIRED
         - SIS_SCHOOL_ALREADY_CONNECTED
+        - SIS_SYNC_ALREADY_RUNNING
+        - SIS_CONNECTION_NOT_ACTIVE
+        - SIS_CONTRACT_VERSION_UNSUPPORTED
+        - SIS_UNAVAILABLE
         - QUESTION_POOL_INSUFFICIENT
         # Exercise / attempt (EXERCISE_ENGINE)
         - ATTEMPT_NOT_FOUND
@@ -18358,13 +18444,90 @@ components:
       type: string
       enum: [active, auth_error, contract_error, paused]
     SisConnectionCreate:
+      description: Tạo SIS connection — `csv_import` (F011, không `config`/`secret_ref`) hoặc `contract_v1` (F017).
+      oneOf:
+        - $ref: '#/components/schemas/SisConnectionCreateCsv'
+        - $ref: '#/components/schemas/SisConnectionCreateContract'
+      discriminator:
+        propertyName: provider_kind
+        mapping:
+          csv_import: '#/components/schemas/SisConnectionCreateCsv'
+          contract_v1: '#/components/schemas/SisConnectionCreateContract'
+    SisConnectionCreateCsv:
       type: object
       additionalProperties: false
       required: [provider_kind]
-      description: F011 chỉ nhận `provider_kind = csv_import` (không `config`, không `secret_ref`); F017 mở rộng thành `oneOf` theo `provider_kind` cho `contract_v1`.
       properties:
         provider_kind: { type: string, enum: [csv_import] }
         reason: { type: string, maxLength: 500 }
+    SisConnectionCreateContract:
+      type: object
+      additionalProperties: false
+      required: [provider_kind, contract_version, config, secret_ref]
+      description: Connection `contract_v1` (F017-AC-01). `config` không chứa secret hay field-mapping; credential chỉ qua tham chiếu secret manager.
+      properties:
+        provider_kind: { type: string, enum: [contract_v1] }
+        contract_version: { type: string, maxLength: 64, pattern: '^1\.[0-9]+\.[0-9]+$' }
+        config: { $ref: '#/components/schemas/SisContractConfig' }
+        secret_ref: { $ref: '#/components/schemas/SisSecretRef' }
+        webhook_secret_ref: { $ref: '#/components/schemas/SisSecretRef' }
+        schedule: { type: string, maxLength: 64, description: 'Cron 5 trường (giờ ICT) của full sync; bỏ trống = `sis_sync_schedule`' }
+        reason: { type: string, maxLength: 500 }
+    SisSecretRef:
+      type: string
+      maxLength: 512
+      pattern: '^[a-z0-9][a-z0-9._/-]{0,511}$'
+      description: Tham chiếu secret manager (Swarm secret), không phải credential; không bao giờ được trả về.
+    SisContractConfig:
+      type: object
+      additionalProperties: false
+      required: [base_url, auth_type, schools]
+      properties:
+        base_url: { type: string, format: uri, maxLength: 2048, pattern: '^https?://', description: 'Base URL facade (`…/eduworld/v1`); https bắt buộc (http chỉ khi cờ dev EW_SIS_ALLOW_HTTP_BASE_URL)' }
+        auth_type: { type: string, enum: [oauth2_client_credentials, api_key, mtls] }
+        token_url: { type: string, format: uri, maxLength: 2048, pattern: '^https?://' }
+        oauth_scope: { type: string, maxLength: 255, default: eduworld.sis.read }
+        schools:
+          type: array
+          maxItems: 500
+          description: Trường của connection — ánh xạ `school_external_id` của SIS sang trường EduWorld trong tenant (OQ F017-1)
+          items:
+            type: object
+            additionalProperties: false
+            required: [school_external_id, school_id]
+            properties:
+              school_external_id: { type: string, minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9._:-]+$' }
+              school_id: { $ref: '#/components/schemas/Uuid' }
+    SisConnectionUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: JSON Merge Patch của connection (F017). Đổi `status` bắt buộc `reason`.
+      properties:
+        config: { $ref: '#/components/schemas/SisContractConfig' }
+        secret_ref: { $ref: '#/components/schemas/SisSecretRef' }
+        webhook_secret_ref:
+          oneOf:
+            - $ref: '#/components/schemas/SisSecretRef'
+            - type: 'null'
+        schedule: { type: [string, 'null'], maxLength: 64 }
+        status: { type: string, enum: [active, paused] }
+        reason: { type: string, maxLength: 500 }
+    SisCapability:
+      type: string
+      enum: [full_sync, delta, webhook, student_lookup]
+    SisConnectionHealth:
+      type: object
+      required: [status, compatible, capabilities, checked_at]
+      properties:
+        status: { type: string, enum: [ok, degraded, unreachable] }
+        contract_version: { type: [string, 'null'], maxLength: 64 }
+        compatible: { type: boolean }
+        capabilities:
+          type: array
+          maxItems: 4
+          items: { $ref: '#/components/schemas/SisCapability' }
+        checked_at: { $ref: '#/components/schemas/Timestamp' }
     SisConnection:
       type: object
       required: [sis_connection_id, tenant_id, provider_kind, status, created_at]
@@ -18380,6 +18543,22 @@ components:
           oneOf:
             - $ref: '#/components/schemas/SyncRun'
             - type: 'null'
+        config:
+          description: Cấu hình `contract_v1` (không secret); `null` với `csv_import`
+          oneOf:
+            - $ref: '#/components/schemas/SisContractConfig'
+            - type: 'null'
+        schedule: { type: [string, 'null'], maxLength: 64 }
+        has_secret: { type: boolean, description: 'Có `secret_ref` (giá trị không bao giờ được trả, F017-AC-04)' }
+        has_webhook_secret: { type: boolean }
+        capabilities:
+          type: array
+          maxItems: 4
+          items: { $ref: '#/components/schemas/SisCapability' }
+        status_reason: { type: [string, 'null'], enum: [version_mismatch, violation_threshold, credential_rejected, secret_unavailable, circuit_open, manual, null] }
+        consecutive_failed_runs: { type: integer, minimum: 0 }
+        last_health_at: { type: [string, 'null'], format: date-time }
+        last_success_at: { type: [string, 'null'], format: date-time }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
     SisConnectionPage:

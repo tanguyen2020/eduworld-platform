@@ -35,3 +35,7 @@ const (
 	SisImportWatchInterval  = 15 * time.Second // detect uploaded CSV files
 	SisStagingAnonymizeTick = time.Hour        // sis-staging-anonymizer
 )
+
+// SisSchedulerInterval is the tick of the job sis-scheduler (F017): twice a minute so no scheduled minute is
+// missed; jobs are deduplicated per connection, mode and minute [Proposed].
+const SisSchedulerInterval = 30 * time.Second

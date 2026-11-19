@@ -149,7 +149,11 @@ const (
 	SetupTicketInvalid               Code = "SETUP_TICKET_INVALID"
 	ShopItemUnavailable              Code = "SHOP_ITEM_UNAVAILABLE"
 	SimulationLogInvalid             Code = "SIMULATION_LOG_INVALID"
+	SisConnectionNotActive           Code = "SIS_CONNECTION_NOT_ACTIVE"
+	SisContractVersionUnsupported    Code = "SIS_CONTRACT_VERSION_UNSUPPORTED"
 	SisSchoolAlreadyConnected        Code = "SIS_SCHOOL_ALREADY_CONNECTED"
+	SisSyncAlreadyRunning            Code = "SIS_SYNC_ALREADY_RUNNING"
+	SisUnavailable                   Code = "SIS_UNAVAILABLE"
 	SocialScopeViolation             Code = "SOCIAL_SCOPE_VIOLATION"
 	StepPreconditionFailed           Code = "STEP_PRECONDITION_FAILED"
 	TenantAccessDisabled             Code = "TENANT_ACCESS_DISABLED"
@@ -315,7 +319,11 @@ var statusByCode = map[Code]int{
 	SetupTicketInvalid:               401,
 	ShopItemUnavailable:              409,
 	SimulationLogInvalid:             422,
+	SisConnectionNotActive:           409,
+	SisContractVersionUnsupported:    422,
 	SisSchoolAlreadyConnected:        409,
+	SisSyncAlreadyRunning:            409,
+	SisUnavailable:                   502,
 	SocialScopeViolation:             403,
 	StepPreconditionFailed:           409,
 	TenantAccessDisabled:             403,
@@ -481,7 +489,11 @@ var allCodes = []Code{
 	SetupTicketInvalid,
 	ShopItemUnavailable,
 	SimulationLogInvalid,
+	SisConnectionNotActive,
+	SisContractVersionUnsupported,
 	SisSchoolAlreadyConnected,
+	SisSyncAlreadyRunning,
+	SisUnavailable,
 	SocialScopeViolation,
 	StepPreconditionFailed,
 	TenantAccessDisabled,

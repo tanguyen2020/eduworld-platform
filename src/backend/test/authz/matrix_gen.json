@@ -321,6 +321,18 @@
     ]
   },
   {
+    "operation_id": "checkSisConnectionHealth",
+    "module": "identity",
+    "method": "POST",
+    "path": "/sis/connections/{connection_id}:health-check",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "claimEventMilestone",
     "module": "game",
     "method": "POST",
@@ -5571,6 +5583,18 @@
     "module": "chat",
     "method": "PATCH",
     "path": "/admin/chat/sensitive-terms/{term_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateSisConnection",
+    "module": "identity",
+    "method": "PATCH",
+    "path": "/sis/connections/{connection_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

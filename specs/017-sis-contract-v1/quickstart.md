@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F011, F004, F003, F001.
 - Lệnh: `make up` (gồm `sis-mock` cổng 4010), `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Secret local: `deploy/compose/secrets/sis-demo-a` (API key bất kỳ, Prism không kiểm) và `sis-demo-a-webhook` (chuỗi HMAC thử) — tạo từ `.example`, không commit.
+- Secret local: `deploy/compose/secrets/sis/th-demo-a` (API key bất kỳ, Prism không kiểm) và `sis/th-demo-a-webhook` (chuỗi HMAC thử) — chép từ `deploy/compose/sis-secrets.example/`, không commit.
 - Tài khoản: `sa.admin`, `ad.truong.a` (TH Demo A, `th-demo-a`), `ad.truong.b` (`pgd-demo`), `qlcm.truong.a`.
 - Gọi API qua gateway nội bộ local; token lấy theo LOCAL_DEVELOPMENT.
 
@@ -14,7 +14,7 @@
 
 | # | Bước | Kết quả mong đợi | Tiêu chí |
 |---|---|---|---|
-| 1 | `sa.admin` `POST /api/v1/sis/connections` (`X-Tenant-Id: th-demo-a`, `Idempotency-Key`) `provider_kind=contract_v1`, `base_url=http://sis-mock:4010/eduworld/v1` (local cho phép http qua cờ dev), `auth_type=api_key`, `secret_ref=sis-demo-a`, `contract_version=1.2.0`; `setSisConnectionSchools` TH Demo A | 201; response không có `secret_ref`, có `has_secret=true`; audit `sis_connection.created` | F017-AC-01, F017-AC-04 |
+| 1 | `sa.admin` `POST /api/v1/sis/connections` (`X-Tenant-Id: th-demo-a`, `Idempotency-Key`) `provider_kind=contract_v1`, `base_url=http://sis-mock:4010` (Prism phục vụ path không kèm `/eduworld/v1`; local cho phép http qua cờ dev `EW_SIS_ALLOW_HTTP_BASE_URL`), `auth_type=api_key`, `secret_ref=sis/th-demo-a`, `contract_version=1.2.0`; `setSisConnectionSchools` TH Demo A | 201; response không có `secret_ref`, có `has_secret=true`; audit `sis_connection.created` | F017-AC-01, F017-AC-04 |
 | 2 | `POST …/{id}:health-check` | `compatible=true`, `capabilities` từ example `Health` lưu trên connection | F017-AC-02 |
 | 3 | Sửa example `Health.contract_version` thành `2.0.0` trong fake SIS (test tích hợp) | `422 SIS_CONTRACT_VERSION_UNSUPPORTED`, connection `contract_error` | F017-AC-02 |
 | 4 | `triggerSisSync` `kind=full`, `dry_run=true` | Run `succeeded`, `dry_run=true`, `stats` có create/update; không có `student.synced` trên NATS | F017-AC-03 |
@@ -22,7 +22,7 @@
 | 6 | Fake SIS: 1 học sinh sai enum `status`, 1 trường lạ `phone` | `partially_failed`, 1 lỗi `SIS_CONTRACT_VIOLATION`; `phone` không có trong staging; metric trường lạ tăng | F017-AC-06 |
 | 7 | Xem `sis.sync_completed` và `missing_in_source` sau khi bỏ 1 học sinh khỏi fake SIS | Event có `mode=full`, `connection_status=active`; học sinh bị đánh dấu `missing_in_source` | F017-AC-08 |
 | 8 | Fake SIS trả trường `TH-LA-999` chưa ánh xạ | Issue `unmapped_school`; không tạo trường | F017-AC-09 |
-| 9 | `curl -H "Prefer: code=503" http://localhost:4010/eduworld/v1/schools`; fake SIS 503×2 rồi 200; 429 `Retry-After: 2` | Prism trả 503 problem+json; worker retry rồi thành công; chờ ≥ 2 s sau 429 | F017-AC-10, F017-AC-11 |
+| 9 | `curl -H "X-Api-Key: x" -H "Prefer: code=503" http://localhost:4010/schools`; fake SIS 503×2 rồi 200; 429 `Retry-After: 2` | Prism trả 503 problem+json; worker retry rồi thành công; chờ ≥ 2 s sau 429 | F017-AC-10, F017-AC-11 |
 | 10 | Fake SIS trả 401 | Run `failed`, connection `auth_error`, event `connection_status=auth_error`, không retry | F017-AC-12 |
 | 11 | Fake SIS lỗi liên tiếp tới ngưỡng; `triggerSisSync` | Connection `paused` (`circuit_open`); trigger → `409 SIS_CONNECTION_NOT_ACTIVE`; `sa.admin` `PATCH status=active` có lý do → `active` | F017-AC-13, F017-AC-14 |
 | 12 | Connection có `delta`; fake `listChanges` 2 trang rồi 410 ở lần sau | Watermark = `next_cursor` trang cuối sau apply; 410 → full sync `trigger=fallback_full`, watermark không đổi | F017-AC-15, F017-AC-16 |
@@ -52,3 +52,21 @@ make specs-lint
 ## 4. Bằng chứng cần nộp
 
 - Kết quả go test/Postman (số pass/fail), `trace_id` kịch bản 5, 14, 17; ảnh log không chứa `secret_ref`/PII (kịch bản 1, 10); metric kịch bản 6, 19.
+
+## 5. Bằng chứng (2026-11-19, máy local, worktree F017)
+
+Binary `core-api`/`worker` chưa nối dây (OQ F010-2) nên kịch bản §2 được chạy bằng test tích hợp (PostgreSQL testcontainers, Valkey + NATS JetStream thật cho webhook, fake SIS `httptest` nhãn MOCK) và bằng Postman CLI vào `sis-mock` (Prism 4) chạy bằng Docker.
+
+| Kịch bản | Bằng chứng | Kết quả |
+|---|---|---|
+| 1–3 (AC-01, 02, 04, 13) | `TestSisContractConnection` | pass |
+| 4–11 (AC-03, 05–10, 12–14) | `TestSisContractPull` | pass |
+| 12–13 (AC-15–17) + scheduler | `TestSisContractDelta` | pass |
+| 14–16 (AC-14, 18–21) | `TestSisContractWebhook`, `TestVerify` | pass |
+| 17–19 (AC-22–24) | `TestLookup`, `TestLookupBulkheadAndBreaker`, `TestClientLookup` (k6 200 đăng nhập chờ binary + staging) | pass |
+| 20 (AC-25–27) | `postman collection run …sis-conformance.postman_collection.json -e …env.sis-mock… --env-var sis_base_url=http://localhost:14010` | 13 request, 22/22 assertion pass; facade không tồn tại → 8 request bắt buộc fail, 5 tùy chọn bỏ qua |
+| 21–23 (AC-28–30) | `TestSisContractHTTP`, `TestSisContractOperationsMatchSpec`, `TestSisConnectionSchemas`, `deploy/apisix/scripts/sis-routes.test.mjs` | pass |
+| Retry/rate (AC-10, 11) | `TestClientRetries`, `TestClientRateLimit`, `TestClientOAuth2`, `TestClientPagesAndValidation` | pass |
+| Domain | `TestValidateContract`, `TestCompatibleMajor`, `TestCircuitBreaker`, `TestViolationRatio`, `TestCron`, `TestFileStore`, `TestParseChanges` | pass |
+
+Log/secret: test kiểm outbox (gồm `audit.recorded`) không chứa tham chiếu `sis/th-demo-a`, response HTTP không có `secret_ref`; lỗi secret store không chứa tham chiếu. Metric: `eduworld_sis_contract_unknown_fields_total` tăng (kịch bản 6), `eduworld_sis_sync_runs_skipped_total{reason="locked"}`, `eduworld_sis_webhook_total{result="replay"}`. `trace_id` thật cần binary đã nối (OQ F010-2).

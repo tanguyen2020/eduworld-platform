@@ -50,7 +50,19 @@ type SisConnection struct {
 	// DeltaWatermark holds the value of the "delta_watermark" field.
 	DeltaWatermark *string `json:"delta_watermark,omitempty"`
 	// Schedule holds the value of the "schedule" field.
-	Schedule     *string `json:"schedule,omitempty"`
+	Schedule *string `json:"schedule,omitempty"`
+	// WebhookSecretRef holds the value of the "webhook_secret_ref" field.
+	WebhookSecretRef *string `json:"-"`
+	// Capabilities holds the value of the "capabilities" field.
+	Capabilities []string `json:"capabilities,omitempty"`
+	// LastHealthAt holds the value of the "last_health_at" field.
+	LastHealthAt *time.Time `json:"last_health_at,omitempty"`
+	// LastSuccessAt holds the value of the "last_success_at" field.
+	LastSuccessAt *time.Time `json:"last_success_at,omitempty"`
+	// ConsecutiveFailedRuns holds the value of the "consecutive_failed_runs" field.
+	ConsecutiveFailedRuns int32 `json:"consecutive_failed_runs,omitempty"`
+	// StatusReason holds the value of the "status_reason" field.
+	StatusReason *string `json:"status_reason,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -61,13 +73,13 @@ func (*SisConnection) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case sisconnection.FieldCreatedBy, sisconnection.FieldUpdatedBy, sisconnection.FieldDeletedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case sisconnection.FieldConfig:
+		case sisconnection.FieldConfig, sisconnection.FieldCapabilities:
 			values[i] = new([]byte)
-		case sisconnection.FieldVersion:
+		case sisconnection.FieldVersion, sisconnection.FieldConsecutiveFailedRuns:
 			values[i] = new(sql.NullInt64)
-		case sisconnection.FieldDeleteReason, sisconnection.FieldProviderKind, sisconnection.FieldContractVersion, sisconnection.FieldSecretRef, sisconnection.FieldStatus, sisconnection.FieldDeltaWatermark, sisconnection.FieldSchedule:
+		case sisconnection.FieldDeleteReason, sisconnection.FieldProviderKind, sisconnection.FieldContractVersion, sisconnection.FieldSecretRef, sisconnection.FieldStatus, sisconnection.FieldDeltaWatermark, sisconnection.FieldSchedule, sisconnection.FieldWebhookSecretRef, sisconnection.FieldStatusReason:
 			values[i] = new(sql.NullString)
-		case sisconnection.FieldCreatedAt, sisconnection.FieldUpdatedAt, sisconnection.FieldDeletedAt:
+		case sisconnection.FieldCreatedAt, sisconnection.FieldUpdatedAt, sisconnection.FieldDeletedAt, sisconnection.FieldLastHealthAt, sisconnection.FieldLastSuccessAt:
 			values[i] = new(sql.NullTime)
 		case sisconnection.FieldID, sisconnection.FieldTenantID:
 			values[i] = new(uuid.UUID)
@@ -199,6 +211,48 @@ func (_m *SisConnection) assignValues(columns []string, values []any) error {
 				_m.Schedule = new(string)
 				*_m.Schedule = value.String
 			}
+		case sisconnection.FieldWebhookSecretRef:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field webhook_secret_ref", values[i])
+			} else if value.Valid {
+				_m.WebhookSecretRef = new(string)
+				*_m.WebhookSecretRef = value.String
+			}
+		case sisconnection.FieldCapabilities:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field capabilities", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Capabilities); err != nil {
+					return fmt.Errorf("unmarshal field capabilities: %w", err)
+				}
+			}
+		case sisconnection.FieldLastHealthAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_health_at", values[i])
+			} else if value.Valid {
+				_m.LastHealthAt = new(time.Time)
+				*_m.LastHealthAt = value.Time
+			}
+		case sisconnection.FieldLastSuccessAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_success_at", values[i])
+			} else if value.Valid {
+				_m.LastSuccessAt = new(time.Time)
+				*_m.LastSuccessAt = value.Time
+			}
+		case sisconnection.FieldConsecutiveFailedRuns:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field consecutive_failed_runs", values[i])
+			} else if value.Valid {
+				_m.ConsecutiveFailedRuns = int32(value.Int64)
+			}
+		case sisconnection.FieldStatusReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status_reason", values[i])
+			} else if value.Valid {
+				_m.StatusReason = new(string)
+				*_m.StatusReason = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -295,6 +349,29 @@ func (_m *SisConnection) String() string {
 	builder.WriteString(", ")
 	if v := _m.Schedule; v != nil {
 		builder.WriteString("schedule=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("webhook_secret_ref=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("capabilities=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Capabilities))
+	builder.WriteString(", ")
+	if v := _m.LastHealthAt; v != nil {
+		builder.WriteString("last_health_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.LastSuccessAt; v != nil {
+		builder.WriteString("last_success_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("consecutive_failed_runs=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ConsecutiveFailedRuns))
+	builder.WriteString(", ")
+	if v := _m.StatusReason; v != nil {
+		builder.WriteString("status_reason=")
 		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')

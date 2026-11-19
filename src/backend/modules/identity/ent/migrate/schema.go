@@ -618,12 +618,28 @@ var (
 		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
 		{Name: "delta_watermark", Type: field.TypeString, Nullable: true, Size: 512},
 		{Name: "schedule", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "webhook_secret_ref", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "capabilities", Type: field.TypeJSON, Nullable: true},
+		{Name: "last_health_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_success_at", Type: field.TypeTime, Nullable: true},
+		{Name: "consecutive_failed_runs", Type: field.TypeInt32, Default: 0},
+		{Name: "status_reason", Type: field.TypeString, Nullable: true, Size: 64},
 	}
 	// SisConnectionsTable holds the schema information for the "sis_connections" table.
 	SisConnectionsTable = &schema.Table{
 		Name:       "sis_connections",
 		Columns:    SisConnectionsColumns,
 		PrimaryKey: []*schema.Column{SisConnectionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sis_connections_schedule_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SisConnectionsColumns[14], SisConnectionsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
 	}
 	// SisConnectionSchoolsColumns holds the columns for the "sis_connection_schools" table.
 	SisConnectionSchoolsColumns = []*schema.Column{
@@ -900,6 +916,8 @@ var (
 		{Name: "stats", Type: field.TypeJSON},
 		{Name: "started_at", Type: field.TypeTime},
 		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+		{Name: "requested_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delivery_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// SyncRunsTable holds the schema information for the "sync_runs" table.
 	SyncRunsTable = &schema.Table{

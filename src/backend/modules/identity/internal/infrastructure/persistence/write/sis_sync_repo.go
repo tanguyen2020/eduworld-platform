@@ -26,6 +26,7 @@ import (
 	entrun "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	entuser "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -42,6 +43,10 @@ func (SisSyncRepo) CreateRun(ctx context.Context, r *write.SyncRun) error {
 	if r.SchoolID != nil {
 		c = c.SetSchoolID(*r.SchoolID)
 	}
+	if r.Trigger != "" {
+		c = c.SetTrigger(r.Trigger)
+	}
+	c = c.SetNillableRequestedBy(r.RequestedBy).SetNillableDeliveryID(r.DeliveryID)
 	row, err := c.Save(ctx)
 	if err != nil {
 		return err
@@ -587,19 +592,8 @@ func (SisSyncRepo) loginState(ctx context.Context, l *ent.SisIdentityLink) (*wri
 	if err != nil {
 		return nil, err
 	}
-	out.StudentLookup = conn.Status == "active" && conn.ProviderKind == "contract_v1" && hasCapability(conn.Config, "student_lookup")
+	out.StudentLookup = conn.Status == "active" && conn.ProviderKind == "contract_v1" && sis.HasCapability(conn.Capabilities, sis.CapStudentLookup)
 	return out, nil
-}
-
-// hasCapability reads config.capabilities (Health.capabilities of the SIS contract, stored by F017).
-func hasCapability(config map[string]any, name string) bool {
-	caps, _ := config["capabilities"].([]any)
-	for _, c := range caps {
-		if c == name {
-			return true
-		}
-	}
-	return false
 }
 
 var _ write.SisImportRepository = SisSyncRepo{}

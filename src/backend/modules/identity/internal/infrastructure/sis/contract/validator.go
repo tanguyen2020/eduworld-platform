@@ -26,6 +26,9 @@ const (
 	KindClass      = "Class"
 	KindStudent    = "Student"
 	KindEnrollment = "Enrollment"
+	// Kinds of contract_v1 responses (F017).
+	KindAcademicYear = "AcademicYear"
+	KindLogin        = "Login"
 )
 
 // Violation is one contract violation of a record (SIS_CONTRACT_VIOLATION).
@@ -66,7 +69,7 @@ func New() (*Validator, error) {
 		return nil, err
 	}
 	v := &Validator{schemas: map[string]*jsonschema.Schema{}, props: map[string]map[string]bool{}, types: map[string]map[string]string{}, version: raw.Version}
-	for _, k := range []string{KindSchool, KindClass, KindStudent, KindEnrollment} {
+	for _, k := range []string{KindSchool, KindClass, KindStudent, KindEnrollment, KindAcademicYear, KindLogin} {
 		s, err := c.Compile(url + "#/$defs/" + k)
 		if err != nil {
 			return nil, fmt.Errorf("contract: compile %s: %w", k, err)
@@ -160,3 +163,26 @@ func missingFields(msg string) []string {
 
 // printer renders violation messages (English, stable for logs and sync_record_errors).
 var printer = message.NewPrinter(language.English)
+
+// Strip removes the fields outside the contract from a response record (the top level and the nested
+// login object of a Student) and returns the clean copy with the number of fields dropped: unknown fields
+// are never stored (SIS_INTEGRATION §2.5, F017-AC-06).
+func (v *Validator) Strip(kind string, record map[string]any) (map[string]any, int) {
+	out := make(map[string]any, len(record))
+	dropped := 0
+	for k, x := range record {
+		if !v.Known(kind, k) {
+			dropped++
+			continue
+		}
+		if kind == KindStudent && k == "login" {
+			if m, ok := x.(map[string]any); ok {
+				clean, n := v.Strip(KindLogin, m)
+				dropped += n
+				x = clean
+			}
+		}
+		out[k] = x
+	}
+	return out, dropped
+}

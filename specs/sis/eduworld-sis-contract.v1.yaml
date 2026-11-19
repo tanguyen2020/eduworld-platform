@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: EduWorld SIS Contract
-  version: 1.2.0
+  version: 1.2.1
   summary: Contract do EduWorld định nghĩa mà hệ thống SIS của trường phải triển khai.
   description: |
     **EduWorld sở hữu toàn bộ DTO trong contract này** (ADR-0021). SIS của trường (hoặc lớp facade
@@ -19,6 +19,9 @@ info:
 
     Phiên bản 1.2.0 (ADR-0072): contract chỉ gồm trường, năm học, lớp, học sinh và enrollment. EduWorld không nhập
     nhân sự hay phân công giảng dạy từ SIS (contract vẫn ở trạng thái Draft, chưa có trường nào triển khai).
+
+    Phiên bản 1.2.1 (F017, chỉ bổ sung): `examples` dữ liệu demo TH Demo A cho mọi response 200 (mock `sis-mock` bằng Prism
+    và bộ conformance `specs/postman/sis-conformance/`); webhook `receiveSisChanges` thêm response 404 và 503.
   license:
     name: Proprietary — EduWorld
     identifier: LicenseRef-EduWorld-Proprietary
@@ -57,6 +60,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"status":"ok","contract_version":"1.2.1","capabilities":["full_sync","delta","webhook","student_lookup"],"server_time":"2026-11-01T08:00:00Z"}
         '401': { $ref: '#/components/responses/Unauthorized' }
         '503': { $ref: '#/components/responses/Unavailable' }
 
@@ -74,6 +81,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SchoolPage' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"school_external_id":"TH-DEMO-001","school_code":"DEMOA1","name":"TH Demo A","province_code":"vn.ha-noi","school_level":"primary","status":"active","updated_at":"2026-11-01T08:00:00Z"}],"page":{"has_more":false,"next_cursor":null}}
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
@@ -98,6 +109,10 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/AcademicYear' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"academic_year":"2026-2027","start_date":"2026-09-05","end_date":"2027-05-31","is_current":true}]}
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -117,6 +132,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ClassPage' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"class_external_id":"C-3A-2026","school_external_id":"TH-DEMO-001","academic_year":"2026-2027","grade_level":3,"name":"3A","updated_at":"2026-11-01T08:00:00Z"},{"class_external_id":"C-3B-2026","school_external_id":"TH-DEMO-001","academic_year":"2026-2027","grade_level":3,"name":"3B","updated_at":"2026-11-01T08:00:00Z"}],"page":{"has_more":false,"next_cursor":null}}
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -137,6 +156,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/StudentPage' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"student_external_id":"HS-DEMO-0001","school_external_id":"TH-DEMO-001","student_code":"A001","full_name":"Nguyễn Văn An","grade_level":3,"status":"active","login":{"username":"hs.an.3a"},"updated_at":"2026-11-01T08:00:00Z"},{"student_external_id":"HS-DEMO-0002","school_external_id":"TH-DEMO-001","student_code":"A002","full_name":"Trần Thị Bình","grade_level":3,"status":"active","login":{"username":"hs.binh.3a"},"updated_at":"2026-11-01T08:00:00Z"},{"student_external_id":"HS-DEMO-0003","school_external_id":"TH-DEMO-001","student_code":"A003","full_name":"Lê Minh Chi","grade_level":3,"status":"active","login":{"username":"hs.chi.3b"},"updated_at":"2026-11-01T08:00:00Z"}],"page":{"has_more":false,"next_cursor":null}}
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -160,6 +183,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Student' }
+              examples:
+                hs_an_3a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"student_external_id":"HS-DEMO-0001","school_external_id":"TH-DEMO-001","student_code":"A001","full_name":"Nguyễn Văn An","grade_level":3,"status":"active","login":{"username":"hs.an.3a"},"updated_at":"2026-11-01T08:00:00Z"}
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -179,6 +206,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EnrollmentPage' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"student_external_id":"HS-DEMO-0001","class_external_id":"C-3A-2026","start_date":"2026-09-05","status":"active","updated_at":"2026-11-01T08:00:00Z"},{"student_external_id":"HS-DEMO-0002","class_external_id":"C-3A-2026","start_date":"2026-09-05","status":"active","updated_at":"2026-11-01T08:00:00Z"},{"student_external_id":"HS-DEMO-0003","class_external_id":"C-3B-2026","start_date":"2026-09-05","status":"active","updated_at":"2026-11-01T08:00:00Z"}],"page":{"has_more":false,"next_cursor":null}}
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -206,6 +237,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ChangePage' }
+              examples:
+                th_demo_a:
+                  summary: Dữ liệu demo TH Demo A (khớp seed th-demo-a)
+                  value: {"data":[{"sequence":101,"entity_kind":"student","operation":"upsert","external_id":"HS-DEMO-0003","occurred_at":"2026-11-01T08:00:00Z","record":{"student_external_id":"HS-DEMO-0003","school_external_id":"TH-DEMO-001","student_code":"A003","full_name":"Lê Minh Chi","grade_level":3,"status":"suspended","login":{"username":"hs.chi.3b"},"updated_at":"2026-11-01T08:00:00Z"}},{"sequence":102,"entity_kind":"enrollment","operation":"delete","external_id":"HS-DEMO-0002|C-3A-2026","occurred_at":"2026-11-01T08:00:00Z"}],"page":{"has_more":false,"next_cursor":"wm-000102"}}
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '410':
@@ -245,7 +280,9 @@ webhooks:
         '202': { description: 'Đã nhận, xử lý bất đồng bộ' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'Connection không tồn tại, không active, không khai báo capability webhook hoặc chưa có webhook secret' }
         '409': { description: delivery_id đã được nhận trước đó (replay) }
+        '503': { description: 'EduWorld tạm thời không nhận được (kho chống replay hoặc hàng đợi lỗi) — SIS gửi lại; delivery_id được dùng làm Nats-Msg-Id' }
 
 components:
   securitySchemes:

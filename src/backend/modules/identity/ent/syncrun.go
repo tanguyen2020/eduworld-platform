@@ -56,7 +56,11 @@ type SyncRun struct {
 	// StartedAt holds the value of the "started_at" field.
 	StartedAt time.Time `json:"started_at,omitempty"`
 	// FinishedAt holds the value of the "finished_at" field.
-	FinishedAt   *time.Time `json:"finished_at,omitempty"`
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
+	// RequestedBy holds the value of the "requested_by" field.
+	RequestedBy *uuid.UUID `json:"requested_by,omitempty"`
+	// DeliveryID holds the value of the "delivery_id" field.
+	DeliveryID   *uuid.UUID `json:"delivery_id,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -65,7 +69,7 @@ func (*SyncRun) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case syncrun.FieldCreatedBy, syncrun.FieldUpdatedBy, syncrun.FieldDeletedBy, syncrun.FieldSchoolID:
+		case syncrun.FieldCreatedBy, syncrun.FieldUpdatedBy, syncrun.FieldDeletedBy, syncrun.FieldSchoolID, syncrun.FieldRequestedBy, syncrun.FieldDeliveryID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case syncrun.FieldStats:
 			values[i] = new([]byte)
@@ -224,6 +228,20 @@ func (_m *SyncRun) assignValues(columns []string, values []any) error {
 				_m.FinishedAt = new(time.Time)
 				*_m.FinishedAt = value.Time
 			}
+		case syncrun.FieldRequestedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field requested_by", values[i])
+			} else if value.Valid {
+				_m.RequestedBy = new(uuid.UUID)
+				*_m.RequestedBy = *value.S.(*uuid.UUID)
+			}
+		case syncrun.FieldDeliveryID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field delivery_id", values[i])
+			} else if value.Valid {
+				_m.DeliveryID = new(uuid.UUID)
+				*_m.DeliveryID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -331,6 +349,16 @@ func (_m *SyncRun) String() string {
 	if v := _m.FinishedAt; v != nil {
 		builder.WriteString("finished_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.RequestedBy; v != nil {
+		builder.WriteString("requested_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.DeliveryID; v != nil {
+		builder.WriteString("delivery_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')
 	return builder.String()

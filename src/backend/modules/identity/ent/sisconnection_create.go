@@ -221,6 +221,82 @@ func (_c *SisConnectionCreate) SetNillableSchedule(v *string) *SisConnectionCrea
 	return _c
 }
 
+// SetWebhookSecretRef sets the "webhook_secret_ref" field.
+func (_c *SisConnectionCreate) SetWebhookSecretRef(v string) *SisConnectionCreate {
+	_c.mutation.SetWebhookSecretRef(v)
+	return _c
+}
+
+// SetNillableWebhookSecretRef sets the "webhook_secret_ref" field if the given value is not nil.
+func (_c *SisConnectionCreate) SetNillableWebhookSecretRef(v *string) *SisConnectionCreate {
+	if v != nil {
+		_c.SetWebhookSecretRef(*v)
+	}
+	return _c
+}
+
+// SetCapabilities sets the "capabilities" field.
+func (_c *SisConnectionCreate) SetCapabilities(v []string) *SisConnectionCreate {
+	_c.mutation.SetCapabilities(v)
+	return _c
+}
+
+// SetLastHealthAt sets the "last_health_at" field.
+func (_c *SisConnectionCreate) SetLastHealthAt(v time.Time) *SisConnectionCreate {
+	_c.mutation.SetLastHealthAt(v)
+	return _c
+}
+
+// SetNillableLastHealthAt sets the "last_health_at" field if the given value is not nil.
+func (_c *SisConnectionCreate) SetNillableLastHealthAt(v *time.Time) *SisConnectionCreate {
+	if v != nil {
+		_c.SetLastHealthAt(*v)
+	}
+	return _c
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_c *SisConnectionCreate) SetLastSuccessAt(v time.Time) *SisConnectionCreate {
+	_c.mutation.SetLastSuccessAt(v)
+	return _c
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_c *SisConnectionCreate) SetNillableLastSuccessAt(v *time.Time) *SisConnectionCreate {
+	if v != nil {
+		_c.SetLastSuccessAt(*v)
+	}
+	return _c
+}
+
+// SetConsecutiveFailedRuns sets the "consecutive_failed_runs" field.
+func (_c *SisConnectionCreate) SetConsecutiveFailedRuns(v int32) *SisConnectionCreate {
+	_c.mutation.SetConsecutiveFailedRuns(v)
+	return _c
+}
+
+// SetNillableConsecutiveFailedRuns sets the "consecutive_failed_runs" field if the given value is not nil.
+func (_c *SisConnectionCreate) SetNillableConsecutiveFailedRuns(v *int32) *SisConnectionCreate {
+	if v != nil {
+		_c.SetConsecutiveFailedRuns(*v)
+	}
+	return _c
+}
+
+// SetStatusReason sets the "status_reason" field.
+func (_c *SisConnectionCreate) SetStatusReason(v string) *SisConnectionCreate {
+	_c.mutation.SetStatusReason(v)
+	return _c
+}
+
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_c *SisConnectionCreate) SetNillableStatusReason(v *string) *SisConnectionCreate {
+	if v != nil {
+		_c.SetStatusReason(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *SisConnectionCreate) SetID(v uuid.UUID) *SisConnectionCreate {
 	_c.mutation.SetID(v)
@@ -294,6 +370,10 @@ func (_c *SisConnectionCreate) defaults() error {
 		v := sisconnection.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.ConsecutiveFailedRuns(); !ok {
+		v := sisconnection.DefaultConsecutiveFailedRuns
+		_c.mutation.SetConsecutiveFailedRuns(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		if sisconnection.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized sisconnection.DefaultID (forgotten import ent/runtime?)")
@@ -357,6 +437,19 @@ func (_c *SisConnectionCreate) check() error {
 	if v, ok := _c.mutation.Schedule(); ok {
 		if err := sisconnection.ScheduleValidator(v); err != nil {
 			return &ValidationError{Name: "schedule", err: fmt.Errorf(`ent: validator failed for field "SisConnection.schedule": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.WebhookSecretRef(); ok {
+		if err := sisconnection.WebhookSecretRefValidator(v); err != nil {
+			return &ValidationError{Name: "webhook_secret_ref", err: fmt.Errorf(`ent: validator failed for field "SisConnection.webhook_secret_ref": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.ConsecutiveFailedRuns(); !ok {
+		return &ValidationError{Name: "consecutive_failed_runs", err: errors.New(`ent: missing required field "SisConnection.consecutive_failed_runs"`)}
+	}
+	if v, ok := _c.mutation.StatusReason(); ok {
+		if err := sisconnection.StatusReasonValidator(v); err != nil {
+			return &ValidationError{Name: "status_reason", err: fmt.Errorf(`ent: validator failed for field "SisConnection.status_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -458,6 +551,30 @@ func (_c *SisConnectionCreate) createSpec() (*SisConnection, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.Schedule(); ok {
 		_spec.SetField(sisconnection.FieldSchedule, field.TypeString, value)
 		_node.Schedule = &value
+	}
+	if value, ok := _c.mutation.WebhookSecretRef(); ok {
+		_spec.SetField(sisconnection.FieldWebhookSecretRef, field.TypeString, value)
+		_node.WebhookSecretRef = &value
+	}
+	if value, ok := _c.mutation.Capabilities(); ok {
+		_spec.SetField(sisconnection.FieldCapabilities, field.TypeJSON, value)
+		_node.Capabilities = value
+	}
+	if value, ok := _c.mutation.LastHealthAt(); ok {
+		_spec.SetField(sisconnection.FieldLastHealthAt, field.TypeTime, value)
+		_node.LastHealthAt = &value
+	}
+	if value, ok := _c.mutation.LastSuccessAt(); ok {
+		_spec.SetField(sisconnection.FieldLastSuccessAt, field.TypeTime, value)
+		_node.LastSuccessAt = &value
+	}
+	if value, ok := _c.mutation.ConsecutiveFailedRuns(); ok {
+		_spec.SetField(sisconnection.FieldConsecutiveFailedRuns, field.TypeInt32, value)
+		_node.ConsecutiveFailedRuns = value
+	}
+	if value, ok := _c.mutation.StatusReason(); ok {
+		_spec.SetField(sisconnection.FieldStatusReason, field.TypeString, value)
+		_node.StatusReason = &value
 	}
 	return _node, _spec
 }

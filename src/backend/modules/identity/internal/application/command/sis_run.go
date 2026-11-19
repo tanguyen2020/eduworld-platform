@@ -90,6 +90,12 @@ type runState struct {
 	// F011-AC-16: national id hash → synced student of another connection; students moved in this run.
 	candidates  map[string]write.TransferCandidate
 	transferred map[string]bool
+	full        bool // F017: the students of a pull run are the full list of the school (missing_in_source)
+}
+
+func newRunState(in RunImportInput, tenantID uuid.UUID) *runState {
+	return &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},
+		candidates: map[string]write.TransferCandidate{}, transferred: map[string]bool{}}
 }
 
 // authorize: School Admin with tenant.sis.import on the school, or platform staff managing connections.
@@ -173,8 +179,7 @@ func (h SisRun) RunImportSystem(ctx context.Context, tenantID uuid.UUID, in RunI
 
 // execute runs the pipeline in the scope already set on ctx.
 func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInput, mode string) (out RunImportResult, err error) {
-	st := &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},
-		candidates: map[string]write.TransferCandidate{}, transferred: map[string]bool{}}
+	st := newRunState(in, tenantID)
 	out = RunImportResult{DryRun: in.DryRun, Diff: map[string]map[string]int{}, Errors: []write.RecordError{}}
 	school := in.SchoolID
 	st.run = &write.SyncRun{ID: ids.New(), TenantID: tenantID, ConnectionID: in.ConnectionID, SchoolID: &school, Mode: mode,
@@ -204,45 +209,9 @@ func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInp
 	}
 	out.RunID = st.run.ID
 
-	// All-or-nothing per file (F011-AC-02): a file with a violation is recorded and skipped entirely.
-	var files []SisFile
-	for _, f := range in.Files {
-		if len(f.Errors) > 0 {
-			out.Errors = append(out.Errors, f.Errors...)
-			continue
-		}
-		files = append(files, f)
-	}
-	if len(out.Errors) > 0 {
-		if err = h.UoW.Do(ctx, func(ctx context.Context) error { return h.Sync.AddErrors(ctx, st.run.ID, out.Errors) }); err != nil {
-			return out, err
-		}
-	}
-	// Staging + diff (no business change): F011-AC-01.
-	staged := map[string][]write.StagingItem{}
-	if err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		for _, f := range files {
-			items, err := h.stage(ctx, st, f)
-			if err != nil {
-				return err
-			}
-			staged[f.Kind] = items
-			out.Diff[f.Kind] = map[string]int{}
-			for _, it := range items {
-				out.Diff[f.Kind][it.Action]++
-			}
-			if err := h.Sync.AddStaging(ctx, st.run.ID, items); err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
+	files, err := h.process(ctx, st, in.Files, nil, nil, &out)
+	if err != nil {
 		return out, err
-	}
-	if !in.DryRun {
-		if err = h.apply(ctx, st, files, staged); err != nil {
-			return out, err
-		}
 	}
 	out.Issues = st.issues
 	out.Status = "succeeded"
@@ -275,6 +244,66 @@ func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInp
 		h.observe(st.run) // after the commit
 	}
 	return out, err
+}
+
+// process records the errors, stages and (unless the run is a dry run) applies the files of a run whose
+// row exists: a file with a violation is skipped entirely (F011-AC-02, csv_import), recordErrs are
+// per-record violations of a pull run that never block the other records (F017-AC-06); deletes are the
+// delete changes of a delta/webhook run (F017-AC-17). It returns the files without violations.
+func (h SisRun) process(ctx context.Context, st *runState, in []SisFile, recordErrs []write.RecordError, deletes []SisDelete,
+	out *RunImportResult) (files []SisFile, err error) {
+	// All-or-nothing per file (F011-AC-02): a file with a violation is recorded and skipped entirely.
+	for _, f := range in {
+		if len(f.Errors) > 0 {
+			out.Errors = append(out.Errors, f.Errors...)
+			continue
+		}
+		files = append(files, f)
+	}
+	out.Errors = append(out.Errors, recordErrs...) // F017: per-record violations never block the other records
+	if len(out.Errors) > 0 {
+		if err = h.UoW.Do(ctx, func(ctx context.Context) error { return h.Sync.AddErrors(ctx, st.run.ID, out.Errors) }); err != nil {
+			return nil, err
+		}
+	}
+	// Staging + diff (no business change): F011-AC-01.
+	staged := map[string][]write.StagingItem{}
+	if err = h.UoW.Do(ctx, func(ctx context.Context) error {
+		if len(deletes) > 0 {
+			items := stageDeletes(deletes)
+			staged[deleteKind] = items
+			for _, it := range items {
+				out.Diff[it.Kind] = orNew(out.Diff[it.Kind])
+				out.Diff[it.Kind][it.Action]++
+			}
+			if err := h.Sync.AddStaging(ctx, st.run.ID, items); err != nil {
+				return err
+			}
+		}
+		for _, f := range files {
+			items, err := h.stage(ctx, st, f)
+			if err != nil {
+				return err
+			}
+			staged[f.Kind] = items
+			out.Diff[f.Kind] = orNew(out.Diff[f.Kind])
+			for _, it := range items {
+				out.Diff[f.Kind][it.Action]++
+			}
+			if err := h.Sync.AddStaging(ctx, st.run.ID, items); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	if !st.in.DryRun {
+		if err = h.apply(ctx, st, files, staged); err != nil {
+			return nil, err
+		}
+	}
+	return files, nil
 }
 
 func externalID(kind string, d map[string]any) string {
@@ -374,6 +403,9 @@ func (h SisRun) apply(ctx context.Context, st *runState, files []SisFile, staged
 				return err
 			}
 		}
+	}
+	if err := h.applyDeletes(ctx, st, staged[deleteKind], size); err != nil {
+		return err
 	}
 	return h.afterApply(ctx, st, files)
 }
@@ -904,7 +936,7 @@ func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.Stag
 func (h SisRun) afterApply(ctx context.Context, st *runState, files []SisFile) error {
 	full := false // a full students file of a csv_import (a lookup run has one record)
 	for _, f := range files {
-		full = full || (f.Kind == sis.KindStudent && st.run.Mode == "csv_import")
+		full = full || (f.Kind == sis.KindStudent && (st.run.Mode == "csv_import" || st.full))
 	}
 	if full {
 		if err := h.UoW.Do(ctx, func(ctx context.Context) error { return h.markMissing(ctx, st) }); err != nil {

@@ -27,6 +27,37 @@ var migrations = map[string][]string{
 	"20261122000001_f013_game_login.sql": {"game_auth_sessions"},
 }
 
+// added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier
+// migration (ALTER TABLE … ADD COLUMN in its entddl block); earlier blocks are checked without them.
+type addition struct {
+	table            string
+	columns, indexes []string
+}
+
+var added = map[string][]addition{
+	"20261124000001_f017_sis_contract.sql": {
+		{"sis_connections", []string{"webhook_secret_ref", "capabilities", "last_health_at", "last_success_at", "consecutive_failed_runs", "status_reason"},
+			[]string{"sis_connections_schedule_idx"}},
+		{"sync_runs", []string{"requested_by", "delivery_id"}, nil},
+	},
+}
+
+// withoutAdded drops from tables the columns/indexes added by migrations other than file.
+func withoutAdded(file string, tbs []*schema.Table) []*schema.Table {
+	out := make([]*schema.Table, 0, len(tbs))
+	for _, tb := range tbs {
+		for f, as := range added {
+			for _, a := range as {
+				if f != file && a.table == tb.Name {
+					tb = entx.Without(tb, a.columns, a.indexes)
+				}
+			}
+		}
+		out = append(out, tb)
+	}
+	return out
+}
+
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
 	return map[string]string{
@@ -75,10 +106,27 @@ func TestMigrationMatchesEnt(t *testing.T) {
 			t.Errorf("ent table %s is created by no migration", tb.Name)
 		}
 	}
-	for file, names := range migrations {
-		want, err := entx.DDL(tablesOf(t, names), func(table string) string { return sc[table] })
+	files := map[string]bool{}
+	for f := range migrations {
+		files[f] = true
+	}
+	for f := range added {
+		files[f] = true
+	}
+	for file := range files {
+		want, err := entx.DDL(withoutAdded(file, tablesOf(t, migrations[file])), func(table string) string { return sc[table] })
 		if err != nil {
 			t.Fatal(err)
+		}
+		if len(migrations[file]) == 0 {
+			want = ""
+		}
+		for _, a := range added[file] {
+			alter, err := entx.AddedDDL(tablesOf(t, []string{a.table})[0], a.columns, a.indexes, func(table string) string { return sc[table] })
+			if err != nil {
+				t.Fatal(err)
+			}
+			want += alter
 		}
 		if *printDDL == file {
 			_, _ = os.Stdout.WriteString(want)

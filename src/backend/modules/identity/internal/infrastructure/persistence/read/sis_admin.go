@@ -2,6 +2,7 @@ package read
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/google/uuid"
 
@@ -12,6 +13,7 @@ import (
 	entrun "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -57,6 +59,7 @@ func (m SisAdminModel) Connections(ctx context.Context, kind, status string, aft
 			updated := r.UpdatedAt
 			v := dto.SisConnection{ConnectionID: r.ID, TenantID: r.TenantID, ProviderKind: r.ProviderKind, ContractVersion: r.ContractVersion,
 				Status: r.Status, SchoolCount: n, CreatedAt: r.CreatedAt, UpdatedAt: &updated}
+			ContractFields(&v, r) // F017: never a secret reference, only flags
 			last, err := c.SyncRun.Query().Where(entrun.SisConnectionID(r.ID)).Order(ent.Desc(entrun.FieldID)).First(ctx)
 			switch {
 			case err == nil:
@@ -157,4 +160,23 @@ func (m SisAdminModel) RunErrorPage(ctx context.Context, run uuid.UUID, after *p
 		return nil
 	})
 	return out, err
+}
+
+// ContractFields fills the F017 fields of a connection view: the contract_v1 configuration (it holds no
+// secret by construction), has_secret/has_webhook_secret flags instead of the references (F017-AC-04).
+func ContractFields(v *dto.SisConnection, r *ent.SisConnection) {
+	v.Schedule, v.StatusReason = r.Schedule, r.StatusReason
+	v.HasSecret, v.HasWebhookSecret = r.SecretRef != nil, r.WebhookSecretRef != nil
+	v.Capabilities = r.Capabilities
+	if v.Capabilities == nil {
+		v.Capabilities = []string{}
+	}
+	v.ConsecutiveFailedRuns, v.LastHealthAt, v.LastSuccessAt, v.Version = int(r.ConsecutiveFailedRuns), r.LastHealthAt, r.LastSuccessAt, r.Version
+	if r.ProviderKind == sis.ProviderContractV1 && r.Config != nil {
+		b, err := json.Marshal(r.Config)
+		var cfg sis.ContractConfig
+		if err == nil && json.Unmarshal(b, &cfg) == nil {
+			v.Config = &cfg
+		}
+	}
 }

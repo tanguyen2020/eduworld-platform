@@ -20,6 +20,9 @@ type SyncRun struct {
 	Stats        map[string]int
 	StartedAt    time.Time
 	FinishedAt   *time.Time
+	Trigger      string     // F017: schedule, manual (default), webhook, fallback_full
+	RequestedBy  *uuid.UUID // F017: the person of a manual run
+	DeliveryID   *uuid.UUID // F017: the webhook delivery of a webhook run
 }
 
 // StagingItem is one normalized record of a run with its decided action.

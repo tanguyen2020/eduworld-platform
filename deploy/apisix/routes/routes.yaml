@@ -3,7 +3,8 @@
 # against the merged OpenAPI spec by scripts/check-routes.mjs. Values from the environment use ${VAR}
 # (routes/env/<env>.env); no URL, host, CIDR or secret is written here (AGENTS R3).
 #
-# Fields: gateway public|internal|both · upstream core-api|realtime · modules (x-service of the
+# Fields: gateway public|internal|both · ip_allow (env var of the CIDR allowlist, internal gateway;
+# default EW_ADMIN_CIDRS) · upstream core-api|realtime · modules (x-service of the
 # operations served) · auth oidc|none|ticket · tenant_header required|optional|none · login (plugin
 # ew-login-key profile) · rate (plugin ew-api-rate profile, api_rate_default per user; required with
 # auth oidc) · body_max (bytes) · sensitive (never log/trace the body) · priority.
@@ -147,6 +148,22 @@ routes:
     tenant_header: optional
     body_max: 1048576
     priority: 100
+
+  # F017 (receiveSisChanges): SIS → EduWorld webhook. No token: the HMAC of the connection's webhook secret
+  # authenticates the SIS in module identity; partner IP allowlist (EW_SIS_WEBHOOK_CIDRS) instead of the
+  # admin VPN ranges; bodies carry student records (never logged).
+  - id: sis-webhook
+    gateway: internal
+    uris: [/internal/sis/webhooks/*]
+    methods: [POST]
+    upstream: core-api
+    modules: [identity]
+    auth: none
+    tenant_header: none
+    ip_allow: EW_SIS_WEBHOOK_CIDRS
+    body_max: 8388608
+    sensitive: true
+    priority: 110
 
   - id: realtime
     gateway: public

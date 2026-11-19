@@ -255,6 +255,34 @@ func (_c *SyncRunCreate) SetNillableFinishedAt(v *time.Time) *SyncRunCreate {
 	return _c
 }
 
+// SetRequestedBy sets the "requested_by" field.
+func (_c *SyncRunCreate) SetRequestedBy(v uuid.UUID) *SyncRunCreate {
+	_c.mutation.SetRequestedBy(v)
+	return _c
+}
+
+// SetNillableRequestedBy sets the "requested_by" field if the given value is not nil.
+func (_c *SyncRunCreate) SetNillableRequestedBy(v *uuid.UUID) *SyncRunCreate {
+	if v != nil {
+		_c.SetRequestedBy(*v)
+	}
+	return _c
+}
+
+// SetDeliveryID sets the "delivery_id" field.
+func (_c *SyncRunCreate) SetDeliveryID(v uuid.UUID) *SyncRunCreate {
+	_c.mutation.SetDeliveryID(v)
+	return _c
+}
+
+// SetNillableDeliveryID sets the "delivery_id" field if the given value is not nil.
+func (_c *SyncRunCreate) SetNillableDeliveryID(v *uuid.UUID) *SyncRunCreate {
+	if v != nil {
+		_c.SetDeliveryID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *SyncRunCreate) SetID(v uuid.UUID) *SyncRunCreate {
 	_c.mutation.SetID(v)
@@ -528,6 +556,14 @@ func (_c *SyncRunCreate) createSpec() (*SyncRun, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.FinishedAt(); ok {
 		_spec.SetField(syncrun.FieldFinishedAt, field.TypeTime, value)
 		_node.FinishedAt = &value
+	}
+	if value, ok := _c.mutation.RequestedBy(); ok {
+		_spec.SetField(syncrun.FieldRequestedBy, field.TypeUUID, value)
+		_node.RequestedBy = &value
+	}
+	if value, ok := _c.mutation.DeliveryID(); ok {
+		_spec.SetField(syncrun.FieldDeliveryID, field.TypeUUID, value)
+		_node.DeliveryID = &value
 	}
 	return _node, _spec
 }

@@ -6410,9 +6410,55 @@ export interface paths {
          * Tạo SIS connection trong tenant đích (F011 chỉ provider_kind = csv_import)
          * @description Quyền `platform.sis_connection.manage`; header `X-Tenant-Id` = tenant đích, `Idempotency-Key` bắt buộc. Connection `csv_import` không cần
          *     `config`/`secret_ref`; gán trường bằng `setSisConnectionSchools` (một trường chỉ một connection active → `409 SIS_SCHOOL_ALREADY_CONNECTED`).
-         *     Ghi audit (F011-AC-26). Nhánh `contract_v1` do F017 mở rộng (`SisConnectionCreate` thành `oneOf` theo `provider_kind`).
+         *     Ghi audit (F011-AC-26). Nhánh `contract_v1` (F017-AC-01): `config` (`base_url` https, `auth_type`, `token_url` khi OAuth2, `schools[]`),
+         *     `secret_ref`, `contract_version` major 1; không lưu secret hay field-mapping; response chỉ có cờ `has_secret`/`has_webhook_secret` (F017-AC-04).
          */
         post: operations["createSisConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sis/connections/{connection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Sửa cấu hình/trạng thái SIS connection (JSON Merge Patch, If-Match) — không trả credential
+         * @description Quyền `platform.sis_connection.manage` (F017-AC-28). Sửa `config`, `secret_ref`, `webhook_secret_ref`, `schedule` (chỉ connection `contract_v1`) hoặc
+         *     `status` (`active`/`paused`, bắt buộc `reason`). Kích hoạt lại (`status = active`) chạy health check trước: major `contract_version` khác →
+         *     `422 SIS_CONTRACT_VERSION_UNSUPPORTED`, facade lỗi → `502 SIS_UNAVAILABLE`; đạt thì đặt `consecutive_failed_runs = 0` (F017-AC-13). Ghi audit
+         *     `sis_connection.updated`/`sis_connection.status_changed` (không ghi tham chiếu secret, F017-AC-04).
+         */
+        patch: operations["updateSisConnection"];
+        trace?: never;
+    };
+    "/sis/connections/{connection_id}:health-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kiểm tra kết nối facade SIS (getHealth) và lưu capabilities
+         * @description Quyền `platform.sis_connection.manage`. Gọi `getHealth` của facade, lưu `capabilities` và `last_health_at` (F017-AC-02). Major `contract_version` khác major
+         *     của connection → connection `contract_error` và `422 SIS_CONTRACT_VERSION_UNSUPPORTED`; facade không trả lời/lỗi → `502 SIS_UNAVAILABLE`;
+         *     credential bị từ chối → connection `auth_error`, `502 SIS_UNAVAILABLE`. Không trả credential.
+         */
+        post: operations["checkSisConnectionHealth"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6432,7 +6478,13 @@ export interface paths {
          */
         get: operations["listSisSyncRuns"];
         put?: never;
-        /** Kích hoạt đồng bộ SIS (full/delta) */
+        /**
+         * Kích hoạt đồng bộ SIS (full/delta) của connection contract_v1 — xử lý bất đồng bộ trong worker
+         * @description Quyền `platform.sis_connection.manage` (mọi trường của connection) hoặc `tenant.sis.import` khi `school_id` (bắt buộc) thuộc scope trường của người gọi
+         *     và thuộc connection (F017-AC-28); tenant/trường khác → `404`. `Idempotency-Key` bắt buộc. Connection không `active` → `409 SIS_CONNECTION_NOT_ACTIVE`;
+         *     connection đang có run → `409 SIS_SYNC_ALREADY_RUNNING` (F017-AC-07, F017-AC-14). `dry_run = true`: pull + validate + staging + reconcile, không apply,
+         *     không phát event nghiệp vụ (F017-AC-03). Run được tạo ở trạng thái `queued` và chạy trong worker (job `scheduled_sync` của `IDENTITY_SIS_JOBS`).
+         */
         post: operations["triggerSisSync"];
         delete?: never;
         options?: never;
@@ -10852,7 +10904,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "MFA_REQUIRED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "MFA_REQUIRED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -11732,23 +11784,66 @@ export interface components {
         SingleChoiceResponse: {
             option_id: components["schemas"]["ItemId"];
         };
+        /** @enum {string} */
+        SisCapability: "full_sync" | "delta" | "webhook" | "student_lookup";
         /** @description SIS connection; không bao giờ chứa `secret_ref` hay credential (F011-AC-27). */
         SisConnection: {
+            capabilities?: components["schemas"]["SisCapability"][];
+            /** @description Cấu hình `contract_v1` (không secret); `null` với `csv_import` */
+            config?: components["schemas"]["SisContractConfig"] | null;
+            consecutive_failed_runs?: number;
             contract_version?: string | null;
             created_at: components["schemas"]["Timestamp"];
+            /** @description Có `secret_ref` (giá trị không bao giờ được trả, F017-AC-04) */
+            has_secret?: boolean;
+            has_webhook_secret?: boolean;
+            /** Format: date-time */
+            last_health_at?: string | null;
+            /** Format: date-time */
+            last_success_at?: string | null;
             last_sync_run?: components["schemas"]["SyncRun"] | null;
             provider_kind: components["schemas"]["SisProviderKind"];
+            schedule?: string | null;
             school_count?: number;
             sis_connection_id: components["schemas"]["Uuid"];
             status: components["schemas"]["SisConnectionStatus"];
+            /** @enum {string|null} */
+            status_reason?: "version_mismatch" | "violation_threshold" | "credential_rejected" | "secret_unavailable" | "circuit_open" | "manual" | null;
             tenant_id: components["schemas"]["Uuid"];
             updated_at?: components["schemas"]["Timestamp"];
         };
-        /** @description F011 chỉ nhận `provider_kind = csv_import` (không `config`, không `secret_ref`); F017 mở rộng thành `oneOf` theo `provider_kind` cho `contract_v1`. */
-        SisConnectionCreate: {
-            /** @enum {string} */
+        /** @description Tạo SIS connection — `csv_import` (F011, không `config`/`secret_ref`) hoặc `contract_v1` (F017). */
+        SisConnectionCreate: components["schemas"]["SisConnectionCreateCsv"] | components["schemas"]["SisConnectionCreateContract"];
+        /** @description Connection `contract_v1` (F017-AC-01). `config` không chứa secret hay field-mapping; credential chỉ qua tham chiếu secret manager. */
+        SisConnectionCreateContract: {
+            config: components["schemas"]["SisContractConfig"];
+            contract_version: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            provider_kind: "contract_v1";
+            reason?: string;
+            /** @description Cron 5 trường (giờ ICT) của full sync; bỏ trống = `sis_sync_schedule` */
+            schedule?: string;
+            secret_ref: components["schemas"]["SisSecretRef"];
+            webhook_secret_ref?: components["schemas"]["SisSecretRef"];
+        };
+        SisConnectionCreateCsv: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             provider_kind: "csv_import";
             reason?: string;
+        };
+        SisConnectionHealth: {
+            capabilities: components["schemas"]["SisCapability"][];
+            checked_at: components["schemas"]["Timestamp"];
+            compatible: boolean;
+            contract_version?: string | null;
+            /** @enum {string} */
+            status: "ok" | "degraded" | "unreachable";
         };
         SisConnectionPage: {
             data: components["schemas"]["SisConnection"][];
@@ -11764,6 +11859,34 @@ export interface components {
         };
         /** @enum {string} */
         SisConnectionStatus: "active" | "auth_error" | "contract_error" | "paused";
+        /** @description JSON Merge Patch của connection (F017). Đổi `status` bắt buộc `reason`. */
+        SisConnectionUpdate: {
+            config?: components["schemas"]["SisContractConfig"];
+            reason?: string;
+            schedule?: string | null;
+            secret_ref?: components["schemas"]["SisSecretRef"];
+            /** @enum {string} */
+            status?: "active" | "paused";
+            webhook_secret_ref?: components["schemas"]["SisSecretRef"] | null;
+        };
+        SisContractConfig: {
+            /** @enum {string} */
+            auth_type: "oauth2_client_credentials" | "api_key" | "mtls";
+            /**
+             * Format: uri
+             * @description Base URL facade (`…/eduworld/v1`); https bắt buộc (http chỉ khi cờ dev EW_SIS_ALLOW_HTTP_BASE_URL)
+             */
+            base_url: string;
+            /** @default eduworld.sis.read */
+            oauth_scope: string;
+            /** @description Trường của connection — ánh xạ `school_external_id` của SIS sang trường EduWorld trong tenant (OQ F017-1) */
+            schools: {
+                school_external_id: string;
+                school_id: components["schemas"]["Uuid"];
+            }[];
+            /** Format: uri */
+            token_url?: string;
+        };
         SisImport: {
             created_at: components["schemas"]["Timestamp"];
             /** @description Số bản ghi theo hành động (create/update/noop/deactivate) của từng loại, sau validate */
@@ -11846,6 +11969,8 @@ export interface components {
             resolution: "link" | "same_person" | "ignore" | "fixed_in_source";
             resolution_note?: string;
         };
+        /** @description Tham chiếu secret manager (Swarm secret), không phải credential; không bao giờ được trả về. */
+        SisSecretRef: string;
         Sticker: {
             alt_text: string;
             sticker_id: components["schemas"]["Uuid"];
@@ -12543,7 +12668,16 @@ export interface components {
         };
     };
     responses: {
-        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED) */
+        /** @description SIS_UNAVAILABLE — hệ thống ngoài (facade SIS của trường) không trả lời, lỗi 5xx hoặc từ chối credential */
+        BadGateway: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -12692,7 +12826,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description VALIDATION_FAILED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform */
+        /** @description VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform */
         ValidationFailed: {
             headers: {
                 [name: string]: unknown;
@@ -29205,6 +29339,83 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    updateSisConnection: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                connection_id: components["parameters"]["ConnectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["SisConnectionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Đã cập nhật */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SisConnection"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            502: components["responses"]["BadGateway"];
+        };
+    };
+    checkSisConnectionHealth: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                connection_id: components["parameters"]["ConnectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kết quả kiểm tra */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SisConnectionHealth"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            502: components["responses"]["BadGateway"];
+        };
+    };
     listSisSyncRuns: {
         parameters: {
             query?: {
@@ -29260,6 +29471,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @default false */
+                    dry_run?: boolean;
                     /** @enum {string} */
                     kind: "full" | "delta";
                     school_id?: components["schemas"]["Uuid"];
@@ -29277,7 +29490,12 @@ export interface operations {
                     "application/json": components["schemas"]["SyncRun"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     createPlatformSisImport: {

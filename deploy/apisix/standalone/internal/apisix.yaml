@@ -159,6 +159,31 @@ routes:
         redis_host: valkey
         redis_port: 6379
         allow_degradation: true
+  - id: internal-sis-webhook
+    uris:
+      - /internal/sis/webhooks/*
+    priority: 110
+    upstream_id: core-api
+    plugins:
+      request-id:
+        header_name: X-Request-Id
+        include_in_response: true
+      prometheus:
+        prefer_name: true
+      opentelemetry:
+        sampler:
+          name: always_on
+      ip-restriction:
+        whitelist:
+          - 127.0.0.1/32
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16
+        message: Forbidden
+      client-control:
+        max_body_size: 8388608
+    methods:
+      - POST
 upstreams:
   - id: core-api
     type: roundrobin

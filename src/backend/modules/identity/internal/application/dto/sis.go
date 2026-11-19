@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 )
 
 // SisIssue is a reconciliation issue (SisReconciliationIssue of the spec).
@@ -123,4 +125,24 @@ type SisConnection struct {
 	LastSyncRun     *SyncRun   `json:"last_sync_run"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
+	// F017 (contract_v1): configuration without secret, flags instead of secret references (F017-AC-04).
+	Config                *sis.ContractConfig `json:"config"`
+	Schedule              *string             `json:"schedule"`
+	HasSecret             bool                `json:"has_secret"`
+	HasWebhookSecret      bool                `json:"has_webhook_secret"`
+	Capabilities          []string            `json:"capabilities"`
+	StatusReason          *string             `json:"status_reason"`
+	ConsecutiveFailedRuns int                 `json:"consecutive_failed_runs"`
+	LastHealthAt          *time.Time          `json:"last_health_at"`
+	LastSuccessAt         *time.Time          `json:"last_success_at"`
+	Version               int64               `json:"-"` // ETag of updateSisConnection
+}
+
+// SisConnectionHealth is the result of checkSisConnectionHealth.
+type SisConnectionHealth struct {
+	Status          string    `json:"status"`
+	ContractVersion *string   `json:"contract_version"`
+	Compatible      bool      `json:"compatible"`
+	Capabilities    []string  `json:"capabilities"`
+	CheckedAt       time.Time `json:"checked_at"`
 }

@@ -2011,7 +2011,7 @@ workspaces:
             label_key: portal.action.platform_admin.tenants.sis_connections
             title: Gán trường cho SIS connection, đồng bộ ngay
             required_permissions: [platform.sis_connection.manage]
-            operation_ids: [listSisConnections, createSisConnection, listSisConnectionSchools, setSisConnectionSchools, triggerSisSync, listSisSyncRuns, getSisSyncRun, listSisSyncRunErrors, createPlatformSisImport, listSisReconciliationIssues, resolveSisReconciliationIssue]
+            operation_ids: [listSisConnections, createSisConnection, updateSisConnection, checkSisConnectionHealth, listSisConnectionSchools, setSisConnectionSchools, triggerSisSync, listSisSyncRuns, getSisSyncRun, listSisSyncRunErrors, createPlatformSisImport, listSisReconciliationIssues, resolveSisReconciliationIssue]
             can_disable: false
       - key: menu.platform_admin.access_control
         label_key: portal.menu.platform_admin.access_control

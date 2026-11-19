@@ -27,7 +27,7 @@ export function render(src, env, gateway) {
         allow_credential: true, max_age: 600 };
     }
     if (gateway === 'internal') {
-      plugins['ip-restriction'] = { whitelist: env.EW_ADMIN_CIDRS.split(',').map((s) => s.trim()).filter(Boolean),
+      plugins['ip-restriction'] = { whitelist: env[r.ip_allow ?? 'EW_ADMIN_CIDRS'].split(',').map((s) => s.trim()).filter(Boolean),
         message: 'Forbidden' };
     }
     if (r.body_max) plugins['client-control'] = { max_body_size: r.body_max };

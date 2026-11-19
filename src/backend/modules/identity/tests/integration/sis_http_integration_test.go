@@ -45,7 +45,7 @@ func TestSisHTTP(t *testing.T) {
 	}
 	noSecret := func(r httpResp) {
 		t.Helper()
-		if strings.Contains(r.raw, "secret") || strings.Contains(r.raw, "config") {
+		if strings.Contains(r.raw, "secret_ref") || strings.Contains(r.raw, `"config":{`) { // F017: has_secret flags and config: null are allowed
 			t.Fatalf("credential field in response: %s", r.raw)
 		}
 	}

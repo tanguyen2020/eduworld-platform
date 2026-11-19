@@ -1,0 +1,50 @@
+# SIS conformance lane (F017 T051, F017-AC-27, TC-AUTH-012): the conformance collection generated from the
+# EduWorld SIS Contract must be fresh and pass against sis-mock (Prism static mock of the same contract);
+# a contract change that breaks the tests fails the PR.
+name: sis-conformance
+
+on:
+  pull_request:
+    paths:
+      - "specs/sis/**"
+      - "specs/postman/sis-conformance/**"
+      - ".github/workflows/sis-conformance.yml"
+  push:
+    branches: [main]
+    paths:
+      - "specs/sis/**"
+      - "specs/postman/sis-conformance/**"
+      - ".github/workflows/sis-conformance.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sis-conformance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: collection generated from the contract
+        run: node specs/postman/sis-conformance/generate.mjs --check
+      - name: start sis-mock (stoplight/prism:4, static examples)
+        run: |
+          docker run -d --name sis-mock -p 4010:4010 -v "$PWD/specs:/specs:ro" stoplight/prism:4 \
+            mock -h 0.0.0.0 -p 4010 /specs/sis/eduworld-sis-contract.v1.yaml
+          for i in $(seq 1 60); do docker logs sis-mock 2>&1 | grep -q "Prism is listening" && exit 0; sleep 2; done
+          docker logs sis-mock; exit 1
+      - name: install Postman CLI
+        run: curl -fsSL https://dl-cli.pstmn.io/install/linux64.sh | sh
+      - name: conformance against sis-mock
+        run: |
+          postman collection run specs/postman/sis-conformance/sis-conformance.postman_collection.json \
+            -e specs/postman/sis-conformance/env.sis-mock.postman_environment.json
+      - if: always()
+        run: docker rm -f sis-mock

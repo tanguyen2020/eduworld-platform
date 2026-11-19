@@ -47,6 +47,18 @@ const (
 	FieldDeltaWatermark = "delta_watermark"
 	// FieldSchedule holds the string denoting the schedule field in the database.
 	FieldSchedule = "schedule"
+	// FieldWebhookSecretRef holds the string denoting the webhook_secret_ref field in the database.
+	FieldWebhookSecretRef = "webhook_secret_ref"
+	// FieldCapabilities holds the string denoting the capabilities field in the database.
+	FieldCapabilities = "capabilities"
+	// FieldLastHealthAt holds the string denoting the last_health_at field in the database.
+	FieldLastHealthAt = "last_health_at"
+	// FieldLastSuccessAt holds the string denoting the last_success_at field in the database.
+	FieldLastSuccessAt = "last_success_at"
+	// FieldConsecutiveFailedRuns holds the string denoting the consecutive_failed_runs field in the database.
+	FieldConsecutiveFailedRuns = "consecutive_failed_runs"
+	// FieldStatusReason holds the string denoting the status_reason field in the database.
+	FieldStatusReason = "status_reason"
 	// Table holds the table name of the sisconnection in the database.
 	Table = "sis_connections"
 )
@@ -70,6 +82,12 @@ var Columns = []string{
 	FieldStatus,
 	FieldDeltaWatermark,
 	FieldSchedule,
+	FieldWebhookSecretRef,
+	FieldCapabilities,
+	FieldLastHealthAt,
+	FieldLastSuccessAt,
+	FieldConsecutiveFailedRuns,
+	FieldStatusReason,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -114,6 +132,12 @@ var (
 	DeltaWatermarkValidator func(string) error
 	// ScheduleValidator is a validator for the "schedule" field. It is called by the builders before save.
 	ScheduleValidator func(string) error
+	// WebhookSecretRefValidator is a validator for the "webhook_secret_ref" field. It is called by the builders before save.
+	WebhookSecretRefValidator func(string) error
+	// DefaultConsecutiveFailedRuns holds the default value on creation for the "consecutive_failed_runs" field.
+	DefaultConsecutiveFailedRuns int32
+	// StatusReasonValidator is a validator for the "status_reason" field. It is called by the builders before save.
+	StatusReasonValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -199,4 +223,29 @@ func ByDeltaWatermark(opts ...sql.OrderTermOption) OrderOption {
 // BySchedule orders the results by the schedule field.
 func BySchedule(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSchedule, opts...).ToFunc()
+}
+
+// ByWebhookSecretRef orders the results by the webhook_secret_ref field.
+func ByWebhookSecretRef(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWebhookSecretRef, opts...).ToFunc()
+}
+
+// ByLastHealthAt orders the results by the last_health_at field.
+func ByLastHealthAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastHealthAt, opts...).ToFunc()
+}
+
+// ByLastSuccessAt orders the results by the last_success_at field.
+func ByLastSuccessAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastSuccessAt, opts...).ToFunc()
+}
+
+// ByConsecutiveFailedRuns orders the results by the consecutive_failed_runs field.
+func ByConsecutiveFailedRuns(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConsecutiveFailedRuns, opts...).ToFunc()
+}
+
+// ByStatusReason orders the results by the status_reason field.
+func ByStatusReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatusReason, opts...).ToFunc()
 }

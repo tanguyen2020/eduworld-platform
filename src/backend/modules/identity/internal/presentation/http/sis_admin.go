@@ -7,8 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -16,6 +18,8 @@ import (
 // SisConnectionsHandler is the connection use cases (command.SisConnections).
 type SisConnectionsHandler interface {
 	Create(ctx context.Context, tenantID uuid.UUID, providerKind, reason string) (write.SisConnection, error)
+	// CreateContract is the contract_v1 branch of createSisConnection (F017-AC-01).
+	CreateContract(ctx context.Context, tenantID uuid.UUID, in command.ContractCreateInput) (dto.SisConnection, error)
 	SetSchools(ctx context.Context, id uuid.UUID, schoolIDs []uuid.UUID, reason string) ([]write.SisConnectionSchool, error)
 	Schools(ctx context.Context, id uuid.UUID) ([]write.SisConnectionSchool, error)
 }
@@ -59,8 +63,13 @@ func (h Handlers) listSisConnections(w http.ResponseWriter, r *http.Request) {
 
 func (h Handlers) createSisConnection(w http.ResponseWriter, r *http.Request) {
 	var b struct {
-		ProviderKind string `json:"provider_kind"`
-		Reason       string `json:"reason"`
+		ProviderKind     string              `json:"provider_kind"`
+		Reason           string              `json:"reason"`
+		ContractVersion  string              `json:"contract_version"`
+		Config           *sis.ContractConfig `json:"config"`
+		SecretRef        string              `json:"secret_ref"`
+		WebhookSecretRef string              `json:"webhook_secret_ref"`
+		Schedule         string              `json:"schedule"`
 	}
 	if err := decode(r, &b); err != nil {
 		fail(w, r, err)
@@ -69,6 +78,20 @@ func (h Handlers) createSisConnection(w http.ResponseWriter, r *http.Request) {
 	p, ok := authz.PrincipalFrom(r.Context())
 	if !ok || p.TenantID == nil {
 		fail(w, r, problem.New(problem.TenantHeaderRequired, ""))
+		return
+	}
+	if b.ProviderKind == sis.ProviderContractV1 { // F017
+		in := command.ContractCreateInput{ContractVersion: b.ContractVersion, SecretRef: b.SecretRef, WebhookSecretRef: b.WebhookSecretRef,
+			Schedule: b.Schedule, Reason: b.Reason}
+		if b.Config != nil {
+			in.Config = *b.Config
+		}
+		out, err := h.SisConnections.CreateContract(r.Context(), *p.TenantID, in)
+		if err != nil {
+			fail(w, r, err)
+			return
+		}
+		writeJSON(w, http.StatusCreated, out)
 		return
 	}
 	c, err := h.SisConnections.Create(r.Context(), *p.TenantID, b.ProviderKind, b.Reason)

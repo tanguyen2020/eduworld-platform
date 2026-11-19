@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/internal"
@@ -243,6 +244,125 @@ func (_u *SisConnectionUpdate) ClearSchedule() *SisConnectionUpdate {
 	return _u
 }
 
+// SetWebhookSecretRef sets the "webhook_secret_ref" field.
+func (_u *SisConnectionUpdate) SetWebhookSecretRef(v string) *SisConnectionUpdate {
+	_u.mutation.SetWebhookSecretRef(v)
+	return _u
+}
+
+// SetNillableWebhookSecretRef sets the "webhook_secret_ref" field if the given value is not nil.
+func (_u *SisConnectionUpdate) SetNillableWebhookSecretRef(v *string) *SisConnectionUpdate {
+	if v != nil {
+		_u.SetWebhookSecretRef(*v)
+	}
+	return _u
+}
+
+// ClearWebhookSecretRef clears the value of the "webhook_secret_ref" field.
+func (_u *SisConnectionUpdate) ClearWebhookSecretRef() *SisConnectionUpdate {
+	_u.mutation.ClearWebhookSecretRef()
+	return _u
+}
+
+// SetCapabilities sets the "capabilities" field.
+func (_u *SisConnectionUpdate) SetCapabilities(v []string) *SisConnectionUpdate {
+	_u.mutation.SetCapabilities(v)
+	return _u
+}
+
+// AppendCapabilities appends value to the "capabilities" field.
+func (_u *SisConnectionUpdate) AppendCapabilities(v []string) *SisConnectionUpdate {
+	_u.mutation.AppendCapabilities(v)
+	return _u
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (_u *SisConnectionUpdate) ClearCapabilities() *SisConnectionUpdate {
+	_u.mutation.ClearCapabilities()
+	return _u
+}
+
+// SetLastHealthAt sets the "last_health_at" field.
+func (_u *SisConnectionUpdate) SetLastHealthAt(v time.Time) *SisConnectionUpdate {
+	_u.mutation.SetLastHealthAt(v)
+	return _u
+}
+
+// SetNillableLastHealthAt sets the "last_health_at" field if the given value is not nil.
+func (_u *SisConnectionUpdate) SetNillableLastHealthAt(v *time.Time) *SisConnectionUpdate {
+	if v != nil {
+		_u.SetLastHealthAt(*v)
+	}
+	return _u
+}
+
+// ClearLastHealthAt clears the value of the "last_health_at" field.
+func (_u *SisConnectionUpdate) ClearLastHealthAt() *SisConnectionUpdate {
+	_u.mutation.ClearLastHealthAt()
+	return _u
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *SisConnectionUpdate) SetLastSuccessAt(v time.Time) *SisConnectionUpdate {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *SisConnectionUpdate) SetNillableLastSuccessAt(v *time.Time) *SisConnectionUpdate {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *SisConnectionUpdate) ClearLastSuccessAt() *SisConnectionUpdate {
+	_u.mutation.ClearLastSuccessAt()
+	return _u
+}
+
+// SetConsecutiveFailedRuns sets the "consecutive_failed_runs" field.
+func (_u *SisConnectionUpdate) SetConsecutiveFailedRuns(v int32) *SisConnectionUpdate {
+	_u.mutation.ResetConsecutiveFailedRuns()
+	_u.mutation.SetConsecutiveFailedRuns(v)
+	return _u
+}
+
+// SetNillableConsecutiveFailedRuns sets the "consecutive_failed_runs" field if the given value is not nil.
+func (_u *SisConnectionUpdate) SetNillableConsecutiveFailedRuns(v *int32) *SisConnectionUpdate {
+	if v != nil {
+		_u.SetConsecutiveFailedRuns(*v)
+	}
+	return _u
+}
+
+// AddConsecutiveFailedRuns adds value to the "consecutive_failed_runs" field.
+func (_u *SisConnectionUpdate) AddConsecutiveFailedRuns(v int32) *SisConnectionUpdate {
+	_u.mutation.AddConsecutiveFailedRuns(v)
+	return _u
+}
+
+// SetStatusReason sets the "status_reason" field.
+func (_u *SisConnectionUpdate) SetStatusReason(v string) *SisConnectionUpdate {
+	_u.mutation.SetStatusReason(v)
+	return _u
+}
+
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_u *SisConnectionUpdate) SetNillableStatusReason(v *string) *SisConnectionUpdate {
+	if v != nil {
+		_u.SetStatusReason(*v)
+	}
+	return _u
+}
+
+// ClearStatusReason clears the value of the "status_reason" field.
+func (_u *SisConnectionUpdate) ClearStatusReason() *SisConnectionUpdate {
+	_u.mutation.ClearStatusReason()
+	return _u
+}
+
 // Mutation returns the SisConnectionMutation object of the builder.
 func (_u *SisConnectionUpdate) Mutation() *SisConnectionMutation {
 	return _u.mutation
@@ -320,6 +440,16 @@ func (_u *SisConnectionUpdate) check() error {
 	if v, ok := _u.mutation.Schedule(); ok {
 		if err := sisconnection.ScheduleValidator(v); err != nil {
 			return &ValidationError{Name: "schedule", err: fmt.Errorf(`ent: validator failed for field "SisConnection.schedule": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.WebhookSecretRef(); ok {
+		if err := sisconnection.WebhookSecretRefValidator(v); err != nil {
+			return &ValidationError{Name: "webhook_secret_ref", err: fmt.Errorf(`ent: validator failed for field "SisConnection.webhook_secret_ref": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.StatusReason(); ok {
+		if err := sisconnection.StatusReasonValidator(v); err != nil {
+			return &ValidationError{Name: "status_reason", err: fmt.Errorf(`ent: validator failed for field "SisConnection.status_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -405,6 +535,47 @@ func (_u *SisConnectionUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if _u.mutation.ScheduleCleared() {
 		_spec.ClearField(sisconnection.FieldSchedule, field.TypeString)
+	}
+	if value, ok := _u.mutation.WebhookSecretRef(); ok {
+		_spec.SetField(sisconnection.FieldWebhookSecretRef, field.TypeString, value)
+	}
+	if _u.mutation.WebhookSecretRefCleared() {
+		_spec.ClearField(sisconnection.FieldWebhookSecretRef, field.TypeString)
+	}
+	if value, ok := _u.mutation.Capabilities(); ok {
+		_spec.SetField(sisconnection.FieldCapabilities, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedCapabilities(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, sisconnection.FieldCapabilities, value)
+		})
+	}
+	if _u.mutation.CapabilitiesCleared() {
+		_spec.ClearField(sisconnection.FieldCapabilities, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.LastHealthAt(); ok {
+		_spec.SetField(sisconnection.FieldLastHealthAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastHealthAtCleared() {
+		_spec.ClearField(sisconnection.FieldLastHealthAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(sisconnection.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(sisconnection.FieldLastSuccessAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ConsecutiveFailedRuns(); ok {
+		_spec.SetField(sisconnection.FieldConsecutiveFailedRuns, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.AddedConsecutiveFailedRuns(); ok {
+		_spec.AddField(sisconnection.FieldConsecutiveFailedRuns, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.StatusReason(); ok {
+		_spec.SetField(sisconnection.FieldStatusReason, field.TypeString, value)
+	}
+	if _u.mutation.StatusReasonCleared() {
+		_spec.ClearField(sisconnection.FieldStatusReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.SisConnection
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -641,6 +812,125 @@ func (_u *SisConnectionUpdateOne) ClearSchedule() *SisConnectionUpdateOne {
 	return _u
 }
 
+// SetWebhookSecretRef sets the "webhook_secret_ref" field.
+func (_u *SisConnectionUpdateOne) SetWebhookSecretRef(v string) *SisConnectionUpdateOne {
+	_u.mutation.SetWebhookSecretRef(v)
+	return _u
+}
+
+// SetNillableWebhookSecretRef sets the "webhook_secret_ref" field if the given value is not nil.
+func (_u *SisConnectionUpdateOne) SetNillableWebhookSecretRef(v *string) *SisConnectionUpdateOne {
+	if v != nil {
+		_u.SetWebhookSecretRef(*v)
+	}
+	return _u
+}
+
+// ClearWebhookSecretRef clears the value of the "webhook_secret_ref" field.
+func (_u *SisConnectionUpdateOne) ClearWebhookSecretRef() *SisConnectionUpdateOne {
+	_u.mutation.ClearWebhookSecretRef()
+	return _u
+}
+
+// SetCapabilities sets the "capabilities" field.
+func (_u *SisConnectionUpdateOne) SetCapabilities(v []string) *SisConnectionUpdateOne {
+	_u.mutation.SetCapabilities(v)
+	return _u
+}
+
+// AppendCapabilities appends value to the "capabilities" field.
+func (_u *SisConnectionUpdateOne) AppendCapabilities(v []string) *SisConnectionUpdateOne {
+	_u.mutation.AppendCapabilities(v)
+	return _u
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (_u *SisConnectionUpdateOne) ClearCapabilities() *SisConnectionUpdateOne {
+	_u.mutation.ClearCapabilities()
+	return _u
+}
+
+// SetLastHealthAt sets the "last_health_at" field.
+func (_u *SisConnectionUpdateOne) SetLastHealthAt(v time.Time) *SisConnectionUpdateOne {
+	_u.mutation.SetLastHealthAt(v)
+	return _u
+}
+
+// SetNillableLastHealthAt sets the "last_health_at" field if the given value is not nil.
+func (_u *SisConnectionUpdateOne) SetNillableLastHealthAt(v *time.Time) *SisConnectionUpdateOne {
+	if v != nil {
+		_u.SetLastHealthAt(*v)
+	}
+	return _u
+}
+
+// ClearLastHealthAt clears the value of the "last_health_at" field.
+func (_u *SisConnectionUpdateOne) ClearLastHealthAt() *SisConnectionUpdateOne {
+	_u.mutation.ClearLastHealthAt()
+	return _u
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *SisConnectionUpdateOne) SetLastSuccessAt(v time.Time) *SisConnectionUpdateOne {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *SisConnectionUpdateOne) SetNillableLastSuccessAt(v *time.Time) *SisConnectionUpdateOne {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *SisConnectionUpdateOne) ClearLastSuccessAt() *SisConnectionUpdateOne {
+	_u.mutation.ClearLastSuccessAt()
+	return _u
+}
+
+// SetConsecutiveFailedRuns sets the "consecutive_failed_runs" field.
+func (_u *SisConnectionUpdateOne) SetConsecutiveFailedRuns(v int32) *SisConnectionUpdateOne {
+	_u.mutation.ResetConsecutiveFailedRuns()
+	_u.mutation.SetConsecutiveFailedRuns(v)
+	return _u
+}
+
+// SetNillableConsecutiveFailedRuns sets the "consecutive_failed_runs" field if the given value is not nil.
+func (_u *SisConnectionUpdateOne) SetNillableConsecutiveFailedRuns(v *int32) *SisConnectionUpdateOne {
+	if v != nil {
+		_u.SetConsecutiveFailedRuns(*v)
+	}
+	return _u
+}
+
+// AddConsecutiveFailedRuns adds value to the "consecutive_failed_runs" field.
+func (_u *SisConnectionUpdateOne) AddConsecutiveFailedRuns(v int32) *SisConnectionUpdateOne {
+	_u.mutation.AddConsecutiveFailedRuns(v)
+	return _u
+}
+
+// SetStatusReason sets the "status_reason" field.
+func (_u *SisConnectionUpdateOne) SetStatusReason(v string) *SisConnectionUpdateOne {
+	_u.mutation.SetStatusReason(v)
+	return _u
+}
+
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_u *SisConnectionUpdateOne) SetNillableStatusReason(v *string) *SisConnectionUpdateOne {
+	if v != nil {
+		_u.SetStatusReason(*v)
+	}
+	return _u
+}
+
+// ClearStatusReason clears the value of the "status_reason" field.
+func (_u *SisConnectionUpdateOne) ClearStatusReason() *SisConnectionUpdateOne {
+	_u.mutation.ClearStatusReason()
+	return _u
+}
+
 // Mutation returns the SisConnectionMutation object of the builder.
 func (_u *SisConnectionUpdateOne) Mutation() *SisConnectionMutation {
 	return _u.mutation
@@ -731,6 +1021,16 @@ func (_u *SisConnectionUpdateOne) check() error {
 	if v, ok := _u.mutation.Schedule(); ok {
 		if err := sisconnection.ScheduleValidator(v); err != nil {
 			return &ValidationError{Name: "schedule", err: fmt.Errorf(`ent: validator failed for field "SisConnection.schedule": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.WebhookSecretRef(); ok {
+		if err := sisconnection.WebhookSecretRefValidator(v); err != nil {
+			return &ValidationError{Name: "webhook_secret_ref", err: fmt.Errorf(`ent: validator failed for field "SisConnection.webhook_secret_ref": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.StatusReason(); ok {
+		if err := sisconnection.StatusReasonValidator(v); err != nil {
+			return &ValidationError{Name: "status_reason", err: fmt.Errorf(`ent: validator failed for field "SisConnection.status_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -833,6 +1133,47 @@ func (_u *SisConnectionUpdateOne) sqlSave(ctx context.Context) (_node *SisConnec
 	}
 	if _u.mutation.ScheduleCleared() {
 		_spec.ClearField(sisconnection.FieldSchedule, field.TypeString)
+	}
+	if value, ok := _u.mutation.WebhookSecretRef(); ok {
+		_spec.SetField(sisconnection.FieldWebhookSecretRef, field.TypeString, value)
+	}
+	if _u.mutation.WebhookSecretRefCleared() {
+		_spec.ClearField(sisconnection.FieldWebhookSecretRef, field.TypeString)
+	}
+	if value, ok := _u.mutation.Capabilities(); ok {
+		_spec.SetField(sisconnection.FieldCapabilities, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedCapabilities(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, sisconnection.FieldCapabilities, value)
+		})
+	}
+	if _u.mutation.CapabilitiesCleared() {
+		_spec.ClearField(sisconnection.FieldCapabilities, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.LastHealthAt(); ok {
+		_spec.SetField(sisconnection.FieldLastHealthAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastHealthAtCleared() {
+		_spec.ClearField(sisconnection.FieldLastHealthAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(sisconnection.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(sisconnection.FieldLastSuccessAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ConsecutiveFailedRuns(); ok {
+		_spec.SetField(sisconnection.FieldConsecutiveFailedRuns, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.AddedConsecutiveFailedRuns(); ok {
+		_spec.AddField(sisconnection.FieldConsecutiveFailedRuns, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.StatusReason(); ok {
+		_spec.SetField(sisconnection.FieldStatusReason, field.TypeString, value)
+	}
+	if _u.mutation.StatusReasonCleared() {
+		_spec.ClearField(sisconnection.FieldStatusReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.SisConnection
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

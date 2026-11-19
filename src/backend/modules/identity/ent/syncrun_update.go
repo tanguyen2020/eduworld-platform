@@ -259,6 +259,46 @@ func (_u *SyncRunUpdate) ClearFinishedAt() *SyncRunUpdate {
 	return _u
 }
 
+// SetRequestedBy sets the "requested_by" field.
+func (_u *SyncRunUpdate) SetRequestedBy(v uuid.UUID) *SyncRunUpdate {
+	_u.mutation.SetRequestedBy(v)
+	return _u
+}
+
+// SetNillableRequestedBy sets the "requested_by" field if the given value is not nil.
+func (_u *SyncRunUpdate) SetNillableRequestedBy(v *uuid.UUID) *SyncRunUpdate {
+	if v != nil {
+		_u.SetRequestedBy(*v)
+	}
+	return _u
+}
+
+// ClearRequestedBy clears the value of the "requested_by" field.
+func (_u *SyncRunUpdate) ClearRequestedBy() *SyncRunUpdate {
+	_u.mutation.ClearRequestedBy()
+	return _u
+}
+
+// SetDeliveryID sets the "delivery_id" field.
+func (_u *SyncRunUpdate) SetDeliveryID(v uuid.UUID) *SyncRunUpdate {
+	_u.mutation.SetDeliveryID(v)
+	return _u
+}
+
+// SetNillableDeliveryID sets the "delivery_id" field if the given value is not nil.
+func (_u *SyncRunUpdate) SetNillableDeliveryID(v *uuid.UUID) *SyncRunUpdate {
+	if v != nil {
+		_u.SetDeliveryID(*v)
+	}
+	return _u
+}
+
+// ClearDeliveryID clears the value of the "delivery_id" field.
+func (_u *SyncRunUpdate) ClearDeliveryID() *SyncRunUpdate {
+	_u.mutation.ClearDeliveryID()
+	return _u
+}
+
 // Mutation returns the SyncRunMutation object of the builder.
 func (_u *SyncRunUpdate) Mutation() *SyncRunMutation {
 	return _u.mutation
@@ -411,6 +451,18 @@ func (_u *SyncRunUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.FinishedAtCleared() {
 		_spec.ClearField(syncrun.FieldFinishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.RequestedBy(); ok {
+		_spec.SetField(syncrun.FieldRequestedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.RequestedByCleared() {
+		_spec.ClearField(syncrun.FieldRequestedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.DeliveryID(); ok {
+		_spec.SetField(syncrun.FieldDeliveryID, field.TypeUUID, value)
+	}
+	if _u.mutation.DeliveryIDCleared() {
+		_spec.ClearField(syncrun.FieldDeliveryID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.SyncRun
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -663,6 +715,46 @@ func (_u *SyncRunUpdateOne) ClearFinishedAt() *SyncRunUpdateOne {
 	return _u
 }
 
+// SetRequestedBy sets the "requested_by" field.
+func (_u *SyncRunUpdateOne) SetRequestedBy(v uuid.UUID) *SyncRunUpdateOne {
+	_u.mutation.SetRequestedBy(v)
+	return _u
+}
+
+// SetNillableRequestedBy sets the "requested_by" field if the given value is not nil.
+func (_u *SyncRunUpdateOne) SetNillableRequestedBy(v *uuid.UUID) *SyncRunUpdateOne {
+	if v != nil {
+		_u.SetRequestedBy(*v)
+	}
+	return _u
+}
+
+// ClearRequestedBy clears the value of the "requested_by" field.
+func (_u *SyncRunUpdateOne) ClearRequestedBy() *SyncRunUpdateOne {
+	_u.mutation.ClearRequestedBy()
+	return _u
+}
+
+// SetDeliveryID sets the "delivery_id" field.
+func (_u *SyncRunUpdateOne) SetDeliveryID(v uuid.UUID) *SyncRunUpdateOne {
+	_u.mutation.SetDeliveryID(v)
+	return _u
+}
+
+// SetNillableDeliveryID sets the "delivery_id" field if the given value is not nil.
+func (_u *SyncRunUpdateOne) SetNillableDeliveryID(v *uuid.UUID) *SyncRunUpdateOne {
+	if v != nil {
+		_u.SetDeliveryID(*v)
+	}
+	return _u
+}
+
+// ClearDeliveryID clears the value of the "delivery_id" field.
+func (_u *SyncRunUpdateOne) ClearDeliveryID() *SyncRunUpdateOne {
+	_u.mutation.ClearDeliveryID()
+	return _u
+}
+
 // Mutation returns the SyncRunMutation object of the builder.
 func (_u *SyncRunUpdateOne) Mutation() *SyncRunMutation {
 	return _u.mutation
@@ -845,6 +937,18 @@ func (_u *SyncRunUpdateOne) sqlSave(ctx context.Context) (_node *SyncRun, err er
 	}
 	if _u.mutation.FinishedAtCleared() {
 		_spec.ClearField(syncrun.FieldFinishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.RequestedBy(); ok {
+		_spec.SetField(syncrun.FieldRequestedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.RequestedByCleared() {
+		_spec.ClearField(syncrun.FieldRequestedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.DeliveryID(); ok {
+		_spec.SetField(syncrun.FieldDeliveryID, field.TypeUUID, value)
+	}
+	if _u.mutation.DeliveryIDCleared() {
+		_spec.ClearField(syncrun.FieldDeliveryID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.SyncRun
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

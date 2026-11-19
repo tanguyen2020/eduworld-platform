@@ -130,6 +130,31 @@ func Schedule(v string) predicate.SisConnection {
 	return predicate.SisConnection(sql.FieldEQ(FieldSchedule, v))
 }
 
+// WebhookSecretRef applies equality check predicate on the "webhook_secret_ref" field. It's identical to WebhookSecretRefEQ.
+func WebhookSecretRef(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldWebhookSecretRef, v))
+}
+
+// LastHealthAt applies equality check predicate on the "last_health_at" field. It's identical to LastHealthAtEQ.
+func LastHealthAt(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldLastHealthAt, v))
+}
+
+// LastSuccessAt applies equality check predicate on the "last_success_at" field. It's identical to LastSuccessAtEQ.
+func LastSuccessAt(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
+// ConsecutiveFailedRuns applies equality check predicate on the "consecutive_failed_runs" field. It's identical to ConsecutiveFailedRunsEQ.
+func ConsecutiveFailedRuns(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldConsecutiveFailedRuns, v))
+}
+
+// StatusReason applies equality check predicate on the "status_reason" field. It's identical to StatusReasonEQ.
+func StatusReason(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldStatusReason, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.SisConnection {
 	return predicate.SisConnection(sql.FieldEQ(FieldTenantID, v))
@@ -1003,6 +1028,306 @@ func ScheduleEqualFold(v string) predicate.SisConnection {
 // ScheduleContainsFold applies the ContainsFold predicate on the "schedule" field.
 func ScheduleContainsFold(v string) predicate.SisConnection {
 	return predicate.SisConnection(sql.FieldContainsFold(FieldSchedule, v))
+}
+
+// WebhookSecretRefEQ applies the EQ predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefEQ(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefNEQ applies the NEQ predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefNEQ(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNEQ(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefIn applies the In predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefIn(vs ...string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIn(FieldWebhookSecretRef, vs...))
+}
+
+// WebhookSecretRefNotIn applies the NotIn predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefNotIn(vs ...string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotIn(FieldWebhookSecretRef, vs...))
+}
+
+// WebhookSecretRefGT applies the GT predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefGT(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGT(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefGTE applies the GTE predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefGTE(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGTE(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefLT applies the LT predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefLT(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLT(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefLTE applies the LTE predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefLTE(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLTE(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefContains applies the Contains predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefContains(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldContains(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefHasPrefix applies the HasPrefix predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefHasPrefix(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldHasPrefix(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefHasSuffix applies the HasSuffix predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefHasSuffix(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldHasSuffix(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefIsNil applies the IsNil predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefIsNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIsNull(FieldWebhookSecretRef))
+}
+
+// WebhookSecretRefNotNil applies the NotNil predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefNotNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotNull(FieldWebhookSecretRef))
+}
+
+// WebhookSecretRefEqualFold applies the EqualFold predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefEqualFold(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEqualFold(FieldWebhookSecretRef, v))
+}
+
+// WebhookSecretRefContainsFold applies the ContainsFold predicate on the "webhook_secret_ref" field.
+func WebhookSecretRefContainsFold(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldContainsFold(FieldWebhookSecretRef, v))
+}
+
+// CapabilitiesIsNil applies the IsNil predicate on the "capabilities" field.
+func CapabilitiesIsNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIsNull(FieldCapabilities))
+}
+
+// CapabilitiesNotNil applies the NotNil predicate on the "capabilities" field.
+func CapabilitiesNotNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotNull(FieldCapabilities))
+}
+
+// LastHealthAtEQ applies the EQ predicate on the "last_health_at" field.
+func LastHealthAtEQ(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldLastHealthAt, v))
+}
+
+// LastHealthAtNEQ applies the NEQ predicate on the "last_health_at" field.
+func LastHealthAtNEQ(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNEQ(FieldLastHealthAt, v))
+}
+
+// LastHealthAtIn applies the In predicate on the "last_health_at" field.
+func LastHealthAtIn(vs ...time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIn(FieldLastHealthAt, vs...))
+}
+
+// LastHealthAtNotIn applies the NotIn predicate on the "last_health_at" field.
+func LastHealthAtNotIn(vs ...time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotIn(FieldLastHealthAt, vs...))
+}
+
+// LastHealthAtGT applies the GT predicate on the "last_health_at" field.
+func LastHealthAtGT(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGT(FieldLastHealthAt, v))
+}
+
+// LastHealthAtGTE applies the GTE predicate on the "last_health_at" field.
+func LastHealthAtGTE(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGTE(FieldLastHealthAt, v))
+}
+
+// LastHealthAtLT applies the LT predicate on the "last_health_at" field.
+func LastHealthAtLT(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLT(FieldLastHealthAt, v))
+}
+
+// LastHealthAtLTE applies the LTE predicate on the "last_health_at" field.
+func LastHealthAtLTE(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLTE(FieldLastHealthAt, v))
+}
+
+// LastHealthAtIsNil applies the IsNil predicate on the "last_health_at" field.
+func LastHealthAtIsNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIsNull(FieldLastHealthAt))
+}
+
+// LastHealthAtNotNil applies the NotNil predicate on the "last_health_at" field.
+func LastHealthAtNotNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotNull(FieldLastHealthAt))
+}
+
+// LastSuccessAtEQ applies the EQ predicate on the "last_success_at" field.
+func LastSuccessAtEQ(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtNEQ applies the NEQ predicate on the "last_success_at" field.
+func LastSuccessAtNEQ(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIn applies the In predicate on the "last_success_at" field.
+func LastSuccessAtIn(vs ...time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtNotIn applies the NotIn predicate on the "last_success_at" field.
+func LastSuccessAtNotIn(vs ...time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtGT applies the GT predicate on the "last_success_at" field.
+func LastSuccessAtGT(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtGTE applies the GTE predicate on the "last_success_at" field.
+func LastSuccessAtGTE(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLT applies the LT predicate on the "last_success_at" field.
+func LastSuccessAtLT(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLTE applies the LTE predicate on the "last_success_at" field.
+func LastSuccessAtLTE(v time.Time) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIsNil applies the IsNil predicate on the "last_success_at" field.
+func LastSuccessAtIsNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIsNull(FieldLastSuccessAt))
+}
+
+// LastSuccessAtNotNil applies the NotNil predicate on the "last_success_at" field.
+func LastSuccessAtNotNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotNull(FieldLastSuccessAt))
+}
+
+// ConsecutiveFailedRunsEQ applies the EQ predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsEQ(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldConsecutiveFailedRuns, v))
+}
+
+// ConsecutiveFailedRunsNEQ applies the NEQ predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsNEQ(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNEQ(FieldConsecutiveFailedRuns, v))
+}
+
+// ConsecutiveFailedRunsIn applies the In predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsIn(vs ...int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIn(FieldConsecutiveFailedRuns, vs...))
+}
+
+// ConsecutiveFailedRunsNotIn applies the NotIn predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsNotIn(vs ...int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotIn(FieldConsecutiveFailedRuns, vs...))
+}
+
+// ConsecutiveFailedRunsGT applies the GT predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsGT(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGT(FieldConsecutiveFailedRuns, v))
+}
+
+// ConsecutiveFailedRunsGTE applies the GTE predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsGTE(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGTE(FieldConsecutiveFailedRuns, v))
+}
+
+// ConsecutiveFailedRunsLT applies the LT predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsLT(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLT(FieldConsecutiveFailedRuns, v))
+}
+
+// ConsecutiveFailedRunsLTE applies the LTE predicate on the "consecutive_failed_runs" field.
+func ConsecutiveFailedRunsLTE(v int32) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLTE(FieldConsecutiveFailedRuns, v))
+}
+
+// StatusReasonEQ applies the EQ predicate on the "status_reason" field.
+func StatusReasonEQ(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEQ(FieldStatusReason, v))
+}
+
+// StatusReasonNEQ applies the NEQ predicate on the "status_reason" field.
+func StatusReasonNEQ(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNEQ(FieldStatusReason, v))
+}
+
+// StatusReasonIn applies the In predicate on the "status_reason" field.
+func StatusReasonIn(vs ...string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIn(FieldStatusReason, vs...))
+}
+
+// StatusReasonNotIn applies the NotIn predicate on the "status_reason" field.
+func StatusReasonNotIn(vs ...string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotIn(FieldStatusReason, vs...))
+}
+
+// StatusReasonGT applies the GT predicate on the "status_reason" field.
+func StatusReasonGT(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGT(FieldStatusReason, v))
+}
+
+// StatusReasonGTE applies the GTE predicate on the "status_reason" field.
+func StatusReasonGTE(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldGTE(FieldStatusReason, v))
+}
+
+// StatusReasonLT applies the LT predicate on the "status_reason" field.
+func StatusReasonLT(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLT(FieldStatusReason, v))
+}
+
+// StatusReasonLTE applies the LTE predicate on the "status_reason" field.
+func StatusReasonLTE(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldLTE(FieldStatusReason, v))
+}
+
+// StatusReasonContains applies the Contains predicate on the "status_reason" field.
+func StatusReasonContains(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldContains(FieldStatusReason, v))
+}
+
+// StatusReasonHasPrefix applies the HasPrefix predicate on the "status_reason" field.
+func StatusReasonHasPrefix(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldHasPrefix(FieldStatusReason, v))
+}
+
+// StatusReasonHasSuffix applies the HasSuffix predicate on the "status_reason" field.
+func StatusReasonHasSuffix(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldHasSuffix(FieldStatusReason, v))
+}
+
+// StatusReasonIsNil applies the IsNil predicate on the "status_reason" field.
+func StatusReasonIsNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldIsNull(FieldStatusReason))
+}
+
+// StatusReasonNotNil applies the NotNil predicate on the "status_reason" field.
+func StatusReasonNotNil() predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldNotNull(FieldStatusReason))
+}
+
+// StatusReasonEqualFold applies the EqualFold predicate on the "status_reason" field.
+func StatusReasonEqualFold(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldEqualFold(FieldStatusReason, v))
+}
+
+// StatusReasonContainsFold applies the ContainsFold predicate on the "status_reason" field.
+func StatusReasonContainsFold(v string) predicate.SisConnection {
+	return predicate.SisConnection(sql.FieldContainsFold(FieldStatusReason, v))
 }
 
 // And groups predicates with the AND operator between them.

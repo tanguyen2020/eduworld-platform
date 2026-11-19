@@ -53,6 +53,10 @@ const (
 	FieldStartedAt = "started_at"
 	// FieldFinishedAt holds the string denoting the finished_at field in the database.
 	FieldFinishedAt = "finished_at"
+	// FieldRequestedBy holds the string denoting the requested_by field in the database.
+	FieldRequestedBy = "requested_by"
+	// FieldDeliveryID holds the string denoting the delivery_id field in the database.
+	FieldDeliveryID = "delivery_id"
 	// Table holds the table name of the syncrun in the database.
 	Table = "sync_runs"
 )
@@ -79,6 +83,8 @@ var Columns = []string{
 	FieldStats,
 	FieldStartedAt,
 	FieldFinishedAt,
+	FieldRequestedBy,
+	FieldDeliveryID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -227,4 +233,14 @@ func ByStartedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByFinishedAt orders the results by the finished_at field.
 func ByFinishedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldFinishedAt, opts...).ToFunc()
+}
+
+// ByRequestedBy orders the results by the requested_by field.
+func ByRequestedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequestedBy, opts...).ToFunc()
+}
+
+// ByDeliveryID orders the results by the delivery_id field.
+func ByDeliveryID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeliveryID, opts...).ToFunc()
 }

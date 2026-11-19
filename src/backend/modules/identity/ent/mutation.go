@@ -19139,30 +19139,38 @@ func (m *SchoolMutation) ResetEdge(name string) error {
 // SisConnectionMutation represents an operation that mutates the SisConnection nodes in the graph.
 type SisConnectionMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *uuid.UUID
-	tenant_id        *uuid.UUID
-	created_at       *time.Time
-	created_by       *uuid.UUID
-	updated_at       *time.Time
-	updated_by       *uuid.UUID
-	deleted_at       *time.Time
-	deleted_by       *uuid.UUID
-	delete_reason    *string
-	version          *int64
-	addversion       *int64
-	provider_kind    *string
-	contract_version *string
-	_config          *map[string]interface{}
-	secret_ref       *string
-	status           *string
-	delta_watermark  *string
-	schedule         *string
-	clearedFields    map[string]struct{}
-	done             bool
-	oldValue         func(context.Context) (*SisConnection, error)
-	predicates       []predicate.SisConnection
+	op                         Op
+	typ                        string
+	id                         *uuid.UUID
+	tenant_id                  *uuid.UUID
+	created_at                 *time.Time
+	created_by                 *uuid.UUID
+	updated_at                 *time.Time
+	updated_by                 *uuid.UUID
+	deleted_at                 *time.Time
+	deleted_by                 *uuid.UUID
+	delete_reason              *string
+	version                    *int64
+	addversion                 *int64
+	provider_kind              *string
+	contract_version           *string
+	_config                    *map[string]interface{}
+	secret_ref                 *string
+	status                     *string
+	delta_watermark            *string
+	schedule                   *string
+	webhook_secret_ref         *string
+	capabilities               *[]string
+	appendcapabilities         []string
+	last_health_at             *time.Time
+	last_success_at            *time.Time
+	consecutive_failed_runs    *int32
+	addconsecutive_failed_runs *int32
+	status_reason              *string
+	clearedFields              map[string]struct{}
+	done                       bool
+	oldValue                   func(context.Context) (*SisConnection, error)
+	predicates                 []predicate.SisConnection
 }
 
 var _ ent.Mutation = (*SisConnectionMutation)(nil)
@@ -19995,6 +20003,323 @@ func (m *SisConnectionMutation) ResetSchedule() {
 	delete(m.clearedFields, sisconnection.FieldSchedule)
 }
 
+// SetWebhookSecretRef sets the "webhook_secret_ref" field.
+func (m *SisConnectionMutation) SetWebhookSecretRef(s string) {
+	m.webhook_secret_ref = &s
+}
+
+// WebhookSecretRef returns the value of the "webhook_secret_ref" field in the mutation.
+func (m *SisConnectionMutation) WebhookSecretRef() (r string, exists bool) {
+	v := m.webhook_secret_ref
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWebhookSecretRef returns the old "webhook_secret_ref" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldWebhookSecretRef(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWebhookSecretRef is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWebhookSecretRef requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWebhookSecretRef: %w", err)
+	}
+	return oldValue.WebhookSecretRef, nil
+}
+
+// ClearWebhookSecretRef clears the value of the "webhook_secret_ref" field.
+func (m *SisConnectionMutation) ClearWebhookSecretRef() {
+	m.webhook_secret_ref = nil
+	m.clearedFields[sisconnection.FieldWebhookSecretRef] = struct{}{}
+}
+
+// WebhookSecretRefCleared returns if the "webhook_secret_ref" field was cleared in this mutation.
+func (m *SisConnectionMutation) WebhookSecretRefCleared() bool {
+	_, ok := m.clearedFields[sisconnection.FieldWebhookSecretRef]
+	return ok
+}
+
+// ResetWebhookSecretRef resets all changes to the "webhook_secret_ref" field.
+func (m *SisConnectionMutation) ResetWebhookSecretRef() {
+	m.webhook_secret_ref = nil
+	delete(m.clearedFields, sisconnection.FieldWebhookSecretRef)
+}
+
+// SetCapabilities sets the "capabilities" field.
+func (m *SisConnectionMutation) SetCapabilities(s []string) {
+	m.capabilities = &s
+	m.appendcapabilities = nil
+}
+
+// Capabilities returns the value of the "capabilities" field in the mutation.
+func (m *SisConnectionMutation) Capabilities() (r []string, exists bool) {
+	v := m.capabilities
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCapabilities returns the old "capabilities" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldCapabilities(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCapabilities is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCapabilities requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCapabilities: %w", err)
+	}
+	return oldValue.Capabilities, nil
+}
+
+// AppendCapabilities adds s to the "capabilities" field.
+func (m *SisConnectionMutation) AppendCapabilities(s []string) {
+	m.appendcapabilities = append(m.appendcapabilities, s...)
+}
+
+// AppendedCapabilities returns the list of values that were appended to the "capabilities" field in this mutation.
+func (m *SisConnectionMutation) AppendedCapabilities() ([]string, bool) {
+	if len(m.appendcapabilities) == 0 {
+		return nil, false
+	}
+	return m.appendcapabilities, true
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (m *SisConnectionMutation) ClearCapabilities() {
+	m.capabilities = nil
+	m.appendcapabilities = nil
+	m.clearedFields[sisconnection.FieldCapabilities] = struct{}{}
+}
+
+// CapabilitiesCleared returns if the "capabilities" field was cleared in this mutation.
+func (m *SisConnectionMutation) CapabilitiesCleared() bool {
+	_, ok := m.clearedFields[sisconnection.FieldCapabilities]
+	return ok
+}
+
+// ResetCapabilities resets all changes to the "capabilities" field.
+func (m *SisConnectionMutation) ResetCapabilities() {
+	m.capabilities = nil
+	m.appendcapabilities = nil
+	delete(m.clearedFields, sisconnection.FieldCapabilities)
+}
+
+// SetLastHealthAt sets the "last_health_at" field.
+func (m *SisConnectionMutation) SetLastHealthAt(t time.Time) {
+	m.last_health_at = &t
+}
+
+// LastHealthAt returns the value of the "last_health_at" field in the mutation.
+func (m *SisConnectionMutation) LastHealthAt() (r time.Time, exists bool) {
+	v := m.last_health_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastHealthAt returns the old "last_health_at" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldLastHealthAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastHealthAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastHealthAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastHealthAt: %w", err)
+	}
+	return oldValue.LastHealthAt, nil
+}
+
+// ClearLastHealthAt clears the value of the "last_health_at" field.
+func (m *SisConnectionMutation) ClearLastHealthAt() {
+	m.last_health_at = nil
+	m.clearedFields[sisconnection.FieldLastHealthAt] = struct{}{}
+}
+
+// LastHealthAtCleared returns if the "last_health_at" field was cleared in this mutation.
+func (m *SisConnectionMutation) LastHealthAtCleared() bool {
+	_, ok := m.clearedFields[sisconnection.FieldLastHealthAt]
+	return ok
+}
+
+// ResetLastHealthAt resets all changes to the "last_health_at" field.
+func (m *SisConnectionMutation) ResetLastHealthAt() {
+	m.last_health_at = nil
+	delete(m.clearedFields, sisconnection.FieldLastHealthAt)
+}
+
+// SetLastSuccessAt sets the "last_success_at" field.
+func (m *SisConnectionMutation) SetLastSuccessAt(t time.Time) {
+	m.last_success_at = &t
+}
+
+// LastSuccessAt returns the value of the "last_success_at" field in the mutation.
+func (m *SisConnectionMutation) LastSuccessAt() (r time.Time, exists bool) {
+	v := m.last_success_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastSuccessAt returns the old "last_success_at" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldLastSuccessAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastSuccessAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastSuccessAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastSuccessAt: %w", err)
+	}
+	return oldValue.LastSuccessAt, nil
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (m *SisConnectionMutation) ClearLastSuccessAt() {
+	m.last_success_at = nil
+	m.clearedFields[sisconnection.FieldLastSuccessAt] = struct{}{}
+}
+
+// LastSuccessAtCleared returns if the "last_success_at" field was cleared in this mutation.
+func (m *SisConnectionMutation) LastSuccessAtCleared() bool {
+	_, ok := m.clearedFields[sisconnection.FieldLastSuccessAt]
+	return ok
+}
+
+// ResetLastSuccessAt resets all changes to the "last_success_at" field.
+func (m *SisConnectionMutation) ResetLastSuccessAt() {
+	m.last_success_at = nil
+	delete(m.clearedFields, sisconnection.FieldLastSuccessAt)
+}
+
+// SetConsecutiveFailedRuns sets the "consecutive_failed_runs" field.
+func (m *SisConnectionMutation) SetConsecutiveFailedRuns(i int32) {
+	m.consecutive_failed_runs = &i
+	m.addconsecutive_failed_runs = nil
+}
+
+// ConsecutiveFailedRuns returns the value of the "consecutive_failed_runs" field in the mutation.
+func (m *SisConnectionMutation) ConsecutiveFailedRuns() (r int32, exists bool) {
+	v := m.consecutive_failed_runs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConsecutiveFailedRuns returns the old "consecutive_failed_runs" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldConsecutiveFailedRuns(ctx context.Context) (v int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConsecutiveFailedRuns is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConsecutiveFailedRuns requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConsecutiveFailedRuns: %w", err)
+	}
+	return oldValue.ConsecutiveFailedRuns, nil
+}
+
+// AddConsecutiveFailedRuns adds i to the "consecutive_failed_runs" field.
+func (m *SisConnectionMutation) AddConsecutiveFailedRuns(i int32) {
+	if m.addconsecutive_failed_runs != nil {
+		*m.addconsecutive_failed_runs += i
+	} else {
+		m.addconsecutive_failed_runs = &i
+	}
+}
+
+// AddedConsecutiveFailedRuns returns the value that was added to the "consecutive_failed_runs" field in this mutation.
+func (m *SisConnectionMutation) AddedConsecutiveFailedRuns() (r int32, exists bool) {
+	v := m.addconsecutive_failed_runs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConsecutiveFailedRuns resets all changes to the "consecutive_failed_runs" field.
+func (m *SisConnectionMutation) ResetConsecutiveFailedRuns() {
+	m.consecutive_failed_runs = nil
+	m.addconsecutive_failed_runs = nil
+}
+
+// SetStatusReason sets the "status_reason" field.
+func (m *SisConnectionMutation) SetStatusReason(s string) {
+	m.status_reason = &s
+}
+
+// StatusReason returns the value of the "status_reason" field in the mutation.
+func (m *SisConnectionMutation) StatusReason() (r string, exists bool) {
+	v := m.status_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatusReason returns the old "status_reason" field's value of the SisConnection entity.
+// If the SisConnection object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SisConnectionMutation) OldStatusReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatusReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatusReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatusReason: %w", err)
+	}
+	return oldValue.StatusReason, nil
+}
+
+// ClearStatusReason clears the value of the "status_reason" field.
+func (m *SisConnectionMutation) ClearStatusReason() {
+	m.status_reason = nil
+	m.clearedFields[sisconnection.FieldStatusReason] = struct{}{}
+}
+
+// StatusReasonCleared returns if the "status_reason" field was cleared in this mutation.
+func (m *SisConnectionMutation) StatusReasonCleared() bool {
+	_, ok := m.clearedFields[sisconnection.FieldStatusReason]
+	return ok
+}
+
+// ResetStatusReason resets all changes to the "status_reason" field.
+func (m *SisConnectionMutation) ResetStatusReason() {
+	m.status_reason = nil
+	delete(m.clearedFields, sisconnection.FieldStatusReason)
+}
+
 // Where appends a list predicates to the SisConnectionMutation builder.
 func (m *SisConnectionMutation) Where(ps ...predicate.SisConnection) {
 	m.predicates = append(m.predicates, ps...)
@@ -20029,7 +20354,7 @@ func (m *SisConnectionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SisConnectionMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 22)
 	if m.tenant_id != nil {
 		fields = append(fields, sisconnection.FieldTenantID)
 	}
@@ -20078,6 +20403,24 @@ func (m *SisConnectionMutation) Fields() []string {
 	if m.schedule != nil {
 		fields = append(fields, sisconnection.FieldSchedule)
 	}
+	if m.webhook_secret_ref != nil {
+		fields = append(fields, sisconnection.FieldWebhookSecretRef)
+	}
+	if m.capabilities != nil {
+		fields = append(fields, sisconnection.FieldCapabilities)
+	}
+	if m.last_health_at != nil {
+		fields = append(fields, sisconnection.FieldLastHealthAt)
+	}
+	if m.last_success_at != nil {
+		fields = append(fields, sisconnection.FieldLastSuccessAt)
+	}
+	if m.consecutive_failed_runs != nil {
+		fields = append(fields, sisconnection.FieldConsecutiveFailedRuns)
+	}
+	if m.status_reason != nil {
+		fields = append(fields, sisconnection.FieldStatusReason)
+	}
 	return fields
 }
 
@@ -20118,6 +20461,18 @@ func (m *SisConnectionMutation) Field(name string) (ent.Value, bool) {
 		return m.DeltaWatermark()
 	case sisconnection.FieldSchedule:
 		return m.Schedule()
+	case sisconnection.FieldWebhookSecretRef:
+		return m.WebhookSecretRef()
+	case sisconnection.FieldCapabilities:
+		return m.Capabilities()
+	case sisconnection.FieldLastHealthAt:
+		return m.LastHealthAt()
+	case sisconnection.FieldLastSuccessAt:
+		return m.LastSuccessAt()
+	case sisconnection.FieldConsecutiveFailedRuns:
+		return m.ConsecutiveFailedRuns()
+	case sisconnection.FieldStatusReason:
+		return m.StatusReason()
 	}
 	return nil, false
 }
@@ -20159,6 +20514,18 @@ func (m *SisConnectionMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldDeltaWatermark(ctx)
 	case sisconnection.FieldSchedule:
 		return m.OldSchedule(ctx)
+	case sisconnection.FieldWebhookSecretRef:
+		return m.OldWebhookSecretRef(ctx)
+	case sisconnection.FieldCapabilities:
+		return m.OldCapabilities(ctx)
+	case sisconnection.FieldLastHealthAt:
+		return m.OldLastHealthAt(ctx)
+	case sisconnection.FieldLastSuccessAt:
+		return m.OldLastSuccessAt(ctx)
+	case sisconnection.FieldConsecutiveFailedRuns:
+		return m.OldConsecutiveFailedRuns(ctx)
+	case sisconnection.FieldStatusReason:
+		return m.OldStatusReason(ctx)
 	}
 	return nil, fmt.Errorf("unknown SisConnection field %s", name)
 }
@@ -20280,6 +20647,48 @@ func (m *SisConnectionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSchedule(v)
 		return nil
+	case sisconnection.FieldWebhookSecretRef:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWebhookSecretRef(v)
+		return nil
+	case sisconnection.FieldCapabilities:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCapabilities(v)
+		return nil
+	case sisconnection.FieldLastHealthAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastHealthAt(v)
+		return nil
+	case sisconnection.FieldLastSuccessAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastSuccessAt(v)
+		return nil
+	case sisconnection.FieldConsecutiveFailedRuns:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConsecutiveFailedRuns(v)
+		return nil
+	case sisconnection.FieldStatusReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatusReason(v)
+		return nil
 	}
 	return fmt.Errorf("unknown SisConnection field %s", name)
 }
@@ -20291,6 +20700,9 @@ func (m *SisConnectionMutation) AddedFields() []string {
 	if m.addversion != nil {
 		fields = append(fields, sisconnection.FieldVersion)
 	}
+	if m.addconsecutive_failed_runs != nil {
+		fields = append(fields, sisconnection.FieldConsecutiveFailedRuns)
+	}
 	return fields
 }
 
@@ -20301,6 +20713,8 @@ func (m *SisConnectionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case sisconnection.FieldVersion:
 		return m.AddedVersion()
+	case sisconnection.FieldConsecutiveFailedRuns:
+		return m.AddedConsecutiveFailedRuns()
 	}
 	return nil, false
 }
@@ -20316,6 +20730,13 @@ func (m *SisConnectionMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddVersion(v)
+		return nil
+	case sisconnection.FieldConsecutiveFailedRuns:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConsecutiveFailedRuns(v)
 		return nil
 	}
 	return fmt.Errorf("unknown SisConnection numeric field %s", name)
@@ -20354,6 +20775,21 @@ func (m *SisConnectionMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(sisconnection.FieldSchedule) {
 		fields = append(fields, sisconnection.FieldSchedule)
+	}
+	if m.FieldCleared(sisconnection.FieldWebhookSecretRef) {
+		fields = append(fields, sisconnection.FieldWebhookSecretRef)
+	}
+	if m.FieldCleared(sisconnection.FieldCapabilities) {
+		fields = append(fields, sisconnection.FieldCapabilities)
+	}
+	if m.FieldCleared(sisconnection.FieldLastHealthAt) {
+		fields = append(fields, sisconnection.FieldLastHealthAt)
+	}
+	if m.FieldCleared(sisconnection.FieldLastSuccessAt) {
+		fields = append(fields, sisconnection.FieldLastSuccessAt)
+	}
+	if m.FieldCleared(sisconnection.FieldStatusReason) {
+		fields = append(fields, sisconnection.FieldStatusReason)
 	}
 	return fields
 }
@@ -20398,6 +20834,21 @@ func (m *SisConnectionMutation) ClearField(name string) error {
 		return nil
 	case sisconnection.FieldSchedule:
 		m.ClearSchedule()
+		return nil
+	case sisconnection.FieldWebhookSecretRef:
+		m.ClearWebhookSecretRef()
+		return nil
+	case sisconnection.FieldCapabilities:
+		m.ClearCapabilities()
+		return nil
+	case sisconnection.FieldLastHealthAt:
+		m.ClearLastHealthAt()
+		return nil
+	case sisconnection.FieldLastSuccessAt:
+		m.ClearLastSuccessAt()
+		return nil
+	case sisconnection.FieldStatusReason:
+		m.ClearStatusReason()
 		return nil
 	}
 	return fmt.Errorf("unknown SisConnection nullable field %s", name)
@@ -20454,6 +20905,24 @@ func (m *SisConnectionMutation) ResetField(name string) error {
 		return nil
 	case sisconnection.FieldSchedule:
 		m.ResetSchedule()
+		return nil
+	case sisconnection.FieldWebhookSecretRef:
+		m.ResetWebhookSecretRef()
+		return nil
+	case sisconnection.FieldCapabilities:
+		m.ResetCapabilities()
+		return nil
+	case sisconnection.FieldLastHealthAt:
+		m.ResetLastHealthAt()
+		return nil
+	case sisconnection.FieldLastSuccessAt:
+		m.ResetLastSuccessAt()
+		return nil
+	case sisconnection.FieldConsecutiveFailedRuns:
+		m.ResetConsecutiveFailedRuns()
+		return nil
+	case sisconnection.FieldStatusReason:
+		m.ResetStatusReason()
 		return nil
 	}
 	return fmt.Errorf("unknown SisConnection field %s", name)
@@ -30383,6 +30852,8 @@ type SyncRunMutation struct {
 	stats             *map[string]int
 	started_at        *time.Time
 	finished_at       *time.Time
+	requested_by      *uuid.UUID
+	delivery_id       *uuid.UUID
 	clearedFields     map[string]struct{}
 	done              bool
 	oldValue          func(context.Context) (*SyncRun, error)
@@ -31301,6 +31772,104 @@ func (m *SyncRunMutation) ResetFinishedAt() {
 	delete(m.clearedFields, syncrun.FieldFinishedAt)
 }
 
+// SetRequestedBy sets the "requested_by" field.
+func (m *SyncRunMutation) SetRequestedBy(u uuid.UUID) {
+	m.requested_by = &u
+}
+
+// RequestedBy returns the value of the "requested_by" field in the mutation.
+func (m *SyncRunMutation) RequestedBy() (r uuid.UUID, exists bool) {
+	v := m.requested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedBy returns the old "requested_by" field's value of the SyncRun entity.
+// If the SyncRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SyncRunMutation) OldRequestedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedBy: %w", err)
+	}
+	return oldValue.RequestedBy, nil
+}
+
+// ClearRequestedBy clears the value of the "requested_by" field.
+func (m *SyncRunMutation) ClearRequestedBy() {
+	m.requested_by = nil
+	m.clearedFields[syncrun.FieldRequestedBy] = struct{}{}
+}
+
+// RequestedByCleared returns if the "requested_by" field was cleared in this mutation.
+func (m *SyncRunMutation) RequestedByCleared() bool {
+	_, ok := m.clearedFields[syncrun.FieldRequestedBy]
+	return ok
+}
+
+// ResetRequestedBy resets all changes to the "requested_by" field.
+func (m *SyncRunMutation) ResetRequestedBy() {
+	m.requested_by = nil
+	delete(m.clearedFields, syncrun.FieldRequestedBy)
+}
+
+// SetDeliveryID sets the "delivery_id" field.
+func (m *SyncRunMutation) SetDeliveryID(u uuid.UUID) {
+	m.delivery_id = &u
+}
+
+// DeliveryID returns the value of the "delivery_id" field in the mutation.
+func (m *SyncRunMutation) DeliveryID() (r uuid.UUID, exists bool) {
+	v := m.delivery_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeliveryID returns the old "delivery_id" field's value of the SyncRun entity.
+// If the SyncRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SyncRunMutation) OldDeliveryID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeliveryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeliveryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeliveryID: %w", err)
+	}
+	return oldValue.DeliveryID, nil
+}
+
+// ClearDeliveryID clears the value of the "delivery_id" field.
+func (m *SyncRunMutation) ClearDeliveryID() {
+	m.delivery_id = nil
+	m.clearedFields[syncrun.FieldDeliveryID] = struct{}{}
+}
+
+// DeliveryIDCleared returns if the "delivery_id" field was cleared in this mutation.
+func (m *SyncRunMutation) DeliveryIDCleared() bool {
+	_, ok := m.clearedFields[syncrun.FieldDeliveryID]
+	return ok
+}
+
+// ResetDeliveryID resets all changes to the "delivery_id" field.
+func (m *SyncRunMutation) ResetDeliveryID() {
+	m.delivery_id = nil
+	delete(m.clearedFields, syncrun.FieldDeliveryID)
+}
+
 // Where appends a list predicates to the SyncRunMutation builder.
 func (m *SyncRunMutation) Where(ps ...predicate.SyncRun) {
 	m.predicates = append(m.predicates, ps...)
@@ -31335,7 +31904,7 @@ func (m *SyncRunMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SyncRunMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.tenant_id != nil {
 		fields = append(fields, syncrun.FieldTenantID)
 	}
@@ -31393,6 +31962,12 @@ func (m *SyncRunMutation) Fields() []string {
 	if m.finished_at != nil {
 		fields = append(fields, syncrun.FieldFinishedAt)
 	}
+	if m.requested_by != nil {
+		fields = append(fields, syncrun.FieldRequestedBy)
+	}
+	if m.delivery_id != nil {
+		fields = append(fields, syncrun.FieldDeliveryID)
+	}
 	return fields
 }
 
@@ -31439,6 +32014,10 @@ func (m *SyncRunMutation) Field(name string) (ent.Value, bool) {
 		return m.StartedAt()
 	case syncrun.FieldFinishedAt:
 		return m.FinishedAt()
+	case syncrun.FieldRequestedBy:
+		return m.RequestedBy()
+	case syncrun.FieldDeliveryID:
+		return m.DeliveryID()
 	}
 	return nil, false
 }
@@ -31486,6 +32065,10 @@ func (m *SyncRunMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldStartedAt(ctx)
 	case syncrun.FieldFinishedAt:
 		return m.OldFinishedAt(ctx)
+	case syncrun.FieldRequestedBy:
+		return m.OldRequestedBy(ctx)
+	case syncrun.FieldDeliveryID:
+		return m.OldDeliveryID(ctx)
 	}
 	return nil, fmt.Errorf("unknown SyncRun field %s", name)
 }
@@ -31628,6 +32211,20 @@ func (m *SyncRunMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetFinishedAt(v)
 		return nil
+	case syncrun.FieldRequestedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedBy(v)
+		return nil
+	case syncrun.FieldDeliveryID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeliveryID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown SyncRun field %s", name)
 }
@@ -31697,6 +32294,12 @@ func (m *SyncRunMutation) ClearedFields() []string {
 	if m.FieldCleared(syncrun.FieldFinishedAt) {
 		fields = append(fields, syncrun.FieldFinishedAt)
 	}
+	if m.FieldCleared(syncrun.FieldRequestedBy) {
+		fields = append(fields, syncrun.FieldRequestedBy)
+	}
+	if m.FieldCleared(syncrun.FieldDeliveryID) {
+		fields = append(fields, syncrun.FieldDeliveryID)
+	}
 	return fields
 }
 
@@ -31734,6 +32337,12 @@ func (m *SyncRunMutation) ClearField(name string) error {
 		return nil
 	case syncrun.FieldFinishedAt:
 		m.ClearFinishedAt()
+		return nil
+	case syncrun.FieldRequestedBy:
+		m.ClearRequestedBy()
+		return nil
+	case syncrun.FieldDeliveryID:
+		m.ClearDeliveryID()
 		return nil
 	}
 	return fmt.Errorf("unknown SyncRun nullable field %s", name)
@@ -31799,6 +32408,12 @@ func (m *SyncRunMutation) ResetField(name string) error {
 		return nil
 	case syncrun.FieldFinishedAt:
 		m.ResetFinishedAt()
+		return nil
+	case syncrun.FieldRequestedBy:
+		m.ResetRequestedBy()
+		return nil
+	case syncrun.FieldDeliveryID:
+		m.ResetDeliveryID()
 		return nil
 	}
 	return fmt.Errorf("unknown SyncRun field %s", name)

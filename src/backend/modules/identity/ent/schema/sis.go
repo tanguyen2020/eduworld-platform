@@ -17,7 +17,7 @@ import (
 
 func live() schema.Annotation { return entsql.IndexWhere("deleted_at IS NULL") }
 
-// SisConnection — sis.sis_connections (T): one SIS source of a tenant (F011: csv_import only).
+// SisConnection — sis.sis_connections (T): one SIS source of a tenant (csv_import F011, contract_v1 F017).
 type SisConnection struct{ ent.Schema }
 
 func (SisConnection) Annotations() []schema.Annotation {
@@ -35,7 +35,17 @@ func (SisConnection) Fields() []ent.Field {
 		field.String("status").MaxLen(64).Default("active"),
 		field.String("delta_watermark").MaxLen(512).Optional().Nillable(),
 		field.String("schedule").MaxLen(64).Optional().Nillable(),
+		// F017 (data-model): webhook secret reference, Health.capabilities, health/success times, circuit counter.
+		field.String("webhook_secret_ref").MaxLen(512).Optional().Nillable().Sensitive(),
+		field.JSON("capabilities", []string{}).Optional(),
+		field.Time("last_health_at").Optional().Nillable(),
+		field.Time("last_success_at").Optional().Nillable(),
+		field.Int32("consecutive_failed_runs").Default(0),
+		field.String("status_reason").MaxLen(64).Optional().Nillable(),
 	}
+}
+func (SisConnection) Indexes() []ent.Index {
+	return []ent.Index{index.Fields("status", "provider_kind").StorageKey("sis_connections_schedule_idx").Annotations(live())}
 }
 
 // SisConnectionSchool — sis.sis_connection_schools (T): one active connection per school (ADR-0046).
@@ -83,6 +93,9 @@ func (SyncRun) Fields() []ent.Field {
 		field.JSON("stats", map[string]int{}).Default(map[string]int{}),
 		field.Time("started_at").Default(nowUTC),
 		field.Time("finished_at").Optional().Nillable(),
+		// F017: who triggered a manual run, the webhook delivery of a webhook run.
+		field.UUID("requested_by", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("delivery_id", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 func (SyncRun) Indexes() []ent.Index {

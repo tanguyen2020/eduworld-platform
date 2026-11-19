@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -23,6 +24,7 @@ type SisConnections struct {
 	UoW         write.UnitOfWork
 	Connections write.SisConnectionRepository
 	Audit       write.Auditor
+	Contract    *SisContract // F017: contract_v1 connections (nil = csv_import only)
 }
 
 // platformTarget authorizes platform.sis_connection.manage and returns ctx scoped to the target tenant.
@@ -138,4 +140,12 @@ func (h SisConnections) Schools(ctx context.Context, id uuid.UUID) (out []write.
 		return err
 	})
 	return out, err
+}
+
+// CreateContract is the contract_v1 branch of createSisConnection, served by SisContract (F017).
+func (h SisConnections) CreateContract(ctx context.Context, tenantID uuid.UUID, in ContractCreateInput) (dto.SisConnection, error) {
+	if h.Contract == nil {
+		return dto.SisConnection{}, problem.Invalid("provider_kind", problem.SubInvalid, "contract_v1 is not enabled on this server")
+	}
+	return h.Contract.Create(ctx, tenantID, in)
 }

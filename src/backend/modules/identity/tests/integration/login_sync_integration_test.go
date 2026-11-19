@@ -75,7 +75,7 @@ func TestLoginSync(t *testing.T) {
 	// A contract_v1 connection declaring student_lookup (created by F017; inserted here as platform).
 	apiConn := uuid.New()
 	if _, err := e.platform.ExecContext(ctx, `INSERT INTO sis.sis_connections (sis_connection_id, tenant_id, created_at, updated_at, provider_kind,
-		config, secret_ref, status) VALUES ($1, $2, now(), now(), 'contract_v1', '{"capabilities":["student_lookup"]}', 'vault:test/sis', 'active')`, apiConn, a.tenant); err != nil {
+		config, secret_ref, status, capabilities) VALUES ($1, $2, now(), now(), 'contract_v1', '{}', 'test/sis', 'active', '["student_lookup"]')`, apiConn, a.tenant); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := conns.SetSchools(sa, apiConn, []uuid.UUID{uuid.MustParse(a.otherSchool)}, "pilot"); err != nil {

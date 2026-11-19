@@ -132,3 +132,89 @@ func CheckDDLBlock(migration, want string) (bool, string) {
 	got := m[i+len(begin) : j]
 	return got == want, got
 }
+
+// AddedDDL renders the ALTER TABLE … ADD COLUMN and CREATE INDEX statements of columns and indexes that a
+// later migration adds to an ent table created by an earlier one (expand step, AGENTS R12). Columns and
+// indexes are rendered in the order given, with the same types and defaults as DDL; a NOT NULL column
+// needs a literal default so existing rows stay valid.
+func AddedDDL(t *schema.Table, columns, indexes []string, schemaOf func(table string) string) (string, error) {
+	name := t.Name
+	if s := schemaOf(t.Name); s != "" {
+		name = s + "." + t.Name
+	}
+	var b strings.Builder
+	for _, cn := range columns {
+		var c *schema.Column
+		for _, x := range t.Columns {
+			if x.Name == cn {
+				c = x
+			}
+		}
+		if c == nil {
+			return "", fmt.Errorf("entx: %s has no column %s", name, cn)
+		}
+		typ, err := pgType(c)
+		if err != nil {
+			return "", fmt.Errorf("entx: %s.%s: %w", name, c.Name, err)
+		}
+		fmt.Fprintf(&b, "ALTER TABLE %s ADD COLUMN %s %s", name, c.Name, typ)
+		d, hasDefault := literalDefault(c)
+		if !c.Nullable {
+			if !hasDefault {
+				return "", fmt.Errorf("entx: %s.%s: an added NOT NULL column needs a literal default", name, c.Name)
+			}
+			b.WriteString(" NOT NULL")
+		}
+		if hasDefault {
+			b.WriteString(" DEFAULT " + d)
+		}
+		b.WriteString(";\n")
+	}
+	for _, in := range indexes {
+		var ix *schema.Index
+		for _, x := range t.Indexes {
+			if x.Name == in {
+				ix = x
+			}
+		}
+		if ix == nil {
+			return "", fmt.Errorf("entx: %s has no index %s", name, in)
+		}
+		cols := make([]string, 0, len(ix.Columns))
+		for _, c := range ix.Columns {
+			cols = append(cols, c.Name)
+		}
+		kind := "INDEX"
+		if ix.Unique {
+			kind = "UNIQUE INDEX"
+		}
+		fmt.Fprintf(&b, "CREATE %s %s ON %s (%s)", kind, ix.Name, name, strings.Join(cols, ", "))
+		if ix.Annotation != nil && ix.Annotation.Where != "" {
+			b.WriteString(" WHERE " + ix.Annotation.Where)
+		}
+		b.WriteString(";\n")
+	}
+	return b.String(), nil
+}
+
+// Without returns a copy of t without the given columns and indexes (the shape of the table before a
+// later migration added them), for the golden test of the earlier migration.
+func Without(t *schema.Table, columns, indexes []string) *schema.Table {
+	drop := map[string]bool{}
+	for _, n := range append(append([]string{}, columns...), indexes...) {
+		drop[n] = true
+	}
+	c := &schema.Table{Name: t.Name, Schema: t.Schema, PrimaryKey: t.PrimaryKey, ForeignKeys: t.ForeignKeys, Annotation: t.Annotation}
+	for _, x := range t.Columns {
+		if !drop[x.Name] {
+			c.Columns = append(c.Columns, x)
+		}
+	}
+	c.Indexes = nil
+	for _, x := range t.Indexes {
+		if !drop[x.Name] {
+			c.Indexes = append(c.Indexes, x)
+		}
+	}
+	return c
+}

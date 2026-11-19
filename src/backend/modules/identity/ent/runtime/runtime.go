@@ -932,6 +932,18 @@ func init() {
 	sisconnectionDescSchedule := sisconnectionFields[6].Descriptor()
 	// sisconnection.ScheduleValidator is a validator for the "schedule" field. It is called by the builders before save.
 	sisconnection.ScheduleValidator = sisconnectionDescSchedule.Validators[0].(func(string) error)
+	// sisconnectionDescWebhookSecretRef is the schema descriptor for webhook_secret_ref field.
+	sisconnectionDescWebhookSecretRef := sisconnectionFields[7].Descriptor()
+	// sisconnection.WebhookSecretRefValidator is a validator for the "webhook_secret_ref" field. It is called by the builders before save.
+	sisconnection.WebhookSecretRefValidator = sisconnectionDescWebhookSecretRef.Validators[0].(func(string) error)
+	// sisconnectionDescConsecutiveFailedRuns is the schema descriptor for consecutive_failed_runs field.
+	sisconnectionDescConsecutiveFailedRuns := sisconnectionFields[11].Descriptor()
+	// sisconnection.DefaultConsecutiveFailedRuns holds the default value on creation for the consecutive_failed_runs field.
+	sisconnection.DefaultConsecutiveFailedRuns = sisconnectionDescConsecutiveFailedRuns.Default.(int32)
+	// sisconnectionDescStatusReason is the schema descriptor for status_reason field.
+	sisconnectionDescStatusReason := sisconnectionFields[12].Descriptor()
+	// sisconnection.StatusReasonValidator is a validator for the "status_reason" field. It is called by the builders before save.
+	sisconnection.StatusReasonValidator = sisconnectionDescStatusReason.Validators[0].(func(string) error)
 	// sisconnectionDescID is the schema descriptor for id field.
 	sisconnectionDescID := sisconnectionMixinFields0[0].Descriptor()
 	// sisconnection.DefaultID holds the default value on creation for the id field.
