@@ -18,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/trash"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 	fent "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/tests/integration/fixtures/ent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/tests/integration/fixtures/ent/fixturecontent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/tests/integration/fixtures/ent/fixturecontentversion"
@@ -269,4 +270,99 @@ func SeedTenants(ctx context.Context, migrator *sql.DB, ts ...Tenant) error {
 		}
 	}
 	return nil
+}
+
+// Row is a fixture item as listed by the read helpers.
+type Row struct {
+	ID       uuid.UUID  `json:"id"`
+	TenantID *uuid.UUID `json:"tenant_id"`
+	Code     string     `json:"code"`
+}
+
+// CreateItem creates a fixture item with the scope of ctx (tenant scope: the session tenant; PlatformScope:
+// a platform item) and returns its id.
+func CreateItem(ctx context.Context, code string) (uuid.UUID, error) {
+	s, ok := tenancy.ScopeFrom(ctx)
+	if !ok {
+		return uuid.Nil, entx.ErrMissingTenantScope
+	}
+	c := Client(ctx).FixtureContent.Create().SetCode(code).SetTitle("Fixture " + code)
+	if s.PlatformOnly() {
+		c.SetOwnerScope(string(contentmodel.OwnerPlatform))
+	} else if id, single := s.SessionTenantID(); single {
+		c.SetTenantID(id).SetOwnerScope(string(contentmodel.OwnerTenant))
+	} else if ids := s.TenantIDs(); len(ids) == 1 {
+		c.SetTenantID(ids[0]).SetOwnerScope(string(contentmodel.OwnerTenant))
+	}
+	r, err := c.Save(ctx)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return r.ID, nil
+}
+
+// List lists the fixture items visible to the scope of ctx through ent (global filter of entx.HybridContent).
+func List(ctx context.Context) ([]Row, error) {
+	rows, err := Client(ctx).FixtureContent.Query().Order(fixturecontent.ByCode()).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Row, len(rows))
+	for i, r := range rows {
+		out[i] = Row{ID: r.ID, TenantID: r.TenantID, Code: r.Code}
+	}
+	return out, nil
+}
+
+// Get loads one fixture item visible to the scope (404 NOT_FOUND otherwise, F020-AC-09).
+func Get(ctx context.Context, id uuid.UUID) (Row, error) {
+	r, err := Client(ctx).FixtureContent.Get(ctx, id)
+	if fent.IsNotFound(err) {
+		return Row{}, problem.New(problem.NotFound, "")
+	}
+	if err != nil {
+		return Row{}, err
+	}
+	return Row{ID: r.ID, TenantID: r.TenantID, Code: r.Code}, nil
+}
+
+// ListExplicit lists the visible fixture items with explicit SQL and read.HybridCondition (MULTITENANCY §4.2).
+func ListExplicit(ctx context.Context) ([]Row, error) {
+	cond, args, err := read.HybridCondition(ctx, "fc", contentmodel.ResourceQuestion, "fixture_content_id", 1)
+	if err != nil {
+		return nil, err
+	}
+	tx, ok := entx.Tx(ctx)
+	if !ok {
+		return nil, entx.ErrNoTransaction
+	}
+	// tenancyguard:ok the condition of read.HybridCondition holds tenant_id and deleted_at IS NULL
+	rows, err := tx.QueryContext(ctx, "SELECT fc.fixture_content_id, fc.tenant_id, fc.code FROM content.fixture_contents fc WHERE "+cond+
+		" ORDER BY fc.code", args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	var out []Row
+	for rows.Next() {
+		var r Row
+		var t uuid.NullUUID
+		if err := rows.Scan(&r.ID, &t, &r.Code); err != nil {
+			return nil, err
+		}
+		if t.Valid {
+			r.TenantID = &t.UUID
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// Assign inserts an active assignment of a fixture item to tenant (as learning_platform; US3 tests use the
+// command instead).
+func Assign(ctx context.Context, platform *sql.DB, item, tenant uuid.UUID) error {
+	_, err := platform.ExecContext(ctx, `INSERT INTO infra.tenant_resource_assignments
+		(assignment_id, tenant_id, created_at, updated_at, resource_type, resource_id, assigned_by, assigned_at)
+		VALUES ($1, $2, now(), now(), 'question', $3, $1, now())`, ids.New(), tenant, item)
+	return err
 }

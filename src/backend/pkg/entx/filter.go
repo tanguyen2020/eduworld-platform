@@ -66,7 +66,7 @@ func predicates(ctx context.Context, k Kind, h *hybrid) ([]func(*sql.Selector), 
 	}
 	return append(ps, func(s *sql.Selector) {
 		a := sql.Table("tenant_resource_assignments").Schema("infra").As("ra")
-		assigned := sql.Select("1").From(a).Where(sql.And(
+		assigned := sql.SelectExpr(sql.Raw("1")).From(a).Where(sql.And(
 			sql.EQ(a.C("resource_type"), h.resourceType),
 			sql.ColumnsEQ(a.C("resource_id"), s.C(h.idColumn)),
 			sql.In(a.C("tenant_id"), tenants...),
