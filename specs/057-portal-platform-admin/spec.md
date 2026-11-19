@@ -1,6 +1,6 @@
 # Feature Specification: F057 — Workspace D — Platform Administration: tenant, gán/clone, thùng rác, danh mục, cấu hình hệ thống
 
-**Feature Branch**: `057-portal-platform-admin` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F045, F051
+**Feature Branch**: `057-portal-platform-admin` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F045, F051
 **Input**: Workspace D chỉ cho System Admin (gateway nội bộ + MFA): bộ lọc tenant liên tenant dùng chung cho mọi workspace, quản lý tenant, gán dữ liệu platform cho tenant, clone giữa tenant, Thùng rác mọi tenant, danh mục quốc gia/tỉnh/trường, cấu hình hệ thống (dọn học sinh, thời hạn chat gameplay). FR nguồn: FR-AUTH-024, FR-CMS-013, FR-CMS-015, FR-ORG-012, FR-ORG-013, FR-ORG-015.
 
 ## Clarifications

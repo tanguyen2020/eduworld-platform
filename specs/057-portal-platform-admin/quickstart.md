@@ -51,3 +51,27 @@ make web-test
 ## 4. Bằng chứng cần nộp
 
 - Kết quả Vitest/Playwright, network log kịch bản 2, 4, 18 (chunk và header), `trace_id` kịch bản 5, 7, 9, ảnh màn hình (sáng/tối).
+
+### Bằng chứng 2026-11-19 (triển khai, mức integration)
+
+Chạy trong `src/cms/frontend` (tối đa 3 worker), commit `6b7a82d`. Backend là MOCK theo contract (`src/test/mock-backend.ts` + `src/test/platform-backend.ts`); Playwright với backend thật, ảnh màn hình sáng/tối và network log của gateway thật chờ môi trường compose (OQ F057-10).
+
+| Lệnh | Kết quả |
+|---|---|
+| `pnpm lint` (ESLint + stylelint) · `pnpm typecheck` · `pnpm gen:check` | xanh |
+| `node scripts/specs/check-features.mjs` | 93 feature, 0 lỗi, 0 cảnh báo |
+| `node scripts/specs/check-portal-catalog.mjs` | 0 lỗi |
+| `npx vitest run --maxWorkers=3` (toàn bộ web, trước rebase) | 43 file, 303 test pass |
+| `npx vitest run --project portal src/workspaces/platform-admin src/shared/tenancy` | 9 file, 76 test pass (sau rebase: `limits.test.ts` 34 pass, thêm loại `learning_material` của F024) |
+| `pnpm build` (+ `check-chunks`) | 5 chunk workspace, chunk `workspace-platform-admin` không do entry tải |
+
+| Kịch bản | Test |
+|---|---|
+| 1–4 | `TenantListPage.test.tsx` › Bộ lọc tenant (cursor, "đã tắt"); `TrashPage.test.tsx` (không `X-Tenant-Id`, `tenant_ids[]`, cột Tenant); `useCrossTenantScope.test.ts`; `Catalog.test.tsx` › Import (tenant đích bắt buộc); `shell/TenantFilter.test.tsx` (F051) |
+| 5–6, 20 | `AssignToTenantsDialog.test.tsx` (gán 2 tenant, gỡ gán có thông điệp lịch sử giữ nguyên, thử lại giữ `Idempotency-Key`, lỗi có `trace_id`) |
+| 7–8 | `CloneWizard.test.tsx` (`succeeded` + `id_map`, `partially_failed` không tự chạy lại, không loại dữ liệu học sinh, đích ≠ nguồn); bước xem trước chờ `previewTenantClone` (OQ F057-1) |
+| 9–10 | `TrashPage.test.tsx` (lý do 3–1000 + bộ đếm, `X-Tenant-Id` của bản ghi, `restorable=false`/`409`, không "Xóa vĩnh viễn") |
+| 11–13 | `Catalog.test.tsx` (quốc gia có lý do, sửa không biết version → `428` theo code — OQ F057-3; tỉnh `status=all`, kế thừa; danh mục trường một tenant; import dry-run → lỗi theo dòng → xác nhận áp dụng) |
+| 14–16b | `SystemSettings.test.tsx` (cảnh báo < 60 ngày, `default_days=null`, duyệt lần dọn, `RETENTION_BELOW_MINIMUM`, giới nghiêm "Mặc định", "hôm sau", HH:MM, xác nhận, `If-Match`, `422`/`412` theo code) |
+| 17, 21 | `TenantListPage.test.tsx` (lọc `q`/`tenant_type`, `maxlength` + bộ đếm, `409`, tắt có lý do + `If-Match`); `limits.test.ts` (mọi giới hạn = OpenAPI) |
+| 18–19, 22 | `workspaceGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan`, MFA step-up giữ URL, VPN, tab ẩn khi action tắt, `403 FEATURE_DISABLED` tải lại quyền) |
