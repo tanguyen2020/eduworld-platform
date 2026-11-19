@@ -65,3 +65,20 @@ func TestDisplayNameAndExternalRef(t *testing.T) {
 		t.Fatal("external_ref > 64 accepted")
 	}
 }
+
+// F011-AC-12.
+func TestExternalIdentityKey(t *testing.T) {
+	allow := []string{"https://sso.eduworld.vn/realms/eduworld", "https://idp.school.vn"}
+	k, err := NewExternalIdentityKey(allow, " https://idp.school.vn ", " 1234-abcd ")
+	if err != nil || k != (ExternalIdentityKey{Issuer: "https://idp.school.vn", Subject: "1234-abcd"}) {
+		t.Fatalf("key = %+v %v", k, err)
+	}
+	for _, c := range [][2]string{{"https://evil.example", "1"}, {"", "1"}, {ExternalRefIssuer, "1"}, {allow[0], ""}} {
+		if _, err := NewExternalIdentityKey(allow, c[0], c[1]); err == nil {
+			t.Fatalf("%v accepted", c)
+		}
+	}
+	if _, err := NewExternalIdentityKey(nil, allow[0], "1"); err == nil {
+		t.Fatal("empty allowlist accepted")
+	}
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
@@ -76,7 +77,7 @@ func TestProvisionStudentAccount(t *testing.T) {
 	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
 	conns := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	importStudents := func(school uuid.UUID, csv string) uuid.UUID {
 		t.Helper()
@@ -115,9 +116,16 @@ func TestProvisionStudentAccount(t *testing.T) {
 
 	kc := newFakeKCUsers()
 	h := command.ProvisionStudentAccount{UoW: e.uow, KC: kc, Accounts: write.SisSyncRepo{}, Sync: write.SisSyncRepo{}, Events: e.deps.Events,
-		Audit: e.deps.Audit, LocalIssuer: "http://kc/realms/eduworld"}
+		Audit: e.deps.Audit, LocalIssuer: "http://kc/realms/eduworld", Issuers: []string{"http://kc/realms/eduworld"}}
 	scope, _ := authz.EventScope(ta)
 	inA := tenancy.WithScope(ctx, scope)
+
+	// AC-12: a local issuer outside the allowlist never reaches Keycloak (permanent failure → DLQ).
+	badIssuer := h
+	badIssuer.Issuers = []string{"https://other.example/realms/x"}
+	if err := badIssuer.Handle(inA, userOf("hs.p.an")); !errors.Is(err, outbox.ErrPermanent) || len(kc.users) != 0 {
+		t.Fatalf("issuer outside the allowlist: %v users=%d", err, len(kc.users))
+	}
 
 	// AC-08: Keycloak user without email, attributes, role; identity linked; user.provisioned; membership event.
 	an := userOf("hs.p.an")

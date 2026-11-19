@@ -53,10 +53,10 @@ type Batch struct {
 }
 
 // unknownFields counts columns outside the contract (metric of F011-AC-03).
-var unknownFields = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_sis_unknown_fields_total",
+var unknownFields = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_sis_contract_unknown_fields_total",
 	Help: "Columns of SIS imports outside the contract, ignored."}, []string{"kind"})
 
-// UnknownFieldsCounter exposes eduworld_sis_unknown_fields_total for registration.
+// UnknownFieldsCounter exposes eduworld_sis_contract_unknown_fields_total for registration.
 func UnknownFieldsCounter() *prometheus.CounterVec { return unknownFields }
 
 const maxRowLen = 64 << 10

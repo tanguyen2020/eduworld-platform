@@ -3612,7 +3612,9 @@
     "module": "identity",
     "method": "GET",
     "path": "/sis/reconciliation-issues",
+    "tenant_scoped": true,
     "required": [
+      "cross_tenant",
       "role_denied"
     ]
   },

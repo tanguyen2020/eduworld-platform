@@ -235,3 +235,20 @@ type SisImportRepository interface {
 	// CsvConnectionOf returns the active csv_import connection serving the school (problem NotFound otherwise).
 	CsvConnectionOf(ctx context.Context, schoolID uuid.UUID) (uuid.UUID, error)
 }
+
+// StagingAnonymizer clears staged payloads past their retention (no DELETE, R21).
+type StagingAnonymizer interface {
+	// AnonymizeStagingBefore sets payload = NULL on up to limit staging records created before cutoff.
+	AnonymizeStagingBefore(ctx context.Context, cutoff time.Time, limit int) (int, error)
+}
+
+// ConflictRules are the lookups of the conflict matrix (SIS_INTEGRATION §6.3).
+type ConflictRules interface {
+	// StudentByCode returns a live student of the school with this student_code (possible_duplicate).
+	StudentByCode(ctx context.Context, schoolID uuid.UUID, code string) (*uuid.UUID, error)
+	// ProvinceKnown reports whether a province code exists in the catalog (any status: old codes map through
+	// successions).
+	ProvinceKnown(ctx context.Context, code string) (bool, error)
+	// DeletedUser reports whether a user is soft-deleted and why (the ent filter hides it otherwise).
+	DeletedUser(ctx context.Context, userID uuid.UUID) (deleted bool, reason *string, err error)
+}

@@ -45,6 +45,8 @@ const (
 	IssueTransferConfirmation  = "transfer_confirmation"
 	IssueDeactivationReview    = "deactivation_review"
 	IssueGradeMismatch         = "grade_mismatch"
+	IssuePossibleDuplicate     = "possible_duplicate"
+	IssueSchoolProvinceMissing = "school_province_missing"
 )
 
 // Hash is the canonical SHA-256 of a record without its updated_at (re-importing the same data is a noop

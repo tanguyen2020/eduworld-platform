@@ -99,3 +99,25 @@ func CheckExternalRef(s string) (string, error) {
 	}
 	return v, nil
 }
+
+// ExternalIdentityKey is the key of an external identity: (issuer, subject) only — never an email, a
+// display name or preferred_username (F011-AC-12, IDENTITY_MAPPING).
+type ExternalIdentityKey struct {
+	Issuer  string
+	Subject string
+}
+
+// NewExternalIdentityKey checks the issuer against the configured allowlist (EW_OIDC_ISSUERS) and the
+// lengths of identity.external_identities (issuer 512, subject 255).
+func NewExternalIdentityKey(allowlist []string, issuer, subject string) (ExternalIdentityKey, error) {
+	issuer, subject = strings.TrimSpace(issuer), strings.TrimSpace(subject)
+	if subject == "" || len(subject) > 255 {
+		return ExternalIdentityKey{}, ErrInvalid{Field: "subject", Reason: "must be 1–255 characters"}
+	}
+	for _, a := range allowlist {
+		if a != "" && a == issuer && len(issuer) <= 512 {
+			return ExternalIdentityKey{Issuer: issuer, Subject: subject}, nil
+		}
+	}
+	return ExternalIdentityKey{}, ErrInvalid{Field: "issuer", Reason: "not in the issuer allowlist"}
+}

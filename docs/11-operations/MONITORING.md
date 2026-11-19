@@ -117,7 +117,8 @@ Metric bổ sung:
 | `eduworld_panics_recovered_total` (`service`, `module`, `entrypoint`: http/nats/consumer/job) | Panic đã được recover middleware bắt; một panic không bắt làm sập cả binary và mọi module trong đó (ADR-0074 hệ quả) |
 | `eduworld_saga_runs_total` (`saga`: tenant_clone/student_cleanup/trash_restore, `result`), `eduworld_saga_step_duration_seconds`, `eduworld_saga_stuck` (gauge) | Saga điều phối từ module identity |
 | `eduworld_cqrs_handler_duration_seconds` (`module`, `kind`: command/query, `handler`), `eduworld_cqrs_handler_errors_total` | Thời gian/ lỗi theo command/query handler (ADR-0038) |
-| `eduworld_sis_sync_runs_total` (`provider`, `result`), `eduworld_sis_sync_records_total` (`entity`, `action`), `eduworld_sis_reconciliation_issues` | SIS ([SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md)) |
+| `eduworld_sis_sync_runs_total` (`connection`, `mode`, `status`), `eduworld_sis_last_success_timestamp` (`connection`), `eduworld_sis_contract_unknown_fields_total` (`kind`), `eduworld_sis_sync_records_total` (`entity`, `action`), `eduworld_sis_reconciliation_issues` | SIS ([SIS_INTEGRATION §8](../09-identity/SIS_INTEGRATION.md)); F011 phát ba metric đầu |
+| `eduworld_sis_login_sync_total` (`branch`: fresh/blocking/background, `result`: ok/timeout/error/missing_class/throttled), `eduworld_sis_login_sync_duration_seconds` (`branch`) | Login sync ([SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md), F011) |
 | `eduworld_auth_logins_total` (`result`: ok/no_sis_record/locked/jit_denied/not_student, `method`: password/refresh — Release 1.0; idp/class_qr/card_qr/picture/device_grant chỉ khi bật mở rộng sau, ADR-0063; `result` thêm `not_provisioned` cho `ACCOUNT_NOT_PROVISIONED`) | Đăng nhập |
 | `eduworld_auth_login_duration_seconds` (histogram, `method`, `tenant_type`) — từ lúc client bấm đăng nhập đến khi vào hub (telemetry client) và `eduworld_auth_session_duration_seconds` (server: `auth/session` + `game/sessions`) | SLO đăng nhập (NFR-PERF-013/014, ADR-0045) |
 | Keycloak (endpoint `/metrics`, `KC_METRICS_ENABLED=true`): `keycloak_user_events_total` (`event`: login/login_error/refresh_token), thời gian xử lý request, `jvm_*`, Infinispan cache, DB pool | Năng lực Keycloak |
@@ -188,6 +189,8 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `GameRefreshReuseSpike` | `rate(eduworld_auth_game_refresh_total{result=~"reused|device_mismatch"}[15m])` > 5× baseline hoặc > 20/giờ ở một tenant | Warning | Dấu hiệu token bị đánh cắp hoặc client refresh song song; xem audit theo `device_id`, kiểm tra bản client mới (single-flight) |
 | `LoginWaitingRoomActive` | `eduworld_auth_waiting_room_queued` > 0 liên tục 10 phút | Warning | Xem có cần nâng ngưỡng/scale |
 | `LoginErrorSpike` | `keycloak_user_events_total{event="login_error"}` tăng > 5× baseline 15 phút | Warning | Có thể credential stuffing; xem brute-force |
+| `SisSyncStale` | `time() - eduworld_sis_last_success_timestamp` > 26 giờ theo connection ([SIS_INTEGRATION §8](../09-identity/SIS_INTEGRATION.md)) | Warning | Xem run lỗi (`listSisSyncRuns`), báo trường |
+| `SisLoginSyncTimeouts` | `eduworld_sis_login_sync_total{branch="blocking",result="timeout"}` > 5% nhánh B trong 10 phút ([SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md)) | Warning | Kiểm tra SIS của trường; breaker theo connection |
 | `SisLookupTimeouts` | `eduworld_sis_lookup_total{result="timeout"}` > 20% trong 15 phút theo connection | Warning | Báo trường; kiểm tra facade SIS |
 | `ContentPublishSlow` | p95 publish → visible > 30 s trong 15 phút | Warning | Xem snapshot builder, consumer lag |
 | `ContentCacheHitLow` | Hit ratio Valkey nội dung < 90% trong 30 phút (giờ học) | Warning | Kiểm tra TTL, eviction |

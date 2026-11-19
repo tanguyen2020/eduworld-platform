@@ -13,6 +13,29 @@
 - Q: Hợp nhất hai tài khoản (`POST /admin/users:merge`)? → A: Thuộc F045; F011 chỉ tạo issue `duplicate_identifier` và hỗ trợ "thêm membership" cho cùng một người.
 - Q: Login sync nhánh B (tra cứu chặn ngắn) khi trường chỉ dùng CSV? → A: F011 hiện thực logic nhánh A/B/C sau port `SisLookupPort`; connection `csv_import` không có capability `student_lookup` nên nhánh B rơi về dữ liệu đồng bộ gần nhất (F011-AC-20). Adapter HTTP `lookupStudent` của `contract_v1` do F017 cung cấp.
 
+### Session 2026-11-18 (triển khai)
+
+Quyết định khi hiện thực F011; mục [Proposed] chờ Technical Architect xác nhận.
+
+- Q: `sis.sync_runs` là bảng G hay T? → A: T (có `tenant_id`, RLS): mỗi run thuộc một connection của một tenant; đọc run của System Admin đi qua `tenancy.Bypass(system_admin_cross_tenant)` để lấy tenant rồi chỉ đọc tenant đó. DATABASE_DESIGN §2.3 cập nhật.
+- Q: Khóa ghép của `sis_links`, `synced_students`, `student_login_keys`? → A: Khóa chính surrogate + unique index một phần (`WHERE deleted_at IS NULL`) trên khóa nguồn, để dùng mixin `entx` chung (ADR-0089).
+- Q: Ai ghi `identity.sis_identity_links`? → A: Bước apply ghi link `active` cùng transaction với user `pending` (enrollment trong cùng run cần user); worker `keycloak-provisioner` chỉ tạo tài khoản Keycloak và `external_identities`. Phát `student.sis_link_created` (`via = provisioning`) lúc apply.
+- Q: Membership Keycloak Organization của học sinh mới? → A: Provisioning phát `tenant_membership.changed`; consumer `keycloak-membership` (F010) thêm member — một đường đồng bộ membership duy nhất (ACCOUNT_PROVISIONING §2.1).
+- Q: Mật khẩu ban đầu khi provisioning bất đồng bộ? → A: [Proposed] Không đặt mật khẩu trong worker (không có người nhận để hiển thị một lần); nhà trường cấp thẻ đăng nhập qua đặt lại mật khẩu (ACCOUNT_PROVISIONING §6d).
+- Q: Học sinh mới không có `login.username`? → A: [Proposed] Bản ghi bị bỏ qua với lỗi `LOGIN_USERNAME_REQUIRED` (chưa sinh username theo mẫu `hs.<school_code>.<student_code>`).
+- Q: `updated_at` thiếu trong CSV? → A: Lấy thời điểm import; hash chuẩn (`raw_hash`) bỏ `updated_at` nên import lại cùng dữ liệu luôn là `noop` (F011-AC-05).
+- Q: Bản ghi xung đột trong lô? → A: Mỗi bản ghi chạy trong savepoint; bản ghi xung đột bị rollback và issue được tạo sau rollback (không mất issue).
+- Q: `possible_duplicate` so khớp gì? → A: [Proposed] `student_code` trùng học sinh khác cùng trường; chưa dùng ngày sinh vì `date_of_birth` chỉ lưu mã hóa và pipeline chưa lưu (cần quản lý khóa mã hóa).
+- Q: Hash `national_student_id`? → A: [Proposed] HMAC-SHA256 với khóa cấu hình `EW_SIS_ID_HASH_KEY` (secret, không commit); không có khóa thì không so khớp chuyển trường. Hash không khóa của mã số ngắn có thể bị dò ngược. Quản lý/xoay khóa: OQ F011-2.
+- Q: `same_person` khi tài khoản sẵn có thuộc tenant khác? → A: Trả `409` "chuyển trường trước" vì học sinh chỉ là member đúng một tenant; quy trình gộp liên tenant: OQ F011-1 (liên quan F045).
+- Q: `missing_in_source`? → A: Chỉ khi import CSV có file học sinh (full của trường); `missing_runs + 1`, không deactivate. Vượt `sis_missing_review_ratio` (5%) hai lần liên tiếp → một issue `deactivation_review` cấp trường; dưới ngưỡng, học sinh vắng 2 lần liên tiếp → issue riêng. Học sinh quay lại (kể cả `noop`) reset `missing_runs`.
+- Q: Login sync nhánh B áp kết quả lookup thế nào? → A: [Proposed] Qua cùng pipeline bằng run một bản ghi `mode = delta` (giữ staging/audit thống nhất); không giữ lock connection. Breaker theo connection: 5 lỗi liên tiếp mở 30 giây [Proposed].
+- Q: Một import nhiều loại bản ghi? → A: [Proposed] Một file CSV một loại (`entity_kinds` đúng 1 phần tử); thêm `dry_run` (mặc định `true`), `diff`, `errors` vào contract `SisImport`.
+- Q: Phát hiện file đã upload? → A: [Proposed] Job watcher HEAD object mỗi 15 giây (không phụ thuộc bucket notification của storage S3-compatible), xếp job `csv_import` vào `IDENTITY_SIS_JOBS` (`Nats-Msg-Id import:<id>`); bucket riêng `ew-sis-imports` (private); file được quét clamd trước khi đọc.
+- Q: School Admin xem danh sách issue? → A: `listSisReconciliationIssues` nhận `tenant.sis.read` hoặc `tenant.sis.import` (theo trường của grant) và header `X-Tenant-Id` tùy chọn (sửa contract); `entity_refs.user_id` của tài khoản giữ định danh trùng chỉ trả cho nhân sự platform.
+- Q: `routematrix` (F002-AC-28) có kiểm các operation của identity? → A: Chưa: tool chỉ nhận `httpx.Operation` viết dạng literal, còn route F010/F011 dùng helper `op(...)`, nên ma trận role/tenant của 36 operation identity không bị bắt buộc (dù test HTTP/integration có kiểm 403/404). Câu hỏi mở OQ F011-3: sửa tool hoặc đổi route sang literal kèm `authztest.Cover`.
+- Q: Gắn binary (core-api/worker)? → A: Vẫn theo OQ F010-2: F011 cung cấp handler, consumer (`keycloak-provisioner`, `sis-jobs`), job (`WatchSisImports`, `AnonymizeSisStaging`) và adapter; composition root của `cmd/worker`/`cmd/core-api` chưa có feature sở hữu.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin nhập CSV theo contract (Priority: P1)

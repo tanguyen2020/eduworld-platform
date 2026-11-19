@@ -335,6 +335,9 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `sis_login_refresh_after_hours` | 24 | giờ | tenant | [Proposed] (ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
 | `sis_login_sync_timeout_ms` | 3000 (timeout duy nhất cho lookup SIS lúc đăng nhập, gồm on-demand lookup lần đầu của ADR-0046) | ms | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0046, ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
 | `sis_login_sync_concurrency` | 20 | lookup đồng thời / SIS connection | platform | [Proposed] (ADR-0061) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
+| `sis_login_sync_breaker` | 5 lookup lỗi liên tiếp → mở mạch 30 s mỗi SIS connection | — | code | [Proposed] (F011) | [SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md) |
+| `sis_missing_review_ratio` | 5 (> 5% bản ghi vắng trong hai lần full liên tiếp → `deactivation_review` cấp trường) | % | code | [Proposed] (F011) | [SIS_INTEGRATION §5](../09-identity/SIS_INTEGRATION.md) |
+| `sis_import_upload_ttl` / `sis_import_watch_interval` | 15 phút / 15 giây | — | code | [Proposed] (F011) | [SIS_INTEGRATION §4.3](../09-identity/SIS_INTEGRATION.md) |
 | `enabled_countries` | `VN` | ISO 3166-1 | platform | [Confirmed] (ADR-0060) | [DATABASE_DESIGN §2.2a](../07-backend/DATABASE_DESIGN.md) |
 
 ## 17. Rate limit và bảo mật

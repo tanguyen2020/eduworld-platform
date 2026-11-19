@@ -100,7 +100,7 @@ func TestSisImportFlow(t *testing.T) {
 	queue := &queueSpy{}
 	create := command.CreateSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: store, Audit: e.deps.Audit}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit}
 	process := command.ProcessSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: store, Scanner: eicarScanner{},
 		Parser: csvreader.Parser{V: v}, Run: run, Audit: e.deps.Audit}

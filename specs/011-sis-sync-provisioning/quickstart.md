@@ -37,3 +37,22 @@ make api-test   # Postman CLI
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (pass/fail), trace_id của import ở bước 3, số lời gọi lookup (fake) ở bước 10, ảnh danh sách issue.
+
+## 5. Bằng chứng (2026-11-18, local)
+
+Chạy tự động trên PostgreSQL thật (testcontainers, `TESTCONTAINERS_RYUK_DISABLED=true go test -tags integration ./modules/identity/tests/integration/`) và unit test; các bước gọi binary (`make run-core-api`, `make run-worker`) chưa chạy được vì composition root của `cmd/core-api`/`cmd/worker` chưa gắn handler/consumer/job của identity (OQ F010-2). Keycloak, object storage, clamd và lookup SIS dùng test double có nhãn trong test (adapter HTTP/TCP có test riêng).
+
+| # | Test |
+|---|---|
+| 1 | `TestSisImportFlow` (dry-run qua import), `TestSisImportRun` (diff, không đổi DB) |
+| 2 | `TestSisImportFlow` (file vi phạm `failed`, lỗi theo dòng/cột), `TestSisImportRun` (cột `teacher_name` không lưu), `csvreader` unit test (metric) |
+| 3 | `TestSisImportRun` (thứ tự, event outbox, audit `student.synced`), `TestSisHTTP` (`Idempotency-Key` 428, 202) |
+| 4 | `TestSisImportRun` (import lại: `update = 0`) |
+| 5 | `TestSisImportFlow`, `TestSisHTTP` (tenant khác/trường khác `404`) |
+| 6 | `TestProvisionStudentAccount` (user Keycloak không email, role `student`, `external_identities`, `user.provisioned`, `tenant_membership.changed`; issuer ngoài allowlist bị từ chối), `domain/user` `TestExternalIdentityKey` |
+| 7 | `TestSisImportRun` (AC-10), `TestProvisionStudentAccount` (409 Keycloak) |
+| 8 | `TestSisIssues` (`same_person` → link tài khoản sẵn có, import sau cập nhật) |
+| 9 | `TestSisImportRun`, `TestSisConflictMatrix` (`missing_class` và các loại khác) |
+| 10 | `loginsync` unit test (0 lookup / không lookup với `csv_import` / timeout / 200 đồng thời), `TestLoginSync` (NATS: một job `login_refresh` cho 3 lần đăng nhập) |
+| 11 | `TestSisImportRun` (`suspended` → `locked`, `graduated` → `deactivated` + enrollment `ended`) |
+| 12 | `TestSisConnections`, `TestSisHTTP` (`409 SIS_SCHOOL_ALREADY_CONNECTED`, không `secret_ref`), `deploy/apisix/scripts/check-routes.mjs` (`/api/v1/sis/*` chỉ gateway nội bộ) |

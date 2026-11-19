@@ -107,7 +107,7 @@ func TestSisHTTP(t *testing.T) {
 
 	// A run (direct use case), then the run reads and the issues of the school.
 	run := command.SisRun{UoW: h.uow, Savepoints: h.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: h.deps.Events, Audit: h.deps.Audit}
 	res, err := run.Handle(authztest.Ctx(ctx, authztest.Staff(ta, "school_admin")), command.RunImportInput{ConnectionID: uuid.MustParse(conn),
 		SchoolID: uuid.MustParse(a.school), Files: sisFiles(t, map[string]string{"students.csv": "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n" +

@@ -3,14 +3,17 @@ package command
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
@@ -34,13 +37,17 @@ type ProvisionStudentAccount struct {
 	Sync        write.SisSyncRepository
 	Events      write.EventPublisher
 	Audit       write.Auditor
-	LocalIssuer string // OIDC issuer of realm eduworld
+	LocalIssuer string   // OIDC issuer of realm eduworld
+	Issuers     []string // allowlist of login issuers (EW_OIDC_ISSUERS); LocalIssuer must belong to it (F011-AC-12)
 }
 
 // Handle provisions one student.
 func (h ProvisionStudentAccount) Handle(ctx context.Context, studentID uuid.UUID) (err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.ProvisionStudentAccount")
 	defer func() { done(err) }()
+	if _, err := user.NewExternalIdentityKey(h.Issuers, h.LocalIssuer, "check"); err != nil {
+		return outbox.Permanent(fmt.Errorf("provisioning: local issuer %q is not in the issuer allowlist", h.LocalIssuer))
+	}
 	var s *write.PendingStudent
 	if err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		var err error
@@ -75,8 +82,12 @@ func (h ProvisionStudentAccount) Handle(ctx context.Context, studentID uuid.UUID
 	if err = h.KC.AddRealmRoles(ctx, kcID, "student"); err != nil {
 		return err
 	}
+	key, err := user.NewExternalIdentityKey(h.Issuers, h.LocalIssuer, kcID)
+	if err != nil {
+		return outbox.Permanent(err)
+	}
 	return h.UoW.Do(ctx, func(ctx context.Context) error {
-		if err := h.Accounts.LinkIdentity(ctx, studentID, h.LocalIssuer, kcID); err != nil {
+		if err := h.Accounts.LinkIdentity(ctx, studentID, key.Issuer, key.Subject); err != nil {
 			var pe *problem.Error
 			if errors.As(err, &pe) && pe.Code == problem.IdentityConflict {
 				return nil // a concurrent delivery linked it

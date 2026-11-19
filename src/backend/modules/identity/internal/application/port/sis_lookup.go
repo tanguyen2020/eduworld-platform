@@ -37,6 +37,11 @@ type LoginRefreshJob struct {
 	StudentExternalID string    `json:"student_external_id"`
 }
 
+// SyncRunObserver is told when a sync run ends (eduworld_sis_last_success_timestamp, SIS_INTEGRATION §8).
+type SyncRunObserver interface {
+	RunFinished(connectionID uuid.UUID, mode, status string, at time.Time)
+}
+
 // LoginSyncMetrics observes eduworld_sis_login_sync_total{branch,result} and its duration.
 type LoginSyncMetrics interface {
 	Observe(branch, result string, d time.Duration)

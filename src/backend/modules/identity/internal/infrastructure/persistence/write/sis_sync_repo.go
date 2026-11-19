@@ -14,6 +14,7 @@ import (
 	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	entenroll "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	entprovince "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	entissue "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
 	entconnschool "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
 	entlink "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisidentitylink"
@@ -689,4 +690,60 @@ func (SisSyncRepo) CsvConnectionOf(ctx context.Context, school uuid.UUID) (uuid.
 		}
 	}
 	return uuid.Nil, problem.New(problem.NotFound, "no active csv_import connection serves this school")
+}
+
+var _ write.StagingAnonymizer = SisSyncRepo{}
+
+// AnonymizeStagingBefore nulls old payloads (explicit SQL: the ent append-only mixin refuses updates).
+func (SisSyncRepo) AnonymizeStagingBefore(ctx context.Context, cutoff time.Time, limit int) (int, error) {
+	tx, ok := entx.Tx(ctx)
+	if !ok {
+		return 0, entx.ErrNoTransaction
+	}
+	// tenancyguard:ok sis.staging_records is global (G, no tenant_id); run by the platform_job bypass
+	res, err := tx.ExecContext(ctx, `UPDATE sis.staging_records SET payload = NULL WHERE (staging_record_id, created_at) IN (
+		SELECT staging_record_id, created_at FROM sis.staging_records WHERE created_at < $1 AND payload IS NOT NULL LIMIT $2)`, cutoff, limit)
+	if err != nil {
+		return 0, err
+	}
+	n, err := res.RowsAffected()
+	return int(n), err
+}
+
+var _ write.ConflictRules = SisSyncRepo{}
+
+// StudentByCode finds a live student of the school by student_code.
+func (SisSyncRepo) StudentByCode(ctx context.Context, school uuid.UUID, code string) (*uuid.UUID, error) {
+	s, err := client(ctx).Student.Query().Where(entstudent.SchoolID(school), entstudent.StudentCode(code)).First(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &s.ID, nil
+}
+
+// DeletedUser reads deleted_at/delete_reason of a user, soft-deleted rows included.
+func (SisSyncRepo) DeletedUser(ctx context.Context, userID uuid.UUID) (bool, *string, error) {
+	tx, ok := entx.Tx(ctx)
+	if !ok {
+		return false, nil, entx.ErrNoTransaction
+	}
+	var deleted bool
+	var reason sql.NullString
+	// tenancyguard:ok identity.users is global (no tenant_id); the soft-delete filter must not apply here
+	err := tx.QueryRowContext(ctx, `SELECT deleted_at IS NOT NULL, delete_reason FROM identity.users WHERE user_id = $1`, userID).Scan(&deleted, &reason)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil, nil
+	}
+	if err != nil || !reason.Valid {
+		return deleted, nil, err
+	}
+	return deleted, &reason.String, nil
+}
+
+// ProvinceKnown checks the catalog.
+func (SisSyncRepo) ProvinceKnown(ctx context.Context, code string) (bool, error) {
+	return client(ctx).Province.Query().Where(entprovince.Code(code)).Exist(ctx)
 }

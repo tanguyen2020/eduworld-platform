@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
@@ -66,10 +67,12 @@ type SisRun struct {
 	Missing     write.MissingTracker
 	Transfers   write.TransferMatcher
 	Students    write.StudentRepository
+	Rules       write.ConflictRules
 	Events      write.EventPublisher
 	Audit       write.Auditor
-	BatchSize   int    // default 500 [Proposed]
-	IDHashKey   []byte // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
+	BatchSize   int                  // default 500 [Proposed]
+	Observer    port.SyncRunObserver // optional: last success metric
+	IDHashKey   []byte               // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
 }
 
 // ErrNoLoginUsername: a new student without login.username cannot get an account.
@@ -268,6 +271,9 @@ func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInp
 		return h.Events.Publish(ctx, write.Event{Type: "sis.sync_completed", SubjectType: "sync_run", SubjectID: st.run.ID.String(), TenantID: &t,
 			Payload: map[string]any{"sync_run_id": st.run.ID.String(), "stats": completedStats(st.run.Stats), "issues_count": st.issues}})
 	})
+	if err == nil {
+		h.observe(st.run) // after the commit
+	}
 	return out, err
 }
 
@@ -506,6 +512,13 @@ func (h SisRun) markMissing(ctx context.Context, st *runState) error {
 	return nil
 }
 
+// observe reports the end of a committed run.
+func (h SisRun) observe(r *write.SyncRun) {
+	if h.Observer != nil && r.FinishedAt != nil {
+		h.Observer.RunFinished(r.ConnectionID, r.Mode, r.Status, *r.FinishedAt)
+	}
+}
+
 // completedStats folds the per-kind run stats into the totals of sis.sync_completed.
 func completedStats(stats map[string]int) map[string]int {
 	out := map[string]int{"fetched": 0, "created": 0, "updated": 0, "unchanged": 0, "errors": stats["errors"]}
@@ -542,6 +555,15 @@ func skip(code problem.Code, msg string) error { return problem.New(code, msg) }
 
 // applySchool links the school record to the school of the import (a csv_import is scoped to one school).
 func (h SisRun) applySchool(ctx context.Context, st *runState, it write.StagingItem) error {
+	if p := sis.Str(it.Payload, "province_code"); p != "" {
+		known, err := h.Rules.ProvinceKnown(ctx, p)
+		if err != nil {
+			return err
+		}
+		if !known { // SIS_INTEGRATION §4.6
+			return conflict(sis.IssueSchoolProvinceMissing, map[string]any{"school_external_id": it.ExternalID, "province_code": p})
+		}
+	}
 	id, _, found, err := h.Sync.LinkOf(ctx, st.in.ConnectionID, sis.KindSchool, it.ExternalID)
 	if err != nil {
 		return err
@@ -647,6 +669,15 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 			return err
 		}
 	} else if existing == nil || existing.UserID == nil {
+		if code != "" { // a new source key with the student_code of another student of the school [Proposed: no date of birth]
+			other, err := h.Rules.StudentByCode(ctx, st.in.SchoolID, code)
+			if err != nil {
+				return err
+			}
+			if other != nil {
+				return conflict(sis.IssuePossibleDuplicate, map[string]any{"student_external_id": it.ExternalID, "user_id": other.String()})
+			}
+		}
 		raw := sis.LoginUsername(d)
 		if raw == "" {
 			return skip(problem.ValidationFailed, codeLoginRequired)
@@ -682,6 +713,16 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 		}
 	} else {
 		userID = *existing.UserID
+		deleted, reason, err := h.Rules.DeletedUser(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if deleted { // never restored by a sync (ADR-0032, F011-AC-25)
+			if reason != nil && *reason == "inactive_cleanup" {
+				return conflict(sis.IssueCleanedUpStudentInSIS, map[string]any{"student_external_id": it.ExternalID, "user_id": userID.String()})
+			}
+			return skip(problem.NotFound, "the student account was deleted")
+		}
 		if err := h.Sync.UpdateStudent(ctx, userID, grade, code, name); err != nil {
 			return err
 		}

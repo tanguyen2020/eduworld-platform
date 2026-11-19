@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	portwrite "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/contract"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/csvreader"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/metrics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -80,7 +82,8 @@ func TestSisImportRun(t *testing.T) {
 	}
 	enrolled(ctx, t, e.platform, a, "hs.taken") // owner of the username of HS-4
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2}
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2,
+		Observer: metrics.Runs{}}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	users := func() int {
 		return count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username LIKE 'hs.sis.%'`)
@@ -122,6 +125,9 @@ func TestSisImportRun(t *testing.T) {
 	}
 	if run.Status != "succeeded" || run.Issues != 3 {
 		t.Fatalf("apply = %+v", run)
+	}
+	if testutil.ToFloat64(metrics.LastSuccess().WithLabelValues(conn.ID.String())) < float64(time.Now().Add(-time.Minute).Unix()) {
+		t.Fatal("eduworld_sis_last_success_timestamp not set by a succeeded run")
 	}
 	if users() != 3 || count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.taken'`) != 1 {
 		t.Fatal("accounts: want 3 new, the taken username untouched (AC-10)")
@@ -211,7 +217,7 @@ func TestSisMissingInSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	students := func(n int) string {
 		var b strings.Builder
@@ -264,6 +270,20 @@ func TestSisMissingInSource(t *testing.T) {
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username LIKE 'hs.m.%' AND status = 'deactivated'`); n != 0 {
 		t.Fatalf("deactivated = %d", n)
 	}
+
+	// T036: sis-staging-anonymizer clears payloads past sis_staging_retention only, without deleting rows.
+	staged := count(ctx, t, e.platform, `SELECT count(*) FROM sis.staging_records`)
+	anon := command.AnonymizeSisStaging{UoW: e.uow, Staging: write.SisSyncRepo{}, Batch: 50}
+	if n, err := anon.RunOnce(ctx); err != nil || n != 0 {
+		t.Fatalf("fresh payloads cleared: %d %v", n, err)
+	}
+	anon.Clock = func() time.Time { return time.Now().Add(command.SisStagingRetention + time.Hour) }
+	if n, err := anon.RunOnce(ctx); err != nil || n != staged {
+		t.Fatalf("anonymized = %d of %d: %v", n, staged, err)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.staging_records WHERE payload IS NULL`); n != staged {
+		t.Fatalf("rows kept with null payload = %d of %d", n, staged)
+	}
 }
 
 // F011-AC-16: a student moving between two SIS connections of the same unit tenant keeps its User (link
@@ -288,7 +308,7 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 	}
 	c1, c2, c3 := connect(a.tenant, a.school), connect(a.tenant, a.otherSchool), connect(b.tenant, b.school)
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit, IDHashKey: []byte("test-only-key")}
 	run := func(tenant, school string, conn uuid.UUID, files map[string]string) command.RunImportResult {
 		t.Helper()
@@ -355,5 +375,90 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.t.an.other'`); n != 0 {
 		t.Fatal("an account was created for a cross-tenant match")
+	}
+}
+
+// F011-AC-14: the remaining types of the conflict matrix: possible_duplicate, school_province_missing,
+// unmapped_school, class_school_mismatch, multi_school_enrollment — each skips the record and raises an issue.
+func TestSisConflictMatrix(t *testing.T) {
+	ctx := context.Background()
+	e := setup(ctx, t)
+	a := seedTenant(ctx, t, e.platform, "pgd-matrix")
+	ta, sA, sB := uuid.MustParse(a.tenant), uuid.MustParse(a.school), uuid.MustParse(a.otherSchool)
+	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
+	conns := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
+	conn, err := conns.Create(sa, ta, "csv_import", "pilot")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := conns.SetSchools(sa, conn.ID, []uuid.UUID{sA, sB}, "pilot"); err != nil {
+		t.Fatal(err)
+	}
+	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
+		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
+		Students: write.StudentRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
+	run := func(school uuid.UUID, files map[string]string) command.RunImportResult {
+		t.Helper()
+		res, err := h.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: sisFiles(t, files)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	issues := func(typ string) int {
+		return count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = $1 AND tenant_id = $2`, typ, a.tenant)
+	}
+	const stHeader = "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n"
+
+	// School A: school, class, student, enrollment.
+	run(sA, map[string]string{
+		"schools.csv":     "school_external_id,school_code,name,status,province_code\nTH-A,A,Truong A,active,vn.ha-noi\n",
+		"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\nC-A,TH-A,2026-2027,3,3M\n",
+		"students.csv":    stHeader + "HS-1,TH-A,001,An,3,active,hs.mx.an\n",
+		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-1,C-A,2026-09-05,active\n",
+	})
+	// school_province_missing: an unknown province code.
+	run(sA, map[string]string{"schools.csv": "school_external_id,school_code,name,status,province_code\nTH-A2,A2,Truong A2,active,vn.khong-co\n"})
+	// possible_duplicate: a new source key with the student_code of HS-1 in the same school.
+	run(sA, map[string]string{"students.csv": stHeader + "HS-99,TH-A,001,An Copy,3,active,hs.mx.copy\n"})
+	// School B: unmapped_school (TH-A belongs to school A), class_school_mismatch (C-A is a class of A),
+	// multi_school_enrollment (HS-1 is enrolled in A).
+	run(sB, map[string]string{
+		"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\nC-B,TH-B,2026-2027,3,3N\n",
+		"students.csv":    stHeader + "HS-2,TH-A,002,Binh,3,active,hs.mx.binh\nHS-3,TH-B,003,Chi,3,active,hs.mx.chi\n",
+		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-3,C-A,2026-09-05,active\nHS-1,C-B,2026-09-05,active\n",
+	})
+	for typ, want := range map[string]int{"school_province_missing": 1, "possible_duplicate": 1, "unmapped_school": 1,
+		"class_school_mismatch": 1, "multi_school_enrollment": 1} {
+		if n := issues(typ); n != want {
+			t.Fatalf("%s = %d, want %d", typ, n, want)
+		}
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username IN ('hs.mx.copy', 'hs.mx.binh')`); n != 0 {
+		t.Fatalf("skipped records created %d accounts", n)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments e JOIN identity.users u ON u.user_id = e.student_id
+		WHERE u.username = 'hs.mx.an' AND e.status = 'active' AND e.school_id = $1`, a.school); n != 1 {
+		t.Fatal("the second-school enrollment must not be applied")
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'sis.reconciliation_issue_raised'`); n < 5 {
+		t.Fatalf("issue events = %d", n)
+	}
+
+	// AC-25: a student cleaned up for inactivity (ADR-0032) is never restored by a sync — through its SIS link
+	// or through its username — and cleaned_up_student_in_sis is raised.
+	if _, err := e.platform.ExecContext(ctx, `UPDATE identity.users SET deleted_at = now(), delete_reason = 'inactive_cleanup' WHERE username = 'hs.mx.an'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.platform.ExecContext(ctx, `UPDATE identity.users SET deleted_at = now(), delete_reason = 'inactive_cleanup' WHERE username = 'hs.mx.chi'`); err != nil {
+		t.Fatal(err)
+	}
+	run(sA, map[string]string{"students.csv": stHeader + "HS-1,TH-A,001,An Moi,3,active,hs.mx.an\nHS-77,TH-A,077,Chi,3,active,hs.mx.chi\n"})
+	if n := issues("cleaned_up_student_in_sis"); n != 2 {
+		t.Fatalf("cleaned_up_student_in_sis = %d", n)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username IN ('hs.mx.an', 'hs.mx.chi') AND deleted_at IS NOT NULL`); n != 2 {
+		t.Fatalf("restored by a sync: %d still deleted", n)
 	}
 }

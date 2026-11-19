@@ -198,6 +198,8 @@ HS-000123,C-2026-3A,2026-09-05,,active
 
 Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng ghi `sis.sync_record_errors` (số dòng, cột, mã lỗi). Import theo chế độ **all-or-nothing theo file** [Proposed] để tránh trạng thái nửa vời. Có **dry-run** hiển thị diff trước khi áp dụng.
 
+Luồng (F011): tạo import (`dry_run` mặc định `true`) → presigned PUT ký cả `Content-Length` (`sis_import_upload_ttl`) vào bucket private `ew-sis-imports` → job watcher HEAD object mỗi `sis_import_watch_interval` và xếp job `csv_import` vào `IDENTITY_SIS_JOBS` (`Nats-Msg-Id import:<id>`) → worker kiểm kích thước, quét clamd, đọc theo contract, chạy pipeline §6 với actor `system:sis-sync:<connection_id>`; quá hạn upload → `expired`. Mỗi import một file một loại bản ghi [Proposed].
+
 ## 4.4. Nhận biết SIS nguồn khi đăng nhập (ADR-0046)
 
 - Mỗi connection gắn **một tenant** và **một tập trường** (`sis_connection_schools`); mỗi trường chỉ một connection active. Do đó từ trường của học sinh luôn suy ra đúng một SIS nguồn.
@@ -251,6 +253,7 @@ sequenceDiagram
 
 - **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ module identity**, nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 - **Bảo vệ khi tải cao:** tối đa `sis_login_sync_concurrency` (20) lookup đồng thời mỗi connection; vượt giới hạn hoặc circuit breaker connection đang mở → nhánh B dùng dữ liệu đồng bộ gần nhất (nếu đủ) hoặc trả `NO_ACTIVE_ENROLLMENT` kèm thông điệp "thử lại sau ít phút"; nhánh C chỉ xếp job. Không có retry đồng bộ trên đường đăng nhập.
+- **Circuit breaker theo connection** (`sis_login_sync_breaker`): 5 lookup lỗi liên tiếp mở mạch 30 giây [Proposed]; khi mở, nhánh B xử lý như vượt giới hạn.
 - **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_class`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).
 - `login_events.sis_connection_id` và kết quả sync được ghi lại (ADR-0046 mục 8).
 - Phạm vi dữ liệu đúng DTO contract (ADR-0021); không lấy trường ngoài contract.
@@ -266,7 +269,7 @@ sequenceDiagram
 
 | Chế độ | Khi nào | Phạm vi | Ghi chú |
 |---|---|---|---|
-| Full sync | Hằng đêm 01:00 ICT [Proposed]; đầu năm học; theo yêu cầu admin | Toàn bộ trường của connection | Phát hiện xóa (bản ghi biến mất) → đánh dấu `missing_in_source`, **không xóa ngay**; sau 2 lần full sync liên tiếp vẫn thiếu → đề xuất deactivate (cần xác nhận nếu > 5% bản ghi) |
+| Full sync | Hằng đêm 01:00 ICT [Proposed]; đầu năm học; theo yêu cầu admin | Toàn bộ trường của connection | Phát hiện xóa (bản ghi biến mất) → đánh dấu `missing_in_source`, **không xóa ngay**; sau 2 lần full sync liên tiếp vẫn thiếu → đề xuất deactivate (`deactivation_review`); vượt `sis_missing_review_ratio` (5%) hai lần liên tiếp → một issue `deactivation_review` cấp trường. Import CSV có file học sinh được coi là full của trường |
 | Delta sync | Mỗi 15 phút giờ hành chính [Proposed], khi trường khai báo capability `delta` | `ListChanges(since)` (`GET /changes`); 410 → full sync | Watermark lưu `sis.sis_connections.delta_watermark` sau khi apply thành công |
 | Webhook | Real-time khi SIS hỗ trợ | Thay đổi đơn lẻ | Endpoint `/internal/sis/webhooks/{connection_id}` chỉ trên gateway nội bộ/allowlist IP; payload `ChangeBatch` theo contract; xác thực HMAC + timestamp ±5 phút + chống replay theo `delivery_id` (`ew:identity:sis:wh:nonce:<id>` TTL 10 phút); đẩy vào JetStream work-queue `IDENTITY_SIS_JOBS`, xử lý như delta |
 | CSV import | Thủ công | File | Như §4.3 |
