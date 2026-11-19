@@ -135,7 +135,8 @@
     },
     "tenantFilter": {
       "label": "Lọc tenant",
-      "all": "Tất cả tenant"
+      "all": "Tất cả tenant",
+      "disabled": "đã tắt"
     },
     "tenantTarget": {
       "label": "Tenant",
@@ -159,7 +160,8 @@
       "label": "Lý do",
       "required": "Vui lòng nhập lý do.",
       "ok": "Xác nhận",
-      "cancel": "Hủy"
+      "cancel": "Hủy",
+      "minLength": "Tối thiểu {{min}} ký tự."
     }
   },
   "error": {
@@ -183,11 +185,13 @@
     "CONFLICT": "Dữ liệu đã thay đổi hoặc bị trùng.",
     "VALIDATION_FAILED": "Dữ liệu nhập chưa hợp lệ. Kiểm tra các trường được đánh dấu.",
     "VERSION_MISMATCH": "Dữ liệu đã được người khác cập nhật. Tải lại rồi thử lại.",
+    "INVALID_STATE_TRANSITION": "Trạng thái hiện tại không cho phép thao tác này.",
     "PRECONDITION_REQUIRED": "Thiếu phiên bản dữ liệu. Tải lại rồi thử lại.",
     "IDEMPOTENCY_KEY_REUSED": "Thao tác trùng với một yêu cầu trước đó có nội dung khác.",
     "IDEMPOTENCY_IN_PROGRESS": "Thao tác trước đó đang được xử lý.",
     "RATE_LIMITED": "Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại.",
     "FEATURE_DISABLED": "Tính năng này đang tạm tắt.",
+    "RETENTION_BELOW_MINIMUM": "Giá trị thấp hơn mức tối thiểu cho phép.",
     "PORTAL_ACCESS_STAFF_ONLY": "Cổng quản trị chỉ dành cho nhân sự.",
     "INVALID_CREDENTIALS": "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.",
     "ACCOUNT_SETUP_REQUIRED": "Tài khoản cần hoàn tất thiết lập.",

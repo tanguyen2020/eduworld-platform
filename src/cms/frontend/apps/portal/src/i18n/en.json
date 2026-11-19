@@ -135,7 +135,8 @@
     },
     "tenantFilter": {
       "label": "Filter tenants",
-      "all": "All tenants"
+      "all": "All tenants",
+      "disabled": "disabled"
     },
     "tenantTarget": {
       "label": "Tenant",
@@ -159,7 +160,8 @@
       "label": "Reason",
       "required": "Enter a reason.",
       "ok": "Confirm",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "minLength": "At least {{min}} characters."
     }
   },
   "error": {
@@ -183,11 +185,13 @@
     "CONFLICT": "The data changed or already exists.",
     "VALIDATION_FAILED": "Some fields are not valid. Check the highlighted fields.",
     "VERSION_MISMATCH": "Someone else updated this data. Reload and try again.",
+    "INVALID_STATE_TRANSITION": "The current state does not allow this action.",
     "PRECONDITION_REQUIRED": "Missing data version. Reload and try again.",
     "IDEMPOTENCY_KEY_REUSED": "This action repeats an earlier request with different content.",
     "IDEMPOTENCY_IN_PROGRESS": "The earlier action is still being processed.",
     "RATE_LIMITED": "Too many actions. Please wait and try again.",
     "FEATURE_DISABLED": "This feature is temporarily turned off.",
+    "RETENTION_BELOW_MINIMUM": "The value is below the allowed minimum.",
     "PORTAL_ACCESS_STAFF_ONLY": "The admin portal is for staff only.",
     "INVALID_CREDENTIALS": "The username, password or authentication code is not correct.",
     "ACCOUNT_SETUP_REQUIRED": "The account setup must be completed.",

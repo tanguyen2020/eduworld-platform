@@ -17,6 +17,21 @@
 
 - Q: Tên thư mục workspace D? → A: `platform-admin` (ADMIN_PORTAL §1.2, RB-603); route `/portal/platform-admin/*`.
 
+### Session 2026-11-19 (triển khai)
+
+Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Proposed], chờ Technical Architect/UX Lead duyệt.
+
+- OQ F057-1 — `previewTenantClone` (T005) chưa có trong contract và backend F045? → A: [Proposed] Không tự thêm contract thay owner F045 (không có backend tương ứng); wizard bỏ bước 3 và hiện "Chưa có API xem trước đồ thị phụ thuộc…" (đúng Clarification 2026-11-16). Cờ `CLONE_PREVIEW_AVAILABLE` trong `api/clones.ts` bật khi owner áp delta.
+- OQ F057-2 — `cancelStudentCleanupRun` (T006) chưa có? → A: [Proposed] Không có nút Hủy; màn ghi rõ "Nút Hủy có khi API cancelStudentCleanupRun được bổ sung" (cờ `CLEANUP_CANCEL_AVAILABLE`). Delta thuộc owner F016.
+- OQ F057-3 — `updateTenant`, `updateCountry`, `updateProvince` bắt buộc `If-Match` nhưng `listTenants`/`listCountries`/`listProvinces` không trả version/ETag từng bản ghi và không có GET từng bản ghi → Portal không biết version khi sửa bản ghi chưa ghi trong phiên? → A: [Proposed] Portal gửi `If-Match` = ETag của lần tạo/sửa gần nhất trong phiên (createTenant/createProvince/update trả `ETag`); khi chưa biết, server trả `428 PRECONDITION_REQUIRED` và Portal hiển thị theo `code`. Đề xuất owner F010 thêm `version` vào `TenantSummary`, `Country`, `Province` (thêm field, không breaking) hoặc operation GET từng bản ghi.
+- OQ F057-4 — `listCatalogSchools` chỉ nhận `X-Tenant-Id` (bắt buộc, backend `TenantRequired`) và không có tham số `status`, trong khi AC-13 nói "lọc tenant, tỉnh, cấp học, trạng thái"? → A: [Proposed] System Admin chọn đúng một tenant ở bộ lọc tenant (quy ước F051-AC-24, `requireSingleTenant`); trạng thái là một cột, màn ghi rõ khoảng trống; đề xuất owner F010 thêm `status`.
+- OQ F057-5 — Vị trí `TenantFilter`/`TenantColumn`/`TargetTenantField`: plan đặt ở `packages/ops-ui/src/tenant/`, nhưng F051 (Done) đã giao `TenantFilter`, `TenantTargetField`, `useTenantColumn`, `withTenantScope` trong `apps/portal/src/shell` và gắn vào topbar? → A: [Proposed] Dùng lại bản F051 (không nhân đôi; component gọi `listTenants` nên không thuộc `ops-ui` — ops-ui không gọi API), bổ sung: phân trang cursor khi cuộn, nhãn "đã tắt", hook `useCrossTenantScope` (`src/shared/tenancy`). Cột Trường cho tenant `unit` chỉ áp dụng khi dòng có trường; các danh sách của F057 (Thùng rác, lần dọn) không có thông tin trường trong contract.
+- OQ F057-6 — Biến môi trường T002 `VITE_EW_INTERNAL_API_BASE_URL`? → A: [Proposed] Đã có từ F050/F051: `apiInternalBaseUrl` của `/config.json` (fallback `VITE_API_INTERNAL_BASE_URL`); không thêm biến mới, không sửa `.env*`.
+- OQ F057-7 — `updateCountry`, `updateProvince`, `putStudentCleanupSettings`, `putChatRetentionSettings`, `putPlatformCurfewSettings` không khai báo `Idempotency-Key` trong contract (dùng `If-Match`), trái với câu chữ AC-20 "mọi thao tác ghi"? → A: [Proposed] Theo contract: các thao tác này an toàn khi thử lại nhờ `If-Match` (PUT/PATCH có version), Portal không gửi khóa; mọi operation có `Idempotency-Key` bắt buộc (gán, gỡ gán, clone, khôi phục, import, duyệt, tạo tenant/tỉnh/kế thừa, sửa tenant) đều gửi và giữ khóa khi thử lại.
+- OQ F057-8 — Chọn "bản ghi" khi clone: không có API liệt kê bản ghi theo tenant + loại dùng chung? → A: [Proposed] Wizard nhận mã bản ghi (UUID, dán nhiều, ≤ `maxItems` 500); màn danh sách của workspace A/B (F053/F054/F079) mở hộp gán/tab "Tenant được gán" kèm bản ghi đã chọn (`?resource_type=&resource_id=`).
+- OQ F057-9 — Plan ghi MSW và ProTable/ProForm? → A: [Proposed] Theo hạ tầng test F051: backend MOCK trong tiến trình (`src/test/mock-backend.ts` + `src/test/platform-backend.ts`, nhãn MOCK) thay MSW; giao diện dùng Ant Design 5 (Table/Form/Steps/Tabs) qua theme ops-ui vì `@ant-design/pro-components` chưa có trong workspace (không thêm dependency ngoài phạm vi).
+- OQ F057-10 — E2E Playwright với backend thật (T019, T040, T046, T049, T048)? → A: [Proposed] Như F051 (OQ F051-9): chưa có backend/realm chạy được trong môi trường này; tiêu chí được kiểm ở mức integration (portal đầy đủ + backend MOCK theo contract), E2E chờ môi trường compose.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Bộ lọc tenant liên tenant của System Admin (Priority: P1) 🎯 MVP

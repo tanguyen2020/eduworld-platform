@@ -136,6 +136,13 @@ const b64url = (s: string) => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').re
 /** MOCK JWT (unsigned, test only) carrying `sub` so the shell can key per-viewer storage. */
 export const fakeJwt = (sub: string, n: number) => `${b64url('{"alg":"none"}')}.${b64url(JSON.stringify({ sub, n }))}.mock-signature-${n}`;
 
+/** JSON bodies are parsed; anything else (multipart CSV upload of F057) is kept as raw text. */
+function parseBody(text: string, contentType: string | undefined): unknown {
+  if (!text) return undefined;
+  if (contentType && !/json/i.test(contentType)) return text;
+  return JSON.parse(text);
+}
+
 export type Handler = (req: RecordedRequest) => Response | undefined | Promise<Response | undefined>;
 
 export class MockPortalBackend {
@@ -194,7 +201,7 @@ export class MockPortalBackend {
       search: url.search,
       gateway: internal ? 'internal' : 'public',
       headers,
-      body: text ? JSON.parse(text) : undefined,
+      body: parseBody(text, headers['content-type']),
     };
     this.requests.push(rec);
     for (const o of this.overrides) {

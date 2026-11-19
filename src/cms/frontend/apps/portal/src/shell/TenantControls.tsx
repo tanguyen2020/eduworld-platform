@@ -3,19 +3,20 @@
 //   cache cleared, permissions reloaded, back to the workspace overview); unsaved drafts are confirmed first; staff of
 //   one tenant only see its name.
 // - TenantFilter (F051-AC-22/26/27): System Admin only (`platform.cross_tenant.read`): searchable multi-select over
-//   `listTenants`, default "Tất cả tenant", kept for the browser session, search cut at the OpenAPI `maxLength`.
+//   `listTenants`, default "Tất cả tenant", kept for the browser session, search cut at the OpenAPI `maxLength`;
+//   pages follow the cursor while scrolling and a disabled tenant stays listed with "đã tắt" (F057 edge cases).
 // - TenantTargetField (F051-AC-25): mandatory target tenant of a System Admin write (optionally "Platform"), no
 //   "all tenants" choice. tenantColumn (F051-AC-23): standard "Tenant" column (name + type) for lists.
 import { App as AntApp, Form, Select, Tag, Typography, theme } from 'antd';
 import type { ColumnType } from 'antd/es/table';
-import { useState } from 'react';
+import { useState, type UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { WorkspaceDef } from '../generated/menu-catalog';
 import { usePermissions } from '../permissions/usePermissions';
 import { useSession } from '../session/SessionProvider';
 import { hasUnsavedChanges } from '../session/unsavedChangesGuard';
-import { clampTenantSearch, useTenantOptions, type TenantSummary } from '../shared/api/hooks/useTenantOptions';
+import { clampTenantSearch, loadMoreOnScroll, useTenantOptions, type TenantSummary } from '../shared/api/hooks/useTenantOptions';
 import { PLATFORM_TARGET } from '../shared/api/withTenantScope';
 import { tenantFilterStore, useTenantFilter } from './tenantFilterStore';
 
@@ -53,8 +54,12 @@ export function TenantSwitcher({ workspace }: { workspace?: WorkspaceDef }) {
   return <TenantSwitcherView tenants={choices} value={scope.tenantId} onChange={onChange} />;
 }
 
-type TenantLike = Pick<TenantSummary, 'tenant_id' | 'name' | 'code'>;
-const tenantOption = (x: TenantLike) => ({ value: x.tenant_id, label: `${x.name} (${x.code})` });
+type TenantLike = Pick<TenantSummary, 'tenant_id' | 'name' | 'code'> & Partial<Pick<TenantSummary, 'status'>>;
+type Translate = (key: string) => string;
+/** "Name (code)", plus "đã tắt" for a disabled tenant (F057 edge case: it keeps its place, clearly marked). */
+export const tenantLabel = (x: TenantLike, t: Translate): string =>
+  x.status === 'disabled' ? `${x.name} (${x.code}) · ${t('shell.tenantFilter.disabled')}` : `${x.name} (${x.code})`;
+const tenantOption = (x: TenantLike, t: Translate) => ({ value: x.tenant_id, label: tenantLabel(x, t) });
 
 /** Presentational switcher (stories, tests): one working tenant among several. */
 export function TenantSwitcherView({ tenants, value, onChange }: { tenants: readonly TenantLike[]; value: string; onChange: (tenantId: string) => void }) {
@@ -67,7 +72,7 @@ export function TenantSwitcherView({ tenants, value, onChange }: { tenants: read
       showSearch
       optionFilterProp="label"
       popupMatchSelectWidth={false}
-      options={tenants.map(tenantOption)}
+      options={tenants.map((x) => tenantOption(x, t))}
     />
   );
 }
@@ -79,10 +84,12 @@ export interface TenantFilterViewProps {
   search: string;
   onSearch: (q: string) => void;
   loading?: boolean;
+  /** Scroll of the dropdown list: loads the next cursor page at its end (F057). */
+  onPopupScroll?: (e: UIEvent<HTMLDivElement>) => void;
 }
 
 /** Presentational System Admin filter: multi-select, empty = "Tất cả tenant", search capped at `q` maxLength. */
-export function TenantFilterView({ options, value, onChange, search, onSearch, loading }: TenantFilterViewProps) {
+export function TenantFilterView({ options, value, onChange, search, onSearch, loading, onPopupScroll }: TenantFilterViewProps) {
   const { t } = useTranslation();
   const { token } = theme.useToken();
   return (
@@ -99,7 +106,8 @@ export function TenantFilterView({ options, value, onChange, search, onSearch, l
       loading={loading}
       maxTagCount="responsive"
       allowClear
-      options={options.map(tenantOption)}
+      onPopupScroll={onPopupScroll}
+      options={options.map((x) => tenantOption(x, t))}
       style={{ minWidth: token.controlHeightLG * 5 }}
     />
   );
@@ -119,6 +127,7 @@ export function TenantFilter() {
       search={search}
       onSearch={setSearch}
       loading={options.isFetching}
+      onPopupScroll={loadMoreOnScroll(options)}
     />
   );
 }
@@ -127,7 +136,7 @@ export function TenantTargetField({ name = 'tenant_target', allowPlatform = fals
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const options = useTenantOptions(search, true);
-  const items = (options.data ?? []).map((x) => ({ value: x.tenant_id, label: `${x.name} (${x.code})` }));
+  const items = (options.data ?? []).map((x) => tenantOption(x, t));
   return (
     <Form.Item name={name} label={t('shell.tenantTarget.label')} rules={[{ required: true, message: t('shell.tenantTarget.required') }]}>
       <Select
@@ -136,6 +145,7 @@ export function TenantTargetField({ name = 'tenant_target', allowPlatform = fals
         searchValue={search}
         onSearch={(v) => setSearch(clampTenantSearch(v))}
         loading={options.isFetching}
+        onPopupScroll={loadMoreOnScroll(options)}
         options={allowPlatform ? [{ value: PLATFORM_TARGET, label: t('shell.tenantTarget.platform') }, ...items] : items}
       />
     </Form.Item>
