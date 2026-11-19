@@ -80,6 +80,8 @@ type QuestionSetVersion struct {
 	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
 	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
 	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy *uuid.UUID `json:"published_by,omitempty"`
 	// QuestionSetID holds the value of the "question_set_id" field.
 	QuestionSetID uuid.UUID `json:"question_set_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -108,7 +110,7 @@ func (*QuestionSetVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case questionsetversion.FieldTenantID, questionsetversion.FieldCreatedBy, questionsetversion.FieldUpdatedBy, questionsetversion.FieldDeletedBy, questionsetversion.FieldReviewerID, questionsetversion.FieldCurriculumVersionID, questionsetversion.FieldBasedOnVersionID, questionsetversion.FieldClonedFromID, questionsetversion.FieldClonedFromTenantID, questionsetversion.FieldClonedBy, questionsetversion.FieldAudioExemptApprovedBy, questionsetversion.FieldSubjectID:
+		case questionsetversion.FieldTenantID, questionsetversion.FieldCreatedBy, questionsetversion.FieldUpdatedBy, questionsetversion.FieldDeletedBy, questionsetversion.FieldReviewerID, questionsetversion.FieldCurriculumVersionID, questionsetversion.FieldBasedOnVersionID, questionsetversion.FieldClonedFromID, questionsetversion.FieldClonedFromTenantID, questionsetversion.FieldClonedBy, questionsetversion.FieldAudioExemptApprovedBy, questionsetversion.FieldPublishedBy, questionsetversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case questionsetversion.FieldTranslationMeta, questionsetversion.FieldTitle, questionsetversion.FieldSummary, questionsetversion.FieldGradeLevels, questionsetversion.FieldTopicIds, questionsetversion.FieldObjectiveIds, questionsetversion.FieldMediaRefs, questionsetversion.FieldWorkedExampleIds, questionsetversion.FieldBody:
 			values[i] = new([]byte)
@@ -343,6 +345,13 @@ func (_m *QuestionSetVersion) assignValues(columns []string, values []any) error
 			} else if value.Valid {
 				_m.AudioExemptApprovedBy = new(uuid.UUID)
 				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
+			}
+		case questionsetversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
 			}
 		case questionsetversion.FieldQuestionSetID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -586,6 +595,11 @@ func (_m *QuestionSetVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.AudioExemptApprovedBy; v != nil {
 		builder.WriteString("audio_exempt_approved_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

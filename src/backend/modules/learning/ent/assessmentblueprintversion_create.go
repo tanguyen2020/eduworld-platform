@@ -418,6 +418,20 @@ func (_c *AssessmentBlueprintVersionCreate) SetNillableAudioExemptApprovedBy(v *
 	return _c
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_c *AssessmentBlueprintVersionCreate) SetPublishedBy(v uuid.UUID) *AssessmentBlueprintVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *AssessmentBlueprintVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *AssessmentBlueprintVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetAssessmentBlueprintID sets the "assessment_blueprint_id" field.
 func (_c *AssessmentBlueprintVersionCreate) SetAssessmentBlueprintID(v uuid.UUID) *AssessmentBlueprintVersionCreate {
 	_c.mutation.SetAssessmentBlueprintID(v)
@@ -852,6 +866,10 @@ func (_c *AssessmentBlueprintVersionCreate) createSpec() (*AssessmentBlueprintVe
 	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
 		_node.AudioExemptApprovedBy = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	if value, ok := _c.mutation.AssessmentBlueprintID(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldAssessmentBlueprintID, field.TypeUUID, value)

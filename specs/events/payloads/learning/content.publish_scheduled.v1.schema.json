@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/content.publish_scheduled.v1.schema.json",
+  "title": "Payload content.publish_scheduled v1 (module learning, owner F026)",
+  "description": "Một version approved được hẹn giờ xuất bản (content.scheduled_publications). Consumer: AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_type",
+    "item_id",
+    "version_id",
+    "version",
+    "schedule_id",
+    "publish_at",
+    "owner_scope",
+    "tenant_id",
+    "requested_by"
+  ],
+  "properties": {
+    "item_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType"
+    },
+    "item_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "schedule_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "publish_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "requested_by": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "examples": [
+    {
+      "item_type": "lesson",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-000000000601",
+      "version_id": "0193a5f4-6c1e-7b2a-9d1f-000000000602",
+      "version": 2,
+      "schedule_id": "0193a5f4-6c1e-7b2a-9d1f-000000000620",
+      "publish_at": "2026-11-21T00:00:00Z",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "requested_by": "0193a5f4-6c1e-7b2a-9d1f-000000000605"
+    }
+  ]
+}

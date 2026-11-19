@@ -31,6 +31,7 @@ type SchemaConfig struct {
 	QuestionVersion            string // QuestionVersion table.
 	QuestionVersionObjective   string // QuestionVersionObjective table.
 	ReviewTask                 string // ReviewTask table.
+	ScheduledPublication       string // ScheduledPublication table.
 	Subject                    string // Subject table.
 	SubjectGrade               string // SubjectGrade table.
 	TenantResourceAssignment   string // TenantResourceAssignment table.

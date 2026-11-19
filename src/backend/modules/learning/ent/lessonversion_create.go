@@ -418,6 +418,20 @@ func (_c *LessonVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *L
 	return _c
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_c *LessonVersionCreate) SetPublishedBy(v uuid.UUID) *LessonVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *LessonVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *LessonVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetLessonID sets the "lesson_id" field.
 func (_c *LessonVersionCreate) SetLessonID(v uuid.UUID) *LessonVersionCreate {
 	_c.mutation.SetLessonID(v)
@@ -852,6 +866,10 @@ func (_c *LessonVersionCreate) createSpec() (*LessonVersion, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
 		_spec.SetField(lessonversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
 		_node.AudioExemptApprovedBy = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(lessonversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	if value, ok := _c.mutation.LessonID(); ok {
 		_spec.SetField(lessonversion.FieldLessonID, field.TypeUUID, value)

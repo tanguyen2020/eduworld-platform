@@ -59,6 +59,26 @@ func (w TranslationWorker) RunOnce(ctx context.Context) (int, error) {
 	return w.Runner.RunPendingTranslations(ctx, batch)
 }
 
+// ScheduleRunner applies due scheduled publications (command.Releases, F026).
+type ScheduleRunner interface {
+	RunDueSchedules(ctx context.Context, limit int) (int, error)
+}
+
+// ScheduleWorker is the job content-scheduled-publish (F026 T036): every minute it applies up to Batch due schedules.
+type ScheduleWorker struct {
+	Runner ScheduleRunner
+	Batch  int
+}
+
+// RunOnce applies one batch and returns how many schedules were applied.
+func (w ScheduleWorker) RunOnce(ctx context.Context) (int, error) {
+	batch := w.Batch
+	if batch <= 0 {
+		batch = 50
+	}
+	return w.Runner.RunDueSchedules(ctx, batch)
+}
+
 // Seeder is what the seed needs of the curriculum use cases (command.Curriculum).
 type Seeder interface {
 	SeedSubjects(ctx context.Context, subjects []command.SubjectInput) (int, error)

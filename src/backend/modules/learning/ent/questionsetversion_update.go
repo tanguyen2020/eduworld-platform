@@ -399,6 +399,26 @@ func (_u *QuestionSetVersionUpdate) ClearAudioExemptApprovedBy() *QuestionSetVer
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *QuestionSetVersionUpdate) SetPublishedBy(v uuid.UUID) *QuestionSetVersionUpdate {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *QuestionSetVersionUpdate) SetNillablePublishedBy(v *uuid.UUID) *QuestionSetVersionUpdate {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *QuestionSetVersionUpdate) ClearPublishedBy() *QuestionSetVersionUpdate {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *QuestionSetVersionUpdate) SetTitle(v jsontext.Value) *QuestionSetVersionUpdate {
 	_u.mutation.SetTitle(v)
@@ -763,6 +783,12 @@ func (_u *QuestionSetVersionUpdate) sqlSave(ctx context.Context) (_node int, err
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(questionsetversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(questionsetversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(questionsetversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(questionsetversion.FieldTitle, field.TypeJSON, value)
@@ -1226,6 +1252,26 @@ func (_u *QuestionSetVersionUpdateOne) ClearAudioExemptApprovedBy() *QuestionSet
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *QuestionSetVersionUpdateOne) SetPublishedBy(v uuid.UUID) *QuestionSetVersionUpdateOne {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *QuestionSetVersionUpdateOne) SetNillablePublishedBy(v *uuid.UUID) *QuestionSetVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *QuestionSetVersionUpdateOne) ClearPublishedBy() *QuestionSetVersionUpdateOne {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *QuestionSetVersionUpdateOne) SetTitle(v jsontext.Value) *QuestionSetVersionUpdateOne {
 	_u.mutation.SetTitle(v)
@@ -1620,6 +1666,12 @@ func (_u *QuestionSetVersionUpdateOne) sqlSave(ctx context.Context) (_node *Ques
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(questionsetversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(questionsetversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(questionsetversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(questionsetversion.FieldTitle, field.TypeJSON, value)

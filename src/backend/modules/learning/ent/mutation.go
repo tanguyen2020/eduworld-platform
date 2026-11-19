@@ -38,6 +38,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -82,6 +83,7 @@ const (
 	TypeQuestionVersion            = "QuestionVersion"
 	TypeQuestionVersionObjective   = "QuestionVersionObjective"
 	TypeReviewTask                 = "ReviewTask"
+	TypeScheduledPublication       = "ScheduledPublication"
 	TypeSubject                    = "Subject"
 	TypeSubjectGrade               = "SubjectGrade"
 	TypeTenantResourceAssignment   = "TenantResourceAssignment"
@@ -1555,6 +1557,7 @@ type AssessmentBlueprintVersionMutation struct {
 	appendtranslation_meta   jsontext.Value
 	audio_exempt_reason      *string
 	audio_exempt_approved_by *uuid.UUID
+	published_by             *uuid.UUID
 	assessment_blueprint_id  *uuid.UUID
 	title                    *jsontext.Value
 	appendtitle              jsontext.Value
@@ -3105,6 +3108,55 @@ func (m *AssessmentBlueprintVersionMutation) ResetAudioExemptApprovedBy() {
 	delete(m.clearedFields, assessmentblueprintversion.FieldAudioExemptApprovedBy)
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (m *AssessmentBlueprintVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *AssessmentBlueprintVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the AssessmentBlueprintVersion entity.
+// If the AssessmentBlueprintVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AssessmentBlueprintVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *AssessmentBlueprintVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[assessmentblueprintversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *AssessmentBlueprintVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[assessmentblueprintversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *AssessmentBlueprintVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, assessmentblueprintversion.FieldPublishedBy)
+}
+
 // SetAssessmentBlueprintID sets the "assessment_blueprint_id" field.
 func (m *AssessmentBlueprintVersionMutation) SetAssessmentBlueprintID(u uuid.UUID) {
 	m.assessment_blueprint_id = &u
@@ -3646,7 +3698,7 @@ func (m *AssessmentBlueprintVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AssessmentBlueprintVersionMutation) Fields() []string {
-	fields := make([]string, 0, 40)
+	fields := make([]string, 0, 41)
 	if m.tenant_id != nil {
 		fields = append(fields, assessmentblueprintversion.FieldTenantID)
 	}
@@ -3736,6 +3788,9 @@ func (m *AssessmentBlueprintVersionMutation) Fields() []string {
 	}
 	if m.audio_exempt_approved_by != nil {
 		fields = append(fields, assessmentblueprintversion.FieldAudioExemptApprovedBy)
+	}
+	if m.published_by != nil {
+		fields = append(fields, assessmentblueprintversion.FieldPublishedBy)
 	}
 	if m.assessment_blueprint_id != nil {
 		fields = append(fields, assessmentblueprintversion.FieldAssessmentBlueprintID)
@@ -3835,6 +3890,8 @@ func (m *AssessmentBlueprintVersionMutation) Field(name string) (ent.Value, bool
 		return m.AudioExemptReason()
 	case assessmentblueprintversion.FieldAudioExemptApprovedBy:
 		return m.AudioExemptApprovedBy()
+	case assessmentblueprintversion.FieldPublishedBy:
+		return m.PublishedBy()
 	case assessmentblueprintversion.FieldAssessmentBlueprintID:
 		return m.AssessmentBlueprintID()
 	case assessmentblueprintversion.FieldTitle:
@@ -3924,6 +3981,8 @@ func (m *AssessmentBlueprintVersionMutation) OldField(ctx context.Context, name 
 		return m.OldAudioExemptReason(ctx)
 	case assessmentblueprintversion.FieldAudioExemptApprovedBy:
 		return m.OldAudioExemptApprovedBy(ctx)
+	case assessmentblueprintversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	case assessmentblueprintversion.FieldAssessmentBlueprintID:
 		return m.OldAssessmentBlueprintID(ctx)
 	case assessmentblueprintversion.FieldTitle:
@@ -4163,6 +4222,13 @@ func (m *AssessmentBlueprintVersionMutation) SetField(name string, value ent.Val
 		}
 		m.SetAudioExemptApprovedBy(v)
 		return nil
+	case assessmentblueprintversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
 	case assessmentblueprintversion.FieldAssessmentBlueprintID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -4356,6 +4422,9 @@ func (m *AssessmentBlueprintVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(assessmentblueprintversion.FieldAudioExemptApprovedBy) {
 		fields = append(fields, assessmentblueprintversion.FieldAudioExemptApprovedBy)
 	}
+	if m.FieldCleared(assessmentblueprintversion.FieldPublishedBy) {
+		fields = append(fields, assessmentblueprintversion.FieldPublishedBy)
+	}
 	if m.FieldCleared(assessmentblueprintversion.FieldSummary) {
 		fields = append(fields, assessmentblueprintversion.FieldSummary)
 	}
@@ -4441,6 +4510,9 @@ func (m *AssessmentBlueprintVersionMutation) ClearField(name string) error {
 		return nil
 	case assessmentblueprintversion.FieldAudioExemptApprovedBy:
 		m.ClearAudioExemptApprovedBy()
+		return nil
+	case assessmentblueprintversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	case assessmentblueprintversion.FieldSummary:
 		m.ClearSummary()
@@ -4545,6 +4617,9 @@ func (m *AssessmentBlueprintVersionMutation) ResetField(name string) error {
 		return nil
 	case assessmentblueprintversion.FieldAudioExemptApprovedBy:
 		m.ResetAudioExemptApprovedBy()
+		return nil
+	case assessmentblueprintversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	case assessmentblueprintversion.FieldAssessmentBlueprintID:
 		m.ResetAssessmentBlueprintID()
@@ -15056,6 +15131,7 @@ type LearningMaterialVersionMutation struct {
 	appendtranslation_meta   jsontext.Value
 	audio_exempt_reason      *string
 	audio_exempt_approved_by *uuid.UUID
+	published_by             *uuid.UUID
 	learning_material_id     *uuid.UUID
 	title                    *jsontext.Value
 	appendtitle              jsontext.Value
@@ -16606,6 +16682,55 @@ func (m *LearningMaterialVersionMutation) ResetAudioExemptApprovedBy() {
 	delete(m.clearedFields, learningmaterialversion.FieldAudioExemptApprovedBy)
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (m *LearningMaterialVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *LearningMaterialVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the LearningMaterialVersion entity.
+// If the LearningMaterialVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LearningMaterialVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *LearningMaterialVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[learningmaterialversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *LearningMaterialVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[learningmaterialversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *LearningMaterialVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, learningmaterialversion.FieldPublishedBy)
+}
+
 // SetLearningMaterialID sets the "learning_material_id" field.
 func (m *LearningMaterialVersionMutation) SetLearningMaterialID(u uuid.UUID) {
 	m.learning_material_id = &u
@@ -17147,7 +17272,7 @@ func (m *LearningMaterialVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LearningMaterialVersionMutation) Fields() []string {
-	fields := make([]string, 0, 40)
+	fields := make([]string, 0, 41)
 	if m.tenant_id != nil {
 		fields = append(fields, learningmaterialversion.FieldTenantID)
 	}
@@ -17237,6 +17362,9 @@ func (m *LearningMaterialVersionMutation) Fields() []string {
 	}
 	if m.audio_exempt_approved_by != nil {
 		fields = append(fields, learningmaterialversion.FieldAudioExemptApprovedBy)
+	}
+	if m.published_by != nil {
+		fields = append(fields, learningmaterialversion.FieldPublishedBy)
 	}
 	if m.learning_material_id != nil {
 		fields = append(fields, learningmaterialversion.FieldLearningMaterialID)
@@ -17336,6 +17464,8 @@ func (m *LearningMaterialVersionMutation) Field(name string) (ent.Value, bool) {
 		return m.AudioExemptReason()
 	case learningmaterialversion.FieldAudioExemptApprovedBy:
 		return m.AudioExemptApprovedBy()
+	case learningmaterialversion.FieldPublishedBy:
+		return m.PublishedBy()
 	case learningmaterialversion.FieldLearningMaterialID:
 		return m.LearningMaterialID()
 	case learningmaterialversion.FieldTitle:
@@ -17425,6 +17555,8 @@ func (m *LearningMaterialVersionMutation) OldField(ctx context.Context, name str
 		return m.OldAudioExemptReason(ctx)
 	case learningmaterialversion.FieldAudioExemptApprovedBy:
 		return m.OldAudioExemptApprovedBy(ctx)
+	case learningmaterialversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	case learningmaterialversion.FieldLearningMaterialID:
 		return m.OldLearningMaterialID(ctx)
 	case learningmaterialversion.FieldTitle:
@@ -17664,6 +17796,13 @@ func (m *LearningMaterialVersionMutation) SetField(name string, value ent.Value)
 		}
 		m.SetAudioExemptApprovedBy(v)
 		return nil
+	case learningmaterialversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
 	case learningmaterialversion.FieldLearningMaterialID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -17857,6 +17996,9 @@ func (m *LearningMaterialVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(learningmaterialversion.FieldAudioExemptApprovedBy) {
 		fields = append(fields, learningmaterialversion.FieldAudioExemptApprovedBy)
 	}
+	if m.FieldCleared(learningmaterialversion.FieldPublishedBy) {
+		fields = append(fields, learningmaterialversion.FieldPublishedBy)
+	}
 	if m.FieldCleared(learningmaterialversion.FieldSummary) {
 		fields = append(fields, learningmaterialversion.FieldSummary)
 	}
@@ -17942,6 +18084,9 @@ func (m *LearningMaterialVersionMutation) ClearField(name string) error {
 		return nil
 	case learningmaterialversion.FieldAudioExemptApprovedBy:
 		m.ClearAudioExemptApprovedBy()
+		return nil
+	case learningmaterialversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	case learningmaterialversion.FieldSummary:
 		m.ClearSummary()
@@ -18046,6 +18191,9 @@ func (m *LearningMaterialVersionMutation) ResetField(name string) error {
 		return nil
 	case learningmaterialversion.FieldAudioExemptApprovedBy:
 		m.ResetAudioExemptApprovedBy()
+		return nil
+	case learningmaterialversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	case learningmaterialversion.FieldLearningMaterialID:
 		m.ResetLearningMaterialID()
@@ -21259,6 +21407,7 @@ type LessonVersionMutation struct {
 	appendtranslation_meta   jsontext.Value
 	audio_exempt_reason      *string
 	audio_exempt_approved_by *uuid.UUID
+	published_by             *uuid.UUID
 	lesson_id                *uuid.UUID
 	title                    *jsontext.Value
 	appendtitle              jsontext.Value
@@ -22809,6 +22958,55 @@ func (m *LessonVersionMutation) ResetAudioExemptApprovedBy() {
 	delete(m.clearedFields, lessonversion.FieldAudioExemptApprovedBy)
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (m *LessonVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *LessonVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the LessonVersion entity.
+// If the LessonVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LessonVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *LessonVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[lessonversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *LessonVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[lessonversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *LessonVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, lessonversion.FieldPublishedBy)
+}
+
 // SetLessonID sets the "lesson_id" field.
 func (m *LessonVersionMutation) SetLessonID(u uuid.UUID) {
 	m.lesson_id = &u
@@ -23350,7 +23548,7 @@ func (m *LessonVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LessonVersionMutation) Fields() []string {
-	fields := make([]string, 0, 40)
+	fields := make([]string, 0, 41)
 	if m.tenant_id != nil {
 		fields = append(fields, lessonversion.FieldTenantID)
 	}
@@ -23440,6 +23638,9 @@ func (m *LessonVersionMutation) Fields() []string {
 	}
 	if m.audio_exempt_approved_by != nil {
 		fields = append(fields, lessonversion.FieldAudioExemptApprovedBy)
+	}
+	if m.published_by != nil {
+		fields = append(fields, lessonversion.FieldPublishedBy)
 	}
 	if m.lesson_id != nil {
 		fields = append(fields, lessonversion.FieldLessonID)
@@ -23539,6 +23740,8 @@ func (m *LessonVersionMutation) Field(name string) (ent.Value, bool) {
 		return m.AudioExemptReason()
 	case lessonversion.FieldAudioExemptApprovedBy:
 		return m.AudioExemptApprovedBy()
+	case lessonversion.FieldPublishedBy:
+		return m.PublishedBy()
 	case lessonversion.FieldLessonID:
 		return m.LessonID()
 	case lessonversion.FieldTitle:
@@ -23628,6 +23831,8 @@ func (m *LessonVersionMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldAudioExemptReason(ctx)
 	case lessonversion.FieldAudioExemptApprovedBy:
 		return m.OldAudioExemptApprovedBy(ctx)
+	case lessonversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	case lessonversion.FieldLessonID:
 		return m.OldLessonID(ctx)
 	case lessonversion.FieldTitle:
@@ -23867,6 +24072,13 @@ func (m *LessonVersionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAudioExemptApprovedBy(v)
 		return nil
+	case lessonversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
 	case lessonversion.FieldLessonID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -24060,6 +24272,9 @@ func (m *LessonVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(lessonversion.FieldAudioExemptApprovedBy) {
 		fields = append(fields, lessonversion.FieldAudioExemptApprovedBy)
 	}
+	if m.FieldCleared(lessonversion.FieldPublishedBy) {
+		fields = append(fields, lessonversion.FieldPublishedBy)
+	}
 	if m.FieldCleared(lessonversion.FieldSummary) {
 		fields = append(fields, lessonversion.FieldSummary)
 	}
@@ -24145,6 +24360,9 @@ func (m *LessonVersionMutation) ClearField(name string) error {
 		return nil
 	case lessonversion.FieldAudioExemptApprovedBy:
 		m.ClearAudioExemptApprovedBy()
+		return nil
+	case lessonversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	case lessonversion.FieldSummary:
 		m.ClearSummary()
@@ -24249,6 +24467,9 @@ func (m *LessonVersionMutation) ResetField(name string) error {
 		return nil
 	case lessonversion.FieldAudioExemptApprovedBy:
 		m.ResetAudioExemptApprovedBy()
+		return nil
+	case lessonversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	case lessonversion.FieldLessonID:
 		m.ResetLessonID()
@@ -34563,6 +34784,7 @@ type QuestionSetVersionMutation struct {
 	appendtranslation_meta   jsontext.Value
 	audio_exempt_reason      *string
 	audio_exempt_approved_by *uuid.UUID
+	published_by             *uuid.UUID
 	question_set_id          *uuid.UUID
 	title                    *jsontext.Value
 	appendtitle              jsontext.Value
@@ -36113,6 +36335,55 @@ func (m *QuestionSetVersionMutation) ResetAudioExemptApprovedBy() {
 	delete(m.clearedFields, questionsetversion.FieldAudioExemptApprovedBy)
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (m *QuestionSetVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *QuestionSetVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the QuestionSetVersion entity.
+// If the QuestionSetVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionSetVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *QuestionSetVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[questionsetversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *QuestionSetVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[questionsetversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *QuestionSetVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, questionsetversion.FieldPublishedBy)
+}
+
 // SetQuestionSetID sets the "question_set_id" field.
 func (m *QuestionSetVersionMutation) SetQuestionSetID(u uuid.UUID) {
 	m.question_set_id = &u
@@ -36654,7 +36925,7 @@ func (m *QuestionSetVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QuestionSetVersionMutation) Fields() []string {
-	fields := make([]string, 0, 40)
+	fields := make([]string, 0, 41)
 	if m.tenant_id != nil {
 		fields = append(fields, questionsetversion.FieldTenantID)
 	}
@@ -36744,6 +37015,9 @@ func (m *QuestionSetVersionMutation) Fields() []string {
 	}
 	if m.audio_exempt_approved_by != nil {
 		fields = append(fields, questionsetversion.FieldAudioExemptApprovedBy)
+	}
+	if m.published_by != nil {
+		fields = append(fields, questionsetversion.FieldPublishedBy)
 	}
 	if m.question_set_id != nil {
 		fields = append(fields, questionsetversion.FieldQuestionSetID)
@@ -36843,6 +37117,8 @@ func (m *QuestionSetVersionMutation) Field(name string) (ent.Value, bool) {
 		return m.AudioExemptReason()
 	case questionsetversion.FieldAudioExemptApprovedBy:
 		return m.AudioExemptApprovedBy()
+	case questionsetversion.FieldPublishedBy:
+		return m.PublishedBy()
 	case questionsetversion.FieldQuestionSetID:
 		return m.QuestionSetID()
 	case questionsetversion.FieldTitle:
@@ -36932,6 +37208,8 @@ func (m *QuestionSetVersionMutation) OldField(ctx context.Context, name string) 
 		return m.OldAudioExemptReason(ctx)
 	case questionsetversion.FieldAudioExemptApprovedBy:
 		return m.OldAudioExemptApprovedBy(ctx)
+	case questionsetversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	case questionsetversion.FieldQuestionSetID:
 		return m.OldQuestionSetID(ctx)
 	case questionsetversion.FieldTitle:
@@ -37171,6 +37449,13 @@ func (m *QuestionSetVersionMutation) SetField(name string, value ent.Value) erro
 		}
 		m.SetAudioExemptApprovedBy(v)
 		return nil
+	case questionsetversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
 	case questionsetversion.FieldQuestionSetID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -37364,6 +37649,9 @@ func (m *QuestionSetVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(questionsetversion.FieldAudioExemptApprovedBy) {
 		fields = append(fields, questionsetversion.FieldAudioExemptApprovedBy)
 	}
+	if m.FieldCleared(questionsetversion.FieldPublishedBy) {
+		fields = append(fields, questionsetversion.FieldPublishedBy)
+	}
 	if m.FieldCleared(questionsetversion.FieldSummary) {
 		fields = append(fields, questionsetversion.FieldSummary)
 	}
@@ -37449,6 +37737,9 @@ func (m *QuestionSetVersionMutation) ClearField(name string) error {
 		return nil
 	case questionsetversion.FieldAudioExemptApprovedBy:
 		m.ClearAudioExemptApprovedBy()
+		return nil
+	case questionsetversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	case questionsetversion.FieldSummary:
 		m.ClearSummary()
@@ -37553,6 +37844,9 @@ func (m *QuestionSetVersionMutation) ResetField(name string) error {
 		return nil
 	case questionsetversion.FieldAudioExemptApprovedBy:
 		m.ResetAudioExemptApprovedBy()
+		return nil
+	case questionsetversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	case questionsetversion.FieldQuestionSetID:
 		m.ResetQuestionSetID()
@@ -37675,6 +37969,7 @@ type QuestionVersionMutation struct {
 	appendtranslation_meta   jsontext.Value
 	audio_exempt_reason      *string
 	audio_exempt_approved_by *uuid.UUID
+	published_by             *uuid.UUID
 	question_id              *uuid.UUID
 	_type                    *string
 	stem                     *jsontext.Value
@@ -39231,6 +39526,55 @@ func (m *QuestionVersionMutation) ResetAudioExemptApprovedBy() {
 	delete(m.clearedFields, questionversion.FieldAudioExemptApprovedBy)
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (m *QuestionVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *QuestionVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *QuestionVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[questionversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *QuestionVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *QuestionVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, questionversion.FieldPublishedBy)
+}
+
 // SetQuestionID sets the "question_id" field.
 func (m *QuestionVersionMutation) SetQuestionID(u uuid.UUID) {
 	m.question_id = &u
@@ -40394,7 +40738,7 @@ func (m *QuestionVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QuestionVersionMutation) Fields() []string {
-	fields := make([]string, 0, 52)
+	fields := make([]string, 0, 53)
 	if m.tenant_id != nil {
 		fields = append(fields, questionversion.FieldTenantID)
 	}
@@ -40484,6 +40828,9 @@ func (m *QuestionVersionMutation) Fields() []string {
 	}
 	if m.audio_exempt_approved_by != nil {
 		fields = append(fields, questionversion.FieldAudioExemptApprovedBy)
+	}
+	if m.published_by != nil {
+		fields = append(fields, questionversion.FieldPublishedBy)
 	}
 	if m.question_id != nil {
 		fields = append(fields, questionversion.FieldQuestionID)
@@ -40619,6 +40966,8 @@ func (m *QuestionVersionMutation) Field(name string) (ent.Value, bool) {
 		return m.AudioExemptReason()
 	case questionversion.FieldAudioExemptApprovedBy:
 		return m.AudioExemptApprovedBy()
+	case questionversion.FieldPublishedBy:
+		return m.PublishedBy()
 	case questionversion.FieldQuestionID:
 		return m.QuestionID()
 	case questionversion.FieldType:
@@ -40732,6 +41081,8 @@ func (m *QuestionVersionMutation) OldField(ctx context.Context, name string) (en
 		return m.OldAudioExemptReason(ctx)
 	case questionversion.FieldAudioExemptApprovedBy:
 		return m.OldAudioExemptApprovedBy(ctx)
+	case questionversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	case questionversion.FieldQuestionID:
 		return m.OldQuestionID(ctx)
 	case questionversion.FieldType:
@@ -40994,6 +41345,13 @@ func (m *QuestionVersionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAudioExemptApprovedBy(v)
+		return nil
+	case questionversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
 		return nil
 	case questionversion.FieldQuestionID:
 		v, ok := value.(uuid.UUID)
@@ -41305,6 +41663,9 @@ func (m *QuestionVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(questionversion.FieldAudioExemptApprovedBy) {
 		fields = append(fields, questionversion.FieldAudioExemptApprovedBy)
 	}
+	if m.FieldCleared(questionversion.FieldPublishedBy) {
+		fields = append(fields, questionversion.FieldPublishedBy)
+	}
 	if m.FieldCleared(questionversion.FieldExplanation) {
 		fields = append(fields, questionversion.FieldExplanation)
 	}
@@ -41402,6 +41763,9 @@ func (m *QuestionVersionMutation) ClearField(name string) error {
 		return nil
 	case questionversion.FieldAudioExemptApprovedBy:
 		m.ClearAudioExemptApprovedBy()
+		return nil
+	case questionversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	case questionversion.FieldExplanation:
 		m.ClearExplanation()
@@ -41521,6 +41885,9 @@ func (m *QuestionVersionMutation) ResetField(name string) error {
 		return nil
 	case questionversion.FieldAudioExemptApprovedBy:
 		m.ResetAudioExemptApprovedBy()
+		return nil
+	case questionversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	case questionversion.FieldQuestionID:
 		m.ResetQuestionID()
@@ -44681,6 +45048,1680 @@ func (m *ReviewTaskMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ReviewTaskMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ReviewTask edge %s", name)
+}
+
+// ScheduledPublicationMutation represents an operation that mutates the ScheduledPublication nodes in the graph.
+type ScheduledPublicationMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	tenant_id          *uuid.UUID
+	created_at         *time.Time
+	created_by         *uuid.UUID
+	updated_at         *time.Time
+	updated_by         *uuid.UUID
+	deleted_at         *time.Time
+	deleted_by         *uuid.UUID
+	delete_reason      *string
+	version            *int64
+	addversion         *int64
+	item_type          *string
+	item_id            *uuid.UUID
+	version_id         *uuid.UUID
+	version_no         *int
+	addversion_no      *int
+	publish_at         *time.Time
+	status             *string
+	failure_code       *string
+	applied_release_id *uuid.UUID
+	change_note        *string
+	requested_by       *uuid.UUID
+	cancelled_by       *uuid.UUID
+	idempotency_key    *string
+	clearedFields      map[string]struct{}
+	done               bool
+	oldValue           func(context.Context) (*ScheduledPublication, error)
+	predicates         []predicate.ScheduledPublication
+}
+
+var _ ent.Mutation = (*ScheduledPublicationMutation)(nil)
+
+// scheduledpublicationOption allows management of the mutation configuration using functional options.
+type scheduledpublicationOption func(*ScheduledPublicationMutation)
+
+// newScheduledPublicationMutation creates new mutation for the ScheduledPublication entity.
+func newScheduledPublicationMutation(c config, op Op, opts ...scheduledpublicationOption) *ScheduledPublicationMutation {
+	m := &ScheduledPublicationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeScheduledPublication,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withScheduledPublicationID sets the ID field of the mutation.
+func withScheduledPublicationID(id uuid.UUID) scheduledpublicationOption {
+	return func(m *ScheduledPublicationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ScheduledPublication
+		)
+		m.oldValue = func(ctx context.Context) (*ScheduledPublication, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ScheduledPublication.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withScheduledPublication sets the old ScheduledPublication of the mutation.
+func withScheduledPublication(node *ScheduledPublication) scheduledpublicationOption {
+	return func(m *ScheduledPublicationMutation) {
+		m.oldValue = func(context.Context) (*ScheduledPublication, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ScheduledPublicationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ScheduledPublicationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ScheduledPublication entities.
+func (m *ScheduledPublicationMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ScheduledPublicationMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ScheduledPublicationMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ScheduledPublication.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ScheduledPublicationMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ScheduledPublicationMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *ScheduledPublicationMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[scheduledpublication.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ScheduledPublicationMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, scheduledpublication.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ScheduledPublicationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ScheduledPublicationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ScheduledPublicationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ScheduledPublicationMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ScheduledPublicationMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ScheduledPublicationMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[scheduledpublication.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ScheduledPublicationMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, scheduledpublication.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ScheduledPublicationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ScheduledPublicationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ScheduledPublicationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ScheduledPublicationMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ScheduledPublicationMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ScheduledPublicationMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[scheduledpublication.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ScheduledPublicationMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, scheduledpublication.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ScheduledPublicationMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ScheduledPublicationMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ScheduledPublicationMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[scheduledpublication.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ScheduledPublicationMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, scheduledpublication.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *ScheduledPublicationMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *ScheduledPublicationMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *ScheduledPublicationMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[scheduledpublication.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *ScheduledPublicationMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, scheduledpublication.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *ScheduledPublicationMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *ScheduledPublicationMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *ScheduledPublicationMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[scheduledpublication.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *ScheduledPublicationMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, scheduledpublication.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *ScheduledPublicationMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ScheduledPublicationMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ScheduledPublicationMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ScheduledPublicationMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ScheduledPublicationMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetItemType sets the "item_type" field.
+func (m *ScheduledPublicationMutation) SetItemType(s string) {
+	m.item_type = &s
+}
+
+// ItemType returns the value of the "item_type" field in the mutation.
+func (m *ScheduledPublicationMutation) ItemType() (r string, exists bool) {
+	v := m.item_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemType returns the old "item_type" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldItemType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemType: %w", err)
+	}
+	return oldValue.ItemType, nil
+}
+
+// ResetItemType resets all changes to the "item_type" field.
+func (m *ScheduledPublicationMutation) ResetItemType() {
+	m.item_type = nil
+}
+
+// SetItemID sets the "item_id" field.
+func (m *ScheduledPublicationMutation) SetItemID(u uuid.UUID) {
+	m.item_id = &u
+}
+
+// ItemID returns the value of the "item_id" field in the mutation.
+func (m *ScheduledPublicationMutation) ItemID() (r uuid.UUID, exists bool) {
+	v := m.item_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemID returns the old "item_id" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldItemID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemID: %w", err)
+	}
+	return oldValue.ItemID, nil
+}
+
+// ResetItemID resets all changes to the "item_id" field.
+func (m *ScheduledPublicationMutation) ResetItemID() {
+	m.item_id = nil
+}
+
+// SetVersionID sets the "version_id" field.
+func (m *ScheduledPublicationMutation) SetVersionID(u uuid.UUID) {
+	m.version_id = &u
+}
+
+// VersionID returns the value of the "version_id" field in the mutation.
+func (m *ScheduledPublicationMutation) VersionID() (r uuid.UUID, exists bool) {
+	v := m.version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionID returns the old "version_id" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionID: %w", err)
+	}
+	return oldValue.VersionID, nil
+}
+
+// ResetVersionID resets all changes to the "version_id" field.
+func (m *ScheduledPublicationMutation) ResetVersionID() {
+	m.version_id = nil
+}
+
+// SetVersionNo sets the "version_no" field.
+func (m *ScheduledPublicationMutation) SetVersionNo(i int) {
+	m.version_no = &i
+	m.addversion_no = nil
+}
+
+// VersionNo returns the value of the "version_no" field in the mutation.
+func (m *ScheduledPublicationMutation) VersionNo() (r int, exists bool) {
+	v := m.version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionNo returns the old "version_no" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionNo: %w", err)
+	}
+	return oldValue.VersionNo, nil
+}
+
+// AddVersionNo adds i to the "version_no" field.
+func (m *ScheduledPublicationMutation) AddVersionNo(i int) {
+	if m.addversion_no != nil {
+		*m.addversion_no += i
+	} else {
+		m.addversion_no = &i
+	}
+}
+
+// AddedVersionNo returns the value that was added to the "version_no" field in this mutation.
+func (m *ScheduledPublicationMutation) AddedVersionNo() (r int, exists bool) {
+	v := m.addversion_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionNo resets all changes to the "version_no" field.
+func (m *ScheduledPublicationMutation) ResetVersionNo() {
+	m.version_no = nil
+	m.addversion_no = nil
+}
+
+// SetPublishAt sets the "publish_at" field.
+func (m *ScheduledPublicationMutation) SetPublishAt(t time.Time) {
+	m.publish_at = &t
+}
+
+// PublishAt returns the value of the "publish_at" field in the mutation.
+func (m *ScheduledPublicationMutation) PublishAt() (r time.Time, exists bool) {
+	v := m.publish_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishAt returns the old "publish_at" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldPublishAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishAt: %w", err)
+	}
+	return oldValue.PublishAt, nil
+}
+
+// ResetPublishAt resets all changes to the "publish_at" field.
+func (m *ScheduledPublicationMutation) ResetPublishAt() {
+	m.publish_at = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ScheduledPublicationMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ScheduledPublicationMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ScheduledPublicationMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetFailureCode sets the "failure_code" field.
+func (m *ScheduledPublicationMutation) SetFailureCode(s string) {
+	m.failure_code = &s
+}
+
+// FailureCode returns the value of the "failure_code" field in the mutation.
+func (m *ScheduledPublicationMutation) FailureCode() (r string, exists bool) {
+	v := m.failure_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailureCode returns the old "failure_code" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldFailureCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailureCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailureCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailureCode: %w", err)
+	}
+	return oldValue.FailureCode, nil
+}
+
+// ClearFailureCode clears the value of the "failure_code" field.
+func (m *ScheduledPublicationMutation) ClearFailureCode() {
+	m.failure_code = nil
+	m.clearedFields[scheduledpublication.FieldFailureCode] = struct{}{}
+}
+
+// FailureCodeCleared returns if the "failure_code" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) FailureCodeCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldFailureCode]
+	return ok
+}
+
+// ResetFailureCode resets all changes to the "failure_code" field.
+func (m *ScheduledPublicationMutation) ResetFailureCode() {
+	m.failure_code = nil
+	delete(m.clearedFields, scheduledpublication.FieldFailureCode)
+}
+
+// SetAppliedReleaseID sets the "applied_release_id" field.
+func (m *ScheduledPublicationMutation) SetAppliedReleaseID(u uuid.UUID) {
+	m.applied_release_id = &u
+}
+
+// AppliedReleaseID returns the value of the "applied_release_id" field in the mutation.
+func (m *ScheduledPublicationMutation) AppliedReleaseID() (r uuid.UUID, exists bool) {
+	v := m.applied_release_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppliedReleaseID returns the old "applied_release_id" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldAppliedReleaseID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppliedReleaseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppliedReleaseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppliedReleaseID: %w", err)
+	}
+	return oldValue.AppliedReleaseID, nil
+}
+
+// ClearAppliedReleaseID clears the value of the "applied_release_id" field.
+func (m *ScheduledPublicationMutation) ClearAppliedReleaseID() {
+	m.applied_release_id = nil
+	m.clearedFields[scheduledpublication.FieldAppliedReleaseID] = struct{}{}
+}
+
+// AppliedReleaseIDCleared returns if the "applied_release_id" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) AppliedReleaseIDCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldAppliedReleaseID]
+	return ok
+}
+
+// ResetAppliedReleaseID resets all changes to the "applied_release_id" field.
+func (m *ScheduledPublicationMutation) ResetAppliedReleaseID() {
+	m.applied_release_id = nil
+	delete(m.clearedFields, scheduledpublication.FieldAppliedReleaseID)
+}
+
+// SetChangeNote sets the "change_note" field.
+func (m *ScheduledPublicationMutation) SetChangeNote(s string) {
+	m.change_note = &s
+}
+
+// ChangeNote returns the value of the "change_note" field in the mutation.
+func (m *ScheduledPublicationMutation) ChangeNote() (r string, exists bool) {
+	v := m.change_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeNote returns the old "change_note" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldChangeNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeNote: %w", err)
+	}
+	return oldValue.ChangeNote, nil
+}
+
+// ClearChangeNote clears the value of the "change_note" field.
+func (m *ScheduledPublicationMutation) ClearChangeNote() {
+	m.change_note = nil
+	m.clearedFields[scheduledpublication.FieldChangeNote] = struct{}{}
+}
+
+// ChangeNoteCleared returns if the "change_note" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) ChangeNoteCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldChangeNote]
+	return ok
+}
+
+// ResetChangeNote resets all changes to the "change_note" field.
+func (m *ScheduledPublicationMutation) ResetChangeNote() {
+	m.change_note = nil
+	delete(m.clearedFields, scheduledpublication.FieldChangeNote)
+}
+
+// SetRequestedBy sets the "requested_by" field.
+func (m *ScheduledPublicationMutation) SetRequestedBy(u uuid.UUID) {
+	m.requested_by = &u
+}
+
+// RequestedBy returns the value of the "requested_by" field in the mutation.
+func (m *ScheduledPublicationMutation) RequestedBy() (r uuid.UUID, exists bool) {
+	v := m.requested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedBy returns the old "requested_by" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldRequestedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedBy: %w", err)
+	}
+	return oldValue.RequestedBy, nil
+}
+
+// ResetRequestedBy resets all changes to the "requested_by" field.
+func (m *ScheduledPublicationMutation) ResetRequestedBy() {
+	m.requested_by = nil
+}
+
+// SetCancelledBy sets the "cancelled_by" field.
+func (m *ScheduledPublicationMutation) SetCancelledBy(u uuid.UUID) {
+	m.cancelled_by = &u
+}
+
+// CancelledBy returns the value of the "cancelled_by" field in the mutation.
+func (m *ScheduledPublicationMutation) CancelledBy() (r uuid.UUID, exists bool) {
+	v := m.cancelled_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelledBy returns the old "cancelled_by" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldCancelledBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelledBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelledBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelledBy: %w", err)
+	}
+	return oldValue.CancelledBy, nil
+}
+
+// ClearCancelledBy clears the value of the "cancelled_by" field.
+func (m *ScheduledPublicationMutation) ClearCancelledBy() {
+	m.cancelled_by = nil
+	m.clearedFields[scheduledpublication.FieldCancelledBy] = struct{}{}
+}
+
+// CancelledByCleared returns if the "cancelled_by" field was cleared in this mutation.
+func (m *ScheduledPublicationMutation) CancelledByCleared() bool {
+	_, ok := m.clearedFields[scheduledpublication.FieldCancelledBy]
+	return ok
+}
+
+// ResetCancelledBy resets all changes to the "cancelled_by" field.
+func (m *ScheduledPublicationMutation) ResetCancelledBy() {
+	m.cancelled_by = nil
+	delete(m.clearedFields, scheduledpublication.FieldCancelledBy)
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *ScheduledPublicationMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *ScheduledPublicationMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the ScheduledPublication entity.
+// If the ScheduledPublication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScheduledPublicationMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *ScheduledPublicationMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+}
+
+// Where appends a list predicates to the ScheduledPublicationMutation builder.
+func (m *ScheduledPublicationMutation) Where(ps ...predicate.ScheduledPublication) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ScheduledPublicationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ScheduledPublicationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ScheduledPublication, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ScheduledPublicationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ScheduledPublicationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ScheduledPublication).
+func (m *ScheduledPublicationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ScheduledPublicationMutation) Fields() []string {
+	fields := make([]string, 0, 21)
+	if m.tenant_id != nil {
+		fields = append(fields, scheduledpublication.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, scheduledpublication.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, scheduledpublication.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, scheduledpublication.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, scheduledpublication.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, scheduledpublication.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, scheduledpublication.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, scheduledpublication.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, scheduledpublication.FieldVersion)
+	}
+	if m.item_type != nil {
+		fields = append(fields, scheduledpublication.FieldItemType)
+	}
+	if m.item_id != nil {
+		fields = append(fields, scheduledpublication.FieldItemID)
+	}
+	if m.version_id != nil {
+		fields = append(fields, scheduledpublication.FieldVersionID)
+	}
+	if m.version_no != nil {
+		fields = append(fields, scheduledpublication.FieldVersionNo)
+	}
+	if m.publish_at != nil {
+		fields = append(fields, scheduledpublication.FieldPublishAt)
+	}
+	if m.status != nil {
+		fields = append(fields, scheduledpublication.FieldStatus)
+	}
+	if m.failure_code != nil {
+		fields = append(fields, scheduledpublication.FieldFailureCode)
+	}
+	if m.applied_release_id != nil {
+		fields = append(fields, scheduledpublication.FieldAppliedReleaseID)
+	}
+	if m.change_note != nil {
+		fields = append(fields, scheduledpublication.FieldChangeNote)
+	}
+	if m.requested_by != nil {
+		fields = append(fields, scheduledpublication.FieldRequestedBy)
+	}
+	if m.cancelled_by != nil {
+		fields = append(fields, scheduledpublication.FieldCancelledBy)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, scheduledpublication.FieldIdempotencyKey)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ScheduledPublicationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case scheduledpublication.FieldTenantID:
+		return m.TenantID()
+	case scheduledpublication.FieldCreatedAt:
+		return m.CreatedAt()
+	case scheduledpublication.FieldCreatedBy:
+		return m.CreatedBy()
+	case scheduledpublication.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case scheduledpublication.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case scheduledpublication.FieldDeletedAt:
+		return m.DeletedAt()
+	case scheduledpublication.FieldDeletedBy:
+		return m.DeletedBy()
+	case scheduledpublication.FieldDeleteReason:
+		return m.DeleteReason()
+	case scheduledpublication.FieldVersion:
+		return m.Version()
+	case scheduledpublication.FieldItemType:
+		return m.ItemType()
+	case scheduledpublication.FieldItemID:
+		return m.ItemID()
+	case scheduledpublication.FieldVersionID:
+		return m.VersionID()
+	case scheduledpublication.FieldVersionNo:
+		return m.VersionNo()
+	case scheduledpublication.FieldPublishAt:
+		return m.PublishAt()
+	case scheduledpublication.FieldStatus:
+		return m.Status()
+	case scheduledpublication.FieldFailureCode:
+		return m.FailureCode()
+	case scheduledpublication.FieldAppliedReleaseID:
+		return m.AppliedReleaseID()
+	case scheduledpublication.FieldChangeNote:
+		return m.ChangeNote()
+	case scheduledpublication.FieldRequestedBy:
+		return m.RequestedBy()
+	case scheduledpublication.FieldCancelledBy:
+		return m.CancelledBy()
+	case scheduledpublication.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ScheduledPublicationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case scheduledpublication.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case scheduledpublication.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case scheduledpublication.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case scheduledpublication.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case scheduledpublication.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case scheduledpublication.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case scheduledpublication.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case scheduledpublication.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case scheduledpublication.FieldVersion:
+		return m.OldVersion(ctx)
+	case scheduledpublication.FieldItemType:
+		return m.OldItemType(ctx)
+	case scheduledpublication.FieldItemID:
+		return m.OldItemID(ctx)
+	case scheduledpublication.FieldVersionID:
+		return m.OldVersionID(ctx)
+	case scheduledpublication.FieldVersionNo:
+		return m.OldVersionNo(ctx)
+	case scheduledpublication.FieldPublishAt:
+		return m.OldPublishAt(ctx)
+	case scheduledpublication.FieldStatus:
+		return m.OldStatus(ctx)
+	case scheduledpublication.FieldFailureCode:
+		return m.OldFailureCode(ctx)
+	case scheduledpublication.FieldAppliedReleaseID:
+		return m.OldAppliedReleaseID(ctx)
+	case scheduledpublication.FieldChangeNote:
+		return m.OldChangeNote(ctx)
+	case scheduledpublication.FieldRequestedBy:
+		return m.OldRequestedBy(ctx)
+	case scheduledpublication.FieldCancelledBy:
+		return m.OldCancelledBy(ctx)
+	case scheduledpublication.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	}
+	return nil, fmt.Errorf("unknown ScheduledPublication field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScheduledPublicationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case scheduledpublication.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case scheduledpublication.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case scheduledpublication.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case scheduledpublication.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case scheduledpublication.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case scheduledpublication.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case scheduledpublication.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case scheduledpublication.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case scheduledpublication.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case scheduledpublication.FieldItemType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemType(v)
+		return nil
+	case scheduledpublication.FieldItemID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemID(v)
+		return nil
+	case scheduledpublication.FieldVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionID(v)
+		return nil
+	case scheduledpublication.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionNo(v)
+		return nil
+	case scheduledpublication.FieldPublishAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishAt(v)
+		return nil
+	case scheduledpublication.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case scheduledpublication.FieldFailureCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailureCode(v)
+		return nil
+	case scheduledpublication.FieldAppliedReleaseID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppliedReleaseID(v)
+		return nil
+	case scheduledpublication.FieldChangeNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeNote(v)
+		return nil
+	case scheduledpublication.FieldRequestedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedBy(v)
+		return nil
+	case scheduledpublication.FieldCancelledBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelledBy(v)
+		return nil
+	case scheduledpublication.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScheduledPublication field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ScheduledPublicationMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, scheduledpublication.FieldVersion)
+	}
+	if m.addversion_no != nil {
+		fields = append(fields, scheduledpublication.FieldVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ScheduledPublicationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case scheduledpublication.FieldVersion:
+		return m.AddedVersion()
+	case scheduledpublication.FieldVersionNo:
+		return m.AddedVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScheduledPublicationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case scheduledpublication.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case scheduledpublication.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScheduledPublication numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ScheduledPublicationMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(scheduledpublication.FieldTenantID) {
+		fields = append(fields, scheduledpublication.FieldTenantID)
+	}
+	if m.FieldCleared(scheduledpublication.FieldCreatedBy) {
+		fields = append(fields, scheduledpublication.FieldCreatedBy)
+	}
+	if m.FieldCleared(scheduledpublication.FieldUpdatedBy) {
+		fields = append(fields, scheduledpublication.FieldUpdatedBy)
+	}
+	if m.FieldCleared(scheduledpublication.FieldDeletedAt) {
+		fields = append(fields, scheduledpublication.FieldDeletedAt)
+	}
+	if m.FieldCleared(scheduledpublication.FieldDeletedBy) {
+		fields = append(fields, scheduledpublication.FieldDeletedBy)
+	}
+	if m.FieldCleared(scheduledpublication.FieldDeleteReason) {
+		fields = append(fields, scheduledpublication.FieldDeleteReason)
+	}
+	if m.FieldCleared(scheduledpublication.FieldFailureCode) {
+		fields = append(fields, scheduledpublication.FieldFailureCode)
+	}
+	if m.FieldCleared(scheduledpublication.FieldAppliedReleaseID) {
+		fields = append(fields, scheduledpublication.FieldAppliedReleaseID)
+	}
+	if m.FieldCleared(scheduledpublication.FieldChangeNote) {
+		fields = append(fields, scheduledpublication.FieldChangeNote)
+	}
+	if m.FieldCleared(scheduledpublication.FieldCancelledBy) {
+		fields = append(fields, scheduledpublication.FieldCancelledBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ScheduledPublicationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ScheduledPublicationMutation) ClearField(name string) error {
+	switch name {
+	case scheduledpublication.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case scheduledpublication.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case scheduledpublication.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case scheduledpublication.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case scheduledpublication.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case scheduledpublication.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case scheduledpublication.FieldFailureCode:
+		m.ClearFailureCode()
+		return nil
+	case scheduledpublication.FieldAppliedReleaseID:
+		m.ClearAppliedReleaseID()
+		return nil
+	case scheduledpublication.FieldChangeNote:
+		m.ClearChangeNote()
+		return nil
+	case scheduledpublication.FieldCancelledBy:
+		m.ClearCancelledBy()
+		return nil
+	}
+	return fmt.Errorf("unknown ScheduledPublication nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ScheduledPublicationMutation) ResetField(name string) error {
+	switch name {
+	case scheduledpublication.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case scheduledpublication.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case scheduledpublication.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case scheduledpublication.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case scheduledpublication.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case scheduledpublication.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case scheduledpublication.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case scheduledpublication.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case scheduledpublication.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case scheduledpublication.FieldItemType:
+		m.ResetItemType()
+		return nil
+	case scheduledpublication.FieldItemID:
+		m.ResetItemID()
+		return nil
+	case scheduledpublication.FieldVersionID:
+		m.ResetVersionID()
+		return nil
+	case scheduledpublication.FieldVersionNo:
+		m.ResetVersionNo()
+		return nil
+	case scheduledpublication.FieldPublishAt:
+		m.ResetPublishAt()
+		return nil
+	case scheduledpublication.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case scheduledpublication.FieldFailureCode:
+		m.ResetFailureCode()
+		return nil
+	case scheduledpublication.FieldAppliedReleaseID:
+		m.ResetAppliedReleaseID()
+		return nil
+	case scheduledpublication.FieldChangeNote:
+		m.ResetChangeNote()
+		return nil
+	case scheduledpublication.FieldRequestedBy:
+		m.ResetRequestedBy()
+		return nil
+	case scheduledpublication.FieldCancelledBy:
+		m.ResetCancelledBy()
+		return nil
+	case scheduledpublication.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	}
+	return fmt.Errorf("unknown ScheduledPublication field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ScheduledPublicationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ScheduledPublicationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ScheduledPublicationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ScheduledPublicationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ScheduledPublicationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ScheduledPublicationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ScheduledPublicationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ScheduledPublication unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ScheduledPublicationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ScheduledPublication edge %s", name)
 }
 
 // SubjectMutation represents an operation that mutates the Subject nodes in the graph.

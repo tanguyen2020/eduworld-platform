@@ -60,6 +60,8 @@ type Tx struct {
 	QuestionVersionObjective *QuestionVersionObjectiveClient
 	// ReviewTask is the client for interacting with the ReviewTask builders.
 	ReviewTask *ReviewTaskClient
+	// ScheduledPublication is the client for interacting with the ScheduledPublication builders.
+	ScheduledPublication *ScheduledPublicationClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -233,6 +235,7 @@ func (tx *Tx) init() {
 	tx.QuestionVersion = NewQuestionVersionClient(tx.config)
 	tx.QuestionVersionObjective = NewQuestionVersionObjectiveClient(tx.config)
 	tx.ReviewTask = NewReviewTaskClient(tx.config)
+	tx.ScheduledPublication = NewScheduledPublicationClient(tx.config)
 	tx.Subject = NewSubjectClient(tx.config)
 	tx.SubjectGrade = NewSubjectGradeClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)

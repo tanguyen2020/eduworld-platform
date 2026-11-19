@@ -65,9 +65,12 @@ type QuestionVersion struct {
 	TranslationMeta       json.RawMessage
 	AudioExemptReason     *string
 	AudioExemptApprovedBy *uuid.UUID
-	Owner                 contentmodel.Owner
-	RowVersion            int64
-	UpdatedAt             time.Time
+	// F026: who published the version and the SHA-256 of its snapshot.
+	PublishedBy    *uuid.UUID
+	SnapshotSHA256 *string
+	Owner          contentmodel.Owner
+	RowVersion     int64
+	UpdatedAt      time.Time
 }
 
 // QuestionAuthoringView is schema QuestionAuthoring (ContentVersion + QuestionAuthoringInput): the CMS view with the

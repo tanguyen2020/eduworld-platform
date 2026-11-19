@@ -51,6 +51,7 @@ type mediaKit struct {
 	qry     query.MediaLibrary
 	preview command.Preview
 	store   cache.PreviewStore
+	cache   cache.SnapshotCache // F026 snapshots and release pointers
 }
 
 // testCDNKey is the CDN signing key of the tests (TEST FIXTURE, not a secret of any environment).
@@ -75,7 +76,7 @@ func newMediaKit(ctx context.Context, t *testing.T, e *env, codec *page.Codec, s
 	}
 	t.Cleanup(vk.Close)
 	k := &mediaKit{s3: s3, signer: storage.CdnSigner{BaseURL: "http://cdn.test", Key: testCDNKey, TTL: command.MediaSignedURLTTL},
-		clamd: startFakeClamd(t), store: cache.PreviewStore{C: vk}}
+		clamd: startFakeClamd(t), store: cache.PreviewStore{C: vk}, cache: cache.SnapshotCache{C: vk}}
 	proc := mediaproc.New(k.clamd.addr)
 	k.cmd = command.Media{UoW: e.uow, Store: write.MediaRepo{}, Storage: s3, Signer: k.signer, Processor: proc, Events: write.Publisher{W: e.writer},
 		Audit: write.Auditor{R: e.rec}, WorkDir: t.TempDir(), Metrics: observability.MediaCounter{}}

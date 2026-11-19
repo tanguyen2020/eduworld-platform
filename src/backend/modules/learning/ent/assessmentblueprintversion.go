@@ -80,6 +80,8 @@ type AssessmentBlueprintVersion struct {
 	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
 	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
 	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy *uuid.UUID `json:"published_by,omitempty"`
 	// AssessmentBlueprintID holds the value of the "assessment_blueprint_id" field.
 	AssessmentBlueprintID uuid.UUID `json:"assessment_blueprint_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -108,7 +110,7 @@ func (*AssessmentBlueprintVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case assessmentblueprintversion.FieldTenantID, assessmentblueprintversion.FieldCreatedBy, assessmentblueprintversion.FieldUpdatedBy, assessmentblueprintversion.FieldDeletedBy, assessmentblueprintversion.FieldReviewerID, assessmentblueprintversion.FieldCurriculumVersionID, assessmentblueprintversion.FieldBasedOnVersionID, assessmentblueprintversion.FieldClonedFromID, assessmentblueprintversion.FieldClonedFromTenantID, assessmentblueprintversion.FieldClonedBy, assessmentblueprintversion.FieldAudioExemptApprovedBy, assessmentblueprintversion.FieldSubjectID:
+		case assessmentblueprintversion.FieldTenantID, assessmentblueprintversion.FieldCreatedBy, assessmentblueprintversion.FieldUpdatedBy, assessmentblueprintversion.FieldDeletedBy, assessmentblueprintversion.FieldReviewerID, assessmentblueprintversion.FieldCurriculumVersionID, assessmentblueprintversion.FieldBasedOnVersionID, assessmentblueprintversion.FieldClonedFromID, assessmentblueprintversion.FieldClonedFromTenantID, assessmentblueprintversion.FieldClonedBy, assessmentblueprintversion.FieldAudioExemptApprovedBy, assessmentblueprintversion.FieldPublishedBy, assessmentblueprintversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case assessmentblueprintversion.FieldTranslationMeta, assessmentblueprintversion.FieldTitle, assessmentblueprintversion.FieldSummary, assessmentblueprintversion.FieldGradeLevels, assessmentblueprintversion.FieldTopicIds, assessmentblueprintversion.FieldObjectiveIds, assessmentblueprintversion.FieldMediaRefs, assessmentblueprintversion.FieldWorkedExampleIds, assessmentblueprintversion.FieldBody:
 			values[i] = new([]byte)
@@ -343,6 +345,13 @@ func (_m *AssessmentBlueprintVersion) assignValues(columns []string, values []an
 			} else if value.Valid {
 				_m.AudioExemptApprovedBy = new(uuid.UUID)
 				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
+			}
+		case assessmentblueprintversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
 			}
 		case assessmentblueprintversion.FieldAssessmentBlueprintID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -586,6 +595,11 @@ func (_m *AssessmentBlueprintVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.AudioExemptApprovedBy; v != nil {
 		builder.WriteString("audio_exempt_approved_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

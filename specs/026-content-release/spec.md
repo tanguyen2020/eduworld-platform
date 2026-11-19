@@ -1,6 +1,6 @@
 # Feature Specification: F026 — Phát hành nội dung: publish/rollback/unpublish, snapshot, manifest, ghim version, nơi sử dụng
 
-**Feature Branch**: `026-content-release` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` (+ consumer manifest trong module `game`) · **Mốc**: M-C2 · **Phụ thuộc**: F025
+**Feature Branch**: `026-content-release` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `learning` (+ consumer manifest trong module `game`) · **Mốc**: M-C2 · **Phụ thuộc**: F025
 **Input**: Mô hình hai lớp Version + Release pointer cho mọi `LearningContentType` (ADR-0015, ADR-0043): publish ngay/hẹn giờ, rollback đổi con trỏ, unpublish, archive, snapshot bất biến (Valkey/CDN, không answer key), content manifest theo tenant có `min_client_version`, đọc theo version đã ghim, báo cáo nơi sử dụng. FR nguồn: FR-CNT-004, FR-CNT-008…012, FR-EXR-015.
 
 ## Clarifications
@@ -10,6 +10,14 @@
 - Q: Manifest do ai dựng? → A: Bảng `game.content_manifests` và `getContentManifest` thuộc module `game` (DATABASE_DESIGN §3.13, F014). F026 phát `content.*` đủ trường và thêm consumer `game.manifest_on_learning_content` gộp mục nội dung học tập vào manifest.
 - Q: Hẹn giờ publish lưu ở đâu khi `content_releases` là append-only? → A: Bảng mới `content.scheduled_publications`; dòng `content_releases` chỉ ghi khi con trỏ thực sự đổi.
 - Q: "Nơi sử dụng" gồm tham chiếu từ quest/challenge (module game)? → A: F026 trả tham chiếu trong module `learning` (question set, lesson, activity, bài giao, exam session); tham chiếu từ nội dung game do F078 bổ sung (projection) [Proposed].
+
+### Session 2026-11-20 (triển khai)
+
+- Q: Game biết tenant đích của item platform thế nào khi không đọc được DB learning? → A: Payload `content.published/rolled_back/unpublished` mang `tenant_ids` (tenant sở hữu hoặc mọi tenant được gán lúc phát, đọc qua `tenancy.Bypass(platform_job)`); gán mới sau khi publish chưa cập nhật manifest (theo dõi ở F045/F078) [Proposed].
+- Q: Khóa hàng khi publish song song? → A: Optimistic theo `version` của item/version (`409 CONTENT_VERSION_CONFLICT`); job hẹn giờ dùng `version` của lịch hẹn để hai worker không áp dụng trùng [Proposed].
+- Q: Rollback/unpublish ai được làm? → A: rollback `content.release.rollback` (System Admin, liveops theo catalog role); unpublish `learning_content.publish`.
+- Q: Nội dung riêng tenant lên CDN? → A: Không; chỉ nội dung platform không phải đề kiểm tra (`cdn_eligible`) lên `ew-media-public`; còn lại phục vụ qua API [Proposed].
+- Q: `active_pinned_sessions`, nơi sử dụng ngoài question set? → A: 0 và chỉ question set cho tới F030/F041/F042 [Proposed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 

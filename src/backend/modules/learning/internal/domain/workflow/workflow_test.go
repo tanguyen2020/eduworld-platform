@@ -38,6 +38,7 @@ func TestApply(t *testing.T) {
 		{"submit in review", contentmodel.StatusInReview, Request{Action: contentmodel.ActionSubmitReview, Actor: author}, "", "", "", ErrInvalidTransition},
 		{"revise published", contentmodel.StatusPublished, Request{Action: contentmodel.ActionRevise, Actor: author}, "", "", "", ErrInvalidTransition},
 		{"reject published", contentmodel.StatusPublished, Request{Action: contentmodel.ActionReject, Actor: reviewer, Note: "x"}, "", "", "", ErrInvalidTransition},
+		{"archive published", contentmodel.StatusPublished, Request{Action: contentmodel.ActionArchive, Actor: author}, "", contentmodel.StatusArchived, "", nil},
 		{"publish is F026", contentmodel.StatusApproved, Request{Action: contentmodel.ActionPublish, Actor: reviewer}, "", "", "", ErrInvalidTransition},
 		{"exemption not acknowledged", contentmodel.StatusInReview, Request{Action: contentmodel.ActionApprove, Actor: reviewer}, "đọc to lộ đáp án", "", "", ErrExemptionNotAcknowledged},
 		{"exemption acknowledged", contentmodel.StatusInReview, Request{Action: contentmodel.ActionApprove, Actor: reviewer, AudioExemptionAcknowledged: true}, "đọc to lộ đáp án", contentmodel.StatusApproved, TaskApproved, nil},

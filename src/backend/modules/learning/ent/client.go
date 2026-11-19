@@ -39,6 +39,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -105,6 +106,8 @@ type Client struct {
 	QuestionVersionObjective *QuestionVersionObjectiveClient
 	// ReviewTask is the client for interacting with the ReviewTask builders.
 	ReviewTask *ReviewTaskClient
+	// ScheduledPublication is the client for interacting with the ScheduledPublication builders.
+	ScheduledPublication *ScheduledPublicationClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -158,6 +161,7 @@ func (c *Client) init() {
 	c.QuestionVersion = NewQuestionVersionClient(c.config)
 	c.QuestionVersionObjective = NewQuestionVersionObjectiveClient(c.config)
 	c.ReviewTask = NewReviewTaskClient(c.config)
+	c.ScheduledPublication = NewScheduledPublicationClient(c.config)
 	c.Subject = NewSubjectClient(c.config)
 	c.SubjectGrade = NewSubjectGradeClient(c.config)
 	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
@@ -286,6 +290,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		QuestionVersion:            NewQuestionVersionClient(cfg),
 		QuestionVersionObjective:   NewQuestionVersionObjectiveClient(cfg),
 		ReviewTask:                 NewReviewTaskClient(cfg),
+		ScheduledPublication:       NewScheduledPublicationClient(cfg),
 		Subject:                    NewSubjectClient(cfg),
 		SubjectGrade:               NewSubjectGradeClient(cfg),
 		TenantResourceAssignment:   NewTenantResourceAssignmentClient(cfg),
@@ -338,6 +343,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		QuestionVersion:            NewQuestionVersionClient(cfg),
 		QuestionVersionObjective:   NewQuestionVersionObjectiveClient(cfg),
 		ReviewTask:                 NewReviewTaskClient(cfg),
+		ScheduledPublication:       NewScheduledPublicationClient(cfg),
 		Subject:                    NewSubjectClient(cfg),
 		SubjectGrade:               NewSubjectGradeClient(cfg),
 		TenantResourceAssignment:   NewTenantResourceAssignmentClient(cfg),
@@ -382,9 +388,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
 		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionSet, c.QuestionSetItem,
 		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective,
-		c.ReviewTask, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
-		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
-		c.Topic, c.TranslationJob,
+		c.ReviewTask, c.ScheduledPublication, c.Subject, c.SubjectGrade,
+		c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.TextbookSectionObjective, c.TextbookSeries, c.Topic, c.TranslationJob,
 	} {
 		n.Use(hooks...)
 	}
@@ -400,9 +406,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
 		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionSet, c.QuestionSetItem,
 		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective,
-		c.ReviewTask, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
-		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
-		c.Topic, c.TranslationJob,
+		c.ReviewTask, c.ScheduledPublication, c.Subject, c.SubjectGrade,
+		c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.TextbookSectionObjective, c.TextbookSeries, c.Topic, c.TranslationJob,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -459,6 +465,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.QuestionVersionObjective.mutate(ctx, m)
 	case *ReviewTaskMutation:
 		return c.ReviewTask.mutate(ctx, m)
+	case *ScheduledPublicationMutation:
+		return c.ScheduledPublication.mutate(ctx, m)
 	case *SubjectMutation:
 		return c.Subject.mutate(ctx, m)
 	case *SubjectGradeMutation:
@@ -3722,6 +3730,141 @@ func (c *ReviewTaskClient) mutate(ctx context.Context, m *ReviewTaskMutation) (V
 	}
 }
 
+// ScheduledPublicationClient is a client for the ScheduledPublication schema.
+type ScheduledPublicationClient struct {
+	config
+}
+
+// NewScheduledPublicationClient returns a client for the ScheduledPublication from the given config.
+func NewScheduledPublicationClient(c config) *ScheduledPublicationClient {
+	return &ScheduledPublicationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `scheduledpublication.Hooks(f(g(h())))`.
+func (c *ScheduledPublicationClient) Use(hooks ...Hook) {
+	c.hooks.ScheduledPublication = append(c.hooks.ScheduledPublication, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `scheduledpublication.Intercept(f(g(h())))`.
+func (c *ScheduledPublicationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScheduledPublication = append(c.inters.ScheduledPublication, interceptors...)
+}
+
+// Create returns a builder for creating a ScheduledPublication entity.
+func (c *ScheduledPublicationClient) Create() *ScheduledPublicationCreate {
+	mutation := newScheduledPublicationMutation(c.config, OpCreate)
+	return &ScheduledPublicationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScheduledPublication entities.
+func (c *ScheduledPublicationClient) CreateBulk(builders ...*ScheduledPublicationCreate) *ScheduledPublicationCreateBulk {
+	return &ScheduledPublicationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScheduledPublicationClient) MapCreateBulk(slice any, setFunc func(*ScheduledPublicationCreate, int)) *ScheduledPublicationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScheduledPublicationCreateBulk{err: fmt.Errorf("calling to ScheduledPublicationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScheduledPublicationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScheduledPublicationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Update() *ScheduledPublicationUpdate {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdate)
+	return &ScheduledPublicationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScheduledPublicationClient) UpdateOne(_m *ScheduledPublication) *ScheduledPublicationUpdateOne {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdateOne, withScheduledPublication(_m))
+	return &ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScheduledPublicationClient) UpdateOneID(id uuid.UUID) *ScheduledPublicationUpdateOne {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdateOne, withScheduledPublicationID(id))
+	return &ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Delete() *ScheduledPublicationDelete {
+	mutation := newScheduledPublicationMutation(c.config, OpDelete)
+	return &ScheduledPublicationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScheduledPublicationClient) DeleteOne(_m *ScheduledPublication) *ScheduledPublicationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScheduledPublicationClient) DeleteOneID(id uuid.UUID) *ScheduledPublicationDeleteOne {
+	builder := c.Delete().Where(scheduledpublication.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScheduledPublicationDeleteOne{builder}
+}
+
+// Query returns a query builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Query() *ScheduledPublicationQuery {
+	return &ScheduledPublicationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScheduledPublication},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScheduledPublication entity by its id.
+func (c *ScheduledPublicationClient) Get(ctx context.Context, id uuid.UUID) (*ScheduledPublication, error) {
+	return c.Query().Where(scheduledpublication.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScheduledPublicationClient) GetX(ctx context.Context, id uuid.UUID) *ScheduledPublication {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ScheduledPublicationClient) Hooks() []Hook {
+	hooks := c.hooks.ScheduledPublication
+	return append(hooks[:len(hooks):len(hooks)], scheduledpublication.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScheduledPublicationClient) Interceptors() []Interceptor {
+	inters := c.inters.ScheduledPublication
+	return append(inters[:len(inters):len(inters)], scheduledpublication.Interceptors[:]...)
+}
+
+func (c *ScheduledPublicationClient) mutate(ctx context.Context, m *ScheduledPublicationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScheduledPublicationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScheduledPublicationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScheduledPublicationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ScheduledPublication mutation op: %q", m.Op())
+	}
+}
+
 // SubjectClient is a client for the Subject schema.
 type SubjectClient struct {
 	config
@@ -4945,9 +5088,9 @@ type (
 		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
 		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionSet,
 		QuestionSetItem, QuestionSetVersion, QuestionVersion, QuestionVersionObjective,
-		ReviewTask, Subject, SubjectGrade, TenantResourceAssignment, Textbook,
-		TextbookSection, TextbookSectionObjective, TextbookSeries, Topic,
-		TranslationJob []ent.Hook
+		ReviewTask, ScheduledPublication, Subject, SubjectGrade,
+		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
+		TextbookSeries, Topic, TranslationJob []ent.Hook
 	}
 	inters struct {
 		AssessmentBlueprint, AssessmentBlueprintVersion, Competency, ContentRelease,
@@ -4955,9 +5098,9 @@ type (
 		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
 		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionSet,
 		QuestionSetItem, QuestionSetVersion, QuestionVersion, QuestionVersionObjective,
-		ReviewTask, Subject, SubjectGrade, TenantResourceAssignment, Textbook,
-		TextbookSection, TextbookSectionObjective, TextbookSeries, Topic,
-		TranslationJob []ent.Interceptor
+		ReviewTask, ScheduledPublication, Subject, SubjectGrade,
+		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
+		TextbookSeries, Topic, TranslationJob []ent.Interceptor
 	}
 )
 
@@ -4988,6 +5131,7 @@ var (
 		QuestionVersion:            tableSchemas[0],
 		QuestionVersionObjective:   tableSchemas[0],
 		ReviewTask:                 tableSchemas[0],
+		ScheduledPublication:       tableSchemas[0],
 		Subject:                    tableSchemas[1],
 		SubjectGrade:               tableSchemas[1],
 		TenantResourceAssignment:   tableSchemas[2],

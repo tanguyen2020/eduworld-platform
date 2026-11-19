@@ -418,6 +418,20 @@ func (_c *LearningMaterialVersionCreate) SetNillableAudioExemptApprovedBy(v *uui
 	return _c
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_c *LearningMaterialVersionCreate) SetPublishedBy(v uuid.UUID) *LearningMaterialVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *LearningMaterialVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *LearningMaterialVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetLearningMaterialID sets the "learning_material_id" field.
 func (_c *LearningMaterialVersionCreate) SetLearningMaterialID(v uuid.UUID) *LearningMaterialVersionCreate {
 	_c.mutation.SetLearningMaterialID(v)
@@ -852,6 +866,10 @@ func (_c *LearningMaterialVersionCreate) createSpec() (*LearningMaterialVersion,
 	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
 		_spec.SetField(learningmaterialversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
 		_node.AudioExemptApprovedBy = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(learningmaterialversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	if value, ok := _c.mutation.LearningMaterialID(); ok {
 		_spec.SetField(learningmaterialversion.FieldLearningMaterialID, field.TypeUUID, value)

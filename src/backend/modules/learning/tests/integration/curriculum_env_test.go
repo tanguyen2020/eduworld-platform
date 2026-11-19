@@ -83,6 +83,7 @@ type curEnv struct {
 	dcmd   command.Docs
 	wf     command.Workflow
 	tr     command.Translations
+	rel    command.Releases
 	schema *qbschema.Validator
 	assets *memAssets
 	users  map[string]authz.PrincipalData
@@ -181,6 +182,14 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		handlers.TranslationJobs = query.TranslationJobs{Session: e.read, Model: read.TranslationJobModel{}, Files: tr.Files}
 	}
 	tr.Questions, tr.Docs = qcmd, dcmd
+	rel := command.Releases{UoW: e.uow, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: write.Publisher{W: e.writer},
+		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}}
+	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}}
+	if mk != nil {
+		rel.Cache, rel.CDN, rel.Signer, reader.Cache = mk.cache, mk.s3, mk.signer, mk.cache
+	}
+	handlers.Releases = rel
+	handlers.ReleaseQueries = query.Releases{Session: e.read, Model: read.ReleaseModel{}, Reader: reader, Cursors: codec}
 	handlers.Translations = tr
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
@@ -189,7 +198,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)

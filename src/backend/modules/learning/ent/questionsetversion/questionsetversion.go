@@ -75,6 +75,8 @@ const (
 	FieldAudioExemptReason = "audio_exempt_reason"
 	// FieldAudioExemptApprovedBy holds the string denoting the audio_exempt_approved_by field in the database.
 	FieldAudioExemptApprovedBy = "audio_exempt_approved_by"
+	// FieldPublishedBy holds the string denoting the published_by field in the database.
+	FieldPublishedBy = "published_by"
 	// FieldQuestionSetID holds the string denoting the question_set_id field in the database.
 	FieldQuestionSetID = "question_set_id"
 	// FieldTitle holds the string denoting the title field in the database.
@@ -132,6 +134,7 @@ var Columns = []string{
 	FieldTranslationMeta,
 	FieldAudioExemptReason,
 	FieldAudioExemptApprovedBy,
+	FieldPublishedBy,
 	FieldQuestionSetID,
 	FieldTitle,
 	FieldSummary,
@@ -361,6 +364,11 @@ func ByAudioExemptReason(opts ...sql.OrderTermOption) OrderOption {
 // ByAudioExemptApprovedBy orders the results by the audio_exempt_approved_by field.
 func ByAudioExemptApprovedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAudioExemptApprovedBy, opts...).ToFunc()
+}
+
+// ByPublishedBy orders the results by the published_by field.
+func ByPublishedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublishedBy, opts...).ToFunc()
 }
 
 // ByQuestionSetID orders the results by the question_set_id field.

@@ -32,6 +32,8 @@ func (WorkflowFields) Fields() []ent.Field {
 		field.JSON("translation_meta", json.RawMessage{}).Optional(),
 		field.String("audio_exempt_reason").MaxLen(255).Optional().Nillable(),
 		field.UUID("audio_exempt_approved_by", uuid.UUID{}).Optional().Nillable(),
+		// F026: who published the version (ContentVersionSummary.published_by).
+		field.UUID("published_by", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 

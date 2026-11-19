@@ -80,6 +80,8 @@ type QuestionVersion struct {
 	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
 	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
 	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy *uuid.UUID `json:"published_by,omitempty"`
 	// QuestionID holds the value of the "question_id" field.
 	QuestionID uuid.UUID `json:"question_id,omitempty"`
 	// Type holds the value of the "type" field.
@@ -132,7 +134,7 @@ func (*QuestionVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case questionversion.FieldTenantID, questionversion.FieldCreatedBy, questionversion.FieldUpdatedBy, questionversion.FieldDeletedBy, questionversion.FieldReviewerID, questionversion.FieldBasedOnVersionID, questionversion.FieldClonedFromID, questionversion.FieldClonedFromTenantID, questionversion.FieldClonedBy, questionversion.FieldAudioExemptApprovedBy:
+		case questionversion.FieldTenantID, questionversion.FieldCreatedBy, questionversion.FieldUpdatedBy, questionversion.FieldDeletedBy, questionversion.FieldReviewerID, questionversion.FieldBasedOnVersionID, questionversion.FieldClonedFromID, questionversion.FieldClonedFromTenantID, questionversion.FieldClonedBy, questionversion.FieldAudioExemptApprovedBy, questionversion.FieldPublishedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case questionversion.FieldTranslationMeta, questionversion.FieldStem, questionversion.FieldRenderPayload, questionversion.FieldAnswerKey, questionversion.FieldScoringRule, questionversion.FieldExplanation, questionversion.FieldOptionFeedback, questionversion.FieldHints, questionversion.FieldWorkedExampleRef, questionversion.FieldMathAssets, questionversion.FieldTags, questionversion.FieldGradeLevels, questionversion.FieldMediaRefs, questionversion.FieldContentHash:
 			values[i] = new([]byte)
@@ -370,6 +372,13 @@ func (_m *QuestionVersion) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.AudioExemptApprovedBy = new(uuid.UUID)
 				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
+			}
+		case questionversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
 			}
 		case questionversion.FieldQuestionID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -691,6 +700,11 @@ func (_m *QuestionVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.AudioExemptApprovedBy; v != nil {
 		builder.WriteString("audio_exempt_approved_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

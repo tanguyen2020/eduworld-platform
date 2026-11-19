@@ -2949,6 +2949,11 @@ components:
             - scheduled
             - applied
             - cancelled
+            - failed
+        failure_code:
+          type: string
+          maxLength: 64
+          description: Mã lỗi guard khi lịch hẹn không áp dụng được
         released_by:
           $ref: '#/components/schemas/Uuid'
         released_at:

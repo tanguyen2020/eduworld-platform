@@ -39,7 +39,7 @@ func questionVersionOf(r *ent.QuestionVersion) dto.QuestionVersion {
 		SubjectID: r.SubjectID, TopicID: r.TopicID, CurriculumVersionID: r.CurriculumVersionID, MediaRefs: r.MediaRefs,
 		ContentLanguage: r.ContentLanguage, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, PublishedAt: r.PublishedAt, ChangeNote: r.ChangeNote,
 		BasedOnID: r.BasedOnVersionID, Owner: ownerOf(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt, TranslationStatus: r.TranslationStatus, TranslationMeta: r.TranslationMeta, AudioExemptReason: r.AudioExemptReason,
-		AudioExemptApprovedBy: r.AudioExemptApprovedBy}
+		AudioExemptApprovedBy: r.AudioExemptApprovedBy, PublishedBy: r.PublishedBy, SnapshotSHA256: r.SnapshotSha256}
 	if r.MinResponseMs != nil {
 		m := int(*r.MinResponseMs)
 		v.MinResponseMS = &m

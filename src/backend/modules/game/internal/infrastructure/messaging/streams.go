@@ -30,3 +30,22 @@ func Subjects(events []string) []string {
 	}
 	return out
 }
+
+// LearningStream is the stream of the producer learning (EVT_LEARNING).
+var LearningStream = natsx.EventStream("learning")
+
+// ManifestLearningName is the durable consumer that merges the released learning items into the tenant content
+// manifests (F026 T046, CONTENT_MODEL §5.3).
+const ManifestLearningName = "game.manifest_on_learning_content"
+
+// ManifestLearningEvents are the release events of learning content (owner F026).
+var ManifestLearningEvents = []string{"content.published", "content.rolled_back", "content.unpublished"}
+
+// LearningSubjects returns the exact subjects of learning events.
+func LearningSubjects(events []string) []string {
+	out := make([]string, len(events))
+	for i, e := range events {
+		out[i] = natsx.EventSubject("learning", e)
+	}
+	return out
+}

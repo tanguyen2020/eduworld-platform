@@ -200,6 +200,11 @@ func AudioExemptApprovedBy(v uuid.UUID) predicate.AssessmentBlueprintVersion {
 	return predicate.AssessmentBlueprintVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
 }
 
+// PublishedBy applies equality check predicate on the "published_by" field. It's identical to PublishedByEQ.
+func PublishedBy(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
 // AssessmentBlueprintID applies equality check predicate on the "assessment_blueprint_id" field. It's identical to AssessmentBlueprintIDEQ.
 func AssessmentBlueprintID(v uuid.UUID) predicate.AssessmentBlueprintVersion {
 	return predicate.AssessmentBlueprintVersion(sql.FieldEQ(FieldAssessmentBlueprintID, v))
@@ -1813,6 +1818,56 @@ func AudioExemptApprovedByIsNil() predicate.AssessmentBlueprintVersion {
 // AudioExemptApprovedByNotNil applies the NotNil predicate on the "audio_exempt_approved_by" field.
 func AudioExemptApprovedByNotNil() predicate.AssessmentBlueprintVersion {
 	return predicate.AssessmentBlueprintVersion(sql.FieldNotNull(FieldAudioExemptApprovedBy))
+}
+
+// PublishedByEQ applies the EQ predicate on the "published_by" field.
+func PublishedByEQ(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
+// PublishedByNEQ applies the NEQ predicate on the "published_by" field.
+func PublishedByNEQ(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldNEQ(FieldPublishedBy, v))
+}
+
+// PublishedByIn applies the In predicate on the "published_by" field.
+func PublishedByIn(vs ...uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByNotIn applies the NotIn predicate on the "published_by" field.
+func PublishedByNotIn(vs ...uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldNotIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByGT applies the GT predicate on the "published_by" field.
+func PublishedByGT(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldGT(FieldPublishedBy, v))
+}
+
+// PublishedByGTE applies the GTE predicate on the "published_by" field.
+func PublishedByGTE(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldGTE(FieldPublishedBy, v))
+}
+
+// PublishedByLT applies the LT predicate on the "published_by" field.
+func PublishedByLT(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldLT(FieldPublishedBy, v))
+}
+
+// PublishedByLTE applies the LTE predicate on the "published_by" field.
+func PublishedByLTE(v uuid.UUID) predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldLTE(FieldPublishedBy, v))
+}
+
+// PublishedByIsNil applies the IsNil predicate on the "published_by" field.
+func PublishedByIsNil() predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldIsNull(FieldPublishedBy))
+}
+
+// PublishedByNotNil applies the NotNil predicate on the "published_by" field.
+func PublishedByNotNil() predicate.AssessmentBlueprintVersion {
+	return predicate.AssessmentBlueprintVersion(sql.FieldNotNull(FieldPublishedBy))
 }
 
 // AssessmentBlueprintIDEQ applies the EQ predicate on the "assessment_blueprint_id" field.

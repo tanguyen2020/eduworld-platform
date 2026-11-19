@@ -30,6 +30,10 @@ func ProjectionIdentitySubjects() []string {
 // is released or an assignment changes (F022-AC-28, QUESTION_BANK §6).
 const QuestionPoolName = "learning.qb_pool_invalidation"
 
+// ReleasePointerName is the durable consumer that keeps the release pointers of Valkey ew:learning:current:* (F026-AC-16);
+// it reads the release events of QuestionPoolSubjects.
+const ReleasePointerName = "learning.release_pointer_cache"
+
 // QuestionPoolStream is the stream of the content events (EVT_LEARNING).
 var QuestionPoolStream = natsx.EventStream("learning")
 

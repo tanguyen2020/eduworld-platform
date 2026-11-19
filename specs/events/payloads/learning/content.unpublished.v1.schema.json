@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/content.unpublished.v1.schema.json",
+  "title": "Payload content.unpublished v1 (module learning, owner F026, ADR-0043)",
+  "description": "Con trỏ release về rỗng; lượt mới nhận 409 CONTENT_NOT_PUBLISHED, lượt đang ghim không bị ngắt. Consumer: con trỏ cache, manifest game, LMS, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_type",
+    "item_id",
+    "release_id",
+    "owner_scope",
+    "tenant_id",
+    "tenant_ids",
+    "from_version_id",
+    "to_version_id",
+    "reason",
+    "released_by",
+    "released_at"
+  ],
+  "properties": {
+    "item_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType"
+    },
+    "item_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "tenant_ids": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Tenant đích: tenant sở hữu, hoặc mọi tenant được gán item platform lúc phát (rỗng = platform chưa gán) [Proposed F026]"
+    },
+    "from_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "released_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "to_version_id": {
+      "type": "null"
+    }
+  },
+  "examples": [
+    {
+      "item_type": "question",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-000000000601",
+      "release_id": "0193a5f4-6c1e-7b2a-9d1f-000000000610",
+      "owner_scope": "tenant",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "tenant_ids": [
+        "0193a5f4-6c1e-7b2a-9d1f-000000000001"
+      ],
+      "from_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000000602",
+      "to_version_id": null,
+      "reason": "Gỡ để sửa",
+      "released_by": "0193a5f4-6c1e-7b2a-9d1f-000000000605",
+      "released_at": "2026-11-20T01:00:00Z"
+    }
+  ]
+}

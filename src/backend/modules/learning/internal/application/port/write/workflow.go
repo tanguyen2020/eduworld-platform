@@ -21,6 +21,9 @@ type StatusChange struct {
 	ReviewerID       *uuid.UUID
 	ExemptApprovedBy *uuid.UUID
 	PublishedAt      *time.Time
+	PublishedBy      *uuid.UUID
+	SnapshotKey      *string
+	SnapshotSHA      *string
 	ClearReview      bool
 }
 

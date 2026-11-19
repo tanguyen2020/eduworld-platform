@@ -399,6 +399,26 @@ func (_u *LearningMaterialVersionUpdate) ClearAudioExemptApprovedBy() *LearningM
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *LearningMaterialVersionUpdate) SetPublishedBy(v uuid.UUID) *LearningMaterialVersionUpdate {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *LearningMaterialVersionUpdate) SetNillablePublishedBy(v *uuid.UUID) *LearningMaterialVersionUpdate {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *LearningMaterialVersionUpdate) ClearPublishedBy() *LearningMaterialVersionUpdate {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *LearningMaterialVersionUpdate) SetTitle(v jsontext.Value) *LearningMaterialVersionUpdate {
 	_u.mutation.SetTitle(v)
@@ -763,6 +783,12 @@ func (_u *LearningMaterialVersionUpdate) sqlSave(ctx context.Context) (_node int
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(learningmaterialversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(learningmaterialversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(learningmaterialversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(learningmaterialversion.FieldTitle, field.TypeJSON, value)
@@ -1226,6 +1252,26 @@ func (_u *LearningMaterialVersionUpdateOne) ClearAudioExemptApprovedBy() *Learni
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *LearningMaterialVersionUpdateOne) SetPublishedBy(v uuid.UUID) *LearningMaterialVersionUpdateOne {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *LearningMaterialVersionUpdateOne) SetNillablePublishedBy(v *uuid.UUID) *LearningMaterialVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *LearningMaterialVersionUpdateOne) ClearPublishedBy() *LearningMaterialVersionUpdateOne {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *LearningMaterialVersionUpdateOne) SetTitle(v jsontext.Value) *LearningMaterialVersionUpdateOne {
 	_u.mutation.SetTitle(v)
@@ -1620,6 +1666,12 @@ func (_u *LearningMaterialVersionUpdateOne) sqlSave(ctx context.Context) (_node 
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(learningmaterialversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(learningmaterialversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(learningmaterialversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(learningmaterialversion.FieldTitle, field.TypeJSON, value)

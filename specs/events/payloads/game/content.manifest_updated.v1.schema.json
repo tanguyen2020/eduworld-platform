@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/content.manifest_updated.v1.schema.json",
+  "title": "Payload content.manifest_updated v1 (module game, owner F026, ADR-0043 §6)",
+  "description": "Manifest nội dung của một tenant được dựng lại (manifest_version tăng, ETag đổi). Envelope tenant_id = tenant của manifest. Consumer: realtime (WS content.manifest.updated).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "manifest_version",
+    "etag",
+    "generated_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "manifest_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "etag": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cause_release_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "manifest_version": 3,
+      "etag": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "generated_at": "2026-11-20T01:00:01Z",
+      "cause_release_id": "0193a5f4-6c1e-7b2a-9d1f-000000000610"
+    }
+  ]
+}

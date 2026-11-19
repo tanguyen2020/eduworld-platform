@@ -4991,6 +4991,22 @@ components:
         sha256:
           type: string
           maxLength: 64
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        min_client_version:
+          type: string
+          maxLength: 32
+          description: Phiên bản client tối thiểu của activity_type (ACTIVITY_ENGINE §12, F026-AC-25)
+    ActivityType:
+      type: string
+      description: Loại learning activity trong version này (ADR-0072, ADR-0082)
+      enum:
+        - quiz
+        - interactive_exercise
+        - minigame
+        - video_lesson
+        - audio_lesson
+        - simulation
     ContentBundle:
       type: object
       required:
@@ -5614,16 +5630,6 @@ components:
           $ref: '#/components/schemas/ActivityRender'
         evaluation:
           $ref: '#/components/schemas/Evaluation'
-    ActivityType:
-      type: string
-      description: Loại learning activity trong version này (ADR-0072, ADR-0082)
-      enum:
-        - quiz
-        - interactive_exercise
-        - minigame
-        - video_lesson
-        - audio_lesson
-        - simulation
     AttemptMode:
       type: string
       enum:
@@ -6616,6 +6622,11 @@ components:
             - scheduled
             - applied
             - cancelled
+            - failed
+        failure_code:
+          type: string
+          maxLength: 64
+          description: Mã lỗi guard khi lịch hẹn không áp dụng được
         released_by:
           $ref: '#/components/schemas/Uuid'
         released_at:

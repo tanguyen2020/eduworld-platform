@@ -2,25 +2,160 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/learning/content.published.v1.schema.json",
   "title": "Payload content.published v1 (module learning, ADR-0043)",
-  "description": "Một item nội dung học tập được publish (ngay hoặc đến giờ hẹn): con trỏ current_version_id đổi sang to_version_id. Consumer: snapshot worker (con trỏ cache), LMS (bài follow_latest), pool cache Question Bank, AUD. Không chứa nội dung câu hỏi hay đáp án.",
+  "description": "Một item nội dung học tập được publish (ngay hoặc đến giờ hẹn): con trỏ current_version_id đổi sang to_version_id. Consumer: snapshot worker (con trỏ cache), LMS (bài follow_latest), pool cache Question Bank, AUD. Không chứa nội dung câu hỏi hay đáp án. F026: tenant_ids là tenant đích của manifest/con trỏ cache; snapshot không chứa đáp án.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["item_type", "item_id", "to_version_id", "to_version", "release_id", "owner_scope", "tenant_id", "scheduled", "published_by"],
+  "required": [
+    "item_type",
+    "item_id",
+    "to_version_id",
+    "to_version",
+    "release_id",
+    "owner_scope",
+    "tenant_id",
+    "scheduled",
+    "published_by"
+  ],
   "properties": {
-    "item_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType" },
-    "item_id": { "type": "string", "format": "uuid" },
-    "from_version_id": { "type": ["string", "null"], "format": "uuid", "description": "null khi publish lần đầu hoặc sau unpublish" },
-    "to_version_id": { "type": "string", "format": "uuid" },
-    "to_version": { "type": "integer", "minimum": 1 },
-    "release_id": { "type": "string", "format": "uuid", "description": "Bản ghi content_releases" },
-    "owner_scope": { "type": "string", "enum": ["platform", "tenant"] },
-    "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null với nội dung platform (envelope tenant_id = null)" },
-    "school_id": { "type": ["string", "null"], "format": "uuid" },
-    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType", "description": "Chỉ khi item_type = activity" },
-    "grade_levels": { "type": "array", "maxItems": 9, "uniqueItems": true, "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
-    "subject_id": { "type": ["string", "null"], "format": "uuid" },
-    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
-    "scheduled": { "type": "boolean", "description": "true khi đến giờ hẹn publish_at" },
-    "published_by": { "type": "string", "format": "uuid" }
-  }
+    "item_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType"
+    },
+    "item_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "from_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "null khi publish lần đầu hoặc sau unpublish"
+    },
+    "to_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "to_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Bản ghi content_releases"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "null với nội dung platform (envelope tenant_id = null)"
+    },
+    "school_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "activity_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType",
+      "description": "Chỉ khi item_type = activity"
+    },
+    "grade_levels": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "subject_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "objective_ids": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "scheduled": {
+      "type": "boolean",
+      "description": "true khi đến giờ hẹn publish_at"
+    },
+    "published_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_ids": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Tenant đích: tenant sở hữu, hoặc mọi tenant được gán item platform lúc phát (rỗng = platform chưa gán) [Proposed F026]"
+    },
+    "min_client_version": {
+      "type": "string",
+      "maxLength": 32,
+      "description": "Chỉ khi item_type = activity (ACTIVITY_ENGINE §12, F026-AC-25)"
+    },
+    "snapshot_url": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048,
+      "description": "Chỉ với nội dung cdn_eligible (platform, không phải đề kiểm tra)"
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "cdn_eligible": {
+      "type": "boolean"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "item_type": "question",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-000000000601",
+      "release_id": "0193a5f4-6c1e-7b2a-9d1f-000000000610",
+      "owner_scope": "tenant",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "tenant_ids": [
+        "0193a5f4-6c1e-7b2a-9d1f-000000000001"
+      ],
+      "to_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000000602",
+      "to_version": 1,
+      "from_version_id": null,
+      "scheduled": false,
+      "published_by": "0193a5f4-6c1e-7b2a-9d1f-000000000605",
+      "snapshot_sha256": "abababababababababababababababababababababababababababababababab",
+      "cdn_eligible": false,
+      "released_at": "2026-11-20T01:00:00Z"
+    }
+  ]
 }

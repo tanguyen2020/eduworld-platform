@@ -88,6 +88,8 @@ type Handlers struct {
 	Reviews          ReviewQueries       // F025
 	Translations     TranslationCommands // F025 US5
 	TranslationJobs  TranslationQueries  // F025 US5
+	Releases         ReleaseCommands     // F026
+	ReleaseQueries   ReleaseQueries      // F026
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {

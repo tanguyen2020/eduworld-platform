@@ -30,6 +30,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
@@ -1504,6 +1505,63 @@ func init() {
 	reviewtaskDescID := reviewtaskMixinFields0[0].Descriptor()
 	// reviewtask.DefaultID holds the default value on creation for the id field.
 	reviewtask.DefaultID = reviewtaskDescID.Default.(func() uuid.UUID)
+	scheduledpublicationMixin := schema.ScheduledPublication{}.Mixin()
+	scheduledpublicationMixinHooks0 := scheduledpublicationMixin[0].Hooks()
+	scheduledpublication.Hooks[0] = scheduledpublicationMixinHooks0[0]
+	scheduledpublicationMixinInters0 := scheduledpublicationMixin[0].Interceptors()
+	scheduledpublication.Interceptors[0] = scheduledpublicationMixinInters0[0]
+	scheduledpublicationMixinFields0 := scheduledpublicationMixin[0].Fields()
+	_ = scheduledpublicationMixinFields0
+	scheduledpublicationFields := schema.ScheduledPublication{}.Fields()
+	_ = scheduledpublicationFields
+	// scheduledpublicationDescCreatedAt is the schema descriptor for created_at field.
+	scheduledpublicationDescCreatedAt := scheduledpublicationMixinFields0[2].Descriptor()
+	// scheduledpublication.DefaultCreatedAt holds the default value on creation for the created_at field.
+	scheduledpublication.DefaultCreatedAt = scheduledpublicationDescCreatedAt.Default.(func() time.Time)
+	// scheduledpublicationDescUpdatedAt is the schema descriptor for updated_at field.
+	scheduledpublicationDescUpdatedAt := scheduledpublicationMixinFields0[4].Descriptor()
+	// scheduledpublication.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	scheduledpublication.DefaultUpdatedAt = scheduledpublicationDescUpdatedAt.Default.(func() time.Time)
+	// scheduledpublication.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	scheduledpublication.UpdateDefaultUpdatedAt = scheduledpublicationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// scheduledpublicationDescDeleteReason is the schema descriptor for delete_reason field.
+	scheduledpublicationDescDeleteReason := scheduledpublicationMixinFields0[8].Descriptor()
+	// scheduledpublication.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	scheduledpublication.DeleteReasonValidator = scheduledpublicationDescDeleteReason.Validators[0].(func(string) error)
+	// scheduledpublicationDescVersion is the schema descriptor for version field.
+	scheduledpublicationDescVersion := scheduledpublicationMixinFields0[9].Descriptor()
+	// scheduledpublication.DefaultVersion holds the default value on creation for the version field.
+	scheduledpublication.DefaultVersion = scheduledpublicationDescVersion.Default.(int64)
+	// scheduledpublicationDescItemType is the schema descriptor for item_type field.
+	scheduledpublicationDescItemType := scheduledpublicationFields[0].Descriptor()
+	// scheduledpublication.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	scheduledpublication.ItemTypeValidator = scheduledpublicationDescItemType.Validators[0].(func(string) error)
+	// scheduledpublicationDescVersionNo is the schema descriptor for version_no field.
+	scheduledpublicationDescVersionNo := scheduledpublicationFields[3].Descriptor()
+	// scheduledpublication.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	scheduledpublication.VersionNoValidator = scheduledpublicationDescVersionNo.Validators[0].(func(int) error)
+	// scheduledpublicationDescStatus is the schema descriptor for status field.
+	scheduledpublicationDescStatus := scheduledpublicationFields[5].Descriptor()
+	// scheduledpublication.DefaultStatus holds the default value on creation for the status field.
+	scheduledpublication.DefaultStatus = scheduledpublicationDescStatus.Default.(string)
+	// scheduledpublication.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	scheduledpublication.StatusValidator = scheduledpublicationDescStatus.Validators[0].(func(string) error)
+	// scheduledpublicationDescFailureCode is the schema descriptor for failure_code field.
+	scheduledpublicationDescFailureCode := scheduledpublicationFields[6].Descriptor()
+	// scheduledpublication.FailureCodeValidator is a validator for the "failure_code" field. It is called by the builders before save.
+	scheduledpublication.FailureCodeValidator = scheduledpublicationDescFailureCode.Validators[0].(func(string) error)
+	// scheduledpublicationDescChangeNote is the schema descriptor for change_note field.
+	scheduledpublicationDescChangeNote := scheduledpublicationFields[8].Descriptor()
+	// scheduledpublication.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	scheduledpublication.ChangeNoteValidator = scheduledpublicationDescChangeNote.Validators[0].(func(string) error)
+	// scheduledpublicationDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	scheduledpublicationDescIdempotencyKey := scheduledpublicationFields[11].Descriptor()
+	// scheduledpublication.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	scheduledpublication.IdempotencyKeyValidator = scheduledpublicationDescIdempotencyKey.Validators[0].(func(string) error)
+	// scheduledpublicationDescID is the schema descriptor for id field.
+	scheduledpublicationDescID := scheduledpublicationMixinFields0[0].Descriptor()
+	// scheduledpublication.DefaultID holds the default value on creation for the id field.
+	scheduledpublication.DefaultID = scheduledpublicationDescID.Default.(func() uuid.UUID)
 	subjectMixin := schema.Subject{}.Mixin()
 	subjectMixinHooks0 := subjectMixin[0].Hooks()
 	subject.Hooks[0] = subjectMixinHooks0[0]

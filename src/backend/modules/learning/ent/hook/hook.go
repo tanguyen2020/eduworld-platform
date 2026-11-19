@@ -297,6 +297,18 @@ func (f ReviewTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReviewTaskMutation", m)
 }
 
+// The ScheduledPublicationFunc type is an adapter to allow the use of ordinary
+// function as ScheduledPublication mutator.
+type ScheduledPublicationFunc func(context.Context, *ent.ScheduledPublicationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScheduledPublicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ScheduledPublicationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ScheduledPublicationMutation", m)
+}
+
 // The SubjectFunc type is an adapter to allow the use of ordinary
 // function as Subject mutator.
 type SubjectFunc func(context.Context, *ent.SubjectMutation) (ent.Value, error)

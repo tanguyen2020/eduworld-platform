@@ -123,6 +123,15 @@ type Subject struct {
 	OutdatedFields    []string
 	PublishedAt       *time.Time
 	UpdatedAt         time.Time
+	// F026: release data of the item and the version.
+	ItemRowVersion int64
+	SnapshotDoc    json.RawMessage
+	SnapshotSHA    *string
+	QuestionType   string
+	ExamOnly       bool
+	SubjectID      *uuid.UUID
+	ObjectiveIDs   []uuid.UUID
+	ActivityType   string
 	// Children are the question versions a question set or blueprint references (publish checks of F026).
 	Children []uuid.UUID
 }
@@ -156,35 +165,13 @@ func (h Workflow) Load(ctx context.Context, t contentmodel.ContentType, itemID u
 	return docSubject(d, v), nil
 }
 
-// questionDoc is the document of a question version checked by the guard and the translation status: stem, render
-// payload (option feedback merged back), explanation and hints, at the pointers of QuestionAuthoringInput.
+// questionDoc is the document of a question version (texts, no answers) and its authoring render payload.
 func questionDoc(v dto.QuestionVersion) (json.RawMessage, json.RawMessage) {
-	render, err := mergedRender(v)
-	if err != nil {
-		render = v.RenderPayload
-	}
-	doc := map[string]json.RawMessage{"stem": v.Stem, "render_payload": render}
-	if !isNull(v.Explanation) {
-		doc["explanation"] = v.Explanation
-	}
-	if !isNull(v.Hints) {
-		doc["hints"] = v.Hints
-	}
-	b, _ := json.Marshal(doc)
-	return b, render
+	return dto.QuestionDoc(v, false), dto.QuestionRender(v)
 }
 
-// docDoc is the document of a composed content version: title, summary and the body keys of its type.
-func docDoc(v dto.DocVersion) json.RawMessage {
-	doc := map[string]json.RawMessage{}
-	_ = json.Unmarshal(v.Body, &doc)
-	doc["title"] = v.Title
-	if !isNull(v.Summary) {
-		doc["summary"] = v.Summary
-	}
-	b, _ := json.Marshal(doc)
-	return b
-}
+// docDoc is the document of a composed content version.
+func docDoc(v dto.DocVersion) json.RawMessage { return dto.DocDoc(v) }
 
 // translation computes translation_status and translation_meta of a draft save from the previous document (F025-AC-19).
 func translation(prev, next json.RawMessage, lang string, prevMeta json.RawMessage, at time.Time) (*string, json.RawMessage) {
@@ -198,7 +185,11 @@ func (h Workflow) questionSubject(q dto.Question, v dto.QuestionVersion) Subject
 	s := Subject{Type: contentmodel.TypeQuestion, ItemID: q.ID, VersionID: v.ID, VersionNo: v.VersionNo, Status: v.Status, AuthorID: v.AuthorID,
 		ReviewerID: v.ReviewerID, Owner: q.Owner, RowVersion: v.RowVersion, CurrentVersionID: q.CurrentVersionID, GradeLevels: v.GradeLevels,
 		ContentLanguage: v.ContentLanguage, Doc: b, Title: titleOf(v.Stem, v.ContentLanguage), AudioExemptReason: deref(v.AudioExemptReason),
-		ExemptApprovedBy: v.AudioExemptApprovedBy, TranslationStatus: v.TranslationStatus, PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt}
+		ExemptApprovedBy: v.AudioExemptApprovedBy, TranslationStatus: v.TranslationStatus, PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt,
+		ItemRowVersion: q.RowVersion, SnapshotDoc: dto.QuestionSnapshotDoc(v), SnapshotSHA: v.SnapshotSHA256, QuestionType: v.Type, ExamOnly: v.ExamOnly,
+		ObjectiveIDs: v.ObjectiveIDs}
+	subject := v.SubjectID
+	s.SubjectID = &subject
 	s.OutdatedFields = i18ntext.OutdatedFields(b, v.ContentLanguage, i18ntext.ParseMeta(v.TranslationMeta))
 	docs := append([]json.RawMessage{v.Stem, v.RenderPayload, v.OptionFeedback, v.Explanation}, hintsOf(v.Hints)...)
 	s.MediaRefs = MediaRefs(v.MediaRefs, docs...)
@@ -241,7 +232,8 @@ func docSubject(d dto.Doc, v dto.DocVersion) Subject {
 		ReviewerID: v.ReviewerID, Owner: d.Owner, RowVersion: v.RowVersion, CurrentVersionID: d.CurrentVersionID, GradeLevels: v.GradeLevels,
 		ContentLanguage: v.ContentLanguage, Doc: b, MediaRefs: v.MediaRefs, Title: titleOf(v.Title, v.ContentLanguage),
 		AudioExemptReason: deref(v.AudioExemptReason), ExemptApprovedBy: v.AudioExemptApprovedBy, TranslationStatus: v.TranslationStatus,
-		PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt}
+		PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt, ItemRowVersion: d.RowVersion, SnapshotDoc: b, SnapshotSHA: v.SnapshotSHA256,
+		SubjectID: v.SubjectID, ObjectiveIDs: v.ObjectiveIDs}
 	s.OutdatedFields = i18ntext.OutdatedFields(b, v.ContentLanguage, i18ntext.ParseMeta(v.TranslationMeta))
 	if len(v.GradeLevels) == 0 {
 		s.Meta = append(s.Meta, contentmodel.Violation{Field: "/grade_levels", Required: true, Reason: "is required before review"})
@@ -412,8 +404,8 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 	if err != nil || !slices.Contains(WorkflowTypes, t) {
 		return out, problem.Invalid("content_type", problem.SubInvalid, "has no workflow in this release")
 	}
-	if !workflow.ReviewAction(action) {
-		return out, problem.New(problem.InvalidStateTransition, "only submit_review, approve, reject and revise are review actions")
+	if !workflow.Supported(action) {
+		return out, problem.New(problem.InvalidStateTransition, "the action is not a workflow action; publish has its own endpoint")
 	}
 	if utf8.RuneCountInString(in.Note) > workflow.MaxNoteLen {
 		return out, problem.Invalid("note", problem.SubMaxLength, "is longer than 2000 characters")
@@ -447,7 +439,7 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 		if err := checkRowVersion(s.RowVersion, in.IfMatch); err != nil {
 			return err
 		}
-		res, err := workflow.Apply(workflow.Version{Status: s.Status, Author: s.AuthorID, AudioExemptReason: s.AudioExemptReason},
+		res, err := workflow.Apply(workflow.Version{Status: s.Status, Author: s.AuthorID, AudioExemptReason: s.AudioExemptReason, IsCurrent: s.IsCurrent()},
 			workflow.Request{Action: action, Actor: p.UserID, Note: in.Note, AudioExemptionAcknowledged: in.AudioExemptionAcknowledged})
 		if err != nil {
 			return workflowErr(ctx, err)
@@ -502,6 +494,22 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 		if err := h.trash().recordFor(ctx, s.Owner.TenantID, audit.Event{Action: transitionAudit[action], TargetType: string(t),
 			TargetID: s.ItemID.String(), Result: audit.ResultSuccess, Reason: truncate(in.Note, 500), Metadata: meta}); err != nil {
 			return err
+		}
+		if action == contentmodel.ActionArchive {
+			pl := map[string]any{"item_type": string(t), "item_id": s.ItemID, "version_id": s.VersionID, "version": s.VersionNo,
+				"owner_scope": string(s.Owner.Scope), "tenant_id": s.Owner.TenantID, "archived_by": p.UserID}
+			if in.Note != "" {
+				pl["note"] = in.Note
+			}
+			e := write.Event{Type: EventContentVersionArchived, SubjectType: string(t), SubjectID: s.VersionID.String(), Payload: pl}
+			if s.Owner.TenantID == nil {
+				e.Platform = true
+			} else {
+				e.TenantID = ptrClone(s.Owner.TenantID)
+			}
+			if err := h.Events.Publish(ctx, e); err != nil {
+				return err
+			}
 		}
 		if typ, ok := transitionEvents[action]; ok {
 			if err := h.publish(ctx, typ, s, task, res, p.UserID, in.Note); err != nil {

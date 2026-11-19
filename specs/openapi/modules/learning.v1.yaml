@@ -1157,6 +1157,131 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /cms/learning/content/{content_type}/{content_id}/versions/{version}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getContentVersion
+      x-portal-action:
+        param: content_type
+        map:
+          lesson: action.content_studio.lessons.view
+          learning_material: action.content_studio.lessons.view
+          activity: action.content_studio.activities.view
+          question: action.content_studio.question_bank.view
+          question_set: action.content_studio.question_sets.view
+          assessment_blueprint: action.content_studio.assessments.view
+          learning_path: action.content_studio.learning_paths.view
+      summary: Nội dung chỉ đọc của một version bất kỳ (kể cả archived) — đáp án chỉ khi có learning_content.review (F026-AC-20)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Version và nội dung theo dạng soạn thảo
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentVersionDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/content/{content_type}/{content_id}/usages:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getContentUsages
+      x-portal-action:
+        param: content_type
+        map:
+          lesson: action.content_studio.lessons.view
+          learning_material: action.content_studio.lessons.view
+          activity: action.content_studio.activities.view
+          question: action.content_studio.question_bank.view
+          question_set: action.content_studio.question_sets.view
+          assessment_blueprint: action.content_studio.assessments.view
+          learning_path: action.content_studio.learning_paths.view
+      summary: Nơi sử dụng một item trong module learning theo version, kèm số lượt đang ghim (F026-AC-27)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+      responses:
+        '200':
+          description: Tham chiếu trong phạm vi tenant người gọi
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/ContentUsage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/content/{content_type}/{content_id}/releases/{release_id}:cancel:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: cancelScheduledPublication
+      x-portal-action:
+        param: content_type
+        map:
+          lesson: action.content_studio.lessons.publish
+          learning_material: action.content_studio.lessons.publish
+          activity: action.content_studio.activities.publish
+          question: action.content_studio.question_bank.publish
+          question_set: action.content_studio.question_sets.publish
+          assessment_blueprint: action.content_studio.assessments.publish
+          learning_path: action.content_studio.learning_paths.publish
+      summary: Hủy một lịch hẹn xuất bản chưa chạy (F026-AC-19)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningContentType'
+        - $ref: '#/components/parameters/ContentIdPath'
+        - name: release_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Lịch đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /cms/learning/content/{content_type}/{content_id}/releases:
     get:
       x-service: learning
@@ -9360,6 +9485,11 @@ components:
             - scheduled
             - applied
             - cancelled
+            - failed
+        failure_code:
+          type: string
+          maxLength: 64
+          description: Mã lỗi guard khi lịch hẹn không áp dụng được
         released_by:
           $ref: '#/components/schemas/Uuid'
         released_at:
@@ -9387,6 +9517,49 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+    ContentVersionDetail:
+      allOf:
+        - $ref: '#/components/schemas/ContentVersion'
+        - type: object
+          properties:
+            content:
+              type: object
+              additionalProperties: true
+              description: Nội dung theo dạng soạn thảo của loại (stem, render_payload, blocks…); answer_key, scoring_rule, explanation, hints, feedback chỉ khi có learning_content.review
+    ContentUsage:
+      type: object
+      required:
+        - ref_type
+        - ref_id
+        - pinned_sessions
+      properties:
+        ref_type:
+          type: string
+          enum:
+            - question_set
+            - lesson
+            - learning_material
+            - assessment_blueprint
+            - activity
+            - assignment
+            - exam_session
+        ref_id:
+          $ref: '#/components/schemas/Uuid'
+        ref_version:
+          type: integer
+          minimum: 1
+        ref_version_id:
+          $ref: '#/components/schemas/Uuid'
+        used_version:
+          type: integer
+          minimum: 1
+          description: Version của item được tham chiếu
+        title:
+          type: string
+          maxLength: 255
+        pinned_sessions:
+          type: integer
+          minimum: 0
     NewVersionRequest:
       type: object
       required:

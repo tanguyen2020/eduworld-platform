@@ -399,6 +399,26 @@ func (_u *AssessmentBlueprintVersionUpdate) ClearAudioExemptApprovedBy() *Assess
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *AssessmentBlueprintVersionUpdate) SetPublishedBy(v uuid.UUID) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdate) SetNillablePublishedBy(v *uuid.UUID) *AssessmentBlueprintVersionUpdate {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *AssessmentBlueprintVersionUpdate) ClearPublishedBy() *AssessmentBlueprintVersionUpdate {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *AssessmentBlueprintVersionUpdate) SetTitle(v jsontext.Value) *AssessmentBlueprintVersionUpdate {
 	_u.mutation.SetTitle(v)
@@ -763,6 +783,12 @@ func (_u *AssessmentBlueprintVersionUpdate) sqlSave(ctx context.Context) (_node 
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldTitle, field.TypeJSON, value)
@@ -1226,6 +1252,26 @@ func (_u *AssessmentBlueprintVersionUpdateOne) ClearAudioExemptApprovedBy() *Ass
 	return _u
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetPublishedBy(v uuid.UUID) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetNillablePublishedBy(v *uuid.UUID) *AssessmentBlueprintVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) ClearPublishedBy() *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *AssessmentBlueprintVersionUpdateOne) SetTitle(v jsontext.Value) *AssessmentBlueprintVersionUpdateOne {
 	_u.mutation.SetTitle(v)
@@ -1620,6 +1666,12 @@ func (_u *AssessmentBlueprintVersionUpdateOne) sqlSave(ctx context.Context) (_no
 	}
 	if _u.mutation.AudioExemptApprovedByCleared() {
 		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldPublishedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldTitle, field.TypeJSON, value)

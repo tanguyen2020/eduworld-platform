@@ -38,6 +38,9 @@ type statusUpdate[U any] interface {
 	SetAudioExemptApprovedBy(uuid.UUID) U
 	ClearAudioExemptApprovedBy() U
 	SetPublishedAt(time.Time) U
+	SetPublishedBy(uuid.UUID) U
+	SetSnapshotKey(string) U
+	SetSnapshotSha256(string) U
 	AddVersion(int64) U
 	Save(context.Context) (int, error)
 }
@@ -55,6 +58,15 @@ func applyStatus[U statusUpdate[U]](ctx context.Context, u U, c write.StatusChan
 	}
 	if c.PublishedAt != nil {
 		u.SetPublishedAt(c.PublishedAt.UTC())
+	}
+	if c.PublishedBy != nil {
+		u.SetPublishedBy(*c.PublishedBy)
+	}
+	if c.SnapshotKey != nil {
+		u.SetSnapshotKey(*c.SnapshotKey)
+	}
+	if c.SnapshotSHA != nil {
+		u.SetSnapshotSha256(*c.SnapshotSHA)
 	}
 	return u.Save(ctx)
 }

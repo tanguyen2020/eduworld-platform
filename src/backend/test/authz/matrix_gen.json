@@ -309,6 +309,18 @@
     ]
   },
   {
+    "operation_id": "cancelScheduledPublication",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/content/{content_type}/{content_id}/releases/{release_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "cancelSchoolEvent",
     "module": "game",
     "method": "POST",
@@ -1866,6 +1878,30 @@
     "method": "GET",
     "path": "/game/content-manifest",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getContentUsages",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/content/{content_type}/{content_id}/usages",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getContentVersion",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/content/{content_type}/{content_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

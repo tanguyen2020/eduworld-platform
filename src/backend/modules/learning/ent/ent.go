@@ -36,6 +36,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -129,6 +130,7 @@ func checkColumn(t, c string) error {
 			questionversion.Table:            questionversion.ValidColumn,
 			questionversionobjective.Table:   questionversionobjective.ValidColumn,
 			reviewtask.Table:                 reviewtask.ValidColumn,
+			scheduledpublication.Table:       scheduledpublication.ValidColumn,
 			subject.Table:                    subject.ValidColumn,
 			subjectgrade.Table:               subjectgrade.ValidColumn,
 			tenantresourceassignment.Table:   tenantresourceassignment.ValidColumn,

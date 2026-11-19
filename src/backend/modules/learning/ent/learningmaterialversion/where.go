@@ -200,6 +200,11 @@ func AudioExemptApprovedBy(v uuid.UUID) predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
 }
 
+// PublishedBy applies equality check predicate on the "published_by" field. It's identical to PublishedByEQ.
+func PublishedBy(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
 // LearningMaterialID applies equality check predicate on the "learning_material_id" field. It's identical to LearningMaterialIDEQ.
 func LearningMaterialID(v uuid.UUID) predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldLearningMaterialID, v))
@@ -1813,6 +1818,56 @@ func AudioExemptApprovedByIsNil() predicate.LearningMaterialVersion {
 // AudioExemptApprovedByNotNil applies the NotNil predicate on the "audio_exempt_approved_by" field.
 func AudioExemptApprovedByNotNil() predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldAudioExemptApprovedBy))
+}
+
+// PublishedByEQ applies the EQ predicate on the "published_by" field.
+func PublishedByEQ(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
+// PublishedByNEQ applies the NEQ predicate on the "published_by" field.
+func PublishedByNEQ(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNEQ(FieldPublishedBy, v))
+}
+
+// PublishedByIn applies the In predicate on the "published_by" field.
+func PublishedByIn(vs ...uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByNotIn applies the NotIn predicate on the "published_by" field.
+func PublishedByNotIn(vs ...uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByGT applies the GT predicate on the "published_by" field.
+func PublishedByGT(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGT(FieldPublishedBy, v))
+}
+
+// PublishedByGTE applies the GTE predicate on the "published_by" field.
+func PublishedByGTE(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGTE(FieldPublishedBy, v))
+}
+
+// PublishedByLT applies the LT predicate on the "published_by" field.
+func PublishedByLT(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLT(FieldPublishedBy, v))
+}
+
+// PublishedByLTE applies the LTE predicate on the "published_by" field.
+func PublishedByLTE(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLTE(FieldPublishedBy, v))
+}
+
+// PublishedByIsNil applies the IsNil predicate on the "published_by" field.
+func PublishedByIsNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIsNull(FieldPublishedBy))
+}
+
+// PublishedByNotNil applies the NotNil predicate on the "published_by" field.
+func PublishedByNotNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldPublishedBy))
 }
 
 // LearningMaterialIDEQ applies the EQ predicate on the "learning_material_id" field.

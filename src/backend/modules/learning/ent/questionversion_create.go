@@ -410,6 +410,20 @@ func (_c *QuestionVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) 
 	return _c
 }
 
+// SetPublishedBy sets the "published_by" field.
+func (_c *QuestionVersionCreate) SetPublishedBy(v uuid.UUID) *QuestionVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *QuestionVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *QuestionVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetQuestionID sets the "question_id" field.
 func (_c *QuestionVersionCreate) SetQuestionID(v uuid.UUID) *QuestionVersionCreate {
 	_c.mutation.SetQuestionID(v)
@@ -969,6 +983,10 @@ func (_c *QuestionVersionCreate) createSpec() (*QuestionVersion, *sqlgraph.Creat
 	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
 		_spec.SetField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
 		_node.AudioExemptApprovedBy = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(questionversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	if value, ok := _c.mutation.QuestionID(); ok {
 		_spec.SetField(questionversion.FieldQuestionID, field.TypeUUID, value)

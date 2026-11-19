@@ -49,3 +49,14 @@ make test-contract
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo F026-AC-*, trace_id bước 1 và 13, số đo p95 bước 14, kết quả quét snapshot (SC-002).
+
+## 4. Bằng chứng (2026-11-20, local, testcontainers PostgreSQL 17 + floci + Valkey)
+
+| Tiêu chí | Test | Kết quả |
+|---|---|---|
+| F026-AC-01…07 | `TestReleasePublish`, `release.TestRules` | pass |
+| F026-AC-08…11, 15; SC-003, SC-004 | `TestReleaseRollbackUnpublish` | pass |
+| F026-AC-12…14, 16; SC-002 | `TestReleaseSnapshotsCache`, `snapshot.TestStrip`, `contract.TestSnapshotStrip` | pass |
+| F026-AC-17…19 | `TestReleaseSchedule` | pass |
+| F026-AC-20…22, 27, 28 | `TestReleaseHistory`, `snapshot.TestDiff` | pass |
+| F026-AC-23…26; SC-001 | `game: TestManifestOnLearningContent` | pass |

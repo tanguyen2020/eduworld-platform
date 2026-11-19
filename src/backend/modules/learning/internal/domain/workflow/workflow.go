@@ -59,14 +59,20 @@ var (
 var reviewActions = []contentmodel.Action{contentmodel.ActionSubmitReview, contentmodel.ActionApprove, contentmodel.ActionReject,
 	contentmodel.ActionRevise}
 
-// ReviewAction reports one of the four actions of F025 (publish/archive belong to F026).
+// ReviewAction reports one of the four review actions of F025.
 func ReviewAction(a contentmodel.Action) bool { return slices.Contains(reviewActions, a) }
+
+// Supported reports an action of transitionContentVersion: the review actions and archive (F026-AC-28); publish has its
+// own endpoint.
+func Supported(a contentmodel.Action) bool { return ReviewAction(a) || a == contentmodel.ActionArchive }
 
 // Version is the workflow state of a content version.
 type Version struct {
 	Status            contentmodel.Status
 	Author            uuid.UUID
 	AudioExemptReason string
+	// IsCurrent: the version is the release pointer of its item (archive is refused, F026-AC-28).
+	IsCurrent bool
 }
 
 // Request is a review action by Actor.
@@ -91,13 +97,13 @@ type Result struct {
 // Apply applies a review action (data-model §2): approve needs a reviewer other than the author and the acknowledgement
 // of a declared audio exemption, reject a note of 1–2000 characters.
 func Apply(v Version, r Request) (Result, error) {
-	if !ReviewAction(r.Action) {
+	if !Supported(r.Action) {
 		return Result{}, ErrInvalidTransition
 	}
 	if utf8.RuneCountInString(r.Note) > MaxNoteLen {
 		return Result{}, ErrNoteTooLong
 	}
-	to, err := contentmodel.Transition(v.Status, r.Action, contentmodel.TransitionInput{Actor: r.Actor, Author: v.Author, Note: r.Note})
+	to, err := contentmodel.Transition(v.Status, r.Action, contentmodel.TransitionInput{Actor: r.Actor, Author: v.Author, Note: r.Note, IsCurrent: v.IsCurrent})
 	switch {
 	case errors.Is(err, contentmodel.ErrReviewerIsAuthor):
 		return Result{}, ErrSelfReview

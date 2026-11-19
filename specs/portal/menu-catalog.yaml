@@ -618,9 +618,13 @@ workspaces:
               - listCmsLearningMaterials
               - getCmsLearningMaterial
               - "listContentVersions[content_type=lesson]"
+              - "getContentVersion[content_type=lesson]"
+              - "getContentUsages[content_type=lesson]"
               - "diffContentVersions[content_type=lesson]"
               - "listContentReleases[content_type=lesson]"
               - "listContentVersions[content_type=learning_material]"
+              - "getContentVersion[content_type=learning_material]"
+              - "getContentUsages[content_type=learning_material]"
               - "diffContentVersions[content_type=learning_material]"
               - "listContentReleases[content_type=learning_material]"
             can_disable: true
@@ -640,7 +644,7 @@ workspaces:
             label_key: portal.action.content_studio.lessons.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=lesson]", "publishContentVersion[content_type=learning_material]"]
+            operation_ids: ["publishContentVersion[content_type=lesson]", "publishContentVersion[content_type=learning_material]", "cancelScheduledPublication[content_type=lesson]", "cancelScheduledPublication[content_type=learning_material]"]
             can_disable: true
           - key: action.content_studio.lessons.rollback
             label_key: portal.action.content_studio.lessons.rollback
@@ -669,6 +673,8 @@ workspaces:
               - getCmsActivity
               - listActivityTypes
               - "listContentVersions[content_type=activity]"
+              - "getContentVersion[content_type=activity]"
+              - "getContentUsages[content_type=activity]"
               - "diffContentVersions[content_type=activity]"
               - "listContentReleases[content_type=activity]"
             can_disable: true
@@ -688,7 +694,7 @@ workspaces:
             label_key: portal.action.content_studio.activities.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=activity]"]
+            operation_ids: ["publishContentVersion[content_type=activity]", "cancelScheduledPublication[content_type=activity]"]
             can_disable: true
           - key: action.content_studio.activities.rollback
             label_key: portal.action.content_studio.activities.rollback
@@ -728,6 +734,8 @@ workspaces:
               - getCmsQuestion
               - getCmsQuestionVersion
               - "listContentVersions[content_type=question]"
+              - "getContentVersion[content_type=question]"
+              - "getContentUsages[content_type=question]"
               - "diffContentVersions[content_type=question]"
               - "listContentReleases[content_type=question]"
             can_disable: true
@@ -747,7 +755,7 @@ workspaces:
             label_key: portal.action.content_studio.question_bank.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=question]"]
+            operation_ids: ["publishContentVersion[content_type=question]", "cancelScheduledPublication[content_type=question]"]
             can_disable: true
           - key: action.content_studio.question_bank.rollback
             label_key: portal.action.content_studio.question_bank.rollback
@@ -778,6 +786,8 @@ workspaces:
               - getCmsQuestionSet
               - getQuestionSetPoolStats
               - "listContentVersions[content_type=question_set]"
+              - "getContentVersion[content_type=question_set]"
+              - "getContentUsages[content_type=question_set]"
               - "diffContentVersions[content_type=question_set]"
               - "listContentReleases[content_type=question_set]"
             can_disable: true
@@ -797,7 +807,7 @@ workspaces:
             label_key: portal.action.content_studio.question_sets.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=question_set]"]
+            operation_ids: ["publishContentVersion[content_type=question_set]", "cancelScheduledPublication[content_type=question_set]"]
             can_disable: true
           - key: action.content_studio.question_sets.rollback
             label_key: portal.action.content_studio.question_sets.rollback
@@ -822,6 +832,8 @@ workspaces:
               - getAssessmentBlueprintPoolStats
               - getCmsAssessmentBlueprint
               - "listContentVersions[content_type=assessment_blueprint]"
+              - "getContentVersion[content_type=assessment_blueprint]"
+              - "getContentUsages[content_type=assessment_blueprint]"
               - "diffContentVersions[content_type=assessment_blueprint]"
               - "listContentReleases[content_type=assessment_blueprint]"
             can_disable: true
@@ -841,7 +853,7 @@ workspaces:
             label_key: portal.action.content_studio.assessments.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=assessment_blueprint]"]
+            operation_ids: ["publishContentVersion[content_type=assessment_blueprint]", "cancelScheduledPublication[content_type=assessment_blueprint]"]
             can_disable: true
           - key: action.content_studio.assessments.rollback
             label_key: portal.action.content_studio.assessments.rollback
@@ -897,6 +909,8 @@ workspaces:
             required_permissions: [learning_content.read]
             operation_ids:
               - "listContentVersions[content_type=learning_path]"
+              - "getContentVersion[content_type=learning_path]"
+              - "getContentUsages[content_type=learning_path]"
               - "diffContentVersions[content_type=learning_path]"
               - "listContentReleases[content_type=learning_path]"
             can_disable: true
@@ -910,7 +924,7 @@ workspaces:
             label_key: portal.action.content_studio.learning_paths.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=learning_path]"]
+            operation_ids: ["publishContentVersion[content_type=learning_path]", "cancelScheduledPublication[content_type=learning_path]"]
             can_disable: true
           - key: action.content_studio.learning_paths.rollback
             label_key: portal.action.content_studio.learning_paths.rollback

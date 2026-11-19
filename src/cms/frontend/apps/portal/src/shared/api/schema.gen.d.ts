@@ -2601,6 +2601,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/content/{content_type}/{content_id}/releases/{release_id}:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hủy một lịch hẹn xuất bản chưa chạy (F026-AC-19) */
+        post: operations["cancelScheduledPublication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/content/{content_type}/{content_id}/usages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nơi sử dụng một item trong module learning theo version, kèm số lượt đang ghim (F026-AC-27) */
+        get: operations["getContentUsages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/learning/content/{content_type}/{content_id}/versions": {
         parameters: {
             query?: never;
@@ -2610,6 +2644,23 @@ export interface paths {
         };
         /** Lịch sử version của một item nội dung học tập (ADR-0043) */
         get: operations["listContentVersions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/content/{content_type}/{content_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nội dung chỉ đọc của một version bất kỳ (kể cả archived) — đáp án chỉ khi có learning_content.review (F026-AC-20) */
+        get: operations["getContentVersion"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9078,8 +9129,11 @@ export interface components {
             tenant_id: components["schemas"]["Uuid"];
         };
         ContentManifestItem: {
+            activity_type?: components["schemas"]["ActivityType"];
             item_id: components["schemas"]["Uuid"];
             item_type: string;
+            /** @description Phiên bản client tối thiểu của activity_type (ACTIVITY_ENGINE §12, F026-AC-25) */
+            min_client_version?: string;
             sha256: string;
             /**
              * Format: uri
@@ -9092,6 +9146,8 @@ export interface components {
         ContentRelease: {
             /** @enum {string} */
             action: "publish" | "rollback" | "unpublish";
+            /** @description Mã lỗi guard khi lịch hẹn không áp dụng được */
+            failure_code?: string;
             from_version?: number;
             item_id: components["schemas"]["Uuid"];
             item_type: string;
@@ -9101,7 +9157,7 @@ export interface components {
             released_by: components["schemas"]["Uuid"];
             scheduled_for?: components["schemas"]["Timestamp"];
             /** @enum {string} */
-            status?: "scheduled" | "applied" | "cancelled";
+            status?: "scheduled" | "applied" | "cancelled" | "failed";
             to_version?: number;
         };
         ContentReviewTask: {
@@ -9140,6 +9196,17 @@ export interface components {
         };
         /** @enum {string} */
         ContentStatus: "draft" | "in_review" | "approved" | "published" | "archived" | "rejected";
+        ContentUsage: {
+            pinned_sessions: number;
+            ref_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            ref_type: "question_set" | "lesson" | "learning_material" | "assessment_blueprint" | "activity" | "assignment" | "exam_session";
+            ref_version?: number;
+            ref_version_id?: components["schemas"]["Uuid"];
+            title?: string;
+            /** @description Version của item được tham chiếu */
+            used_version?: number;
+        };
         ContentVersion: {
             /** @description true nếu là dữ liệu platform được gán cho tenant (chỉ đọc với tenant) */
             assigned?: boolean;
@@ -9172,6 +9239,12 @@ export interface components {
                 field: string;
                 message?: string;
             }[];
+        };
+        ContentVersionDetail: components["schemas"]["ContentVersion"] & {
+            /** @description Nội dung theo dạng soạn thảo của loại (stem, render_payload, blocks…); answer_key, scoring_rule, explanation, hints, feedback chỉ khi có learning_content.review */
+            content?: {
+                [key: string]: unknown;
+            };
         };
         ContentVersionDiff: {
             changes: {
@@ -20163,6 +20236,83 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    cancelScheduledPublication: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                content_id: components["parameters"]["ContentIdPath"];
+                content_type: components["parameters"]["LearningContentType"];
+                release_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lịch đã hủy */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentRelease"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getContentUsages: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                content_id: components["parameters"]["ContentIdPath"];
+                content_type: components["parameters"]["LearningContentType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tham chiếu trong phạm vi tenant người gọi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContentUsage"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     listContentVersions: {
         parameters: {
             query?: {
@@ -20194,6 +20344,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentVersionHistory"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getContentVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                content_id: components["parameters"]["ContentIdPath"];
+                content_type: components["parameters"]["LearningContentType"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Version và nội dung theo dạng soạn thảo */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentVersionDetail"];
                 };
             };
             401: components["responses"]["Unauthenticated"];

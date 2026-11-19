@@ -78,6 +78,9 @@ type QuestionVersionObjective func(*sql.Selector)
 // ReviewTask is the predicate function for reviewtask builders.
 type ReviewTask func(*sql.Selector)
 
+// ScheduledPublication is the predicate function for scheduledpublication builders.
+type ScheduledPublication func(*sql.Selector)
+
 // Subject is the predicate function for subject builders.
 type Subject func(*sql.Selector)
 

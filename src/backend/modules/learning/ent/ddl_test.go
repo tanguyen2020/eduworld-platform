@@ -28,6 +28,7 @@ var migrations = map[string][]string{
 	"20261127000001_f024_content_types.sql": {"question_sets", "question_set_versions", "question_set_items", "lessons", "lesson_versions",
 		"learning_materials", "learning_material_versions", "assessment_blueprints", "assessment_blueprint_versions"},
 	"20261128000001_f025_workflow.sql": {"review_tasks", "translation_jobs"},
+	"20261129000001_f026_release.sql":  {"scheduled_publications"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -47,6 +48,13 @@ var added = map[string][]addition{
 		{"lesson_versions", workflowColumns, nil},
 		{"learning_material_versions", workflowColumns, nil},
 		{"assessment_blueprint_versions", workflowColumns, nil},
+	},
+	"20261129000001_f026_release.sql": {
+		{"question_versions", []string{"published_by"}, nil},
+		{"question_set_versions", []string{"published_by"}, nil},
+		{"lesson_versions", []string{"published_by"}, nil},
+		{"learning_material_versions", []string{"published_by"}, nil},
+		{"assessment_blueprint_versions", []string{"published_by"}, nil},
 	},
 }
 
@@ -80,7 +88,7 @@ func schemas() map[string]string {
 		"question_sets": c.QuestionSet, "question_set_versions": c.QuestionSetVersion, "question_set_items": c.QuestionSetItem,
 		"lessons": c.Lesson, "lesson_versions": c.LessonVersion, "learning_materials": c.LearningMaterial,
 		"learning_material_versions": c.LearningMaterialVersion, "assessment_blueprints": c.AssessmentBlueprint,
-		"assessment_blueprint_versions": c.AssessmentBlueprintVersion, "review_tasks": c.ReviewTask, "translation_jobs": c.TranslationJob,
+		"assessment_blueprint_versions": c.AssessmentBlueprintVersion, "review_tasks": c.ReviewTask, "translation_jobs": c.TranslationJob, "scheduled_publications": c.ScheduledPublication,
 	}
 }
 

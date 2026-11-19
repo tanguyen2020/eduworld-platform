@@ -200,6 +200,11 @@ func AudioExemptApprovedBy(v uuid.UUID) predicate.QuestionSetVersion {
 	return predicate.QuestionSetVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
 }
 
+// PublishedBy applies equality check predicate on the "published_by" field. It's identical to PublishedByEQ.
+func PublishedBy(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
 // QuestionSetID applies equality check predicate on the "question_set_id" field. It's identical to QuestionSetIDEQ.
 func QuestionSetID(v uuid.UUID) predicate.QuestionSetVersion {
 	return predicate.QuestionSetVersion(sql.FieldEQ(FieldQuestionSetID, v))
@@ -1813,6 +1818,56 @@ func AudioExemptApprovedByIsNil() predicate.QuestionSetVersion {
 // AudioExemptApprovedByNotNil applies the NotNil predicate on the "audio_exempt_approved_by" field.
 func AudioExemptApprovedByNotNil() predicate.QuestionSetVersion {
 	return predicate.QuestionSetVersion(sql.FieldNotNull(FieldAudioExemptApprovedBy))
+}
+
+// PublishedByEQ applies the EQ predicate on the "published_by" field.
+func PublishedByEQ(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
+// PublishedByNEQ applies the NEQ predicate on the "published_by" field.
+func PublishedByNEQ(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldNEQ(FieldPublishedBy, v))
+}
+
+// PublishedByIn applies the In predicate on the "published_by" field.
+func PublishedByIn(vs ...uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByNotIn applies the NotIn predicate on the "published_by" field.
+func PublishedByNotIn(vs ...uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldNotIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByGT applies the GT predicate on the "published_by" field.
+func PublishedByGT(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldGT(FieldPublishedBy, v))
+}
+
+// PublishedByGTE applies the GTE predicate on the "published_by" field.
+func PublishedByGTE(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldGTE(FieldPublishedBy, v))
+}
+
+// PublishedByLT applies the LT predicate on the "published_by" field.
+func PublishedByLT(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldLT(FieldPublishedBy, v))
+}
+
+// PublishedByLTE applies the LTE predicate on the "published_by" field.
+func PublishedByLTE(v uuid.UUID) predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldLTE(FieldPublishedBy, v))
+}
+
+// PublishedByIsNil applies the IsNil predicate on the "published_by" field.
+func PublishedByIsNil() predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldIsNull(FieldPublishedBy))
+}
+
+// PublishedByNotNil applies the NotNil predicate on the "published_by" field.
+func PublishedByNotNil() predicate.QuestionSetVersion {
+	return predicate.QuestionSetVersion(sql.FieldNotNull(FieldPublishedBy))
 }
 
 // QuestionSetIDEQ applies the EQ predicate on the "question_set_id" field.

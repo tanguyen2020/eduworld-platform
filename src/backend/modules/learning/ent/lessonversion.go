@@ -80,6 +80,8 @@ type LessonVersion struct {
 	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
 	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
 	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy *uuid.UUID `json:"published_by,omitempty"`
 	// LessonID holds the value of the "lesson_id" field.
 	LessonID uuid.UUID `json:"lesson_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -108,7 +110,7 @@ func (*LessonVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case lessonversion.FieldTenantID, lessonversion.FieldCreatedBy, lessonversion.FieldUpdatedBy, lessonversion.FieldDeletedBy, lessonversion.FieldReviewerID, lessonversion.FieldCurriculumVersionID, lessonversion.FieldBasedOnVersionID, lessonversion.FieldClonedFromID, lessonversion.FieldClonedFromTenantID, lessonversion.FieldClonedBy, lessonversion.FieldAudioExemptApprovedBy, lessonversion.FieldSubjectID:
+		case lessonversion.FieldTenantID, lessonversion.FieldCreatedBy, lessonversion.FieldUpdatedBy, lessonversion.FieldDeletedBy, lessonversion.FieldReviewerID, lessonversion.FieldCurriculumVersionID, lessonversion.FieldBasedOnVersionID, lessonversion.FieldClonedFromID, lessonversion.FieldClonedFromTenantID, lessonversion.FieldClonedBy, lessonversion.FieldAudioExemptApprovedBy, lessonversion.FieldPublishedBy, lessonversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case lessonversion.FieldTranslationMeta, lessonversion.FieldTitle, lessonversion.FieldSummary, lessonversion.FieldGradeLevels, lessonversion.FieldTopicIds, lessonversion.FieldObjectiveIds, lessonversion.FieldMediaRefs, lessonversion.FieldWorkedExampleIds, lessonversion.FieldBody:
 			values[i] = new([]byte)
@@ -343,6 +345,13 @@ func (_m *LessonVersion) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.AudioExemptApprovedBy = new(uuid.UUID)
 				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
+			}
+		case lessonversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
 			}
 		case lessonversion.FieldLessonID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -586,6 +595,11 @@ func (_m *LessonVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.AudioExemptApprovedBy; v != nil {
 		builder.WriteString("audio_exempt_approved_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
