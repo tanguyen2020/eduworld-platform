@@ -42,10 +42,43 @@ export const LIMITS = {
   curfewTime: { source: 'components.schemas.PlatformCurfewSettings.properties.start', maxLength: 5, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' },
   curfewReason: { source: 'components.schemas.PlatformCurfewSettings.properties.reason', minLength: 3, maxLength: 500 },
   pageSize: { source: 'components.parameters.Limit', minimum: 1, maximum: 100 },
+  // F059 (F059-AC-27): permission catalog, roles, UserRoles, accounts, audit, feature flags
+  permissionSearch: { source: 'components.schemas.Permission.properties.code', maxLength: 64 },
+  permissionCodes: { source: 'components.schemas.RoleInput.properties.permission_codes', maxItems: 500 },
+  roleCode: { source: 'components.schemas.RoleInput.properties.code', maxLength: 64, pattern: '^[a-z][a-z0-9_]{1,63}$' },
+  roleNameVi: { source: 'components.schemas.TenantLocalizedName.properties.vi', minLength: 1, maxLength: 255 },
+  roleNameEn: { source: 'components.schemas.TenantLocalizedName.properties.en', minLength: 1, maxLength: 255 },
+  roleDescription: { source: 'components.schemas.RoleInput.properties.description', maxLength: 1000 },
+  roleReason: { source: 'components.schemas.RoleInput.properties.reason', maxLength: 1000 },
+  roleDeleteReason: { source: 'paths./admin/roles/{role_id}.delete.parameters.reason', minLength: 3, maxLength: 1000 },
+  grantReason: { source: 'components.schemas.UserRoleGrantRequest.properties.reason', maxLength: 1000 },
+  revokeReason: { source: 'paths./admin/user-roles/{user_role_id}.delete.parameters.reason', minLength: 3, maxLength: 1000 },
+  lockReason: { source: 'paths./admin/users/{user_id}:lock.post.requestBody.reason', maxLength: 500 },
+  unlockReason: { source: 'paths./admin/users/{user_id}:unlock.post.requestBody.reason', minLength: 3, maxLength: 500 },
+  deactivateReason: { source: 'paths./admin/users/{user_id}:deactivate.post.requestBody.reason', minLength: 3, maxLength: 500 },
+  username: { source: 'components.schemas.TenantUserCreateRequest.properties.username', minLength: 3, maxLength: 128, pattern: '^[A-Za-z0-9._-]{3,128}$' },
+  email: { source: 'components.schemas.TenantUserCreateRequest.properties.email', maxLength: 320 },
+  displayName: { source: 'components.schemas.TenantUserCreateRequest.properties.display_name', minLength: 1, maxLength: 128 },
+  initialUserRoles: { source: 'components.schemas.TenantUserCreateRequest.properties.initial_user_roles', maxItems: 20 },
+  tenantUserSearch: { source: 'paths./tenant/users.get.parameters.q', minLength: 2, maxLength: 100 },
+  auditAction: { source: 'paths./admin/audit-logs.get.parameters.action', maxLength: 128 },
+  auditResourceType: { source: 'paths./admin/audit-logs.get.parameters.resource_type', maxLength: 64 },
+  flagDescription: { source: 'components.schemas.FeatureFlagWrite.properties.description', maxLength: 1000 },
+  flagReason: { source: 'components.schemas.FeatureFlagWrite.properties.reason', minLength: 3, maxLength: 500 },
 } as const satisfies Record<string, FieldLimit>;
 
 /** CONFIG_DEFAULTS `inactive_student_cleanup_low_days_warning` (ADR-0032, ADMIN_PORTAL §3.10): display warning only. */
 export const CLEANUP_LOW_DAYS_WARNING = 60;
+
+/** CONFIG_DEFAULTS `principal_cache_ttl` (ADR-0066): delay before a role/UserRole change applies — message only (F059-AC-05). */
+export const PRINCIPAL_CACHE_TTL_SECONDS = 60;
+
+/** CONFIG_DEFAULTS `audit_query_max_range_days` (ADMIN_PORTAL §7): longest audit query, shown with a `422` (F059-AC-17). */
+export const AUDIT_MAX_RANGE_DAYS = 93;
+
+/** Default audit window (24 h) and login-events window (7 days): UI choices, not business parameters (F059 Assumptions). */
+export const AUDIT_DEFAULT_HOURS = 24;
+export const LOGIN_EVENTS_DEFAULT_DAYS = 7;
 
 /** Page size of the cursor lists of workspace D (≤ `Limit.maximum`). */
 export const PAGE_SIZE = 50;

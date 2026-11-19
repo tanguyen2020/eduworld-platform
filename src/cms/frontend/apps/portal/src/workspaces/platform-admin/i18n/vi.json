@@ -279,5 +279,320 @@
     "curfewConfirmTitle": "Lưu giờ giới nghiêm platform?",
     "curfewConfirmContent": "Trong khung giờ này, mọi học sinh của mọi tenant bị chặn đăng nhập game, game session và chat.",
     "readOnly": "Bạn chỉ có quyền xem cấu hình."
+  },
+  "access": {
+    "tabUsers": "Người dùng",
+    "tabRoles": "Role",
+    "tabPermissions": "Permission catalog",
+    "tabUserRoles": "UserRole"
+  },
+  "scopeKind": {
+    "platform": "Platform",
+    "tenant": "Tenant"
+  },
+  "scopeType": {
+    "platform": "Platform",
+    "tenant": "Toàn tenant",
+    "school": "Trường",
+    "subject": "Môn học"
+  },
+  "permissions": {
+    "code": "Mã permission",
+    "name": "Tên",
+    "scopeKind": "Phạm vi",
+    "allScopes": "Mọi phạm vi",
+    "search": "Tìm theo mã",
+    "roles": "Role đang chứa",
+    "catalogVersion": "Phiên bản catalog: {{version}}",
+    "readOnly": "Permission được định nghĩa trong mã nguồn — chỉ xem, không thêm/sửa/xóa ở đây."
+  },
+  "roles": {
+    "code": "Mã role",
+    "name": "Tên",
+    "nameVi": "Tên (tiếng Việt)",
+    "nameEn": "Tên (tiếng Anh)",
+    "description": "Mô tả",
+    "scopeKind": "Loại role",
+    "kind": "Nguồn",
+    "system": "Hệ thống",
+    "custom": "Tùy biến",
+    "shared": "Dùng chung",
+    "userCount": "Số người",
+    "updatedAt": "Cập nhật lúc",
+    "create": "Tạo role",
+    "createTitle": "Tạo role platform / dùng chung",
+    "editTitle": "Sửa role",
+    "cloneTitle": "Nhân bản role hệ thống thành role tùy biến",
+    "clone": "Nhân bản thành role tùy biến",
+    "cloneName": "{{name}} (tùy biến)",
+    "delete": "Xóa",
+    "deleteTitle": "Xóa role {{code}}",
+    "deleteConsequence": "Role đang được gán cho {{users}} người. Role còn người dùng thì không xóa được — thu hồi UserRole trước.",
+    "inUse": "Role còn người dùng: thu hồi các UserRole của role này trước khi xóa.",
+    "tenantReadOnly": "Role của tenant — chỉ xem (sửa ở workspace Quản trị trường)",
+    "permissions": "Permission",
+    "permissionsHelp": "Chỉ hiện permission cùng phạm vi với role (tối đa {{max}}).",
+    "permissionsRequired": "Chọn ít nhất một permission.",
+    "scopeNotAllowed": "Permission không hợp lệ với phạm vi của role: {{codes}}",
+    "appliesWithin": "Đã lưu. Thay đổi áp dụng trong ≤ {{seconds}} giây cho {{users}} người đang có role.",
+    "gone": "Role không còn tồn tại (đã bị xóa). Quay về danh sách."
+  },
+  "userRoles": {
+    "user": "Người dùng",
+    "userId": "Mã người dùng (UUID)",
+    "role": "Role",
+    "scope": "Phạm vi",
+    "validity": "Hiệu lực",
+    "validRange": "{{from}} – {{to}}",
+    "validFrom": "Từ {{from}}, không thời hạn",
+    "validFromLabel": "Hiệu lực từ",
+    "validToLabel": "Hiệu lực đến",
+    "validToAfter": "Thời điểm kết thúc phải sau thời điểm bắt đầu.",
+    "source": "Nguồn",
+    "sourceKind": {
+      "sis": "SIS",
+      "manual": "Thủ công"
+    },
+    "grantedBy": "Người gán",
+    "system": "Hệ thống",
+    "grant": "Gán role",
+    "grantTitle": "Gán role cho người dùng",
+    "granted": "Đã gán. Quyền mới có hiệu lực trong ≤ {{seconds}} giây.",
+    "accountKind": "Loại tài khoản",
+    "kind": {
+      "platform": "Nhân sự platform (không có tenant gốc)",
+      "tenant": "Nhân sự trường (có tenant gốc)"
+    },
+    "platformUserHelp": "Chỉ nhận role platform, phạm vi platform; không gửi tenant.",
+    "staff": "Nhân sự của tenant đích",
+    "userRequired": "Chọn người được gán.",
+    "roleRequired": "Chọn role.",
+    "scopeIdRequired": "Chọn đối tượng của phạm vi.",
+    "subjectId": "Mã môn học (UUID)",
+    "trainingHelp": "Role safety_moderator cần ngày hoàn thành đào tạo an toàn trẻ em.",
+    "trainingDate": "Ngày hoàn thành đào tạo",
+    "trainingRequired": "Nhập ngày hoàn thành đào tạo.",
+    "revoke": "Thu hồi",
+    "revokeTitle": "Thu hồi role {{role}}",
+    "revokeConsequence": "Người dùng mất quyền của role này trong ≤ {{seconds}} giây.",
+    "revoked": "Đã thu hồi. Thay đổi áp dụng trong ≤ {{seconds}} giây."
+  },
+  "users": {
+    "listUnavailable": "Danh sách tài khoản mọi tenant có khi API listPlatformUsers được bổ sung. Hiện xem theo từng tenant hoặc tra cứu theo mã người dùng.",
+    "tenant": "Tenant",
+    "userType": "Loại tài khoản",
+    "type": {
+      "staff": "Nhân sự",
+      "student": "Học sinh"
+    },
+    "search": "Tìm theo tên đăng nhập, email, họ tên",
+    "searchMin": "Nhập ít nhất {{min}} ký tự để tìm.",
+    "pickTenant": "Chọn một tenant để xem tài khoản.",
+    "displayName": "Họ tên",
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "emailInvalid": "Email chưa đúng định dạng.",
+    "homeTenant": "Tenant gốc",
+    "platformStaff": "Nhân sự platform",
+    "status": {
+      "pending": "Chờ kích hoạt",
+      "active": "Đang hoạt động",
+      "locked": "Đã khóa",
+      "deactivated": "Đã vô hiệu hóa"
+    },
+    "sis": "SIS",
+    "source": "Nguồn",
+    "sourceKind": {
+      "sis": "SIS",
+      "manual": "Thủ công",
+      "import": "Nhập file"
+    },
+    "lastLogin": "Đăng nhập cuối",
+    "never": "Chưa đăng nhập",
+    "details": "Chi tiết",
+    "detailTitle": "Chi tiết tài khoản",
+    "userId": "Mã người dùng",
+    "userRoles": "UserRole theo tenant",
+    "noUserRoles": "Chưa có UserRole.",
+    "lookup": "Tra cứu theo mã người dùng",
+    "open": "Mở",
+    "createStaff": "Tạo nhân sự",
+    "createTitle": "Tạo tài khoản nhân sự",
+    "accountKind": "Loại nhân sự",
+    "platformCreateUnavailable": "Tạo nhân sự platform có khi API createPlatformUser được bổ sung.",
+    "locale": "Ngôn ngữ",
+    "initialRole": "Role ban đầu",
+    "created": "Đã tạo tài khoản.",
+    "takenHint": "Tên đăng nhập hoặc email đã thuộc một tài khoản khác. Hãy gán role cho tài khoản sẵn có (tab UserRole) thay vì tạo mới.",
+    "action": {
+      "lock": "Khóa",
+      "unlock": "Mở khóa",
+      "deactivate": "Vô hiệu hóa"
+    },
+    "actionTitle": {
+      "lock": "Khóa tài khoản",
+      "unlock": "Mở khóa tài khoản",
+      "deactivate": "Vô hiệu hóa tài khoản"
+    },
+    "actionConsequence": {
+      "lock": "Tài khoản không đăng nhập được cho tới khi được mở khóa; các phiên đang mở bị đóng.",
+      "unlock": "Tài khoản đăng nhập lại được.",
+      "deactivate": "Tài khoản ngừng sử dụng (không xóa dữ liệu)."
+    },
+    "actionDone": {
+      "lock": "Đã khóa tài khoản.",
+      "unlock": "Đã mở khóa tài khoản.",
+      "deactivate": "Đã vô hiệu hóa tài khoản."
+    }
+  },
+  "audit": {
+    "tabSystem": "Toàn hệ thống",
+    "tabPermissions": "Phân quyền",
+    "range": "Khoảng thời gian",
+    "rangeRequired": "Chọn khoảng thời gian.",
+    "rangeLimit": "Khoảng thời gian không hợp lệ hoặc vượt giới hạn (tối đa {{days}} ngày mỗi lần tra cứu). Bộ lọc được giữ nguyên.",
+    "actorId": "Người làm (UUID)",
+    "actor": "Người làm",
+    "actorType": "Loại người làm",
+    "actorKind": {
+      "student": "Học sinh",
+      "staff": "Nhân sự",
+      "service": "Dịch vụ",
+      "system": "Hệ thống"
+    },
+    "systemActor": "Hệ thống",
+    "action": "Hành động",
+    "resource": "Tài nguyên",
+    "resourceType": "Loại tài nguyên",
+    "resourceId": "Mã tài nguyên (UUID)",
+    "result": "Kết quả",
+    "resultKind": {
+      "success": "Thành công",
+      "denied": "Bị từ chối",
+      "error": "Lỗi"
+    },
+    "traceId": "Mã truy vết",
+    "changes": "Thay đổi",
+    "viewDetail": "Xem",
+    "detailTitle": "Chi tiết bản ghi audit",
+    "occurredAt": "Thời điểm",
+    "apply": "Lọc",
+    "tenantHint": "Không chọn tenant: chỉ bản ghi platform.",
+    "permissionsHint": "Chỉ các hành động role.* và user_role.* (một hành động mỗi lần tra cứu)."
+  },
+  "loginEvents": {
+    "student": "Học sinh",
+    "studentId": "Mã học sinh (UUID)",
+    "platform": "Nền tảng",
+    "platformKind": {
+      "windows": "Windows",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web",
+      "macos": "macOS",
+      "linux": "Linux"
+    },
+    "device": "Thiết bị",
+    "clientVersion": "Phiên bản client",
+    "loginAt": "Vào lúc",
+    "logoutAt": "Ra lúc",
+    "endReasonLabel": "Lý do kết thúc",
+    "endReason": {
+      "open": "Đang mở",
+      "logout": "Đăng xuất",
+      "replaced_by_other_device": "Đăng nhập trên thiết bị khác",
+      "timeout": "Hết thời gian chờ",
+      "account_locked": "Tài khoản bị khóa",
+      "access_revoked": "Bị thu hồi quyền truy cập",
+      "cleanup": "Dọn tài khoản",
+      "client_crash": "Ứng dụng bị lỗi",
+      "curfew": "Giờ giới nghiêm"
+    }
+  },
+  "featureFlags": {
+    "key": "Mã",
+    "kind": "Loại",
+    "allKinds": "Mọi loại",
+    "kindLabel": {
+      "feature": "Tính năng",
+      "menu": "Menu",
+      "action": "Thao tác"
+    },
+    "description": "Mô tả",
+    "default": "Mặc định platform",
+    "override": "Ghi đè của tenant",
+    "noOverride": "Không ghi đè",
+    "effective": "Hiệu lực",
+    "protected": "Bảo vệ",
+    "cannotDisable": "Không tắt được",
+    "version": "Phiên bản",
+    "updated": "Cập nhật",
+    "on": "Bật",
+    "off": "Tắt",
+    "tenantView": "Xem ghi đè của tenant",
+    "fromCode": "Flag khai báo trong mã nguồn và danh mục menu — chỉ sửa giá trị, không tạo/xóa.",
+    "editTitle": "Sửa {{key}}",
+    "currentVersion": "Phiên bản hiện tại: {{version}}",
+    "scope": "Phạm vi",
+    "scopeKind": {
+      "platform": "Mặc định platform",
+      "tenant": "Ghi đè cho một tenant"
+    },
+    "targetTenant": "Tenant đích",
+    "state": "Giá trị",
+    "stateKind": {
+      "enabled": "Bật",
+      "disabled": "Tắt",
+      "inherit": "Theo mặc định platform (gỡ ghi đè)"
+    },
+    "protectedHelp": "Mục được bảo vệ: không tắt được.",
+    "saved": "Đã lưu. Thay đổi áp dụng sau vài chục giây.",
+    "stale": "Đã có người sửa. Giá trị mới (phiên bản {{version}}) đã được tải lại — kiểm tra rồi lưu lại."
+  },
+  "integrations": {
+    "readOnly": "Chỉ xem, để đối chiếu khi hỗ trợ trường. Không hiển thị secret, credential hay token.",
+    "tabReference": "Keycloak · APISIX",
+    "tabSis": "SIS",
+    "overviewUnavailable": "Thông tin Keycloak (issuer, realm, client) và APISIX (nhóm route) có khi API getIntegrationOverview được bổ sung.",
+    "asCode": "Cấu hình Keycloak và APISIX được quản lý bằng realm-as-code và route-as-code, không sửa ở portal.",
+    "allStatuses": "Mọi trạng thái",
+    "provider": "Nguồn",
+    "providerKind": {
+      "contract_v1": "API SIS (contract v1)",
+      "csv_import": "Nhập CSV"
+    },
+    "contractVersion": "Phiên bản contract",
+    "status": {
+      "active": "Đang hoạt động",
+      "auth_error": "Lỗi xác thực",
+      "contract_error": "Lỗi contract",
+      "paused": "Tạm dừng"
+    },
+    "schoolCount": "Số trường",
+    "schedule": "Lịch đồng bộ",
+    "defaultSchedule": "Mặc định",
+    "secret": "Secret",
+    "secretSet": "Đã cấu hình (ẩn)",
+    "secretNone": "Chưa cấu hình",
+    "lastRun": "Lần đồng bộ gần nhất",
+    "noRun": "Chưa đồng bộ",
+    "runSummary": "{{status}} · {{at}} · {{rejected}} bản ghi lỗi",
+    "runStatus": {
+      "queued": "Đang chờ",
+      "running": "Đang chạy",
+      "succeeded": "Thành công",
+      "partially_failed": "Lỗi một phần",
+      "failed": "Thất bại"
+    },
+    "schools": "Trường của kết nối",
+    "schoolName": "Trường",
+    "schoolActive": "Đang đồng bộ",
+    "schoolInactive": "Ngừng đồng bộ",
+    "assignedAt": "Gắn lúc",
+    "runs": "Các lần đồng bộ",
+    "runKind": "Kiểu",
+    "startedAt": "Bắt đầu",
+    "finishedAt": "Kết thúc",
+    "rejectedRows": "Bản ghi lỗi"
   }
 }

@@ -1,7 +1,8 @@
 // @vitest-environment node
 // F057 T043 (F057-AC-21, ADR-0041, AGENTS R33) + T003: every input limit of workspace D equals the schema field it
 // names in specs/openapi/eduworld-api.v1.yaml; the low-days warning equals CONFIG_DEFAULTS; translations vi/en of the
-// workspace have the same keys and none is empty; clone types never include student data (AGENTS R22).
+// workspace have the same keys and none is empty; clone types never include student data (AGENTS R22). F059 adds its
+// limits (F059-AC-27) and the display values principal_cache_ttl / audit_query_max_range_days of CONFIG_DEFAULTS.
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
@@ -11,7 +12,7 @@ import { ASSIGNABLE_TYPES } from './api/assignments';
 import { TRASH_TYPES } from './api/trash';
 import en from './i18n/en.json';
 import vi from './i18n/vi.json';
-import { CLEANUP_LOW_DAYS_WARNING, LIMITS, PAGE_SIZE } from './limits';
+import { AUDIT_MAX_RANGE_DAYS, CLEANUP_LOW_DAYS_WARNING, LIMITS, PAGE_SIZE, PRINCIPAL_CACHE_TTL_SECONDS } from './limits';
 
 const REPO = path.resolve(__dirname, '../../../../../../../..');
 type Node = Record<string, unknown>;
@@ -60,6 +61,13 @@ describe('limits of workspace D = OpenAPI (F057-AC-21)', () => {
     const doc = fs.readFileSync(path.join(REPO, 'docs/00-overview/CONFIG_DEFAULTS.md'), 'utf8');
     const row = doc.split('\n').find((l) => l.startsWith('| `inactive_student_cleanup_low_days_warning`'))!;
     expect(row).toContain(`< ${CLEANUP_LOW_DAYS_WARNING}`);
+  });
+
+  it('F059: CONFIG_DEFAULTS principal_cache_ttl and audit_query_max_range_days', () => {
+    const doc = fs.readFileSync(path.join(REPO, 'docs/00-overview/CONFIG_DEFAULTS.md'), 'utf8');
+    const row = (key: string) => doc.split('\n').find((l) => l.startsWith(`| \`${key}\``))!;
+    expect(row('principal_cache_ttl')).toContain(`| ${PRINCIPAL_CACHE_TTL_SECONDS} giây`);
+    expect(row('audit_query_max_range_days')).toContain(`| ${AUDIT_MAX_RANGE_DAYS} mỗi lần`);
   });
 });
 

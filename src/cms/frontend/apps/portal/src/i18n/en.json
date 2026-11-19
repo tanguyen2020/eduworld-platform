@@ -204,6 +204,13 @@
     "ACCOUNT_NOT_PROVISIONED": "This account has no admin access yet.",
     "INTERNAL": "System error. Please try again later.",
     "UNAVAILABLE": "The service is temporarily unavailable. Please try again later.",
-    "MAINTENANCE": "The system is under maintenance."
+    "MAINTENANCE": "The system is under maintenance.",
+    "USERNAME_TAKEN": "The username already belongs to another account.",
+    "EMAIL_TAKEN": "The email already belongs to another account.",
+    "ROLE_NOT_FOUND": "The role does not exist or was deleted."
+  },
+  "authz": {
+    "permissionGroup": "{{group}} ({{total}})",
+    "noPermission": "No permission for this scope."
   }
 }

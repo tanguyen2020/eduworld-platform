@@ -204,6 +204,13 @@
     "ACCOUNT_NOT_PROVISIONED": "Tài khoản chưa được cấp quyền quản trị.",
     "INTERNAL": "Lỗi hệ thống. Vui lòng thử lại sau.",
     "UNAVAILABLE": "Dịch vụ tạm thời không sẵn sàng. Vui lòng thử lại sau.",
-    "MAINTENANCE": "Hệ thống đang bảo trì."
+    "MAINTENANCE": "Hệ thống đang bảo trì.",
+    "USERNAME_TAKEN": "Tên đăng nhập đã thuộc một tài khoản khác.",
+    "EMAIL_TAKEN": "Email đã thuộc một tài khoản khác.",
+    "ROLE_NOT_FOUND": "Role không tồn tại hoặc đã bị xóa."
+  },
+  "authz": {
+    "permissionGroup": "{{group}} ({{total}})",
+    "noPermission": "Không có permission nào cho phạm vi này."
   }
 }

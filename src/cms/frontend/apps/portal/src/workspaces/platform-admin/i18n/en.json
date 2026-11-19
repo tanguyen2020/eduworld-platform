@@ -279,5 +279,320 @@
     "curfewConfirmTitle": "Save the platform curfew?",
     "curfewConfirmContent": "During this window every student of every tenant is blocked from game sign-in, game sessions and chat.",
     "readOnly": "You can only view the settings."
+  },
+  "access": {
+    "tabUsers": "Users",
+    "tabRoles": "Roles",
+    "tabPermissions": "Permission catalog",
+    "tabUserRoles": "User roles"
+  },
+  "scopeKind": {
+    "platform": "Platform",
+    "tenant": "Tenant"
+  },
+  "scopeType": {
+    "platform": "Platform",
+    "tenant": "Whole tenant",
+    "school": "School",
+    "subject": "Subject"
+  },
+  "permissions": {
+    "code": "Permission code",
+    "name": "Name",
+    "scopeKind": "Scope",
+    "allScopes": "All scopes",
+    "search": "Search by code",
+    "roles": "Held by roles",
+    "catalogVersion": "Catalog version: {{version}}",
+    "readOnly": "Permissions are defined in code — view only, nothing is added, edited or deleted here."
+  },
+  "roles": {
+    "code": "Role code",
+    "name": "Name",
+    "nameVi": "Name (Vietnamese)",
+    "nameEn": "Name (English)",
+    "description": "Description",
+    "scopeKind": "Role kind",
+    "kind": "Origin",
+    "system": "System",
+    "custom": "Custom",
+    "shared": "Shared",
+    "userCount": "Users",
+    "updatedAt": "Updated at",
+    "create": "Create role",
+    "createTitle": "Create a platform / shared role",
+    "editTitle": "Edit role",
+    "cloneTitle": "Clone a system role into a custom role",
+    "clone": "Clone into a custom role",
+    "cloneName": "{{name}} (custom)",
+    "delete": "Delete",
+    "deleteTitle": "Delete role {{code}}",
+    "deleteConsequence": "The role is assigned to {{users}} users. A role still in use cannot be deleted — revoke its user roles first.",
+    "inUse": "The role is still in use: revoke its user roles before deleting it.",
+    "tenantReadOnly": "Tenant role — view only (edited in the School administration workspace)",
+    "permissions": "Permissions",
+    "permissionsHelp": "Only permissions of the role scope are offered (at most {{max}}).",
+    "permissionsRequired": "Pick at least one permission.",
+    "scopeNotAllowed": "Permissions not allowed for the role scope: {{codes}}",
+    "appliesWithin": "Saved. The change applies within {{seconds}} seconds to the {{users}} users holding the role.",
+    "gone": "The role no longer exists (deleted). Back to the list."
+  },
+  "userRoles": {
+    "user": "User",
+    "userId": "User id (UUID)",
+    "role": "Role",
+    "scope": "Scope",
+    "validity": "Validity",
+    "validRange": "{{from}} – {{to}}",
+    "validFrom": "From {{from}}, no end",
+    "validFromLabel": "Valid from",
+    "validToLabel": "Valid to",
+    "validToAfter": "The end must be after the start.",
+    "source": "Source",
+    "sourceKind": {
+      "sis": "SIS",
+      "manual": "Manual"
+    },
+    "grantedBy": "Granted by",
+    "system": "System",
+    "grant": "Grant role",
+    "grantTitle": "Grant a role to a user",
+    "granted": "Granted. The new permissions apply within {{seconds}} seconds.",
+    "accountKind": "Account kind",
+    "kind": {
+      "platform": "Platform staff (no home tenant)",
+      "tenant": "School staff (home tenant)"
+    },
+    "platformUserHelp": "Gets platform roles only, platform scope; no tenant is sent.",
+    "staff": "Staff of the target tenant",
+    "userRequired": "Pick the user.",
+    "roleRequired": "Pick a role.",
+    "scopeIdRequired": "Pick the scope target.",
+    "subjectId": "Subject id (UUID)",
+    "trainingHelp": "The safety_moderator role needs the date the child-safety training was completed.",
+    "trainingDate": "Training completed on",
+    "trainingRequired": "Enter the training completion date.",
+    "revoke": "Revoke",
+    "revokeTitle": "Revoke role {{role}}",
+    "revokeConsequence": "The user loses the permissions of this role within {{seconds}} seconds.",
+    "revoked": "Revoked. The change applies within {{seconds}} seconds."
+  },
+  "users": {
+    "listUnavailable": "The account list of every tenant comes with the listPlatformUsers API. For now browse one tenant or look an account up by id.",
+    "tenant": "Tenant",
+    "userType": "Account type",
+    "type": {
+      "staff": "Staff",
+      "student": "Student"
+    },
+    "search": "Search by username, email, name",
+    "searchMin": "Type at least {{min}} characters to search.",
+    "pickTenant": "Pick a tenant to see its accounts.",
+    "displayName": "Full name",
+    "username": "Username",
+    "email": "Email",
+    "emailInvalid": "Invalid email.",
+    "homeTenant": "Home tenant",
+    "platformStaff": "Platform staff",
+    "status": {
+      "pending": "Pending",
+      "active": "Active",
+      "locked": "Locked",
+      "deactivated": "Deactivated"
+    },
+    "sis": "SIS",
+    "source": "Source",
+    "sourceKind": {
+      "sis": "SIS",
+      "manual": "Manual",
+      "import": "File import"
+    },
+    "lastLogin": "Last login",
+    "never": "Never signed in",
+    "details": "Details",
+    "detailTitle": "Account details",
+    "userId": "User id",
+    "userRoles": "User roles per tenant",
+    "noUserRoles": "No user role yet.",
+    "lookup": "Look up by user id",
+    "open": "Open",
+    "createStaff": "Create staff",
+    "createTitle": "Create a staff account",
+    "accountKind": "Staff kind",
+    "platformCreateUnavailable": "Creating platform staff comes with the createPlatformUser API.",
+    "locale": "Language",
+    "initialRole": "Initial role",
+    "created": "Account created.",
+    "takenHint": "The username or email already belongs to another account. Grant a role to the existing account (User roles tab) instead of creating one.",
+    "action": {
+      "lock": "Lock",
+      "unlock": "Unlock",
+      "deactivate": "Deactivate"
+    },
+    "actionTitle": {
+      "lock": "Lock account",
+      "unlock": "Unlock account",
+      "deactivate": "Deactivate account"
+    },
+    "actionConsequence": {
+      "lock": "The account cannot sign in until unlocked; open sessions are closed.",
+      "unlock": "The account can sign in again.",
+      "deactivate": "The account stops being used (no data is deleted)."
+    },
+    "actionDone": {
+      "lock": "Account locked.",
+      "unlock": "Account unlocked.",
+      "deactivate": "Account deactivated."
+    }
+  },
+  "audit": {
+    "tabSystem": "System-wide",
+    "tabPermissions": "Permissions",
+    "range": "Time range",
+    "rangeRequired": "Pick a time range.",
+    "rangeLimit": "Invalid time range or over the limit (at most {{days}} days per query). The filters are kept.",
+    "actorId": "Actor (UUID)",
+    "actor": "Actor",
+    "actorType": "Actor type",
+    "actorKind": {
+      "student": "Student",
+      "staff": "Staff",
+      "service": "Service",
+      "system": "System"
+    },
+    "systemActor": "System",
+    "action": "Action",
+    "resource": "Resource",
+    "resourceType": "Resource type",
+    "resourceId": "Resource id (UUID)",
+    "result": "Result",
+    "resultKind": {
+      "success": "Success",
+      "denied": "Denied",
+      "error": "Error"
+    },
+    "traceId": "Trace id",
+    "changes": "Changes",
+    "viewDetail": "View",
+    "detailTitle": "Audit entry",
+    "occurredAt": "Time",
+    "apply": "Filter",
+    "tenantHint": "No tenant picked: platform entries only.",
+    "permissionsHint": "role.* and user_role.* actions only (one action per query)."
+  },
+  "loginEvents": {
+    "student": "Student",
+    "studentId": "Student id (UUID)",
+    "platform": "Platform",
+    "platformKind": {
+      "windows": "Windows",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web",
+      "macos": "macOS",
+      "linux": "Linux"
+    },
+    "device": "Device",
+    "clientVersion": "Client version",
+    "loginAt": "Signed in",
+    "logoutAt": "Signed out",
+    "endReasonLabel": "End reason",
+    "endReason": {
+      "open": "Open",
+      "logout": "Signed out",
+      "replaced_by_other_device": "Signed in on another device",
+      "timeout": "Timed out",
+      "account_locked": "Account locked",
+      "access_revoked": "Access revoked",
+      "cleanup": "Account cleanup",
+      "client_crash": "Client crashed",
+      "curfew": "Curfew"
+    }
+  },
+  "featureFlags": {
+    "key": "Key",
+    "kind": "Kind",
+    "allKinds": "All kinds",
+    "kindLabel": {
+      "feature": "Feature",
+      "menu": "Menu",
+      "action": "Action"
+    },
+    "description": "Description",
+    "default": "Platform default",
+    "override": "Tenant override",
+    "noOverride": "No override",
+    "effective": "Effective",
+    "protected": "Protected",
+    "cannotDisable": "Cannot be turned off",
+    "version": "Version",
+    "updated": "Updated",
+    "on": "On",
+    "off": "Off",
+    "tenantView": "Show the override of a tenant",
+    "fromCode": "Flags are declared in code and the menu catalog — only their values are edited, none is created or deleted.",
+    "editTitle": "Edit {{key}}",
+    "currentVersion": "Current version: {{version}}",
+    "scope": "Scope",
+    "scopeKind": {
+      "platform": "Platform default",
+      "tenant": "Override for one tenant"
+    },
+    "targetTenant": "Target tenant",
+    "state": "Value",
+    "stateKind": {
+      "enabled": "On",
+      "disabled": "Off",
+      "inherit": "Platform default (remove the override)"
+    },
+    "protectedHelp": "Protected item: it cannot be turned off.",
+    "saved": "Saved. The change applies within a few tens of seconds.",
+    "stale": "Someone else changed it. The new value (version {{version}}) was reloaded — check and save again."
+  },
+  "integrations": {
+    "readOnly": "View only, to check settings while supporting schools. No secret, credential or token is shown.",
+    "tabReference": "Keycloak · APISIX",
+    "tabSis": "SIS",
+    "overviewUnavailable": "Keycloak (issuer, realm, clients) and APISIX (route groups) come with the getIntegrationOverview API.",
+    "asCode": "Keycloak and APISIX are configured as code (realm-as-code, route-as-code), not in the portal.",
+    "allStatuses": "All statuses",
+    "provider": "Source",
+    "providerKind": {
+      "contract_v1": "SIS API (contract v1)",
+      "csv_import": "CSV import"
+    },
+    "contractVersion": "Contract version",
+    "status": {
+      "active": "Active",
+      "auth_error": "Authentication error",
+      "contract_error": "Contract error",
+      "paused": "Paused"
+    },
+    "schoolCount": "Schools",
+    "schedule": "Sync schedule",
+    "defaultSchedule": "Default",
+    "secret": "Secret",
+    "secretSet": "Configured (hidden)",
+    "secretNone": "Not configured",
+    "lastRun": "Last sync",
+    "noRun": "Never synced",
+    "runSummary": "{{status}} · {{at}} · {{rejected}} rejected rows",
+    "runStatus": {
+      "queued": "Queued",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "partially_failed": "Partially failed",
+      "failed": "Failed"
+    },
+    "schools": "Schools of the connection",
+    "schoolName": "School",
+    "schoolActive": "Syncing",
+    "schoolInactive": "Not syncing",
+    "assignedAt": "Assigned at",
+    "runs": "Sync runs",
+    "runKind": "Kind",
+    "startedAt": "Started",
+    "finishedAt": "Finished",
+    "rejectedRows": "Rejected rows"
   }
 }

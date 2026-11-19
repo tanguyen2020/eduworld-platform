@@ -43,6 +43,12 @@ export function LimitedField({ name, label, limit, required, textarea, help, ext
   );
 }
 
+/** Hard cap + counter of a free-text filter input (search, action…) from an OpenAPI string limit (F059-AC-27). */
+export function limitInputProps(limit: FieldLimit) {
+  const schema = { type: 'string', maxLength: limit.maxLength };
+  return openapiInputProps(schema);
+}
+
 /** Mandatory reason of a platform write (min/max of the operation's schema). */
 export function ReasonField({ limit, required = true, name = 'reason' }: { limit: FieldLimit; required?: boolean; name?: string }) {
   const { t } = useTranslation();
@@ -66,13 +72,14 @@ export function TenantCell({ tenantId, directory }: { tenantId?: string | null; 
  * search (`q` maxLength) and cursor paging. `exclude` hides tenants (the clone source from the target list). No
  * "all tenants" entry: a write always names its tenants (ADMIN_PORTAL §2.5).
  */
-export function TenantSelect({ value, onChange, multiple, exclude = [], ariaLabel, maxCount }: {
+export function TenantSelect({ value, onChange, multiple, exclude = [], ariaLabel, maxCount, allowClear }: {
   value?: string | string[];
   onChange?: (v: string | string[]) => void;
   multiple?: boolean;
   exclude?: readonly string[];
   ariaLabel: string;
   maxCount?: number;
+  allowClear?: boolean;
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -83,6 +90,7 @@ export function TenantSelect({ value, onChange, multiple, exclude = [], ariaLabe
       aria-label={ariaLabel}
       mode={multiple ? 'multiple' : undefined}
       maxCount={multiple ? maxCount : undefined}
+      allowClear={allowClear}
       value={value}
       onChange={onChange}
       showSearch
