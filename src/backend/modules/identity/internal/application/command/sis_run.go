@@ -70,9 +70,10 @@ type SisRun struct {
 	Rules       write.ConflictRules
 	Events      write.EventPublisher
 	Audit       write.Auditor
-	BatchSize   int                  // default 500 [Proposed]
-	Observer    port.SyncRunObserver // optional: last success metric
-	IDHashKey   []byte               // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
+	BatchSize   int                       // default 500 [Proposed]
+	Observer    port.SyncRunObserver      // optional: last success metric
+	IDHashKey   []byte                    // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
+	History     write.LifecycleRepository // F016 US2: identity.user_status_history of SIS status changes (nil = not recorded)
 }
 
 // ErrNoLoginUsername: a new student without login.username cannot get an account.
@@ -803,6 +804,12 @@ func (h SisRun) applyStatus(ctx context.Context, st *runState, userID uuid.UUID,
 		}
 		if changed {
 			reason := "sis:" + recordStatus
+			if h.History != nil { // same history as a staff change (F016-AC-07)
+				if err := h.History.RecordStatusChange(ctx, write.StatusChange{UserID: userID, TenantID: &t, From: from, To: eff.UserStatus,
+					Reason: reason, Source: "sis"}); err != nil {
+					return err
+				}
+			}
 			if err := h.Events.Publish(ctx, write.Event{Type: "user.status_changed", SubjectType: "user", SubjectID: uid, TenantID: &t,
 				Payload: map[string]any{"user_id": uid, "from": from, "to": eff.UserStatus, "reason": reason}}); err != nil {
 				return err
