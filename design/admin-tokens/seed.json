@@ -249,6 +249,11 @@
       "$value": "{ops.color.text.secondary}",
       "$description": "Typography type=\"secondary\" and descriptions kept at AA contrast."
     },
+    "colorTextPlaceholder": {
+      "$type": "color",
+      "$value": "{ops.color.text.secondary}",
+      "$description": "Placeholder text (e.g. the default of the tenant filter); Ant Design default #bfbfbf (1.83:1) fails WCAG AA (axe, F051)."
+    },
     "fontFamily": {
       "$type": "fontFamily",
       "$value": "{ops.font.family.base}",
