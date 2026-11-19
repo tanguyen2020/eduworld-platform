@@ -1,6 +1,6 @@
 # Feature Specification: F061 — `ApiClient`, đăng nhập game trong form, chọn tenant, takeover, buộc cập nhật, đăng xuất
 
-**Feature Branch**: `061-godot-api-client-login` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C1 · **Phụ thuộc**: F013, F014, F060
+**Feature Branch**: `061-godot-api-client-login` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/game/` · **Mốc**: M-C1 · **Phụ thuộc**: F013, F014, F060
 **Input**: Lớp mạng REST (`ApiClient`) và luồng vào game của học sinh trong Godot: kiểm tra phiên bản, form đăng nhập S01 gửi `POST /auth/game/login`, chọn tenant sau đăng nhập, xác nhận takeover một thiết bị, giữ phiên bằng refresh token trong kho bảo mật của hệ điều hành và tự vào lại khi phiên còn hạn (ADR-0086; Web và máy dùng chung chỉ RAM), refresh có rotation, giữ game session bằng heartbeat, đăng xuất/thoát. FR nguồn: FR-AUTH-002, FR-AUTH-003, FR-AUTH-008, FR-AUTH-009, FR-AUTH-017, FR-AUTH-023, FR-AUTH-027, FR-GAME-008, FR-GAME-014.
 
 ## Clarifications
@@ -24,6 +24,20 @@
 ### Session 2026-11-17
 
 - Q: Màn "Tiếp tục là <nickname>?" khi tự vào lại và xử lý giờ giới nghiêm phía client (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
+
+### Session 2026-11-20 (triển khai — Câu hỏi mở, dùng mặc định [Proposed])
+
+- Q: Lớp `Problem` mới (plan) hay `ApiProblem` có sẵn của F060? → A: [Proposed] Mở rộng `ApiProblem` (một model cho Problem Details): thêm `errors[]`, `choices[]` (`ApiProblem.TenantChoice`), `login_ticket`, `other_device` (`ApiProblem.OtherDevice`), `min_client_version`, `store_url`, `reopen_at`; `ApiResult` mang `code` (Problem `code`, `NETWORK_ERROR` hoặc `HTTP_<status>`).
+- Q: Godot không cho `class_name` trùng tên autoload? → A: Autoload `AuthService` có `class_name GameAuthService`, `ApiClient` có `class_name RestApiClient` (test tạo instance riêng với FakeHttp/FakeClock/FakeSecureStorage). Signal `logged_out` của plan đổi thành `logout_completed` (lint thì quá khứ của F060). Intent "Không phải tôi" (S01b) và "Đăng nhập bằng tài khoản khác" (ResumeSplash) dùng chung `AuthService.switch_account()`.
+- Q: Fixture `tests/fixtures/auth/*.json` (T002)? → A: [Proposed] Dùng chung bộ sinh `src/game/tools/gen_fixtures.mjs` của F060: thêm `GameLoginResponse`, `GameTokenRefreshResponse`, `GameLoginProblem`, `ClientVersionProblem`, `GameSession`, `ActiveSessionConflict` vào `tests/fixtures/contract/openapi/` (kiểm `--check` trong `make godot-lint`); từng mã lỗi dựng từ fixture `Problem` trong `tests/fakes/auth_harness.gd`. `FakeSecureStorage` dùng lại bản F060 ở `tests/fixtures/`.
+- Q: Sau khi có `game_session_id` vào màn nào khi Main Hub (F062) và tạo avatar (F070) chưa có? → A: [Proposed] Màn tạm `scenes/world/WorldPlaceholder.tscn` (gắn nhãn PLACEHOLDER theo R17, đổi qua `GameStateMachine.IN_WORLD_SCENE`) có nút "Đăng xuất" + `LogoutConfirm` và cảnh báo giờ giới nghiêm; mục Cài đặt → Tài khoản gắn `LogoutConfirm` khi có màn Cài đặt.
+- Q: `getClientConfig` không gọi được (mất mạng/5xx sau 3 lần retry GET)? → A: [Proposed] Tiếp tục Resume/Login; server vẫn chặn phiên bản cũ bằng `426` ở `gameLogin`/`refreshGameToken` (F061-AC-27, F061-AC-31).
+- Q: Mobile quay lại từ nền sau bao lâu thì tạo game session mới? → A: [Proposed] Từ `ws_timeout` (45 s) trở lên — server đã đóng phiên theo heartbeat timeout — gọi lại `createGameSession` bằng token đang có (refresh `renew` khi access token sắp hết), không hỏi mật khẩu; ngắn hơn thì gửi heartbeat ngay.
+- Q: Đóng cửa sổ chờ `:end`/`gameLogout` bao lâu? → A: [Proposed] Tối đa 3 s (`GameAuthService.CLOSE_GRACE_SEC`) rồi thoát; không gọi được thì module game đóng phiên theo heartbeat timeout.
+- Q: Logo trường ở `TenantChoice`? → A: [Proposed] Chưa tải ảnh (scene không gọi mạng — R1; tải ảnh qua `ContentCache` của F062); thẻ hiện `name — school_name`.
+- Q: Gửi telemetry (`client_bug`, `auth_refresh_reused`, `auth_resume_result`, `secure_storage_write_failed`) lên server? → A: [Proposed] F061 xếp vào `AppState.pending_telemetry` (đã lọc qua `Log.redact`, không token); gửi `/game/telemetry` không có trong tasks F061 — feature sau.
+- Q: Integration với backend compose (T035, T044, T053, T047)? → A: Test viết sẵn ở `tests/integration/auth/`, tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL` (mật khẩu seed lấy từ `EDUWORLD_IT_STUDENT_PASSWORD`/`EDUWORLD_IT_STAFF_PASSWORD`, không nằm trong repo); chưa chạy vì binary backend chưa nối trong compose (OQ F014-7). Đường HTTP thật (`HttpRequestPool`) đã chạy với Prism MOCK :4011.
+- Q: Chỉ HTTPS (Ràng buộc phi chức năng)? → A: [Proposed] `ApiClient` từ chối URL không phải `https://` trong build release (`INSECURE_TRANSPORT`); build debug cho phép `http://` (compose local, Prism). Certificate pinning vẫn là việc mở GODOT_ARCHITECTURE §14.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

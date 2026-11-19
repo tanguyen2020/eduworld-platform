@@ -62,3 +62,36 @@ make test-e2e          # integration headless với backend compose (tests/integ
 ## 4. Bằng chứng cần nộp
 
 - Kết quả GdUnit4 (pass/fail), log quét artifact (bước 11), log quét lưu trữ thiết bị (bước 4, 12, 31), bắt gói resume (bước 28–34), `trace_id` đăng nhập thành công, video/ảnh takeover hai thiết bị Windows + Android.
+
+## Bằng chứng (2026-11-20, local — Windows 11, Godot 4.7.2 stable, GNU make qua WSL)
+
+Lệnh gate (nối `&&`): `make godot-lint GDLINT=true` (gdlint chỉ chạy ở CI, như F060) → `make godot-test` → `make godot-smoke` → `make godot-export-check` → `make design-tokens-check` → `node scripts/specs/check-features.mjs` → `node scripts/specs/check-cross-features.mjs` → `node scripts/docs/check-links.mjs`: **exit 0**. Commit code `f3d414e`. (`build-rtm.mjs --check` đã lệch sẵn trên `origin/main` trước F061 — không do thay đổi này.)
+
+Tổng GdUnit4: **232 test, 0 lỗi, 0 fail, 0 orphan, 4 skip** (4 test integration cần backend thật); `scan_artifact_test.sh` 20/20; `make godot-export-check` PCK release sạch (13 mẫu: secret, `oidc_*`, `/protocol/openid-connect/token`, `redirect_uri`, `oauth2redirect`, AppAuth, mock); smoke `--env=mock`: `boot_completed` (9 autoload `Config,Log,EventBus,AppState,AuthService,ApiClient,SceneRouter,AudioDirector,Settings`) → `splash_shown`.
+
+| Tiêu chí | Bằng chứng tự động (FakeHttp + FakeClock + FakeSecureStorage, fixture sinh từ OpenAPI) | Kết quả |
+|---|---|---|
+| F061-AC-01, AC-27 | `tests/unit/core/test_version_check.gd` (client-config trước form, public; `update_required`/SemVer → ForceUpdate; bảo trì kiểm lại 60 s; `426` → ForceUpdate + `store_url`, không retry) | 6/6 |
+| F061-AC-02 | `tests/scene/auth/test_login_scene.gd` (đúng thành phần S01, `secret`, nút tắt khi ô trống, không WebView/`shell_open`/ô trường) | 5/5 |
+| F061-AC-03 | `test_auth_service_login.gd` (body đúng `GameLoginRequest`, trim, `maxLength` 128/256, không `Authorization`/`X-Tenant-Id`/`Idempotency-Key`) | 3/3 |
+| F061-AC-04, AC-28 | `test_auth_service_success.gd` (token RAM, bản ghi `{refresh_token, tenant_id, saved_at}`, mật khẩu đã wipe, `createGameSession` có `X-Device-Id`/`X-Tenant-Id`/UUIDv7; lỗi khác 409 → `gameLogout` + xóa, không vào game; quét `user://` không có secret) | 4/4 |
+| F061-AC-05, 07, 08, 09 | `test_login_form_model.gd` | 6/6 |
+| F061-AC-06 | `test_login_queue.gd` (hàng chờ `Retry-After` + 0–50 %, Hủy, `RATE_LIMITED` đếm ngược) | 3/3 |
+| F061-AC-10 | `test_no_secret_logging.gd` (ring buffer + telemetry sau mọi nhánh) | 3/3 |
+| F061-AC-11 | `tools/ci/scan_export_secrets.sh` → `scan_artifact.sh`; `scan_artifact_test.sh`; `make godot-export-check` | 20/20; OK |
+| F061-AC-12 | `test_remember_username.gd` | 3/3 |
+| F061-AC-13, 14, 15 | `test_select_tenant.gd`, `test_select_tenant_errors.gd`, `test_tenant_not_persisted.gd` (kể cả scene TenantChoice không chọn sẵn) | 2/2, 2/2, 4/4 |
+| F061-AC-16, 17, 19, 20 | `test_api_client_headers.gd`, `test_api_client_retry.gd`, `test_api_client_tenant_errors.gd`, `test_problem.gd` | 5/5, 7/7, 3/3, 5/5 |
+| F061-AC-18, AC-33 | `test_refresh_single_flight.gd` (5 request `401` → 1 refresh `renew`), `test_refresh_rotation.gd` | 4/4, 3/3 |
+| F061-AC-21, AC-22 | `test_takeover.gd`, `test_game_session_replaced.gd` | 3/3, 1/1 |
+| F061-AC-23, 24, 25, 26 | `test_logout.gd`, `test_heartbeat.gd`, `tests/unit/core/test_lifecycle_watcher.gd`, `tests/scene/auth/test_cold_start.gd` | 3/3, 2/2, 5/5, 2/2 |
+| F061-AC-29…32, 34 | `test_resume.gd`, `test_resume_failures.gd`, `test_resume_transient.gd`, `test_shared_device_session.gd` | 4/4, 3/3, 3/3, 3/3 |
+| F061-AC-35, AC-36 | `tests/unit/test_resume_confirm.gd`, `tests/unit/test_curfew_flow.gd` | 3/3, 6/6 |
+| i18n/overflow màn F061 | `test_pseudo_locale.gd` (14 màn F061 ở `xx-PS`), `extract_pot --check` 143 khóa vi/en | 2/2; OK |
+
+Đường HTTP thật: `HttpRequestPool` + `ApiClient` + `AuthService` chạy với Prism MOCK (`docker compose --profile mock up api-mock`, :4011; container đã dừng và xóa sau khi chạy): `GET /game/client-config` 200 → `POST /auth/game/login` 200 → `POST /game/sessions` 201 → `:heartbeat` 204 → `:end` 204 → `POST /auth/game/logout` 204 (token mẫu của Prism có `expires_in` < 60 s nên mỗi request gọi trước một `token:refresh` `renew` — đúng F061-AC-18).
+
+**Chưa có bằng chứng (ghi rõ):**
+- Kịch bản §2 với backend thật (bước 3–36) và integration `tests/integration/auth/*` (T035, T044, T053): chưa chạy — binary backend chưa nối trong compose (OQ F014-7); test tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL`.
+- Android (bước 25, video takeover Windows + Android): chờ lane thiết bị/emulator F133; adapter DPAPI/Keystore thật chạy ở CI (F060).
+- `gdlint` chỉ chạy ở CI (`godot.yml`); mã viết theo cấu hình mặc định gdtoolkit (≤ 20 public method, thứ tự khai báo, không gọi method private từ ngoài lớp).
