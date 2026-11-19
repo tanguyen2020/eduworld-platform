@@ -68,8 +68,19 @@ func (p *IDP) AuthConfig() httpx.AuthConfig {
 // Token signs an access token for sub through client azp at now; mfa adds amr otp.
 func (p *IDP) Token(sub, azp string, mfa bool, now time.Time) string {
 	p.t.Helper()
+	return p.sign(sub, azp, "sid-1", mfa, now)
+}
+
+// TokenSID is Token with the Keycloak session id sid (game tokens of two devices, F014 takeover).
+func (p *IDP) TokenSID(sub, azp, sid string, now time.Time) string {
+	p.t.Helper()
+	return p.sign(sub, azp, sid, false, now)
+}
+
+func (p *IDP) sign(sub, azp, sid string, mfa bool, now time.Time) string {
+	p.t.Helper()
 	claims := map[string]any{"iss": p.Issuer(), "sub": sub, "aud": []string{Audience}, "azp": azp, "typ": "Bearer",
-		"exp": now.Add(5 * time.Minute).Unix(), "iat": now.Add(-time.Minute).Unix(), "nbf": now.Add(-time.Minute).Unix(), "sid": "sid-1"}
+		"exp": now.Add(5 * time.Minute).Unix(), "iat": now.Add(-time.Minute).Unix(), "nbf": now.Add(-time.Minute).Unix(), "sid": sid}
 	if mfa {
 		claims["amr"] = []string{"pwd", "otp"}
 	}
