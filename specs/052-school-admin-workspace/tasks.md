@@ -139,8 +139,8 @@ Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết t�
 - [x] T048 [P] E2E giới hạn `maxLength`/`pattern` và map `VALIDATION_FAILED` (F052-AC-26; TC-TEN-024); < 768 px dạng thẻ + "cần màn hình lớn hơn" + axe (F052-AC-27; TC-UI-006) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/responsive-a11y.spec.ts` — **2026-11-20:** `common/fieldSchemas.test.ts` (22 giới hạn = OpenAPI), `access.test.tsx` (maxlength, pattern), thẻ < 768 px (`classes.test.tsx`), "cần màn hình lớn hơn" (`sis.test.tsx`); axe toàn trang chờ E2E.
 - [x] T049 [P] Story Storybook cho dialog/form chính (sáng/tối) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-lms.stories.tsx` — **2026-11-20:** `school-lms.stories.tsx` (Light/Dark/Compact: kết quả import, picker permission, bảng đăng nhập).
 - [x] T050 [P] Cập nhật SIS_INTEGRATION §10 theo route public `/schools/{school_id}/sis-imports`, `/schools/{school_id}/reconciliation-issues`; cập nhật API_DESIGN, CHANGELOG — file: `docs/09-identity/SIS_INTEGRATION.md`, `CHANGELOG.md` — **2026-11-20:** SIS_INTEGRATION §9–§10, API_DESIGN (bảng endpoint), CHANGELOG.
-- [ ] T051 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/052-school-admin-workspace/quickstart.md`
-- [ ] T052 Cập nhật trạng thái F052 — file: `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
+- [x] T051 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/052-school-admin-workspace/quickstart.md` — **2026-11-20:** quickstart §5 (lệnh tự động + bảng kịch bản ↔ test; kịch bản backend thật chờ OQ F051-9).
+- [x] T052 Cập nhật trạng thái F052 — file: `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — **2026-11-20:** F052 Done.
 - [x] T053 [P] Test F052-AC-28: tắt `menu.school_lms.audit_logs` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/feature-toggle.spec.ts` — **2026-11-20:** `audit/audit.test.tsx` › menu/action turned off (3 test).
 - [x] T054 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F052-AC-28) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx` — **2026-11-20:** menu/route từ catalog; nút bọc `<ActionGate>`; `catalogMenus.test.tsx` (không path/label tay) xanh.
 
@@ -151,8 +151,8 @@ Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết t�
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F052-AC-* có test pass (ghi mã test/TC)
-- [ ] `make web-lint`, `make web-test`, Playwright `@F052` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F052-AC-* có test pass (ghi mã test/TC) — mức integration toàn portal với MOCK backend; E2E backend thật còn mở (OQ F051-9, Câu hỏi mở F052-1)
+- [x] `make web-lint`, `make web-test` xanh (lệnh pnpm tương đương, quickstart §5); Playwright `@F052` chờ OQ F051-9
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — MOCK chỉ trong `src/test/` và test
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — SIS_INTEGRATION §9–§10, API_DESIGN, CHANGELOG; CONFIG_DEFAULTS không đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

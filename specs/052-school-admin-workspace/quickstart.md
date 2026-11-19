@@ -52,3 +52,21 @@ cd src/cms/frontend && pnpm --filter portal test:e2e -- --grep @F052
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail), báo cáo axe; ảnh màn kịch bản 6, 11, 14; `trace_id` của kịch bản 8 và 9.
+
+## 5. Bằng chứng (2026-11-20)
+
+Chạy tự động trong worktree `f052-school-admin` (Windows, 2 worker Vitest), commit `3771c3f`. Backend = **MOCK** (`src/test/school-lms-mock.ts`, gắn nhãn R17) theo `specs/openapi/eduworld-api.v1.yaml`; kịch bản với backend local thật, ảnh màn và `trace_id` thật chờ OQ F051-9 và backend ba operation mới (Câu hỏi mở F052-1).
+
+| Lệnh | Kết quả |
+|---|---|
+| `npx vitest run --maxWorkers=2` (toàn bộ `src/cms/frontend`, trước rebase cuối) | 53 file, 391 test pass (1 test F051 `catalogMenus` sửa điều kiện chờ thông báo/trang tắt — thứ tự hiển thị đổi khi màn Lớp có thật) |
+| `vitest … apps/portal/src/workspaces/school-lms` | 10 file, 87 test pass (sau tách test gán/thu hồi UserRole) |
+| `vitest … i18n, school-lms/i18n, common, students, catalogMenus` (sau rebase cuối) | 5 file, 45 test pass |
+| `pnpm lint` (ESLint + stylelint) · `pnpm typecheck` · `pnpm build` (check-chunks) | xanh; chunk `workspace-school-lms` riêng |
+| `pnpm gen:check` | 2 file sinh khớp spec gộp; menu-catalog khớp |
+| `node scripts/specs/check-features.mjs` · `check-cross-features.mjs` · `check-portal-catalog.mjs` · `check-maxlength.mjs` · `check-problem-codes.mjs` · `check-enums.mjs` · `validate-schemas.mjs` · `split-public.mjs --check` · `sync-platform-ops.mjs --check` | 0 lỗi |
+| `go run ./tools/routematrix check` (GOMAXPROCS=2) | 535 operation, 0 problem (ma trận sinh lại có 3 operation mới) |
+| `go test ./pkg/httpx/featuregate/ ./pkg/httpx/` | ok |
+| `node scripts/docs/check-links.mjs` | 0 link hỏng |
+
+Kịch bản §2 ↔ test: 1–3 `schools.test.tsx`; 4–7 `classes.test.tsx`, `students.test.tsx`; 8–9 `sis.test.tsx`, `sisFlow.test.ts`; 10–15 `access.test.tsx`; 16–18d `settings.test.tsx`; 19, 24 `audit.test.tsx`; 20 `schools.test.tsx`; 21 `sis.test.tsx`/`access.test.tsx`/`settings.test.tsx` (người chỉ đọc); 22 `fieldSchemas.test.ts`, `access.test.tsx`; 23 `classes.test.tsx`, `sis.test.tsx`. Chưa chạy: Playwright `@F052`, axe toàn trang (SC-005), visual baseline của `school-lms.stories.tsx` (`make web-visual` cần duyệt ảnh).

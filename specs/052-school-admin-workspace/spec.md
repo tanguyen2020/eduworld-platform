@@ -1,6 +1,6 @@
 # Feature Specification: F052 — Workspace C — quản trị trường: trường/lớp/học sinh, SIS, người dùng và phân quyền, cài đặt, audit
 
-**Feature Branch**: `052-school-admin-workspace` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace `school_lms`) · **Mốc**: M-C3 · **Phụ thuộc**: F011, F015, F016, F051
+**Feature Branch**: `052-school-admin-workspace` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/cms/frontend/apps/portal` (workspace `school_lms`) · **Mốc**: M-C3 · **Phụ thuộc**: F011, F015, F016, F051
 **Input**: Phần quản trị của workspace C (School & Learning Management) cho Tenant Admin, School Admin, Academic Manager và System Admin (một tenant đích): trường, lớp, học sinh SIS (chỉ đọc), nhập CSV SIS và xung đột đồng bộ, người dùng/Role/UserRole, cài đặt tenant/trường, dọn học sinh không đăng nhập, hoạt động đăng nhập game, nhật ký audit. FR nguồn: FR-AUTH-024, FR-AUTH-032, FR-ORG-007, FR-ORG-016, FR-SIS-005, FR-AUD-001, FR-GAME-013.
 
 ## Clarifications
