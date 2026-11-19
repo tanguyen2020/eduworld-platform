@@ -46,3 +46,31 @@ make migrate-lint MOD=identity
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail (`platformadmin`), kết quả facade test identity ↔ learning, trace_id kịch bản 10 và 12, bản ghi audit truy vấn được cho kịch bản 2, 5, 10, 13.
+
+## 5. Bằng chứng (2026-11-19)
+
+Binary chưa nối module (OQ F010-2) nên kịch bản quickstart chạy bằng test tự động: chuỗi `pkg/httpx` thật (JWT IDP giả, phân giải Principal thật từ DB, validate OpenAPI, idempotency), repository/outbox/saga engine thật trên PostgreSQL testcontainers; facade module learning là TEST DOUBLE `fakeLearningFacade` (R17) có cùng luật F020, gọi qua `modules.Gateway` + `pkg/modcall` thật; `mergeUserData` của 4 module là TEST DOUBLE `mergeOwners` (chưa module nào hiện thực, OQ F045-3).
+
+| Kịch bản | Test | Kết quả |
+|---|---|---|
+| 1, 2, 3, 4, 13, 14, 15 | `TestPlatformAdminCrossTenantTrash` (`platform_admin_trash_integration_test.go`) | PASS |
+| 5, 6, 8, 9 (7: chỉ đọc/`RESOURCE_NOT_ASSIGNED` thuộc F020-AC-16/AC-18) | `TestPlatformAdminAssignments` | PASS |
+| 10, 11, 12 | `TestPlatformAdminClone` | PASS |
+| 16, 17, 18 | `TestPlatformAdminMerge` | PASS |
+| facade ngữ cảnh + 503 | `TestOwnerGatewayCallContext`, `TestOwnerGatewayUnavailable` (`tests/contract/owner_gateway_test.go`) | PASS |
+| route khớp spec | `TestPlatformAdminOperationsMatchSpec` | PASS |
+| domain | `TestRouting`, `TestPlanClone`, `TestSummarizeClone`, `TestCheckMerge` | PASS |
+
+Lệnh (từ `src/backend`, máy 8 nhân dùng chung):
+
+```bash
+GOMAXPROCS=2 go test -p 2 ./modules/identity/... ./pkg/authz/...                     # 34 package ok
+TESTCONTAINERS_RYUK_DISABLED=true GOMAXPROCS=2 go test -p 2 -tags integration -timeout 40m \
+  ./modules/identity/tests/integration/ -run 'TestPlatformAdmin|TestSagaEngine'        # 5/5 PASS
+TESTCONTAINERS_RYUK_DISABLED=true GOMAXPROCS=2 go test -p 2 -tags integration -timeout 40m ./modules/identity/tests/integration/  # toàn bộ: 60 PASS, 0 FAIL (1237 s)
+GOMAXPROCS=2 golangci-lint run --allow-parallel-runners --concurrency 2 ./modules/identity/... ./pkg/authz/...   # 0 issues
+GOMAXPROCS=2 golangci-lint run --allow-parallel-runners --concurrency 2 --config .golangci.arch.yml ./modules/identity/...  # 0 issues
+go run ./tools/tenancyguard ./... && go run ./tools/lint/ewlint ./... && go run ./tools/entlint && go run ./tools/archgen --check && go run ./tools/routematrix check
+```
+
+Audit truy vấn được trong outbox (`infra.outbox_events`, `audit.recorded`): `cross_tenant.accessed` (kịch bản 2), `tenant_data.assigned`/`unassigned` mỗi tenant (5, 8), `tenant_data.cloned` ở tenant nguồn và đích (10), `question.restored` có lý do (13), `user.merged` không PII (16), `authz.denied` (4). Không có trace_id thật vì không chạy binary.

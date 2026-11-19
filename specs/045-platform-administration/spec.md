@@ -1,6 +1,6 @@
 # Feature Specification: F045 — Platform Administration backend: saga gán/clone, thùng rác mọi tenant, đọc liên tenant
 
-**Feature Branch**: `045-platform-administration` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `identity` · **Mốc**: M-C3 · **Phụ thuộc**: F015, F020
+**Feature Branch**: `045-platform-administration` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `identity` · **Mốc**: M-C3 · **Phụ thuộc**: F015, F020
 **Input**: System Admin là người duy nhất xem dữ liệu liên tenant, gán dữ liệu platform cho tenant, clone cấu hình/nội dung giữa tenant (không bao giờ clone dữ liệu học sinh) và xem/khôi phục Thùng rác mọi tenant; module identity điều phối, module sở hữu dữ liệu thực hiện qua internal API. FR nguồn: FR-ORG-008, FR-ORG-012, FR-ORG-013, FR-CMS-013, FR-CMS-014, FR-CMS-015; hợp nhất tài khoản `/admin/users:merge` theo IDENTITY_MAPPING §7 (PRD chưa có mã FR riêng).
 
 ## Clarifications
