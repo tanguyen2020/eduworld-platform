@@ -34,14 +34,7 @@ func (h Handlers) listTenantUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func staffView(s write.StaffRow) read.UserView {
-	v := read.UserView{UserID: s.UserID, UserType: "staff", PrimaryTenantID: s.PrimaryTenantID, Status: s.Status, Username: s.Username,
-		Email: s.Email, DisplayName: s.DisplayName, Source: "manual", UserRoles: []read.UserRoleView{}, Version: s.Version}
-	if s.Locale != nil {
-		v.Locale = *s.Locale
-	}
-	return v
-}
+func staffView(s write.StaffRow) read.UserView { return command.StaffView(s) }
 
 func (h Handlers) createTenantUser(w http.ResponseWriter, r *http.Request) {
 	var b struct {

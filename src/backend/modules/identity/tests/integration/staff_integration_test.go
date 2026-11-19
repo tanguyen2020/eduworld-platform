@@ -58,9 +58,15 @@ func TestTenantStaff(t *testing.T) {
 	}
 
 	// AC-25: Keycloak user + staff with the session tenant as home tenant + initial role, audited.
-	r := h.do(t, "POST", "/tenant/users", tok, newKey(), staff("GV.Lan", "Lan.GV@School.vn", roles))
+	createKey := newKey()
+	r := h.do(t, "POST", "/tenant/users", tok, createKey, staff("GV.Lan", "Lan.GV@School.vn", roles))
 	if r.status != 201 || r.body["username"] != "gv.lan" || r.body["email"] != "lan.gv@school.vn" || r.body["primary_tenant_id"] != a.tenant {
 		t.Fatalf("create: %d %s", r.status, r.raw)
+	}
+	// R10: the same Idempotency-Key replays the stored response instead of running the use case again (no 409).
+	if rr := h.do(t, "POST", "/tenant/users", tok, createKey, staff("GV.Lan", "Lan.GV@School.vn", roles)); rr.status != 201 ||
+		rr.body["user_id"] != r.body["user_id"] || rr.header.Get("Idempotent-Replayed") != "true" {
+		t.Fatalf("replay: %d %s", rr.status, rr.raw)
 	}
 	id, version := r.body["user_id"].(string), int(r.body["version"].(float64))
 	kcID := h.kc.users["gv.lan"]

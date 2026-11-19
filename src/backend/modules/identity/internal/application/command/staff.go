@@ -10,10 +10,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -154,8 +156,11 @@ func (h Staff) Create(ctx context.Context, in CreateStaffInput) (out write.Staff
 			return err
 		}
 		out = *created
-		return h.Audit.Record(ctx, audit.Event{Action: "user.created", TargetType: "user", TargetID: uid, Result: audit.ResultSuccess,
-			Metadata: map[string]any{"user_type": "staff", "roles": len(in.Roles), "actor": p.UserID.String()}})
+		if err := h.Audit.Record(ctx, audit.Event{Action: "user.created", TargetType: "user", TargetID: uid, Result: audit.ResultSuccess,
+			Metadata: map[string]any{"user_type": "staff", "roles": len(in.Roles), "actor": p.UserID.String()}}); err != nil {
+			return err
+		}
+		return idempotency.SetResult(ctx, StaffView(out)) // same Idempotency-Key → the stored response (R10)
 	})
 	if err != nil {
 		_ = h.KC.DisableUser(context.WithoutCancel(ctx), kcID)
@@ -244,4 +249,14 @@ func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.Staff
 				"display_name_changed": in.DisplayName != nil, "locale_changed": in.Locale != nil}})
 	})
 	return out, err
+}
+
+// StaffView is the User response of createTenantUser (stored for idempotent replays and written by the handler).
+func StaffView(s write.StaffRow) read.UserView {
+	v := read.UserView{UserID: s.UserID, UserType: "staff", PrimaryTenantID: s.PrimaryTenantID, Status: s.Status, Username: s.Username,
+		Email: s.Email, DisplayName: s.DisplayName, Source: "manual", UserRoles: []read.UserRoleView{}, Version: s.Version}
+	if s.Locale != nil {
+		v.Locale = *s.Locale
+	}
+	return v
 }
