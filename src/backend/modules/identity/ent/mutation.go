@@ -17,6 +17,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/predicate"
@@ -56,6 +58,8 @@ const (
 	TypeCountry                  = "Country"
 	TypeEnrollment               = "Enrollment"
 	TypeExternalIdentity         = "ExternalIdentity"
+	TypeGameAuthSession          = "GameAuthSession"
+	TypeLoginEvent               = "LoginEvent"
 	TypePermission               = "Permission"
 	TypePortalPasswordResetToken = "PortalPasswordResetToken"
 	TypeProvince                 = "Province"
@@ -6154,6 +6158,2452 @@ func (m *ExternalIdentityMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ExternalIdentityMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ExternalIdentity edge %s", name)
+}
+
+// GameAuthSessionMutation represents an operation that mutates the GameAuthSession nodes in the graph.
+type GameAuthSessionMutation struct {
+	config
+	op                          Op
+	typ                         string
+	id                          *uuid.UUID
+	tenant_id                   *uuid.UUID
+	created_at                  *time.Time
+	created_by                  *uuid.UUID
+	updated_at                  *time.Time
+	updated_by                  *uuid.UUID
+	deleted_at                  *time.Time
+	deleted_by                  *uuid.UUID
+	delete_reason               *string
+	version                     *int64
+	addversion                  *int64
+	user_id                     *uuid.UUID
+	keycloak_sid                *string
+	device_id                   *uuid.UUID
+	platform                    *string
+	refresh_token_hash          *string
+	previous_token_hashes       *[]string
+	appendprevious_token_hashes []string
+	last_refreshed_at           *time.Time
+	revoked_at                  *time.Time
+	revoke_reason               *string
+	clearedFields               map[string]struct{}
+	done                        bool
+	oldValue                    func(context.Context) (*GameAuthSession, error)
+	predicates                  []predicate.GameAuthSession
+}
+
+var _ ent.Mutation = (*GameAuthSessionMutation)(nil)
+
+// gameauthsessionOption allows management of the mutation configuration using functional options.
+type gameauthsessionOption func(*GameAuthSessionMutation)
+
+// newGameAuthSessionMutation creates new mutation for the GameAuthSession entity.
+func newGameAuthSessionMutation(c config, op Op, opts ...gameauthsessionOption) *GameAuthSessionMutation {
+	m := &GameAuthSessionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGameAuthSession,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGameAuthSessionID sets the ID field of the mutation.
+func withGameAuthSessionID(id uuid.UUID) gameauthsessionOption {
+	return func(m *GameAuthSessionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GameAuthSession
+		)
+		m.oldValue = func(ctx context.Context) (*GameAuthSession, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GameAuthSession.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGameAuthSession sets the old GameAuthSession of the mutation.
+func withGameAuthSession(node *GameAuthSession) gameauthsessionOption {
+	return func(m *GameAuthSessionMutation) {
+		m.oldValue = func(context.Context) (*GameAuthSession, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GameAuthSessionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GameAuthSessionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of GameAuthSession entities.
+func (m *GameAuthSessionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GameAuthSessionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GameAuthSessionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GameAuthSession.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *GameAuthSessionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *GameAuthSessionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *GameAuthSessionMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GameAuthSessionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GameAuthSessionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GameAuthSessionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *GameAuthSessionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *GameAuthSessionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *GameAuthSessionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[gameauthsession.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *GameAuthSessionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, gameauthsession.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *GameAuthSessionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *GameAuthSessionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *GameAuthSessionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *GameAuthSessionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *GameAuthSessionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *GameAuthSessionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[gameauthsession.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *GameAuthSessionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, gameauthsession.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *GameAuthSessionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *GameAuthSessionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *GameAuthSessionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[gameauthsession.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *GameAuthSessionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, gameauthsession.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *GameAuthSessionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *GameAuthSessionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *GameAuthSessionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[gameauthsession.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *GameAuthSessionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, gameauthsession.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *GameAuthSessionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *GameAuthSessionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *GameAuthSessionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[gameauthsession.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *GameAuthSessionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, gameauthsession.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *GameAuthSessionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *GameAuthSessionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *GameAuthSessionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *GameAuthSessionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *GameAuthSessionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *GameAuthSessionMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *GameAuthSessionMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *GameAuthSessionMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetKeycloakSid sets the "keycloak_sid" field.
+func (m *GameAuthSessionMutation) SetKeycloakSid(s string) {
+	m.keycloak_sid = &s
+}
+
+// KeycloakSid returns the value of the "keycloak_sid" field in the mutation.
+func (m *GameAuthSessionMutation) KeycloakSid() (r string, exists bool) {
+	v := m.keycloak_sid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeycloakSid returns the old "keycloak_sid" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldKeycloakSid(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeycloakSid is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeycloakSid requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeycloakSid: %w", err)
+	}
+	return oldValue.KeycloakSid, nil
+}
+
+// ResetKeycloakSid resets all changes to the "keycloak_sid" field.
+func (m *GameAuthSessionMutation) ResetKeycloakSid() {
+	m.keycloak_sid = nil
+}
+
+// SetDeviceID sets the "device_id" field.
+func (m *GameAuthSessionMutation) SetDeviceID(u uuid.UUID) {
+	m.device_id = &u
+}
+
+// DeviceID returns the value of the "device_id" field in the mutation.
+func (m *GameAuthSessionMutation) DeviceID() (r uuid.UUID, exists bool) {
+	v := m.device_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeviceID returns the old "device_id" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldDeviceID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeviceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeviceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeviceID: %w", err)
+	}
+	return oldValue.DeviceID, nil
+}
+
+// ResetDeviceID resets all changes to the "device_id" field.
+func (m *GameAuthSessionMutation) ResetDeviceID() {
+	m.device_id = nil
+}
+
+// SetPlatform sets the "platform" field.
+func (m *GameAuthSessionMutation) SetPlatform(s string) {
+	m.platform = &s
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *GameAuthSessionMutation) Platform() (r string, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldPlatform(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *GameAuthSessionMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetRefreshTokenHash sets the "refresh_token_hash" field.
+func (m *GameAuthSessionMutation) SetRefreshTokenHash(s string) {
+	m.refresh_token_hash = &s
+}
+
+// RefreshTokenHash returns the value of the "refresh_token_hash" field in the mutation.
+func (m *GameAuthSessionMutation) RefreshTokenHash() (r string, exists bool) {
+	v := m.refresh_token_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRefreshTokenHash returns the old "refresh_token_hash" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldRefreshTokenHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRefreshTokenHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRefreshTokenHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRefreshTokenHash: %w", err)
+	}
+	return oldValue.RefreshTokenHash, nil
+}
+
+// ResetRefreshTokenHash resets all changes to the "refresh_token_hash" field.
+func (m *GameAuthSessionMutation) ResetRefreshTokenHash() {
+	m.refresh_token_hash = nil
+}
+
+// SetPreviousTokenHashes sets the "previous_token_hashes" field.
+func (m *GameAuthSessionMutation) SetPreviousTokenHashes(s []string) {
+	m.previous_token_hashes = &s
+	m.appendprevious_token_hashes = nil
+}
+
+// PreviousTokenHashes returns the value of the "previous_token_hashes" field in the mutation.
+func (m *GameAuthSessionMutation) PreviousTokenHashes() (r []string, exists bool) {
+	v := m.previous_token_hashes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPreviousTokenHashes returns the old "previous_token_hashes" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldPreviousTokenHashes(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPreviousTokenHashes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPreviousTokenHashes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPreviousTokenHashes: %w", err)
+	}
+	return oldValue.PreviousTokenHashes, nil
+}
+
+// AppendPreviousTokenHashes adds s to the "previous_token_hashes" field.
+func (m *GameAuthSessionMutation) AppendPreviousTokenHashes(s []string) {
+	m.appendprevious_token_hashes = append(m.appendprevious_token_hashes, s...)
+}
+
+// AppendedPreviousTokenHashes returns the list of values that were appended to the "previous_token_hashes" field in this mutation.
+func (m *GameAuthSessionMutation) AppendedPreviousTokenHashes() ([]string, bool) {
+	if len(m.appendprevious_token_hashes) == 0 {
+		return nil, false
+	}
+	return m.appendprevious_token_hashes, true
+}
+
+// ResetPreviousTokenHashes resets all changes to the "previous_token_hashes" field.
+func (m *GameAuthSessionMutation) ResetPreviousTokenHashes() {
+	m.previous_token_hashes = nil
+	m.appendprevious_token_hashes = nil
+}
+
+// SetLastRefreshedAt sets the "last_refreshed_at" field.
+func (m *GameAuthSessionMutation) SetLastRefreshedAt(t time.Time) {
+	m.last_refreshed_at = &t
+}
+
+// LastRefreshedAt returns the value of the "last_refreshed_at" field in the mutation.
+func (m *GameAuthSessionMutation) LastRefreshedAt() (r time.Time, exists bool) {
+	v := m.last_refreshed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastRefreshedAt returns the old "last_refreshed_at" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldLastRefreshedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastRefreshedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastRefreshedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastRefreshedAt: %w", err)
+	}
+	return oldValue.LastRefreshedAt, nil
+}
+
+// ResetLastRefreshedAt resets all changes to the "last_refreshed_at" field.
+func (m *GameAuthSessionMutation) ResetLastRefreshedAt() {
+	m.last_refreshed_at = nil
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (m *GameAuthSessionMutation) SetRevokedAt(t time.Time) {
+	m.revoked_at = &t
+}
+
+// RevokedAt returns the value of the "revoked_at" field in the mutation.
+func (m *GameAuthSessionMutation) RevokedAt() (r time.Time, exists bool) {
+	v := m.revoked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevokedAt returns the old "revoked_at" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldRevokedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevokedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevokedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevokedAt: %w", err)
+	}
+	return oldValue.RevokedAt, nil
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (m *GameAuthSessionMutation) ClearRevokedAt() {
+	m.revoked_at = nil
+	m.clearedFields[gameauthsession.FieldRevokedAt] = struct{}{}
+}
+
+// RevokedAtCleared returns if the "revoked_at" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) RevokedAtCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldRevokedAt]
+	return ok
+}
+
+// ResetRevokedAt resets all changes to the "revoked_at" field.
+func (m *GameAuthSessionMutation) ResetRevokedAt() {
+	m.revoked_at = nil
+	delete(m.clearedFields, gameauthsession.FieldRevokedAt)
+}
+
+// SetRevokeReason sets the "revoke_reason" field.
+func (m *GameAuthSessionMutation) SetRevokeReason(s string) {
+	m.revoke_reason = &s
+}
+
+// RevokeReason returns the value of the "revoke_reason" field in the mutation.
+func (m *GameAuthSessionMutation) RevokeReason() (r string, exists bool) {
+	v := m.revoke_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevokeReason returns the old "revoke_reason" field's value of the GameAuthSession entity.
+// If the GameAuthSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameAuthSessionMutation) OldRevokeReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevokeReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevokeReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevokeReason: %w", err)
+	}
+	return oldValue.RevokeReason, nil
+}
+
+// ClearRevokeReason clears the value of the "revoke_reason" field.
+func (m *GameAuthSessionMutation) ClearRevokeReason() {
+	m.revoke_reason = nil
+	m.clearedFields[gameauthsession.FieldRevokeReason] = struct{}{}
+}
+
+// RevokeReasonCleared returns if the "revoke_reason" field was cleared in this mutation.
+func (m *GameAuthSessionMutation) RevokeReasonCleared() bool {
+	_, ok := m.clearedFields[gameauthsession.FieldRevokeReason]
+	return ok
+}
+
+// ResetRevokeReason resets all changes to the "revoke_reason" field.
+func (m *GameAuthSessionMutation) ResetRevokeReason() {
+	m.revoke_reason = nil
+	delete(m.clearedFields, gameauthsession.FieldRevokeReason)
+}
+
+// Where appends a list predicates to the GameAuthSessionMutation builder.
+func (m *GameAuthSessionMutation) Where(ps ...predicate.GameAuthSession) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GameAuthSessionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GameAuthSessionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GameAuthSession, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GameAuthSessionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GameAuthSessionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GameAuthSession).
+func (m *GameAuthSessionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GameAuthSessionMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.tenant_id != nil {
+		fields = append(fields, gameauthsession.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, gameauthsession.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, gameauthsession.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, gameauthsession.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, gameauthsession.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, gameauthsession.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, gameauthsession.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, gameauthsession.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, gameauthsession.FieldVersion)
+	}
+	if m.user_id != nil {
+		fields = append(fields, gameauthsession.FieldUserID)
+	}
+	if m.keycloak_sid != nil {
+		fields = append(fields, gameauthsession.FieldKeycloakSid)
+	}
+	if m.device_id != nil {
+		fields = append(fields, gameauthsession.FieldDeviceID)
+	}
+	if m.platform != nil {
+		fields = append(fields, gameauthsession.FieldPlatform)
+	}
+	if m.refresh_token_hash != nil {
+		fields = append(fields, gameauthsession.FieldRefreshTokenHash)
+	}
+	if m.previous_token_hashes != nil {
+		fields = append(fields, gameauthsession.FieldPreviousTokenHashes)
+	}
+	if m.last_refreshed_at != nil {
+		fields = append(fields, gameauthsession.FieldLastRefreshedAt)
+	}
+	if m.revoked_at != nil {
+		fields = append(fields, gameauthsession.FieldRevokedAt)
+	}
+	if m.revoke_reason != nil {
+		fields = append(fields, gameauthsession.FieldRevokeReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GameAuthSessionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case gameauthsession.FieldTenantID:
+		return m.TenantID()
+	case gameauthsession.FieldCreatedAt:
+		return m.CreatedAt()
+	case gameauthsession.FieldCreatedBy:
+		return m.CreatedBy()
+	case gameauthsession.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case gameauthsession.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case gameauthsession.FieldDeletedAt:
+		return m.DeletedAt()
+	case gameauthsession.FieldDeletedBy:
+		return m.DeletedBy()
+	case gameauthsession.FieldDeleteReason:
+		return m.DeleteReason()
+	case gameauthsession.FieldVersion:
+		return m.Version()
+	case gameauthsession.FieldUserID:
+		return m.UserID()
+	case gameauthsession.FieldKeycloakSid:
+		return m.KeycloakSid()
+	case gameauthsession.FieldDeviceID:
+		return m.DeviceID()
+	case gameauthsession.FieldPlatform:
+		return m.Platform()
+	case gameauthsession.FieldRefreshTokenHash:
+		return m.RefreshTokenHash()
+	case gameauthsession.FieldPreviousTokenHashes:
+		return m.PreviousTokenHashes()
+	case gameauthsession.FieldLastRefreshedAt:
+		return m.LastRefreshedAt()
+	case gameauthsession.FieldRevokedAt:
+		return m.RevokedAt()
+	case gameauthsession.FieldRevokeReason:
+		return m.RevokeReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GameAuthSessionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case gameauthsession.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case gameauthsession.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case gameauthsession.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case gameauthsession.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case gameauthsession.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case gameauthsession.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case gameauthsession.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case gameauthsession.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case gameauthsession.FieldVersion:
+		return m.OldVersion(ctx)
+	case gameauthsession.FieldUserID:
+		return m.OldUserID(ctx)
+	case gameauthsession.FieldKeycloakSid:
+		return m.OldKeycloakSid(ctx)
+	case gameauthsession.FieldDeviceID:
+		return m.OldDeviceID(ctx)
+	case gameauthsession.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case gameauthsession.FieldRefreshTokenHash:
+		return m.OldRefreshTokenHash(ctx)
+	case gameauthsession.FieldPreviousTokenHashes:
+		return m.OldPreviousTokenHashes(ctx)
+	case gameauthsession.FieldLastRefreshedAt:
+		return m.OldLastRefreshedAt(ctx)
+	case gameauthsession.FieldRevokedAt:
+		return m.OldRevokedAt(ctx)
+	case gameauthsession.FieldRevokeReason:
+		return m.OldRevokeReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown GameAuthSession field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameAuthSessionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case gameauthsession.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case gameauthsession.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case gameauthsession.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case gameauthsession.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case gameauthsession.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case gameauthsession.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case gameauthsession.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case gameauthsession.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case gameauthsession.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case gameauthsession.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case gameauthsession.FieldKeycloakSid:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeycloakSid(v)
+		return nil
+	case gameauthsession.FieldDeviceID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeviceID(v)
+		return nil
+	case gameauthsession.FieldPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case gameauthsession.FieldRefreshTokenHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRefreshTokenHash(v)
+		return nil
+	case gameauthsession.FieldPreviousTokenHashes:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPreviousTokenHashes(v)
+		return nil
+	case gameauthsession.FieldLastRefreshedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastRefreshedAt(v)
+		return nil
+	case gameauthsession.FieldRevokedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevokedAt(v)
+		return nil
+	case gameauthsession.FieldRevokeReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevokeReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GameAuthSession field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GameAuthSessionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, gameauthsession.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GameAuthSessionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case gameauthsession.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameAuthSessionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case gameauthsession.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GameAuthSession numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GameAuthSessionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(gameauthsession.FieldCreatedBy) {
+		fields = append(fields, gameauthsession.FieldCreatedBy)
+	}
+	if m.FieldCleared(gameauthsession.FieldUpdatedBy) {
+		fields = append(fields, gameauthsession.FieldUpdatedBy)
+	}
+	if m.FieldCleared(gameauthsession.FieldDeletedAt) {
+		fields = append(fields, gameauthsession.FieldDeletedAt)
+	}
+	if m.FieldCleared(gameauthsession.FieldDeletedBy) {
+		fields = append(fields, gameauthsession.FieldDeletedBy)
+	}
+	if m.FieldCleared(gameauthsession.FieldDeleteReason) {
+		fields = append(fields, gameauthsession.FieldDeleteReason)
+	}
+	if m.FieldCleared(gameauthsession.FieldRevokedAt) {
+		fields = append(fields, gameauthsession.FieldRevokedAt)
+	}
+	if m.FieldCleared(gameauthsession.FieldRevokeReason) {
+		fields = append(fields, gameauthsession.FieldRevokeReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GameAuthSessionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GameAuthSessionMutation) ClearField(name string) error {
+	switch name {
+	case gameauthsession.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case gameauthsession.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case gameauthsession.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case gameauthsession.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case gameauthsession.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case gameauthsession.FieldRevokedAt:
+		m.ClearRevokedAt()
+		return nil
+	case gameauthsession.FieldRevokeReason:
+		m.ClearRevokeReason()
+		return nil
+	}
+	return fmt.Errorf("unknown GameAuthSession nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GameAuthSessionMutation) ResetField(name string) error {
+	switch name {
+	case gameauthsession.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case gameauthsession.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case gameauthsession.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case gameauthsession.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case gameauthsession.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case gameauthsession.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case gameauthsession.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case gameauthsession.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case gameauthsession.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case gameauthsession.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case gameauthsession.FieldKeycloakSid:
+		m.ResetKeycloakSid()
+		return nil
+	case gameauthsession.FieldDeviceID:
+		m.ResetDeviceID()
+		return nil
+	case gameauthsession.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case gameauthsession.FieldRefreshTokenHash:
+		m.ResetRefreshTokenHash()
+		return nil
+	case gameauthsession.FieldPreviousTokenHashes:
+		m.ResetPreviousTokenHashes()
+		return nil
+	case gameauthsession.FieldLastRefreshedAt:
+		m.ResetLastRefreshedAt()
+		return nil
+	case gameauthsession.FieldRevokedAt:
+		m.ResetRevokedAt()
+		return nil
+	case gameauthsession.FieldRevokeReason:
+		m.ResetRevokeReason()
+		return nil
+	}
+	return fmt.Errorf("unknown GameAuthSession field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GameAuthSessionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GameAuthSessionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GameAuthSessionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GameAuthSessionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GameAuthSessionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GameAuthSessionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GameAuthSessionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GameAuthSession unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GameAuthSessionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GameAuthSession edge %s", name)
+}
+
+// LoginEventMutation represents an operation that mutates the LoginEvent nodes in the graph.
+type LoginEventMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	tenant_id         *uuid.UUID
+	created_at        *time.Time
+	created_by        *uuid.UUID
+	user_id           *uuid.UUID
+	occurred_at       *time.Time
+	client            *string
+	ip_hash           *[]byte
+	sis_connection_id *uuid.UUID
+	device_id         *uuid.UUID
+	result            *string
+	tenant_resolution *string
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*LoginEvent, error)
+	predicates        []predicate.LoginEvent
+}
+
+var _ ent.Mutation = (*LoginEventMutation)(nil)
+
+// logineventOption allows management of the mutation configuration using functional options.
+type logineventOption func(*LoginEventMutation)
+
+// newLoginEventMutation creates new mutation for the LoginEvent entity.
+func newLoginEventMutation(c config, op Op, opts ...logineventOption) *LoginEventMutation {
+	m := &LoginEventMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLoginEvent,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLoginEventID sets the ID field of the mutation.
+func withLoginEventID(id uuid.UUID) logineventOption {
+	return func(m *LoginEventMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *LoginEvent
+		)
+		m.oldValue = func(ctx context.Context) (*LoginEvent, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().LoginEvent.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLoginEvent sets the old LoginEvent of the mutation.
+func withLoginEvent(node *LoginEvent) logineventOption {
+	return func(m *LoginEventMutation) {
+		m.oldValue = func(context.Context) (*LoginEvent, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LoginEventMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LoginEventMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of LoginEvent entities.
+func (m *LoginEventMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LoginEventMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LoginEventMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().LoginEvent.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *LoginEventMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *LoginEventMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *LoginEventMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[loginevent.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *LoginEventMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *LoginEventMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, loginevent.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *LoginEventMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *LoginEventMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *LoginEventMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *LoginEventMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *LoginEventMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *LoginEventMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[loginevent.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *LoginEventMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *LoginEventMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, loginevent.FieldCreatedBy)
+}
+
+// SetUserID sets the "user_id" field.
+func (m *LoginEventMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *LoginEventMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldUserID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *LoginEventMutation) ClearUserID() {
+	m.user_id = nil
+	m.clearedFields[loginevent.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *LoginEventMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *LoginEventMutation) ResetUserID() {
+	m.user_id = nil
+	delete(m.clearedFields, loginevent.FieldUserID)
+}
+
+// SetOccurredAt sets the "occurred_at" field.
+func (m *LoginEventMutation) SetOccurredAt(t time.Time) {
+	m.occurred_at = &t
+}
+
+// OccurredAt returns the value of the "occurred_at" field in the mutation.
+func (m *LoginEventMutation) OccurredAt() (r time.Time, exists bool) {
+	v := m.occurred_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOccurredAt returns the old "occurred_at" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldOccurredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOccurredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOccurredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOccurredAt: %w", err)
+	}
+	return oldValue.OccurredAt, nil
+}
+
+// ResetOccurredAt resets all changes to the "occurred_at" field.
+func (m *LoginEventMutation) ResetOccurredAt() {
+	m.occurred_at = nil
+}
+
+// SetClient sets the "client" field.
+func (m *LoginEventMutation) SetClient(s string) {
+	m.client = &s
+}
+
+// GetClient returns the value of the "client" field in the mutation.
+func (m *LoginEventMutation) GetClient() (r string, exists bool) {
+	v := m.client
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClient returns the old "client" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldClient(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClient is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClient requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClient: %w", err)
+	}
+	return oldValue.Client, nil
+}
+
+// ResetClient resets all changes to the "client" field.
+func (m *LoginEventMutation) ResetClient() {
+	m.client = nil
+}
+
+// SetIPHash sets the "ip_hash" field.
+func (m *LoginEventMutation) SetIPHash(b []byte) {
+	m.ip_hash = &b
+}
+
+// IPHash returns the value of the "ip_hash" field in the mutation.
+func (m *LoginEventMutation) IPHash() (r []byte, exists bool) {
+	v := m.ip_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIPHash returns the old "ip_hash" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldIPHash(ctx context.Context) (v *[]byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIPHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIPHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIPHash: %w", err)
+	}
+	return oldValue.IPHash, nil
+}
+
+// ClearIPHash clears the value of the "ip_hash" field.
+func (m *LoginEventMutation) ClearIPHash() {
+	m.ip_hash = nil
+	m.clearedFields[loginevent.FieldIPHash] = struct{}{}
+}
+
+// IPHashCleared returns if the "ip_hash" field was cleared in this mutation.
+func (m *LoginEventMutation) IPHashCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldIPHash]
+	return ok
+}
+
+// ResetIPHash resets all changes to the "ip_hash" field.
+func (m *LoginEventMutation) ResetIPHash() {
+	m.ip_hash = nil
+	delete(m.clearedFields, loginevent.FieldIPHash)
+}
+
+// SetSisConnectionID sets the "sis_connection_id" field.
+func (m *LoginEventMutation) SetSisConnectionID(u uuid.UUID) {
+	m.sis_connection_id = &u
+}
+
+// SisConnectionID returns the value of the "sis_connection_id" field in the mutation.
+func (m *LoginEventMutation) SisConnectionID() (r uuid.UUID, exists bool) {
+	v := m.sis_connection_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSisConnectionID returns the old "sis_connection_id" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldSisConnectionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSisConnectionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSisConnectionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSisConnectionID: %w", err)
+	}
+	return oldValue.SisConnectionID, nil
+}
+
+// ClearSisConnectionID clears the value of the "sis_connection_id" field.
+func (m *LoginEventMutation) ClearSisConnectionID() {
+	m.sis_connection_id = nil
+	m.clearedFields[loginevent.FieldSisConnectionID] = struct{}{}
+}
+
+// SisConnectionIDCleared returns if the "sis_connection_id" field was cleared in this mutation.
+func (m *LoginEventMutation) SisConnectionIDCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldSisConnectionID]
+	return ok
+}
+
+// ResetSisConnectionID resets all changes to the "sis_connection_id" field.
+func (m *LoginEventMutation) ResetSisConnectionID() {
+	m.sis_connection_id = nil
+	delete(m.clearedFields, loginevent.FieldSisConnectionID)
+}
+
+// SetDeviceID sets the "device_id" field.
+func (m *LoginEventMutation) SetDeviceID(u uuid.UUID) {
+	m.device_id = &u
+}
+
+// DeviceID returns the value of the "device_id" field in the mutation.
+func (m *LoginEventMutation) DeviceID() (r uuid.UUID, exists bool) {
+	v := m.device_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeviceID returns the old "device_id" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldDeviceID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeviceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeviceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeviceID: %w", err)
+	}
+	return oldValue.DeviceID, nil
+}
+
+// ClearDeviceID clears the value of the "device_id" field.
+func (m *LoginEventMutation) ClearDeviceID() {
+	m.device_id = nil
+	m.clearedFields[loginevent.FieldDeviceID] = struct{}{}
+}
+
+// DeviceIDCleared returns if the "device_id" field was cleared in this mutation.
+func (m *LoginEventMutation) DeviceIDCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldDeviceID]
+	return ok
+}
+
+// ResetDeviceID resets all changes to the "device_id" field.
+func (m *LoginEventMutation) ResetDeviceID() {
+	m.device_id = nil
+	delete(m.clearedFields, loginevent.FieldDeviceID)
+}
+
+// SetResult sets the "result" field.
+func (m *LoginEventMutation) SetResult(s string) {
+	m.result = &s
+}
+
+// Result returns the value of the "result" field in the mutation.
+func (m *LoginEventMutation) Result() (r string, exists bool) {
+	v := m.result
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResult returns the old "result" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldResult(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResult is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResult requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResult: %w", err)
+	}
+	return oldValue.Result, nil
+}
+
+// ResetResult resets all changes to the "result" field.
+func (m *LoginEventMutation) ResetResult() {
+	m.result = nil
+}
+
+// SetTenantResolution sets the "tenant_resolution" field.
+func (m *LoginEventMutation) SetTenantResolution(s string) {
+	m.tenant_resolution = &s
+}
+
+// TenantResolution returns the value of the "tenant_resolution" field in the mutation.
+func (m *LoginEventMutation) TenantResolution() (r string, exists bool) {
+	v := m.tenant_resolution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantResolution returns the old "tenant_resolution" field's value of the LoginEvent entity.
+// If the LoginEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LoginEventMutation) OldTenantResolution(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantResolution is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantResolution requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantResolution: %w", err)
+	}
+	return oldValue.TenantResolution, nil
+}
+
+// ClearTenantResolution clears the value of the "tenant_resolution" field.
+func (m *LoginEventMutation) ClearTenantResolution() {
+	m.tenant_resolution = nil
+	m.clearedFields[loginevent.FieldTenantResolution] = struct{}{}
+}
+
+// TenantResolutionCleared returns if the "tenant_resolution" field was cleared in this mutation.
+func (m *LoginEventMutation) TenantResolutionCleared() bool {
+	_, ok := m.clearedFields[loginevent.FieldTenantResolution]
+	return ok
+}
+
+// ResetTenantResolution resets all changes to the "tenant_resolution" field.
+func (m *LoginEventMutation) ResetTenantResolution() {
+	m.tenant_resolution = nil
+	delete(m.clearedFields, loginevent.FieldTenantResolution)
+}
+
+// Where appends a list predicates to the LoginEventMutation builder.
+func (m *LoginEventMutation) Where(ps ...predicate.LoginEvent) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LoginEventMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LoginEventMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.LoginEvent, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LoginEventMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LoginEventMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (LoginEvent).
+func (m *LoginEventMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LoginEventMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.tenant_id != nil {
+		fields = append(fields, loginevent.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, loginevent.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, loginevent.FieldCreatedBy)
+	}
+	if m.user_id != nil {
+		fields = append(fields, loginevent.FieldUserID)
+	}
+	if m.occurred_at != nil {
+		fields = append(fields, loginevent.FieldOccurredAt)
+	}
+	if m.client != nil {
+		fields = append(fields, loginevent.FieldClient)
+	}
+	if m.ip_hash != nil {
+		fields = append(fields, loginevent.FieldIPHash)
+	}
+	if m.sis_connection_id != nil {
+		fields = append(fields, loginevent.FieldSisConnectionID)
+	}
+	if m.device_id != nil {
+		fields = append(fields, loginevent.FieldDeviceID)
+	}
+	if m.result != nil {
+		fields = append(fields, loginevent.FieldResult)
+	}
+	if m.tenant_resolution != nil {
+		fields = append(fields, loginevent.FieldTenantResolution)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LoginEventMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case loginevent.FieldTenantID:
+		return m.TenantID()
+	case loginevent.FieldCreatedAt:
+		return m.CreatedAt()
+	case loginevent.FieldCreatedBy:
+		return m.CreatedBy()
+	case loginevent.FieldUserID:
+		return m.UserID()
+	case loginevent.FieldOccurredAt:
+		return m.OccurredAt()
+	case loginevent.FieldClient:
+		return m.GetClient()
+	case loginevent.FieldIPHash:
+		return m.IPHash()
+	case loginevent.FieldSisConnectionID:
+		return m.SisConnectionID()
+	case loginevent.FieldDeviceID:
+		return m.DeviceID()
+	case loginevent.FieldResult:
+		return m.Result()
+	case loginevent.FieldTenantResolution:
+		return m.TenantResolution()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LoginEventMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case loginevent.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case loginevent.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case loginevent.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case loginevent.FieldUserID:
+		return m.OldUserID(ctx)
+	case loginevent.FieldOccurredAt:
+		return m.OldOccurredAt(ctx)
+	case loginevent.FieldClient:
+		return m.OldClient(ctx)
+	case loginevent.FieldIPHash:
+		return m.OldIPHash(ctx)
+	case loginevent.FieldSisConnectionID:
+		return m.OldSisConnectionID(ctx)
+	case loginevent.FieldDeviceID:
+		return m.OldDeviceID(ctx)
+	case loginevent.FieldResult:
+		return m.OldResult(ctx)
+	case loginevent.FieldTenantResolution:
+		return m.OldTenantResolution(ctx)
+	}
+	return nil, fmt.Errorf("unknown LoginEvent field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LoginEventMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case loginevent.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case loginevent.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case loginevent.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case loginevent.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case loginevent.FieldOccurredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOccurredAt(v)
+		return nil
+	case loginevent.FieldClient:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClient(v)
+		return nil
+	case loginevent.FieldIPHash:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIPHash(v)
+		return nil
+	case loginevent.FieldSisConnectionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSisConnectionID(v)
+		return nil
+	case loginevent.FieldDeviceID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeviceID(v)
+		return nil
+	case loginevent.FieldResult:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResult(v)
+		return nil
+	case loginevent.FieldTenantResolution:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantResolution(v)
+		return nil
+	}
+	return fmt.Errorf("unknown LoginEvent field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LoginEventMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LoginEventMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LoginEventMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LoginEvent numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LoginEventMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(loginevent.FieldTenantID) {
+		fields = append(fields, loginevent.FieldTenantID)
+	}
+	if m.FieldCleared(loginevent.FieldCreatedBy) {
+		fields = append(fields, loginevent.FieldCreatedBy)
+	}
+	if m.FieldCleared(loginevent.FieldUserID) {
+		fields = append(fields, loginevent.FieldUserID)
+	}
+	if m.FieldCleared(loginevent.FieldIPHash) {
+		fields = append(fields, loginevent.FieldIPHash)
+	}
+	if m.FieldCleared(loginevent.FieldSisConnectionID) {
+		fields = append(fields, loginevent.FieldSisConnectionID)
+	}
+	if m.FieldCleared(loginevent.FieldDeviceID) {
+		fields = append(fields, loginevent.FieldDeviceID)
+	}
+	if m.FieldCleared(loginevent.FieldTenantResolution) {
+		fields = append(fields, loginevent.FieldTenantResolution)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LoginEventMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LoginEventMutation) ClearField(name string) error {
+	switch name {
+	case loginevent.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case loginevent.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case loginevent.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case loginevent.FieldIPHash:
+		m.ClearIPHash()
+		return nil
+	case loginevent.FieldSisConnectionID:
+		m.ClearSisConnectionID()
+		return nil
+	case loginevent.FieldDeviceID:
+		m.ClearDeviceID()
+		return nil
+	case loginevent.FieldTenantResolution:
+		m.ClearTenantResolution()
+		return nil
+	}
+	return fmt.Errorf("unknown LoginEvent nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LoginEventMutation) ResetField(name string) error {
+	switch name {
+	case loginevent.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case loginevent.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case loginevent.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case loginevent.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case loginevent.FieldOccurredAt:
+		m.ResetOccurredAt()
+		return nil
+	case loginevent.FieldClient:
+		m.ResetClient()
+		return nil
+	case loginevent.FieldIPHash:
+		m.ResetIPHash()
+		return nil
+	case loginevent.FieldSisConnectionID:
+		m.ResetSisConnectionID()
+		return nil
+	case loginevent.FieldDeviceID:
+		m.ResetDeviceID()
+		return nil
+	case loginevent.FieldResult:
+		m.ResetResult()
+		return nil
+	case loginevent.FieldTenantResolution:
+		m.ResetTenantResolution()
+		return nil
+	}
+	return fmt.Errorf("unknown LoginEvent field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LoginEventMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LoginEventMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LoginEventMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LoginEventMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LoginEventMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LoginEventMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LoginEventMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown LoginEvent unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LoginEventMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown LoginEvent edge %s", name)
 }
 
 // PermissionMutation represents an operation that mutates the Permission nodes in the graph.

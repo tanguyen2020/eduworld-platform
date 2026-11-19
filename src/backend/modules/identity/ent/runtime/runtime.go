@@ -11,6 +11,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
@@ -325,6 +327,94 @@ func init() {
 	externalidentityDescID := externalidentityMixinFields0[0].Descriptor()
 	// externalidentity.DefaultID holds the default value on creation for the id field.
 	externalidentity.DefaultID = externalidentityDescID.Default.(func() uuid.UUID)
+	gameauthsessionMixin := schema.GameAuthSession{}.Mixin()
+	gameauthsessionMixinHooks0 := gameauthsessionMixin[0].Hooks()
+	gameauthsession.Hooks[0] = gameauthsessionMixinHooks0[0]
+	gameauthsessionMixinInters0 := gameauthsessionMixin[0].Interceptors()
+	gameauthsession.Interceptors[0] = gameauthsessionMixinInters0[0]
+	gameauthsessionMixinFields0 := gameauthsessionMixin[0].Fields()
+	_ = gameauthsessionMixinFields0
+	gameauthsessionFields := schema.GameAuthSession{}.Fields()
+	_ = gameauthsessionFields
+	// gameauthsessionDescCreatedAt is the schema descriptor for created_at field.
+	gameauthsessionDescCreatedAt := gameauthsessionMixinFields0[2].Descriptor()
+	// gameauthsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gameauthsession.DefaultCreatedAt = gameauthsessionDescCreatedAt.Default.(func() time.Time)
+	// gameauthsessionDescUpdatedAt is the schema descriptor for updated_at field.
+	gameauthsessionDescUpdatedAt := gameauthsessionMixinFields0[4].Descriptor()
+	// gameauthsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	gameauthsession.DefaultUpdatedAt = gameauthsessionDescUpdatedAt.Default.(func() time.Time)
+	// gameauthsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	gameauthsession.UpdateDefaultUpdatedAt = gameauthsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// gameauthsessionDescDeleteReason is the schema descriptor for delete_reason field.
+	gameauthsessionDescDeleteReason := gameauthsessionMixinFields0[8].Descriptor()
+	// gameauthsession.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	gameauthsession.DeleteReasonValidator = gameauthsessionDescDeleteReason.Validators[0].(func(string) error)
+	// gameauthsessionDescVersion is the schema descriptor for version field.
+	gameauthsessionDescVersion := gameauthsessionMixinFields0[9].Descriptor()
+	// gameauthsession.DefaultVersion holds the default value on creation for the version field.
+	gameauthsession.DefaultVersion = gameauthsessionDescVersion.Default.(int64)
+	// gameauthsessionDescKeycloakSid is the schema descriptor for keycloak_sid field.
+	gameauthsessionDescKeycloakSid := gameauthsessionFields[1].Descriptor()
+	// gameauthsession.KeycloakSidValidator is a validator for the "keycloak_sid" field. It is called by the builders before save.
+	gameauthsession.KeycloakSidValidator = gameauthsessionDescKeycloakSid.Validators[0].(func(string) error)
+	// gameauthsessionDescPlatform is the schema descriptor for platform field.
+	gameauthsessionDescPlatform := gameauthsessionFields[3].Descriptor()
+	// gameauthsession.PlatformValidator is a validator for the "platform" field. It is called by the builders before save.
+	gameauthsession.PlatformValidator = gameauthsessionDescPlatform.Validators[0].(func(string) error)
+	// gameauthsessionDescRefreshTokenHash is the schema descriptor for refresh_token_hash field.
+	gameauthsessionDescRefreshTokenHash := gameauthsessionFields[4].Descriptor()
+	// gameauthsession.RefreshTokenHashValidator is a validator for the "refresh_token_hash" field. It is called by the builders before save.
+	gameauthsession.RefreshTokenHashValidator = gameauthsessionDescRefreshTokenHash.Validators[0].(func(string) error)
+	// gameauthsessionDescPreviousTokenHashes is the schema descriptor for previous_token_hashes field.
+	gameauthsessionDescPreviousTokenHashes := gameauthsessionFields[5].Descriptor()
+	// gameauthsession.DefaultPreviousTokenHashes holds the default value on creation for the previous_token_hashes field.
+	gameauthsession.DefaultPreviousTokenHashes = gameauthsessionDescPreviousTokenHashes.Default.([]string)
+	// gameauthsessionDescLastRefreshedAt is the schema descriptor for last_refreshed_at field.
+	gameauthsessionDescLastRefreshedAt := gameauthsessionFields[6].Descriptor()
+	// gameauthsession.DefaultLastRefreshedAt holds the default value on creation for the last_refreshed_at field.
+	gameauthsession.DefaultLastRefreshedAt = gameauthsessionDescLastRefreshedAt.Default.(func() time.Time)
+	// gameauthsessionDescRevokeReason is the schema descriptor for revoke_reason field.
+	gameauthsessionDescRevokeReason := gameauthsessionFields[8].Descriptor()
+	// gameauthsession.RevokeReasonValidator is a validator for the "revoke_reason" field. It is called by the builders before save.
+	gameauthsession.RevokeReasonValidator = gameauthsessionDescRevokeReason.Validators[0].(func(string) error)
+	// gameauthsessionDescID is the schema descriptor for id field.
+	gameauthsessionDescID := gameauthsessionMixinFields0[0].Descriptor()
+	// gameauthsession.DefaultID holds the default value on creation for the id field.
+	gameauthsession.DefaultID = gameauthsessionDescID.Default.(func() uuid.UUID)
+	logineventMixin := schema.LoginEvent{}.Mixin()
+	logineventMixinHooks0 := logineventMixin[0].Hooks()
+	loginevent.Hooks[0] = logineventMixinHooks0[0]
+	logineventMixinInters0 := logineventMixin[0].Interceptors()
+	loginevent.Interceptors[0] = logineventMixinInters0[0]
+	logineventMixinFields0 := logineventMixin[0].Fields()
+	_ = logineventMixinFields0
+	logineventFields := schema.LoginEvent{}.Fields()
+	_ = logineventFields
+	// logineventDescCreatedAt is the schema descriptor for created_at field.
+	logineventDescCreatedAt := logineventMixinFields0[2].Descriptor()
+	// loginevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	loginevent.DefaultCreatedAt = logineventDescCreatedAt.Default.(func() time.Time)
+	// logineventDescOccurredAt is the schema descriptor for occurred_at field.
+	logineventDescOccurredAt := logineventFields[1].Descriptor()
+	// loginevent.DefaultOccurredAt holds the default value on creation for the occurred_at field.
+	loginevent.DefaultOccurredAt = logineventDescOccurredAt.Default.(func() time.Time)
+	// logineventDescClient is the schema descriptor for client field.
+	logineventDescClient := logineventFields[2].Descriptor()
+	// loginevent.ClientValidator is a validator for the "client" field. It is called by the builders before save.
+	loginevent.ClientValidator = logineventDescClient.Validators[0].(func(string) error)
+	// logineventDescResult is the schema descriptor for result field.
+	logineventDescResult := logineventFields[6].Descriptor()
+	// loginevent.ResultValidator is a validator for the "result" field. It is called by the builders before save.
+	loginevent.ResultValidator = logineventDescResult.Validators[0].(func(string) error)
+	// logineventDescTenantResolution is the schema descriptor for tenant_resolution field.
+	logineventDescTenantResolution := logineventFields[7].Descriptor()
+	// loginevent.TenantResolutionValidator is a validator for the "tenant_resolution" field. It is called by the builders before save.
+	loginevent.TenantResolutionValidator = logineventDescTenantResolution.Validators[0].(func(string) error)
+	// logineventDescID is the schema descriptor for id field.
+	logineventDescID := logineventMixinFields0[0].Descriptor()
+	// loginevent.DefaultID holds the default value on creation for the id field.
+	loginevent.DefaultID = logineventDescID.Default.(func() uuid.UUID)
 	permissionMixin := schema.Permission{}.Mixin()
 	permissionMixinHooks0 := permissionMixin[0].Hooks()
 	permission.Hooks[0] = permissionMixinHooks0[0]

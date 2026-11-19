@@ -20,6 +20,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
@@ -61,6 +63,10 @@ type Client struct {
 	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
+	// GameAuthSession is the client for interacting with the GameAuthSession builders.
+	GameAuthSession *GameAuthSessionClient
+	// LoginEvent is the client for interacting with the LoginEvent builders.
+	LoginEvent *LoginEventClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// PortalPasswordResetToken is the client for interacting with the PortalPasswordResetToken builders.
@@ -121,6 +127,8 @@ func (c *Client) init() {
 	c.Country = NewCountryClient(c.config)
 	c.Enrollment = NewEnrollmentClient(c.config)
 	c.ExternalIdentity = NewExternalIdentityClient(c.config)
+	c.GameAuthSession = NewGameAuthSessionClient(c.config)
+	c.LoginEvent = NewLoginEventClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.PortalPasswordResetToken = NewPortalPasswordResetTokenClient(c.config)
 	c.Province = NewProvinceClient(c.config)
@@ -243,6 +251,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Country:                  NewCountryClient(cfg),
 		Enrollment:               NewEnrollmentClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
+		GameAuthSession:          NewGameAuthSessionClient(cfg),
+		LoginEvent:               NewLoginEventClient(cfg),
 		Permission:               NewPermissionClient(cfg),
 		PortalPasswordResetToken: NewPortalPasswordResetTokenClient(cfg),
 		Province:                 NewProvinceClient(cfg),
@@ -289,6 +299,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Country:                  NewCountryClient(cfg),
 		Enrollment:               NewEnrollmentClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
+		GameAuthSession:          NewGameAuthSessionClient(cfg),
+		LoginEvent:               NewLoginEventClient(cfg),
 		Permission:               NewPermissionClient(cfg),
 		PortalPasswordResetToken: NewPortalPasswordResetTokenClient(cfg),
 		Province:                 NewProvinceClient(cfg),
@@ -341,11 +353,12 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
-		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
-		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
-		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
-		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
+		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
+		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
+		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
+		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
+		c.User, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -356,11 +369,12 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
-		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
-		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
-		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
-		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
+		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
+		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
+		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
+		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
+		c.User, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -379,6 +393,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Enrollment.mutate(ctx, m)
 	case *ExternalIdentityMutation:
 		return c.ExternalIdentity.mutate(ctx, m)
+	case *GameAuthSessionMutation:
+		return c.GameAuthSession.mutate(ctx, m)
+	case *LoginEventMutation:
+		return c.LoginEvent.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
 	case *PortalPasswordResetTokenMutation:
@@ -1100,6 +1118,276 @@ func (c *ExternalIdentityClient) mutate(ctx context.Context, m *ExternalIdentity
 		return (&ExternalIdentityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ExternalIdentity mutation op: %q", m.Op())
+	}
+}
+
+// GameAuthSessionClient is a client for the GameAuthSession schema.
+type GameAuthSessionClient struct {
+	config
+}
+
+// NewGameAuthSessionClient returns a client for the GameAuthSession from the given config.
+func NewGameAuthSessionClient(c config) *GameAuthSessionClient {
+	return &GameAuthSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gameauthsession.Hooks(f(g(h())))`.
+func (c *GameAuthSessionClient) Use(hooks ...Hook) {
+	c.hooks.GameAuthSession = append(c.hooks.GameAuthSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gameauthsession.Intercept(f(g(h())))`.
+func (c *GameAuthSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GameAuthSession = append(c.inters.GameAuthSession, interceptors...)
+}
+
+// Create returns a builder for creating a GameAuthSession entity.
+func (c *GameAuthSessionClient) Create() *GameAuthSessionCreate {
+	mutation := newGameAuthSessionMutation(c.config, OpCreate)
+	return &GameAuthSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GameAuthSession entities.
+func (c *GameAuthSessionClient) CreateBulk(builders ...*GameAuthSessionCreate) *GameAuthSessionCreateBulk {
+	return &GameAuthSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GameAuthSessionClient) MapCreateBulk(slice any, setFunc func(*GameAuthSessionCreate, int)) *GameAuthSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GameAuthSessionCreateBulk{err: fmt.Errorf("calling to GameAuthSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GameAuthSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GameAuthSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GameAuthSession.
+func (c *GameAuthSessionClient) Update() *GameAuthSessionUpdate {
+	mutation := newGameAuthSessionMutation(c.config, OpUpdate)
+	return &GameAuthSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameAuthSessionClient) UpdateOne(_m *GameAuthSession) *GameAuthSessionUpdateOne {
+	mutation := newGameAuthSessionMutation(c.config, OpUpdateOne, withGameAuthSession(_m))
+	return &GameAuthSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameAuthSessionClient) UpdateOneID(id uuid.UUID) *GameAuthSessionUpdateOne {
+	mutation := newGameAuthSessionMutation(c.config, OpUpdateOne, withGameAuthSessionID(id))
+	return &GameAuthSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GameAuthSession.
+func (c *GameAuthSessionClient) Delete() *GameAuthSessionDelete {
+	mutation := newGameAuthSessionMutation(c.config, OpDelete)
+	return &GameAuthSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GameAuthSessionClient) DeleteOne(_m *GameAuthSession) *GameAuthSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GameAuthSessionClient) DeleteOneID(id uuid.UUID) *GameAuthSessionDeleteOne {
+	builder := c.Delete().Where(gameauthsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameAuthSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for GameAuthSession.
+func (c *GameAuthSessionClient) Query() *GameAuthSessionQuery {
+	return &GameAuthSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGameAuthSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GameAuthSession entity by its id.
+func (c *GameAuthSessionClient) Get(ctx context.Context, id uuid.UUID) (*GameAuthSession, error) {
+	return c.Query().Where(gameauthsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameAuthSessionClient) GetX(ctx context.Context, id uuid.UUID) *GameAuthSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GameAuthSessionClient) Hooks() []Hook {
+	hooks := c.hooks.GameAuthSession
+	return append(hooks[:len(hooks):len(hooks)], gameauthsession.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *GameAuthSessionClient) Interceptors() []Interceptor {
+	inters := c.inters.GameAuthSession
+	return append(inters[:len(inters):len(inters)], gameauthsession.Interceptors[:]...)
+}
+
+func (c *GameAuthSessionClient) mutate(ctx context.Context, m *GameAuthSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GameAuthSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GameAuthSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GameAuthSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GameAuthSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GameAuthSession mutation op: %q", m.Op())
+	}
+}
+
+// LoginEventClient is a client for the LoginEvent schema.
+type LoginEventClient struct {
+	config
+}
+
+// NewLoginEventClient returns a client for the LoginEvent from the given config.
+func NewLoginEventClient(c config) *LoginEventClient {
+	return &LoginEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `loginevent.Hooks(f(g(h())))`.
+func (c *LoginEventClient) Use(hooks ...Hook) {
+	c.hooks.LoginEvent = append(c.hooks.LoginEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `loginevent.Intercept(f(g(h())))`.
+func (c *LoginEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LoginEvent = append(c.inters.LoginEvent, interceptors...)
+}
+
+// Create returns a builder for creating a LoginEvent entity.
+func (c *LoginEventClient) Create() *LoginEventCreate {
+	mutation := newLoginEventMutation(c.config, OpCreate)
+	return &LoginEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LoginEvent entities.
+func (c *LoginEventClient) CreateBulk(builders ...*LoginEventCreate) *LoginEventCreateBulk {
+	return &LoginEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LoginEventClient) MapCreateBulk(slice any, setFunc func(*LoginEventCreate, int)) *LoginEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LoginEventCreateBulk{err: fmt.Errorf("calling to LoginEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LoginEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LoginEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LoginEvent.
+func (c *LoginEventClient) Update() *LoginEventUpdate {
+	mutation := newLoginEventMutation(c.config, OpUpdate)
+	return &LoginEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LoginEventClient) UpdateOne(_m *LoginEvent) *LoginEventUpdateOne {
+	mutation := newLoginEventMutation(c.config, OpUpdateOne, withLoginEvent(_m))
+	return &LoginEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LoginEventClient) UpdateOneID(id uuid.UUID) *LoginEventUpdateOne {
+	mutation := newLoginEventMutation(c.config, OpUpdateOne, withLoginEventID(id))
+	return &LoginEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LoginEvent.
+func (c *LoginEventClient) Delete() *LoginEventDelete {
+	mutation := newLoginEventMutation(c.config, OpDelete)
+	return &LoginEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LoginEventClient) DeleteOne(_m *LoginEvent) *LoginEventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LoginEventClient) DeleteOneID(id uuid.UUID) *LoginEventDeleteOne {
+	builder := c.Delete().Where(loginevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LoginEventDeleteOne{builder}
+}
+
+// Query returns a query builder for LoginEvent.
+func (c *LoginEventClient) Query() *LoginEventQuery {
+	return &LoginEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLoginEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LoginEvent entity by its id.
+func (c *LoginEventClient) Get(ctx context.Context, id uuid.UUID) (*LoginEvent, error) {
+	return c.Query().Where(loginevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LoginEventClient) GetX(ctx context.Context, id uuid.UUID) *LoginEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LoginEventClient) Hooks() []Hook {
+	hooks := c.hooks.LoginEvent
+	return append(hooks[:len(hooks):len(hooks)], loginevent.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LoginEventClient) Interceptors() []Interceptor {
+	inters := c.inters.LoginEvent
+	return append(inters[:len(inters):len(inters)], loginevent.Interceptors[:]...)
+}
+
+func (c *LoginEventClient) mutate(ctx context.Context, m *LoginEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LoginEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LoginEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LoginEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LoginEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LoginEvent mutation op: %q", m.Op())
 	}
 }
 
@@ -4074,19 +4362,20 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Permission,
-		PortalPasswordResetToken, Province, ProvinceSuccession, ReconciliationIssue,
-		Role, RolePermission, School, SisConnection, SisConnectionSchool,
-		SisIdentityLink, SisImport, SisLink, StagingRecord, Student, StudentLoginKey,
-		SyncRecordError, SyncRun, SyncedStudent, Tenant, User, UserRole []ent.Hook
+		AcademicYear, Class, Country, Enrollment, ExternalIdentity, GameAuthSession,
+		LoginEvent, Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
+		ReconciliationIssue, Role, RolePermission, School, SisConnection,
+		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
+		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
+		User, UserRole []ent.Hook
 	}
 	inters struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Permission,
-		PortalPasswordResetToken, Province, ProvinceSuccession, ReconciliationIssue,
-		Role, RolePermission, School, SisConnection, SisConnectionSchool,
-		SisIdentityLink, SisImport, SisLink, StagingRecord, Student, StudentLoginKey,
-		SyncRecordError, SyncRun, SyncedStudent, Tenant, User,
-		UserRole []ent.Interceptor
+		AcademicYear, Class, Country, Enrollment, ExternalIdentity, GameAuthSession,
+		LoginEvent, Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
+		ReconciliationIssue, Role, RolePermission, School, SisConnection,
+		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
+		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
+		User, UserRole []ent.Interceptor
 	}
 )
 
@@ -4098,6 +4387,8 @@ var (
 		Country:                  tableSchemas[0],
 		Enrollment:               tableSchemas[2],
 		ExternalIdentity:         tableSchemas[1],
+		GameAuthSession:          tableSchemas[1],
+		LoginEvent:               tableSchemas[1],
 		Permission:               tableSchemas[1],
 		PortalPasswordResetToken: tableSchemas[1],
 		Province:                 tableSchemas[0],

@@ -171,8 +171,11 @@ func (c *Cluster) Migrate(ctx context.Context, t testing.TB, module string) {
 		logs, _ := a.Logs(ctx)
 		var b strings.Builder
 		if logs != nil {
-			// The log stream has several frames: read all of it (bounded) so the failing statement shows.
-			out, _ := io.ReadAll(io.LimitReader(logs, 64<<10))
+			// The log stream has several frames: read it (bounded) and keep its end, where the failing statement is.
+			out, _ := io.ReadAll(io.LimitReader(logs, 8<<20))
+			if len(out) > 16<<10 {
+				out = out[len(out)-16<<10:]
+			}
 			b.Write(out)
 		}
 		t.Fatalf("atlas migrate %s exit %d: %s", module, state.ExitCode, b.String())

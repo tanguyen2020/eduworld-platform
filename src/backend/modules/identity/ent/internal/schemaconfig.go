@@ -12,6 +12,8 @@ type SchemaConfig struct {
 	Country                  string // Country table.
 	Enrollment               string // Enrollment table.
 	ExternalIdentity         string // ExternalIdentity table.
+	GameAuthSession          string // GameAuthSession table.
+	LoginEvent               string // LoginEvent table.
 	Permission               string // Permission table.
 	PortalPasswordResetToken string // PortalPasswordResetToken table.
 	Province                 string // Province table.

@@ -202,6 +202,89 @@ var (
 			},
 		},
 	}
+	// GameAuthSessionsColumns holds the columns for the "game_auth_sessions" table.
+	GameAuthSessionsColumns = []*schema.Column{
+		{Name: "game_auth_session_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "keycloak_sid", Type: field.TypeString, Size: 64},
+		{Name: "device_id", Type: field.TypeUUID},
+		{Name: "platform", Type: field.TypeString, Size: 16},
+		{Name: "refresh_token_hash", Type: field.TypeString, Size: 64},
+		{Name: "previous_token_hashes", Type: field.TypeJSON},
+		{Name: "last_refreshed_at", Type: field.TypeTime},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoke_reason", Type: field.TypeString, Nullable: true, Size: 32},
+	}
+	// GameAuthSessionsTable holds the schema information for the "game_auth_sessions" table.
+	GameAuthSessionsTable = &schema.Table{
+		Name:       "game_auth_sessions",
+		Columns:    GameAuthSessionsColumns,
+		PrimaryKey: []*schema.Column{GameAuthSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "game_auth_sessions_sid_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameAuthSessionsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "game_auth_sessions_token_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameAuthSessionsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "revoked_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "game_auth_sessions_user_idx",
+				Unique:  false,
+				Columns: []*schema.Column{GameAuthSessionsColumns[1], GameAuthSessionsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "revoked_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "game_auth_sessions_device_idx",
+				Unique:  false,
+				Columns: []*schema.Column{GameAuthSessionsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "revoked_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// LoginEventsColumns holds the columns for the "login_events" table.
+	LoginEventsColumns = []*schema.Column{
+		{Name: "login_event_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "occurred_at", Type: field.TypeTime},
+		{Name: "client", Type: field.TypeString, Size: 64},
+		{Name: "ip_hash", Type: field.TypeBytes, Nullable: true},
+		{Name: "sis_connection_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "device_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "result", Type: field.TypeString, Size: 64},
+		{Name: "tenant_resolution", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// LoginEventsTable holds the schema information for the "login_events" table.
+	LoginEventsTable = &schema.Table{
+		Name:       "login_events",
+		Columns:    LoginEventsColumns,
+		PrimaryKey: []*schema.Column{LoginEventsColumns[0]},
+	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
 		{Name: "permission_code", Type: field.TypeString, Size: 64},
@@ -1051,6 +1134,8 @@ var (
 		CountriesTable,
 		EnrollmentsTable,
 		ExternalIdentitiesTable,
+		GameAuthSessionsTable,
+		LoginEventsTable,
 		PermissionsTable,
 		PortalPasswordResetTokensTable,
 		ProvincesTable,
@@ -1091,6 +1176,12 @@ func init() {
 	}
 	ExternalIdentitiesTable.Annotation = &entsql.Annotation{
 		Table: "external_identities",
+	}
+	GameAuthSessionsTable.Annotation = &entsql.Annotation{
+		Table: "game_auth_sessions",
+	}
+	LoginEventsTable.Annotation = &entsql.Annotation{
+		Table: "login_events",
 	}
 	PermissionsTable.Annotation = &entsql.Annotation{
 		Table: "permissions",

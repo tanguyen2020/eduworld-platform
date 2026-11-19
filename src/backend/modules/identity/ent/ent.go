@@ -17,6 +17,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
@@ -104,6 +106,8 @@ func checkColumn(t, c string) error {
 			country.Table:                  country.ValidColumn,
 			enrollment.Table:               enrollment.ValidColumn,
 			externalidentity.Table:         externalidentity.ValidColumn,
+			gameauthsession.Table:          gameauthsession.ValidColumn,
+			loginevent.Table:               loginevent.ValidColumn,
 			permission.Table:               permission.ValidColumn,
 			portalpasswordresettoken.Table: portalpasswordresettoken.ValidColumn,
 			province.Table:                 province.ValidColumn,

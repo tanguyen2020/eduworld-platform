@@ -69,6 +69,30 @@ func (f ExternalIdentityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExternalIdentityMutation", m)
 }
 
+// The GameAuthSessionFunc type is an adapter to allow the use of ordinary
+// function as GameAuthSession mutator.
+type GameAuthSessionFunc func(context.Context, *ent.GameAuthSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameAuthSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameAuthSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameAuthSessionMutation", m)
+}
+
+// The LoginEventFunc type is an adapter to allow the use of ordinary
+// function as LoginEvent mutator.
+type LoginEventFunc func(context.Context, *ent.LoginEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LoginEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LoginEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginEventMutation", m)
+}
+
 // The PermissionFunc type is an adapter to allow the use of ordinary
 // function as Permission mutator.
 type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)

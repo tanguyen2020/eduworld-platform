@@ -24,6 +24,7 @@ var migrations = map[string][]string{
 	"20261120000001_f011_sis.sql": {"reconciliation_issues", "sis_connection_schools", "sis_connections", "sis_identity_links",
 		"sis_imports", "sis_links", "student_login_keys", "sync_runs", "synced_students"},
 	"20261121000001_f012_authz.sql": {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
+	"20261122000001_f013_game_login.sql": {"game_auth_sessions"},
 }
 
 func schemas() map[string]string {
@@ -37,7 +38,7 @@ func schemas() map[string]string {
 		"sis_links": c.SisLink, "synced_students": c.SyncedStudent, "student_login_keys": c.StudentLoginKey,
 		"reconciliation_issues": c.ReconciliationIssue, "sis_identity_links": c.SisIdentityLink,
 		"permissions": c.Permission, "roles": c.Role, "role_permissions": c.RolePermission, "user_roles": c.UserRole,
-		"portal_password_reset_tokens": c.PortalPasswordResetToken,
+		"portal_password_reset_tokens": c.PortalPasswordResetToken, "login_events": c.LoginEvent, "game_auth_sessions": c.GameAuthSession,
 	}
 }
 
@@ -60,7 +61,7 @@ func tablesOf(t *testing.T, names []string) []*schema.Table {
 
 func TestMigrationMatchesEnt(t *testing.T) {
 	sc := schemas()
-	listed := map[string]bool{"staging_records": true, "sync_record_errors": true} // hand-written, partitioned
+	listed := map[string]bool{"staging_records": true, "sync_record_errors": true, "login_events": true} // hand-written, partitioned
 	for _, tbs := range migrations {
 		for _, n := range tbs {
 			listed[n] = true

@@ -21,6 +21,12 @@ type Enrollment func(*sql.Selector)
 // ExternalIdentity is the predicate function for externalidentity builders.
 type ExternalIdentity func(*sql.Selector)
 
+// GameAuthSession is the predicate function for gameauthsession builders.
+type GameAuthSession func(*sql.Selector)
+
+// LoginEvent is the predicate function for loginevent builders.
+type LoginEvent func(*sql.Selector)
+
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
 

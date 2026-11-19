@@ -51,6 +51,21 @@ psql_su <<SQL
 GRANT CONNECT ON DATABASE eduworld_chat TO chat_purger;
 SQL
 
+# identity_membership_reader: NOLOGIN, BYPASSRLS, owner of the SECURITY DEFINER function
+# identity.memberships_for_user used on the login path (ADR-0089 §3, F013 T044). Its SELECT privileges
+# on the membership sources are granted by the identity migration; identity_migrator is a member so the
+# migration can hand the function over to it.
+psql_su <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'identity_membership_reader') THEN
+    CREATE ROLE identity_membership_reader NOLOGIN BYPASSRLS;
+  END IF;
+END
+\$\$;
+GRANT identity_membership_reader TO identity_migrator;
+SQL
+
 # Keycloak keeps its own database and role.
 psql_su <<SQL
 DO \$\$

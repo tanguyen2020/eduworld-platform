@@ -22,6 +22,10 @@ type Tx struct {
 	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
+	// GameAuthSession is the client for interacting with the GameAuthSession builders.
+	GameAuthSession *GameAuthSessionClient
+	// LoginEvent is the client for interacting with the LoginEvent builders.
+	LoginEvent *LoginEventClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// PortalPasswordResetToken is the client for interacting with the PortalPasswordResetToken builders.
@@ -202,6 +206,8 @@ func (tx *Tx) init() {
 	tx.Country = NewCountryClient(tx.config)
 	tx.Enrollment = NewEnrollmentClient(tx.config)
 	tx.ExternalIdentity = NewExternalIdentityClient(tx.config)
+	tx.GameAuthSession = NewGameAuthSessionClient(tx.config)
+	tx.LoginEvent = NewLoginEventClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PortalPasswordResetToken = NewPortalPasswordResetTokenClient(tx.config)
 	tx.Province = NewProvinceClient(tx.config)
