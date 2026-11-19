@@ -24,6 +24,10 @@ CREATE TABLE platform.saga_runs (
 );
 CREATE UNIQUE INDEX saga_runs_idem_uq ON platform.saga_runs (saga_type, idempotency_key);
 CREATE INDEX saga_runs_due_idx ON platform.saga_runs (next_attempt_at) WHERE status IN ('running', 'compensating');
+ALTER TABLE platform.saga_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform.saga_runs FORCE ROW LEVEL SECURITY;
+-- identity_app has no privilege; identity_platform (BYPASSRLS) runs the jobs and the platform scope.
+CREATE POLICY tenant_read ON platform.saga_runs FOR SELECT USING (tenant_id = infra.current_tenant_id());
 
 CREATE TABLE platform.saga_steps (
   saga_id     uuid NOT NULL REFERENCES platform.saga_runs (saga_id),
@@ -85,6 +89,10 @@ CREATE TABLE platform.student_cleanup_runs (
   version         bigint NOT NULL DEFAULT 1
 );
 CREATE INDEX student_cleanup_runs_tenant_idx ON platform.student_cleanup_runs (tenant_id, started_at DESC);
+ALTER TABLE platform.student_cleanup_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform.student_cleanup_runs FORCE ROW LEVEL SECURITY;
+-- identity_app has no privilege; identity_platform (BYPASSRLS) runs the jobs and the platform scope.
+CREATE POLICY tenant_read ON platform.student_cleanup_runs FOR SELECT USING (tenant_id = infra.current_tenant_id());
 REVOKE ALL ON platform.student_cleanup_runs FROM identity_app, identity_platform;
 GRANT SELECT, INSERT, UPDATE ON platform.student_cleanup_runs TO identity_platform;
 
@@ -108,6 +116,10 @@ CREATE TABLE platform.deletion_requests (
 );
 CREATE INDEX deletion_requests_status_idx ON platform.deletion_requests (status, due_at);
 CREATE UNIQUE INDEX deletion_requests_open_uq ON platform.deletion_requests (subject_id) WHERE status IN ('pending', 'approved');
+ALTER TABLE platform.deletion_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform.deletion_requests FORCE ROW LEVEL SECURITY;
+-- identity_app has no privilege; identity_platform (BYPASSRLS) runs the jobs and the platform scope.
+CREATE POLICY tenant_read ON platform.deletion_requests FOR SELECT USING (tenant_id = infra.current_tenant_id());
 
 CREATE TABLE platform.erasure_log (
   erasure_id    uuid PRIMARY KEY,
