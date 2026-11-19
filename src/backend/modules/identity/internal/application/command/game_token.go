@@ -22,7 +22,7 @@ const (
 	refreshInvalid        = "invalid"
 	refreshReused         = "reused"
 	refreshDeviceMismatch = "device_mismatch"
-	refreshDenied         = "denied"
+	refreshDenied         = "forbidden"
 	refreshUnavailable    = "unavailable"
 )
 

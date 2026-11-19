@@ -18,7 +18,6 @@ type Metrics struct {
 	duration prometheus.Histogram
 	refresh  *prometheus.CounterVec
 	revoked  *prometheus.CounterVec
-	queue    prometheus.Counter
 	limited  *prometheus.CounterVec
 }
 
@@ -35,15 +34,13 @@ func NewMetrics(reg prometheus.Registerer) (*Metrics, error) {
 			Help: "Game token refreshes by mode and result (ADR-0086)."}, []string{"mode", "result"}),
 		revoked: prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_auth_game_sessions_revoked_total",
 			Help: "Game login sessions revoked by reason (ADR-0086)."}, []string{"reason"}),
-		queue: prometheus.NewCounter(prometheus.CounterOpts{Name: "eduworld_auth_login_queue_rejected_total",
-			Help: "Game logins refused with LOGIN_QUEUE_BUSY (global login_rate)."}),
-		limited: prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_auth_rate_limited_total",
-			Help: "Game logins refused with RATE_LIMITED by key kind (device, username)."}, []string{"key"}),
+		limited: prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_auth_ratelimit_rejected_total",
+			Help: "Logins refused by login_rate: scope global (LOGIN_QUEUE_BUSY), device or username (RATE_LIMITED)."}, []string{"scope"}),
 	}
 	if reg == nil {
 		return m, nil
 	}
-	for _, c := range []prometheus.Collector{m.login, m.duration, m.refresh, m.revoked, m.queue, m.limited} {
+	for _, c := range []prometheus.Collector{m.login, m.duration, m.refresh, m.revoked, m.limited} {
 		if err := reg.Register(c); err != nil {
 			var are prometheus.AlreadyRegisteredError
 			if !errors.As(err, &are) {
@@ -67,10 +64,10 @@ func (m *Metrics) Refresh(mode, result string) { m.refresh.WithLabelValues(mode,
 func (m *Metrics) Revoked(reason string) { m.revoked.WithLabelValues(reason).Inc() }
 
 // QueueRejected implements port.GameAuthMetrics.
-func (m *Metrics) QueueRejected() { m.queue.Inc() }
+func (m *Metrics) QueueRejected() { m.limited.WithLabelValues("global").Inc() }
 
 // RateLimited implements port.GameAuthMetrics.
-func (m *Metrics) RateLimited(key string) { m.limited.WithLabelValues(key).Inc() }
+func (m *Metrics) RateLimited(scope string) { m.limited.WithLabelValues(scope).Inc() }
 
 // LoginCount, RefreshCount and RevokedCount expose one series (tests, dashboards).
 func (m *Metrics) LoginCount(result string) prometheus.Counter {
@@ -87,5 +84,5 @@ func (m *Metrics) RevokedCount(reason string) prometheus.Counter {
 	return m.revoked.WithLabelValues(reason)
 }
 
-// QueueCount returns eduworld_auth_login_queue_rejected_total.
-func (m *Metrics) QueueCount() prometheus.Counter { return m.queue }
+// QueueCount returns eduworld_auth_ratelimit_rejected_total{scope="global"}.
+func (m *Metrics) QueueCount() prometheus.Counter { return m.limited.WithLabelValues("global") }

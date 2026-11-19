@@ -36,7 +36,7 @@ func GameConfigFrom(c *config.Config) (PortalConfig, error) {
 		TokenURL: realm + "/protocol/openid-connect/token", LogoutURL: realm + "/protocol/openid-connect/logout",
 		ClientID: c.String("EW_KC_GAME_CLIENT_ID"), ClientSecret: c.String("EW_KC_GAME_CLIENT_SECRET"),
 		Timeout: c.Duration("EW_KC_TOKEN_TIMEOUT", 3*time.Second), MaxRetries: c.Int("EW_EXT_CLIENT_RETRY_MAX", 2),
-		FailureRatio: ratio,
+		FailureRatio: ratio, Kind: "game",
 	}, nil
 }
 

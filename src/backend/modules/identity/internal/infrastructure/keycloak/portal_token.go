@@ -16,6 +16,7 @@ import (
 	"github.com/failsafe-go/failsafe-go"
 	"github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -36,6 +37,8 @@ type PortalConfig struct {
 	Timeout      time.Duration
 	MaxRetries   int // logout only (idempotent)
 	FailureRatio float64
+	// Kind prefixes span names and metric labels: portal (default) or game (eduworld-game-backend, F013).
+	Kind string
 }
 
 // PortalConfigFrom reads the configuration; missing variables are reported by name only.
@@ -70,6 +73,15 @@ func realmURL(adminBase string) (string, error) {
 	return adminBase[:i] + "/realms/" + adminBase[i+len("/admin/realms/"):], nil
 }
 
+// tokenCallDuration is eduworld_keycloak_token_call_duration_seconds{op} (plan F013 "Quan sát"): every call
+// to the token and logout endpoints, including timeouts and open-circuit refusals.
+var tokenCallDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "eduworld_keycloak_token_call_duration_seconds",
+	Help: "Duration of calls from module identity to the Keycloak token and logout endpoints.", Buckets: []float64{.025, .05, .1, .25, .5, 1, 2, 3, 5}},
+	[]string{"op"})
+
+// TokenCallDuration exposes the histogram for registration by the binary.
+func TokenCallDuration() *prometheus.HistogramVec { return tokenCallDuration }
+
 // PortalTokens is the token client of eduworld-portal. The password grant and the refresh are never
 // retried (a retry would count twice for brute-force detection, and a rotated refresh token is single use);
 // logout is. Only transport errors, 429 and 5xx count for the circuit breaker, so wrong passwords cannot
@@ -93,6 +105,9 @@ func NewPortalTokens(cfg PortalConfig, client *http.Client) (*PortalTokens, erro
 	}
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 2 * time.Second
+	}
+	if cfg.Kind == "" {
+		cfg.Kind = "portal"
 	}
 	if cfg.FailureRatio <= 0 || cfg.FailureRatio > 1 {
 		cfg.FailureRatio = 0.5
@@ -130,7 +145,7 @@ func (p *PortalTokens) PasswordGrant(ctx context.Context, username string, passw
 		form = appendField(form, "otp", otp) // the direct grant OTP parameter is "otp" (F004 research R5)
 	}
 	defer clear(form)
-	res, err := p.post(ctx, "portal_password_grant", p.cfg.TokenURL, form, p.once)
+	res, err := p.post(ctx, p.cfg.Kind+"_password_grant", p.cfg.TokenURL, form, p.once)
 	if err != nil {
 		return port.PortalTokens{}, err
 	}
@@ -144,7 +159,7 @@ func (p *PortalTokens) Refresh(ctx context.Context, refreshToken string) (port.P
 	}
 	form := appendField(p.clientForm("refresh_token"), "refresh_token", []byte(refreshToken))
 	defer clear(form)
-	res, err := p.post(ctx, "portal_refresh", p.cfg.TokenURL, form, p.once)
+	res, err := p.post(ctx, p.cfg.Kind+"_refresh", p.cfg.TokenURL, form, p.once)
 	if err != nil {
 		return port.PortalTokens{}, err
 	}
@@ -160,7 +175,7 @@ func (p *PortalTokens) Logout(ctx context.Context, refreshToken string) error {
 	form := p.clientForm("")
 	form = appendField(form, "refresh_token", []byte(refreshToken))
 	defer clear(form)
-	res, err := p.post(ctx, "portal_logout", p.cfg.LogoutURL, form, p.retry)
+	res, err := p.post(ctx, p.cfg.Kind+"_logout", p.cfg.LogoutURL, form, p.retry)
 	if err != nil {
 		return err
 	}
@@ -198,6 +213,8 @@ func (p *PortalTokens) clientForm(grant string) []byte {
 func (p *PortalTokens) post(ctx context.Context, op, url string, form []byte, exec failsafe.Executor[tokenResult]) (tokenResult, error) {
 	ctx, span := otel.Tracer("eduworld/identity/keycloak").Start(ctx, "keycloak."+op)
 	defer span.End()
+	start := time.Now()
+	defer func() { tokenCallDuration.WithLabelValues(op).Observe(time.Since(start).Seconds()) }()
 	res, err := exec.WithContext(ctx).Get(func() (tokenResult, error) {
 		rctx, cancel := context.WithTimeout(ctx, p.cfg.Timeout)
 		defer cancel()

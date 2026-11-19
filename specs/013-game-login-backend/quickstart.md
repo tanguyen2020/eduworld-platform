@@ -43,3 +43,20 @@ k6 run tests/perf/login_queue.js   # TC-PERF-016, staging
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (pass/fail), trace_id kịch bản 1 và 6 (không chứa body), kết quả quét log kịch bản 9, báo cáo k6 hàng chờ.
+
+## 5. Bằng chứng (2026-11-19, local)
+
+Chạy tự động bằng lệnh tương đương target `make` (Windows, chưa có `make`): `go test -tags integration ./modules/identity/tests/integration/` (PostgreSQL + Valkey thật qua testcontainers, Keycloak giả có nhãn `fakeKeycloak` theo Keycloak 26), `go test ./modules/identity/... ./pkg/...`.
+
+| Kịch bản | Test tự động | Kết quả |
+|---|---|---|
+| 1, 2, 3, 4, 5, 13, 14 | `TestGameLogin`, `TestGameLoginSchema`, `tests/contract/auth_login_bypass_test.go` | PASS |
+| 6 | `TestGameLoginTenantSelect` (membership thứ hai bằng test double — OQ F013-2) | PASS |
+| 7, 7b, 7c (port), 8 | `TestGameRefreshAndLogout` | PASS |
+| 7c (event) | `TestGameSessionRevokeConsumer` (fixture T045) | PASS |
+| 9 | `TestGameLoginNeverLogsCredentials` (log + span của `core-api`: thành công, 401, 503, panic) | PASS |
+| 10, 11 | `TestGameLoginProtection` | PASS |
+| 12 | `pkg/httpx` `TestTenantHeader`, `TestTenantMismatch`, `TestOrganizationClaimOfSeveralTenants` | PASS |
+| 15 | `TestGameLoginCurfew` + `domain/gamelogin` `TestCurfew` (21:35, 06:25, 06:30) | PASS |
+
+Chưa làm (cần môi trường): 7d (idle realm thật), quét log APISIX/Tempo của kịch bản 9, p50 lỗi xác thực (F013-AC-17) và báo cáo k6 `tests/perf/login_queue.js` trên staging; chạy với realm Keycloak thật qua APISIX khi handler được nối vào `core-api` (OQ F010-2).
