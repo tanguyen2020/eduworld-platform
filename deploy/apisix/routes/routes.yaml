@@ -94,7 +94,7 @@ routes:
 
   - id: tenant-optional
     gateway: both
-    uris: [/api/v1/me/permissions, /api/v1/catalog/countries*, /api/v1/catalog/provinces*, /api/v1/cms/*]
+    uris: [/api/v1/me/permissions, /api/v1/catalog/countries*, /api/v1/catalog/provinces*, /api/v1/catalog/schools*, /api/v1/cms/*]
     upstream: core-api
     modules: [identity, learning]
     auth: oidc

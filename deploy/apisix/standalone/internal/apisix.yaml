@@ -5,6 +5,7 @@ routes:
       - /api/v1/me/permissions
       - /api/v1/catalog/countries*
       - /api/v1/catalog/provinces*
+      - /api/v1/catalog/schools*
       - /api/v1/cms/*
     priority: 200
     upstream_id: core-api
@@ -40,6 +41,7 @@ routes:
           issuer:
             valid_issuers:
               - http://localhost:8180/realms/eduworld
+              - http://keycloak:8180/realms/eduworld
           audience:
             claim: aud
             required: true
@@ -93,6 +95,7 @@ routes:
           issuer:
             valid_issuers:
               - http://localhost:8180/realms/eduworld
+              - http://keycloak:8180/realms/eduworld
           audience:
             claim: aud
             required: true
@@ -146,6 +149,7 @@ routes:
           issuer:
             valid_issuers:
               - http://localhost:8180/realms/eduworld
+              - http://keycloak:8180/realms/eduworld
           audience:
             claim: aud
             required: true
