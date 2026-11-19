@@ -20,6 +20,18 @@ coverage.out
 godot/.godot/
 godot/export/
 godot/build/
+src/game/.godot/
+src/game/build/
+src/game/reports/
+src/game/android/
+src/game/addons/eduworld_platform/android/build/
+src/game/addons/eduworld_platform/android/.gradle/
+src/game/addons/eduworld_platform/bin/
+src/game/addons/eduworld_platform/eduworld_platform.gdextension
+src/game/addons/eduworld_platform/windows/godot-cpp/
+src/game/addons/eduworld_platform/windows/**/*.obj
+src/game/addons/eduworld_platform/windows/.sconsign.dblite
+src/game/tests/scene/screenshots/
 *.import.tmp
 export_credentials.cfg
 

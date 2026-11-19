@@ -1,0 +1,38 @@
+{
+  "min_client_version": "sample",
+  "latest_client_version": "sample",
+  "update_required": false,
+  "maintenance": {
+    "active": false,
+    "message": "sample",
+    "until": "2026-11-15T07:30:00Z"
+  },
+  "login": {
+    "login_url": "https://example.invalid/resource",
+    "remember_username_default": false,
+    "password_help": {
+      "vi": "sample",
+      "en": "sample"
+    }
+  },
+  "world_manifest_url": "https://example.invalid/resource",
+  "realtime_url": "https://example.invalid/resource",
+  "feature_flags": {},
+  "device_profiles": [
+    {
+      "match": {
+        "platform": "sample",
+        "gpu_vendor": "sample",
+        "gpu_model_pattern": "sample",
+        "device_model_pattern": "sample",
+        "os_version_max": "sample"
+      },
+      "renderer": "mobile",
+      "preset": "low",
+      "reason": "sample"
+    }
+  ],
+  "supported_locales": [
+    "vi-VN"
+  ]
+}

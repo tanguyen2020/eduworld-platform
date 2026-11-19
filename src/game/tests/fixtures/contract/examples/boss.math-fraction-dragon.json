@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "boss_id": "01936c20-0000-7000-8000-000000000001",
+  "boss_version_id": "01936c20-0000-7000-8000-000000000002",
+  "code": "math.boss.fraction_dragon",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "name": {
+    "vi": "Rồng Phân Số",
+    "en": "Fraction Dragon"
+  },
+  "description": {
+    "vi": "Rồng Phân Số đã làm rối tung các chiếc bánh. Cùng nhau chia lại cho đều nhé!",
+    "en": "The Fraction Dragon has jumbled up all the cakes. Let’s share them out fairly together!"
+  },
+  "area_id": "learning_zone.math",
+  "visual_ref": "bundles/zone_math/boss_fraction_dragon.tscn",
+  "grade_levels": [
+    4,
+    5
+  ],
+  "subject_id": "01936b2e-0000-7000-8000-00000000a001",
+  "objective_ids": [
+    "01936b2e-0000-7000-8000-00000000c411"
+  ],
+  "mode": "party_optional",
+  "party_size": {
+    "min": 1,
+    "max": 4
+  },
+  "total_time_limit_seconds": 900,
+  "max_phase_retries": 3,
+  "reconnect_grace_seconds": 120,
+  "phases": [
+    {
+      "phase_id": "p1_slices",
+      "order": 1,
+      "title": {
+        "vi": "Chia bánh",
+        "en": "Share the Cakes"
+      },
+      "energy_share": 0.4,
+      "requirements": [
+        {
+          "requirement_id": "r1_quiz",
+          "kind": "activity",
+          "per_grade": [
+            {
+              "grade_level": 4,
+              "activity_ref": {
+                "activity_type": "quiz",
+                "activity_id": "01936c20-0000-7000-8000-0000000004a1"
+              }
+            },
+            {
+              "grade_level": 5,
+              "activity_ref": {
+                "activity_type": "quiz",
+                "activity_id": "01936c20-0000-7000-8000-0000000005a1"
+              }
+            }
+          ],
+          "pass_rule": {
+            "min_correct_ratio": 0.6,
+            "min_items": 5
+          }
+        }
+      ],
+      "completion_rule": {
+        "type": "collective_count",
+        "collective_target": 12,
+        "min_contribution": 3
+      },
+      "time_limit_seconds": 300,
+      "on_fail": "retry_phase",
+      "presentation": {
+        "intro_line": {
+          "vi": "Bánh của ta, các ngươi chia được không?",
+          "en": "These are my cakes. Can you share them fairly?"
+        },
+        "wrong_answer_reaction": "dragon_sneeze",
+        "phase_clear_animation": "dragon_dizzy"
+      }
+    },
+    {
+      "phase_id": "p2_bridge",
+      "order": 2,
+      "title": {
+        "vi": "Cây cầu phân số",
+        "en": "The Fraction Bridge"
+      },
+      "energy_share": 0.6,
+      "requirements": [
+        {
+          "requirement_id": "r2_minigame",
+          "kind": "minigame",
+          "activity_ref": {
+            "activity_type": "minigame",
+            "activity_id": "01936c20-0000-7000-8000-0000000004b1"
+          },
+          "pass_rule": {
+            "min_correct_ratio": 0.7
+          }
+        },
+        {
+          "requirement_id": "r3_lever",
+          "kind": "interaction",
+          "interactable_id": "boss_bridge_lever"
+        }
+      ],
+      "completion_rule": {
+        "type": "all"
+      },
+      "time_limit_seconds": 420,
+      "on_fail": "retry_phase"
+    }
+  ],
+  "defeat_rewards": [
+    {
+      "type": "xp",
+      "amount": 150
+    },
+    {
+      "type": "currency",
+      "currency_code": "xu",
+      "amount": 80
+    }
+  ],
+  "first_defeat_rewards": [
+    {
+      "type": "badge",
+      "badge_id": "badge_fraction_dragon"
+    },
+    {
+      "type": "collection_item",
+      "collection_item_id": "card_fraction_basics"
+    }
+  ]
+}

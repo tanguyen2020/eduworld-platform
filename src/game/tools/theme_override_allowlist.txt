@@ -1,0 +1,2 @@
+# Theme override allowlist (F060-AC-07, DESIGN_SYSTEM §9): one `<res path>::<property>` per line, each with a
+# reason in the merge request. Empty by design: style comes from the generated Theme and its type variations.

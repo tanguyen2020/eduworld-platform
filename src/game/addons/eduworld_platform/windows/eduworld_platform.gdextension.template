@@ -1,0 +1,10 @@
+; Installed as addons/eduworld_platform/eduworld_platform.gdextension by windows/SConstruct (F060 T051, ADR-0086).
+[configuration]
+
+entry_symbol = "eduworld_platform_library_init"
+compatibility_minimum = "4.5"
+
+[libraries]
+
+windows.debug.x86_64 = "res://addons/eduworld_platform/bin/eduworld_platform.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/eduworld_platform/bin/eduworld_platform.windows.template_release.x86_64.dll"

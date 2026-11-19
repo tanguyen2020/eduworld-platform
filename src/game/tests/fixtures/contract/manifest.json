@@ -1,0 +1,53 @@
+{
+  "generated_by": "src/game/tools/gen_fixtures.mjs",
+  "fixtures": {
+    "openapi/ClientConfig.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClientConfig",
+      "sha256": "53e275394ab05c51d60141465a2f3a4b584ffd0622c5a5364693f9a333b8d818"
+    },
+    "openapi/Problem.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Problem",
+      "sha256": "4191bb18594b9c33b3facb96817826781315aca146a984dcb2ef9bf6367da2f6"
+    },
+    "examples/achievement.explorer-math-zone.json": {
+      "source": "specs/examples/achievement.explorer-math-zone.json",
+      "sha256": "e6003dc883ec9c39ba5e6d0128b2b04f00c3ab45d63902dfef995b122d3aad9b"
+    },
+    "examples/activity.video-lesson.science-g4-water-cycle.json": {
+      "source": "specs/examples/activity.video-lesson.science-g4-water-cycle.json",
+      "sha256": "f1e5dcbe18ea5480232c02e6e2f9263e961f4e549b7d2b38d88baceb2592d526"
+    },
+    "examples/boss.math-fraction-dragon.json": {
+      "source": "specs/examples/boss.math-fraction-dragon.json",
+      "sha256": "e10c80d4d5647c2d575dfec0d8eaa8bd672c054c0130d6d9e654892ba2d59d24"
+    },
+    "examples/challenge.math-g3-time-attack.json": {
+      "source": "specs/examples/challenge.math-g3-time-attack.json",
+      "sha256": "dccb179e852d73636ae92f1966e1bc5372e66231951c3274368b75818760c643"
+    },
+    "examples/event.mid-autumn-festival.json": {
+      "source": "specs/examples/event.mid-autumn-festival.json",
+      "sha256": "aee1087ead445add9ffcbc6b990e7c54944e576915c72c6a12d36ecc397249fb"
+    },
+    "examples/minigame.math-g3-matching.json": {
+      "source": "specs/examples/minigame.math-g3-matching.json",
+      "sha256": "65cd68894f40fc6e9cc1ee7e00229f5acfc1b34ff0bdd40a6e00a256e4b22291"
+    },
+    "examples/progression-curve.default.json": {
+      "source": "specs/examples/progression-curve.default.json",
+      "sha256": "e0d82e23aafa98a103b6e88cad6b58e40fe304fda2ba948169bca27e3701c85c"
+    },
+    "examples/quest.math-g3-multiplication.json": {
+      "source": "specs/examples/quest.math-g3-multiplication.json",
+      "sha256": "cf8531bf9161fcbe2f661282a8acec7911b0a54ecc6c743be33e5f19b4a6f6c4"
+    },
+    "examples/season-track.season-1.json": {
+      "source": "specs/examples/season-track.season-1.json",
+      "sha256": "930e38e971d1254e8d92dac41f0c101e660146855fb0ce0c3fe8788cb0d9fa33"
+    },
+    "examples/shop-item.explorer-hat.json": {
+      "source": "specs/examples/shop-item.explorer-hat.json",
+      "sha256": "a7f153f2d0b3da1670c9cdba4f7c5f1b08d2035b7e0afde672dfac97d2f3b3cc"
+    }
+  }
+}

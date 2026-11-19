@@ -54,18 +54,21 @@ env: ## Copy every .env.example to .env (root, backend modules) if missing
 	@for f in .env.example $(BACKEND)/modules/*/.env.example; do [ -f "$$f" ] || continue; t="$${f%.example}"; [ -f "$$t" ] || cp "$$f" "$$t"; done
 
 # ---------- infrastructure ----------
-.PHONY: up down reset up-obs
+.PHONY: up down reset up-obs up-mock
 up: ## Start infrastructure (postgres valkey nats keycloak apisix apisix-internal mailpit floci s3-init cdn sis-mock)
 	bash scripts/dev/check-docker.sh
 	$(DC) up -d --wait postgres valkey nats keycloak apisix apisix-internal mailpit floci cdn sis-mock
 	$(DC) up s3-init
 
 down: ## Stop every container
-	$(DC) --profile app --profile obs --profile media --profile tools --profile migrate down
+	$(DC) --profile app --profile obs --profile media --profile tools --profile migrate --profile mock down
 
 reset: ## Stop and delete volumes and ./data (local only)
-	$(DC) --profile app --profile obs --profile media --profile tools --profile migrate down -v
+	$(DC) --profile app --profile obs --profile media --profile tools --profile migrate --profile mock down -v
 	rm -rf data/floci data/backups
+
+up-mock: ## Start the labelled Prism MOCK API for the game client on :4011 (profile mock, F060-AC-20; not a backend)
+	$(DC) --profile mock up -d --wait api-mock
 
 up-obs: ## Start observability (otel-collector, Prometheus, Grafana, Loki, Tempo)
 	$(DC) --profile obs up -d --wait
@@ -236,6 +239,63 @@ web-storybook-check: web-install ## Build Storybook (Light/Dark/Compact per comp
 web-visual: web-install ## Playwright visual regression of the stories (100% and 200% zoom), one worker
 	cd $(WEB_DIR) && $(PNPM) test:visual
 
+# ---------- game client: Godot (F060, GODOT_ARCHITECTURE §11-§12, ADR-0014) ----------
+# Export paths are relative to the project folder (Godot resolves them against --path).
+# GODOT is the Godot 4.x binary of the pinned minor (src/game/.godot-version); pass your own path, e.g.
+#   make godot-test GODOT="/c/path/to/Godot_v4.7.2-stable_win64_console.exe"
+GODOT    ?= godot
+GDLINT   ?= gdlint
+GAME_DIR := src/game
+GODOT_HL  = "$(GODOT)" --headless --path $(GAME_DIR)
+GAME_ENV ?= mock
+.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-windows godot-export-android
+godot-import: ## Import the Godot project headless (global class cache, fonts); needed once after checkout
+	$(GODOT_HL) --import
+
+godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal lints + translation keys + pseudo-locale + fixtures + no Admin UI
+	cd $(GAME_DIR) && $(GDLINT) scripts scenes tools tests
+	$(GODOT_HL) -s res://tools/check_typed.gd
+	$(GODOT_HL) -s res://tools/lint_theme_overrides.gd
+	$(GODOT_HL) -s res://tools/lint_layers.gd
+	$(GODOT_HL) -s res://tools/lint_signals.gd
+	$(GODOT_HL) -s res://tools/extract_pot.gd -- --check
+	$(GODOT_HL) -s res://tools/pseudo_locale.gd -- --check
+	node $(GAME_DIR)/tools/gen_fixtures.mjs --check
+	bash $(GAME_DIR)/tools/check_no_admin_ui.sh
+
+godot-test: godot-import ## GdUnit4 headless (unit, scene, contract, integration) + artifact scan tests (exports a release PCK)
+	$(GODOT_HL) -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c -a res://tests -rd res://reports
+	GODOT="$(GODOT)" bash $(GAME_DIR)/tools/tests/scan_artifact_test.sh
+
+godot-smoke: godot-import ## Boot headless with GAME_ENV (default mock) and require Boot -> Splash
+	mkdir -p $(GAME_DIR)/build
+	$(GODOT_HL) res://scenes/bootstrap/Boot.tscn --quit-after 300 -- --env=$(GAME_ENV) 2>&1 | tee $(GAME_DIR)/build/smoke.log | tail -n 5
+	grep -q '"event":"splash_shown"' $(GAME_DIR)/build/smoke.log
+
+godot-screenshots: godot-import ## UiGallery 4 densities x vi/en/xx-PS + high contrast vs baselines (needs a renderer; UPDATE=1 rewrites baselines)
+	"$(GODOT)" --path $(GAME_DIR) $(GODOT_RENDER_FLAGS) -s res://tools/screenshot_gallery.gd -- $(if $(UPDATE),--update-baseline)
+
+godot-fixtures: ## Regenerate contract fixtures, messages.pot and the pseudo-locale after a spec or UI string change
+	node $(GAME_DIR)/tools/gen_fixtures.mjs
+	$(GODOT_HL) -s res://tools/extract_pot.gd
+	$(GODOT_HL) -s res://tools/pseudo_locale.gd
+
+godot-export-check: godot-import ## Export the release PCK (no export template needed) and scan it for secrets, OIDC keys, mock config
+	mkdir -p $(GAME_DIR)/build/check
+	$(GODOT_HL) --export-pack "Windows Desktop" build/check/EduWorld.pck
+	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/check
+
+godot-export-windows: godot-import ## Export the Windows release (export templates of the pinned version required) and scan it
+	mkdir -p $(GAME_DIR)/build/windows
+	$(GODOT_HL) --export-release "Windows Desktop" build/windows/EduWorld.exe
+	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/windows
+
+godot-export-android: godot-import ## Export the Android APK, debug-signed (templates, Android SDK, JDK 17 required) and scan it
+	mkdir -p $(GAME_DIR)/build/android
+	$(GODOT_HL) --install-android-build-template
+	$(GODOT_HL) --export-debug "Android" build/android/EduWorld.apk
+	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/android
+
 # ---------- specs / docs ----------
 .PHONY: specs-lint specs-breaking docs-check
 specs-lint: ## Contract checks (Spectral/AsyncAPI added with the spec toolchain)
@@ -267,6 +327,7 @@ ci-local: ## CI checks that need no GitHub: workflows, path filters, admin ports
 	bash scripts/ci/test-path-filters.sh
 	bash scripts/ci/test-design-rules.sh
 	bash scripts/ci/test-web-rules.sh
+	bash scripts/ci/test-godot-rules.sh
 	bash scripts/ci/check-admin-ports.sh
 	bash scripts/ci/test-arch-fixtures.sh
 	bash scripts/ci/test-gitleaks.sh

@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/components/ui_component.gd" id="1_component"]
+
+[node name="Dialog" type="PanelContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_component")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+autowrap_mode = 3
+
+[node name="Body" type="Label" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Cancel" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+autowrap_mode = 3
+
+[node name="Confirm" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3

@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[node name="MockBadge" type="CanvasLayer"]
+layer = 128
+
+[node name="Badge" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+
+[node name="Label" type="Label" parent="Badge"]
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "ui.debug.mock_badge"

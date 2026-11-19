@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "minigame_config_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a01",
+  "minigame_config_version_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a02",
+  "code": "math.g3.multiplication_card_match",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "minigame_type": "matching",
+  "name": {
+    "vi": "Lật thẻ bảng nhân",
+    "en": "Times Table Card Match"
+  },
+  "instructions": {
+    "vi": "Lật hai thẻ để tìm cặp phép nhân và kết quả đúng. Ghép đủ các cặp trước khi hết giờ nhé!",
+    "en": "Flip two cards to match a multiplication with its correct answer. Match all the pairs before time runs out!"
+  },
+  "grade_levels": [
+    3
+  ],
+  "subject_id": "01936b2e-0000-7000-8000-00000000a001",
+  "objective_ids": [
+    "01936b2e-0000-7000-8000-00000000c311"
+  ],
+  "question_source": {
+    "kind": "selection_rule",
+    "rule": {
+      "grade_levels": [
+        3
+      ],
+      "subject_id": "01936b2e-0000-7000-8000-00000000a001",
+      "objective_ids": [
+        "01936b2e-0000-7000-8000-00000000c311"
+      ],
+      "difficulty_min": 2,
+      "difficulty_max": 3,
+      "question_types": [
+        "matching"
+      ],
+      "exclude_recently_seen_days": 7
+    }
+  },
+  "difficulty": 2,
+  "time_limit_seconds": 180,
+  "per_item_time_seconds": null,
+  "question_count": 3,
+  "scoring": {
+    "points_per_correct": 100,
+    "wrong_penalty": 0,
+    "time_bonus": {
+      "enabled": true,
+      "max_bonus": 50,
+      "full_bonus_within_ms": 20000
+    },
+    "streak_bonus": {
+      "enabled": true,
+      "every_n_correct": 3,
+      "bonus": 30
+    }
+  },
+  "result_calculation": {
+    "learning_score": "sum_question_scores",
+    "game_score": "points_plus_bonus"
+  },
+  "feedback_policy": {
+    "timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": true
+  },
+  "completion_rule": {
+    "type": "min_correct_ratio",
+    "threshold": 0.7
+  },
+  "limits": {
+    "max_plays_per_day": 5,
+    "retry_policy": "new_questions",
+    "resumable": false
+  },
+  "reward_rule_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e7c02",
+  "presentation": {
+    "scene_variant": "matching.market_cards",
+    "theme": "market_day",
+    "background_music_id": "music_market_light",
+    "mascot_npc_id": "npc.brown_bear_merchant"
+  }
+}

@@ -55,6 +55,7 @@ File: `deploy/compose/docker-compose.yml` (hạ tầng), `docker-compose.app.yml
 | `cdn` | `nginx:alpine` | 8090 | **CDN giả lập**: reverse proxy tới floci (path-style `http://floci:4566/<bucket>/<key>`), thêm `Cache-Control: immutable` cho đường dẫn có hash, kiểm tra chữ ký signed URL (HMAC đơn giản, cùng định dạng production) cho `ew-media-private` | default |
 | `clamav` | `clamav/clamav:stable` | 3310 | Quét virus cho media worker; tắt được bằng `EW_MEDIA_SCAN=disabled` để khởi động nhanh (CI và staging luôn bật) | `media` |
 | `sis-mock` | `stoplight/prism:4` (mock `specs/sis/eduworld-sis-contract.v1.yaml`; không dùng prism 5: lỗi khởi động `Cannot read properties of undefined (reading 'isPrimary')`) | 4010 | SIS giả lập cho provider `contract_v1` | default |
+| `api-mock` | `stoplight/prism:4` (`--dynamic=false`, mock `specs/openapi/eduworld-api.v1.yaml`, chỉ trả `examples`; khởi động ~1 phút do spec lớn) | 4011 | **MOCK** API cho game client khi backend chưa sẵn sàng (F060, R17): game dùng `res://config/env/mock.json` (`is_mock: true`) và hiện nhãn "MOCK" trên mọi màn; bản phát hành không chứa cấu hình này. `make up-mock` | `mock` |
 
 ### 3.2. Service ứng dụng (profile `app`)
 
@@ -262,10 +263,11 @@ make run-worker PROFILE=events              # khi sửa consumer/job: go -C src/
 Kiểm tra: `curl http://localhost:9100/readyz` (trạng thái từng module trong body); qua gateway: `curl http://localhost:9080/api/v1/game/client-config`.
 
 ### 6.3. Godot
-1. Mở `src/game/project.godot` bằng Godot 4.x đúng phiên bản ghim.
-2. Chọn profile môi trường `local` (`-- --env=local`).
-3. Chạy `res://scenes/bootstrap/bootstrap.tscn` → form đăng nhập trong game (S01) → nhập `hs.an.3a` + mật khẩu seed (game gọi `/api/v1/auth/game/login`, ADR-0068).
-4. Test: `godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests`.
+1. Mở `src/game/project.godot` bằng Godot 4.x đúng phiên bản ghim (`src/game/.godot-version`); lần đầu chạy `make godot-import`. Mọi target Godot đọc binary từ biến `GODOT` (mặc định `godot`), ví dụ `make godot-test GODOT="/c/.../Godot_v4.7.2-stable_win64_console.exe"`.
+2. Chọn profile môi trường `local` (`-- --env=local`; chỉ build debug đọc `--env`). Chưa có backend: `make up-mock` (Prism profile `mock`, cổng 4011) rồi chạy với `-- --env=mock` — mọi màn có nhãn "MOCK" (R17).
+3. Chạy `res://scenes/bootstrap/Boot.tscn` (scene chính) → Splash; từ F061: form đăng nhập trong game (S01) → nhập `hs.an.3a` + mật khẩu seed (game gọi `/api/v1/auth/game/login`, ADR-0068). `res://scenes/ui/debug/UiGallery.tscn` (chỉ build debug) xem component ở 4 density, vi/en/`xx-PS`, tương phản cao.
+4. Kiểm tra: `make godot-lint` (gdtoolkit `gdlint`, typed check, lint theme/lớp/signal, khóa dịch, fixture, không Admin UI), `make godot-test` (GdUnit4 headless + quét artifact), `make godot-smoke`, `make godot-screenshots` (cần renderer), `make godot-export-check` (PCK phát hành không cần export template). Đổi chuỗi UI hoặc spec: `make godot-fixtures`.
+5. `SecureStorage` (ADR-0086): adapter DPAPI/Keystore cần plugin native build bởi CI (`godot.yml` job `platform-windows`, `platform-android`); checkout chưa build plugin thì game dùng `MemoryOnly` (phải đăng nhập lại mỗi lần mở).
 
 ### 6.4. Web CMS/LMS
 ```bash
@@ -310,7 +312,8 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make test-contract` | Facade test: module đích hiện thực đúng interface sinh từ spec internal (lỗi ánh xạ sang `problem`, `maxLength`, ngữ cảnh `src/backend/pkg/modcall`), kèm test của mọi module trong `x-allowed-callers` dùng facade đó; chạy trong tiến trình, không HTTP |
 | `make test-e2e` | E2E toàn hệ thống trên compose |
 | `make api-test` | Postman CLI collection môi trường local |
-| `make godot-test` / `make godot-export-<target>` | Godot headless |
+| `make godot-lint` / `make godot-test` / `make godot-smoke` / `make godot-screenshots` / `make godot-export-check` / `make godot-export-<windows\|android>` (biến `GODOT=<binary>`) | Godot headless: lint, GdUnit4, smoke boot, ảnh UiGallery so baseline, export + quét artifact (F060) |
+| `make up-mock` | Prism MOCK API cho game (profile `mock`, cổng 4011) |
 | `make design-tokens` / `make design-tokens-check` | Style Dictionary sinh Theme Godot, `UiTokens.gd`, resource 3D, theme Ant Design + CSS variables từ `design/`; bản `-check` báo lỗi nếu file sinh lệch nguồn (ADR-0047) |
 | `make storybook` | Chạy Storybook của `src/cms/frontend/packages/ops-ui` |
 | `make web-lint` / `make web-test` / `make web-build` | `src/cms/frontend`: ESLint + stylelint + typecheck + `gen:check` / Vitest 1 worker / build portal + kiểm 5 chunk workspace (F050) |

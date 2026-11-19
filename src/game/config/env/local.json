@@ -1,0 +1,10 @@
+{
+  "env": "local",
+  "api_base_url": "http://localhost:9080/api/v1",
+  "realtime_url": "ws://localhost:9080/realtime/v1",
+  "cdn_base_url": "http://localhost:8090",
+  "login_path": "/auth/game/login",
+  "client_version": "0.0.0-dev",
+  "log_level": "debug",
+  "feature_flags_default": {}
+}

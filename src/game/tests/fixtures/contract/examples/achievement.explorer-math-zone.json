@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "achievement_id": "01936c30-0000-7000-8000-000000000001",
+  "achievement_version_id": "01936c30-0000-7000-8000-000000000002",
+  "code": "exploration.math_zone_explorer",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "category": "exploration",
+  "name": {
+    "vi": "Nhà khám phá Vương quốc Toán",
+    "en": "Math Kingdom Explorer"
+  },
+  "description": {
+    "vi": "Tìm các điểm khám phá trong Vương quốc Số.",
+    "en": "Find the discovery points in the Number Kingdom."
+  },
+  "trigger": {
+    "event_types": [
+      "world.discovery_found"
+    ],
+    "filters": {
+      "area_ids": [
+        "learning_zone.math"
+      ]
+    }
+  },
+  "progress_metric": {
+    "kind": "distinct_count",
+    "distinct_field": "interactable_id"
+  },
+  "visibility": "visible",
+  "tiers": [
+    {
+      "tier": "bronze",
+      "threshold": 5,
+      "rewards": [
+        {
+          "type": "currency",
+          "currency_code": "xu",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "tier": "silver",
+      "threshold": 15,
+      "rewards": [
+        {
+          "type": "badge",
+          "badge_id": "badge_math_explorer_silver"
+        }
+      ]
+    },
+    {
+      "tier": "gold",
+      "threshold": 30,
+      "rewards": [
+        {
+          "type": "title",
+          "title_code": "math_cartographer"
+        },
+        {
+          "type": "item",
+          "item_id": "pet_compass_turtle"
+        }
+      ]
+    }
+  ]
+}

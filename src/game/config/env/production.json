@@ -1,0 +1,10 @@
+{
+  "env": "production",
+  "api_base_url": "https://api.eduworld.example/api/v1",
+  "realtime_url": "wss://api.eduworld.example/realtime/v1",
+  "cdn_base_url": "https://cdn.eduworld.example",
+  "login_path": "/auth/game/login",
+  "client_version": "0.0.0-dev",
+  "log_level": "warn",
+  "feature_flags_default": {}
+}

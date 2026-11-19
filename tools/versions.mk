@@ -11,3 +11,7 @@ GOVULNCHECK_VERSION    := v1.9.0
 
 ATLAS_IMAGE            := arigaio/atlas:0.38.0
 POSTGRES_IMAGE         := postgres:17
+
+# Game client (F060, ADR-0014): Godot minor pinned in src/game/.godot-version; full version for CI downloads.
+GODOT_FULL_VERSION     := 4.7.2
+GDTOOLKIT_VERSION      := 4.5.0

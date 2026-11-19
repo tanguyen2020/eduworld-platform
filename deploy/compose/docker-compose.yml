@@ -174,6 +174,20 @@ services:
       <<: *hc
       test: ["CMD-SHELL", "node -e \"require('net').connect(4010,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
 
+  # MOCK API for game client development (F060-AC-20, AGENTS R17, CODE_PLAN §2): Prism serves the merged public
+  # spec with its examples only (--dynamic=false). The game marks every screen "MOCK" with res://config/env/mock.json;
+  # release presets never ship that file. Not a backend: no auth, no tenant, no state.
+  api-mock:
+    image: stoplight/prism:4
+    profiles: [mock]
+    command: ["mock", "-h", "0.0.0.0", "-p", "4011", "--dynamic=false", "/specs/openapi/eduworld-api.v1.yaml"]
+    ports: ["4011:4011"]
+    volumes:
+      - ../../specs:/specs:ro
+    healthcheck:
+      <<: *hc
+      test: ["CMD-SHELL", "node -e \"require('net').connect(4011,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
+
   clamav:
     image: clamav/clamav:1.4
     profiles: [media]

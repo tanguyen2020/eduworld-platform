@@ -1,0 +1,11 @@
+# gdlint (gdtoolkit 4.5.0, ADR-0014) for the EduWorld game client; run from src/game (make godot-lint).
+# Values not listed keep the gdtoolkit defaults (snake_case functions/variables, PascalCase classes, etc.).
+excluded_directories: !!set
+  .godot: null
+  addons: null
+  reports: null
+  build: null
+max-line-length: 200
+max-returns: 12
+max-file-lines: 1000
+function-arguments-number: 10

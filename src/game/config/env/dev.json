@@ -1,0 +1,10 @@
+{
+  "env": "dev",
+  "api_base_url": "https://api.dev.eduworld.example/api/v1",
+  "realtime_url": "wss://api.dev.eduworld.example/realtime/v1",
+  "cdn_base_url": "https://cdn.dev.eduworld.example",
+  "login_path": "/auth/game/login",
+  "client_version": "0.0.0-dev",
+  "log_level": "info",
+  "feature_flags_default": {}
+}

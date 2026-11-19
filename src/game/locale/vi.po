@@ -1,0 +1,244 @@
+# EduWorld game UI strings — Vietnamese (GODOT_ARCHITECTURE §10.1, ADR-0056). Keys: ui.<screen>.<element>[.<state>].
+# Keys are immutable; edit the msgstr only. Template: messages.pot (src/game/tools/extract_pot.gd).
+msgid ""
+msgstr ""
+"Project-Id-Version: EduWorld game\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "ui.boot.loading"
+msgstr "Đang tải…"
+
+msgid "ui.boot.title"
+msgstr "EduWorld"
+
+msgid "ui.config_error.body"
+msgstr "Cấu hình của bản cài đặt này bị lỗi. Em hãy nhờ thầy cô hoặc bố mẹ cài lại trò chơi nhé."
+
+msgid "ui.config_error.detail"
+msgstr "Mã lỗi: {code}"
+
+msgid "ui.config_error.quit"
+msgstr "Thoát"
+
+msgid "ui.config_error.title"
+msgstr "Không khởi động được trò chơi"
+
+msgid "ui.debug.mock_badge"
+msgstr "MOCK · dữ liệu giả lập, không phải máy chủ thật"
+
+msgid "ui.error.ACCESS_OUTSIDE_ALLOWED_HOURS"
+msgstr "Bây giờ chưa đến giờ chơi EduWorld."
+
+msgid "ui.error.ACCOUNT_DEACTIVATED"
+msgstr "Tài khoản không còn hoạt động."
+
+msgid "ui.error.ACCOUNT_LOCKED"
+msgstr "Tài khoản đang tạm khóa. Em hãy liên hệ nhà trường."
+
+msgid "ui.error.ACCOUNT_NOT_PROVISIONED"
+msgstr "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy nhờ nhà trường kiểm tra nhé."
+
+msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
+msgstr "Tài khoản của em đang được dùng trên thiết bị khác."
+
+msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
+msgstr "Bài này đã được nộp rồi."
+
+msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
+msgstr "Trò chơi cần được cập nhật lên phiên bản mới."
+
+msgid "ui.error.CURFEW_ACTIVE"
+msgstr "Đã đến giờ nghỉ. EduWorld sẽ mở lại vào giờ cho phép."
+
+msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
+msgstr "Tài khoản này dùng cho cán bộ quản lý, không dùng để vào game. Vui lòng dùng trang quản trị EduWorld."
+
+msgid "ui.error.INTERNAL"
+msgstr "Có lỗi xảy ra. Em thử lại sau nhé."
+
+msgid "ui.error.INVALID_CREDENTIALS"
+msgstr "Tên đăng nhập hoặc mật khẩu chưa đúng."
+
+msgid "ui.error.LOGIN_QUEUE_BUSY"
+msgstr "Đang vào lớp…"
+
+msgid "ui.error.LOGIN_TICKET_INVALID"
+msgstr "Phiên chọn trường đã hết, em đăng nhập lại nhé."
+
+msgid "ui.error.MAINTENANCE"
+msgstr "EduWorld đang bảo trì, em quay lại sau nhé."
+
+msgid "ui.error.NO_ACTIVE_ENROLLMENT"
+msgstr "Em chưa được xếp lớp trong năm học này."
+
+msgid "ui.error.RATE_LIMITED"
+msgstr "Em thao tác hơi nhanh, đợi một chút rồi thử lại nhé."
+
+msgid "ui.error.REFRESH_TOKEN_DEVICE_MISMATCH"
+msgstr "Phiên đăng nhập đã hết, em đăng nhập lại nhé."
+
+msgid "ui.error.REFRESH_TOKEN_INVALID"
+msgstr "Phiên đăng nhập đã hết, em đăng nhập lại nhé."
+
+msgid "ui.error.REFRESH_TOKEN_REUSED"
+msgstr "Phiên đăng nhập đã hết, em đăng nhập lại nhé."
+
+msgid "ui.error.TENANT_ACCESS_DISABLED"
+msgstr "Trường của em hiện chưa mở EduWorld."
+
+msgid "ui.error.TENANT_HEADER_REQUIRED"
+msgstr "Em hãy đăng nhập lại."
+
+msgid "ui.error.TENANT_MISMATCH"
+msgstr "Em hãy đăng nhập lại."
+
+msgid "ui.error.TENANT_NOT_SELECTED"
+msgstr "Em hãy chọn trường để tiếp tục."
+
+msgid "ui.error.UNAVAILABLE"
+msgstr "Máy chủ đang bận, em thử lại sau nhé."
+
+msgid "ui.error.generic"
+msgstr "Có lỗi xảy ra. Em thử lại sau nhé."
+
+msgid "ui.format.am"
+msgstr "SA"
+
+msgid "ui.format.date"
+msgstr "{dd}/{mm}/{yyyy}"
+
+msgid "ui.format.decimal_separator"
+msgstr ","
+
+msgid "ui.format.duration.hms"
+msgstr "{h} giờ {m} phút {s} giây"
+
+msgid "ui.format.duration.ms"
+msgstr "{m} phút {s} giây"
+
+msgid "ui.format.duration.s"
+msgstr "{s} giây"
+
+msgid "ui.format.group_separator"
+msgstr "."
+
+msgid "ui.format.month_short.1"
+msgstr "Th1"
+
+msgid "ui.format.month_short.10"
+msgstr "Th10"
+
+msgid "ui.format.month_short.11"
+msgstr "Th11"
+
+msgid "ui.format.month_short.12"
+msgstr "Th12"
+
+msgid "ui.format.month_short.2"
+msgstr "Th2"
+
+msgid "ui.format.month_short.3"
+msgstr "Th3"
+
+msgid "ui.format.month_short.4"
+msgstr "Th4"
+
+msgid "ui.format.month_short.5"
+msgstr "Th5"
+
+msgid "ui.format.month_short.6"
+msgstr "Th6"
+
+msgid "ui.format.month_short.7"
+msgstr "Th7"
+
+msgid "ui.format.month_short.8"
+msgstr "Th8"
+
+msgid "ui.format.month_short.9"
+msgstr "Th9"
+
+msgid "ui.format.pm"
+msgstr "CH"
+
+msgid "ui.format.time"
+msgstr "{HH}:{MM}"
+
+msgid "ui.gallery.button.hint"
+msgstr "Gợi ý"
+
+msgid "ui.gallery.button.primary"
+msgstr "Bắt đầu nhiệm vụ"
+
+msgid "ui.gallery.button.secondary"
+msgstr "Để sau"
+
+msgid "ui.gallery.card.body"
+msgstr "Giúp bác nông dân đếm số táo trong vườn."
+
+msgid "ui.gallery.card.title"
+msgstr "Nhiệm vụ: Phép nhân"
+
+msgid "ui.gallery.density.g1_3"
+msgstr "Lớp 1–3"
+
+msgid "ui.gallery.density.g4_5"
+msgstr "Lớp 4–5"
+
+msgid "ui.gallery.density.g6_7"
+msgstr "Lớp 6–7"
+
+msgid "ui.gallery.density.g8_9"
+msgstr "Lớp 8–9"
+
+msgid "ui.gallery.dialog.body"
+msgstr "Tiến độ của em đã được lưu."
+
+msgid "ui.gallery.dialog.cancel"
+msgstr "Hủy"
+
+msgid "ui.gallery.dialog.confirm"
+msgstr "Đồng ý"
+
+msgid "ui.gallery.dialog.title"
+msgstr "Em có chắc không?"
+
+msgid "ui.gallery.format_sample"
+msgstr "Số {number} · Ngày {date} · Giờ {time} · {duration}"
+
+msgid "ui.gallery.heading"
+msgstr "Tiêu đề lớn"
+
+msgid "ui.gallery.high_contrast"
+msgstr "Tương phản cao"
+
+msgid "ui.gallery.input.placeholder"
+msgstr "Tên đăng nhập"
+
+msgid "ui.gallery.locale.en"
+msgstr "English"
+
+msgid "ui.gallery.locale.pseudo"
+msgstr "Giả lập chuỗi dài"
+
+msgid "ui.gallery.locale.vi"
+msgstr "Tiếng Việt"
+
+msgid "ui.gallery.muted"
+msgstr "Chú thích phụ"
+
+msgid "ui.gallery.progress.label"
+msgstr "Tiến độ"
+
+msgid "ui.gallery.sample_vietnamese"
+msgstr "Tiếng Việt: ằẳẵặ ỹỷỵ ữựừ Đđ Ơơ Ưư"
+
+msgid "ui.gallery.title"
+msgstr "Bộ thành phần giao diện"
+
+msgid "ui.gallery.toast.message"
+msgstr "Đã lưu cài đặt"

@@ -1,3 +1,9 @@
-# src/game — Game client (Godot 4.x)
+# src/game — Game client (Godot 4.7)
 
-Project Godot (`project.godot`, `scenes/`, `scripts/`, `resources/`), GDScript static typing (AGENTS §7), Theme sinh từ `design/game-tokens/` (ADR-0047). Khung project, `AppState`, lane CI `godot.yml` do **F060** tạo; đăng nhập và API client do **F061**.
+Project Godot (`project.godot`, `scenes/`, `scripts/`, `resources/`), GDScript static typing bắt buộc (`untyped_declaration = error`, AGENTS §7), Theme sinh từ `design/game-tokens/` (ADR-0047, không sửa tay). Khung project, autoload nền, i18n vi/en, `SecureStorage`, lint và lane CI `godot.yml` do **F060** tạo; đăng nhập và API client do **F061**.
+
+- Phiên bản Godot ghim: `.godot-version` (minor) · CI tải bản đầy đủ `GODOT_FULL_VERSION` trong `tools/versions.mk`, kiểm SHA-512 (`scripts/ci/setup-godot.sh`).
+- Cấu hình môi trường: `config/env/<env>.json` (không secret, không OIDC); `--env=<name>` chỉ có hiệu lực ở build debug.
+- Lệnh: `make godot-import`, `godot-lint`, `godot-test`, `godot-smoke`, `godot-screenshots`, `godot-export-check`, `godot-export-windows`, `godot-export-android`, `godot-fixtures`, `up-mock` — truyền binary bằng `GODOT=<path>` ([LOCAL_DEVELOPMENT §6.3](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Addon: `addons/gdUnit4` (GdUnit4 v6.2.3 từ release chính thức, giấy phép MIT trong thư mục addon); `addons/eduworld_platform` (adapter native `SecureStorage`: GDExtension DPAPI Windows, plugin Android Keystore — build trong CI).
+- Kiến trúc: [GODOT_ARCHITECTURE](../../docs/08-game-client/GODOT_ARCHITECTURE.md) · feature: [F060](../../specs/060-godot-project-foundation/spec.md).

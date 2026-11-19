@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "shop_item_id": "01936c40-0000-7000-8000-000000000001",
+  "shop_item_version_id": "01936c40-0000-7000-8000-000000000002",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "item_id": "acc_explorer_hat",
+  "item_kind": "accessory",
+  "price": { "currency_code": "xu", "amount": 150 },
+  "purchase_limit": 1,
+  "featured_order": 10
+}

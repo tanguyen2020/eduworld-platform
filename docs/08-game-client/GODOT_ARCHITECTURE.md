@@ -91,10 +91,11 @@ src/game/
 │                    settings/, debug/UiGallery.tscn
 ├── scripts/
 │   ├── core/            app_state.gd, event_bus.gd, scene_router.gd, service_locator.gd, config.gd, logger.gd, result.gd, play_time_service.gd,
+│   │                    settings.gd, audio_director.gd, theme_service.gd, l10n.gd, locale_format.gd, models/{api_problem,client_config}.gd,
 │   │                    ui_tokens.gd (class_name UiTokens — SINH TỪ design/game-tokens)
 │   ├── networking/      api_client.gd, http_request_pool.gd, realtime_client.gd, ws_envelope.gd, backoff.gd
 │   ├── authentication/  auth_service.gd, session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd
-│   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{dpapi,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086)
+│   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{file_cipher,dpapi,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086)
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
 │   ├── learning/        learning_service.gd, question_renderer_registry.gd, activity_renderer_registry.gd,
@@ -122,8 +123,11 @@ src/game/
 │   └── audio/        bus_layout.tres
 ├── assets/
 │   ├── models/ textures/ audio/ fonts/ icons/
-├── locale/           vi.po, en.po (gettext)
-└── tests/            unit/, integration/, fixtures/ (JSON response mẫu)
+├── config/env/       local.json, dev.json, staging.json, production.json, mock.json (§4; không secret, không OIDC)
+├── locale/           messages.pot (sinh), vi.po, en.po (gettext), xx_PS.po (pseudo-locale sinh, chỉ build debug)
+├── tools/            lint_theme_overrides.gd, lint_layers.gd, lint_signals.gd, check_typed.gd, extract_pot.gd, pseudo_locale.gd,
+│                     screenshot_gallery.gd, gen_fixtures.mjs, scan_artifact.sh, check_no_admin_ui.sh (`make godot-lint`, `make godot-test`)
+└── tests/            unit/, scene/, contract/, integration/, fixtures/ (JSON response mẫu sinh bởi tools/gen_fixtures.mjs)
 ```
 
 Quy tắc đặt tên: file/thư mục `snake_case`, scene `PascalCase.tscn`, class_name `PascalCase`, signal `snake_case` ở thì quá khứ (`quest_progress_updated`), hằng `UPPER_SNAKE`.

@@ -1,0 +1,80 @@
+; EduWorld game client (F060). Godot version is pinned in .godot-version (minor) and in config/features.
+; Autoload order follows GODOT_ARCHITECTURE §4 (AuthService/ApiClient: F061, RealtimeClient: F092,
+; ContentCache/QualityManager: F062 insert themselves at their numbered position).
+
+config_version=5
+
+[application]
+
+config/name="EduWorld"
+config/description="EduWorld game client"
+run/main_scene="res://scenes/bootstrap/Boot.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+
+[audio]
+
+buses/default_bus_layout="res://resources/audio/bus_layout.tres"
+
+[autoload]
+
+Config="*res://scripts/core/config.gd"
+Log="*res://scripts/core/logger.gd"
+EventBus="*res://scripts/core/event_bus.gd"
+AppState="*res://scripts/core/app_state.gd"
+SceneRouter="*res://scripts/core/scene_router.gd"
+AudioDirector="*res://scripts/core/audio_director.gd"
+Settings="*res://scripts/core/settings.gd"
+
+[debug]
+
+gdscript/warnings/exclude_addons=true
+gdscript/warnings/untyped_declaration=2
+gdscript/warnings/unsafe_property_access=1
+gdscript/warnings/unsafe_method_access=1
+gdscript/warnings/unsafe_cast=1
+gdscript/warnings/unsafe_call_argument=1
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/eduworld_platform/plugin.cfg")
+
+[eduworld]
+
+config/env="local"
+config/env.eduworld_dev="dev"
+config/env.eduworld_staging="staging"
+config/env.eduworld_production="production"
+log/ring_buffer_size=500
+i18n/supported_locales=PackedStringArray("vi-VN", "en-US")
+i18n/default_locale="vi-VN"
+i18n/pseudo_locale="xx-PS"
+i18n/pseudo_locale_path="res://locale/xx_PS.po"
+ui/pre_bootstrap_density="g1_3"
+device/config_path="user://device.cfg"
+device/shared_device_default/windows=true
+device/shared_device_default/android=false
+device/shared_device_default/ios=false
+device/shared_device_default/web=true
+device/shared_device_default/other=true
+
+[gui]
+
+theme/custom="res://resources/ui/theme/eduworld_theme_g1_3.tres"
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://locale/vi.po", "res://locale/en.po")
+locale/fallback="vi"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.web="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

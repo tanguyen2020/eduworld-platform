@@ -1,0 +1,162 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/debug/ui_gallery.gd" id="1_gallery"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/Button.tscn" id="2_button"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/Card.tscn" id="3_card"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/Dialog.tscn" id="4_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/Toast.tscn" id="5_toast"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/ProgressBar.tscn" id="6_progress"]
+
+[node name="UiGallery" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gallery")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.gallery.title"
+autowrap_mode = 3
+
+[node name="Densities" type="HFlowContainer" parent="Scroll/Content"]
+layout_mode = 2
+
+[node name="DensityG13" type="Button" parent="Scroll/Content/Densities"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.density.g1_3"
+
+[node name="DensityG45" type="Button" parent="Scroll/Content/Densities"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.density.g4_5"
+
+[node name="DensityG67" type="Button" parent="Scroll/Content/Densities"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.density.g6_7"
+
+[node name="DensityG89" type="Button" parent="Scroll/Content/Densities"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.density.g8_9"
+
+[node name="Locales" type="HFlowContainer" parent="Scroll/Content"]
+layout_mode = 2
+
+[node name="LocaleVi" type="Button" parent="Scroll/Content/Locales"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.locale.vi"
+
+[node name="LocaleEn" type="Button" parent="Scroll/Content/Locales"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.locale.en"
+
+[node name="LocalePseudo" type="Button" parent="Scroll/Content/Locales"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.locale.pseudo"
+
+[node name="HighContrast" type="CheckButton" parent="Scroll/Content/Locales"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.gallery.high_contrast"
+
+[node name="Buttons" type="HBoxContainer" parent="Scroll/Content"]
+layout_mode = 2
+
+[node name="Primary" parent="Scroll/Content/Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+text = "ui.gallery.button.primary"
+
+[node name="Secondary" parent="Scroll/Content/Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.gallery.button.secondary"
+
+[node name="Hint" parent="Scroll/Content/Buttons" instance=ExtResource("2_button")]
+layout_mode = 2
+theme_type_variation = &"HintButton"
+text = "ui.gallery.button.hint"
+
+[node name="Card" parent="Scroll/Content" instance=ExtResource("3_card")]
+layout_mode = 2
+title_key = "ui.gallery.card.title"
+body_key = "ui.gallery.card.body"
+
+[node name="Dialog" parent="Scroll/Content" instance=ExtResource("4_dialog")]
+layout_mode = 2
+title_key = "ui.gallery.dialog.title"
+body_key = "ui.gallery.dialog.body"
+confirm_key = "ui.gallery.dialog.confirm"
+cancel_key = "ui.gallery.dialog.cancel"
+
+[node name="Toast" parent="Scroll/Content" instance=ExtResource("5_toast")]
+layout_mode = 2
+body_key = "ui.gallery.toast.message"
+
+[node name="Progress" parent="Scroll/Content" instance=ExtResource("6_progress")]
+layout_mode = 2
+title_key = "ui.gallery.progress.label"
+
+[node name="Heading" type="Label" parent="Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.gallery.heading"
+autowrap_mode = 3
+
+[node name="Muted" type="Label" parent="Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.gallery.muted"
+autowrap_mode = 3
+
+[node name="Input" type="LineEdit" parent="Scroll/Content"]
+layout_mode = 2
+placeholder_text = "ui.gallery.input.placeholder"
+
+[node name="SampleVietnamese" type="Label" parent="Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.gallery.sample_vietnamese"
+autowrap_mode = 3
+
+[node name="FormatSample" type="Label" parent="Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
