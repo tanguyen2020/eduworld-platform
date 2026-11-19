@@ -41,3 +41,56 @@ make migrate-lint MOD=learning
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail) theo mã F020-AC-*, trace_id của bước 7 và 10, bản ghi audit tương ứng, output `make migrate-lint` (RLS + REVOKE).
+
+## 5. Bằng chứng (2026-11-19, local, T041)
+
+Chạy trong worktree `f020-learning` (Windows, Docker Desktop, `GOMAXPROCS=2`), lệnh tương đương target `make` (máy không có `make`). Bước tay 1–13 ở §2 cần dữ liệu seed identity, loại nội dung thật (F021/F022) và route portal (F045) cùng composition root (Câu hỏi mở F020-3); trước đó chúng được kiểm bằng test tự động dưới đây (fixture chỉ trong `tests/`).
+
+| Tiêu chí | Test (file) | Kết quả |
+|---|---|---|
+| F020-AC-01 | `TestProjectionTenantSourceVersion` (`tests/integration/projection_tenant_test.go`; lag < 5 s — SC-002) | PASS |
+| F020-AC-02 | `TestProjectionEntities` (`projection_entities_test.go`) | PASS |
+| F020-AC-03 | `TestProjectionRedeliveryProcessedOnce` (`projection_dedupe_test.go`) | PASS |
+| F020-AC-04 | `TestProjectionTenantMismatchDeadLettered` (`projection_dedupe_test.go`, gồm edge case event đến trước `tenant.created`) | PASS |
+| F020-AC-05 | `TestOnlyProjectionConsumerWritesRef` (`tests/unit/arch_ref_write_test.go`) | PASS |
+| F020-AC-06 | `TestContentAndResourceTypes` (`domain/contentmodel/content_meta_test.go`), `TestApplyTenantAssignmentsInvalid` (`quest` → 422) | PASS |
+| F020-AC-07 | `TestContentMetaValidate` | PASS |
+| F020-AC-08 | `TestOwnerScopeTenantInvariant`, `TestOwnerCheckAndPublishedImmutability` (CHECK DB) | PASS |
+| F020-AC-09 | `TestHybridReadScope` (`hybrid_scope_test.go`) | PASS |
+| F020-AC-10 | `TestHybridMissingScopeAndRLS` | PASS |
+| F020-AC-11 | `TestScopeOfContentLists` (`scope_principal_test.go`, chuỗi `pkg/httpx`), `TestForRead` | PASS |
+| F020-AC-12 | `TestForWrite` (`application/scope`), `TestPlatformScopeWrites` | PASS |
+| F020-AC-13 | `TestScopeOfContentLists`, `TestForRead` | PASS |
+| F020-AC-14 | `TestStringsAreBounded` (`maxlen_test.go`), `TestRevokeTenantAssignments` (`reason` 1001 ký tự → 422) | PASS |
+| F020-AC-15 | `TestApplyTenantAssignments` (`assignment_apply_test.go`) | PASS |
+| F020-AC-16 | `TestApplyTenantAssignmentsInvalid` | PASS |
+| F020-AC-17 | `TestRevokeTenantAssignments` (`assignment_revoke_test.go`) | PASS |
+| F020-AC-18 | `TestAssignedContentReadOnly` (`assignment_readonly_test.go`), `TestSoftDeleteContent` | PASS |
+| F020-AC-19 | `TestPlatformOpsOnlyForIdentity`, `TestPlatformOpsAuthorizePrincipal` (`tests/contract/platform_ops_auth_test.go`) — cưỡng chế theo operation lúc chạy (`CALLER_NOT_ALLOWED`); `arch-check` theo package (Câu hỏi mở F020-2) | PASS |
+| F020-AC-20 | `TestApplyTenantAssignments`, `TestRevokeTenantAssignments` (audit actor = Principal gốc, cache Valkey) | PASS |
+| F020-AC-21 | `TestSoftDeleteContent` (`soft_delete_test.go`) | PASS |
+| F020-AC-22 | `TestHardDeleteImpossible` | PASS |
+| F020-AC-23 | `TestSoftDeleteContent`, `TestTrashListAndRestore` | PASS |
+| F020-AC-24 | `TestTrashListAndRestore` (`trash_test.go`) | PASS |
+| F020-AC-25 | `TestTrashListAndRestore` | PASS |
+| F020-AC-26 | `TestTrashListAndRestore` | PASS |
+| F020-AC-27 | `TestCloneStep` (`clone_step_test.go`) | PASS |
+| F020-AC-28 | `TestCloneStep` | PASS |
+| F020-AC-29 | `TestCloneStep` | PASS |
+| F020-AC-30 | `TestCloneStep` | PASS |
+| F020-AC-31 | `TestRLSAndSoftDelete` (`rls_softdelete_test.go`) | PASS |
+| F020-AC-32 | `TestPlatformScopeWrites` (`platform_scope_write_test.go`) | PASS |
+
+Lệnh (trong `src/backend`):
+
+```bash
+GOMAXPROCS=2 go run ./tools/facadegen --check --oapi=oapi-codegen && GOMAXPROCS=2 go run ./tools/allowedcallers --check   # gen-check
+gofmt -l modules/learning pkg; GOMAXPROCS=2 go vet -p 2 -tags integration ./modules/learning/...
+golangci-lint run --allow-parallel-runners --concurrency 2 ./modules/learning/...            # 0 issues
+golangci-lint run --allow-parallel-runners --concurrency 2 --config .golangci.arch.yml ./modules/learning/...   # 0 issues
+GOMAXPROCS=2 go run ./tools/lint/ewlint ./modules/learning/... && go run ./tools/tenancyguard && go run ./tools/entlint && go run ./tools/archgen --check
+GOMAXPROCS=2 go test -p 2 ./modules/learning/...                                               # unit + contract
+TESTCONTAINERS_RYUK_DISABLED=true GOMAXPROCS=2 go test -p 1 -tags integration -timeout 30m ./modules/learning/tests/integration/
+```
+
+Kết quả lần chạy cuối (2026-11-19): integration `modules/learning/tests/integration` **19/19 PASS** (176,9 s, một PostgreSQL 17 dùng chung cho package, NATS/Valkey testcontainers); unit + contract `modules/learning/...` 6 package `ok` (contentmodel, resourceassignment, scope, ent golden, contract, unit); golangci-lint 0 issues (thường và `.golangci.arch.yml`); `ewlint`, `tenancyguard`, `entlint` 0 vi phạm; `archgen --check` 0 violations; `facadegen --check`, `allowedcallers --check` xanh; specs: `check-maxlength` 0 vi phạm, `check-enums` 0 lỗi, `check-features` 0 lỗi, `check-cross-features` 0 lỗi, `validate-schemas` 0 lỗi, `check-links` 0 hỏng.

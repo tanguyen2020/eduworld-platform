@@ -216,7 +216,8 @@ Tên bảng/cột theo [SIS_INTEGRATION §6.1](../09-identity/SIS_INTEGRATION.md
 | `content_releases` | lịch sử con trỏ: `action` publish/rollback/unpublish, `from/to_version_id`, `reason`, `released_by` | TA\* (append-only, `tenant_id` NULL = platform); DDL §3.13 |
 | `learning.lesson_sessions` | `lesson_session_id`, `tenant_id`, `student_id`, `lesson_version_id` (ghim), `status`, `started_at`, `ended_at` | ghim version bài học (ADR-0043) |
 | `review_tasks` | `content_type`, `content_version_id`, `assignee_id`, `status`, `comments jsonb` | duyệt nội dung (workflow biên tập), không phải chấm bài |
-| `content_transitions` | `content_type`, `content_version_id`, `from_status`, `to_status`, `actor_id`, `at`, `note` | TA\* (append-only, audit trail CMS) |
+| `content_transitions` | `transition_id`, `tenant_id` (NULL = platform), `content_type varchar(64)` (`LearningContentType` + `curriculum`), `content_version_id`, `from_status` (NULL khi tạo), `to_status varchar(64)`, `actor_id`, `at`, `note varchar(2000)` | TA\* (append-only, audit trail CMS; mixin `TenantOptionalAppendOnly`, CHECK trạng thái, idx `content_version_id`; tạo ở F020) |
+| (mixin version, F020) | mọi bảng version nội dung dùng `ContentVersionMixin` của module learning: `version_no`, `status`, `author_id`, `reviewer_id`, `published_at`, `content_language varchar(64)` (`vi`/`en`, mặc định `vi`, ADR-0056), `curriculum_version_id` (NOT NULL trừ media), `change_note`, `publish_at`, `snapshot_key`, `snapshot_sha256`, `based_on_version_id`, `cloned_*`; item dùng `ContentItemMixin` (`current_version_id`, `latest_version_no`, `cloned_*`) | Bảng version là H, hiển thị cho tenant theo assignment của **item** (`entx.HybridContent.ResourceIDColumn`); trigger `content.forbid_published_update()` (tạo ở F020) gắn cho từng bảng version ở F021/F022/F024 |
 
 `answer_key` **không bao giờ** được select bởi query phục vụ client học sinh: query delivery dùng view `content.question_delivery_v` loại bỏ cột này (ADR-0016).
 
@@ -552,6 +553,7 @@ Quy tắc projection:
 2. Projection không có `deleted_at` riêng: phản ánh trạng thái nguồn (gồm `deleted_at` nguồn nếu cần lọc).
 3. Có job **rebuild** projection qua facade của module nguồn (operation liệt kê theo trang trong spec internal, gọi trong tiến trình) khi tạo database mới hoặc phát hiện lệch [Proposed].
 4. Không ghi projection từ use case nghiệp vụ; sai lệch được sửa ở nguồn.
+5. Bảng `ref.*` viết tay, không dùng mixin `entx` (không có cột audit/soft-delete riêng, F020). Bảng có `tenant_id` bật RLS điều kiện tenant **không** `FORCE`, để hàm `ref.projection_tenant(table, id)` (`SECURITY DEFINER`, chủ sở hữu bảng) trả tenant sở hữu một dòng cho consumer kiểm event lệch tenant (F020-AC-04); role ứng dụng không phải chủ sở hữu nên vẫn chịu RLS. Ở `eduworld_learning`, consumer `learning.projection_identity` cũng nhận `school.updated` cho `ref.schools`; `ref.classes.academic_year_id` để NULL đến khi `class.synced` mang trường này [Proposed].
 
 ## 3. DDL mẫu (bảng then chốt)
 
@@ -590,7 +592,8 @@ CREATE TABLE infra.tenant_resource_assignments (
   assigned_by   uuid NOT NULL,
   assigned_at   timestamptz NOT NULL DEFAULT now(),
   deleted_at    timestamptz,
-  deleted_by    uuid
+  deleted_by    uuid,
+  delete_reason varchar(64)              -- F020: cột soft-delete chuẩn; module learning dùng mixin entx.Base (thêm created_*, updated_*, version)
 );
 CREATE UNIQUE INDEX tra_active_uq ON infra.tenant_resource_assignments (resource_type, resource_id, tenant_id)
   WHERE deleted_at IS NULL;
@@ -848,7 +851,7 @@ CREATE TABLE content.question_versions (
   question_id     uuid NOT NULL REFERENCES content.questions(question_id),
   tenant_id       uuid,                    -- NULL = nội dung platform (chỉ hiện với tenant được gán, ADR-0029)
   owner_scope     varchar(64) NOT NULL CHECK (owner_scope IN ('platform','tenant')),
-  version         int  NOT NULL,
+  version_no      int  NOT NULL,           -- số version (F020: `version` là cột optimistic concurrency của mixin entx, ADR-0039)
   status          varchar(64) NOT NULL CHECK (status IN ('draft','in_review','approved','published','archived','rejected')),
   type            varchar(64) NOT NULL CHECK (type IN ('single_choice','multiple_choice','true_false','fill_in_blank',
                      'short_answer','numeric','matching','ordering','drag_drop','image_based','interactive')),
@@ -873,7 +876,7 @@ CREATE TABLE content.question_versions (
   deleted_by      uuid,
   cloned_from_id  uuid, cloned_from_tenant_id uuid, cloned_at timestamptz, cloned_by uuid,
   CHECK ((owner_scope = 'platform') = (tenant_id IS NULL)),
-  UNIQUE (question_id, version)
+  UNIQUE (question_id, version_no)
 );
 CREATE INDEX question_versions_delivery_idx
   ON content.question_versions (tenant_id, subject_id, topic_id, difficulty)
