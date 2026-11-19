@@ -44,3 +44,15 @@ func QuestionPoolSubjects() []string {
 	}
 	return out
 }
+
+// MediaWorkerName is the durable consumer of the media pipeline (F027 T019, profile worker-events): it processes
+// media.uploaded of module learning; its dead letters go to DLQ_LEARNING (ew.dlq.learning.media_worker).
+const MediaWorkerName = "learning.media_worker"
+
+// MediaWorkerStream is the stream of the learning events (EVT_LEARNING).
+var MediaWorkerStream = natsx.EventStream("learning")
+
+// MediaWorkerSubjects are the filter subjects of the media worker.
+func MediaWorkerSubjects() []string {
+	return []string{natsx.EventSubject("learning", "media.uploaded")}
+}

@@ -1258,6 +1258,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/preview/sessions/{preview_session_id}/responses:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: submitPreviewResponse
+      x-portal-action: action.content_studio.reviews.preview
+      summary: Thử làm trong phiên preview (F027) — chấm server-side bằng scorer của Question Bank, trả đúng/sai, giải thích, phản hồi theo phương án và gợi ý theo cấp; không tạo attempt/learning event/XP; phiên hết hạn → 404
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: preview_session_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewResponseRequest'
+      responses:
+        '200':
+          description: Kết quả chấm thử (không lưu)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponseResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /cms/learning/imports:
     post:
       x-service: learning
@@ -3536,6 +3572,38 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /cms/media/{asset_id}:complete-upload:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: completeMediaUpload
+      x-portal-action: action.content_studio.media.upload
+      summary: Báo đã PUT xong file vào ew-media-quarantine (F027, ADR-0044) — server kiểm object, kích thước, sha256 rồi chuyển processing và ghi outbox media.uploaded; không khớp → rejected (type_mismatch/too_large); gọi lại trả trạng thái hiện tại, không phát lại event
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/AssetIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Trạng thái asset sau khi xác nhận (processing, hoặc rejected khi object không khớp)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAsset'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /lms/assignments:
     get:
       x-service: learning
@@ -8550,19 +8618,22 @@ components:
         math_assets:
           type: array
           maxItems: 50
-          description: Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay)
+          description: Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay). Portal gửi svg (MathJax 4) — server kiểm LaTeX, sanitize, lưu math/<sha256>.svg và trả svg_asset; svg_asset không kèm svg phải là SVG đã lưu; thiếu cả hai → 422 MATH_RENDER_FAILED (F027)
           items:
             type: object
             additionalProperties: false
             required:
               - latex
-              - svg_asset
               - speech_text
             properties:
               latex:
                 type: string
                 minLength: 1
                 maxLength: 2000
+              svg:
+                type: string
+                maxLength: 262144
+                description: SVG ≤ 256 KB (math_svg_max), chỉ gửi lên
               svg_asset:
                 type: string
                 maxLength: 128
@@ -8830,6 +8901,90 @@ components:
             $ref: '#/components/schemas/QuestionRender'
         expires_at:
           $ref: '#/components/schemas/Timestamp'
+    PreviewResponseRequest:
+      type: object
+      required:
+        - position
+        - response
+      additionalProperties: false
+      properties:
+        position:
+          type: integer
+          minimum: 1
+          maximum: 200
+        response:
+          $ref: '#/components/schemas/QuestionResponse'
+    PreviewResponseResult:
+      type: object
+      description: Kết quả chấm thử trong preview (F027-AC-18) — chỉ cho người soạn/duyệt, không lưu, không phát event
+      required:
+        - position
+        - question_version_id
+        - is_correct
+        - score
+        - max_score
+      properties:
+        position:
+          type: integer
+          minimum: 1
+        question_version_id:
+          $ref: '#/components/schemas/Uuid'
+        is_correct:
+          type: boolean
+        score:
+          type: number
+        max_score:
+          type: number
+        parts:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required:
+              - id
+              - correct
+            properties:
+              id:
+                type: string
+                maxLength: 64
+              correct:
+                type: boolean
+        explanation:
+          type: object
+          additionalProperties: true
+          description: Rich content (CONTENT_MODEL §9), công thức dạng khối math
+        feedback:
+          type: array
+          maxItems: 20
+          description: Phản hồi theo phương án đã chọn (options[].feedback)
+          items:
+            type: object
+            required:
+              - option_id
+            properties:
+              option_id:
+                type: string
+                maxLength: 64
+              feedback:
+                type: object
+                additionalProperties: true
+        hint_levels:
+          type: array
+          maxItems: 5
+          description: Gợi ý theo cấp (cấp 1 trước)
+          items:
+            type: object
+            required:
+              - level
+              - hint
+            properties:
+              level:
+                type: integer
+                minimum: 1
+                maximum: 5
+              hint:
+                type: object
+                additionalProperties: true
     ContentImportRequest:
       type: object
       required:
@@ -9992,6 +10147,7 @@ components:
           default: false
     MediaPresignRequest:
       type: object
+      description: alt_text bắt buộc khi kind = image (422 VALIDATION_FAILED); is_exam_material buộc lưu ở ew-media-private (F027)
       required:
         - kind
         - filename
@@ -10020,10 +10176,15 @@ components:
           pattern: ^[0-9a-f]{64}$
         license:
           type: string
-          maxLength: 64
+          minLength: 1
+          maxLength: 255
         alt_text:
           type: string
           maxLength: 500
+        is_exam_material:
+          type: boolean
+          default: false
+          description: Media của đề kiểm tra — luôn ở ew-media-private, phát bằng signed URL
         owner_scope:
           type: string
           enum:
@@ -10042,11 +10203,10 @@ components:
         - document
     MediaPresignResponse:
       type: object
+      description: 'Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01)'
       required:
         - asset_id
         - status
-        - upload_url
-        - expires_at
       properties:
         asset_id:
           $ref: '#/components/schemas/Uuid'
@@ -10120,7 +10280,14 @@ components:
           maxLength: 500
         license:
           type: string
-          maxLength: 64
+          maxLength: 255
+        bucket:
+          type: string
+          enum:
+            - ew-media-public
+            - ew-media-private
+        is_exam_material:
+          type: boolean
         variants:
           type: array
           maxItems: 32
@@ -10137,9 +10304,18 @@ components:
                 type: string
                 format: uri
                 maxLength: 2048
+                description: URL CDN; signed URL hạn media_signed_url_ttl khi bucket = ew-media-private
+              key:
+                type: string
+                maxLength: 512
+              mime_type:
+                type: string
+                maxLength: 127
               size_bytes:
                 type: integer
                 format: int64
+              expires_at:
+                $ref: '#/components/schemas/Timestamp'
         used_in:
           type: array
           maxItems: 500

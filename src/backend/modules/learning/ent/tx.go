@@ -28,6 +28,12 @@ type Tx struct {
 	LearningObjective *LearningObjectiveClient
 	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
 	LoVersionMapping *LoVersionMappingClient
+	// MathSvg is the client for interacting with the MathSvg builders.
+	MathSvg *MathSvgClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUsage is the client for interacting with the MediaUsage builders.
+	MediaUsage *MediaUsageClient
 	// Question is the client for interacting with the Question builders.
 	Question *QuestionClient
 	// QuestionVersion is the client for interacting with the QuestionVersion builders.
@@ -189,6 +195,9 @@ func (tx *Tx) init() {
 	tx.ImportJob = NewImportJobClient(tx.config)
 	tx.LearningObjective = NewLearningObjectiveClient(tx.config)
 	tx.LoVersionMapping = NewLoVersionMappingClient(tx.config)
+	tx.MathSvg = NewMathSvgClient(tx.config)
+	tx.MediaAsset = NewMediaAssetClient(tx.config)
+	tx.MediaUsage = NewMediaUsageClient(tx.config)
 	tx.Question = NewQuestionClient(tx.config)
 	tx.QuestionVersion = NewQuestionVersionClient(tx.config)
 	tx.QuestionVersionObjective = NewQuestionVersionObjectiveClient(tx.config)

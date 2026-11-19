@@ -876,7 +876,7 @@ workspaces:
             label_key: portal.action.content_studio.media.upload
             title: Tải media lên
             required_permissions: [media.upload]
-            operation_ids: [presignMediaUpload]
+            operation_ids: [presignMediaUpload, completeMediaUpload]
             can_disable: true
       - key: menu.content_studio.learning_paths
         label_key: portal.menu.content_studio.learning_paths
@@ -931,7 +931,7 @@ workspaces:
             label_key: portal.action.content_studio.reviews.preview
             title: Preview nội dung
             required_permissions: [learning_content.read]
-            operation_ids: [createLearningPreviewSession]
+            operation_ids: [createLearningPreviewSession, submitPreviewResponse]
             can_disable: true
       - key: menu.content_studio.translations
         label_key: portal.menu.content_studio.translations

@@ -14,6 +14,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
@@ -448,6 +451,195 @@ func init() {
 	loversionmappingDescID := loversionmappingMixinFields0[0].Descriptor()
 	// loversionmapping.DefaultID holds the default value on creation for the id field.
 	loversionmapping.DefaultID = loversionmappingDescID.Default.(func() uuid.UUID)
+	mathsvgMixin := schema.MathSvg{}.Mixin()
+	mathsvgMixinHooks0 := mathsvgMixin[0].Hooks()
+	mathsvg.Hooks[0] = mathsvgMixinHooks0[0]
+	mathsvgMixinInters0 := mathsvgMixin[0].Interceptors()
+	mathsvg.Interceptors[0] = mathsvgMixinInters0[0]
+	mathsvgMixinFields0 := mathsvgMixin[0].Fields()
+	_ = mathsvgMixinFields0
+	mathsvgFields := schema.MathSvg{}.Fields()
+	_ = mathsvgFields
+	// mathsvgDescCreatedAt is the schema descriptor for created_at field.
+	mathsvgDescCreatedAt := mathsvgMixinFields0[1].Descriptor()
+	// mathsvg.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mathsvg.DefaultCreatedAt = mathsvgDescCreatedAt.Default.(func() time.Time)
+	// mathsvgDescUpdatedAt is the schema descriptor for updated_at field.
+	mathsvgDescUpdatedAt := mathsvgMixinFields0[3].Descriptor()
+	// mathsvg.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	mathsvg.DefaultUpdatedAt = mathsvgDescUpdatedAt.Default.(func() time.Time)
+	// mathsvg.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	mathsvg.UpdateDefaultUpdatedAt = mathsvgDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// mathsvgDescDeleteReason is the schema descriptor for delete_reason field.
+	mathsvgDescDeleteReason := mathsvgMixinFields0[7].Descriptor()
+	// mathsvg.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	mathsvg.DeleteReasonValidator = mathsvgDescDeleteReason.Validators[0].(func(string) error)
+	// mathsvgDescVersion is the schema descriptor for version field.
+	mathsvgDescVersion := mathsvgMixinFields0[8].Descriptor()
+	// mathsvg.DefaultVersion holds the default value on creation for the version field.
+	mathsvg.DefaultVersion = mathsvgDescVersion.Default.(int64)
+	// mathsvgDescStorageKey is the schema descriptor for storage_key field.
+	mathsvgDescStorageKey := mathsvgFields[0].Descriptor()
+	// mathsvg.StorageKeyValidator is a validator for the "storage_key" field. It is called by the builders before save.
+	mathsvg.StorageKeyValidator = mathsvgDescStorageKey.Validators[0].(func(string) error)
+	// mathsvgDescLatex is the schema descriptor for latex field.
+	mathsvgDescLatex := mathsvgFields[1].Descriptor()
+	// mathsvg.LatexValidator is a validator for the "latex" field. It is called by the builders before save.
+	mathsvg.LatexValidator = mathsvgDescLatex.Validators[0].(func(string) error)
+	// mathsvgDescSpeechText is the schema descriptor for speech_text field.
+	mathsvgDescSpeechText := mathsvgFields[2].Descriptor()
+	// mathsvg.SpeechTextValidator is a validator for the "speech_text" field. It is called by the builders before save.
+	mathsvg.SpeechTextValidator = mathsvgDescSpeechText.Validators[0].(func(string) error)
+	// mathsvgDescID is the schema descriptor for id field.
+	mathsvgDescID := mathsvgMixinFields0[0].Descriptor()
+	// mathsvg.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	mathsvg.IDValidator = func() func(string) error {
+		validators := mathsvgDescID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(id string) error {
+			for _, fn := range fns {
+				if err := fn(id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	mediaassetMixin := schema.MediaAsset{}.Mixin()
+	mediaassetMixinHooks0 := mediaassetMixin[0].Hooks()
+	mediaasset.Hooks[0] = mediaassetMixinHooks0[0]
+	mediaassetMixinInters0 := mediaassetMixin[0].Interceptors()
+	mediaasset.Interceptors[0] = mediaassetMixinInters0[0]
+	mediaassetMixinFields0 := mediaassetMixin[0].Fields()
+	_ = mediaassetMixinFields0
+	mediaassetFields := schema.MediaAsset{}.Fields()
+	_ = mediaassetFields
+	// mediaassetDescCreatedAt is the schema descriptor for created_at field.
+	mediaassetDescCreatedAt := mediaassetMixinFields0[2].Descriptor()
+	// mediaasset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mediaasset.DefaultCreatedAt = mediaassetDescCreatedAt.Default.(func() time.Time)
+	// mediaassetDescUpdatedAt is the schema descriptor for updated_at field.
+	mediaassetDescUpdatedAt := mediaassetMixinFields0[4].Descriptor()
+	// mediaasset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	mediaasset.DefaultUpdatedAt = mediaassetDescUpdatedAt.Default.(func() time.Time)
+	// mediaasset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	mediaasset.UpdateDefaultUpdatedAt = mediaassetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// mediaassetDescDeleteReason is the schema descriptor for delete_reason field.
+	mediaassetDescDeleteReason := mediaassetMixinFields0[8].Descriptor()
+	// mediaasset.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	mediaasset.DeleteReasonValidator = mediaassetDescDeleteReason.Validators[0].(func(string) error)
+	// mediaassetDescVersion is the schema descriptor for version field.
+	mediaassetDescVersion := mediaassetMixinFields0[9].Descriptor()
+	// mediaasset.DefaultVersion holds the default value on creation for the version field.
+	mediaasset.DefaultVersion = mediaassetDescVersion.Default.(int64)
+	// mediaassetDescOwnerScope is the schema descriptor for owner_scope field.
+	mediaassetDescOwnerScope := mediaassetMixinFields0[10].Descriptor()
+	// mediaasset.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	mediaasset.DefaultOwnerScope = mediaassetDescOwnerScope.Default.(string)
+	// mediaasset.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	mediaasset.OwnerScopeValidator = mediaassetDescOwnerScope.Validators[0].(func(string) error)
+	// mediaassetDescKind is the schema descriptor for kind field.
+	mediaassetDescKind := mediaassetFields[0].Descriptor()
+	// mediaasset.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	mediaasset.KindValidator = mediaassetDescKind.Validators[0].(func(string) error)
+	// mediaassetDescOriginalFilename is the schema descriptor for original_filename field.
+	mediaassetDescOriginalFilename := mediaassetFields[1].Descriptor()
+	// mediaasset.OriginalFilenameValidator is a validator for the "original_filename" field. It is called by the builders before save.
+	mediaasset.OriginalFilenameValidator = mediaassetDescOriginalFilename.Validators[0].(func(string) error)
+	// mediaassetDescMimeType is the schema descriptor for mime_type field.
+	mediaassetDescMimeType := mediaassetFields[2].Descriptor()
+	// mediaasset.MimeTypeValidator is a validator for the "mime_type" field. It is called by the builders before save.
+	mediaasset.MimeTypeValidator = mediaassetDescMimeType.Validators[0].(func(string) error)
+	// mediaassetDescSha256 is the schema descriptor for sha256 field.
+	mediaassetDescSha256 := mediaassetFields[7].Descriptor()
+	// mediaasset.Sha256Validator is a validator for the "sha256" field. It is called by the builders before save.
+	mediaasset.Sha256Validator = mediaassetDescSha256.Validators[0].(func(string) error)
+	// mediaassetDescBucket is the schema descriptor for bucket field.
+	mediaassetDescBucket := mediaassetFields[8].Descriptor()
+	// mediaasset.BucketValidator is a validator for the "bucket" field. It is called by the builders before save.
+	mediaasset.BucketValidator = mediaassetDescBucket.Validators[0].(func(string) error)
+	// mediaassetDescVariants is the schema descriptor for variants field.
+	mediaassetDescVariants := mediaassetFields[9].Descriptor()
+	// mediaasset.DefaultVariants holds the default value on creation for the variants field.
+	mediaasset.DefaultVariants = mediaassetDescVariants.Default.(map[string]interface{})
+	// mediaassetDescAltText is the schema descriptor for alt_text field.
+	mediaassetDescAltText := mediaassetFields[10].Descriptor()
+	// mediaasset.AltTextValidator is a validator for the "alt_text" field. It is called by the builders before save.
+	mediaasset.AltTextValidator = mediaassetDescAltText.Validators[0].(func(string) error)
+	// mediaassetDescLicense is the schema descriptor for license field.
+	mediaassetDescLicense := mediaassetFields[11].Descriptor()
+	// mediaasset.LicenseValidator is a validator for the "license" field. It is called by the builders before save.
+	mediaasset.LicenseValidator = mediaassetDescLicense.Validators[0].(func(string) error)
+	// mediaassetDescStatus is the schema descriptor for status field.
+	mediaassetDescStatus := mediaassetFields[12].Descriptor()
+	// mediaasset.DefaultStatus holds the default value on creation for the status field.
+	mediaasset.DefaultStatus = mediaassetDescStatus.Default.(string)
+	// mediaasset.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	mediaasset.StatusValidator = mediaassetDescStatus.Validators[0].(func(string) error)
+	// mediaassetDescRejectReason is the schema descriptor for reject_reason field.
+	mediaassetDescRejectReason := mediaassetFields[13].Descriptor()
+	// mediaasset.RejectReasonValidator is a validator for the "reject_reason" field. It is called by the builders before save.
+	mediaasset.RejectReasonValidator = mediaassetDescRejectReason.Validators[0].(func(string) error)
+	// mediaassetDescQuarantineKey is the schema descriptor for quarantine_key field.
+	mediaassetDescQuarantineKey := mediaassetFields[14].Descriptor()
+	// mediaasset.QuarantineKeyValidator is a validator for the "quarantine_key" field. It is called by the builders before save.
+	mediaasset.QuarantineKeyValidator = mediaassetDescQuarantineKey.Validators[0].(func(string) error)
+	// mediaassetDescIsExamMaterial is the schema descriptor for is_exam_material field.
+	mediaassetDescIsExamMaterial := mediaassetFields[15].Descriptor()
+	// mediaasset.DefaultIsExamMaterial holds the default value on creation for the is_exam_material field.
+	mediaasset.DefaultIsExamMaterial = mediaassetDescIsExamMaterial.Default.(bool)
+	// mediaassetDescID is the schema descriptor for id field.
+	mediaassetDescID := mediaassetMixinFields0[0].Descriptor()
+	// mediaasset.DefaultID holds the default value on creation for the id field.
+	mediaasset.DefaultID = mediaassetDescID.Default.(func() uuid.UUID)
+	mediausageMixin := schema.MediaUsage{}.Mixin()
+	mediausageMixinHooks0 := mediausageMixin[0].Hooks()
+	mediausage.Hooks[0] = mediausageMixinHooks0[0]
+	mediausageMixinInters0 := mediausageMixin[0].Interceptors()
+	mediausage.Interceptors[0] = mediausageMixinInters0[0]
+	mediausageMixinFields0 := mediausageMixin[0].Fields()
+	_ = mediausageMixinFields0
+	mediausageFields := schema.MediaUsage{}.Fields()
+	_ = mediausageFields
+	// mediausageDescCreatedAt is the schema descriptor for created_at field.
+	mediausageDescCreatedAt := mediausageMixinFields0[2].Descriptor()
+	// mediausage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mediausage.DefaultCreatedAt = mediausageDescCreatedAt.Default.(func() time.Time)
+	// mediausageDescUpdatedAt is the schema descriptor for updated_at field.
+	mediausageDescUpdatedAt := mediausageMixinFields0[4].Descriptor()
+	// mediausage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	mediausage.DefaultUpdatedAt = mediausageDescUpdatedAt.Default.(func() time.Time)
+	// mediausage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	mediausage.UpdateDefaultUpdatedAt = mediausageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// mediausageDescDeleteReason is the schema descriptor for delete_reason field.
+	mediausageDescDeleteReason := mediausageMixinFields0[8].Descriptor()
+	// mediausage.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	mediausage.DeleteReasonValidator = mediausageDescDeleteReason.Validators[0].(func(string) error)
+	// mediausageDescVersion is the schema descriptor for version field.
+	mediausageDescVersion := mediausageMixinFields0[9].Descriptor()
+	// mediausage.DefaultVersion holds the default value on creation for the version field.
+	mediausage.DefaultVersion = mediausageDescVersion.Default.(int64)
+	// mediausageDescOwnerScope is the schema descriptor for owner_scope field.
+	mediausageDescOwnerScope := mediausageMixinFields0[10].Descriptor()
+	// mediausage.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	mediausage.DefaultOwnerScope = mediausageDescOwnerScope.Default.(string)
+	// mediausage.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	mediausage.OwnerScopeValidator = mediausageDescOwnerScope.Validators[0].(func(string) error)
+	// mediausageDescItemType is the schema descriptor for item_type field.
+	mediausageDescItemType := mediausageFields[1].Descriptor()
+	// mediausage.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	mediausage.ItemTypeValidator = mediausageDescItemType.Validators[0].(func(string) error)
+	// mediausageDescVersionNo is the schema descriptor for version_no field.
+	mediausageDescVersionNo := mediausageFields[4].Descriptor()
+	// mediausage.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	mediausage.VersionNoValidator = mediausageDescVersionNo.Validators[0].(func(int) error)
+	// mediausageDescID is the schema descriptor for id field.
+	mediausageDescID := mediausageMixinFields0[0].Descriptor()
+	// mediausage.DefaultID holds the default value on creation for the id field.
+	mediausage.DefaultID = mediausageDescID.Default.(func() uuid.UUID)
 	questionMixin := schema.Question{}.Mixin()
 	questionMixinHooks0 := questionMixin[0].Hooks()
 	question.Hooks[0] = questionMixinHooks0[0]

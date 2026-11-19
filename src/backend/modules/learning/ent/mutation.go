@@ -21,6 +21,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/predicate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
@@ -52,6 +55,9 @@ const (
 	TypeImportJob                = "ImportJob"
 	TypeLearningObjective        = "LearningObjective"
 	TypeLoVersionMapping         = "LoVersionMapping"
+	TypeMathSvg                  = "MathSvg"
+	TypeMediaAsset               = "MediaAsset"
+	TypeMediaUsage               = "MediaUsage"
 	TypeQuestion                 = "Question"
 	TypeQuestionVersion          = "QuestionVersion"
 	TypeQuestionVersionObjective = "QuestionVersionObjective"
@@ -11738,6 +11744,4711 @@ func (m *LoVersionMappingMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *LoVersionMappingMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown LoVersionMapping edge %s", name)
+}
+
+// MathSvgMutation represents an operation that mutates the MathSvg nodes in the graph.
+type MathSvgMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *string
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	storage_key   *string
+	latex         *string
+	speech_text   *string
+	size_bytes    *int32
+	addsize_bytes *int32
+	sanitized_at  *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*MathSvg, error)
+	predicates    []predicate.MathSvg
+}
+
+var _ ent.Mutation = (*MathSvgMutation)(nil)
+
+// mathsvgOption allows management of the mutation configuration using functional options.
+type mathsvgOption func(*MathSvgMutation)
+
+// newMathSvgMutation creates new mutation for the MathSvg entity.
+func newMathSvgMutation(c config, op Op, opts ...mathsvgOption) *MathSvgMutation {
+	m := &MathSvgMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMathSvg,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMathSvgID sets the ID field of the mutation.
+func withMathSvgID(id string) mathsvgOption {
+	return func(m *MathSvgMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MathSvg
+		)
+		m.oldValue = func(ctx context.Context) (*MathSvg, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MathSvg.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMathSvg sets the old MathSvg of the mutation.
+func withMathSvg(node *MathSvg) mathsvgOption {
+	return func(m *MathSvgMutation) {
+		m.oldValue = func(context.Context) (*MathSvg, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MathSvgMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MathSvgMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MathSvg entities.
+func (m *MathSvgMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MathSvgMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MathSvgMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MathSvg.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MathSvgMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MathSvgMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MathSvgMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MathSvgMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MathSvgMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MathSvgMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[mathsvg.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MathSvgMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MathSvgMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, mathsvg.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MathSvgMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MathSvgMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MathSvgMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MathSvgMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MathSvgMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MathSvgMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[mathsvg.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MathSvgMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MathSvgMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, mathsvg.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MathSvgMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MathSvgMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MathSvgMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[mathsvg.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MathSvgMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MathSvgMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, mathsvg.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MathSvgMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MathSvgMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MathSvgMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[mathsvg.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MathSvgMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MathSvgMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, mathsvg.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MathSvgMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MathSvgMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MathSvgMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[mathsvg.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MathSvgMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MathSvgMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, mathsvg.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MathSvgMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MathSvgMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MathSvgMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MathSvgMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MathSvgMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetStorageKey sets the "storage_key" field.
+func (m *MathSvgMutation) SetStorageKey(s string) {
+	m.storage_key = &s
+}
+
+// StorageKey returns the value of the "storage_key" field in the mutation.
+func (m *MathSvgMutation) StorageKey() (r string, exists bool) {
+	v := m.storage_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStorageKey returns the old "storage_key" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldStorageKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStorageKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStorageKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStorageKey: %w", err)
+	}
+	return oldValue.StorageKey, nil
+}
+
+// ResetStorageKey resets all changes to the "storage_key" field.
+func (m *MathSvgMutation) ResetStorageKey() {
+	m.storage_key = nil
+}
+
+// SetLatex sets the "latex" field.
+func (m *MathSvgMutation) SetLatex(s string) {
+	m.latex = &s
+}
+
+// Latex returns the value of the "latex" field in the mutation.
+func (m *MathSvgMutation) Latex() (r string, exists bool) {
+	v := m.latex
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatex returns the old "latex" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldLatex(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatex is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatex requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatex: %w", err)
+	}
+	return oldValue.Latex, nil
+}
+
+// ResetLatex resets all changes to the "latex" field.
+func (m *MathSvgMutation) ResetLatex() {
+	m.latex = nil
+}
+
+// SetSpeechText sets the "speech_text" field.
+func (m *MathSvgMutation) SetSpeechText(s string) {
+	m.speech_text = &s
+}
+
+// SpeechText returns the value of the "speech_text" field in the mutation.
+func (m *MathSvgMutation) SpeechText() (r string, exists bool) {
+	v := m.speech_text
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpeechText returns the old "speech_text" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldSpeechText(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpeechText is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpeechText requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpeechText: %w", err)
+	}
+	return oldValue.SpeechText, nil
+}
+
+// ClearSpeechText clears the value of the "speech_text" field.
+func (m *MathSvgMutation) ClearSpeechText() {
+	m.speech_text = nil
+	m.clearedFields[mathsvg.FieldSpeechText] = struct{}{}
+}
+
+// SpeechTextCleared returns if the "speech_text" field was cleared in this mutation.
+func (m *MathSvgMutation) SpeechTextCleared() bool {
+	_, ok := m.clearedFields[mathsvg.FieldSpeechText]
+	return ok
+}
+
+// ResetSpeechText resets all changes to the "speech_text" field.
+func (m *MathSvgMutation) ResetSpeechText() {
+	m.speech_text = nil
+	delete(m.clearedFields, mathsvg.FieldSpeechText)
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *MathSvgMutation) SetSizeBytes(i int32) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *MathSvgMutation) SizeBytes() (r int32, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldSizeBytes(ctx context.Context) (v int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *MathSvgMutation) AddSizeBytes(i int32) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *MathSvgMutation) AddedSizeBytes() (r int32, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *MathSvgMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetSanitizedAt sets the "sanitized_at" field.
+func (m *MathSvgMutation) SetSanitizedAt(t time.Time) {
+	m.sanitized_at = &t
+}
+
+// SanitizedAt returns the value of the "sanitized_at" field in the mutation.
+func (m *MathSvgMutation) SanitizedAt() (r time.Time, exists bool) {
+	v := m.sanitized_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSanitizedAt returns the old "sanitized_at" field's value of the MathSvg entity.
+// If the MathSvg object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MathSvgMutation) OldSanitizedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSanitizedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSanitizedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSanitizedAt: %w", err)
+	}
+	return oldValue.SanitizedAt, nil
+}
+
+// ResetSanitizedAt resets all changes to the "sanitized_at" field.
+func (m *MathSvgMutation) ResetSanitizedAt() {
+	m.sanitized_at = nil
+}
+
+// Where appends a list predicates to the MathSvgMutation builder.
+func (m *MathSvgMutation) Where(ps ...predicate.MathSvg) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MathSvgMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MathSvgMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MathSvg, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MathSvgMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MathSvgMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MathSvg).
+func (m *MathSvgMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MathSvgMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.created_at != nil {
+		fields = append(fields, mathsvg.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, mathsvg.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, mathsvg.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, mathsvg.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, mathsvg.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, mathsvg.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, mathsvg.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, mathsvg.FieldVersion)
+	}
+	if m.storage_key != nil {
+		fields = append(fields, mathsvg.FieldStorageKey)
+	}
+	if m.latex != nil {
+		fields = append(fields, mathsvg.FieldLatex)
+	}
+	if m.speech_text != nil {
+		fields = append(fields, mathsvg.FieldSpeechText)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, mathsvg.FieldSizeBytes)
+	}
+	if m.sanitized_at != nil {
+		fields = append(fields, mathsvg.FieldSanitizedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MathSvgMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mathsvg.FieldCreatedAt:
+		return m.CreatedAt()
+	case mathsvg.FieldCreatedBy:
+		return m.CreatedBy()
+	case mathsvg.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case mathsvg.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case mathsvg.FieldDeletedAt:
+		return m.DeletedAt()
+	case mathsvg.FieldDeletedBy:
+		return m.DeletedBy()
+	case mathsvg.FieldDeleteReason:
+		return m.DeleteReason()
+	case mathsvg.FieldVersion:
+		return m.Version()
+	case mathsvg.FieldStorageKey:
+		return m.StorageKey()
+	case mathsvg.FieldLatex:
+		return m.Latex()
+	case mathsvg.FieldSpeechText:
+		return m.SpeechText()
+	case mathsvg.FieldSizeBytes:
+		return m.SizeBytes()
+	case mathsvg.FieldSanitizedAt:
+		return m.SanitizedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MathSvgMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mathsvg.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case mathsvg.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case mathsvg.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case mathsvg.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case mathsvg.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case mathsvg.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case mathsvg.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case mathsvg.FieldVersion:
+		return m.OldVersion(ctx)
+	case mathsvg.FieldStorageKey:
+		return m.OldStorageKey(ctx)
+	case mathsvg.FieldLatex:
+		return m.OldLatex(ctx)
+	case mathsvg.FieldSpeechText:
+		return m.OldSpeechText(ctx)
+	case mathsvg.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case mathsvg.FieldSanitizedAt:
+		return m.OldSanitizedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown MathSvg field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MathSvgMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mathsvg.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case mathsvg.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case mathsvg.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case mathsvg.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case mathsvg.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case mathsvg.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case mathsvg.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case mathsvg.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case mathsvg.FieldStorageKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStorageKey(v)
+		return nil
+	case mathsvg.FieldLatex:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatex(v)
+		return nil
+	case mathsvg.FieldSpeechText:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpeechText(v)
+		return nil
+	case mathsvg.FieldSizeBytes:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case mathsvg.FieldSanitizedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSanitizedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MathSvg field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MathSvgMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, mathsvg.FieldVersion)
+	}
+	if m.addsize_bytes != nil {
+		fields = append(fields, mathsvg.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MathSvgMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mathsvg.FieldVersion:
+		return m.AddedVersion()
+	case mathsvg.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MathSvgMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mathsvg.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case mathsvg.FieldSizeBytes:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MathSvg numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MathSvgMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(mathsvg.FieldCreatedBy) {
+		fields = append(fields, mathsvg.FieldCreatedBy)
+	}
+	if m.FieldCleared(mathsvg.FieldUpdatedBy) {
+		fields = append(fields, mathsvg.FieldUpdatedBy)
+	}
+	if m.FieldCleared(mathsvg.FieldDeletedAt) {
+		fields = append(fields, mathsvg.FieldDeletedAt)
+	}
+	if m.FieldCleared(mathsvg.FieldDeletedBy) {
+		fields = append(fields, mathsvg.FieldDeletedBy)
+	}
+	if m.FieldCleared(mathsvg.FieldDeleteReason) {
+		fields = append(fields, mathsvg.FieldDeleteReason)
+	}
+	if m.FieldCleared(mathsvg.FieldSpeechText) {
+		fields = append(fields, mathsvg.FieldSpeechText)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MathSvgMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MathSvgMutation) ClearField(name string) error {
+	switch name {
+	case mathsvg.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case mathsvg.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case mathsvg.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case mathsvg.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case mathsvg.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case mathsvg.FieldSpeechText:
+		m.ClearSpeechText()
+		return nil
+	}
+	return fmt.Errorf("unknown MathSvg nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MathSvgMutation) ResetField(name string) error {
+	switch name {
+	case mathsvg.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case mathsvg.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case mathsvg.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case mathsvg.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case mathsvg.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case mathsvg.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case mathsvg.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case mathsvg.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case mathsvg.FieldStorageKey:
+		m.ResetStorageKey()
+		return nil
+	case mathsvg.FieldLatex:
+		m.ResetLatex()
+		return nil
+	case mathsvg.FieldSpeechText:
+		m.ResetSpeechText()
+		return nil
+	case mathsvg.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case mathsvg.FieldSanitizedAt:
+		m.ResetSanitizedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MathSvg field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MathSvgMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MathSvgMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MathSvgMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MathSvgMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MathSvgMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MathSvgMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MathSvgMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MathSvg unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MathSvgMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MathSvg edge %s", name)
+}
+
+// MediaAssetMutation represents an operation that mutates the MediaAsset nodes in the graph.
+type MediaAssetMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	tenant_id           *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	owner_scope         *string
+	kind                *string
+	original_filename   *string
+	mime_type           *string
+	size_bytes          *int64
+	addsize_bytes       *int64
+	width               *int32
+	addwidth            *int32
+	height              *int32
+	addheight           *int32
+	duration_ms         *int32
+	addduration_ms      *int32
+	sha256              *string
+	bucket              *string
+	variants            *map[string]interface{}
+	alt_text            *string
+	license             *string
+	status              *string
+	reject_reason       *string
+	quarantine_key      *string
+	is_exam_material    *bool
+	upload_completed_at *time.Time
+	processed_at        *time.Time
+	uploaded_by         *uuid.UUID
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*MediaAsset, error)
+	predicates          []predicate.MediaAsset
+}
+
+var _ ent.Mutation = (*MediaAssetMutation)(nil)
+
+// mediaassetOption allows management of the mutation configuration using functional options.
+type mediaassetOption func(*MediaAssetMutation)
+
+// newMediaAssetMutation creates new mutation for the MediaAsset entity.
+func newMediaAssetMutation(c config, op Op, opts ...mediaassetOption) *MediaAssetMutation {
+	m := &MediaAssetMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMediaAsset,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMediaAssetID sets the ID field of the mutation.
+func withMediaAssetID(id uuid.UUID) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MediaAsset
+		)
+		m.oldValue = func(ctx context.Context) (*MediaAsset, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MediaAsset.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMediaAsset sets the old MediaAsset of the mutation.
+func withMediaAsset(node *MediaAsset) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		m.oldValue = func(context.Context) (*MediaAsset, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MediaAssetMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MediaAssetMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MediaAsset entities.
+func (m *MediaAssetMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MediaAssetMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MediaAssetMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MediaAsset.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *MediaAssetMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *MediaAssetMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *MediaAssetMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[mediaasset.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *MediaAssetMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *MediaAssetMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, mediaasset.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MediaAssetMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MediaAssetMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MediaAssetMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MediaAssetMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MediaAssetMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MediaAssetMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[mediaasset.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MediaAssetMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MediaAssetMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, mediaasset.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MediaAssetMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MediaAssetMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MediaAssetMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MediaAssetMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MediaAssetMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MediaAssetMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[mediaasset.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MediaAssetMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MediaAssetMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, mediaasset.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MediaAssetMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MediaAssetMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MediaAssetMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[mediaasset.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MediaAssetMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MediaAssetMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, mediaasset.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MediaAssetMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MediaAssetMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MediaAssetMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[mediaasset.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MediaAssetMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MediaAssetMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, mediaasset.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MediaAssetMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MediaAssetMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MediaAssetMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[mediaasset.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MediaAssetMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MediaAssetMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, mediaasset.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MediaAssetMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MediaAssetMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MediaAssetMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MediaAssetMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MediaAssetMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *MediaAssetMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *MediaAssetMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *MediaAssetMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetKind sets the "kind" field.
+func (m *MediaAssetMutation) SetKind(s string) {
+	m.kind = &s
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *MediaAssetMutation) Kind() (r string, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldKind(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *MediaAssetMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetOriginalFilename sets the "original_filename" field.
+func (m *MediaAssetMutation) SetOriginalFilename(s string) {
+	m.original_filename = &s
+}
+
+// OriginalFilename returns the value of the "original_filename" field in the mutation.
+func (m *MediaAssetMutation) OriginalFilename() (r string, exists bool) {
+	v := m.original_filename
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalFilename returns the old "original_filename" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldOriginalFilename(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalFilename is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalFilename requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalFilename: %w", err)
+	}
+	return oldValue.OriginalFilename, nil
+}
+
+// ResetOriginalFilename resets all changes to the "original_filename" field.
+func (m *MediaAssetMutation) ResetOriginalFilename() {
+	m.original_filename = nil
+}
+
+// SetMimeType sets the "mime_type" field.
+func (m *MediaAssetMutation) SetMimeType(s string) {
+	m.mime_type = &s
+}
+
+// MimeType returns the value of the "mime_type" field in the mutation.
+func (m *MediaAssetMutation) MimeType() (r string, exists bool) {
+	v := m.mime_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMimeType returns the old "mime_type" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldMimeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMimeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMimeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMimeType: %w", err)
+	}
+	return oldValue.MimeType, nil
+}
+
+// ResetMimeType resets all changes to the "mime_type" field.
+func (m *MediaAssetMutation) ResetMimeType() {
+	m.mime_type = nil
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *MediaAssetMutation) SetSizeBytes(i int64) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *MediaAssetMutation) SizeBytes() (r int64, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldSizeBytes(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *MediaAssetMutation) AddSizeBytes(i int64) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *MediaAssetMutation) AddedSizeBytes() (r int64, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *MediaAssetMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetWidth sets the "width" field.
+func (m *MediaAssetMutation) SetWidth(i int32) {
+	m.width = &i
+	m.addwidth = nil
+}
+
+// Width returns the value of the "width" field in the mutation.
+func (m *MediaAssetMutation) Width() (r int32, exists bool) {
+	v := m.width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWidth returns the old "width" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldWidth(ctx context.Context) (v *int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWidth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWidth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWidth: %w", err)
+	}
+	return oldValue.Width, nil
+}
+
+// AddWidth adds i to the "width" field.
+func (m *MediaAssetMutation) AddWidth(i int32) {
+	if m.addwidth != nil {
+		*m.addwidth += i
+	} else {
+		m.addwidth = &i
+	}
+}
+
+// AddedWidth returns the value that was added to the "width" field in this mutation.
+func (m *MediaAssetMutation) AddedWidth() (r int32, exists bool) {
+	v := m.addwidth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearWidth clears the value of the "width" field.
+func (m *MediaAssetMutation) ClearWidth() {
+	m.width = nil
+	m.addwidth = nil
+	m.clearedFields[mediaasset.FieldWidth] = struct{}{}
+}
+
+// WidthCleared returns if the "width" field was cleared in this mutation.
+func (m *MediaAssetMutation) WidthCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldWidth]
+	return ok
+}
+
+// ResetWidth resets all changes to the "width" field.
+func (m *MediaAssetMutation) ResetWidth() {
+	m.width = nil
+	m.addwidth = nil
+	delete(m.clearedFields, mediaasset.FieldWidth)
+}
+
+// SetHeight sets the "height" field.
+func (m *MediaAssetMutation) SetHeight(i int32) {
+	m.height = &i
+	m.addheight = nil
+}
+
+// Height returns the value of the "height" field in the mutation.
+func (m *MediaAssetMutation) Height() (r int32, exists bool) {
+	v := m.height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeight returns the old "height" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldHeight(ctx context.Context) (v *int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHeight is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHeight requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeight: %w", err)
+	}
+	return oldValue.Height, nil
+}
+
+// AddHeight adds i to the "height" field.
+func (m *MediaAssetMutation) AddHeight(i int32) {
+	if m.addheight != nil {
+		*m.addheight += i
+	} else {
+		m.addheight = &i
+	}
+}
+
+// AddedHeight returns the value that was added to the "height" field in this mutation.
+func (m *MediaAssetMutation) AddedHeight() (r int32, exists bool) {
+	v := m.addheight
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHeight clears the value of the "height" field.
+func (m *MediaAssetMutation) ClearHeight() {
+	m.height = nil
+	m.addheight = nil
+	m.clearedFields[mediaasset.FieldHeight] = struct{}{}
+}
+
+// HeightCleared returns if the "height" field was cleared in this mutation.
+func (m *MediaAssetMutation) HeightCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldHeight]
+	return ok
+}
+
+// ResetHeight resets all changes to the "height" field.
+func (m *MediaAssetMutation) ResetHeight() {
+	m.height = nil
+	m.addheight = nil
+	delete(m.clearedFields, mediaasset.FieldHeight)
+}
+
+// SetDurationMs sets the "duration_ms" field.
+func (m *MediaAssetMutation) SetDurationMs(i int32) {
+	m.duration_ms = &i
+	m.addduration_ms = nil
+}
+
+// DurationMs returns the value of the "duration_ms" field in the mutation.
+func (m *MediaAssetMutation) DurationMs() (r int32, exists bool) {
+	v := m.duration_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDurationMs returns the old "duration_ms" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldDurationMs(ctx context.Context) (v *int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDurationMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDurationMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDurationMs: %w", err)
+	}
+	return oldValue.DurationMs, nil
+}
+
+// AddDurationMs adds i to the "duration_ms" field.
+func (m *MediaAssetMutation) AddDurationMs(i int32) {
+	if m.addduration_ms != nil {
+		*m.addduration_ms += i
+	} else {
+		m.addduration_ms = &i
+	}
+}
+
+// AddedDurationMs returns the value that was added to the "duration_ms" field in this mutation.
+func (m *MediaAssetMutation) AddedDurationMs() (r int32, exists bool) {
+	v := m.addduration_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDurationMs clears the value of the "duration_ms" field.
+func (m *MediaAssetMutation) ClearDurationMs() {
+	m.duration_ms = nil
+	m.addduration_ms = nil
+	m.clearedFields[mediaasset.FieldDurationMs] = struct{}{}
+}
+
+// DurationMsCleared returns if the "duration_ms" field was cleared in this mutation.
+func (m *MediaAssetMutation) DurationMsCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldDurationMs]
+	return ok
+}
+
+// ResetDurationMs resets all changes to the "duration_ms" field.
+func (m *MediaAssetMutation) ResetDurationMs() {
+	m.duration_ms = nil
+	m.addduration_ms = nil
+	delete(m.clearedFields, mediaasset.FieldDurationMs)
+}
+
+// SetSha256 sets the "sha256" field.
+func (m *MediaAssetMutation) SetSha256(s string) {
+	m.sha256 = &s
+}
+
+// Sha256 returns the value of the "sha256" field in the mutation.
+func (m *MediaAssetMutation) Sha256() (r string, exists bool) {
+	v := m.sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSha256 returns the old "sha256" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldSha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSha256: %w", err)
+	}
+	return oldValue.Sha256, nil
+}
+
+// ResetSha256 resets all changes to the "sha256" field.
+func (m *MediaAssetMutation) ResetSha256() {
+	m.sha256 = nil
+}
+
+// SetBucket sets the "bucket" field.
+func (m *MediaAssetMutation) SetBucket(s string) {
+	m.bucket = &s
+}
+
+// Bucket returns the value of the "bucket" field in the mutation.
+func (m *MediaAssetMutation) Bucket() (r string, exists bool) {
+	v := m.bucket
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBucket returns the old "bucket" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldBucket(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBucket is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBucket requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBucket: %w", err)
+	}
+	return oldValue.Bucket, nil
+}
+
+// ResetBucket resets all changes to the "bucket" field.
+func (m *MediaAssetMutation) ResetBucket() {
+	m.bucket = nil
+}
+
+// SetVariants sets the "variants" field.
+func (m *MediaAssetMutation) SetVariants(value map[string]interface{}) {
+	m.variants = &value
+}
+
+// Variants returns the value of the "variants" field in the mutation.
+func (m *MediaAssetMutation) Variants() (r map[string]interface{}, exists bool) {
+	v := m.variants
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVariants returns the old "variants" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldVariants(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVariants is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVariants requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVariants: %w", err)
+	}
+	return oldValue.Variants, nil
+}
+
+// ResetVariants resets all changes to the "variants" field.
+func (m *MediaAssetMutation) ResetVariants() {
+	m.variants = nil
+}
+
+// SetAltText sets the "alt_text" field.
+func (m *MediaAssetMutation) SetAltText(s string) {
+	m.alt_text = &s
+}
+
+// AltText returns the value of the "alt_text" field in the mutation.
+func (m *MediaAssetMutation) AltText() (r string, exists bool) {
+	v := m.alt_text
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAltText returns the old "alt_text" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldAltText(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAltText is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAltText requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAltText: %w", err)
+	}
+	return oldValue.AltText, nil
+}
+
+// ClearAltText clears the value of the "alt_text" field.
+func (m *MediaAssetMutation) ClearAltText() {
+	m.alt_text = nil
+	m.clearedFields[mediaasset.FieldAltText] = struct{}{}
+}
+
+// AltTextCleared returns if the "alt_text" field was cleared in this mutation.
+func (m *MediaAssetMutation) AltTextCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldAltText]
+	return ok
+}
+
+// ResetAltText resets all changes to the "alt_text" field.
+func (m *MediaAssetMutation) ResetAltText() {
+	m.alt_text = nil
+	delete(m.clearedFields, mediaasset.FieldAltText)
+}
+
+// SetLicense sets the "license" field.
+func (m *MediaAssetMutation) SetLicense(s string) {
+	m.license = &s
+}
+
+// License returns the value of the "license" field in the mutation.
+func (m *MediaAssetMutation) License() (r string, exists bool) {
+	v := m.license
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLicense returns the old "license" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldLicense(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLicense is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLicense requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLicense: %w", err)
+	}
+	return oldValue.License, nil
+}
+
+// ResetLicense resets all changes to the "license" field.
+func (m *MediaAssetMutation) ResetLicense() {
+	m.license = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MediaAssetMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MediaAssetMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MediaAssetMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetRejectReason sets the "reject_reason" field.
+func (m *MediaAssetMutation) SetRejectReason(s string) {
+	m.reject_reason = &s
+}
+
+// RejectReason returns the value of the "reject_reason" field in the mutation.
+func (m *MediaAssetMutation) RejectReason() (r string, exists bool) {
+	v := m.reject_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRejectReason returns the old "reject_reason" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldRejectReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRejectReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRejectReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRejectReason: %w", err)
+	}
+	return oldValue.RejectReason, nil
+}
+
+// ClearRejectReason clears the value of the "reject_reason" field.
+func (m *MediaAssetMutation) ClearRejectReason() {
+	m.reject_reason = nil
+	m.clearedFields[mediaasset.FieldRejectReason] = struct{}{}
+}
+
+// RejectReasonCleared returns if the "reject_reason" field was cleared in this mutation.
+func (m *MediaAssetMutation) RejectReasonCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldRejectReason]
+	return ok
+}
+
+// ResetRejectReason resets all changes to the "reject_reason" field.
+func (m *MediaAssetMutation) ResetRejectReason() {
+	m.reject_reason = nil
+	delete(m.clearedFields, mediaasset.FieldRejectReason)
+}
+
+// SetQuarantineKey sets the "quarantine_key" field.
+func (m *MediaAssetMutation) SetQuarantineKey(s string) {
+	m.quarantine_key = &s
+}
+
+// QuarantineKey returns the value of the "quarantine_key" field in the mutation.
+func (m *MediaAssetMutation) QuarantineKey() (r string, exists bool) {
+	v := m.quarantine_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuarantineKey returns the old "quarantine_key" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldQuarantineKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuarantineKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuarantineKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuarantineKey: %w", err)
+	}
+	return oldValue.QuarantineKey, nil
+}
+
+// ResetQuarantineKey resets all changes to the "quarantine_key" field.
+func (m *MediaAssetMutation) ResetQuarantineKey() {
+	m.quarantine_key = nil
+}
+
+// SetIsExamMaterial sets the "is_exam_material" field.
+func (m *MediaAssetMutation) SetIsExamMaterial(b bool) {
+	m.is_exam_material = &b
+}
+
+// IsExamMaterial returns the value of the "is_exam_material" field in the mutation.
+func (m *MediaAssetMutation) IsExamMaterial() (r bool, exists bool) {
+	v := m.is_exam_material
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsExamMaterial returns the old "is_exam_material" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldIsExamMaterial(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsExamMaterial is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsExamMaterial requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsExamMaterial: %w", err)
+	}
+	return oldValue.IsExamMaterial, nil
+}
+
+// ResetIsExamMaterial resets all changes to the "is_exam_material" field.
+func (m *MediaAssetMutation) ResetIsExamMaterial() {
+	m.is_exam_material = nil
+}
+
+// SetUploadCompletedAt sets the "upload_completed_at" field.
+func (m *MediaAssetMutation) SetUploadCompletedAt(t time.Time) {
+	m.upload_completed_at = &t
+}
+
+// UploadCompletedAt returns the value of the "upload_completed_at" field in the mutation.
+func (m *MediaAssetMutation) UploadCompletedAt() (r time.Time, exists bool) {
+	v := m.upload_completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadCompletedAt returns the old "upload_completed_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUploadCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadCompletedAt: %w", err)
+	}
+	return oldValue.UploadCompletedAt, nil
+}
+
+// ClearUploadCompletedAt clears the value of the "upload_completed_at" field.
+func (m *MediaAssetMutation) ClearUploadCompletedAt() {
+	m.upload_completed_at = nil
+	m.clearedFields[mediaasset.FieldUploadCompletedAt] = struct{}{}
+}
+
+// UploadCompletedAtCleared returns if the "upload_completed_at" field was cleared in this mutation.
+func (m *MediaAssetMutation) UploadCompletedAtCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldUploadCompletedAt]
+	return ok
+}
+
+// ResetUploadCompletedAt resets all changes to the "upload_completed_at" field.
+func (m *MediaAssetMutation) ResetUploadCompletedAt() {
+	m.upload_completed_at = nil
+	delete(m.clearedFields, mediaasset.FieldUploadCompletedAt)
+}
+
+// SetProcessedAt sets the "processed_at" field.
+func (m *MediaAssetMutation) SetProcessedAt(t time.Time) {
+	m.processed_at = &t
+}
+
+// ProcessedAt returns the value of the "processed_at" field in the mutation.
+func (m *MediaAssetMutation) ProcessedAt() (r time.Time, exists bool) {
+	v := m.processed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessedAt returns the old "processed_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldProcessedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessedAt: %w", err)
+	}
+	return oldValue.ProcessedAt, nil
+}
+
+// ClearProcessedAt clears the value of the "processed_at" field.
+func (m *MediaAssetMutation) ClearProcessedAt() {
+	m.processed_at = nil
+	m.clearedFields[mediaasset.FieldProcessedAt] = struct{}{}
+}
+
+// ProcessedAtCleared returns if the "processed_at" field was cleared in this mutation.
+func (m *MediaAssetMutation) ProcessedAtCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldProcessedAt]
+	return ok
+}
+
+// ResetProcessedAt resets all changes to the "processed_at" field.
+func (m *MediaAssetMutation) ResetProcessedAt() {
+	m.processed_at = nil
+	delete(m.clearedFields, mediaasset.FieldProcessedAt)
+}
+
+// SetUploadedBy sets the "uploaded_by" field.
+func (m *MediaAssetMutation) SetUploadedBy(u uuid.UUID) {
+	m.uploaded_by = &u
+}
+
+// UploadedBy returns the value of the "uploaded_by" field in the mutation.
+func (m *MediaAssetMutation) UploadedBy() (r uuid.UUID, exists bool) {
+	v := m.uploaded_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadedBy returns the old "uploaded_by" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUploadedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadedBy: %w", err)
+	}
+	return oldValue.UploadedBy, nil
+}
+
+// ResetUploadedBy resets all changes to the "uploaded_by" field.
+func (m *MediaAssetMutation) ResetUploadedBy() {
+	m.uploaded_by = nil
+}
+
+// Where appends a list predicates to the MediaAssetMutation builder.
+func (m *MediaAssetMutation) Where(ps ...predicate.MediaAsset) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MediaAssetMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MediaAssetMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MediaAsset, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MediaAssetMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MediaAssetMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MediaAsset).
+func (m *MediaAssetMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MediaAssetMutation) Fields() []string {
+	fields := make([]string, 0, 29)
+	if m.tenant_id != nil {
+		fields = append(fields, mediaasset.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, mediaasset.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, mediaasset.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, mediaasset.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, mediaasset.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, mediaasset.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, mediaasset.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, mediaasset.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, mediaasset.FieldVersion)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, mediaasset.FieldOwnerScope)
+	}
+	if m.kind != nil {
+		fields = append(fields, mediaasset.FieldKind)
+	}
+	if m.original_filename != nil {
+		fields = append(fields, mediaasset.FieldOriginalFilename)
+	}
+	if m.mime_type != nil {
+		fields = append(fields, mediaasset.FieldMimeType)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	if m.width != nil {
+		fields = append(fields, mediaasset.FieldWidth)
+	}
+	if m.height != nil {
+		fields = append(fields, mediaasset.FieldHeight)
+	}
+	if m.duration_ms != nil {
+		fields = append(fields, mediaasset.FieldDurationMs)
+	}
+	if m.sha256 != nil {
+		fields = append(fields, mediaasset.FieldSha256)
+	}
+	if m.bucket != nil {
+		fields = append(fields, mediaasset.FieldBucket)
+	}
+	if m.variants != nil {
+		fields = append(fields, mediaasset.FieldVariants)
+	}
+	if m.alt_text != nil {
+		fields = append(fields, mediaasset.FieldAltText)
+	}
+	if m.license != nil {
+		fields = append(fields, mediaasset.FieldLicense)
+	}
+	if m.status != nil {
+		fields = append(fields, mediaasset.FieldStatus)
+	}
+	if m.reject_reason != nil {
+		fields = append(fields, mediaasset.FieldRejectReason)
+	}
+	if m.quarantine_key != nil {
+		fields = append(fields, mediaasset.FieldQuarantineKey)
+	}
+	if m.is_exam_material != nil {
+		fields = append(fields, mediaasset.FieldIsExamMaterial)
+	}
+	if m.upload_completed_at != nil {
+		fields = append(fields, mediaasset.FieldUploadCompletedAt)
+	}
+	if m.processed_at != nil {
+		fields = append(fields, mediaasset.FieldProcessedAt)
+	}
+	if m.uploaded_by != nil {
+		fields = append(fields, mediaasset.FieldUploadedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MediaAssetMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldTenantID:
+		return m.TenantID()
+	case mediaasset.FieldCreatedAt:
+		return m.CreatedAt()
+	case mediaasset.FieldCreatedBy:
+		return m.CreatedBy()
+	case mediaasset.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case mediaasset.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case mediaasset.FieldDeletedAt:
+		return m.DeletedAt()
+	case mediaasset.FieldDeletedBy:
+		return m.DeletedBy()
+	case mediaasset.FieldDeleteReason:
+		return m.DeleteReason()
+	case mediaasset.FieldVersion:
+		return m.Version()
+	case mediaasset.FieldOwnerScope:
+		return m.OwnerScope()
+	case mediaasset.FieldKind:
+		return m.Kind()
+	case mediaasset.FieldOriginalFilename:
+		return m.OriginalFilename()
+	case mediaasset.FieldMimeType:
+		return m.MimeType()
+	case mediaasset.FieldSizeBytes:
+		return m.SizeBytes()
+	case mediaasset.FieldWidth:
+		return m.Width()
+	case mediaasset.FieldHeight:
+		return m.Height()
+	case mediaasset.FieldDurationMs:
+		return m.DurationMs()
+	case mediaasset.FieldSha256:
+		return m.Sha256()
+	case mediaasset.FieldBucket:
+		return m.Bucket()
+	case mediaasset.FieldVariants:
+		return m.Variants()
+	case mediaasset.FieldAltText:
+		return m.AltText()
+	case mediaasset.FieldLicense:
+		return m.License()
+	case mediaasset.FieldStatus:
+		return m.Status()
+	case mediaasset.FieldRejectReason:
+		return m.RejectReason()
+	case mediaasset.FieldQuarantineKey:
+		return m.QuarantineKey()
+	case mediaasset.FieldIsExamMaterial:
+		return m.IsExamMaterial()
+	case mediaasset.FieldUploadCompletedAt:
+		return m.UploadCompletedAt()
+	case mediaasset.FieldProcessedAt:
+		return m.ProcessedAt()
+	case mediaasset.FieldUploadedBy:
+		return m.UploadedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MediaAssetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mediaasset.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case mediaasset.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case mediaasset.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case mediaasset.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case mediaasset.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case mediaasset.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case mediaasset.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case mediaasset.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case mediaasset.FieldVersion:
+		return m.OldVersion(ctx)
+	case mediaasset.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case mediaasset.FieldKind:
+		return m.OldKind(ctx)
+	case mediaasset.FieldOriginalFilename:
+		return m.OldOriginalFilename(ctx)
+	case mediaasset.FieldMimeType:
+		return m.OldMimeType(ctx)
+	case mediaasset.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case mediaasset.FieldWidth:
+		return m.OldWidth(ctx)
+	case mediaasset.FieldHeight:
+		return m.OldHeight(ctx)
+	case mediaasset.FieldDurationMs:
+		return m.OldDurationMs(ctx)
+	case mediaasset.FieldSha256:
+		return m.OldSha256(ctx)
+	case mediaasset.FieldBucket:
+		return m.OldBucket(ctx)
+	case mediaasset.FieldVariants:
+		return m.OldVariants(ctx)
+	case mediaasset.FieldAltText:
+		return m.OldAltText(ctx)
+	case mediaasset.FieldLicense:
+		return m.OldLicense(ctx)
+	case mediaasset.FieldStatus:
+		return m.OldStatus(ctx)
+	case mediaasset.FieldRejectReason:
+		return m.OldRejectReason(ctx)
+	case mediaasset.FieldQuarantineKey:
+		return m.OldQuarantineKey(ctx)
+	case mediaasset.FieldIsExamMaterial:
+		return m.OldIsExamMaterial(ctx)
+	case mediaasset.FieldUploadCompletedAt:
+		return m.OldUploadCompletedAt(ctx)
+	case mediaasset.FieldProcessedAt:
+		return m.OldProcessedAt(ctx)
+	case mediaasset.FieldUploadedBy:
+		return m.OldUploadedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case mediaasset.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case mediaasset.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case mediaasset.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case mediaasset.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case mediaasset.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case mediaasset.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case mediaasset.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case mediaasset.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case mediaasset.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case mediaasset.FieldKind:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case mediaasset.FieldOriginalFilename:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalFilename(v)
+		return nil
+	case mediaasset.FieldMimeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMimeType(v)
+		return nil
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case mediaasset.FieldWidth:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWidth(v)
+		return nil
+	case mediaasset.FieldHeight:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeight(v)
+		return nil
+	case mediaasset.FieldDurationMs:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDurationMs(v)
+		return nil
+	case mediaasset.FieldSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSha256(v)
+		return nil
+	case mediaasset.FieldBucket:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBucket(v)
+		return nil
+	case mediaasset.FieldVariants:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVariants(v)
+		return nil
+	case mediaasset.FieldAltText:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAltText(v)
+		return nil
+	case mediaasset.FieldLicense:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLicense(v)
+		return nil
+	case mediaasset.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case mediaasset.FieldRejectReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRejectReason(v)
+		return nil
+	case mediaasset.FieldQuarantineKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuarantineKey(v)
+		return nil
+	case mediaasset.FieldIsExamMaterial:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsExamMaterial(v)
+		return nil
+	case mediaasset.FieldUploadCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadCompletedAt(v)
+		return nil
+	case mediaasset.FieldProcessedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessedAt(v)
+		return nil
+	case mediaasset.FieldUploadedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MediaAssetMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, mediaasset.FieldVersion)
+	}
+	if m.addsize_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	if m.addwidth != nil {
+		fields = append(fields, mediaasset.FieldWidth)
+	}
+	if m.addheight != nil {
+		fields = append(fields, mediaasset.FieldHeight)
+	}
+	if m.addduration_ms != nil {
+		fields = append(fields, mediaasset.FieldDurationMs)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MediaAssetMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldVersion:
+		return m.AddedVersion()
+	case mediaasset.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	case mediaasset.FieldWidth:
+		return m.AddedWidth()
+	case mediaasset.FieldHeight:
+		return m.AddedHeight()
+	case mediaasset.FieldDurationMs:
+		return m.AddedDurationMs()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	case mediaasset.FieldWidth:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWidth(v)
+		return nil
+	case mediaasset.FieldHeight:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHeight(v)
+		return nil
+	case mediaasset.FieldDurationMs:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDurationMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MediaAssetMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(mediaasset.FieldTenantID) {
+		fields = append(fields, mediaasset.FieldTenantID)
+	}
+	if m.FieldCleared(mediaasset.FieldCreatedBy) {
+		fields = append(fields, mediaasset.FieldCreatedBy)
+	}
+	if m.FieldCleared(mediaasset.FieldUpdatedBy) {
+		fields = append(fields, mediaasset.FieldUpdatedBy)
+	}
+	if m.FieldCleared(mediaasset.FieldDeletedAt) {
+		fields = append(fields, mediaasset.FieldDeletedAt)
+	}
+	if m.FieldCleared(mediaasset.FieldDeletedBy) {
+		fields = append(fields, mediaasset.FieldDeletedBy)
+	}
+	if m.FieldCleared(mediaasset.FieldDeleteReason) {
+		fields = append(fields, mediaasset.FieldDeleteReason)
+	}
+	if m.FieldCleared(mediaasset.FieldWidth) {
+		fields = append(fields, mediaasset.FieldWidth)
+	}
+	if m.FieldCleared(mediaasset.FieldHeight) {
+		fields = append(fields, mediaasset.FieldHeight)
+	}
+	if m.FieldCleared(mediaasset.FieldDurationMs) {
+		fields = append(fields, mediaasset.FieldDurationMs)
+	}
+	if m.FieldCleared(mediaasset.FieldAltText) {
+		fields = append(fields, mediaasset.FieldAltText)
+	}
+	if m.FieldCleared(mediaasset.FieldRejectReason) {
+		fields = append(fields, mediaasset.FieldRejectReason)
+	}
+	if m.FieldCleared(mediaasset.FieldUploadCompletedAt) {
+		fields = append(fields, mediaasset.FieldUploadCompletedAt)
+	}
+	if m.FieldCleared(mediaasset.FieldProcessedAt) {
+		fields = append(fields, mediaasset.FieldProcessedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MediaAssetMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ClearField(name string) error {
+	switch name {
+	case mediaasset.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case mediaasset.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case mediaasset.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case mediaasset.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case mediaasset.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case mediaasset.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case mediaasset.FieldWidth:
+		m.ClearWidth()
+		return nil
+	case mediaasset.FieldHeight:
+		m.ClearHeight()
+		return nil
+	case mediaasset.FieldDurationMs:
+		m.ClearDurationMs()
+		return nil
+	case mediaasset.FieldAltText:
+		m.ClearAltText()
+		return nil
+	case mediaasset.FieldRejectReason:
+		m.ClearRejectReason()
+		return nil
+	case mediaasset.FieldUploadCompletedAt:
+		m.ClearUploadCompletedAt()
+		return nil
+	case mediaasset.FieldProcessedAt:
+		m.ClearProcessedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ResetField(name string) error {
+	switch name {
+	case mediaasset.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case mediaasset.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case mediaasset.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case mediaasset.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case mediaasset.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case mediaasset.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case mediaasset.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case mediaasset.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case mediaasset.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case mediaasset.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case mediaasset.FieldKind:
+		m.ResetKind()
+		return nil
+	case mediaasset.FieldOriginalFilename:
+		m.ResetOriginalFilename()
+		return nil
+	case mediaasset.FieldMimeType:
+		m.ResetMimeType()
+		return nil
+	case mediaasset.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case mediaasset.FieldWidth:
+		m.ResetWidth()
+		return nil
+	case mediaasset.FieldHeight:
+		m.ResetHeight()
+		return nil
+	case mediaasset.FieldDurationMs:
+		m.ResetDurationMs()
+		return nil
+	case mediaasset.FieldSha256:
+		m.ResetSha256()
+		return nil
+	case mediaasset.FieldBucket:
+		m.ResetBucket()
+		return nil
+	case mediaasset.FieldVariants:
+		m.ResetVariants()
+		return nil
+	case mediaasset.FieldAltText:
+		m.ResetAltText()
+		return nil
+	case mediaasset.FieldLicense:
+		m.ResetLicense()
+		return nil
+	case mediaasset.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case mediaasset.FieldRejectReason:
+		m.ResetRejectReason()
+		return nil
+	case mediaasset.FieldQuarantineKey:
+		m.ResetQuarantineKey()
+		return nil
+	case mediaasset.FieldIsExamMaterial:
+		m.ResetIsExamMaterial()
+		return nil
+	case mediaasset.FieldUploadCompletedAt:
+		m.ResetUploadCompletedAt()
+		return nil
+	case mediaasset.FieldProcessedAt:
+		m.ResetProcessedAt()
+		return nil
+	case mediaasset.FieldUploadedBy:
+		m.ResetUploadedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MediaAssetMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MediaAssetMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MediaAssetMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MediaAssetMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MediaAssetMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MediaAssetMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MediaAssetMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MediaAsset unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MediaAssetMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MediaAsset edge %s", name)
+}
+
+// MediaUsageMutation represents an operation that mutates the MediaUsage nodes in the graph.
+type MediaUsageMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	tenant_id     *uuid.UUID
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	owner_scope   *string
+	asset_id      *uuid.UUID
+	item_type     *string
+	item_id       *uuid.UUID
+	version_id    *uuid.UUID
+	version_no    *int
+	addversion_no *int
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*MediaUsage, error)
+	predicates    []predicate.MediaUsage
+}
+
+var _ ent.Mutation = (*MediaUsageMutation)(nil)
+
+// mediausageOption allows management of the mutation configuration using functional options.
+type mediausageOption func(*MediaUsageMutation)
+
+// newMediaUsageMutation creates new mutation for the MediaUsage entity.
+func newMediaUsageMutation(c config, op Op, opts ...mediausageOption) *MediaUsageMutation {
+	m := &MediaUsageMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMediaUsage,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMediaUsageID sets the ID field of the mutation.
+func withMediaUsageID(id uuid.UUID) mediausageOption {
+	return func(m *MediaUsageMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MediaUsage
+		)
+		m.oldValue = func(ctx context.Context) (*MediaUsage, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MediaUsage.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMediaUsage sets the old MediaUsage of the mutation.
+func withMediaUsage(node *MediaUsage) mediausageOption {
+	return func(m *MediaUsageMutation) {
+		m.oldValue = func(context.Context) (*MediaUsage, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MediaUsageMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MediaUsageMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MediaUsage entities.
+func (m *MediaUsageMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MediaUsageMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MediaUsageMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MediaUsage.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *MediaUsageMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *MediaUsageMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *MediaUsageMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[mediausage.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *MediaUsageMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *MediaUsageMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, mediausage.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MediaUsageMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MediaUsageMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MediaUsageMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MediaUsageMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MediaUsageMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MediaUsageMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[mediausage.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MediaUsageMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MediaUsageMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, mediausage.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MediaUsageMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MediaUsageMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MediaUsageMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MediaUsageMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MediaUsageMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MediaUsageMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[mediausage.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MediaUsageMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MediaUsageMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, mediausage.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MediaUsageMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MediaUsageMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MediaUsageMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[mediausage.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MediaUsageMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MediaUsageMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, mediausage.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MediaUsageMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MediaUsageMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MediaUsageMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[mediausage.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MediaUsageMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MediaUsageMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, mediausage.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MediaUsageMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MediaUsageMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MediaUsageMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[mediausage.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MediaUsageMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[mediausage.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MediaUsageMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, mediausage.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MediaUsageMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MediaUsageMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MediaUsageMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MediaUsageMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MediaUsageMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *MediaUsageMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *MediaUsageMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *MediaUsageMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetAssetID sets the "asset_id" field.
+func (m *MediaUsageMutation) SetAssetID(u uuid.UUID) {
+	m.asset_id = &u
+}
+
+// AssetID returns the value of the "asset_id" field in the mutation.
+func (m *MediaUsageMutation) AssetID() (r uuid.UUID, exists bool) {
+	v := m.asset_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssetID returns the old "asset_id" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldAssetID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssetID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssetID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssetID: %w", err)
+	}
+	return oldValue.AssetID, nil
+}
+
+// ResetAssetID resets all changes to the "asset_id" field.
+func (m *MediaUsageMutation) ResetAssetID() {
+	m.asset_id = nil
+}
+
+// SetItemType sets the "item_type" field.
+func (m *MediaUsageMutation) SetItemType(s string) {
+	m.item_type = &s
+}
+
+// ItemType returns the value of the "item_type" field in the mutation.
+func (m *MediaUsageMutation) ItemType() (r string, exists bool) {
+	v := m.item_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemType returns the old "item_type" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldItemType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemType: %w", err)
+	}
+	return oldValue.ItemType, nil
+}
+
+// ResetItemType resets all changes to the "item_type" field.
+func (m *MediaUsageMutation) ResetItemType() {
+	m.item_type = nil
+}
+
+// SetItemID sets the "item_id" field.
+func (m *MediaUsageMutation) SetItemID(u uuid.UUID) {
+	m.item_id = &u
+}
+
+// ItemID returns the value of the "item_id" field in the mutation.
+func (m *MediaUsageMutation) ItemID() (r uuid.UUID, exists bool) {
+	v := m.item_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemID returns the old "item_id" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldItemID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemID: %w", err)
+	}
+	return oldValue.ItemID, nil
+}
+
+// ResetItemID resets all changes to the "item_id" field.
+func (m *MediaUsageMutation) ResetItemID() {
+	m.item_id = nil
+}
+
+// SetVersionID sets the "version_id" field.
+func (m *MediaUsageMutation) SetVersionID(u uuid.UUID) {
+	m.version_id = &u
+}
+
+// VersionID returns the value of the "version_id" field in the mutation.
+func (m *MediaUsageMutation) VersionID() (r uuid.UUID, exists bool) {
+	v := m.version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionID returns the old "version_id" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionID: %w", err)
+	}
+	return oldValue.VersionID, nil
+}
+
+// ResetVersionID resets all changes to the "version_id" field.
+func (m *MediaUsageMutation) ResetVersionID() {
+	m.version_id = nil
+}
+
+// SetVersionNo sets the "version_no" field.
+func (m *MediaUsageMutation) SetVersionNo(i int) {
+	m.version_no = &i
+	m.addversion_no = nil
+}
+
+// VersionNo returns the value of the "version_no" field in the mutation.
+func (m *MediaUsageMutation) VersionNo() (r int, exists bool) {
+	v := m.version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionNo returns the old "version_no" field's value of the MediaUsage entity.
+// If the MediaUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUsageMutation) OldVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionNo: %w", err)
+	}
+	return oldValue.VersionNo, nil
+}
+
+// AddVersionNo adds i to the "version_no" field.
+func (m *MediaUsageMutation) AddVersionNo(i int) {
+	if m.addversion_no != nil {
+		*m.addversion_no += i
+	} else {
+		m.addversion_no = &i
+	}
+}
+
+// AddedVersionNo returns the value that was added to the "version_no" field in this mutation.
+func (m *MediaUsageMutation) AddedVersionNo() (r int, exists bool) {
+	v := m.addversion_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionNo resets all changes to the "version_no" field.
+func (m *MediaUsageMutation) ResetVersionNo() {
+	m.version_no = nil
+	m.addversion_no = nil
+}
+
+// Where appends a list predicates to the MediaUsageMutation builder.
+func (m *MediaUsageMutation) Where(ps ...predicate.MediaUsage) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MediaUsageMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MediaUsageMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MediaUsage, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MediaUsageMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MediaUsageMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MediaUsage).
+func (m *MediaUsageMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MediaUsageMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.tenant_id != nil {
+		fields = append(fields, mediausage.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, mediausage.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, mediausage.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, mediausage.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, mediausage.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, mediausage.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, mediausage.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, mediausage.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, mediausage.FieldVersion)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, mediausage.FieldOwnerScope)
+	}
+	if m.asset_id != nil {
+		fields = append(fields, mediausage.FieldAssetID)
+	}
+	if m.item_type != nil {
+		fields = append(fields, mediausage.FieldItemType)
+	}
+	if m.item_id != nil {
+		fields = append(fields, mediausage.FieldItemID)
+	}
+	if m.version_id != nil {
+		fields = append(fields, mediausage.FieldVersionID)
+	}
+	if m.version_no != nil {
+		fields = append(fields, mediausage.FieldVersionNo)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MediaUsageMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mediausage.FieldTenantID:
+		return m.TenantID()
+	case mediausage.FieldCreatedAt:
+		return m.CreatedAt()
+	case mediausage.FieldCreatedBy:
+		return m.CreatedBy()
+	case mediausage.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case mediausage.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case mediausage.FieldDeletedAt:
+		return m.DeletedAt()
+	case mediausage.FieldDeletedBy:
+		return m.DeletedBy()
+	case mediausage.FieldDeleteReason:
+		return m.DeleteReason()
+	case mediausage.FieldVersion:
+		return m.Version()
+	case mediausage.FieldOwnerScope:
+		return m.OwnerScope()
+	case mediausage.FieldAssetID:
+		return m.AssetID()
+	case mediausage.FieldItemType:
+		return m.ItemType()
+	case mediausage.FieldItemID:
+		return m.ItemID()
+	case mediausage.FieldVersionID:
+		return m.VersionID()
+	case mediausage.FieldVersionNo:
+		return m.VersionNo()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MediaUsageMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mediausage.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case mediausage.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case mediausage.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case mediausage.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case mediausage.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case mediausage.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case mediausage.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case mediausage.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case mediausage.FieldVersion:
+		return m.OldVersion(ctx)
+	case mediausage.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case mediausage.FieldAssetID:
+		return m.OldAssetID(ctx)
+	case mediausage.FieldItemType:
+		return m.OldItemType(ctx)
+	case mediausage.FieldItemID:
+		return m.OldItemID(ctx)
+	case mediausage.FieldVersionID:
+		return m.OldVersionID(ctx)
+	case mediausage.FieldVersionNo:
+		return m.OldVersionNo(ctx)
+	}
+	return nil, fmt.Errorf("unknown MediaUsage field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaUsageMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mediausage.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case mediausage.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case mediausage.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case mediausage.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case mediausage.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case mediausage.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case mediausage.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case mediausage.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case mediausage.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case mediausage.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case mediausage.FieldAssetID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssetID(v)
+		return nil
+	case mediausage.FieldItemType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemType(v)
+		return nil
+	case mediausage.FieldItemID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemID(v)
+		return nil
+	case mediausage.FieldVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionID(v)
+		return nil
+	case mediausage.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUsage field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MediaUsageMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, mediausage.FieldVersion)
+	}
+	if m.addversion_no != nil {
+		fields = append(fields, mediausage.FieldVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MediaUsageMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mediausage.FieldVersion:
+		return m.AddedVersion()
+	case mediausage.FieldVersionNo:
+		return m.AddedVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaUsageMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mediausage.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case mediausage.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUsage numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MediaUsageMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(mediausage.FieldTenantID) {
+		fields = append(fields, mediausage.FieldTenantID)
+	}
+	if m.FieldCleared(mediausage.FieldCreatedBy) {
+		fields = append(fields, mediausage.FieldCreatedBy)
+	}
+	if m.FieldCleared(mediausage.FieldUpdatedBy) {
+		fields = append(fields, mediausage.FieldUpdatedBy)
+	}
+	if m.FieldCleared(mediausage.FieldDeletedAt) {
+		fields = append(fields, mediausage.FieldDeletedAt)
+	}
+	if m.FieldCleared(mediausage.FieldDeletedBy) {
+		fields = append(fields, mediausage.FieldDeletedBy)
+	}
+	if m.FieldCleared(mediausage.FieldDeleteReason) {
+		fields = append(fields, mediausage.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MediaUsageMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MediaUsageMutation) ClearField(name string) error {
+	switch name {
+	case mediausage.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case mediausage.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case mediausage.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case mediausage.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case mediausage.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case mediausage.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUsage nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MediaUsageMutation) ResetField(name string) error {
+	switch name {
+	case mediausage.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case mediausage.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case mediausage.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case mediausage.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case mediausage.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case mediausage.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case mediausage.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case mediausage.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case mediausage.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case mediausage.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case mediausage.FieldAssetID:
+		m.ResetAssetID()
+		return nil
+	case mediausage.FieldItemType:
+		m.ResetItemType()
+		return nil
+	case mediausage.FieldItemID:
+		m.ResetItemID()
+		return nil
+	case mediausage.FieldVersionID:
+		m.ResetVersionID()
+		return nil
+	case mediausage.FieldVersionNo:
+		m.ResetVersionNo()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUsage field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MediaUsageMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MediaUsageMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MediaUsageMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MediaUsageMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MediaUsageMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MediaUsageMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MediaUsageMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MediaUsage unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MediaUsageMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MediaUsage edge %s", name)
 }
 
 // QuestionMutation represents an operation that mutates the Question nodes in the graph.

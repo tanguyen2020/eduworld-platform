@@ -105,6 +105,42 @@ func (f LoVersionMappingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoVersionMappingMutation", m)
 }
 
+// The MathSvgFunc type is an adapter to allow the use of ordinary
+// function as MathSvg mutator.
+type MathSvgFunc func(context.Context, *ent.MathSvgMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MathSvgFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MathSvgMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MathSvgMutation", m)
+}
+
+// The MediaAssetFunc type is an adapter to allow the use of ordinary
+// function as MediaAsset mutator.
+type MediaAssetFunc func(context.Context, *ent.MediaAssetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MediaAssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MediaAssetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaAssetMutation", m)
+}
+
+// The MediaUsageFunc type is an adapter to allow the use of ordinary
+// function as MediaUsage mutator.
+type MediaUsageFunc func(context.Context, *ent.MediaUsageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MediaUsageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MediaUsageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaUsageMutation", m)
+}
+
 // The QuestionFunc type is an adapter to allow the use of ordinary
 // function as Question mutator.
 type QuestionFunc func(context.Context, *ent.QuestionMutation) (ent.Value, error)

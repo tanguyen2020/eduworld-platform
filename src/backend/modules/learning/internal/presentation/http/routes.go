@@ -72,12 +72,15 @@ type CurriculumQueries interface {
 	PublicObjective(ctx context.Context, id uuid.UUID) (dto.Objective, string, error)
 }
 
-// Handlers are the use cases served over HTTP (F021 curriculum, F022 question bank).
+// Handlers are the use cases served over HTTP (F021 curriculum, F022 question bank, F027 media and preview).
 type Handlers struct {
 	Commands         CurriculumCommands
 	Queries          CurriculumQueries
 	QuestionCommands QuestionCommands // F022
 	QuestionQueries  QuestionQueries  // F022
+	Media            MediaCommands    // F027
+	MediaQueries     MediaQueries     // F027
+	Preview          PreviewCommands  // F027
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -149,6 +152,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
 	}
 	for id, fn := range questionRoutes {
+		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
+	}
+	for id, fn := range mediaRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
 	}
 	for id, fn := range publicRoutes {

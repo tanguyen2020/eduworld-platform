@@ -82,7 +82,16 @@ type curEnv struct {
 	assets *memAssets
 	users  map[string]authz.PrincipalData
 	tokens map[string]string
+	media  *mediaKit // F027 (newCurEnv(..., withMedia))
 }
+
+// envOpt configures newCurEnv.
+type envOpt func(*envOpts)
+
+type envOpts struct{ media bool }
+
+// withMedia adds the media pipeline and the preview sessions of F027 (floci, Valkey, clamd test double).
+func withMedia(o *envOpts) { o.media = true }
 
 // Demo principals (quickstart §1): content admin, system admin, content reviewer (platform); academic manager and
 // school admin of tenants A and B; a staff member without role; a student of tenant A.
@@ -96,10 +105,16 @@ const (
 	adB       = "ad.truong.b"
 	noRoleA   = "staff.norole.a"
 	hsAn      = "hs.an.3a"
+	edA       = "bt.noidung.a" // tenant_content_editor of tenant A (media.upload, F027)
+	edB       = "bt.noidung.b" // tenant_content_editor of tenant B
 )
 
-func newCurEnv(ctx context.Context, t *testing.T) *curEnv {
+func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Helper()
+	var o envOpts
+	for _, f := range opts {
+		f(&o)
+	}
 	e := setup(ctx, t, true)
 	authz.Configure(authz.Hooks{Recorder: e.rec})
 	t.Cleanup(func() { authz.Configure(authz.Hooks{}) })
@@ -132,13 +147,21 @@ func newCurEnv(ctx context.Context, t *testing.T) *curEnv {
 	qcmd := command.Questions{UoW: e.uow, Store: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{}, Schema: schema,
 		Registry: question.Base(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
 	qqry := query.Questions{Session: e.read, Model: read.QuestionModel{}, Cursors: codec}
-	if err := learninghttp.Register(srv, learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry}); err != nil {
+	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry}
+	var mk *mediaKit
+	if o.media {
+		mk = newMediaKit(ctx, t, e, codec, schema)
+		qcmd.Math, qcmd.Media = &mk.math, write.MediaRepo{}
+		handlers.QuestionCommands = qcmd
+		handlers.Media, handlers.MediaQueries, handlers.Preview = mk.cmd, mk.qry, mk.preview
+	}
+	if err := learninghttp.Register(srv, handlers); err != nil {
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}}
+		tokens: map[string]string{}, media: mk}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)
@@ -149,6 +172,8 @@ func newCurEnv(ctx context.Context, t *testing.T) *curEnv {
 	ce.user(adB, authztest.Staff(e.tenantB, "school_admin").PrincipalData, true)
 	ce.user(noRoleA, authztest.NoRole(e.tenantA).PrincipalData, true)
 	ce.user(hsAn, authztest.Student(e.tenantA).PrincipalData, false)
+	ce.user(edA, authztest.Staff(e.tenantA, "tenant_content_editor").PrincipalData, true)
+	ce.user(edB, authztest.Staff(e.tenantB, "tenant_content_editor").PrincipalData, true)
 	return ce
 }
 

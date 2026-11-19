@@ -15,6 +15,9 @@ type SchemaConfig struct {
 	ImportJob                string // ImportJob table.
 	LearningObjective        string // LearningObjective table.
 	LoVersionMapping         string // LoVersionMapping table.
+	MathSvg                  string // MathSvg table.
+	MediaAsset               string // MediaAsset table.
+	MediaUsage               string // MediaUsage table.
 	Question                 string // Question table.
 	QuestionVersion          string // QuestionVersion table.
 	QuestionVersionObjective string // QuestionVersionObjective table.

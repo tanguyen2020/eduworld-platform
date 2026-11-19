@@ -18,7 +18,10 @@ RUN CGO_ENABLED=0 go build -trimpath \
         -X github.com/tanguyen2020/eduworld-platform/src/backend/pkg/buildinfo.BuildTime=${BUILD_TIME}" \
       -o /out/worker ./cmd/worker
 
-FROM gcr.io/distroless/static-debian12:nonroot
+# Runtime: Alpine with ffmpeg/ffprobe (media worker of module learning, profile events: Ogg Vorbis/MP3, Ogg Theora,
+# H.264 MP4 and HLS — F027, CONTENT_MODEL §7). Images are processed in pure Go (no libvips/cgo).
+FROM alpine:3.22
+RUN apk add --no-cache ffmpeg ca-certificates tzdata  && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
 ARG VERSION=dev
 ARG COMMIT=unknown
 LABEL org.opencontainers.image.title="eduworld/worker" \

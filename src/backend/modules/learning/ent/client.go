@@ -23,6 +23,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
@@ -59,6 +62,12 @@ type Client struct {
 	LearningObjective *LearningObjectiveClient
 	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
 	LoVersionMapping *LoVersionMappingClient
+	// MathSvg is the client for interacting with the MathSvg builders.
+	MathSvg *MathSvgClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUsage is the client for interacting with the MediaUsage builders.
+	MediaUsage *MediaUsageClient
 	// Question is the client for interacting with the Question builders.
 	Question *QuestionClient
 	// QuestionVersion is the client for interacting with the QuestionVersion builders.
@@ -100,6 +109,9 @@ func (c *Client) init() {
 	c.ImportJob = NewImportJobClient(c.config)
 	c.LearningObjective = NewLearningObjectiveClient(c.config)
 	c.LoVersionMapping = NewLoVersionMappingClient(c.config)
+	c.MathSvg = NewMathSvgClient(c.config)
+	c.MediaAsset = NewMediaAssetClient(c.config)
+	c.MediaUsage = NewMediaUsageClient(c.config)
 	c.Question = NewQuestionClient(c.config)
 	c.QuestionVersion = NewQuestionVersionClient(c.config)
 	c.QuestionVersionObjective = NewQuestionVersionObjectiveClient(c.config)
@@ -214,6 +226,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ImportJob:                NewImportJobClient(cfg),
 		LearningObjective:        NewLearningObjectiveClient(cfg),
 		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		MathSvg:                  NewMathSvgClient(cfg),
+		MediaAsset:               NewMediaAssetClient(cfg),
+		MediaUsage:               NewMediaUsageClient(cfg),
 		Question:                 NewQuestionClient(cfg),
 		QuestionVersion:          NewQuestionVersionClient(cfg),
 		QuestionVersionObjective: NewQuestionVersionObjectiveClient(cfg),
@@ -252,6 +267,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ImportJob:                NewImportJobClient(cfg),
 		LearningObjective:        NewLearningObjectiveClient(cfg),
 		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		MathSvg:                  NewMathSvgClient(cfg),
+		MediaAsset:               NewMediaAssetClient(cfg),
+		MediaUsage:               NewMediaUsageClient(cfg),
 		Question:                 NewQuestionClient(cfg),
 		QuestionVersion:          NewQuestionVersionClient(cfg),
 		QuestionVersionObjective: NewQuestionVersionObjectiveClient(cfg),
@@ -294,8 +312,9 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
 		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
-		c.Question, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.MathSvg, c.MediaAsset, c.MediaUsage, c.Question, c.QuestionVersion,
+		c.QuestionVersionObjective, c.Subject, c.SubjectGrade,
+		c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
 		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
 	} {
 		n.Use(hooks...)
@@ -308,8 +327,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
 		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
-		c.Question, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.MathSvg, c.MediaAsset, c.MediaUsage, c.Question, c.QuestionVersion,
+		c.QuestionVersionObjective, c.Subject, c.SubjectGrade,
+		c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
 		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
 	} {
 		n.Intercept(interceptors...)
@@ -335,6 +355,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.LearningObjective.mutate(ctx, m)
 	case *LoVersionMappingMutation:
 		return c.LoVersionMapping.mutate(ctx, m)
+	case *MathSvgMutation:
+		return c.MathSvg.mutate(ctx, m)
+	case *MediaAssetMutation:
+		return c.MediaAsset.mutate(ctx, m)
+	case *MediaUsageMutation:
+		return c.MediaUsage.mutate(ctx, m)
 	case *QuestionMutation:
 		return c.Question.mutate(ctx, m)
 	case *QuestionVersionMutation:
@@ -1439,6 +1465,411 @@ func (c *LoVersionMappingClient) mutate(ctx context.Context, m *LoVersionMapping
 		return (&LoVersionMappingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown LoVersionMapping mutation op: %q", m.Op())
+	}
+}
+
+// MathSvgClient is a client for the MathSvg schema.
+type MathSvgClient struct {
+	config
+}
+
+// NewMathSvgClient returns a client for the MathSvg from the given config.
+func NewMathSvgClient(c config) *MathSvgClient {
+	return &MathSvgClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mathsvg.Hooks(f(g(h())))`.
+func (c *MathSvgClient) Use(hooks ...Hook) {
+	c.hooks.MathSvg = append(c.hooks.MathSvg, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mathsvg.Intercept(f(g(h())))`.
+func (c *MathSvgClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MathSvg = append(c.inters.MathSvg, interceptors...)
+}
+
+// Create returns a builder for creating a MathSvg entity.
+func (c *MathSvgClient) Create() *MathSvgCreate {
+	mutation := newMathSvgMutation(c.config, OpCreate)
+	return &MathSvgCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MathSvg entities.
+func (c *MathSvgClient) CreateBulk(builders ...*MathSvgCreate) *MathSvgCreateBulk {
+	return &MathSvgCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MathSvgClient) MapCreateBulk(slice any, setFunc func(*MathSvgCreate, int)) *MathSvgCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MathSvgCreateBulk{err: fmt.Errorf("calling to MathSvgClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MathSvgCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MathSvgCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MathSvg.
+func (c *MathSvgClient) Update() *MathSvgUpdate {
+	mutation := newMathSvgMutation(c.config, OpUpdate)
+	return &MathSvgUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MathSvgClient) UpdateOne(_m *MathSvg) *MathSvgUpdateOne {
+	mutation := newMathSvgMutation(c.config, OpUpdateOne, withMathSvg(_m))
+	return &MathSvgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MathSvgClient) UpdateOneID(id string) *MathSvgUpdateOne {
+	mutation := newMathSvgMutation(c.config, OpUpdateOne, withMathSvgID(id))
+	return &MathSvgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MathSvg.
+func (c *MathSvgClient) Delete() *MathSvgDelete {
+	mutation := newMathSvgMutation(c.config, OpDelete)
+	return &MathSvgDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MathSvgClient) DeleteOne(_m *MathSvg) *MathSvgDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MathSvgClient) DeleteOneID(id string) *MathSvgDeleteOne {
+	builder := c.Delete().Where(mathsvg.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MathSvgDeleteOne{builder}
+}
+
+// Query returns a query builder for MathSvg.
+func (c *MathSvgClient) Query() *MathSvgQuery {
+	return &MathSvgQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMathSvg},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MathSvg entity by its id.
+func (c *MathSvgClient) Get(ctx context.Context, id string) (*MathSvg, error) {
+	return c.Query().Where(mathsvg.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MathSvgClient) GetX(ctx context.Context, id string) *MathSvg {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MathSvgClient) Hooks() []Hook {
+	hooks := c.hooks.MathSvg
+	return append(hooks[:len(hooks):len(hooks)], mathsvg.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MathSvgClient) Interceptors() []Interceptor {
+	inters := c.inters.MathSvg
+	return append(inters[:len(inters):len(inters)], mathsvg.Interceptors[:]...)
+}
+
+func (c *MathSvgClient) mutate(ctx context.Context, m *MathSvgMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MathSvgCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MathSvgUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MathSvgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MathSvgDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MathSvg mutation op: %q", m.Op())
+	}
+}
+
+// MediaAssetClient is a client for the MediaAsset schema.
+type MediaAssetClient struct {
+	config
+}
+
+// NewMediaAssetClient returns a client for the MediaAsset from the given config.
+func NewMediaAssetClient(c config) *MediaAssetClient {
+	return &MediaAssetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediaasset.Hooks(f(g(h())))`.
+func (c *MediaAssetClient) Use(hooks ...Hook) {
+	c.hooks.MediaAsset = append(c.hooks.MediaAsset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediaasset.Intercept(f(g(h())))`.
+func (c *MediaAssetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaAsset = append(c.inters.MediaAsset, interceptors...)
+}
+
+// Create returns a builder for creating a MediaAsset entity.
+func (c *MediaAssetClient) Create() *MediaAssetCreate {
+	mutation := newMediaAssetMutation(c.config, OpCreate)
+	return &MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaAsset entities.
+func (c *MediaAssetClient) CreateBulk(builders ...*MediaAssetCreate) *MediaAssetCreateBulk {
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaAssetClient) MapCreateBulk(slice any, setFunc func(*MediaAssetCreate, int)) *MediaAssetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaAssetCreateBulk{err: fmt.Errorf("calling to MediaAssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaAssetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaAsset.
+func (c *MediaAssetClient) Update() *MediaAssetUpdate {
+	mutation := newMediaAssetMutation(c.config, OpUpdate)
+	return &MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaAssetClient) UpdateOne(_m *MediaAsset) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAsset(_m))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaAssetClient) UpdateOneID(id uuid.UUID) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAssetID(id))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaAsset.
+func (c *MediaAssetClient) Delete() *MediaAssetDelete {
+	mutation := newMediaAssetMutation(c.config, OpDelete)
+	return &MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaAssetClient) DeleteOne(_m *MediaAsset) *MediaAssetDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaAssetClient) DeleteOneID(id uuid.UUID) *MediaAssetDeleteOne {
+	builder := c.Delete().Where(mediaasset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaAssetDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaAsset.
+func (c *MediaAssetClient) Query() *MediaAssetQuery {
+	return &MediaAssetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaAsset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaAsset entity by its id.
+func (c *MediaAssetClient) Get(ctx context.Context, id uuid.UUID) (*MediaAsset, error) {
+	return c.Query().Where(mediaasset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaAssetClient) GetX(ctx context.Context, id uuid.UUID) *MediaAsset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MediaAssetClient) Hooks() []Hook {
+	hooks := c.hooks.MediaAsset
+	return append(hooks[:len(hooks):len(hooks)], mediaasset.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaAssetClient) Interceptors() []Interceptor {
+	inters := c.inters.MediaAsset
+	return append(inters[:len(inters):len(inters)], mediaasset.Interceptors[:]...)
+}
+
+func (c *MediaAssetClient) mutate(ctx context.Context, m *MediaAssetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaAsset mutation op: %q", m.Op())
+	}
+}
+
+// MediaUsageClient is a client for the MediaUsage schema.
+type MediaUsageClient struct {
+	config
+}
+
+// NewMediaUsageClient returns a client for the MediaUsage from the given config.
+func NewMediaUsageClient(c config) *MediaUsageClient {
+	return &MediaUsageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediausage.Hooks(f(g(h())))`.
+func (c *MediaUsageClient) Use(hooks ...Hook) {
+	c.hooks.MediaUsage = append(c.hooks.MediaUsage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediausage.Intercept(f(g(h())))`.
+func (c *MediaUsageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaUsage = append(c.inters.MediaUsage, interceptors...)
+}
+
+// Create returns a builder for creating a MediaUsage entity.
+func (c *MediaUsageClient) Create() *MediaUsageCreate {
+	mutation := newMediaUsageMutation(c.config, OpCreate)
+	return &MediaUsageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaUsage entities.
+func (c *MediaUsageClient) CreateBulk(builders ...*MediaUsageCreate) *MediaUsageCreateBulk {
+	return &MediaUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaUsageClient) MapCreateBulk(slice any, setFunc func(*MediaUsageCreate, int)) *MediaUsageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaUsageCreateBulk{err: fmt.Errorf("calling to MediaUsageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaUsageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaUsage.
+func (c *MediaUsageClient) Update() *MediaUsageUpdate {
+	mutation := newMediaUsageMutation(c.config, OpUpdate)
+	return &MediaUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaUsageClient) UpdateOne(_m *MediaUsage) *MediaUsageUpdateOne {
+	mutation := newMediaUsageMutation(c.config, OpUpdateOne, withMediaUsage(_m))
+	return &MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaUsageClient) UpdateOneID(id uuid.UUID) *MediaUsageUpdateOne {
+	mutation := newMediaUsageMutation(c.config, OpUpdateOne, withMediaUsageID(id))
+	return &MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaUsage.
+func (c *MediaUsageClient) Delete() *MediaUsageDelete {
+	mutation := newMediaUsageMutation(c.config, OpDelete)
+	return &MediaUsageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaUsageClient) DeleteOne(_m *MediaUsage) *MediaUsageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaUsageClient) DeleteOneID(id uuid.UUID) *MediaUsageDeleteOne {
+	builder := c.Delete().Where(mediausage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaUsageDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaUsage.
+func (c *MediaUsageClient) Query() *MediaUsageQuery {
+	return &MediaUsageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaUsage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaUsage entity by its id.
+func (c *MediaUsageClient) Get(ctx context.Context, id uuid.UUID) (*MediaUsage, error) {
+	return c.Query().Where(mediausage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaUsageClient) GetX(ctx context.Context, id uuid.UUID) *MediaUsage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MediaUsageClient) Hooks() []Hook {
+	hooks := c.hooks.MediaUsage
+	return append(hooks[:len(hooks):len(hooks)], mediausage.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaUsageClient) Interceptors() []Interceptor {
+	inters := c.inters.MediaUsage
+	return append(inters[:len(inters):len(inters)], mediausage.Interceptors[:]...)
+}
+
+func (c *MediaUsageClient) mutate(ctx context.Context, m *MediaUsageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaUsageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaUsageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaUsage mutation op: %q", m.Op())
 	}
 }
 
@@ -2931,17 +3362,17 @@ func (c *TopicClient) mutate(ctx context.Context, m *TopicMutation) (Value, erro
 type (
 	hooks struct {
 		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
-		ImportJob, LearningObjective, LoVersionMapping, Question, QuestionVersion,
-		QuestionVersionObjective, Subject, SubjectGrade, TenantResourceAssignment,
-		Textbook, TextbookSection, TextbookSectionObjective, TextbookSeries,
-		Topic []ent.Hook
+		ImportJob, LearningObjective, LoVersionMapping, MathSvg, MediaAsset,
+		MediaUsage, Question, QuestionVersion, QuestionVersionObjective, Subject,
+		SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
+		TextbookSectionObjective, TextbookSeries, Topic []ent.Hook
 	}
 	inters struct {
 		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
-		ImportJob, LearningObjective, LoVersionMapping, Question, QuestionVersion,
-		QuestionVersionObjective, Subject, SubjectGrade, TenantResourceAssignment,
-		Textbook, TextbookSection, TextbookSectionObjective, TextbookSeries,
-		Topic []ent.Interceptor
+		ImportJob, LearningObjective, LoVersionMapping, MathSvg, MediaAsset,
+		MediaUsage, Question, QuestionVersion, QuestionVersionObjective, Subject,
+		SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
+		TextbookSectionObjective, TextbookSeries, Topic []ent.Interceptor
 	}
 )
 
@@ -2956,6 +3387,9 @@ var (
 		ImportJob:                tableSchemas[0],
 		LearningObjective:        tableSchemas[1],
 		LoVersionMapping:         tableSchemas[1],
+		MathSvg:                  tableSchemas[0],
+		MediaAsset:               tableSchemas[0],
+		MediaUsage:               tableSchemas[0],
 		Question:                 tableSchemas[0],
 		QuestionVersion:          tableSchemas[0],
 		QuestionVersionObjective: tableSchemas[0],

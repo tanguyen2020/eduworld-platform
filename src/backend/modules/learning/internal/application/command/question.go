@@ -42,6 +42,10 @@ type Questions struct {
 	Events     write.EventPublisher
 	Audit      write.Auditor
 	Clock      func() time.Time
+	// Math validates and stores the formulas of a version (F027 US3); nil keeps the F022 check only.
+	Math *MathAssets
+	// Media checks media references and records media_usages (F027-AC-11); nil skips it.
+	Media write.MediaStore
 }
 
 func (h Questions) trash() TrashDeps {
@@ -192,7 +196,13 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 	var rule question.ScoringRule
 	_ = json.Unmarshal(v.ScoringRule, &rule)
 	var assets []question.MathAsset
-	if !isNull(v.MathAssets) {
+	if h.Math != nil {
+		stored, resolved, err := h.Math.Resolve(ctx, v.MathAssets)
+		if err != nil {
+			return err
+		}
+		v.MathAssets, assets = stored, resolved
+	} else if !isNull(v.MathAssets) {
 		if err := json.Unmarshal(v.MathAssets, &assets); err != nil {
 			return problem.Invalid("/math_assets", problem.SubInvalid, "must be a list of rendered formulas")
 		}
@@ -237,6 +247,9 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 		return problemOfViolations(all)
 	}
 	if err := h.checkReferences(ctx, *v); err != nil {
+		return err
+	}
+	if err := h.checkMedia(ctx, *v, authRender); err != nil {
 		return err
 	}
 	render, feedback, err := question.SplitFeedback(authRender)
@@ -334,6 +347,9 @@ func (h Questions) CreateQuestion(ctx context.Context, f QuestionFields) (out Qu
 		if err := h.Store.InsertQuestionVersion(ctx, v); err != nil {
 			return err
 		}
+		if err := h.recordUsages(ctx, v); err != nil {
+			return err
+		}
 		if err := h.recordQuestion(ctx, o, audit.Event{Action: ActionContentVersionCreated, TargetID: q.ID.String(),
 			Metadata: map[string]any{"question_version_id": v.ID.String(), "version": 1, "type": v.Type}}); err != nil {
 			return err
@@ -409,6 +425,9 @@ func (h Questions) UpdateQuestionDraft(ctx context.Context, in UpdateQuestionDra
 		if _, err := h.Store.UpdateQuestionVersion(ctx, v, in.IfMatch); err != nil {
 			return err
 		}
+		if err := h.recordUsages(ctx, v); err != nil {
+			return err
+		}
 		out, err = h.load(ctx, in.QuestionID, in.VersionNo)
 		return err
 	})
@@ -480,6 +499,9 @@ func (h Questions) CreateQuestionVersion(ctx context.Context, in NewQuestionVers
 		}
 		v.Owner = q.Owner
 		if err := h.Store.InsertQuestionVersion(ctx, v); err != nil {
+			return err
+		}
+		if err := h.recordUsages(ctx, v); err != nil {
 			return err
 		}
 		q.LatestVersionNo = v.VersionNo

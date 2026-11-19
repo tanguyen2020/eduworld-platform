@@ -224,7 +224,7 @@ Bảng con của version (`subject_grades`, `topics`, `learning_objectives`, `co
 | `question_sets`, `question_set_versions`, `question_set_items` | static items hoặc `selection_rules jsonb` | như trên |
 | `assessment_blueprints`, `assessment_blueprint_versions` | `sections jsonb`, `time_limit_seconds`, `scoring jsonb`, `shuffle_policy`, `result_visibility` | |
 | `lesson_versions`, `learning_materials` | | |
-| `media_assets`, `media_usages` | metadata file trên object storage (ADR-0044): `kind`, `mime_type`, `size_bytes`, `sha256`, `bucket`, `variants jsonb`, `alt_text`, `license`, `status` | DDL §3.13; file **không** lưu trong DB |
+| `media_assets`, `media_usages` | metadata file trên object storage (ADR-0044): `kind`, `mime_type`, `size_bytes`, `sha256`, `bucket`, `variants jsonb`, `alt_text`, `license`, `status`, `quarantine_key`, `is_exam_material`, `upload_completed_at`, `processed_at` (F027); `media_usages` có `tenant_id`, `item_id`, `version_no` | H (F027): DDL §3.13; file **không** lưu trong DB; RLS theo assignment `resource_type = media` |
 | `scheduled_publications` | `schedule_id` (trả về như `release_id` trong `202 ContentRelease`), `tenant_id` (NULL = platform), `item_type`, `item_id`, `version_id`, `publish_at`, `status` (`scheduled`/`applied`/`cancelled`/`failed`), `failure_code`, `applied_release_id`, `change_note varchar(500)`, `requested_by`, `cancelled_by`, `idempotency_key` | Lịch hẹn publish; worker áp đúng giờ và ghi `content_releases`. UNIQUE `(item_type, item_id) WHERE status = 'scheduled' AND deleted_at IS NULL` (một lịch chờ/item), UNIQUE `(item_type, item_id, idempotency_key)`; idx `(status, publish_at) WHERE status = 'scheduled'` |
 | `import_jobs` | `import_id`, `tenant_id` (NULL = platform), `owner_scope`, `kind` (`curriculum_yaml`/`curriculum_csv`, F024 mở rộng), `asset_id`, `source_ref varchar(512)`, `dry_run`, `status` (`queued`/`running`/`succeeded`/`failed`), `created_count`, `rejected_count`, `errors jsonb` (≤ 500 dòng, ≤ 256 KB), `result_refs jsonb` (≤ 64 KB), `idempotency_key`, `finished_at` | T* (F021): UNIQUE `(created_by, idempotency_key)`; idx `(status, created_at)` |
 | `content_releases` | lịch sử con trỏ: `action` publish/rollback/unpublish, `from/to_version_id`, `reason`, `released_by` | TA\* (append-only, `tenant_id` NULL = platform); DDL §3.13 |
@@ -1396,6 +1396,9 @@ CREATE TABLE content.media_assets (
   license           varchar(255) NOT NULL,
   status            varchar(16) NOT NULL CHECK (status IN ('quarantined','processing','ready','rejected')),
   reject_reason     varchar(255),
+  quarantine_key    varchar(512) NOT NULL,             -- F027: quarantine/<asset_id> trong ew-media-quarantine
+  is_exam_material  boolean NOT NULL DEFAULT false,    -- F027: media đề kiểm tra → luôn ew-media-private
+  upload_completed_at timestamptz, processed_at timestamptz,  -- F027
   uploaded_by       uuid NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
   deleted_at timestamptz, deleted_by uuid,
@@ -1406,11 +1409,18 @@ CREATE UNIQUE INDEX media_assets_sha_scope_uq
   ON content.media_assets (coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid), sha256)
   WHERE deleted_at IS NULL;                            -- cùng file trong cùng phạm vi → dùng lại asset
 CREATE TABLE content.media_usages (                    -- "đang dùng ở version nào"; chặn soft-delete asset còn được tham chiếu
+  media_usage_id uuid PRIMARY KEY,                     -- F027: khóa thay thế (soft-delete khi bản nháp bỏ tham chiếu)
+  tenant_id  uuid,                                     -- F027: chủ sở hữu version (NULL = platform), RLS H theo assignment của asset
+  owner_scope varchar(64) NOT NULL,
   asset_id   uuid NOT NULL REFERENCES content.media_assets(asset_id),
   item_type  varchar(64) NOT NULL,
+  item_id    uuid NOT NULL,                            -- F027
   version_id uuid NOT NULL,
-  PRIMARY KEY (asset_id, item_type, version_id)
+  version_no int NOT NULL,                             -- F027 (used_in trả số version)
+  -- cột chuẩn ADR-0039 (created_*, updated_*, deleted_*, version)
+  CHECK ((owner_scope = 'platform') = (tenant_id IS NULL))
 );
+CREATE UNIQUE INDEX media_usages_uq ON content.media_usages (asset_id, item_type, version_id) WHERE deleted_at IS NULL;
 ```
 
 Ghim version ở các bảng khác: `game.quest_progress.quest_version_id`, `assessment.attempts.source_version_id`, `assessment.exam_sessions.blueprint_version_id`, `learning.lesson_sessions.lesson_version_id`, `lms.assignments.pinned_version_id` + `follow_latest boolean NOT NULL DEFAULT false`, `competition.matches.question_plan_version` (§2.6, §2.8, §2.10, §2.14).

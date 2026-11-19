@@ -380,6 +380,18 @@
     ]
   },
   {
+    "operation_id": "completeMediaUpload",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/media/{asset_id}:complete-upload",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createAdminTenantSchool",
     "module": "identity",
     "method": "POST",
@@ -5078,6 +5090,18 @@
     "module": "learning",
     "method": "POST",
     "path": "/exams/attempts/{attempt_id}:submit",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "submitPreviewResponse",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/preview/sessions/{preview_session_id}/responses",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

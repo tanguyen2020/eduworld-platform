@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/mathx"
 )
 
 // Handler is one question type: semantic validation, scorer and renderer (plan F022 "registry"). Validate reports
@@ -284,8 +285,8 @@ func renderOptions(payload map[string]any, assets []MathAsset) (map[string]any, 
 	return m, nil
 }
 
-// renderRich rewrites a rich content for the client: math blocks carry math_ref (SVG asset) and speech_text instead of
-// LaTeX (ADR-0055); nil stays nil.
+// renderRich rewrites a rich content for the client: math blocks become the math block of mathx (math_ref = SVG
+// asset and speech_text, no LaTeX — F027-AC-14, ADR-0055 §5); nil stays nil.
 func renderRich(doc json.RawMessage, assets []MathAsset) (any, error) {
 	if len(doc) == 0 || bytes.Equal(doc, []byte("null")) {
 		return nil, nil
@@ -294,35 +295,11 @@ func renderRich(doc json.RawMessage, assets []MathAsset) (any, error) {
 	if err := json.Unmarshal(doc, &v); err != nil {
 		return nil, err
 	}
-	byLatex := map[string]MathAsset{}
-	for _, a := range assets {
-		byLatex[a.Latex] = a
+	rendered := make([]mathx.Rendered, len(assets))
+	for i, a := range assets {
+		rendered[i] = mathx.Rendered{Latex: a.Latex, SVGAsset: a.SVGAsset, SpeechText: a.SpeechText}
 	}
-	var rec func(any) any
-	rec = func(x any) any {
-		switch t := x.(type) {
-		case map[string]any:
-			if t["type"] == "math" {
-				if l, ok := t["latex"].(string); ok {
-					delete(t, "latex")
-					if a, ok := byLatex[l]; ok {
-						t["math_ref"], t["speech_text"] = a.SVGAsset, a.SpeechText
-					}
-				}
-			}
-			for k, val := range t {
-				t[k] = rec(val)
-			}
-			return t
-		case []any:
-			for i := range t {
-				t[i] = rec(t[i])
-			}
-			return t
-		}
-		return x
-	}
-	return rec(v), nil
+	return mathx.Transform(v, rendered, false), nil
 }
 
 // decodeStrict decodes a response: unknown fields, trailing data or a wrong shape are ErrInvalidResponse.

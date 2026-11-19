@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/media.uploaded.v1.schema.json",
+  "title": "Payload media.uploaded v1 (module learning, owner F027, ADR-0044)",
+  "description": "completeMediaUpload thấy object trong ew-media-quarantine khớp kích thước và sha256; asset chuyển processing. Envelope tenant_id = tenant sở hữu, null với media platform. Consumer: learning.media_worker (quét virus, magic bytes, xóa EXIF, biến thể).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["asset_id", "tenant_id", "kind", "mime_type", "quarantine_key", "size_bytes", "sha256"],
+  "properties": {
+    "asset_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "kind": { "type": "string", "enum": ["image", "audio", "video", "model3d", "document"] },
+    "mime_type": { "type": "string", "maxLength": 127 },
+    "quarantine_key": { "type": "string", "maxLength": 512 },
+    "size_bytes": { "type": "integer", "minimum": 1 },
+    "sha256": { "type": "string", "maxLength": 64, "pattern": "^[0-9a-f]{64}$" }
+  },
+  "examples": [
+    { "asset_id": "0193a5f4-6c1e-7b2a-9d1f-000000000501", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "kind": "image", "mime_type": "image/jpeg", "quarantine_key": "quarantine/0193a5f4-6c1e-7b2a-9d1f-000000000501", "size_bytes": 482133, "sha256": "9f2c4b1d8e7a6f5c4b3a29180716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4" }
+  ]
+}

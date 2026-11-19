@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/media.rejected.v1.schema.json",
+  "title": "Payload media.rejected v1 (module learning, owner F027, ADR-0044)",
+  "description": "Asset bị từ chối: object không khớp khi completeMediaUpload, nhiễm virus, sai magic bytes, vượt giới hạn hoặc lỗi chuyển đổi. Không mang tên chữ ký virus hay tên file. Envelope tenant_id = tenant sở hữu, null với media platform. Consumer: NTF (người upload).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["asset_id", "tenant_id", "reason"],
+  "properties": {
+    "asset_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "reason": { "type": "string", "enum": ["virus", "type_mismatch", "too_large", "transcode_failed"] }
+  },
+  "examples": [
+    { "asset_id": "0193a5f4-6c1e-7b2a-9d1f-000000000502", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "reason": "virus" }
+  ]
+}

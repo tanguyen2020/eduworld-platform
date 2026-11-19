@@ -24,6 +24,7 @@ var migrations = map[string][]string{
 		"learning_objectives", "competencies", "lo_version_mappings", "textbook_series", "textbooks", "textbook_sections",
 		"textbook_section_objectives", "import_jobs"},
 	"20261125000001_f022_question_bank.sql": {"questions", "question_versions", "question_version_objectives"},
+	"20261126000001_f027_media.sql":         {"media_assets", "media_usages", "math_svgs"},
 }
 
 func schemas() map[string]string {
@@ -36,6 +37,7 @@ func schemas() map[string]string {
 		"lo_version_mappings": c.LoVersionMapping, "textbook_series": c.TextbookSeries, "textbooks": c.Textbook,
 		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob,
 		"questions": c.Question, "question_versions": c.QuestionVersion, "question_version_objectives": c.QuestionVersionObjective,
+		"media_assets": c.MediaAsset, "media_usages": c.MediaUsage, "math_svgs": c.MathSvg,
 	}
 }
 

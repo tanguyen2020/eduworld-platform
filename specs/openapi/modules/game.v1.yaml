@@ -6860,6 +6860,7 @@ components:
           $ref: '#/components/schemas/Timestamp'
     MediaPresignRequest:
       type: object
+      description: alt_text bắt buộc khi kind = image (422 VALIDATION_FAILED); is_exam_material buộc lưu ở ew-media-private (F027)
       required:
         - kind
         - filename
@@ -6888,10 +6889,15 @@ components:
           pattern: ^[0-9a-f]{64}$
         license:
           type: string
-          maxLength: 64
+          minLength: 1
+          maxLength: 255
         alt_text:
           type: string
           maxLength: 500
+        is_exam_material:
+          type: boolean
+          default: false
+          description: Media của đề kiểm tra — luôn ở ew-media-private, phát bằng signed URL
         owner_scope:
           type: string
           enum:
@@ -6910,11 +6916,10 @@ components:
         - document
     MediaPresignResponse:
       type: object
+      description: 'Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01)'
       required:
         - asset_id
         - status
-        - upload_url
-        - expires_at
       properties:
         asset_id:
           $ref: '#/components/schemas/Uuid'
@@ -6988,7 +6993,14 @@ components:
           maxLength: 500
         license:
           type: string
-          maxLength: 64
+          maxLength: 255
+        bucket:
+          type: string
+          enum:
+            - ew-media-public
+            - ew-media-private
+        is_exam_material:
+          type: boolean
         variants:
           type: array
           maxItems: 32
@@ -7005,9 +7017,18 @@ components:
                 type: string
                 format: uri
                 maxLength: 2048
+                description: URL CDN; signed URL hạn media_signed_url_ttl khi bucket = ew-media-private
+              key:
+                type: string
+                maxLength: 512
+              mime_type:
+                type: string
+                maxLength: 127
               size_bytes:
                 type: integer
                 format: int64
+              expires_at:
+                $ref: '#/components/schemas/Timestamp'
         used_in:
           type: array
           maxItems: 500

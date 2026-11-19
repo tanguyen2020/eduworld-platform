@@ -30,6 +30,15 @@ type LearningObjective func(*sql.Selector)
 // LoVersionMapping is the predicate function for loversionmapping builders.
 type LoVersionMapping func(*sql.Selector)
 
+// MathSvg is the predicate function for mathsvg builders.
+type MathSvg func(*sql.Selector)
+
+// MediaAsset is the predicate function for mediaasset builders.
+type MediaAsset func(*sql.Selector)
+
+// MediaUsage is the predicate function for mediausage builders.
+type MediaUsage func(*sql.Selector)
+
 // Question is the predicate function for question builders.
 type Question func(*sql.Selector)
 

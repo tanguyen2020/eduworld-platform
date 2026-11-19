@@ -2885,6 +2885,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/preview/sessions/{preview_session_id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Thử làm trong phiên preview (F027) — chấm server-side bằng scorer của Question Bank, trả đúng/sai, giải thích, phản hồi theo phương án và gợi ý theo cấp; không tạo attempt/learning event/XP; phiên hết hạn → 404 */
+        post: operations["submitPreviewResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/learning/question-sets": {
         parameters: {
             query?: never;
@@ -3336,6 +3353,23 @@ export interface paths {
         get: operations["getMediaAsset"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/media/{asset_id}:complete-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Báo đã PUT xong file vào ew-media-quarantine (F027, ADR-0044) — server kiểm object, kích thước, sha256 rồi chuyển processing và ghi outbox media.uploaded; không khớp → rejected (type_mismatch/too_large); gọi lại trả trạng thái hiện tại, không phát lại event */
+        post: operations["completeMediaUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10295,9 +10329,12 @@ export interface components {
         MediaAsset: {
             alt_text?: string;
             asset_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            bucket?: "ew-media-public" | "ew-media-private";
             created_at?: components["schemas"]["Timestamp"];
             duration_ms?: number;
             height?: number;
+            is_exam_material?: boolean;
             kind: components["schemas"]["MediaKind"];
             license?: string;
             mime_type?: string;
@@ -10316,9 +10353,15 @@ export interface components {
                 version?: number;
             }[];
             variants?: {
+                expires_at?: components["schemas"]["Timestamp"];
+                key?: string;
+                mime_type?: string;
                 /** Format: int64 */
                 size_bytes?: number;
-                /** Format: uri */
+                /**
+                 * Format: uri
+                 * @description URL CDN; signed URL hạn media_signed_url_ttl khi bucket = ew-media-private
+                 */
                 url: string;
                 variant: string;
             }[];
@@ -10326,9 +10369,15 @@ export interface components {
         };
         /** @enum {string} */
         MediaKind: "image" | "audio" | "video" | "model3d" | "document";
+        /** @description alt_text bắt buộc khi kind = image (422 VALIDATION_FAILED); is_exam_material buộc lưu ở ew-media-private (F027) */
         MediaPresignRequest: {
             alt_text?: string;
             filename: string;
+            /**
+             * @description Media của đề kiểm tra — luôn ở ew-media-private, phát bằng signed URL
+             * @default false
+             */
+            is_exam_material: boolean;
             kind: components["schemas"]["MediaKind"];
             license: string;
             mime_type: string;
@@ -10345,16 +10394,17 @@ export interface components {
             size_bytes: number;
             tenant_id?: components["schemas"]["Uuid"];
         };
+        /** @description Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01) */
         MediaPresignResponse: {
             asset_id: components["schemas"]["Uuid"];
             duplicate_of?: components["schemas"]["Uuid"];
-            expires_at: components["schemas"]["Timestamp"];
+            expires_at?: components["schemas"]["Timestamp"];
             status: components["schemas"]["MediaStatus"];
             upload_headers?: {
                 [key: string]: string;
             };
             /** Format: uri */
-            upload_url: string;
+            upload_url?: string;
         };
         /** @enum {string} */
         MediaStatus: "quarantined" | "processing" | "ready" | "rejected";
@@ -10948,6 +10998,40 @@ export interface components {
         };
         /** @enum {string} */
         PortalWorkspaceKey: "school_lms" | "content_studio" | "game_ops" | "live_ops" | "platform_admin";
+        PreviewResponseRequest: {
+            position: number;
+            response: components["schemas"]["QuestionResponse"];
+        };
+        /** @description Kết quả chấm thử trong preview (F027-AC-18) — chỉ cho người soạn/duyệt, không lưu, không phát event */
+        PreviewResponseResult: {
+            /** @description Rich content (CONTENT_MODEL §9), công thức dạng khối math */
+            explanation?: {
+                [key: string]: unknown;
+            };
+            /** @description Phản hồi theo phương án đã chọn (options[].feedback) */
+            feedback?: {
+                feedback?: {
+                    [key: string]: unknown;
+                };
+                option_id: string;
+            }[];
+            /** @description Gợi ý theo cấp (cấp 1 trước) */
+            hint_levels?: {
+                hint: {
+                    [key: string]: unknown;
+                };
+                level: number;
+            }[];
+            is_correct: boolean;
+            max_score: number;
+            parts?: {
+                correct: boolean;
+                id: string;
+            }[];
+            position: number;
+            question_version_id: components["schemas"]["Uuid"];
+            score: number;
+        };
         Principal: {
             display_name?: string;
             roles: components["schemas"]["EffectiveRole"][];
@@ -11113,11 +11197,13 @@ export interface components {
             hints?: {
                 [key: string]: unknown;
             }[];
-            /** @description Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay) */
+            /** @description Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay). Portal gửi svg (MathJax 4) — server kiểm LaTeX, sanitize, lưu math/<sha256>.svg và trả svg_asset; svg_asset không kèm svg phải là SVG đã lưu; thiếu cả hai → 422 MATH_RENDER_FAILED (F027) */
             math_assets?: {
                 latex: string;
                 speech_text: string;
-                svg_asset: string;
+                /** @description SVG ≤ 256 KB (math_svg_max), chỉ gửi lên */
+                svg?: string;
+                svg_asset?: string;
             }[];
             /** @default 1 */
             max_score: number;
@@ -20601,6 +20687,43 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    submitPreviewResponse: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                preview_session_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description Kết quả chấm thử (không lưu) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewResponseResult"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     listCmsQuestionSets: {
         parameters: {
             query?: {
@@ -22061,6 +22184,47 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    completeMediaUpload: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                asset_id: components["parameters"]["AssetIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trạng thái asset sau khi xác nhận (processing, hoặc rejected khi object không khớp) */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaAsset"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     createDuel: {

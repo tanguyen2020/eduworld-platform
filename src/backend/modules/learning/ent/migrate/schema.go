@@ -305,6 +305,121 @@ var (
 		Columns:    LoVersionMappingsColumns,
 		PrimaryKey: []*schema.Column{LoVersionMappingsColumns[0]},
 	}
+	// MathSvgsColumns holds the columns for the "math_svgs" table.
+	MathSvgsColumns = []*schema.Column{
+		{Name: "sha256", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "storage_key", Type: field.TypeString, Size: 128},
+		{Name: "latex", Type: field.TypeString, Size: 2000},
+		{Name: "speech_text", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "size_bytes", Type: field.TypeInt32},
+		{Name: "sanitized_at", Type: field.TypeTime},
+	}
+	// MathSvgsTable holds the schema information for the "math_svgs" table.
+	MathSvgsTable = &schema.Table{
+		Name:       "math_svgs",
+		Columns:    MathSvgsColumns,
+		PrimaryKey: []*schema.Column{MathSvgsColumns[0]},
+	}
+	// MediaAssetsColumns holds the columns for the "media_assets" table.
+	MediaAssetsColumns = []*schema.Column{
+		{Name: "asset_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "kind", Type: field.TypeString, Size: 16},
+		{Name: "original_filename", Type: field.TypeString, Size: 255},
+		{Name: "mime_type", Type: field.TypeString, Size: 127},
+		{Name: "size_bytes", Type: field.TypeInt64},
+		{Name: "width", Type: field.TypeInt32, Nullable: true},
+		{Name: "height", Type: field.TypeInt32, Nullable: true},
+		{Name: "duration_ms", Type: field.TypeInt32, Nullable: true},
+		{Name: "sha256", Type: field.TypeString, Size: 64},
+		{Name: "bucket", Type: field.TypeString, Size: 64},
+		{Name: "variants", Type: field.TypeJSON},
+		{Name: "alt_text", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "license", Type: field.TypeString, Size: 255},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "quarantined"},
+		{Name: "reject_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "quarantine_key", Type: field.TypeString, Size: 512},
+		{Name: "is_exam_material", Type: field.TypeBool, Default: false},
+		{Name: "upload_completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "uploaded_by", Type: field.TypeUUID},
+	}
+	// MediaAssetsTable holds the schema information for the "media_assets" table.
+	MediaAssetsTable = &schema.Table{
+		Name:       "media_assets",
+		Columns:    MediaAssetsColumns,
+		PrimaryKey: []*schema.Column{MediaAssetsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "media_assets_library_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MediaAssetsColumns[10], MediaAssetsColumns[1], MediaAssetsColumns[11], MediaAssetsColumns[23]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// MediaUsagesColumns holds the columns for the "media_usages" table.
+	MediaUsagesColumns = []*schema.Column{
+		{Name: "media_usage_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "asset_id", Type: field.TypeUUID},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "item_id", Type: field.TypeUUID},
+		{Name: "version_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+	}
+	// MediaUsagesTable holds the schema information for the "media_usages" table.
+	MediaUsagesTable = &schema.Table{
+		Name:       "media_usages",
+		Columns:    MediaUsagesColumns,
+		PrimaryKey: []*schema.Column{MediaUsagesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "media_usages_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MediaUsagesColumns[11], MediaUsagesColumns[12], MediaUsagesColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "media_usages_version_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MediaUsagesColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// QuestionsColumns holds the columns for the "questions" table.
 	QuestionsColumns = []*schema.Column{
 		{Name: "question_id", Type: field.TypeUUID},
@@ -761,6 +876,9 @@ var (
 		ImportJobsTable,
 		LearningObjectivesTable,
 		LoVersionMappingsTable,
+		MathSvgsTable,
+		MediaAssetsTable,
+		MediaUsagesTable,
 		QuestionsTable,
 		QuestionVersionsTable,
 		QuestionVersionObjectivesTable,
@@ -799,6 +917,15 @@ func init() {
 	}
 	LoVersionMappingsTable.Annotation = &entsql.Annotation{
 		Table: "lo_version_mappings",
+	}
+	MathSvgsTable.Annotation = &entsql.Annotation{
+		Table: "math_svgs",
+	}
+	MediaAssetsTable.Annotation = &entsql.Annotation{
+		Table: "media_assets",
+	}
+	MediaUsagesTable.Annotation = &entsql.Annotation{
+		Table: "media_usages",
 	}
 	QuestionsTable.Annotation = &entsql.Annotation{
 		Table: "questions",

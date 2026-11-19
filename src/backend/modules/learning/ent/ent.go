@@ -20,6 +20,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
@@ -99,6 +102,9 @@ func checkColumn(t, c string) error {
 			importjob.Table:                importjob.ValidColumn,
 			learningobjective.Table:        learningobjective.ValidColumn,
 			loversionmapping.Table:         loversionmapping.ValidColumn,
+			mathsvg.Table:                  mathsvg.ValidColumn,
+			mediaasset.Table:               mediaasset.ValidColumn,
+			mediausage.Table:               mediausage.ValidColumn,
 			question.Table:                 question.ValidColumn,
 			questionversion.Table:          questionversion.ValidColumn,
 			questionversionobjective.Table: questionversionobjective.ValidColumn,
