@@ -69,6 +69,30 @@ func (f ExternalIdentityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExternalIdentityMutation", m)
 }
 
+// The PermissionFunc type is an adapter to allow the use of ordinary
+// function as Permission mutator.
+type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PermissionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionMutation", m)
+}
+
+// The PortalPasswordResetTokenFunc type is an adapter to allow the use of ordinary
+// function as PortalPasswordResetToken mutator.
+type PortalPasswordResetTokenFunc func(context.Context, *ent.PortalPasswordResetTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PortalPasswordResetTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PortalPasswordResetTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PortalPasswordResetTokenMutation", m)
+}
+
 // The ProvinceFunc type is an adapter to allow the use of ordinary
 // function as Province mutator.
 type ProvinceFunc func(context.Context, *ent.ProvinceMutation) (ent.Value, error)
@@ -103,6 +127,30 @@ func (f ReconciliationIssueFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReconciliationIssueMutation", m)
+}
+
+// The RoleFunc type is an adapter to allow the use of ordinary
+// function as Role mutator.
+type RoleFunc func(context.Context, *ent.RoleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RoleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
+}
+
+// The RolePermissionFunc type is an adapter to allow the use of ordinary
+// function as RolePermission mutator.
+type RolePermissionFunc func(context.Context, *ent.RolePermissionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RolePermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RolePermissionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RolePermissionMutation", m)
 }
 
 // The SchoolFunc type is an adapter to allow the use of ordinary
@@ -271,6 +319,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The UserRoleFunc type is an adapter to allow the use of ordinary
+// function as UserRole mutator.
+type UserRoleFunc func(context.Context, *ent.UserRoleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserRoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserRoleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserRoleMutation", m)
 }
 
 // Condition is a hook condition function.

@@ -23,6 +23,7 @@ var migrations = map[string][]string{
 		"province_successions", "schools", "students", "tenants", "users"},
 	"20261120000001_f011_sis.sql": {"reconciliation_issues", "sis_connection_schools", "sis_connections", "sis_identity_links",
 		"sis_imports", "sis_links", "student_login_keys", "sync_runs", "synced_students"},
+	"20261121000001_f012_authz.sql": {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
 }
 
 func schemas() map[string]string {
@@ -35,6 +36,8 @@ func schemas() map[string]string {
 		"staging_records": c.StagingRecord, "sync_record_errors": c.SyncRecordError, "sis_imports": c.SisImport,
 		"sis_links": c.SisLink, "synced_students": c.SyncedStudent, "student_login_keys": c.StudentLoginKey,
 		"reconciliation_issues": c.ReconciliationIssue, "sis_identity_links": c.SisIdentityLink,
+		"permissions": c.Permission, "roles": c.Role, "role_permissions": c.RolePermission, "user_roles": c.UserRole,
+		"portal_password_reset_tokens": c.PortalPasswordResetToken,
 	}
 }
 

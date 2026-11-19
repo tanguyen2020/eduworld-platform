@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
@@ -39,6 +40,9 @@ type env struct {
 func setup(ctx context.Context, t *testing.T) *env {
 	t.Helper()
 	cl := testkit.Isolated(ctx, t)
+	if _, err := identity.SyncAuthzCatalog(ctx, open(t, cl.ModuleDSN("identity", "migrator"))); err != nil { // F012 catalog + system roles
+		t.Fatal(err)
+	}
 	e := &env{app: open(t, cl.ModuleDSN("identity", "app")), platform: open(t, cl.ModuleDSN("identity", "platform")),
 		relay: open(t, cl.ModuleDSN("identity", "relay"))}
 	w, err := outbox.NewWriter("identity", "core", nil)

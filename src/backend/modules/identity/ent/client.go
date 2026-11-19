@@ -20,9 +20,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/role"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/rolepermission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
@@ -37,6 +41,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/userrole"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/internal"
 )
@@ -56,12 +61,20 @@ type Client struct {
 	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
+	// PortalPasswordResetToken is the client for interacting with the PortalPasswordResetToken builders.
+	PortalPasswordResetToken *PortalPasswordResetTokenClient
 	// Province is the client for interacting with the Province builders.
 	Province *ProvinceClient
 	// ProvinceSuccession is the client for interacting with the ProvinceSuccession builders.
 	ProvinceSuccession *ProvinceSuccessionClient
 	// ReconciliationIssue is the client for interacting with the ReconciliationIssue builders.
 	ReconciliationIssue *ReconciliationIssueClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
+	// RolePermission is the client for interacting with the RolePermission builders.
+	RolePermission *RolePermissionClient
 	// School is the client for interacting with the School builders.
 	School *SchoolClient
 	// SisConnection is the client for interacting with the SisConnection builders.
@@ -90,6 +103,8 @@ type Client struct {
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserRole is the client for interacting with the UserRole builders.
+	UserRole *UserRoleClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -106,9 +121,13 @@ func (c *Client) init() {
 	c.Country = NewCountryClient(c.config)
 	c.Enrollment = NewEnrollmentClient(c.config)
 	c.ExternalIdentity = NewExternalIdentityClient(c.config)
+	c.Permission = NewPermissionClient(c.config)
+	c.PortalPasswordResetToken = NewPortalPasswordResetTokenClient(c.config)
 	c.Province = NewProvinceClient(c.config)
 	c.ProvinceSuccession = NewProvinceSuccessionClient(c.config)
 	c.ReconciliationIssue = NewReconciliationIssueClient(c.config)
+	c.Role = NewRoleClient(c.config)
+	c.RolePermission = NewRolePermissionClient(c.config)
 	c.School = NewSchoolClient(c.config)
 	c.SisConnection = NewSisConnectionClient(c.config)
 	c.SisConnectionSchool = NewSisConnectionSchoolClient(c.config)
@@ -123,6 +142,7 @@ func (c *Client) init() {
 	c.SyncedStudent = NewSyncedStudentClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.UserRole = NewUserRoleClient(c.config)
 }
 
 type (
@@ -216,30 +236,35 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                 ctx,
-		config:              cfg,
-		AcademicYear:        NewAcademicYearClient(cfg),
-		Class:               NewClassClient(cfg),
-		Country:             NewCountryClient(cfg),
-		Enrollment:          NewEnrollmentClient(cfg),
-		ExternalIdentity:    NewExternalIdentityClient(cfg),
-		Province:            NewProvinceClient(cfg),
-		ProvinceSuccession:  NewProvinceSuccessionClient(cfg),
-		ReconciliationIssue: NewReconciliationIssueClient(cfg),
-		School:              NewSchoolClient(cfg),
-		SisConnection:       NewSisConnectionClient(cfg),
-		SisConnectionSchool: NewSisConnectionSchoolClient(cfg),
-		SisIdentityLink:     NewSisIdentityLinkClient(cfg),
-		SisImport:           NewSisImportClient(cfg),
-		SisLink:             NewSisLinkClient(cfg),
-		StagingRecord:       NewStagingRecordClient(cfg),
-		Student:             NewStudentClient(cfg),
-		StudentLoginKey:     NewStudentLoginKeyClient(cfg),
-		SyncRecordError:     NewSyncRecordErrorClient(cfg),
-		SyncRun:             NewSyncRunClient(cfg),
-		SyncedStudent:       NewSyncedStudentClient(cfg),
-		Tenant:              NewTenantClient(cfg),
-		User:                NewUserClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		AcademicYear:             NewAcademicYearClient(cfg),
+		Class:                    NewClassClient(cfg),
+		Country:                  NewCountryClient(cfg),
+		Enrollment:               NewEnrollmentClient(cfg),
+		ExternalIdentity:         NewExternalIdentityClient(cfg),
+		Permission:               NewPermissionClient(cfg),
+		PortalPasswordResetToken: NewPortalPasswordResetTokenClient(cfg),
+		Province:                 NewProvinceClient(cfg),
+		ProvinceSuccession:       NewProvinceSuccessionClient(cfg),
+		ReconciliationIssue:      NewReconciliationIssueClient(cfg),
+		Role:                     NewRoleClient(cfg),
+		RolePermission:           NewRolePermissionClient(cfg),
+		School:                   NewSchoolClient(cfg),
+		SisConnection:            NewSisConnectionClient(cfg),
+		SisConnectionSchool:      NewSisConnectionSchoolClient(cfg),
+		SisIdentityLink:          NewSisIdentityLinkClient(cfg),
+		SisImport:                NewSisImportClient(cfg),
+		SisLink:                  NewSisLinkClient(cfg),
+		StagingRecord:            NewStagingRecordClient(cfg),
+		Student:                  NewStudentClient(cfg),
+		StudentLoginKey:          NewStudentLoginKeyClient(cfg),
+		SyncRecordError:          NewSyncRecordErrorClient(cfg),
+		SyncRun:                  NewSyncRunClient(cfg),
+		SyncedStudent:            NewSyncedStudentClient(cfg),
+		Tenant:                   NewTenantClient(cfg),
+		User:                     NewUserClient(cfg),
+		UserRole:                 NewUserRoleClient(cfg),
 	}, nil
 }
 
@@ -257,30 +282,35 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                 ctx,
-		config:              cfg,
-		AcademicYear:        NewAcademicYearClient(cfg),
-		Class:               NewClassClient(cfg),
-		Country:             NewCountryClient(cfg),
-		Enrollment:          NewEnrollmentClient(cfg),
-		ExternalIdentity:    NewExternalIdentityClient(cfg),
-		Province:            NewProvinceClient(cfg),
-		ProvinceSuccession:  NewProvinceSuccessionClient(cfg),
-		ReconciliationIssue: NewReconciliationIssueClient(cfg),
-		School:              NewSchoolClient(cfg),
-		SisConnection:       NewSisConnectionClient(cfg),
-		SisConnectionSchool: NewSisConnectionSchoolClient(cfg),
-		SisIdentityLink:     NewSisIdentityLinkClient(cfg),
-		SisImport:           NewSisImportClient(cfg),
-		SisLink:             NewSisLinkClient(cfg),
-		StagingRecord:       NewStagingRecordClient(cfg),
-		Student:             NewStudentClient(cfg),
-		StudentLoginKey:     NewStudentLoginKeyClient(cfg),
-		SyncRecordError:     NewSyncRecordErrorClient(cfg),
-		SyncRun:             NewSyncRunClient(cfg),
-		SyncedStudent:       NewSyncedStudentClient(cfg),
-		Tenant:              NewTenantClient(cfg),
-		User:                NewUserClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		AcademicYear:             NewAcademicYearClient(cfg),
+		Class:                    NewClassClient(cfg),
+		Country:                  NewCountryClient(cfg),
+		Enrollment:               NewEnrollmentClient(cfg),
+		ExternalIdentity:         NewExternalIdentityClient(cfg),
+		Permission:               NewPermissionClient(cfg),
+		PortalPasswordResetToken: NewPortalPasswordResetTokenClient(cfg),
+		Province:                 NewProvinceClient(cfg),
+		ProvinceSuccession:       NewProvinceSuccessionClient(cfg),
+		ReconciliationIssue:      NewReconciliationIssueClient(cfg),
+		Role:                     NewRoleClient(cfg),
+		RolePermission:           NewRolePermissionClient(cfg),
+		School:                   NewSchoolClient(cfg),
+		SisConnection:            NewSisConnectionClient(cfg),
+		SisConnectionSchool:      NewSisConnectionSchoolClient(cfg),
+		SisIdentityLink:          NewSisIdentityLinkClient(cfg),
+		SisImport:                NewSisImportClient(cfg),
+		SisLink:                  NewSisLinkClient(cfg),
+		StagingRecord:            NewStagingRecordClient(cfg),
+		Student:                  NewStudentClient(cfg),
+		StudentLoginKey:          NewStudentLoginKeyClient(cfg),
+		SyncRecordError:          NewSyncRecordErrorClient(cfg),
+		SyncRun:                  NewSyncRunClient(cfg),
+		SyncedStudent:            NewSyncedStudentClient(cfg),
+		Tenant:                   NewTenantClient(cfg),
+		User:                     NewUserClient(cfg),
+		UserRole:                 NewUserRoleClient(cfg),
 	}, nil
 }
 
@@ -311,10 +341,11 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.School,
-		c.SisConnection, c.SisConnectionSchool, c.SisIdentityLink, c.SisImport,
-		c.SisLink, c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError,
-		c.SyncRun, c.SyncedStudent, c.Tenant, c.User,
+		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
+		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
+		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
+		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
+		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -325,10 +356,11 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.School,
-		c.SisConnection, c.SisConnectionSchool, c.SisIdentityLink, c.SisImport,
-		c.SisLink, c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError,
-		c.SyncRun, c.SyncedStudent, c.Tenant, c.User,
+		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
+		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
+		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
+		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
+		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -347,12 +379,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Enrollment.mutate(ctx, m)
 	case *ExternalIdentityMutation:
 		return c.ExternalIdentity.mutate(ctx, m)
+	case *PermissionMutation:
+		return c.Permission.mutate(ctx, m)
+	case *PortalPasswordResetTokenMutation:
+		return c.PortalPasswordResetToken.mutate(ctx, m)
 	case *ProvinceMutation:
 		return c.Province.mutate(ctx, m)
 	case *ProvinceSuccessionMutation:
 		return c.ProvinceSuccession.mutate(ctx, m)
 	case *ReconciliationIssueMutation:
 		return c.ReconciliationIssue.mutate(ctx, m)
+	case *RoleMutation:
+		return c.Role.mutate(ctx, m)
+	case *RolePermissionMutation:
+		return c.RolePermission.mutate(ctx, m)
 	case *SchoolMutation:
 		return c.School.mutate(ctx, m)
 	case *SisConnectionMutation:
@@ -381,6 +421,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Tenant.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *UserRoleMutation:
+		return c.UserRole.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1061,6 +1103,276 @@ func (c *ExternalIdentityClient) mutate(ctx context.Context, m *ExternalIdentity
 	}
 }
 
+// PermissionClient is a client for the Permission schema.
+type PermissionClient struct {
+	config
+}
+
+// NewPermissionClient returns a client for the Permission from the given config.
+func NewPermissionClient(c config) *PermissionClient {
+	return &PermissionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `permission.Hooks(f(g(h())))`.
+func (c *PermissionClient) Use(hooks ...Hook) {
+	c.hooks.Permission = append(c.hooks.Permission, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `permission.Intercept(f(g(h())))`.
+func (c *PermissionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Permission = append(c.inters.Permission, interceptors...)
+}
+
+// Create returns a builder for creating a Permission entity.
+func (c *PermissionClient) Create() *PermissionCreate {
+	mutation := newPermissionMutation(c.config, OpCreate)
+	return &PermissionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Permission entities.
+func (c *PermissionClient) CreateBulk(builders ...*PermissionCreate) *PermissionCreateBulk {
+	return &PermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PermissionClient) MapCreateBulk(slice any, setFunc func(*PermissionCreate, int)) *PermissionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PermissionCreateBulk{err: fmt.Errorf("calling to PermissionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PermissionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Permission.
+func (c *PermissionClient) Update() *PermissionUpdate {
+	mutation := newPermissionMutation(c.config, OpUpdate)
+	return &PermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PermissionClient) UpdateOne(_m *Permission) *PermissionUpdateOne {
+	mutation := newPermissionMutation(c.config, OpUpdateOne, withPermission(_m))
+	return &PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PermissionClient) UpdateOneID(id string) *PermissionUpdateOne {
+	mutation := newPermissionMutation(c.config, OpUpdateOne, withPermissionID(id))
+	return &PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Permission.
+func (c *PermissionClient) Delete() *PermissionDelete {
+	mutation := newPermissionMutation(c.config, OpDelete)
+	return &PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PermissionClient) DeleteOne(_m *Permission) *PermissionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PermissionClient) DeleteOneID(id string) *PermissionDeleteOne {
+	builder := c.Delete().Where(permission.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PermissionDeleteOne{builder}
+}
+
+// Query returns a query builder for Permission.
+func (c *PermissionClient) Query() *PermissionQuery {
+	return &PermissionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePermission},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Permission entity by its id.
+func (c *PermissionClient) Get(ctx context.Context, id string) (*Permission, error) {
+	return c.Query().Where(permission.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PermissionClient) GetX(ctx context.Context, id string) *Permission {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PermissionClient) Hooks() []Hook {
+	hooks := c.hooks.Permission
+	return append(hooks[:len(hooks):len(hooks)], permission.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PermissionClient) Interceptors() []Interceptor {
+	inters := c.inters.Permission
+	return append(inters[:len(inters):len(inters)], permission.Interceptors[:]...)
+}
+
+func (c *PermissionClient) mutate(ctx context.Context, m *PermissionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PermissionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Permission mutation op: %q", m.Op())
+	}
+}
+
+// PortalPasswordResetTokenClient is a client for the PortalPasswordResetToken schema.
+type PortalPasswordResetTokenClient struct {
+	config
+}
+
+// NewPortalPasswordResetTokenClient returns a client for the PortalPasswordResetToken from the given config.
+func NewPortalPasswordResetTokenClient(c config) *PortalPasswordResetTokenClient {
+	return &PortalPasswordResetTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `portalpasswordresettoken.Hooks(f(g(h())))`.
+func (c *PortalPasswordResetTokenClient) Use(hooks ...Hook) {
+	c.hooks.PortalPasswordResetToken = append(c.hooks.PortalPasswordResetToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `portalpasswordresettoken.Intercept(f(g(h())))`.
+func (c *PortalPasswordResetTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PortalPasswordResetToken = append(c.inters.PortalPasswordResetToken, interceptors...)
+}
+
+// Create returns a builder for creating a PortalPasswordResetToken entity.
+func (c *PortalPasswordResetTokenClient) Create() *PortalPasswordResetTokenCreate {
+	mutation := newPortalPasswordResetTokenMutation(c.config, OpCreate)
+	return &PortalPasswordResetTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PortalPasswordResetToken entities.
+func (c *PortalPasswordResetTokenClient) CreateBulk(builders ...*PortalPasswordResetTokenCreate) *PortalPasswordResetTokenCreateBulk {
+	return &PortalPasswordResetTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PortalPasswordResetTokenClient) MapCreateBulk(slice any, setFunc func(*PortalPasswordResetTokenCreate, int)) *PortalPasswordResetTokenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PortalPasswordResetTokenCreateBulk{err: fmt.Errorf("calling to PortalPasswordResetTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PortalPasswordResetTokenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PortalPasswordResetTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PortalPasswordResetToken.
+func (c *PortalPasswordResetTokenClient) Update() *PortalPasswordResetTokenUpdate {
+	mutation := newPortalPasswordResetTokenMutation(c.config, OpUpdate)
+	return &PortalPasswordResetTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PortalPasswordResetTokenClient) UpdateOne(_m *PortalPasswordResetToken) *PortalPasswordResetTokenUpdateOne {
+	mutation := newPortalPasswordResetTokenMutation(c.config, OpUpdateOne, withPortalPasswordResetToken(_m))
+	return &PortalPasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PortalPasswordResetTokenClient) UpdateOneID(id uuid.UUID) *PortalPasswordResetTokenUpdateOne {
+	mutation := newPortalPasswordResetTokenMutation(c.config, OpUpdateOne, withPortalPasswordResetTokenID(id))
+	return &PortalPasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PortalPasswordResetToken.
+func (c *PortalPasswordResetTokenClient) Delete() *PortalPasswordResetTokenDelete {
+	mutation := newPortalPasswordResetTokenMutation(c.config, OpDelete)
+	return &PortalPasswordResetTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PortalPasswordResetTokenClient) DeleteOne(_m *PortalPasswordResetToken) *PortalPasswordResetTokenDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PortalPasswordResetTokenClient) DeleteOneID(id uuid.UUID) *PortalPasswordResetTokenDeleteOne {
+	builder := c.Delete().Where(portalpasswordresettoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PortalPasswordResetTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for PortalPasswordResetToken.
+func (c *PortalPasswordResetTokenClient) Query() *PortalPasswordResetTokenQuery {
+	return &PortalPasswordResetTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePortalPasswordResetToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PortalPasswordResetToken entity by its id.
+func (c *PortalPasswordResetTokenClient) Get(ctx context.Context, id uuid.UUID) (*PortalPasswordResetToken, error) {
+	return c.Query().Where(portalpasswordresettoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PortalPasswordResetTokenClient) GetX(ctx context.Context, id uuid.UUID) *PortalPasswordResetToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PortalPasswordResetTokenClient) Hooks() []Hook {
+	hooks := c.hooks.PortalPasswordResetToken
+	return append(hooks[:len(hooks):len(hooks)], portalpasswordresettoken.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PortalPasswordResetTokenClient) Interceptors() []Interceptor {
+	inters := c.inters.PortalPasswordResetToken
+	return append(inters[:len(inters):len(inters)], portalpasswordresettoken.Interceptors[:]...)
+}
+
+func (c *PortalPasswordResetTokenClient) mutate(ctx context.Context, m *PortalPasswordResetTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PortalPasswordResetTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PortalPasswordResetTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PortalPasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PortalPasswordResetTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PortalPasswordResetToken mutation op: %q", m.Op())
+	}
+}
+
 // ProvinceClient is a client for the Province schema.
 type ProvinceClient struct {
 	config
@@ -1463,6 +1775,276 @@ func (c *ReconciliationIssueClient) mutate(ctx context.Context, m *Reconciliatio
 		return (&ReconciliationIssueDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ReconciliationIssue mutation op: %q", m.Op())
+	}
+}
+
+// RoleClient is a client for the Role schema.
+type RoleClient struct {
+	config
+}
+
+// NewRoleClient returns a client for the Role from the given config.
+func NewRoleClient(c config) *RoleClient {
+	return &RoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `role.Hooks(f(g(h())))`.
+func (c *RoleClient) Use(hooks ...Hook) {
+	c.hooks.Role = append(c.hooks.Role, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `role.Intercept(f(g(h())))`.
+func (c *RoleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Role = append(c.inters.Role, interceptors...)
+}
+
+// Create returns a builder for creating a Role entity.
+func (c *RoleClient) Create() *RoleCreate {
+	mutation := newRoleMutation(c.config, OpCreate)
+	return &RoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Role entities.
+func (c *RoleClient) CreateBulk(builders ...*RoleCreate) *RoleCreateBulk {
+	return &RoleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RoleClient) MapCreateBulk(slice any, setFunc func(*RoleCreate, int)) *RoleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RoleCreateBulk{err: fmt.Errorf("calling to RoleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RoleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RoleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Role.
+func (c *RoleClient) Update() *RoleUpdate {
+	mutation := newRoleMutation(c.config, OpUpdate)
+	return &RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RoleClient) UpdateOne(_m *Role) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRole(_m))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RoleClient) UpdateOneID(id uuid.UUID) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRoleID(id))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Role.
+func (c *RoleClient) Delete() *RoleDelete {
+	mutation := newRoleMutation(c.config, OpDelete)
+	return &RoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RoleClient) DeleteOne(_m *Role) *RoleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RoleClient) DeleteOneID(id uuid.UUID) *RoleDeleteOne {
+	builder := c.Delete().Where(role.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RoleDeleteOne{builder}
+}
+
+// Query returns a query builder for Role.
+func (c *RoleClient) Query() *RoleQuery {
+	return &RoleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRole},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Role entity by its id.
+func (c *RoleClient) Get(ctx context.Context, id uuid.UUID) (*Role, error) {
+	return c.Query().Where(role.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RoleClient) GetX(ctx context.Context, id uuid.UUID) *Role {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RoleClient) Hooks() []Hook {
+	hooks := c.hooks.Role
+	return append(hooks[:len(hooks):len(hooks)], role.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RoleClient) Interceptors() []Interceptor {
+	inters := c.inters.Role
+	return append(inters[:len(inters):len(inters)], role.Interceptors[:]...)
+}
+
+func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RoleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Role mutation op: %q", m.Op())
+	}
+}
+
+// RolePermissionClient is a client for the RolePermission schema.
+type RolePermissionClient struct {
+	config
+}
+
+// NewRolePermissionClient returns a client for the RolePermission from the given config.
+func NewRolePermissionClient(c config) *RolePermissionClient {
+	return &RolePermissionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rolepermission.Hooks(f(g(h())))`.
+func (c *RolePermissionClient) Use(hooks ...Hook) {
+	c.hooks.RolePermission = append(c.hooks.RolePermission, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rolepermission.Intercept(f(g(h())))`.
+func (c *RolePermissionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RolePermission = append(c.inters.RolePermission, interceptors...)
+}
+
+// Create returns a builder for creating a RolePermission entity.
+func (c *RolePermissionClient) Create() *RolePermissionCreate {
+	mutation := newRolePermissionMutation(c.config, OpCreate)
+	return &RolePermissionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RolePermission entities.
+func (c *RolePermissionClient) CreateBulk(builders ...*RolePermissionCreate) *RolePermissionCreateBulk {
+	return &RolePermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RolePermissionClient) MapCreateBulk(slice any, setFunc func(*RolePermissionCreate, int)) *RolePermissionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RolePermissionCreateBulk{err: fmt.Errorf("calling to RolePermissionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RolePermissionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RolePermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RolePermission.
+func (c *RolePermissionClient) Update() *RolePermissionUpdate {
+	mutation := newRolePermissionMutation(c.config, OpUpdate)
+	return &RolePermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RolePermissionClient) UpdateOne(_m *RolePermission) *RolePermissionUpdateOne {
+	mutation := newRolePermissionMutation(c.config, OpUpdateOne, withRolePermission(_m))
+	return &RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RolePermissionClient) UpdateOneID(id uuid.UUID) *RolePermissionUpdateOne {
+	mutation := newRolePermissionMutation(c.config, OpUpdateOne, withRolePermissionID(id))
+	return &RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RolePermission.
+func (c *RolePermissionClient) Delete() *RolePermissionDelete {
+	mutation := newRolePermissionMutation(c.config, OpDelete)
+	return &RolePermissionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RolePermissionClient) DeleteOne(_m *RolePermission) *RolePermissionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RolePermissionClient) DeleteOneID(id uuid.UUID) *RolePermissionDeleteOne {
+	builder := c.Delete().Where(rolepermission.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RolePermissionDeleteOne{builder}
+}
+
+// Query returns a query builder for RolePermission.
+func (c *RolePermissionClient) Query() *RolePermissionQuery {
+	return &RolePermissionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRolePermission},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RolePermission entity by its id.
+func (c *RolePermissionClient) Get(ctx context.Context, id uuid.UUID) (*RolePermission, error) {
+	return c.Query().Where(rolepermission.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RolePermissionClient) GetX(ctx context.Context, id uuid.UUID) *RolePermission {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RolePermissionClient) Hooks() []Hook {
+	hooks := c.hooks.RolePermission
+	return append(hooks[:len(hooks):len(hooks)], rolepermission.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RolePermissionClient) Interceptors() []Interceptor {
+	inters := c.inters.RolePermission
+	return append(inters[:len(inters):len(inters)], rolepermission.Interceptors[:]...)
+}
+
+func (c *RolePermissionClient) mutate(ctx context.Context, m *RolePermissionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RolePermissionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RolePermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RolePermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RolePermission mutation op: %q", m.Op())
 	}
 }
 
@@ -3354,49 +3936,190 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// UserRoleClient is a client for the UserRole schema.
+type UserRoleClient struct {
+	config
+}
+
+// NewUserRoleClient returns a client for the UserRole from the given config.
+func NewUserRoleClient(c config) *UserRoleClient {
+	return &UserRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userrole.Hooks(f(g(h())))`.
+func (c *UserRoleClient) Use(hooks ...Hook) {
+	c.hooks.UserRole = append(c.hooks.UserRole, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userrole.Intercept(f(g(h())))`.
+func (c *UserRoleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserRole = append(c.inters.UserRole, interceptors...)
+}
+
+// Create returns a builder for creating a UserRole entity.
+func (c *UserRoleClient) Create() *UserRoleCreate {
+	mutation := newUserRoleMutation(c.config, OpCreate)
+	return &UserRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserRole entities.
+func (c *UserRoleClient) CreateBulk(builders ...*UserRoleCreate) *UserRoleCreateBulk {
+	return &UserRoleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserRoleClient) MapCreateBulk(slice any, setFunc func(*UserRoleCreate, int)) *UserRoleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserRoleCreateBulk{err: fmt.Errorf("calling to UserRoleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserRoleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserRoleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserRole.
+func (c *UserRoleClient) Update() *UserRoleUpdate {
+	mutation := newUserRoleMutation(c.config, OpUpdate)
+	return &UserRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserRoleClient) UpdateOne(_m *UserRole) *UserRoleUpdateOne {
+	mutation := newUserRoleMutation(c.config, OpUpdateOne, withUserRole(_m))
+	return &UserRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserRoleClient) UpdateOneID(id uuid.UUID) *UserRoleUpdateOne {
+	mutation := newUserRoleMutation(c.config, OpUpdateOne, withUserRoleID(id))
+	return &UserRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserRole.
+func (c *UserRoleClient) Delete() *UserRoleDelete {
+	mutation := newUserRoleMutation(c.config, OpDelete)
+	return &UserRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserRoleClient) DeleteOne(_m *UserRole) *UserRoleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserRoleClient) DeleteOneID(id uuid.UUID) *UserRoleDeleteOne {
+	builder := c.Delete().Where(userrole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserRoleDeleteOne{builder}
+}
+
+// Query returns a query builder for UserRole.
+func (c *UserRoleClient) Query() *UserRoleQuery {
+	return &UserRoleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserRole},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserRole entity by its id.
+func (c *UserRoleClient) Get(ctx context.Context, id uuid.UUID) (*UserRole, error) {
+	return c.Query().Where(userrole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserRoleClient) GetX(ctx context.Context, id uuid.UUID) *UserRole {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UserRoleClient) Hooks() []Hook {
+	hooks := c.hooks.UserRole
+	return append(hooks[:len(hooks):len(hooks)], userrole.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserRoleClient) Interceptors() []Interceptor {
+	inters := c.inters.UserRole
+	return append(inters[:len(inters):len(inters)], userrole.Interceptors[:]...)
+}
+
+func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserRoleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserRoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserRole mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Province,
-		ProvinceSuccession, ReconciliationIssue, School, SisConnection,
-		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
-		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
-		User []ent.Hook
+		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Permission,
+		PortalPasswordResetToken, Province, ProvinceSuccession, ReconciliationIssue,
+		Role, RolePermission, School, SisConnection, SisConnectionSchool,
+		SisIdentityLink, SisImport, SisLink, StagingRecord, Student, StudentLoginKey,
+		SyncRecordError, SyncRun, SyncedStudent, Tenant, User, UserRole []ent.Hook
 	}
 	inters struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Province,
-		ProvinceSuccession, ReconciliationIssue, School, SisConnection,
-		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
-		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
-		User []ent.Interceptor
+		AcademicYear, Class, Country, Enrollment, ExternalIdentity, Permission,
+		PortalPasswordResetToken, Province, ProvinceSuccession, ReconciliationIssue,
+		Role, RolePermission, School, SisConnection, SisConnectionSchool,
+		SisIdentityLink, SisImport, SisLink, StagingRecord, Student, StudentLoginKey,
+		SyncRecordError, SyncRun, SyncedStudent, Tenant, User,
+		UserRole []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		AcademicYear:        tableSchemas[2],
-		Class:               tableSchemas[2],
-		Country:             tableSchemas[0],
-		Enrollment:          tableSchemas[2],
-		ExternalIdentity:    tableSchemas[1],
-		Province:            tableSchemas[0],
-		ProvinceSuccession:  tableSchemas[0],
-		ReconciliationIssue: tableSchemas[4],
-		School:              tableSchemas[2],
-		SisConnection:       tableSchemas[4],
-		SisConnectionSchool: tableSchemas[4],
-		SisIdentityLink:     tableSchemas[1],
-		SisImport:           tableSchemas[4],
-		SisLink:             tableSchemas[4],
-		StagingRecord:       tableSchemas[4],
-		Student:             tableSchemas[2],
-		StudentLoginKey:     tableSchemas[4],
-		SyncRecordError:     tableSchemas[4],
-		SyncRun:             tableSchemas[4],
-		SyncedStudent:       tableSchemas[4],
-		Tenant:              tableSchemas[3],
-		User:                tableSchemas[1],
+		AcademicYear:             tableSchemas[2],
+		Class:                    tableSchemas[2],
+		Country:                  tableSchemas[0],
+		Enrollment:               tableSchemas[2],
+		ExternalIdentity:         tableSchemas[1],
+		Permission:               tableSchemas[1],
+		PortalPasswordResetToken: tableSchemas[1],
+		Province:                 tableSchemas[0],
+		ProvinceSuccession:       tableSchemas[0],
+		ReconciliationIssue:      tableSchemas[4],
+		Role:                     tableSchemas[1],
+		RolePermission:           tableSchemas[1],
+		School:                   tableSchemas[2],
+		SisConnection:            tableSchemas[4],
+		SisConnectionSchool:      tableSchemas[4],
+		SisIdentityLink:          tableSchemas[1],
+		SisImport:                tableSchemas[4],
+		SisLink:                  tableSchemas[4],
+		StagingRecord:            tableSchemas[4],
+		Student:                  tableSchemas[2],
+		StudentLoginKey:          tableSchemas[4],
+		SyncRecordError:          tableSchemas[4],
+		SyncRun:                  tableSchemas[4],
+		SyncedStudent:            tableSchemas[4],
+		Tenant:                   tableSchemas[3],
+		User:                     tableSchemas[1],
+		UserRole:                 tableSchemas[1],
 	}
 	tableSchemas = [...]string{"catalog", "identity", "org", "platform", "sis"}
 )

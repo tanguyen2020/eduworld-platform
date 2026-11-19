@@ -22,12 +22,20 @@ type Tx struct {
 	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
+	// PortalPasswordResetToken is the client for interacting with the PortalPasswordResetToken builders.
+	PortalPasswordResetToken *PortalPasswordResetTokenClient
 	// Province is the client for interacting with the Province builders.
 	Province *ProvinceClient
 	// ProvinceSuccession is the client for interacting with the ProvinceSuccession builders.
 	ProvinceSuccession *ProvinceSuccessionClient
 	// ReconciliationIssue is the client for interacting with the ReconciliationIssue builders.
 	ReconciliationIssue *ReconciliationIssueClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
+	// RolePermission is the client for interacting with the RolePermission builders.
+	RolePermission *RolePermissionClient
 	// School is the client for interacting with the School builders.
 	School *SchoolClient
 	// SisConnection is the client for interacting with the SisConnection builders.
@@ -56,6 +64,8 @@ type Tx struct {
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserRole is the client for interacting with the UserRole builders.
+	UserRole *UserRoleClient
 
 	// lazily loaded.
 	client     *Client
@@ -192,9 +202,13 @@ func (tx *Tx) init() {
 	tx.Country = NewCountryClient(tx.config)
 	tx.Enrollment = NewEnrollmentClient(tx.config)
 	tx.ExternalIdentity = NewExternalIdentityClient(tx.config)
+	tx.Permission = NewPermissionClient(tx.config)
+	tx.PortalPasswordResetToken = NewPortalPasswordResetTokenClient(tx.config)
 	tx.Province = NewProvinceClient(tx.config)
 	tx.ProvinceSuccession = NewProvinceSuccessionClient(tx.config)
 	tx.ReconciliationIssue = NewReconciliationIssueClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
+	tx.RolePermission = NewRolePermissionClient(tx.config)
 	tx.School = NewSchoolClient(tx.config)
 	tx.SisConnection = NewSisConnectionClient(tx.config)
 	tx.SisConnectionSchool = NewSisConnectionSchoolClient(tx.config)
@@ -209,6 +223,7 @@ func (tx *Tx) init() {
 	tx.SyncedStudent = NewSyncedStudentClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserRole = NewUserRoleClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

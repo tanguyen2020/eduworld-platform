@@ -21,6 +21,12 @@ type Enrollment func(*sql.Selector)
 // ExternalIdentity is the predicate function for externalidentity builders.
 type ExternalIdentity func(*sql.Selector)
 
+// Permission is the predicate function for permission builders.
+type Permission func(*sql.Selector)
+
+// PortalPasswordResetToken is the predicate function for portalpasswordresettoken builders.
+type PortalPasswordResetToken func(*sql.Selector)
+
 // Province is the predicate function for province builders.
 type Province func(*sql.Selector)
 
@@ -29,6 +35,12 @@ type ProvinceSuccession func(*sql.Selector)
 
 // ReconciliationIssue is the predicate function for reconciliationissue builders.
 type ReconciliationIssue func(*sql.Selector)
+
+// Role is the predicate function for role builders.
+type Role func(*sql.Selector)
+
+// RolePermission is the predicate function for rolepermission builders.
+type RolePermission func(*sql.Selector)
 
 // School is the predicate function for school builders.
 type School func(*sql.Selector)
@@ -71,3 +83,6 @@ type Tenant func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserRole is the predicate function for userrole builders.
+type UserRole func(*sql.Selector)

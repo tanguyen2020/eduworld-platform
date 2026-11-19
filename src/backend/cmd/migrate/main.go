@@ -10,6 +10,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -23,6 +24,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver "pgx"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity"
 )
 
 // Modules with a database, in apply order.
@@ -103,6 +107,24 @@ func migrate(ctx context.Context, module, root, atlasBin string, getenv func(str
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: atlas migrate apply: %w", module, err)
 	}
+	if module == identity.Name {
+		return seedIdentity(ctx, dsn)
+	}
+	return nil
+}
+
+// seedIdentity syncs the permission catalog and the system roles (F012 T007) as identity_migrator.
+func seedIdentity(ctx context.Context, dsn string) error {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }()
+	summary, err := identity.SyncAuthzCatalog(ctx, db)
+	if err != nil {
+		return fmt.Errorf("identity: authz catalog: %w", err)
+	}
+	fmt.Printf("migrate: identity: authz catalog synced (%s)\n", summary)
 	return nil
 }
 

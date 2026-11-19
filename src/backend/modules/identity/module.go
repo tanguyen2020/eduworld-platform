@@ -3,9 +3,13 @@
 package identity
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/seed"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/migrations"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 )
@@ -27,4 +31,14 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
 	return &Module{}, nil
+}
+
+// SyncAuthzCatalog writes the permission catalog and the system roles of pkg/authz into eduworld_identity
+// (F012 T007). cmd/migrate calls it after the Atlas migrations with the identity_migrator connection.
+func SyncAuthzCatalog(ctx context.Context, db *sql.DB) (string, error) {
+	st, err := seed.SyncAuthz(ctx, db, authz.Catalog(), authz.SystemRoles())
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d permissions, %d system roles, %d grants, %d retired", st.Permissions, st.Roles, st.RolePermissions, st.Retired), nil
 }

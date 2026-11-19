@@ -17,9 +17,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/role"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/rolepermission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnectionschool"
@@ -34,6 +38,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/userrole"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -94,28 +99,33 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			academicyear.Table:        academicyear.ValidColumn,
-			class.Table:               class.ValidColumn,
-			country.Table:             country.ValidColumn,
-			enrollment.Table:          enrollment.ValidColumn,
-			externalidentity.Table:    externalidentity.ValidColumn,
-			province.Table:            province.ValidColumn,
-			provincesuccession.Table:  provincesuccession.ValidColumn,
-			reconciliationissue.Table: reconciliationissue.ValidColumn,
-			school.Table:              school.ValidColumn,
-			sisconnection.Table:       sisconnection.ValidColumn,
-			sisconnectionschool.Table: sisconnectionschool.ValidColumn,
-			sisidentitylink.Table:     sisidentitylink.ValidColumn,
-			sisimport.Table:           sisimport.ValidColumn,
-			sislink.Table:             sislink.ValidColumn,
-			stagingrecord.Table:       stagingrecord.ValidColumn,
-			student.Table:             student.ValidColumn,
-			studentloginkey.Table:     studentloginkey.ValidColumn,
-			syncrecorderror.Table:     syncrecorderror.ValidColumn,
-			syncrun.Table:             syncrun.ValidColumn,
-			syncedstudent.Table:       syncedstudent.ValidColumn,
-			tenant.Table:              tenant.ValidColumn,
-			user.Table:                user.ValidColumn,
+			academicyear.Table:             academicyear.ValidColumn,
+			class.Table:                    class.ValidColumn,
+			country.Table:                  country.ValidColumn,
+			enrollment.Table:               enrollment.ValidColumn,
+			externalidentity.Table:         externalidentity.ValidColumn,
+			permission.Table:               permission.ValidColumn,
+			portalpasswordresettoken.Table: portalpasswordresettoken.ValidColumn,
+			province.Table:                 province.ValidColumn,
+			provincesuccession.Table:       provincesuccession.ValidColumn,
+			reconciliationissue.Table:      reconciliationissue.ValidColumn,
+			role.Table:                     role.ValidColumn,
+			rolepermission.Table:           rolepermission.ValidColumn,
+			school.Table:                   school.ValidColumn,
+			sisconnection.Table:            sisconnection.ValidColumn,
+			sisconnectionschool.Table:      sisconnectionschool.ValidColumn,
+			sisidentitylink.Table:          sisidentitylink.ValidColumn,
+			sisimport.Table:                sisimport.ValidColumn,
+			sislink.Table:                  sislink.ValidColumn,
+			stagingrecord.Table:            stagingrecord.ValidColumn,
+			student.Table:                  student.ValidColumn,
+			studentloginkey.Table:          studentloginkey.ValidColumn,
+			syncrecorderror.Table:          syncrecorderror.ValidColumn,
+			syncrun.Table:                  syncrun.ValidColumn,
+			syncedstudent.Table:            syncedstudent.ValidColumn,
+			tenant.Table:                   tenant.ValidColumn,
+			user.Table:                     user.ValidColumn,
+			userrole.Table:                 userrole.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

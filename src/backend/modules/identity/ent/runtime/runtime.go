@@ -11,9 +11,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/permission"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/portalpasswordresettoken"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/reconciliationissue"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/role"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/rolepermission"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/sisconnection"
@@ -29,6 +33,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/syncrun"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/user"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/userrole"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -320,6 +325,120 @@ func init() {
 	externalidentityDescID := externalidentityMixinFields0[0].Descriptor()
 	// externalidentity.DefaultID holds the default value on creation for the id field.
 	externalidentity.DefaultID = externalidentityDescID.Default.(func() uuid.UUID)
+	permissionMixin := schema.Permission{}.Mixin()
+	permissionMixinHooks0 := permissionMixin[0].Hooks()
+	permission.Hooks[0] = permissionMixinHooks0[0]
+	permissionMixinInters0 := permissionMixin[0].Interceptors()
+	permission.Interceptors[0] = permissionMixinInters0[0]
+	permissionMixinFields0 := permissionMixin[0].Fields()
+	_ = permissionMixinFields0
+	permissionFields := schema.Permission{}.Fields()
+	_ = permissionFields
+	// permissionDescCreatedAt is the schema descriptor for created_at field.
+	permissionDescCreatedAt := permissionMixinFields0[1].Descriptor()
+	// permission.DefaultCreatedAt holds the default value on creation for the created_at field.
+	permission.DefaultCreatedAt = permissionDescCreatedAt.Default.(func() time.Time)
+	// permissionDescUpdatedAt is the schema descriptor for updated_at field.
+	permissionDescUpdatedAt := permissionMixinFields0[3].Descriptor()
+	// permission.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	permission.DefaultUpdatedAt = permissionDescUpdatedAt.Default.(func() time.Time)
+	// permission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	permission.UpdateDefaultUpdatedAt = permissionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// permissionDescDeleteReason is the schema descriptor for delete_reason field.
+	permissionDescDeleteReason := permissionMixinFields0[7].Descriptor()
+	// permission.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	permission.DeleteReasonValidator = permissionDescDeleteReason.Validators[0].(func(string) error)
+	// permissionDescVersion is the schema descriptor for version field.
+	permissionDescVersion := permissionMixinFields0[8].Descriptor()
+	// permission.DefaultVersion holds the default value on creation for the version field.
+	permission.DefaultVersion = permissionDescVersion.Default.(int64)
+	// permissionDescScopeKind is the schema descriptor for scope_kind field.
+	permissionDescScopeKind := permissionFields[0].Descriptor()
+	// permission.ScopeKindValidator is a validator for the "scope_kind" field. It is called by the builders before save.
+	permission.ScopeKindValidator = permissionDescScopeKind.Validators[0].(func(string) error)
+	// permissionDescGroupCode is the schema descriptor for group_code field.
+	permissionDescGroupCode := permissionFields[1].Descriptor()
+	// permission.GroupCodeValidator is a validator for the "group_code" field. It is called by the builders before save.
+	permission.GroupCodeValidator = permissionDescGroupCode.Validators[0].(func(string) error)
+	// permissionDescNameVi is the schema descriptor for name_vi field.
+	permissionDescNameVi := permissionFields[2].Descriptor()
+	// permission.NameViValidator is a validator for the "name_vi" field. It is called by the builders before save.
+	permission.NameViValidator = permissionDescNameVi.Validators[0].(func(string) error)
+	// permissionDescNameEn is the schema descriptor for name_en field.
+	permissionDescNameEn := permissionFields[3].Descriptor()
+	// permission.NameEnValidator is a validator for the "name_en" field. It is called by the builders before save.
+	permission.NameEnValidator = permissionDescNameEn.Validators[0].(func(string) error)
+	// permissionDescCatalogVersion is the schema descriptor for catalog_version field.
+	permissionDescCatalogVersion := permissionFields[4].Descriptor()
+	// permission.CatalogVersionValidator is a validator for the "catalog_version" field. It is called by the builders before save.
+	permission.CatalogVersionValidator = permissionDescCatalogVersion.Validators[0].(func(string) error)
+	// permissionDescSyncedAt is the schema descriptor for synced_at field.
+	permissionDescSyncedAt := permissionFields[5].Descriptor()
+	// permission.DefaultSyncedAt holds the default value on creation for the synced_at field.
+	permission.DefaultSyncedAt = permissionDescSyncedAt.Default.(func() time.Time)
+	// permissionDescID is the schema descriptor for id field.
+	permissionDescID := permissionMixinFields0[0].Descriptor()
+	// permission.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	permission.IDValidator = func() func(string) error {
+		validators := permissionDescID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(id string) error {
+			for _, fn := range fns {
+				if err := fn(id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	portalpasswordresettokenMixin := schema.PortalPasswordResetToken{}.Mixin()
+	portalpasswordresettokenMixinHooks0 := portalpasswordresettokenMixin[0].Hooks()
+	portalpasswordresettoken.Hooks[0] = portalpasswordresettokenMixinHooks0[0]
+	portalpasswordresettokenMixinInters0 := portalpasswordresettokenMixin[0].Interceptors()
+	portalpasswordresettoken.Interceptors[0] = portalpasswordresettokenMixinInters0[0]
+	portalpasswordresettokenMixinFields0 := portalpasswordresettokenMixin[0].Fields()
+	_ = portalpasswordresettokenMixinFields0
+	portalpasswordresettokenFields := schema.PortalPasswordResetToken{}.Fields()
+	_ = portalpasswordresettokenFields
+	// portalpasswordresettokenDescCreatedAt is the schema descriptor for created_at field.
+	portalpasswordresettokenDescCreatedAt := portalpasswordresettokenMixinFields0[1].Descriptor()
+	// portalpasswordresettoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	portalpasswordresettoken.DefaultCreatedAt = portalpasswordresettokenDescCreatedAt.Default.(func() time.Time)
+	// portalpasswordresettokenDescUpdatedAt is the schema descriptor for updated_at field.
+	portalpasswordresettokenDescUpdatedAt := portalpasswordresettokenMixinFields0[3].Descriptor()
+	// portalpasswordresettoken.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	portalpasswordresettoken.DefaultUpdatedAt = portalpasswordresettokenDescUpdatedAt.Default.(func() time.Time)
+	// portalpasswordresettoken.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	portalpasswordresettoken.UpdateDefaultUpdatedAt = portalpasswordresettokenDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// portalpasswordresettokenDescDeleteReason is the schema descriptor for delete_reason field.
+	portalpasswordresettokenDescDeleteReason := portalpasswordresettokenMixinFields0[7].Descriptor()
+	// portalpasswordresettoken.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	portalpasswordresettoken.DeleteReasonValidator = portalpasswordresettokenDescDeleteReason.Validators[0].(func(string) error)
+	// portalpasswordresettokenDescVersion is the schema descriptor for version field.
+	portalpasswordresettokenDescVersion := portalpasswordresettokenMixinFields0[8].Descriptor()
+	// portalpasswordresettoken.DefaultVersion holds the default value on creation for the version field.
+	portalpasswordresettoken.DefaultVersion = portalpasswordresettokenDescVersion.Default.(int64)
+	// portalpasswordresettokenDescTokenHash is the schema descriptor for token_hash field.
+	portalpasswordresettokenDescTokenHash := portalpasswordresettokenFields[1].Descriptor()
+	// portalpasswordresettoken.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	portalpasswordresettoken.TokenHashValidator = portalpasswordresettokenDescTokenHash.Validators[0].(func(string) error)
+	// portalpasswordresettokenDescLocale is the schema descriptor for locale field.
+	portalpasswordresettokenDescLocale := portalpasswordresettokenFields[2].Descriptor()
+	// portalpasswordresettoken.DefaultLocale holds the default value on creation for the locale field.
+	portalpasswordresettoken.DefaultLocale = portalpasswordresettokenDescLocale.Default.(string)
+	// portalpasswordresettoken.LocaleValidator is a validator for the "locale" field. It is called by the builders before save.
+	portalpasswordresettoken.LocaleValidator = portalpasswordresettokenDescLocale.Validators[0].(func(string) error)
+	// portalpasswordresettokenDescRequestedDeviceHash is the schema descriptor for requested_device_hash field.
+	portalpasswordresettokenDescRequestedDeviceHash := portalpasswordresettokenFields[5].Descriptor()
+	// portalpasswordresettoken.RequestedDeviceHashValidator is a validator for the "requested_device_hash" field. It is called by the builders before save.
+	portalpasswordresettoken.RequestedDeviceHashValidator = portalpasswordresettokenDescRequestedDeviceHash.Validators[0].(func(string) error)
+	// portalpasswordresettokenDescID is the schema descriptor for id field.
+	portalpasswordresettokenDescID := portalpasswordresettokenMixinFields0[0].Descriptor()
+	// portalpasswordresettoken.DefaultID holds the default value on creation for the id field.
+	portalpasswordresettoken.DefaultID = portalpasswordresettokenDescID.Default.(func() uuid.UUID)
 	provinceMixin := schema.Province{}.Mixin()
 	provinceMixinHooks0 := provinceMixin[0].Hooks()
 	province.Hooks[0] = provinceMixinHooks0[0]
@@ -479,6 +598,96 @@ func init() {
 	reconciliationissueDescID := reconciliationissueMixinFields0[0].Descriptor()
 	// reconciliationissue.DefaultID holds the default value on creation for the id field.
 	reconciliationissue.DefaultID = reconciliationissueDescID.Default.(func() uuid.UUID)
+	roleMixin := schema.Role{}.Mixin()
+	roleMixinHooks0 := roleMixin[0].Hooks()
+	role.Hooks[0] = roleMixinHooks0[0]
+	roleMixinInters0 := roleMixin[0].Interceptors()
+	role.Interceptors[0] = roleMixinInters0[0]
+	roleMixinFields0 := roleMixin[0].Fields()
+	_ = roleMixinFields0
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescCreatedAt is the schema descriptor for created_at field.
+	roleDescCreatedAt := roleMixinFields0[2].Descriptor()
+	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
+	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	// roleDescUpdatedAt is the schema descriptor for updated_at field.
+	roleDescUpdatedAt := roleMixinFields0[4].Descriptor()
+	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
+	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	role.UpdateDefaultUpdatedAt = roleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// roleDescDeleteReason is the schema descriptor for delete_reason field.
+	roleDescDeleteReason := roleMixinFields0[8].Descriptor()
+	// role.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	role.DeleteReasonValidator = roleDescDeleteReason.Validators[0].(func(string) error)
+	// roleDescVersion is the schema descriptor for version field.
+	roleDescVersion := roleMixinFields0[9].Descriptor()
+	// role.DefaultVersion holds the default value on creation for the version field.
+	role.DefaultVersion = roleDescVersion.Default.(int64)
+	// roleDescCode is the schema descriptor for code field.
+	roleDescCode := roleFields[0].Descriptor()
+	// role.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	role.CodeValidator = roleDescCode.Validators[0].(func(string) error)
+	// roleDescNameVi is the schema descriptor for name_vi field.
+	roleDescNameVi := roleFields[1].Descriptor()
+	// role.NameViValidator is a validator for the "name_vi" field. It is called by the builders before save.
+	role.NameViValidator = roleDescNameVi.Validators[0].(func(string) error)
+	// roleDescNameEn is the schema descriptor for name_en field.
+	roleDescNameEn := roleFields[2].Descriptor()
+	// role.NameEnValidator is a validator for the "name_en" field. It is called by the builders before save.
+	role.NameEnValidator = roleDescNameEn.Validators[0].(func(string) error)
+	// roleDescDescription is the schema descriptor for description field.
+	roleDescDescription := roleFields[3].Descriptor()
+	// role.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	role.DescriptionValidator = roleDescDescription.Validators[0].(func(string) error)
+	// roleDescRoleScopeKind is the schema descriptor for role_scope_kind field.
+	roleDescRoleScopeKind := roleFields[4].Descriptor()
+	// role.RoleScopeKindValidator is a validator for the "role_scope_kind" field. It is called by the builders before save.
+	role.RoleScopeKindValidator = roleDescRoleScopeKind.Validators[0].(func(string) error)
+	// roleDescIsSystem is the schema descriptor for is_system field.
+	roleDescIsSystem := roleFields[5].Descriptor()
+	// role.DefaultIsSystem holds the default value on creation for the is_system field.
+	role.DefaultIsSystem = roleDescIsSystem.Default.(bool)
+	// roleDescID is the schema descriptor for id field.
+	roleDescID := roleMixinFields0[0].Descriptor()
+	// role.DefaultID holds the default value on creation for the id field.
+	role.DefaultID = roleDescID.Default.(func() uuid.UUID)
+	rolepermissionMixin := schema.RolePermission{}.Mixin()
+	rolepermissionMixinHooks0 := rolepermissionMixin[0].Hooks()
+	rolepermission.Hooks[0] = rolepermissionMixinHooks0[0]
+	rolepermissionMixinInters0 := rolepermissionMixin[0].Interceptors()
+	rolepermission.Interceptors[0] = rolepermissionMixinInters0[0]
+	rolepermissionMixinFields0 := rolepermissionMixin[0].Fields()
+	_ = rolepermissionMixinFields0
+	rolepermissionFields := schema.RolePermission{}.Fields()
+	_ = rolepermissionFields
+	// rolepermissionDescCreatedAt is the schema descriptor for created_at field.
+	rolepermissionDescCreatedAt := rolepermissionMixinFields0[2].Descriptor()
+	// rolepermission.DefaultCreatedAt holds the default value on creation for the created_at field.
+	rolepermission.DefaultCreatedAt = rolepermissionDescCreatedAt.Default.(func() time.Time)
+	// rolepermissionDescUpdatedAt is the schema descriptor for updated_at field.
+	rolepermissionDescUpdatedAt := rolepermissionMixinFields0[4].Descriptor()
+	// rolepermission.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	rolepermission.DefaultUpdatedAt = rolepermissionDescUpdatedAt.Default.(func() time.Time)
+	// rolepermission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	rolepermission.UpdateDefaultUpdatedAt = rolepermissionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// rolepermissionDescDeleteReason is the schema descriptor for delete_reason field.
+	rolepermissionDescDeleteReason := rolepermissionMixinFields0[8].Descriptor()
+	// rolepermission.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	rolepermission.DeleteReasonValidator = rolepermissionDescDeleteReason.Validators[0].(func(string) error)
+	// rolepermissionDescVersion is the schema descriptor for version field.
+	rolepermissionDescVersion := rolepermissionMixinFields0[9].Descriptor()
+	// rolepermission.DefaultVersion holds the default value on creation for the version field.
+	rolepermission.DefaultVersion = rolepermissionDescVersion.Default.(int64)
+	// rolepermissionDescPermissionCode is the schema descriptor for permission_code field.
+	rolepermissionDescPermissionCode := rolepermissionFields[1].Descriptor()
+	// rolepermission.PermissionCodeValidator is a validator for the "permission_code" field. It is called by the builders before save.
+	rolepermission.PermissionCodeValidator = rolepermissionDescPermissionCode.Validators[0].(func(string) error)
+	// rolepermissionDescID is the schema descriptor for id field.
+	rolepermissionDescID := rolepermissionMixinFields0[0].Descriptor()
+	// rolepermission.DefaultID holds the default value on creation for the id field.
+	rolepermission.DefaultID = rolepermissionDescID.Default.(func() uuid.UUID)
 	schoolMixin := schema.School{}.Mixin()
 	schoolMixinHooks0 := schoolMixin[0].Hooks()
 	school.Hooks[0] = schoolMixinHooks0[0]
@@ -1293,6 +1502,51 @@ func init() {
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	userroleMixin := schema.UserRole{}.Mixin()
+	userroleMixinHooks0 := userroleMixin[0].Hooks()
+	userrole.Hooks[0] = userroleMixinHooks0[0]
+	userroleMixinInters0 := userroleMixin[0].Interceptors()
+	userrole.Interceptors[0] = userroleMixinInters0[0]
+	userroleMixinFields0 := userroleMixin[0].Fields()
+	_ = userroleMixinFields0
+	userroleFields := schema.UserRole{}.Fields()
+	_ = userroleFields
+	// userroleDescCreatedAt is the schema descriptor for created_at field.
+	userroleDescCreatedAt := userroleMixinFields0[2].Descriptor()
+	// userrole.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userrole.DefaultCreatedAt = userroleDescCreatedAt.Default.(func() time.Time)
+	// userroleDescUpdatedAt is the schema descriptor for updated_at field.
+	userroleDescUpdatedAt := userroleMixinFields0[4].Descriptor()
+	// userrole.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userrole.DefaultUpdatedAt = userroleDescUpdatedAt.Default.(func() time.Time)
+	// userrole.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userrole.UpdateDefaultUpdatedAt = userroleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userroleDescDeleteReason is the schema descriptor for delete_reason field.
+	userroleDescDeleteReason := userroleMixinFields0[8].Descriptor()
+	// userrole.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	userrole.DeleteReasonValidator = userroleDescDeleteReason.Validators[0].(func(string) error)
+	// userroleDescVersion is the schema descriptor for version field.
+	userroleDescVersion := userroleMixinFields0[9].Descriptor()
+	// userrole.DefaultVersion holds the default value on creation for the version field.
+	userrole.DefaultVersion = userroleDescVersion.Default.(int64)
+	// userroleDescScopeType is the schema descriptor for scope_type field.
+	userroleDescScopeType := userroleFields[2].Descriptor()
+	// userrole.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
+	userrole.ScopeTypeValidator = userroleDescScopeType.Validators[0].(func(string) error)
+	// userroleDescValidFrom is the schema descriptor for valid_from field.
+	userroleDescValidFrom := userroleFields[5].Descriptor()
+	// userrole.DefaultValidFrom holds the default value on creation for the valid_from field.
+	userrole.DefaultValidFrom = userroleDescValidFrom.Default.(func() time.Time)
+	// userroleDescSource is the schema descriptor for source field.
+	userroleDescSource := userroleFields[8].Descriptor()
+	// userrole.DefaultSource holds the default value on creation for the source field.
+	userrole.DefaultSource = userroleDescSource.Default.(string)
+	// userrole.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	userrole.SourceValidator = userroleDescSource.Validators[0].(func(string) error)
+	// userroleDescID is the schema descriptor for id field.
+	userroleDescID := userroleMixinFields0[0].Descriptor()
+	// userrole.DefaultID holds the default value on creation for the id field.
+	userrole.DefaultID = userroleDescID.Default.(func() uuid.UUID)
 }
 
 const (

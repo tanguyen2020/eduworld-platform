@@ -202,6 +202,74 @@ var (
 			},
 		},
 	}
+	// PermissionsColumns holds the columns for the "permissions" table.
+	PermissionsColumns = []*schema.Column{
+		{Name: "permission_code", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope_kind", Type: field.TypeString, Size: 64},
+		{Name: "group_code", Type: field.TypeString, Size: 64},
+		{Name: "name_vi", Type: field.TypeString, Size: 255},
+		{Name: "name_en", Type: field.TypeString, Size: 255},
+		{Name: "catalog_version", Type: field.TypeString, Size: 64},
+		{Name: "synced_at", Type: field.TypeTime},
+	}
+	// PermissionsTable holds the schema information for the "permissions" table.
+	PermissionsTable = &schema.Table{
+		Name:       "permissions",
+		Columns:    PermissionsColumns,
+		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
+	}
+	// PortalPasswordResetTokensColumns holds the columns for the "portal_password_reset_tokens" table.
+	PortalPasswordResetTokensColumns = []*schema.Column{
+		{Name: "reset_token_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "token_hash", Type: field.TypeString, Size: 64},
+		{Name: "locale", Type: field.TypeString, Size: 8, Default: "vi"},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "requested_device_hash", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// PortalPasswordResetTokensTable holds the schema information for the "portal_password_reset_tokens" table.
+	PortalPasswordResetTokensTable = &schema.Table{
+		Name:       "portal_password_reset_tokens",
+		Columns:    PortalPasswordResetTokensColumns,
+		PrimaryKey: []*schema.Column{PortalPasswordResetTokensColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "portal_password_reset_tokens_hash_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PortalPasswordResetTokensColumns[10]},
+			},
+			{
+				Name:    "portal_password_reset_tokens_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PortalPasswordResetTokensColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "used_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "portal_password_reset_tokens_expires_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PortalPasswordResetTokensColumns[12]},
+			},
+		},
+	}
 	// ProvincesColumns holds the columns for the "provinces" table.
 	ProvincesColumns = []*schema.Column{
 		{Name: "province_id", Type: field.TypeUUID},
@@ -296,6 +364,80 @@ var (
 				Name:    "reconciliation_issues_open_idx",
 				Unique:  false,
 				Columns: []*schema.Column{ReconciliationIssuesColumns[1], ReconciliationIssuesColumns[16], ReconciliationIssuesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name_vi", Type: field.TypeString, Size: 255},
+		{Name: "name_en", Type: field.TypeString, Size: 255},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "role_scope_kind", Type: field.TypeString, Size: 64},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "roles_shared_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "tenant_id IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "roles_tenant_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[1], RolesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "tenant_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// RolePermissionsColumns holds the columns for the "role_permissions" table.
+	RolePermissionsColumns = []*schema.Column{
+		{Name: "role_permission_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "permission_code", Type: field.TypeString, Size: 64},
+	}
+	// RolePermissionsTable holds the schema information for the "role_permissions" table.
+	RolePermissionsTable = &schema.Table{
+		Name:       "role_permissions",
+		Columns:    RolePermissionsColumns,
+		PrimaryKey: []*schema.Column{RolePermissionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "role_permissions_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RolePermissionsColumns[10], RolePermissionsColumns[11]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -847,6 +989,61 @@ var (
 			},
 		},
 	}
+	// UserRolesColumns holds the columns for the "user_roles" table.
+	UserRolesColumns = []*schema.Column{
+		{Name: "user_role_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "scope_type", Type: field.TypeString, Size: 64},
+		{Name: "scope_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "valid_from", Type: field.TypeTime},
+		{Name: "valid_to", Type: field.TypeTime, Nullable: true},
+		{Name: "granted_by", Type: field.TypeUUID},
+		{Name: "source", Type: field.TypeString, Size: 64, Default: "manual"},
+		{Name: "training_completed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// UserRolesTable holds the schema information for the "user_roles" table.
+	UserRolesTable = &schema.Table{
+		Name:       "user_roles",
+		Columns:    UserRolesColumns,
+		PrimaryKey: []*schema.Column{UserRolesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_roles_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{UserRolesColumns[10], UserRolesColumns[11], UserRolesColumns[12], UserRolesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL AND valid_to IS NULL",
+				},
+			},
+			{
+				Name:    "user_roles_user_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{UserRolesColumns[10], UserRolesColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "user_roles_tenant_role_idx",
+				Unique:  false,
+				Columns: []*schema.Column{UserRolesColumns[1], UserRolesColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AcademicYearsTable,
@@ -854,9 +1051,13 @@ var (
 		CountriesTable,
 		EnrollmentsTable,
 		ExternalIdentitiesTable,
+		PermissionsTable,
+		PortalPasswordResetTokensTable,
 		ProvincesTable,
 		ProvinceSuccessionsTable,
 		ReconciliationIssuesTable,
+		RolesTable,
+		RolePermissionsTable,
 		SchoolsTable,
 		SisConnectionsTable,
 		SisConnectionSchoolsTable,
@@ -871,6 +1072,7 @@ var (
 		SyncedStudentsTable,
 		TenantsTable,
 		UsersTable,
+		UserRolesTable,
 	}
 )
 
@@ -890,6 +1092,12 @@ func init() {
 	ExternalIdentitiesTable.Annotation = &entsql.Annotation{
 		Table: "external_identities",
 	}
+	PermissionsTable.Annotation = &entsql.Annotation{
+		Table: "permissions",
+	}
+	PortalPasswordResetTokensTable.Annotation = &entsql.Annotation{
+		Table: "portal_password_reset_tokens",
+	}
 	ProvincesTable.Annotation = &entsql.Annotation{
 		Table: "provinces",
 	}
@@ -898,6 +1106,12 @@ func init() {
 	}
 	ReconciliationIssuesTable.Annotation = &entsql.Annotation{
 		Table: "reconciliation_issues",
+	}
+	RolesTable.Annotation = &entsql.Annotation{
+		Table: "roles",
+	}
+	RolePermissionsTable.Annotation = &entsql.Annotation{
+		Table: "role_permissions",
 	}
 	SchoolsTable.Annotation = &entsql.Annotation{
 		Table: "schools",
@@ -940,5 +1154,8 @@ func init() {
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",
+	}
+	UserRolesTable.Annotation = &entsql.Annotation{
+		Table: "user_roles",
 	}
 }

@@ -21,6 +21,14 @@
 - Q: Middleware `featuregate` (ADR-0090) thuộc feature nào? → A: F012 sở hữu middleware trong `src/backend/pkg/httpx` và port `featuregate.Source` (thứ tự: xác thực → `tenant` → `portal_staff` → `featuregate` → handler → `authz.Require`) và trường `disabled_menus`/`disabled_actions` của `getMyPermissions`; F015 sở hữu dữ liệu (`platform.feature_flags`, `platform.portal_menu_catalog`), API System Admin và hiện thực `featuregate.Source` trong module identity (US9).
 - Q: Phần đăng nhập portal có phụ thuộc kết quả spike Keycloak không? → A: Có — F004 T039 (claim `amr`/`acr`, lỗi khi còn required action) phải xong trước T041–T050 của feature này [Proposed].
 
+### Session 2026-11-19 (triển khai)
+
+- Q: Loại bảng `roles`, `role_permissions`, `user_roles`? → A: T* (mixin `TenantOptional`): dòng `tenant_id` NULL là role hệ thống/dùng chung và UserRole platform. RLS cho phép mọi tenant **đọc** dòng dùng chung của `roles`/`role_permissions` (cần để dựng Principal), ghi chỉ trong tenant của phiên; dòng dùng chung do `identity_migrator` (seed) hoặc `identity_platform` ghi. Khóa ghép `role_permissions` thành id surrogate + unique index; gỡ permission khỏi role = soft-delete.
+- Q: Tên hiển thị permission/role trong `identity.permissions`/`roles`? → A: [Proposed] Bằng chính mã (`name_vi = name_en = code`), `group_code` = tiền tố trước dấu chấm; portal dịch mã qua file dịch. Chưa có bảng tên trong ADMIN_PORTAL §2.2.
+- Q: Đồng bộ catalog chạy ở đâu? → A: `cmd/migrate` gọi `identity.SyncAuthzCatalog` ngay sau Atlas của module identity, một transaction, idempotent: id role hệ thống tất định (UUID v5 theo mã), permission/quyền rời catalog bị soft-delete, `catalog_version` = băm catalog. Trigger chặn `identity_app`/`identity_platform` sửa role hệ thống và quyền của nó (lớp 2 của F012-AC-17).
+- Q: Membership nhân sự? → A: `identity.tenant_memberships_v` thêm nhánh `member_kind = staff` từ UserRole tenant còn hiệu lực (một dòng mỗi tenant/user); consumer `keycloak-membership` của F010 dùng lại view này.
+- Q: Song song hóa F012? → A: Data model (Pha 0) làm trước; `featuregate` (`pkg/httpx`) và đăng nhập portal (US7/US8) làm song song trên nhánh riêng, merge sau gate.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Permission catalog và role hệ thống (Priority: P1)
