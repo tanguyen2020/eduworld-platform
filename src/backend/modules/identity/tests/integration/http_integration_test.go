@@ -33,10 +33,11 @@ import (
 
 type httpEnv struct {
 	*env
-	srv *httptest.Server
-	idp *httpxtest.IDP
-	res *httpxtest.Resolver
-	kc  *kcUsers // realAuthHTTP: the Keycloak test double behind createTenantUser
+	srv     *httptest.Server
+	idp     *httpxtest.IDP
+	res     *httpxtest.Resolver
+	kc      *kcUsers        // realAuthHTTP: the Keycloak test double behind createTenantUser
+	revoker *revokeRecorder // realAuthHTTP: TEST DOUBLE of the game session revoker (F016)
 }
 
 type httpResp struct {

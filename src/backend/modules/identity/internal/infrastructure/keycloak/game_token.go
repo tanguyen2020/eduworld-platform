@@ -55,3 +55,14 @@ func (a *Admin) DeleteSession(ctx context.Context, sid string) error {
 	}
 	return err
 }
+
+// EnableUser sets enabled=true on the user (unlock, F016-AC-04; idempotent PUT of the representation).
+func (a *Admin) EnableUser(ctx context.Context, userID string) error {
+	var cur map[string]any
+	if _, err := a.call(ctx, "get_user", http.MethodGet, "/users/"+url.PathEscape(userID), nil, &cur, true); err != nil {
+		return err
+	}
+	cur["enabled"] = true
+	_, err := a.call(ctx, "enable_user", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
+	return err
+}

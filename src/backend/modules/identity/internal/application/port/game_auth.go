@@ -85,3 +85,16 @@ type GameAuthMetrics interface {
 type AccessHoursSource interface {
 	AllowedHours(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID) (*settings.AllowedHours, *time.Location, error)
 }
+
+// KeycloakAccessAdmin switches a Keycloak user off/on and ends its sessions (F016-AC-03, AC-04; Admin API of
+// svc-identity, idempotent calls retried by the consumer).
+type KeycloakAccessAdmin interface {
+	DisableUser(ctx context.Context, userID string) error
+	EnableUser(ctx context.Context, userID string) error
+	LogoutUser(ctx context.Context, userID string) error
+}
+
+// KeycloakPasswordAdmin sets the password of a Keycloak user (resetStudentPassword, F016-AC-25).
+type KeycloakPasswordAdmin interface {
+	SetPassword(ctx context.Context, userID, password string, temporary bool) error
+}

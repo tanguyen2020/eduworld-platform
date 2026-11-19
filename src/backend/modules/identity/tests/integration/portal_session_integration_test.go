@@ -197,7 +197,11 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 	if err := identityhttp.RegisterSettings(srv, settingsHandlers(e, codec)); err != nil { // F015
 		t.Fatal(err)
 	}
+	rec := &revokeRecorder{}
+	if err := identityhttp.RegisterLifecycle(srv, lifecycleHandlers(e, kc, rec)); err != nil { // F016
+		t.Fatal(err)
+	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	return &httpEnv{env: e, srv: hs, idp: idp, kc: kc}, idp
+	return &httpEnv{env: e, srv: hs, idp: idp, kc: kc, revoker: rec}, idp
 }
