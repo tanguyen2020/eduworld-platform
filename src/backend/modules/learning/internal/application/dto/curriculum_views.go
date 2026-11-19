@@ -127,12 +127,13 @@ type TopicView struct {
 	SubjectID           uuid.UUID  `json:"subject_id"`
 	GradeLevel          int        `json:"grade_level"`
 	SortOrder           int        `json:"sort_order"`
+	RowVersion          int64      `json:"row_version"` // ETag W/"<row_version>" for If-Match from a list (OQ F053)
 }
 
 // TopicJSON maps a topic.
 func TopicJSON(t Topic) TopicView {
 	return TopicView{TopicID: t.ID, CurriculumVersionID: t.VersionID, ParentTopicID: t.ParentID, Code: t.Code, Name: t.Name, SubjectID: t.SubjectID,
-		GradeLevel: t.GradeLevel, SortOrder: t.SortOrder}
+		GradeLevel: t.GradeLevel, SortOrder: t.SortOrder, RowVersion: t.RowVersion}
 }
 
 // ObjectiveView is schema LearningObjective.
@@ -148,6 +149,7 @@ type ObjectiveView struct {
 	YccdRef             *string     `json:"yccd_ref,omitempty"`
 	CompetencyIDs       []uuid.UUID `json:"competency_ids"`
 	PrerequisiteIDs     []uuid.UUID `json:"prerequisite_ids"`
+	RowVersion          int64       `json:"row_version"` // ETag W/"<row_version>" for If-Match from a list (OQ F053)
 }
 
 func nonNil(v []uuid.UUID) []uuid.UUID {
@@ -161,7 +163,7 @@ func nonNil(v []uuid.UUID) []uuid.UUID {
 func ObjectiveJSON(o Objective) ObjectiveView {
 	return ObjectiveView{ObjectiveID: o.ID, CurriculumVersionID: o.VersionID, Code: o.Code, StableKey: o.StableKey, Description: o.Description,
 		TopicID: o.TopicID, SortOrder: o.SortOrder, BloomLevel: o.BloomLevel, YccdRef: o.YccdRef, CompetencyIDs: nonNil(o.CompetencyIDs),
-		PrerequisiteIDs: nonNil(o.PrerequisiteIDs)}
+		PrerequisiteIDs: nonNil(o.PrerequisiteIDs), RowVersion: o.RowVersion}
 }
 
 // CompetencyView is schema Competency.

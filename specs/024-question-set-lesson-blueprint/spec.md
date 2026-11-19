@@ -31,6 +31,10 @@
 - OQ F024-11: Test tích hợp đặt phẳng `tests/integration/content_*_test.go`; benchmark 100.000 version (T038) chưa chạy — GIN được tạo, chưa đo p95. → [Proposed].
 - OQ F024-12: Route/handler/job chưa nối vào binary (cùng OQ F010-2/F020-3). → [Proposed].
 
+### Session 2026-11-20 (follow-up OQ F053)
+
+- Q: Công thức trong khối rich_text/worked_example của lesson? → A: `LessonAuthoringInput.math_assets[]` (cùng shape với câu hỏi) lưu trong body của version lesson; khi có pipeline công thức (F027) server kiểm LaTeX, sanitize SVG và lưu `math/<sha256>.svg` như câu hỏi, trả `svg_asset` (không trả lại SVG thô); test `TestF053Followups`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Question set tĩnh và theo luật (Priority: P1)

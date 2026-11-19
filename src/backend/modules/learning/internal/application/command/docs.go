@@ -37,7 +37,7 @@ var DocTypes = []contentmodel.ContentType{contentmodel.TypeQuestionSet, contentm
 // BodyKeys are the request keys stored in the body of a version, by type (the other keys are metadata columns).
 var BodyKeys = map[contentmodel.ContentType][]string{
 	contentmodel.TypeQuestionSet:         {"definition", "default_feedback_timing"},
-	contentmodel.TypeLesson:              {"blocks", "completion_rule", "estimated_minutes"},
+	contentmodel.TypeLesson:              {"blocks", "completion_rule", "estimated_minutes", "math_assets"},
 	contentmodel.TypeLearningMaterial:    {"blocks", "material_kind"},
 	contentmodel.TypeAssessmentBlueprint: {"definition", "exam_type", "feedback_timing", "result_release", "efficacy_instrument"},
 }
@@ -56,6 +56,8 @@ type Docs struct {
 	Events     write.EventPublisher
 	Audit      write.Auditor
 	Clock      func() time.Time
+	// Math validates and stores the formulas of a lesson (math_assets); nil keeps them as sent (validated by OpenAPI).
+	Math *MathAssets
 	// ActivityEnabled: F030 registered the activity block validator (BLOCK_KIND_NOT_ENABLED otherwise).
 	ActivityEnabled bool
 	// MaxMeanPDiff is variant_balance_max_mean_p_diff (0 = blueprint.DefaultMaxMeanPDiff).
@@ -468,6 +470,15 @@ func (h Docs) prepare(ctx context.Context, v *dto.DocVersion) error {
 	}
 	if len(all) > 0 {
 		return problemOfViolations(all)
+	}
+	if raw, ok := body["math_assets"]; ok && h.Math != nil {
+		// Formulas of the rich_text/worked_example blocks (OQ F053 follow-up of F024): validated and stored like the
+		// formulas of a question (F027 US3).
+		stored, _, err := h.Math.Resolve(ctx, raw)
+		if err != nil {
+			return err
+		}
+		body["math_assets"] = stored
 	}
 	if v.Type == contentmodel.TypeQuestionSet {
 		if err := h.checkItems(ctx, v); err != nil {

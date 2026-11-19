@@ -171,7 +171,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	if o.media {
 		mk = newMediaKit(ctx, t, e, codec, schema)
 		qcmd.Math, qcmd.Media = &mk.math, write.MediaRepo{}
-		dcmd.Media = write.MediaRepo{}
+		dcmd.Media, dcmd.Math = write.MediaRepo{}, &mk.math
 		handlers.QuestionCommands, handlers.Docs = qcmd, dcmd
 		handlers.Media, handlers.MediaQueries, handlers.Preview = mk.cmd, mk.qry, mk.preview
 		if err := mk.s3.EnsureBucket(ctx, storage.BucketExports); err != nil {

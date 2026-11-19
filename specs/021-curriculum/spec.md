@@ -33,6 +33,10 @@
 - Q: Test integration đặt ở `tests/integration/curriculum/`? → A: Đặt trong package `tests/integration` (file `curriculum_*_test.go`) để dùng chung `TestMain`/cluster và fixture tenant; command/query trong package `command`/`query` phẳng, HTTP trong `internal/presentation/http` như module identity.
 - Q: Kiểm thử `tools/routematrix` báo lỗi ở `tests/contract/platform_ops_auth_test.go` (F020, `authztest.Cover` với biến)? → A: Facade operation không thuộc ma trận public; bỏ lời gọi `Cover`, vòng lặp vẫn là test role-denied của facade.
 
+### Session 2026-11-20 (follow-up OQ F053)
+
+- Q: Portal kéo-thả cây chủ đề/LO cần `If-Match` từ danh sách? → A: `Topic.row_version`, `LearningObjective.row_version` (readOnly, = phiên bản dòng của ETag `W/"<row_version>"`) trả trong mọi list/get topic và LO (F053-AC-27, AC-28); test `TestF053Followups`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn cấu trúc chương trình (Priority: P1)
