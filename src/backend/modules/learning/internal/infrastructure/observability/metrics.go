@@ -36,3 +36,13 @@ func Register(r prometheus.Registerer) {
 		_ = r.Register(c)
 	}
 }
+
+// AssignmentCounter adapts eduworld_tenant_assignments_total to command.AssignmentMetrics.
+type AssignmentCounter struct{}
+
+// Add counts n assignments of op (apply, revoke).
+func (AssignmentCounter) Add(op string, n int) {
+	if n > 0 {
+		assignments.WithLabelValues(op).Add(float64(n))
+	}
+}
