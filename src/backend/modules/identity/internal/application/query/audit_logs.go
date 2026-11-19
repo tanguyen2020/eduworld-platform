@@ -26,14 +26,15 @@ type AuditLogs struct {
 
 // AuditLogsInput are the filters of both operations.
 type AuditLogsInput struct {
-	SchoolID     *uuid.UUID
-	ActorID      *uuid.UUID
-	Action       string
-	ResourceType string
-	ResourceID   string
-	From, To     time.Time
-	Limit        int
-	Cursor       string
+	SchoolID       *uuid.UUID
+	ActorID        *uuid.UUID
+	Action         string
+	ActionPrefixes []string // action_prefix (F059-3)
+	ResourceType   string
+	ResourceID     string
+	From, To       time.Time
+	Limit          int
+	Cursor         string
 }
 
 // AuditPage is AuditLogPage.
@@ -43,6 +44,9 @@ type AuditPage struct {
 }
 
 func (q AuditLogs) filter(in AuditLogsInput) (read.AuditFilter, error) {
+	if err := audit.CheckActionPrefixes(in.ActionPrefixes); err != nil {
+		return read.AuditFilter{}, problem.Invalid("action_prefix", problem.SubInvalid, "at most 10 dotted lower-case prefixes of 2 to 64 characters")
+	}
 	if err := audit.CheckRange(in.From, in.To, q.MaxRange); err != nil {
 		return read.AuditFilter{}, problem.Invalid("from", problem.SubInvalid, "from and to are required, to after from, at most the maximum range")
 	}
@@ -50,8 +54,8 @@ func (q AuditLogs) filter(in AuditLogsInput) (read.AuditFilter, error) {
 	if err != nil {
 		return read.AuditFilter{}, problem.New(problem.BadRequest, "invalid cursor")
 	}
-	return read.AuditFilter{SchoolID: in.SchoolID, ActorID: in.ActorID, Action: in.Action, TargetType: in.ResourceType, TargetID: in.ResourceID,
-		From: in.From, To: in.To, After: c, Limit: page.Limit(in.Limit)}, nil
+	return read.AuditFilter{SchoolID: in.SchoolID, ActorID: in.ActorID, Action: in.Action, ActionPrefixes: in.ActionPrefixes,
+		TargetType: in.ResourceType, TargetID: in.ResourceID, From: in.From, To: in.To, After: c, Limit: page.Limit(in.Limit)}, nil
 }
 
 func (q AuditLogs) page(ctx context.Context, f read.AuditFilter) (AuditPage, error) {

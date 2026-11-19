@@ -902,6 +902,15 @@
     ]
   },
   {
+    "operation_id": "createPlatformUser",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/users",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createProvince",
     "module": "identity",
     "method": "POST",
@@ -2135,6 +2144,15 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getIntegrationOverview",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/integrations",
+    "required": [
       "role_denied"
     ]
   },
@@ -3777,6 +3795,15 @@
     "module": "identity",
     "method": "GET",
     "path": "/admin/roles",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listPlatformUsers",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/users",
     "required": [
       "role_denied"
     ]

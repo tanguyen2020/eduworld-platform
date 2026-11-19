@@ -149,6 +149,12 @@ type SisAdminReadModel interface {
 	RunErrorPage(ctx context.Context, runID uuid.UUID, after *page.Cursor, limit int) ([]dto.SisRecordError, error)
 }
 
+// SisConnectionStats counts the live SIS connections of every tenant by status (getIntegrationOverview, F059-2):
+// an aggregate only, read under the audited System Admin bypass.
+type SisConnectionStats interface {
+	ConnectionStatusCounts(ctx context.Context) (map[string]int, error)
+}
+
 // BootstrapReader builds the PlayerBootstrap of a student in the tenant of the scope (F013 T012): user,
 // student, school (bilingual name, province), active class, tenant. Runs under the TenantScope of the
 // chosen tenant; nothing from other modules (ADR-0074).
@@ -159,18 +165,19 @@ type BootstrapReader interface {
 // AuditFilter selects audit entries (F015 US2). Exactly one of TenantIDs (tenant or cross-tenant read) and
 // PlatformOnly is set by the query; SchoolIDs limits a School Admin to the schools of their grants.
 type AuditFilter struct {
-	TenantIDs    []uuid.UUID
-	PlatformOnly bool
-	SchoolIDs    []uuid.UUID // nil = every school of the tenants
-	SchoolID     *uuid.UUID
-	ActorID      *uuid.UUID
-	Action       string
-	TargetType   string
-	TargetID     string
-	From, To     time.Time
-	After        *page.Cursor // occurred_at (RFC 3339 nano) + audit_id, descending
-	Limit        int
-	NoModeration bool // the tenant view never shows the moderation journal
+	TenantIDs      []uuid.UUID
+	PlatformOnly   bool
+	SchoolIDs      []uuid.UUID // nil = every school of the tenants
+	SchoolID       *uuid.UUID
+	ActorID        *uuid.UUID
+	Action         string
+	ActionPrefixes []string // OR of "action = p OR action LIKE p.%" (F059-3)
+	TargetType     string
+	TargetID       string
+	From, To       time.Time
+	After          *page.Cursor // occurred_at (RFC 3339 nano) + audit_id, descending
+	Limit          int
+	NoModeration   bool // the tenant view never shows the moderation journal
 }
 
 // AuditReadModel reads audit.audit_logs with explicit tenant, time-range and soft conditions.

@@ -972,7 +972,7 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
     ├── Gán cho tenant · Clone giữa tenant (job)
     ├── Chính sách trường · An toàn chat — Danh mục từ nhạy cảm · Công tắc kiểm duyệt · Break-glass
     ├── Cấu hình hệ thống — Dọn học sinh · Thời hạn chat gameplay · Retention · Feature flag · Bật/tắt menu & action (§3.18)
-    ├── Tích hợp — Keycloak · SIS · APISIX (tham chiếu, chỉ xem) · Integration Monitoring [TBD]
+    ├── Tích hợp — Keycloak · SIS · APISIX (tham chiếu, chỉ xem: `getIntegrationOverview`, giá trị từ cấu hình server, không secret) · Integration Monitoring [TBD]
     ├── Thùng rác (mọi tenant + platform)
     └── Nhật ký toàn hệ thống
 ```

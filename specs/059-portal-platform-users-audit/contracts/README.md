@@ -13,15 +13,15 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (nguồn: `specs/openapi/modules/iden
 | `createPlatformRole` · `updatePlatformRole` · `deletePlatformRole` | `POST /api/v1/admin/roles` · `PATCH`/`DELETE …/{role_id}` | identity | `platform.role.write` | Có sẵn |
 | `listAllUserRoles` · `grantPlatformUserRole` | `GET`/`POST /api/v1/admin/user-roles` | identity | `platform.user_role.write` (list: + `platform.cross_tenant.read`) | Có sẵn; request cần sửa (§6) |
 | `revokePlatformUserRole` | `DELETE /api/v1/admin/user-roles/{user_role_id}` | identity | `platform.user_role.write` | Có sẵn |
-| `listPlatformUsers` | `GET /api/v1/admin/users` | identity | `platform.user.manage` | Cần thêm |
-| `createPlatformUser` | `POST /api/v1/admin/users` | identity | `platform.user.manage` | Cần thêm |
+| `listPlatformUsers` | `GET /api/v1/admin/users` | identity | `platform.user.manage` | Có sẵn (owner F012 áp 2026-11-20) |
+| `createPlatformUser` | `POST /api/v1/admin/users` | identity | `platform.user.manage` (+ `platform.user_role.write`) | Có sẵn (owner F012 áp 2026-11-20) |
 | `createTenantUser` | `POST /api/v1/tenant/users` (`X-Tenant-Id` = tenant đích) | identity | `tenant.user.write` (System Admin theo tenant đích) | Có sẵn |
 | `lockUser` | `POST /api/v1/admin/users/{user_id}:lock` | identity | `platform.user.manage` | Có sẵn |
 | `unlockUser` · `deactivateUser` | `POST /api/v1/admin/users/{user_id}:unlock` · `:deactivate` | identity | `platform.user.manage` | Cần thêm (owner F016) |
-| `listPlatformAuditLogs` | `GET /api/v1/admin/audit-logs` | identity | `platform.audit.read` | Có sẵn; Cần sửa (§6) |
+| `listPlatformAuditLogs` | `GET /api/v1/admin/audit-logs` | identity | `platform.audit.read` | Có sẵn (`action_prefix[]` áp 2026-11-20, owner F015) |
 | `listLoginEventsCrossTenant` | `GET /api/v1/admin/login-events` | game | `platform.cross_tenant.read` | Có sẵn |
 | `listFeatureFlags` · `putFeatureFlag` | `GET /api/v1/admin/feature-flags` · `PUT …/{flag_key}` | identity | `platform.feature_flag.write` | Cần thêm (owner F015) |
-| `getIntegrationOverview` | `GET /api/v1/admin/integrations` | identity | `platform.sis_connection.manage` | Cần thêm |
+| `getIntegrationOverview` | `GET /api/v1/admin/integrations` | identity | `platform.sis_connection.manage` hoặc `platform.tenant.manage` | Có sẵn (owner F012 áp 2026-11-20; chưa có `route_groups[]` — OQ F059-12) |
 | `listSisConnections` | `GET /api/v1/sis/connections` | identity | `platform.sis_connection.manage` | Có sẵn (áp 2026-11-17, owner F011) |
 | `listSisSyncRuns` | `GET /api/v1/sis/connections/{connection_id}/sync-runs` | identity | `platform.sis_connection.manage` | Có sẵn (áp 2026-11-17, owner F011) |
 | `listSisConnectionSchools` | `GET /api/v1/admin/sis/connections/{connection_id}/schools` | identity | `platform.sis_connection.manage` | Có sẵn |

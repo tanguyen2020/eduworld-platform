@@ -653,6 +653,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tổng quan tích hợp chỉ đọc — Keycloak, gateway APISIX, SIS (platform.sis_connection.manage hoặc platform.tenant.manage)
+         * @description Giá trị lấy từ cấu hình server (Keycloak: issuer, realm, client id + mục đích, MFA bắt buộc với route platform; APISIX:
+         *     URL gateway public/nội bộ khi được cấu hình) và số kết nối SIS theo trạng thái (mọi tenant, chỉ đếm). Không bao giờ
+         *     chứa secret, credential, token hay tham chiếu secret (AGENTS R3, R4; F059-AC-23). Không có thao tác ghi.
+         */
+        get: operations["getIntegrationOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/learning/efficacy-studies": {
         parameters: {
             query?: never;
@@ -1643,6 +1665,39 @@ export interface paths {
         post?: never;
         /** Thu hồi UserRole bất kỳ (soft-delete, bắt buộc reason) — platform.user_role.write */
         delete: operations["revokePlatformUserRole"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tài khoản người dùng cho System Admin (platform.user.manage) — không gửi X-Tenant-Id
+         * @description Không có `tenant_ids` → chỉ nhân sự platform (`primary_tenant_id = null`); có `tenant_ids` (CrossTenantScope,
+         *     cần thêm `platform.cross_tenant.read` + MFA, audit `cross_tenant.accessed`) → người có membership trong các tenant đó
+         *     (học sinh + nhân sự trường). Không có truy vấn "mọi người dùng mọi tenant" (AGENTS R8). `tenant_ids[]` của từng
+         *     `User` chỉ gồm các tenant trong phạm vi truy vấn; `user_roles` để trống (xem `listAllUserRoles?user_id=`).
+         *     Không trả mật khẩu, token, IP (F059-AC-14).
+         */
+        get: operations["listPlatformUsers"];
+        put?: never;
+        /**
+         * Tạo tài khoản nhân sự platform (platform.user.manage + platform.user_role.write) — primary_tenant_id = null (ADR-0081)
+         * @description Tạo user Keycloak (realm role `platform_staff` → OTP bắt buộc, email đặt mật khẩu `UPDATE_PASSWORD`), tài khoản
+         *     `staff` không có tenant gốc và các UserRole platform ban đầu (`scope_type = platform`) trong một use case; lỗi DB vô
+         *     hiệu hóa user Keycloak vừa tạo. Role không phải `platform` hoặc `safety_moderator` (cần `training_completed_at`, gán
+         *     sau bằng `grantPlatformUserRole`) → `422`. Username/email đã thuộc tài khoản khác → `409 USERNAME_TAKEN` /
+         *     `409 EMAIL_TAKEN` (ADR-0069). Phát `user.provisioned` (`tenant_id = null`), audit `user.created`. Nhân sự trường tạo
+         *     bằng `createTenantUser` với `X-Tenant-Id` = tenant đích.
+         */
+        post: operations["createPlatformUser"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -10260,6 +10315,44 @@ export interface components {
                 [key: string]: components["schemas"]["ItemId"];
             };
         };
+        /** @description Tổng quan tích hợp chỉ đọc từ cấu hình server và số liệu SIS; không có secret (getIntegrationOverview). */
+        IntegrationOverview: {
+            /** @description Định tuyến quản lý bằng route-as-code (deploy/apisix/routes/routes.yaml); URL lấy từ EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL, null = chưa cấu hình */
+            apisix: {
+                /** Format: uri */
+                internal_base_url: string | null;
+                /** Format: uri */
+                public_base_url: string | null;
+            };
+            generated_at: components["schemas"]["Timestamp"];
+            keycloak: {
+                clients: {
+                    client_id: string;
+                    /**
+                     * @description portal = client portal, game = client game backend, admin_api = service account Admin API của module identity
+                     * @enum {string}
+                     */
+                    purpose: "portal" | "game" | "admin_api";
+                }[];
+                /**
+                 * Format: uri
+                 * @description Issuer OIDC của realm (phần tử đầu EW_OIDC_ISSUERS)
+                 */
+                issuer_url: string;
+                /** @description Tuổi tối đa của lần xác thực cho route platform (EW_OIDC_PLATFORM_MAX_AUTH_AGE) */
+                platform_auth_max_age_seconds: number;
+                /** @description Luôn true: /admin/*, /game-admin/* yêu cầu MFA + role platform (ADR-0027) */
+                platform_mfa_required: boolean;
+                realm: string;
+            };
+            sis: {
+                /** @description Số kết nối SIS (mọi tenant, chưa xóa) theo `status` */
+                connections_by_status: {
+                    [key: string]: number;
+                };
+                connections_total: number;
+            };
+        };
         /** @description interactive — trạng thái widget + action log; validator Go đã đăng ký chấm */
         InteractiveResponse: {
             action_log?: {
@@ -11320,6 +11413,20 @@ export interface components {
         /** @description Như `SisImportCreate`, thêm `school_id` của trường thuộc tenant đích (System Admin). */
         PlatformSisImportCreate: components["schemas"]["SisImportCreate"] & {
             school_id: components["schemas"]["Uuid"];
+        };
+        /** @description Tạo nhân sự platform (`createPlatformUser`, `primary_tenant_id = null`, chỉ nhận role platform — ADR-0081). Username/email duy nhất trên SSO và trong module identity, không phân biệt hoa thường (ADR-0069). */
+        PlatformUserCreateRequest: {
+            display_name: string;
+            /**
+             * Format: email
+             * @description Bắt buộc với nhân sự (ADR-0069)
+             */
+            email: string;
+            /** @description Role `platform` (scope_type = platform); `safety_moderator` gán sau bằng grantPlatformUserRole (cần training_completed_at) */
+            initial_role_ids: components["schemas"]["Uuid"][];
+            locale?: components["schemas"]["Locale"];
+            reason: string;
+            username: string;
         };
         /**
          * @description Bootstrap phiên người chơi do module identity trả (`gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume`, `createAuthSession`).
@@ -13303,6 +13410,8 @@ export interface components {
             source?: "sis" | "manual" | "import";
             /** @enum {string} */
             status: "pending" | "active" | "locked" | "deactivated";
+            /** @description Tenant có membership của người dùng trong phạm vi truy vấn (chỉ listPlatformUsers với tenant_ids; vắng ở API khác) */
+            tenant_ids?: components["schemas"]["Uuid"][];
             user_id: components["schemas"]["Uuid"];
             /** @description UserRole hiệu lực trong tenant hiện tại */
             user_roles?: components["schemas"]["UserRole"][];
@@ -13627,6 +13736,11 @@ export interface components {
         AssetIdPath: components["schemas"]["Uuid"];
         AssignmentIdPath: components["schemas"]["Uuid"];
         AttemptId: components["schemas"]["Uuid"];
+        /**
+         * @description Lọc theo nhóm action (F059-3): mỗi giá trị là tiền tố theo dấu chấm, khớp action bằng giá trị hoặc bắt đầu bằng `<giá trị>.`
+         *     (ví dụ `role` khớp `role.created`, không khớp `role_x.y`); nhiều giá trị = OR; dùng cùng `action` = AND. Tối đa 10 giá trị.
+         */
+        AuditActionPrefix: string[];
         BlueprintIdPath: components["schemas"]["Uuid"];
         CaseIdPath: components["schemas"]["Uuid"];
         ChallengeAttemptIdPath: components["schemas"]["Uuid"];
@@ -14111,6 +14225,11 @@ export interface operations {
         parameters: {
             query: {
                 action?: string;
+                /**
+                 * @description Lọc theo nhóm action (F059-3): mỗi giá trị là tiền tố theo dấu chấm, khớp action bằng giá trị hoặc bắt đầu bằng `<giá trị>.`
+                 *     (ví dụ `role` khớp `role.created`, không khớp `role_x.y`); nhiều giá trị = OR; dùng cùng `action` = AND. Tối đa 10 giá trị.
+                 */
+                action_prefix?: components["parameters"]["AuditActionPrefix"];
                 actor_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
@@ -15450,6 +15569,28 @@ export interface operations {
                 };
             };
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getIntegrationOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationOverview"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listEfficacyStudies: {
@@ -18088,6 +18229,88 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listPlatformUsers: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                /** @description Tìm theo username, email, tên hiển thị (không phân biệt hoa thường) */
+                q?: string;
+                /** @description Người có UserRole hiệu lực mang role này (role platform khi không có tenant_ids, role tenant trong các tenant lọc) */
+                role_code?: components["schemas"]["RoleCode"];
+                status?: "pending" | "active" | "locked" | "deactivated";
+                /**
+                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+                 */
+                tenant_ids?: components["parameters"]["TenantIds"];
+                user_type?: "student" | "staff";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createPlatformUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformUserCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            /** @description USERNAME_TAKEN, EMAIL_TAKEN (định danh đã thuộc tài khoản khác trên SSO hoặc trong module identity) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            422: components["responses"]["ValidationFailed"];
         };
     };
     mergeUsers: {
@@ -33035,6 +33258,11 @@ export interface operations {
         parameters: {
             query: {
                 action?: string;
+                /**
+                 * @description Lọc theo nhóm action (F059-3): mỗi giá trị là tiền tố theo dấu chấm, khớp action bằng giá trị hoặc bắt đầu bằng `<giá trị>.`
+                 *     (ví dụ `role` khớp `role.created`, không khớp `role_x.y`); nhiều giá trị = OR; dùng cùng `action` = AND. Tối đa 10 giá trị.
+                 */
+                action_prefix?: components["parameters"]["AuditActionPrefix"];
                 actor_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];

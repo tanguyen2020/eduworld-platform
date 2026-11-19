@@ -48,7 +48,7 @@ func mapStaffErr(err error) error {
 	return err
 }
 
-// CreateStaff inserts the staff user and its local identity.
+// CreateStaff inserts the staff user (platform staff when TenantID is nil) and its local identity.
 func (StaffRepo) CreateStaff(ctx context.Context, s write.NewStaff) error {
 	tx, err := txOf(ctx)
 	if err != nil {
@@ -78,15 +78,33 @@ func (StaffRepo) Staff(ctx context.Context, userID, tenantID uuid.UUID, issuer s
 	if err != nil {
 		return nil, err
 	}
-	var r write.StaffRow
-	var email, locale, sub sql.NullString
-	var home uuid.NullUUID
 	// tenancyguard:ok identity.users is global; the explicit home-tenant condition scopes it to the session tenant
-	err = tx.QueryRowContext(ctx, `SELECT u.user_id, u.username, u.email, u.display_name, u.locale, u.status, u.primary_tenant_id, u.version,
+	return scanStaff(tx.QueryRowContext(ctx, `SELECT u.user_id, u.username, u.email, u.display_name, u.locale, u.status, u.primary_tenant_id, u.version,
 			(SELECT e.subject FROM identity.external_identities e WHERE e.user_id = u.user_id AND e.issuer = $3 AND e.status = 'active'
 			   AND e.deleted_at IS NULL LIMIT 1)
 		FROM identity.users u WHERE u.user_id = $1 AND u.user_type = 'staff' AND u.primary_tenant_id = $2 AND u.deleted_at IS NULL`,
-		userID, tenantID, issuer).Scan(&r.UserID, &r.Username, &email, &r.DisplayName, &locale, &r.Status, &home, &r.Version, &sub)
+		userID, tenantID, issuer))
+}
+
+// PlatformStaff returns a live platform staff account (no home tenant, ADR-0081).
+func (StaffRepo) PlatformStaff(ctx context.Context, userID uuid.UUID, issuer string) (*write.StaffRow, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok identity.users is global (no tenant_id); platform staff only (primary_tenant_id IS NULL)
+	return scanStaff(tx.QueryRowContext(ctx, `SELECT u.user_id, u.username, u.email, u.display_name, u.locale, u.status, u.primary_tenant_id, u.version,
+			(SELECT e.subject FROM identity.external_identities e WHERE e.user_id = u.user_id AND e.issuer = $2 AND e.status = 'active'
+			   AND e.deleted_at IS NULL LIMIT 1)
+		FROM identity.users u WHERE u.user_id = $1 AND u.user_type = 'staff' AND u.primary_tenant_id IS NULL AND u.deleted_at IS NULL`,
+		userID, issuer))
+}
+
+func scanStaff(row *sql.Row) (*write.StaffRow, error) {
+	var r write.StaffRow
+	var email, locale, sub sql.NullString
+	var home uuid.NullUUID
+	err := row.Scan(&r.UserID, &r.Username, &email, &r.DisplayName, &locale, &r.Status, &home, &r.Version, &sub)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, problem.New(problem.NotFound, "")
 	}

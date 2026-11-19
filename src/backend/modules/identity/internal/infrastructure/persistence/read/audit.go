@@ -55,6 +55,11 @@ func (m AuditModel) AuditLogs(ctx context.Context, f read.AuditFilter) (out []dt
 	if f.Action != "" {
 		where = append(where, "a.action = "+arg(f.Action))
 	}
+	if len(f.ActionPrefixes) > 0 {
+		// starts_with on "<prefix>." (not LIKE: "_" of the prefix stays literal); values validated by the query (F059-3)
+		p := arg(f.ActionPrefixes)
+		where = append(where, "(a.action = ANY("+p+"::text[]) OR EXISTS (SELECT 1 FROM unnest("+p+"::text[]) AS ap(v) WHERE starts_with(a.action, ap.v || '.')))")
+	}
 	if f.TargetType != "" {
 		where = append(where, "a.target_type = "+arg(f.TargetType))
 	}

@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.19.2"
+catalog_version: "2026.11.20.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -2051,13 +2051,13 @@ workspaces:
             label_key: portal.action.platform_admin.access_control.view_users
             title: Xem người dùng mọi tenant
             required_permissions: [platform.user.manage]
-            operation_ids: [getUserMerge]
+            operation_ids: [listPlatformUsers, getUserMerge]
             can_disable: false
           - key: action.platform_admin.access_control.edit_users
             label_key: portal.action.platform_admin.access_control.edit_users
             title: Tạo/sửa nhân sự platform, mở khóa; tạo học sinh tenant chung; duyệt gộp tài khoản (platform.user.merge, F045)
             required_permissions: [platform.user.manage]
-            operation_ids: [createCommonTenantStudents, mergeUsers]
+            operation_ids: [createPlatformUser, createCommonTenantStudents, mergeUsers]
             can_disable: false
           - key: action.platform_admin.access_control.view_roles
             label_key: portal.action.platform_admin.access_control.view_roles
@@ -2395,7 +2395,7 @@ workspaces:
             can_disable: true
       - key: menu.platform_admin.integrations
         label_key: portal.menu.platform_admin.integrations
-        title: Tích hợp — Keycloak · SIS · APISIX (tham chiếu) [TBD]
+        title: Tích hợp — Keycloak · SIS · APISIX (tham chiếu)
         path: /platform-admin/integrations
         order: 140
         required_permissions: [platform.sis_connection.manage, platform.tenant.manage]
@@ -2405,7 +2405,7 @@ workspaces:
             label_key: portal.action.platform_admin.integrations.view
             title: Xem cấu hình tham chiếu
             required_permissions: [platform.sis_connection.manage, platform.tenant.manage]
-            operation_ids: []
+            operation_ids: [getIntegrationOverview]
             can_disable: true
       - key: menu.platform_admin.trash
         label_key: portal.menu.platform_admin.trash

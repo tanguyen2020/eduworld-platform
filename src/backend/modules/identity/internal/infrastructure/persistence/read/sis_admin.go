@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
 // SisAdminModel implements read.SisAdminReadModel (tenant + soft-delete filters from the ent interceptors).
@@ -179,4 +180,31 @@ func ContractFields(v *dto.SisConnection, r *ent.SisConnection) {
 			v.Config = &cfg
 		}
 	}
+}
+
+var _ read.SisConnectionStats = SisAdminModel{}
+
+// ConnectionStatusCounts counts the live connections of every tenant by status (F059-2). The read lifts the
+// tenant filter through tenancy.Bypass (reason system_admin_cross_tenant: audit cross_tenant.accessed + metric);
+// the soft-delete filter stays. Only counts leave the read: no tenant, school or credential.
+func (m SisAdminModel) ConnectionStatusCounts(ctx context.Context) (out map[string]int, err error) {
+	bctx, err := tenancy.Bypass(tenancy.WithModule(ctx, "identity"), tenancy.ReasonSystemAdminCrossTenant)
+	if err != nil {
+		return nil, problem.New(problem.PermissionDenied, "").Wrap(err)
+	}
+	var rows []struct {
+		Status string `json:"status"`
+		Count  int    `json:"count"`
+	}
+	err = m.Session.Read(bctx, func(ctx context.Context) error {
+		return cl(ctx).SisConnection.Query().GroupBy(entconn.FieldStatus).Aggregate(ent.Count()).Scan(ctx, &rows)
+	})
+	if err != nil {
+		return nil, err
+	}
+	out = make(map[string]int, len(rows))
+	for _, r := range rows {
+		out[r.Status] = r.Count
+	}
+	return out, nil
 }

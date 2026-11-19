@@ -107,6 +107,7 @@ func auditInput(r *http.Request) (query.AuditLogsInput, error) {
 	}
 	q := r.URL.Query()
 	in.Action, in.ResourceType, in.ResourceID = q.Get("action"), q.Get("resource_type"), q.Get("resource_id")
+	in.ActionPrefixes = q["action_prefix"]
 	in.Limit, in.Cursor = queryInt(r, "limit"), q.Get("cursor")
 	return in, nil
 }

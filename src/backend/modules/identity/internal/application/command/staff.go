@@ -135,7 +135,7 @@ func (h Staff) Create(ctx context.Context, in CreateStaffInput) (out write.Staff
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		if err := h.Repo.CreateStaff(ctx, write.NewStaff{UserID: userID, Username: username, Email: email, DisplayName: name, Locale: in.Locale,
-			TenantID: tenant, Issuer: h.LocalIssuer, Subject: kcID}); err != nil {
+			TenantID: &tenant, Issuer: h.LocalIssuer, Subject: kcID}); err != nil {
 			return err
 		}
 		for _, r := range in.Roles {

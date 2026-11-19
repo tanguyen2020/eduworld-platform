@@ -8756,6 +8756,114 @@ paths:
                 $ref: '#/components/schemas/TenantCloneJob'
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /admin/users:
+    get:
+      x-service: identity
+      tags: [admin]
+      operationId: listPlatformUsers
+      x-portal-action: action.platform_admin.access_control.view_users
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Tài khoản người dùng cho System Admin (platform.user.manage) — không gửi X-Tenant-Id
+      description: |
+        Không có `tenant_ids` → chỉ nhân sự platform (`primary_tenant_id = null`); có `tenant_ids` (CrossTenantScope,
+        cần thêm `platform.cross_tenant.read` + MFA, audit `cross_tenant.accessed`) → người có membership trong các tenant đó
+        (học sinh + nhân sự trường). Không có truy vấn "mọi người dùng mọi tenant" (AGENTS R8). `tenant_ids[]` của từng
+        `User` chỉ gồm các tenant trong phạm vi truy vấn; `user_roles` để trống (xem `listAllUserRoles?user_id=`).
+        Không trả mật khẩu, token, IP (F059-AC-14).
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Tìm theo username, email, tên hiển thị (không phân biệt hoa thường)
+          schema: { type: string, minLength: 2, maxLength: 100 }
+        - name: user_type
+          in: query
+          required: false
+          schema: { type: string, enum: [student, staff] }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [pending, active, locked, deactivated] }
+        - name: role_code
+          in: query
+          required: false
+          description: Người có UserRole hiệu lực mang role này (role platform khi không có tenant_ids, role tenant trong các tenant lọc)
+          schema: { $ref: '#/components/schemas/RoleCode' }
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    post:
+      x-service: identity
+      tags: [admin]
+      operationId: createPlatformUser
+      x-portal-action: action.platform_admin.access_control.edit_users
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Tạo tài khoản nhân sự platform (platform.user.manage + platform.user_role.write) — primary_tenant_id = null (ADR-0081)
+      description: |
+        Tạo user Keycloak (realm role `platform_staff` → OTP bắt buộc, email đặt mật khẩu `UPDATE_PASSWORD`), tài khoản
+        `staff` không có tenant gốc và các UserRole platform ban đầu (`scope_type = platform`) trong một use case; lỗi DB vô
+        hiệu hóa user Keycloak vừa tạo. Role không phải `platform` hoặc `safety_moderator` (cần `training_completed_at`, gán
+        sau bằng `grantPlatformUserRole`) → `422`. Username/email đã thuộc tài khoản khác → `409 USERNAME_TAKEN` /
+        `409 EMAIL_TAKEN` (ADR-0069). Phát `user.provisioned` (`tenant_id = null`), audit `user.created`. Nhân sự trường tạo
+        bằng `createTenantUser` với `X-Tenant-Id` = tenant đích.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlatformUserCreateRequest' }
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: USERNAME_TAKEN, EMAIL_TAKEN (định danh đã thuộc tài khoản khác trên SSO hoặc trong module identity)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /admin/integrations:
+    get:
+      x-service: identity
+      tags: [admin]
+      operationId: getIntegrationOverview
+      x-portal-action: action.platform_admin.integrations.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Tổng quan tích hợp chỉ đọc — Keycloak, gateway APISIX, SIS (platform.sis_connection.manage hoặc platform.tenant.manage)
+      description: |
+        Giá trị lấy từ cấu hình server (Keycloak: issuer, realm, client id + mục đích, MFA bắt buộc với route platform; APISIX:
+        URL gateway public/nội bộ khi được cấu hình) và số kết nối SIS theo trạng thái (mọi tenant, chỉ đếm). Không bao giờ
+        chứa secret, credential, token hay tham chiếu secret (AGENTS R3, R4; F059-AC-23). Không có thao tác ghi.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IntegrationOverview' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /admin/users:merge:
     post:
       x-service: identity
@@ -11330,6 +11438,8 @@ paths:
       tags: [admin]
       operationId: listPlatformAuditLogs
       x-internal: true
+      security:
+        - { keycloakAdminBearer: [] }
       x-portal-action: action.platform_admin.audit_logs.view
       summary: Truy vấn audit liên tenant (system_admin · platform.audit.read; gồm role.*, user_role.*, cross_tenant.accessed, moderation.*)
       parameters:
@@ -11340,6 +11450,7 @@ paths:
         - name: action
           in: query
           schema: { type: string, maxLength: 128 }
+        - $ref: '#/components/parameters/AuditActionPrefix'
         - name: resource_type
           in: query
           schema: { type: string, maxLength: 64 }
@@ -11383,6 +11494,7 @@ paths:
         - name: action
           in: query
           schema: { type: string, maxLength: 128 }
+        - $ref: '#/components/parameters/AuditActionPrefix'
         - name: from
           in: query
           required: true
@@ -16077,6 +16189,19 @@ components:
       required: true
       description: UUID của bản cài game (sinh lần đầu, lưu user://). Dùng cho quy tắc một thiết bị (ADR-0031), không phải credential.
       schema: { $ref: '#/components/schemas/Uuid' }
+    AuditActionPrefix:
+      name: action_prefix
+      in: query
+      required: false
+      description: |
+        Lọc theo nhóm action (F059-3): mỗi giá trị là tiền tố theo dấu chấm, khớp action bằng giá trị hoặc bắt đầu bằng `<giá trị>.`
+        (ví dụ `role` khớp `role.created`, không khớp `role_x.y`); nhiều giá trị = OR; dùng cùng `action` = AND. Tối đa 10 giá trị.
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 10
+        items: { type: string, minLength: 2, maxLength: 64, pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$' }
     TenantIds:
       name: tenant_ids
       in: query
@@ -23085,6 +23210,11 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Timestamp'
             - type: 'null'
+        tenant_ids:
+          type: array
+          maxItems: 50
+          description: Tenant có membership của người dùng trong phạm vi truy vấn (chỉ listPlatformUsers với tenant_ids; vắng ở API khác)
+          items: { $ref: '#/components/schemas/Uuid' }
         user_roles:
           type: array
           maxItems: 100
@@ -23100,6 +23230,64 @@ components:
           maxItems: 200
           items: { $ref: '#/components/schemas/User' }
         page: { $ref: '#/components/schemas/PageInfo' }
+    PlatformUserCreateRequest:
+      type: object
+      required: [username, email, display_name, initial_role_ids, reason]
+      additionalProperties: false
+      description: 'Tạo nhân sự platform (`createPlatformUser`, `primary_tenant_id = null`, chỉ nhận role platform — ADR-0081). Username/email duy nhất trên SSO và trong module identity, không phân biệt hoa thường (ADR-0069).'
+      properties:
+        username: { type: string, minLength: 3, maxLength: 128, pattern: '^[A-Za-z0-9._-]{3,128}$' }
+        email: { type: string, format: email, maxLength: 320, description: Bắt buộc với nhân sự (ADR-0069) }
+        display_name: { type: string, minLength: 1, maxLength: 128 }
+        locale: { $ref: '#/components/schemas/Locale' }
+        initial_role_ids:
+          type: array
+          minItems: 1
+          maxItems: 20
+          uniqueItems: true
+          description: Role `platform` (scope_type = platform); `safety_moderator` gán sau bằng grantPlatformUserRole (cần training_completed_at)
+          items: { $ref: '#/components/schemas/Uuid' }
+        reason: { type: string, minLength: 3, maxLength: 1000 }
+    IntegrationOverview:
+      type: object
+      required: [keycloak, apisix, sis, generated_at]
+      description: Tổng quan tích hợp chỉ đọc từ cấu hình server và số liệu SIS; không có secret (getIntegrationOverview).
+      properties:
+        keycloak:
+          type: object
+          required: [issuer_url, realm, clients, platform_mfa_required, platform_auth_max_age_seconds]
+          properties:
+            issuer_url: { type: string, format: uri, maxLength: 2048, description: Issuer OIDC của realm (phần tử đầu EW_OIDC_ISSUERS) }
+            realm: { type: string, maxLength: 64 }
+            clients:
+              type: array
+              maxItems: 20
+              items:
+                type: object
+                required: [client_id, purpose]
+                properties:
+                  client_id: { type: string, maxLength: 64 }
+                  purpose: { type: string, enum: [portal, game, admin_api], description: 'portal = client portal, game = client game backend, admin_api = service account Admin API của module identity' }
+            platform_mfa_required: { type: boolean, description: 'Luôn true: /admin/*, /game-admin/* yêu cầu MFA + role platform (ADR-0027)' }
+            platform_auth_max_age_seconds: { type: integer, minimum: 0, description: 'Tuổi tối đa của lần xác thực cho route platform (EW_OIDC_PLATFORM_MAX_AUTH_AGE)' }
+        apisix:
+          type: object
+          required: [public_base_url, internal_base_url]
+          description: 'Định tuyến quản lý bằng route-as-code (deploy/apisix/routes/routes.yaml); URL lấy từ EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL, null = chưa cấu hình'
+          properties:
+            public_base_url: { type: [string, 'null'], format: uri, maxLength: 2048 }
+            internal_base_url: { type: [string, 'null'], format: uri, maxLength: 2048 }
+        sis:
+          type: object
+          required: [connections_total, connections_by_status]
+          properties:
+            connections_total: { type: integer, minimum: 0 }
+            connections_by_status:
+              type: object
+              maxProperties: 10
+              description: Số kết nối SIS (mọi tenant, chưa xóa) theo `status`
+              additionalProperties: { type: integer, minimum: 0 }
+        generated_at: { $ref: '#/components/schemas/Timestamp' }
     TenantUserCreateRequest:
       type: object
       required: [username, email, display_name, user_type, initial_user_roles]

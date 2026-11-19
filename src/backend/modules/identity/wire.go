@@ -320,6 +320,15 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		Assign: command.AssignToTenants{PlatformAdminDeps: pad}, Unassign: command.UnassignFromTenants{PlatformAdminDeps: pad},
 		Restore: command.RestoreTrashItem{PlatformAdminDeps: pad}, Clone: command.CreateTenantClone{PlatformAdminDeps: pad},
 		Merge: command.MergeUsers{PlatformAdminDeps: pad}}
+	integrationsCfg, err := integrationConfig(cfg, localIssuer)
+	if err != nil {
+		return err
+	}
+	platformUsersH := identityhttp.PlatformUserHandlers{ // F059-1, F059-2 (owner F012)
+		List: query.PlatformUsers{Model: principals, Cursors: cursors},
+		Create: command.PlatformStaff{UoW: core.UoW, Repo: write.StaffRepo{}, Roles: userRoles, KC: kc, Events: events, Audit: auditor,
+			LocalIssuer: localIssuer},
+		Integrations: query.Integrations{Config: integrationsCfg, Stats: read.SisAdminModel{Session: core.ReadSession}}}
 	webhookRecv := command.ReceiveSisWebhook{UoW: core.UoW, Repo: write.SisContractRepo{}, Secrets: providers.Secrets,
 		Verifier: webhook.Verifier{Validator: validator}, Nonces: cache.SisWebhookNonces{C: vk}, Jobs: queue, Metrics: metrics.Sync{}}
 	ipKey := gaCfg.IPHashKey
@@ -330,6 +339,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			func(s *httpx.Server) error { return identityhttp.RegisterSettings(s, settingsH) },
 			func(s *httpx.Server) error { return identityhttp.RegisterLifecycle(s, lifecycleH) },
 			func(s *httpx.Server) error { return identityhttp.RegisterPlatformAdmin(s, platformH) },
+			func(s *httpx.Server) error { return identityhttp.RegisterPlatformUsers(s, platformUsersH) },
 			func(s *httpx.Server) error {
 				return identityhttp.RegisterGameAuth(s, identityhttp.GameAuthHandlers{Session: gameAuth, IPHashKey: ipKey})
 			},

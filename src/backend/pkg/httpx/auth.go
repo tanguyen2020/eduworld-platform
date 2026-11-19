@@ -18,6 +18,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
+// DefaultPlatformMaxAuthAge is the step-up window of platform routes when EW_OIDC_PLATFORM_MAX_AUTH_AGE is unset
+// (KEYCLOAK_SSO §3.3: auth_time within the last 8 hours).
+const DefaultPlatformMaxAuthAge = 8 * time.Hour
+
 // AuthConfig comes from EW_OIDC_* and EW_KC_*_CLIENT_ID (KEYCLOAK_SSO §11); nothing is hard-coded (R3).
 type AuthConfig struct {
 	Issuers             []string
@@ -40,7 +44,7 @@ func AuthConfigFrom(c *config.Config) (AuthConfig, error) {
 		return AuthConfig{}, err
 	}
 	skew := c.Duration("EW_OIDC_ALLOWED_CLOCK_SKEW", 30*time.Second)
-	age := c.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", 8*time.Hour)
+	age := c.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", DefaultPlatformMaxAuthAge)
 	amr := c.List("EW_OIDC_PLATFORM_REQUIRED_AMR")
 	if len(amr) == 0 {
 		amr = []string{"otp"}

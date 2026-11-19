@@ -122,6 +122,8 @@ EW_OIDC_PLATFORM_REQUIRED_ACR=                    # tùy chọn: acr chấp nh�
 EW_OIDC_PLATFORM_MAX_AUTH_AGE=8h
 EW_KC_PORTAL_CLIENT_ID=eduworld-portal            # azp của portal (guard portal_staff, F002)
 EW_KC_GAME_CLIENT_ID=eduworld-game-backend        # azp của game (guard game_player, F002)
+EW_GATEWAY_PUBLIC_BASE_URL=http://localhost:9080/api/v1   # tùy chọn: chỉ hiển thị ở màn Tích hợp (getIntegrationOverview, F059-2); trống = null
+EW_GATEWAY_INTERNAL_BASE_URL=                     # tùy chọn: URL gateway nội bộ (không chứa user/password, query)
 EW_SHUTDOWN_DRAIN_DELAY=0s                  # chờ LB thấy readyz 503 (mặc định 5s khi có HTTP public; local 0s)
 EW_HTTP_SHUTDOWN_TIMEOUT=20s                # srv.Shutdown (BACKEND_DESIGN §13)
 EW_WORKER_SHUTDOWN_TIMEOUT=60s              # chờ handler worker đang chạy

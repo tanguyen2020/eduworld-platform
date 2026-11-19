@@ -33,6 +33,11 @@
 - Q: Nối binary? → A: Consumer `identity.audit_sink` (mỗi stream `EVT_*`), `identity.feature_toggle_cache`, job `partition-maintainer`/`audit-retention`, `RegisterSettings` và `featuretoggle.Source` cho `featuregate` chưa nối vào `core-api`/`worker` (cùng OQ F010-2).
 - Q: Ghi đè flag theo tenant của System Admin? → A: `X-Tenant-Id` là tenant đích (R20); Principal của System Admin mang tenant đó vẫn được ghi.
 
+### Session 2026-11-20 (follow-up F059, Workspace D)
+
+- Q: Nhật ký phân quyền cần xem chung `role.*` và `user_role.*` (OQ F059-3, T007 của F059)? → A: Thêm tham số `action_prefix` (mảng, maxItems 10, mỗi giá trị 2–64 ký tự, pattern `^[a-z][a-z0-9_]*(.[a-z][a-z0-9_]*)*$`) cho cả `listPlatformAuditLogs` và `listTenantAuditLogs`: giá trị khớp action bằng chính nó hoặc bắt đầu bằng `<giá trị>.` (không khớp chuỗi con — `role` không khớp `role_x.*`; SQL dùng `starts_with`, không `LIKE`); nhiều giá trị là OR, dùng cùng `action` là AND; giá trị sai → `422 VALIDATION_FAILED` (`action_prefix`). Phạm vi tenant/platform/CrossTenantScope không đổi. `listPlatformAuditLogs` thêm `security: keycloakAdminBearer`.
+- Q: `platform.audit.read` hay `platform.audit.read_all` (OQ F059-11)? → A: Giữ quyết định Session 2026-11-16: `platform.audit.read` (catalog permission trong code, ADMIN_PORTAL §2.2 đã gỡ `read_all`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)
