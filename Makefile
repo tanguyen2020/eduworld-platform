@@ -94,11 +94,14 @@ build: ## Build every binary into ./bin with build metadata
 	  CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=$$b" -o $(GOBIN)/$$b ./cmd/$$b; done
 
 # ---------- database ----------
-.PHONY: migrate migrate-diff migrate-lint db-privileges db-backup db-restore
+.PHONY: migrate migrate-diff migrate-lint seed db-privileges db-backup db-restore
 migrate: $(addprefix migrate-,$(MODULES)) ## Apply Atlas migrations to every module database
 
 migrate-%: ## Apply Atlas migrations of one module (role <module>_migrator)
 	$(MIGRATOR_ENV) $(GO) run ./cmd/migrate --module=$* --atlas="bash $(CURDIR)/scripts/dev/atlas.sh"
+
+seed: ## Load the dev seed (module learning: subjects + curriculum GDPT2018_SAMPLE through the import use case, F021)
+	EW_DB_LEARNING_DSN=$(call dsn,learning,app) EW_DB_LEARNING_PLATFORM_DSN=$(call dsn,learning,platform) $(GO) run ./modules/learning/cmd/seed
 
 name ?= change
 migrate-diff: ## Generate a migration from ent schema: MOD=<module> name=<x>

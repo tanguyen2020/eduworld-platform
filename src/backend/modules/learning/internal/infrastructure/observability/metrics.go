@@ -46,3 +46,46 @@ func (AssignmentCounter) Add(op string, n int) {
 		assignments.WithLabelValues(op).Add(float64(n))
 	}
 }
+
+// Curriculum metrics (plan F021 "Quan sát").
+var (
+	curriculumPublish = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_curriculum_publish_total",
+		Help: "Curriculum version publishes by result (success, rejected, error).",
+	}, []string{"result"})
+	importJobs = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_import_jobs_total",
+		Help: "Content import jobs finished by kind and status.",
+	}, []string{"kind", "status"})
+	importRowsRejected = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_import_rows_rejected_total",
+		Help: "Rows rejected by content imports by kind.",
+	}, []string{"kind"})
+)
+
+// RegisterCurriculum adds the curriculum metrics to r; already registered collectors are ignored.
+func RegisterCurriculum(r prometheus.Registerer) {
+	for _, c := range []prometheus.Collector{curriculumPublish, importJobs, importRowsRejected} {
+		_ = r.Register(c)
+	}
+}
+
+// CurriculumCounter adapts the curriculum metrics to command.CurriculumMetrics.
+type CurriculumCounter struct{}
+
+// Published counts a publish of result (success, rejected, error).
+func (CurriculumCounter) Published(result string) { curriculumPublish.WithLabelValues(result).Inc() }
+
+// ImportFinished counts a finished import job and its rejected rows.
+func (CurriculumCounter) ImportFinished(kind, status string, rejected int) {
+	importJobs.WithLabelValues(kind, status).Inc()
+	if rejected > 0 {
+		importRowsRejected.WithLabelValues(kind).Add(float64(rejected))
+	}
+}
+
+// CurriculumPublishTotal is eduworld_curriculum_publish_total{result} (tests).
+func CurriculumPublishTotal() *prometheus.CounterVec { return curriculumPublish }
+
+// ImportJobsTotal is eduworld_import_jobs_total{kind,status} (tests).
+func ImportJobsTotal() *prometheus.CounterVec { return importJobs }

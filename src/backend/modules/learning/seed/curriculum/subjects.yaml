@@ -1,0 +1,12 @@
+# Danh mục môn học mẫu cho dev/pilot (CURRICULUM_MODEL §2, cấp 3: subject là danh mục platform dùng chung).
+# Nạp bằng `go -C src/backend run ./modules/learning/cmd/seed` trước các file curriculum (tham chiếu môn theo mã).
+subjects:
+  - code: math
+    name: { vi: Toán, en: Mathematics }
+    grade_levels: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  - code: vietnamese
+    name: { vi: Tiếng Việt, en: Vietnamese }
+    grade_levels: [1, 2, 3, 4, 5]
+  - code: english
+    name: { vi: Tiếng Anh, en: English }
+    grade_levels: [3, 4, 5, 6, 7, 8, 9]

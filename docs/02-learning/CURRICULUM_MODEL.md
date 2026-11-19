@@ -1,6 +1,6 @@
 # Curriculum Model
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: EdTech Specialist + Backend Architect · Cập nhật: 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: EdTech Specialist + Backend Architect · Cập nhật: 2026-11-19 (§9 theo hợp đồng F021)
 > Liên quan: [DOMAIN_MODEL §3](../06-architecture/DOMAIN_MODEL.md#3-curriculum--content) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [ADR-0015](../adr/ADR-0015-content-versioning-bat-bien-sau-publish.md) · [OQ-08](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Mục đích
@@ -177,14 +177,18 @@ Mã FR, nhãn và phase do [PRODUCT_REQUIREMENTS §2.4](../00-overview/PRODUCT_R
 
 ## 9. API (tóm tắt)
 
+Hợp đồng chi tiết: `specs/openapi/eduworld-api.v1.yaml` (tag `learning`, `cms`; F021).
+
 | Method | Path | Mô tả | Quyền |
 |---|---|---|---|
-| GET | `/api/v1/learning/curricula` | Danh sách curriculum khả dụng cho principal | mọi role đã đăng nhập |
-| GET | `/api/v1/learning/curricula/{id}/versions/{vid}/tree?subject=&grade=` | Cây topic + LO (read model, cache) | mọi role |
-| GET | `/api/v1/learning/objectives/{lo_id}` | Chi tiết LO | mọi role |
-| POST/PATCH | `/api/v1/cms/curricula/...` | Soạn thảo cấu trúc | `curriculum.write`: `content_admin` (platform), `academic_manager` scope tenant (curriculum của tenant) |
-| POST | `/api/v1/cms/curricula/{id}/versions/{vid}:submit-review` / `:publish` | Workflow | xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) |
-| POST | `/api/v1/cms/curricula/import` | Import YAML (Idempotency-Key) | `content_admin` |
+| GET | `/api/v1/learning/curricula`, `/learning/topics`, `/learning/objectives` | Curriculum khả dụng và cây topic/LO của version đang áp dụng cho trường (chỉ version `published`, không metadata biên tập) | mọi principal của tenant |
+| GET | `/api/v1/learning/objectives/{objective_id}` | Chi tiết LO, kể cả LO của version cũ (lịch sử attempt) | mọi principal của tenant |
+| GET/POST/PATCH/DELETE | `/api/v1/cms/learning/curricula…`, `/cms/learning/topics…`, `/cms/learning/objectives…`, `/cms/learning/competencies…` | Soạn thảo cấu trúc (chỉ version `draft`) | `curriculum.read`/`curriculum.write`: `content_admin` (platform), `academic_manager` (curriculum của tenant) |
+| POST | `/api/v1/cms/learning/curricula/{id}/versions/{version}:transition` / `:publish` | Workflow (`submit_review`, `revise` — `curriculum.write`; `approve`, `reject`, `archive`, publish — `curriculum.publish`) | xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) |
+| GET/PUT | `/api/v1/cms/learning/curricula/{id}/versions/{version}/lo-mappings` | Mapping LO giữa version (§5) | `curriculum.read`/`curriculum.write` |
+| GET | `/api/v1/cms/learning/curricula/{id}/versions/{version}:export?format=yaml\|csv` | Xuất cây (định dạng `specs/schemas/curriculum-import.schema.json`) | `curriculum.read` |
+| POST | `/api/v1/cms/learning/imports` (`kind` `curriculum_yaml`/`curriculum_csv`) | Import qua job 202 (Idempotency-Key, `dry_run`) | `curriculum.write` |
+| … | `/api/v1/cms/learning/subjects`, `/cms/learning/textbook-*` | Danh mục môn học, bộ sách (§6) | ghi: chỉ nhân sự platform |
 
 Godot chỉ đọc cây curriculum dạng rút gọn (topic, LO code, tên hiển thị) để render khu học tập; không đọc metadata biên tập.
 
