@@ -1,0 +1,26 @@
+{
+  "event_id": "0193a5f4-6c1e-7b2a-9d1f-000000000105",
+  "event_type": "student.cleaned_up",
+  "schema_version": 1,
+  "occurred_at": "2026-11-19T07:00:00Z",
+  "recorded_at": "2026-11-19T07:00:01Z",
+  "producer": "identity/cleanup",
+  "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+  "actor": {
+    "type": "staff",
+    "id": "0193a5f4-6c1e-7b2a-9d1f-000000000009"
+  },
+  "subject": {
+    "type": "student",
+    "id": "0193a5f4-6c1e-7b2a-9d1f-000000000005"
+  },
+  "idempotency_key": "student.cleaned_up:05",
+  "trace_id": null,
+  "payload": {
+    "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+    "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+    "last_login_at": "2026-03-01T07:00:00Z",
+    "cutoff_days": 180,
+    "run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004"
+  }
+}
