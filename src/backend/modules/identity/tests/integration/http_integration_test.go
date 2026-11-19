@@ -36,6 +36,7 @@ type httpEnv struct {
 	srv *httptest.Server
 	idp *httpxtest.IDP
 	res *httpxtest.Resolver
+	kc  *kcUsers // realAuthHTTP: the Keycloak test double behind createTenantUser
 }
 
 type httpResp struct {

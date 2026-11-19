@@ -39,6 +39,8 @@ type Handlers struct {
 	Me                   query.Me                       // F012
 	UserRoles            command.UserRoles              // F012
 	UserRoleList         query.UserRoles                // F012
+	Staff                command.Staff                  // F012
+	UserList             query.TenantUsers              // F012
 	Roles                command.Roles                  // F012
 	RoleList             query.Roles                    // F012
 }
@@ -109,6 +111,9 @@ var Operations = map[string]httpx.Operation{
 	"updatePlatformRole":     op("updatePlatformRole", http.MethodPatch, "/admin/roles/{role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	"deletePlatformRole":     op("deletePlatformRole", http.MethodDelete, "/admin/roles/{role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 204),
 	"listAllPermissions":     op("listAllPermissions", http.MethodGet, "/admin/permissions", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"listTenantUsers":        withGuard(op("listTenantUsers", http.MethodGet, "/tenant/users", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"createTenantUser":       withGuard(op("createTenantUser", http.MethodPost, "/tenant/users", httpx.TenantRequired, httpx.IdempotencyRequired, 201), httpx.GuardPortalStaff),
+	"updateTenantUser":       withGuard(op("updateTenantUser", http.MethodPatch, "/tenant/users/{user_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"getMe":                  withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"listSisSyncRunErrors":   op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
@@ -159,6 +164,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn(h)
 	}
 	for id, fn := range roleOperations {
+		routes[id] = fn(h)
+	}
+	for id, fn := range userOperations {
 		routes[id] = fn(h)
 	}
 	for id, fn := range routes {

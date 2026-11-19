@@ -358,6 +358,7 @@ func (a *Admin) UpdateOrganization(ctx context.Context, org port.KCOrganization)
 type userRep struct {
 	ID         string              `json:"id,omitempty"`
 	Username   string              `json:"username"`
+	Email      string              `json:"email,omitempty"`
 	Enabled    bool                `json:"enabled"`
 	FirstName  string              `json:"firstName,omitempty"`
 	Attributes map[string][]string `json:"attributes,omitempty"`
@@ -442,7 +443,7 @@ func (a *Admin) FindUserByAttribute(ctx context.Context, name, value string) (po
 
 func (a *Admin) CreateUser(ctx context.Context, u port.KCNewUser) (string, error) {
 	loc, err := a.call(ctx, "create_user", http.MethodPost, "/users",
-		userRep{Username: u.Username, Enabled: u.Enabled, FirstName: u.FirstName, Attributes: u.Attributes}, nil, false)
+		userRep{Username: u.Username, Email: u.Email, Enabled: u.Enabled, FirstName: u.FirstName, Attributes: u.Attributes}, nil, false)
 	if err != nil {
 		return "", err
 	}

@@ -34,6 +34,7 @@ type KCUser struct {
 // KCNewUser is a local Keycloak user created by module identity (common tenant, ACCOUNT_PROVISIONING §3.4).
 type KCNewUser struct {
 	Username   string
+	Email      string // staff only (ADR-0069); never set for students
 	FirstName  string
 	Enabled    bool
 	Attributes map[string][]string

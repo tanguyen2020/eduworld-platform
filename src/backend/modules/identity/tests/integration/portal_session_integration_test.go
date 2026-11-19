@@ -185,11 +185,15 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 		UserRoles:    command.UserRoles{UoW: e.uow, Repo: write.UserRoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
 		UserRoleList: query.UserRoles{Model: model, Cursors: codec},
 		Roles:        command.Roles{UoW: e.uow, Repo: write.RoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
-		RoleList:     query.Roles{Model: model, Cursors: codec}}
+		RoleList:     query.Roles{Model: model, Cursors: codec},
+		UserList:     query.TenantUsers{Model: model, Cursors: codec}}
+	kc := newKCUsers()
+	h.Staff = command.Staff{UoW: e.uow, Repo: write.StaffRepo{}, Roles: h.UserRoles, KC: kc, Events: e.deps.Events, Audit: e.deps.Audit,
+		LocalIssuer: "http://kc/realms/eduworld"}
 	if err := identityhttp.Register(srv, h); err != nil {
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	return &httpEnv{env: e, srv: hs, idp: idp}, idp
+	return &httpEnv{env: e, srv: hs, idp: idp, kc: kc}, idp
 }
