@@ -1,0 +1,32 @@
+/* Self-hosted Be Vietnam Pro (SIL OFL 1.1, design/fonts/BeVietnamPro/LICENSE) — DESIGN_SYSTEM §4.1. */
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../../../../../design/fonts/BeVietnamPro/BeVietnamPro-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../../../../../../../design/fonts/BeVietnamPro/BeVietnamPro-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../../../../../../../design/fonts/BeVietnamPro/BeVietnamPro-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../../../../../../../design/fonts/BeVietnamPro/BeVietnamPro-Bold.ttf") format("truetype");
+}

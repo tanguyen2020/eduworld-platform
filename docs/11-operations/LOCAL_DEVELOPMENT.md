@@ -270,11 +270,13 @@ Kiểm tra: `curl http://localhost:9100/readyz` (trạng thái từng module tro
 ### 6.4. Web CMS/LMS
 ```bash
 cd src/cms/frontend && pnpm install
-pnpm gen:api      # sinh client TS từ specs/openapi (bundle public)
+pnpm gen:api      # sinh type TS (schema.gen.d.ts) + metadata operation (operation-meta.gen.ts) từ specs/openapi/eduworld-api.v1.yaml; pnpm gen:check báo lệch
 pnpm dev          # http://localhost:5173 — Admin Portal (src/cms/frontend/apps/portal), mọi workspace; gọi APISIX local (public + internal cùng máy)
                   # MathJax 4 (mathjax@4.x) + MathLive (mathlive) ghim phiên bản cố định trong src/cms/frontend/apps/portal/package.json (ADR-0055)
 pnpm storybook    # http://localhost:6006 — ops-ui + theme Ant Design (sáng/tối/compact)
+pnpm lint && pnpm test   # ESLint + stylelint (chặn hardcode màu/font/khoảng cách, import game, URL môi trường, chuỗi UI literal) · Vitest 1 worker
 ```
+Cấu hình runtime của portal: `/config.json` (`apiBaseUrl`, `apiInternalBaseUrl`, `oidcIssuer`, `oidcClientId`, `env`) sinh lúc deploy. Khi dev, Vite phục vụ `apps/portal/public/config.json` nếu có (gitignore), nếu không thì `public/config.example.json` (gateway public `:9080`, nội bộ `:9180`); khi `/config.json` không đọc được (chỉ ở dev) thì dùng biến `VITE_API_BASE_URL`, `VITE_API_INTERNAL_BASE_URL`, `VITE_OIDC_ISSUER`, `VITE_OIDC_CLIENT_ID`, `VITE_APP_ENV`. Trình duyệt Playwright cho axe/visual: `pnpm exec playwright install --only-shell chromium`.
 
 ### 6.5. API test bằng Postman CLI
 ```bash
@@ -311,6 +313,8 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make godot-test` / `make godot-export-<target>` | Godot headless |
 | `make design-tokens` / `make design-tokens-check` | Style Dictionary sinh Theme Godot, `UiTokens.gd`, resource 3D, theme Ant Design + CSS variables từ `design/`; bản `-check` báo lỗi nếu file sinh lệch nguồn (ADR-0047) |
 | `make storybook` | Chạy Storybook của `src/cms/frontend/packages/ops-ui` |
+| `make web-lint` / `make web-test` / `make web-build` | `src/cms/frontend`: ESLint + stylelint + typecheck + `gen:check` / Vitest 1 worker / build portal + kiểm 5 chunk workspace (F050) |
+| `make web-storybook-check` / `make web-visual` | Build Storybook + axe mọi story (lỗi serious/critical fail) / Playwright visual regression 100% và 200% zoom (F050) |
 | `make docs-check` | `npm ci --prefix scripts` rồi chạy `node scripts/docs/check-mermaid.mjs` (cú pháp mọi sơ đồ Mermaid trong `docs/` + README) và `node scripts/docs/check-links.mjs` (link tương đối + anchor kiểu GitHub), `node scripts/docs/build-rtm.mjs --check` (ma trận truy vết khớp nguồn). Exit ≠ 0 khi có lỗi; cùng lệnh với job CI `docs:check`. Sinh lại RTM: `node scripts/docs/build-rtm.mjs` |
 | `make render-thumbnails [ASSET=<path>]` | Godot headless render thumbnail/turntable cho asset 3D, upload lên floci local |
 | `make specs-lint` | Spectral (+ rule `maxLength`), AsyncAPI, ajv JSON Schema, oasdiff, `check-enums`, `check-problem-codes`, `check-portal-catalog` (danh mục menu/action portal ↔ `x-portal-action`, ADR-0090) |

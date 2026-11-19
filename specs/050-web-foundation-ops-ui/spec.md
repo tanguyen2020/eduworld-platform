@@ -16,6 +16,20 @@
 
 - Q: Tên thư mục 5 workspace? → A: `game-ops` (A), `content-studio` (B), `school-lms` (C), `platform-admin` (D), `live-ops` (E) theo [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) (RB-603, RB-619).
 
+### Session 2026-11-19 (triển khai, [Proposed] — Technical Architect/UX Lead duyệt)
+
+- Q: Phiên bản stack? → A: [Proposed] Ghim chính xác: React 18.3.1, antd 5.29.3, `@ant-design/pro-components` 2.8.10 (peer của `ops-ui`, chưa component nào dùng ở F050), Vite 6.4.5, React Router 6.30.6, TanStack Query 5.104.5, `openapi-typescript` 7.13.0 + `openapi-fetch` 0.17.0, i18next 25.10.10 + react-i18next 15.7.4, Vitest 3.2.7, MSW 2.15.0, ESLint 9.39.5 (flat config `eslint.config.mjs`, thay `.eslintrc.cjs`), stylelint 16.26.1 (`stylelint.config.mjs`), Storybook 8.6.19 + test-runner 0.22.1 + axe-playwright 2.2.2, Playwright 1.64.1 (`pnpm.overrides`), pnpm 10.34.9 (`packageManager`).
+- Q: Header do apiClient tự gắn có bắt người gọi truyền trong type? → A: [Proposed] Không: bản sao spec dùng để sinh `schema.gen.d.ts` đặt `X-Tenant-Id`, `Idempotency-Key`, `If-Match`, `Accept-Language` thành tùy chọn; `operation-meta.gen.ts` vẫn lấy yêu cầu thật từ spec gốc.
+- Q: Giữ cùng `Idempotency-Key` khi người dùng thao tác lại? → A: [Proposed] Retry tự động dùng chung key (key gắn trước vòng retry). Thao tác lại của người dùng truyền mã ý định qua header nội bộ `x-ew-intent` (bị gỡ trước khi gửi) → cùng key trong thời hạn `idempotency_record_ttl` (24 h); thành công thì quên ý định.
+- Q: Chính sách retry/429 cụ thể? → A: [Proposed] Tối đa 2 lần, backoff 100 ms × 2ⁿ + jitter (≤ 100 ms × 2ⁿ), chỉ GET hoặc request có `Idempotency-Key`, chỉ lỗi mạng/502/503/504. `429`: chờ `Retry-After` rồi thử lại nếu request được phép retry và chờ ≤ 30 s; ngược lại trả lỗi kèm `retryAfterMs` cho UI.
+- Q: "Gateway nội bộ không kết nối được" nhận biết thế nào? → A: [Proposed] Lỗi mạng (fetch reject) với operation đi gateway nội bộ, sau khi hết lượt retry → sự kiện `vpn_required` + `ApiError` `VPN_REQUIRED` (khóa `error.VPN_REQUIRED` "Cần kết nối mạng quản trị (VPN)."); gateway public → `NETWORK_ERROR`. Đường dẫn không có trong spec vẫn chọn gateway theo prefix.
+- Q: ETag cho `If-Match` lấy ở đâu? → A: [Proposed] Bộ nhớ (không storage) theo đường dẫn tài nguyên; đường dẫn hành động `/x/{id}:publish` dùng ETag của `/x/{id}`; phản hồi ghi có `ETag` cập nhật cache.
+- Q: `/config.json` khi dev? → A: [Proposed] Vite dev phục vụ `public/config.json` (gitignore) hoặc `public/config.example.json`; `VITE_*` chỉ là fallback ở dev; production không fallback.
+- Q: Chuỗi UI literal được phép ở đâu? → A: Test, story và helper test (`**/test-utils.ts`, `src/test/**`) được tắt `i18next/no-literal-string` và `ew/no-env-url-literal`; story vẫn chịu `ew/no-hardcoded-style`. Giá trị hình học `50%`, `100%` không coi là token thiết kế. ProblemCode chưa có thông điệp riêng dùng `error.generic` (test i18n cảnh báo số mã thiếu).
+- Q: Visual regression baseline? → A: [Proposed] Ảnh theo nền tảng `tests/visual/__screenshots__/<platform>/`; F050 commit baseline `win32`. CI Linux chạy `--update-snapshots=missing`: ảnh mới được ghi và tải lên artifact `web-visual` để duyệt rồi commit; ảnh có sẵn lệch > 1% điểm ảnh làm job fail. Zoom 200% mô phỏng bằng viewport ½ + `deviceScaleFactor` 2 và kiểm không có cuộn ngang.
+- Q: Font Be Vietnam Pro tự host? → A: [Proposed] `ops-ui/src/theme/fonts.css` nạp 400/500/600/700 từ `design/fonts/BeVietnamPro` (Vite đóng gói). Màu chữ phụ của Ant Design (độ mờ 0,45 → 3,36:1) bị axe chặn nên `design/admin-tokens` thêm `antd.colorText*` (tokens@0.2.0).
+- Q: Đường dẫn route workspace? → A: `/school`, `/content`, `/game-ops`, `/live-ops`, `/platform` (tasks T010) → thư mục `school-lms`, `content-studio`, `game-ops`, `live-ops`, `platform-admin`; trang `/` chỉ là danh sách liên kết, không quyết định quyền.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khung Admin Portal một ứng dụng, 5 workspace (Priority: P1)

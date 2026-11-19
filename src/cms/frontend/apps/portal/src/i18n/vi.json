@@ -1,0 +1,63 @@
+{
+  "app": {
+    "title": "EduWorld — Cổng quản trị",
+    "loading": "Đang tải…",
+    "home": {
+      "title": "Chọn khu vực làm việc",
+      "description": "Mỗi khu vực mở theo quyền của tài khoản; quyền thật do máy chủ quyết định."
+    },
+    "configError": {
+      "title": "Thiếu cấu hình môi trường",
+      "description": "Không đọc được /config.json hoặc thiếu biến: {{missing}}."
+    },
+    "notFound": "Không tìm thấy trang."
+  },
+  "workspace": {
+    "school-lms": {
+      "title": "Quản lý trường và học tập"
+    },
+    "content-studio": {
+      "title": "Content Studio"
+    },
+    "game-ops": {
+      "title": "Game Operations Console"
+    },
+    "live-ops": {
+      "title": "Game Live Operations"
+    },
+    "platform-admin": {
+      "title": "Quản trị nền tảng"
+    },
+    "placeholder": "Nội dung khu vực này được bổ sung ở các tính năng sau."
+  },
+  "error": {
+    "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+    "detail": {
+      "code": "Mã lỗi",
+      "traceId": "Mã truy vết"
+    },
+    "VPN_REQUIRED": "Cần kết nối mạng quản trị (VPN).",
+    "NETWORK_ERROR": "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.",
+    "BAD_REQUEST": "Yêu cầu không hợp lệ.",
+    "UNAUTHENTICATED": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+    "TOKEN_EXPIRED": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    "PERMISSION_DENIED": "Bạn không có quyền thực hiện thao tác này.",
+    "MFA_REQUIRED": "Thao tác này cần xác thực hai lớp.",
+    "TENANT_HEADER_REQUIRED": "Chưa chọn đơn vị làm việc.",
+    "TENANT_NOT_SELECTED": "Chưa chọn đơn vị làm việc.",
+    "TENANT_MISMATCH": "Đơn vị làm việc không khớp với phiên đăng nhập.",
+    "NOT_FOUND": "Không tìm thấy dữ liệu.",
+    "CONFLICT": "Dữ liệu đã thay đổi hoặc bị trùng.",
+    "VALIDATION_FAILED": "Dữ liệu nhập chưa hợp lệ. Kiểm tra các trường được đánh dấu.",
+    "VERSION_MISMATCH": "Dữ liệu đã được người khác cập nhật. Tải lại rồi thử lại.",
+    "PRECONDITION_REQUIRED": "Thiếu phiên bản dữ liệu. Tải lại rồi thử lại.",
+    "IDEMPOTENCY_KEY_REUSED": "Thao tác trùng với một yêu cầu trước đó có nội dung khác.",
+    "IDEMPOTENCY_IN_PROGRESS": "Thao tác trước đó đang được xử lý.",
+    "RATE_LIMITED": "Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại.",
+    "FEATURE_DISABLED": "Chức năng này đang tắt.",
+    "PORTAL_ACCESS_STAFF_ONLY": "Cổng quản trị chỉ dành cho nhân sự.",
+    "INTERNAL": "Lỗi hệ thống. Vui lòng thử lại sau.",
+    "UNAVAILABLE": "Dịch vụ tạm thời không sẵn sàng. Vui lòng thử lại sau.",
+    "MAINTENANCE": "Hệ thống đang bảo trì."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "eduworld-frontend",
+  "private": true,
+  "description": "EduWorld Admin Portal workspace (F050): apps/portal + packages/ops-ui.",
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @eduworld/portal dev",
+    "build": "pnpm --filter @eduworld/portal build",
+    "gen:api": "pnpm --filter @eduworld/portal gen:api",
+    "gen:check": "pnpm --filter @eduworld/portal gen:check",
+    "lint": "eslint . --max-warnings=0 && stylelint \"**/*.css\"",
+    "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
+    "test": "vitest run --maxWorkers=1 --minWorkers=1",
+    "storybook": "pnpm --filter @eduworld/ops-ui storybook",
+    "storybook:build": "pnpm --filter @eduworld/ops-ui storybook:build",
+    "test-storybook": "pnpm --filter @eduworld/ops-ui test-storybook",
+    "test:visual": "playwright test -c tests/visual/playwright.config.ts --workers=1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.64.1",
+    "eslint": "9.39.5",
+    "eslint-plugin-i18next": "6.1.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "16.5.0",
+    "http-server": "14.1.1",
+    "stylelint": "16.26.1",
+    "stylelint-config-standard": "38.0.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@swc/core"
+    ],
+    "overrides": {
+      "playwright": "1.64.1",
+      "playwright-core": "1.64.1"
+    }
+  }
+}

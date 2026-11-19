@@ -1,0 +1,53 @@
+{
+  "domain": {
+    "subject": {
+      "math": "Toán",
+      "vietnamese": "Tiếng Việt",
+      "english": "Tiếng Anh",
+      "science": "Khoa học"
+    },
+    "rarity": {
+      "common": "Thường",
+      "uncommon": "Không phổ biến",
+      "rare": "Hiếm",
+      "epic": "Sử thi",
+      "legendary": "Huyền thoại"
+    },
+    "content_status": {
+      "draft": "Bản nháp",
+      "in_review": "Đang duyệt",
+      "approved": "Đã duyệt",
+      "published": "Đã phát hành",
+      "archived": "Đã lưu trữ",
+      "rejected": "Bị từ chối"
+    },
+    "brand": {
+      "primary": "Thương hiệu chính",
+      "secondary": "Thương hiệu phụ"
+    }
+  },
+  "field": {
+    "required": "Trường này bắt buộc.",
+    "maxLength": "Tối đa {{max}} ký tự.",
+    "minLength": "Tối thiểu {{min}} ký tự.",
+    "pattern": "Giá trị không đúng định dạng."
+  },
+  "charCounter": {
+    "label": "Đã nhập {{count}} trên tối đa {{max}} ký tự"
+  },
+  "story": {
+    "themeTitle": "Giao diện vận hành EduWorld",
+    "themeDescription": "Màu, phông chữ và mật độ lấy từ design/admin-tokens.",
+    "primaryAction": "Lưu",
+    "secondaryAction": "Hủy",
+    "fieldLabel": "Tên lớp",
+    "fieldPlaceholder": "Ví dụ: 3A",
+    "alert": "Đang tắt kiểm duyệt cho tenant thử nghiệm."
+  },
+  "group": {
+    "subject": "Môn học",
+    "rarity": "Độ hiếm",
+    "content_status": "Trạng thái nội dung",
+    "brand": "Thương hiệu"
+  }
+}

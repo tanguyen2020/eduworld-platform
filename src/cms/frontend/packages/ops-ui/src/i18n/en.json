@@ -1,0 +1,53 @@
+{
+  "domain": {
+    "subject": {
+      "math": "Math",
+      "vietnamese": "Vietnamese",
+      "english": "English",
+      "science": "Science"
+    },
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "content_status": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "approved": "Approved",
+      "published": "Published",
+      "archived": "Archived",
+      "rejected": "Rejected"
+    },
+    "brand": {
+      "primary": "Brand primary",
+      "secondary": "Brand secondary"
+    }
+  },
+  "field": {
+    "required": "This field is required.",
+    "maxLength": "At most {{max}} characters.",
+    "minLength": "At least {{min}} characters.",
+    "pattern": "The value has an invalid format."
+  },
+  "charCounter": {
+    "label": "{{count}} of at most {{max}} characters entered"
+  },
+  "story": {
+    "themeTitle": "EduWorld operations UI",
+    "themeDescription": "Colors, fonts and density come from design/admin-tokens.",
+    "primaryAction": "Save",
+    "secondaryAction": "Cancel",
+    "fieldLabel": "Class name",
+    "fieldPlaceholder": "For example: 3A",
+    "alert": "Moderation is turned off for the test tenant."
+  },
+  "group": {
+    "subject": "Subject",
+    "rarity": "Rarity",
+    "content_status": "Content status",
+    "brand": "Brand"
+  }
+}

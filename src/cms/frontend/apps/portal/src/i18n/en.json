@@ -1,0 +1,63 @@
+{
+  "app": {
+    "title": "EduWorld — Admin Portal",
+    "loading": "Loading…",
+    "home": {
+      "title": "Choose a workspace",
+      "description": "Workspaces open according to your account permissions; the server makes the actual decision."
+    },
+    "configError": {
+      "title": "Missing environment configuration",
+      "description": "Could not read /config.json or missing variables: {{missing}}."
+    },
+    "notFound": "Page not found."
+  },
+  "workspace": {
+    "school-lms": {
+      "title": "School & Learning Management"
+    },
+    "content-studio": {
+      "title": "Content Studio"
+    },
+    "game-ops": {
+      "title": "Game Operations Console"
+    },
+    "live-ops": {
+      "title": "Game Live Operations"
+    },
+    "platform-admin": {
+      "title": "Platform Administration"
+    },
+    "placeholder": "This workspace is filled in by later features."
+  },
+  "error": {
+    "generic": "Something went wrong. Please try again.",
+    "detail": {
+      "code": "Error code",
+      "traceId": "Trace ID"
+    },
+    "VPN_REQUIRED": "Admin network connection (VPN) required.",
+    "NETWORK_ERROR": "Cannot reach the server. Check your connection and try again.",
+    "BAD_REQUEST": "Invalid request.",
+    "UNAUTHENTICATED": "Your session is not valid. Please sign in again.",
+    "TOKEN_EXPIRED": "Your session has expired. Please sign in again.",
+    "PERMISSION_DENIED": "You do not have permission to do this.",
+    "MFA_REQUIRED": "This action requires two-factor authentication.",
+    "TENANT_HEADER_REQUIRED": "No working organization selected.",
+    "TENANT_NOT_SELECTED": "No working organization selected.",
+    "TENANT_MISMATCH": "The working organization does not match your session.",
+    "NOT_FOUND": "Not found.",
+    "CONFLICT": "The data changed or already exists.",
+    "VALIDATION_FAILED": "Some fields are not valid. Check the highlighted fields.",
+    "VERSION_MISMATCH": "Someone else updated this data. Reload and try again.",
+    "PRECONDITION_REQUIRED": "Missing data version. Reload and try again.",
+    "IDEMPOTENCY_KEY_REUSED": "This action repeats an earlier request with different content.",
+    "IDEMPOTENCY_IN_PROGRESS": "The earlier action is still being processed.",
+    "RATE_LIMITED": "Too many actions. Please wait and try again.",
+    "FEATURE_DISABLED": "This feature is turned off.",
+    "PORTAL_ACCESS_STAFF_ONLY": "The admin portal is for staff only.",
+    "INTERNAL": "System error. Please try again later.",
+    "UNAVAILABLE": "The service is temporarily unavailable. Please try again later.",
+    "MAINTENANCE": "The system is under maintenance."
+  }
+}

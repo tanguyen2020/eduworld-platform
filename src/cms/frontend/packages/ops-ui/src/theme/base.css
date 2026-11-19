@@ -1,0 +1,6 @@
+/* Root of every ops-ui tree: page background and text color of the active mode (tokens.css, data-theme). */
+.ew-ops-root {
+  background: var(--ew-ops-color-bg-layout);
+  color: var(--ew-ops-color-text-primary);
+  font-family: var(--ew-antd-font-family);
+}

@@ -47,4 +47,5 @@ jobs:
           node --test scripts/ci/check-workflows.test.mjs
           bash scripts/ci/test-path-filters.sh
           bash scripts/ci/test-design-rules.sh
+          bash scripts/ci/test-web-rules.sh
           bash scripts/ci/check-admin-ports.sh

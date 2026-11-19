@@ -1,6 +1,6 @@
-# Web lane (DEPLOYMENT §10.2, ADR-0088). Started by its own path filter and by design.yml (workflow_call).
-# Skeleton created by F005: the generated Ant Design theme and CSS variables are fresh and carry no game token.
-# F050 adds lint, gen:check, tests, portal build, Storybook, axe and visual regression.
+# Web lane (F050 T037, F050-AC-21, DEPLOYMENT §10.2, ADR-0088): Admin Portal + ops-ui. Started by its own path
+# filter and by design.yml (workflow_call). Lint (hardcoded style, game imports, env URLs, i18n), gen:check of the
+# API client, tests, portal build (5 workspace chunks), Storybook build, axe (serious/critical fail), visual.
 name: web
 
 on:
@@ -28,8 +28,29 @@ concurrency:
   group: web-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    working-directory: src/cms/frontend
+
 jobs:
-  theme:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: theme files generated from design/ are fresh (F005)
+        working-directory: design
+        run: pnpm install --frozen-lockfile && node checks/run-all.mjs --only web
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - name: gen-check (API types + operation metadata match specs/openapi)
+        run: pnpm gen:check
+
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -38,6 +59,33 @@ jobs:
           node-version: 20
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
-        working-directory: design
-      - name: generated web theme files are fresh and carry no game token
-        run: node design/checks/run-all.mjs --only web
+      - run: pnpm test
+      - name: build portal (fails on game import; 5 lazy workspace chunks)
+        run: pnpm build
+
+  storybook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps --only-shell chromium
+      - name: build Storybook (every component has Light/Dark/Compact stories)
+        run: pnpm storybook:build
+      - name: axe on every story (serious/critical fail)
+        run: |
+          node tooling/storybook-a11y.mjs
+      - name: visual regression (new baselines for this platform are written and uploaded for review)
+        run: pnpm test:visual --update-snapshots=missing
+      - name: visual report and new baselines
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web-visual
+          path: |
+            src/cms/frontend/playwright-report/
+            src/cms/frontend/tests/visual/__screenshots__/
+          if-no-files-found: ignore

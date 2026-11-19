@@ -205,6 +205,31 @@ design-tokens-check: ## Fail if generated theme files drift from design/; aliase
 	cd design && $(PNPM) test
 	cd design && DESIGN_BASE_REF=$(BASE_REF) $(PNPM) check
 
+# ---------- web: Admin Portal + ops-ui (F050, ADR-0022, ADR-0047) ----------
+WEB_DIR := src/cms/frontend
+.PHONY: web-install web-lint web-test web-build storybook web-storybook-check web-visual
+web-install: ## Install the pnpm workspace of src/cms/frontend (frozen lockfile)
+	cd $(WEB_DIR) && $(PNPM) install --frozen-lockfile
+
+web-lint: web-install ## ESLint + stylelint (no hardcoded style/game import/env URL, i18n), typecheck, gen:check of the API client
+	cd $(WEB_DIR) && $(PNPM) lint && $(PNPM) typecheck && $(PNPM) gen:check
+
+web-test: web-install ## Vitest with one worker: portal (apiClient, routes, i18n), ops-ui, ESLint rules
+	cd $(WEB_DIR) && $(PNPM) test
+
+web-build: web-install ## Production build of the portal + check of the 5 lazy workspace chunks
+	cd $(WEB_DIR) && $(PNPM) build
+
+storybook: web-install ## Storybook of packages/ops-ui on :6006 (light/dark/compact)
+	cd $(WEB_DIR) && $(PNPM) storybook
+
+web-storybook-check: web-install ## Build Storybook (Light/Dark/Compact per component), axe on every story (needs Playwright Chromium)
+	cd $(WEB_DIR) && $(PNPM) storybook:build
+	cd $(WEB_DIR) && node tooling/storybook-a11y.mjs
+
+web-visual: web-install ## Playwright visual regression of the stories (100% and 200% zoom), one worker
+	cd $(WEB_DIR) && $(PNPM) test:visual
+
 # ---------- specs / docs ----------
 .PHONY: specs-lint specs-breaking docs-check
 specs-lint: ## Contract checks (Spectral/AsyncAPI added with the spec toolchain)
@@ -235,6 +260,7 @@ ci-local: ## CI checks that need no GitHub: workflows, path filters, admin ports
 	node --test scripts/ci/check-workflows.test.mjs
 	bash scripts/ci/test-path-filters.sh
 	bash scripts/ci/test-design-rules.sh
+	bash scripts/ci/test-web-rules.sh
 	bash scripts/ci/check-admin-ports.sh
 	bash scripts/ci/test-arch-fixtures.sh
 	bash scripts/ci/test-gitleaks.sh
