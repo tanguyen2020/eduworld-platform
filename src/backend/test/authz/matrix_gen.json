@@ -549,6 +549,17 @@
     ]
   },
   {
+    "operation_id": "createCompetency",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/competencies",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createContentImport",
     "module": "learning",
     "method": "POST",
@@ -576,6 +587,18 @@
     "method": "POST",
     "path": "/cms/learning/curricula",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCurriculumVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -1085,6 +1108,39 @@
     ]
   },
   {
+    "operation_id": "createTextbook",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/textbooks",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTextbookSection",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/textbook-sections",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createTextbookSeries",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/textbook-series",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createTopic",
     "module": "learning",
     "method": "POST",
@@ -1112,6 +1168,30 @@
     "module": "competition",
     "method": "POST",
     "path": "/competition/duels/{duel_id}:decline",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteCurriculum",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/curricula/{curriculum_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteObjective",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/objectives/{objective_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -1239,6 +1319,18 @@
     ]
   },
   {
+    "operation_id": "deleteTopic",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/topics/{topic_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "diffContentVersions",
     "module": "learning",
     "method": "GET",
@@ -1326,6 +1418,18 @@
     "module": "learning",
     "method": "POST",
     "path": "/lms/assignments/{assignment_id}/students/{student_id}:excuse",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "exportCurriculumVersion",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}:export",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -1625,6 +1729,30 @@
     ]
   },
   {
+    "operation_id": "getCurriculumVersion",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCurriculumVersionLoMappings",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}/lo-mappings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getDataRequest",
     "module": "identity",
     "method": "GET",
@@ -1859,6 +1987,18 @@
     "module": "learning",
     "method": "GET",
     "path": "/admin/learning/experiments/{experiment_id}/results",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLearningObjective",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/objectives/{objective_id}",
+    "tenant_scoped": true,
     "has_id_param": true,
     "required": [
       "cross_tenant",
@@ -2852,6 +2992,17 @@
     ]
   },
   {
+    "operation_id": "listCmsCompetencies",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/competencies",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listCmsCurricula",
     "module": "learning",
     "method": "GET",
@@ -2991,6 +3142,18 @@
     "method": "GET",
     "path": "/learning/curricula",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCurriculumVersions",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -3825,6 +3988,39 @@
     ]
   },
   {
+    "operation_id": "listTextbookSections",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/textbook-sections",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTextbookSeries",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/textbook-series",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTextbooks",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/textbooks",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listTopics",
     "module": "learning",
     "method": "GET",
@@ -4065,6 +4261,18 @@
     ]
   },
   {
+    "operation_id": "publishCurriculumVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}:publish",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "publishGameConfigVersion",
     "module": "game|competition|chat",
     "method": "POST",
@@ -4121,6 +4329,18 @@
     ]
   },
   {
+    "operation_id": "putCurriculumVersionLoMappings",
+    "module": "learning",
+    "method": "PUT",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}/lo-mappings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "putFeatureFlag",
     "module": "identity",
     "method": "PUT",
@@ -4147,6 +4367,18 @@
     "method": "PUT",
     "path": "/admin/settings/student-cleanup",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putTextbookSectionObjectives",
+    "module": "learning",
+    "method": "PUT",
+    "path": "/cms/learning/textbook-sections/{section_id}/objectives",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -4887,6 +5119,18 @@
     ]
   },
   {
+    "operation_id": "transitionCurriculumVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}:transition",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "transitionGameConfigVersion",
     "module": "game|competition|chat",
     "method": "POST",
@@ -5099,6 +5343,18 @@
     ]
   },
   {
+    "operation_id": "updateCompetency",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/competencies/{competency_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "updateCountry",
     "module": "identity",
     "method": "PATCH",
@@ -5127,6 +5383,18 @@
     "module": "learning",
     "method": "PATCH",
     "path": "/cms/learning/curricula/{curriculum_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCurriculumVersionDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -5397,6 +5665,18 @@
     "module": "identity",
     "method": "PATCH",
     "path": "/tenant/users/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateTextbookSection",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/textbook-sections/{section_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

@@ -12,12 +12,38 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Competency is the client for interacting with the Competency builders.
+	Competency *CompetencyClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// ContentTransition is the client for interacting with the ContentTransition builders.
 	ContentTransition *ContentTransitionClient
+	// Curriculum is the client for interacting with the Curriculum builders.
+	Curriculum *CurriculumClient
+	// CurriculumVersion is the client for interacting with the CurriculumVersion builders.
+	CurriculumVersion *CurriculumVersionClient
+	// ImportJob is the client for interacting with the ImportJob builders.
+	ImportJob *ImportJobClient
+	// LearningObjective is the client for interacting with the LearningObjective builders.
+	LearningObjective *LearningObjectiveClient
+	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
+	LoVersionMapping *LoVersionMappingClient
+	// Subject is the client for interacting with the Subject builders.
+	Subject *SubjectClient
+	// SubjectGrade is the client for interacting with the SubjectGrade builders.
+	SubjectGrade *SubjectGradeClient
 	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
 	TenantResourceAssignment *TenantResourceAssignmentClient
+	// Textbook is the client for interacting with the Textbook builders.
+	Textbook *TextbookClient
+	// TextbookSection is the client for interacting with the TextbookSection builders.
+	TextbookSection *TextbookSectionClient
+	// TextbookSectionObjective is the client for interacting with the TextbookSectionObjective builders.
+	TextbookSectionObjective *TextbookSectionObjectiveClient
+	// TextbookSeries is the client for interacting with the TextbookSeries builders.
+	TextbookSeries *TextbookSeriesClient
+	// Topic is the client for interacting with the Topic builders.
+	Topic *TopicClient
 
 	// lazily loaded.
 	client     *Client
@@ -149,9 +175,22 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Competency = NewCompetencyClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.ContentTransition = NewContentTransitionClient(tx.config)
+	tx.Curriculum = NewCurriculumClient(tx.config)
+	tx.CurriculumVersion = NewCurriculumVersionClient(tx.config)
+	tx.ImportJob = NewImportJobClient(tx.config)
+	tx.LearningObjective = NewLearningObjectiveClient(tx.config)
+	tx.LoVersionMapping = NewLoVersionMappingClient(tx.config)
+	tx.Subject = NewSubjectClient(tx.config)
+	tx.SubjectGrade = NewSubjectGradeClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
+	tx.Textbook = NewTextbookClient(tx.config)
+	tx.TextbookSection = NewTextbookSectionClient(tx.config)
+	tx.TextbookSectionObjective = NewTextbookSectionObjectiveClient(tx.config)
+	tx.TextbookSeries = NewTextbookSeriesClient(tx.config)
+	tx.Topic = NewTopicClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -161,7 +200,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: ContentRelease.QueryXXX(), the query will be executed
+// applies a query, for example: Competency.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

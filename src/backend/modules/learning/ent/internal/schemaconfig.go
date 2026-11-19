@@ -7,9 +7,22 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
+	Competency               string // Competency table.
 	ContentRelease           string // ContentRelease table.
 	ContentTransition        string // ContentTransition table.
+	Curriculum               string // Curriculum table.
+	CurriculumVersion        string // CurriculumVersion table.
+	ImportJob                string // ImportJob table.
+	LearningObjective        string // LearningObjective table.
+	LoVersionMapping         string // LoVersionMapping table.
+	Subject                  string // Subject table.
+	SubjectGrade             string // SubjectGrade table.
 	TenantResourceAssignment string // TenantResourceAssignment table.
+	Textbook                 string // Textbook table.
+	TextbookSection          string // TextbookSection table.
+	TextbookSectionObjective string // TextbookSectionObjective table.
+	TextbookSeries           string // TextbookSeries table.
+	Topic                    string // Topic table.
 }
 
 type schemaCtxKey struct{}

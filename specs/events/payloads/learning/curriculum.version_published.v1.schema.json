@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/curriculum.version_published.v1.schema.json",
+  "title": "Payload curriculum.version_published v1 (module learning, F021)",
+  "description": "Một CurriculumVersion được publish: con trỏ current_version_id của curriculum đổi sang version này (ADR-0043, CURRICULUM_MODEL §5). Khi version thay thế version cũ (supersedes_version_id), payload mang bảng mapping LO để consumer mastery (F031) chiếu mastery; không learning event nào bị sửa. Envelope tenant_id = tenant sở hữu, null với curriculum platform. Không chứa nội dung chương trình.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["curriculum_id", "curriculum_version_id", "version", "version_label", "owner_scope", "tenant_id", "release_id", "mappings", "published_by"],
+  "properties": {
+    "curriculum_id": { "type": "string", "format": "uuid" },
+    "curriculum_code": { "type": "string", "maxLength": 64 },
+    "curriculum_version_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "version_label": { "type": "string", "pattern": "^[0-9]{1,4}\\.[0-9]{1,4}$", "maxLength": 9 },
+    "supersedes_version_id": { "type": ["string", "null"], "format": "uuid" },
+    "from_version_id": { "type": ["string", "null"], "format": "uuid", "description": "Con trỏ cũ (null khi publish lần đầu)" },
+    "owner_scope": { "type": "string", "enum": ["platform", "tenant"] },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "release_id": { "type": "string", "format": "uuid", "description": "Bản ghi content.content_releases (item_type = curriculum)" },
+    "mappings": {
+      "type": "array",
+      "maxItems": 5000,
+      "description": "Rỗng khi không có supersedes_version_id",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_lo_id", "to_lo_id", "relation"],
+        "properties": {
+          "from_lo_id": { "type": "string", "format": "uuid" },
+          "to_lo_id": { "type": ["string", "null"], "format": "uuid" },
+          "relation": { "type": "string", "enum": ["same", "split", "merge", "replaces", "removed"] }
+        }
+      }
+    },
+    "published_by": { "type": "string", "format": "uuid" }
+  },
+  "examples": [
+    {
+      "curriculum_id": "0193f0a2-7c1e-7000-8000-000000000101",
+      "curriculum_code": "GDPT2018_SAMPLE",
+      "curriculum_version_id": "0193f0a2-7c1e-7000-8000-000000000102",
+      "version": 2,
+      "version_label": "2018.2",
+      "supersedes_version_id": "0193f0a2-7c1e-7000-8000-000000000103",
+      "from_version_id": "0193f0a2-7c1e-7000-8000-000000000103",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "release_id": "0193f0a2-7c1e-7000-8000-000000000104",
+      "mappings": [
+        { "from_lo_id": "0193f0a2-7c1e-7000-8000-000000000105", "to_lo_id": "0193f0a2-7c1e-7000-8000-000000000106", "relation": "same" },
+        { "from_lo_id": "0193f0a2-7c1e-7000-8000-000000000107", "to_lo_id": null, "relation": "removed" }
+      ],
+      "published_by": "0193f0a2-7c1e-7000-8000-000000000108"
+    }
+  ]
+}

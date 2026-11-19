@@ -9,6 +9,42 @@ import (
 )
 
 var (
+	// CompetenciesColumns holds the columns for the "competencies" table.
+	CompetenciesColumns = []*schema.Column{
+		{Name: "competency_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeJSON},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// CompetenciesTable holds the schema information for the "competencies" table.
+	CompetenciesTable = &schema.Table{
+		Name:       "competencies",
+		Columns:    CompetenciesColumns,
+		PrimaryKey: []*schema.Column{CompetenciesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "competencies_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CompetenciesColumns[12], CompetenciesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// ContentReleasesColumns holds the columns for the "content_releases" table.
 	ContentReleasesColumns = []*schema.Column{
 		{Name: "release_id", Type: field.TypeUUID},
@@ -71,6 +107,271 @@ var (
 			},
 		},
 	}
+	// CurriculaColumns holds the columns for the "curricula" table.
+	CurriculaColumns = []*schema.Column{
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+		{Name: "cloned_from_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeJSON},
+		{Name: "framework", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// CurriculaTable holds the schema information for the "curricula" table.
+	CurriculaTable = &schema.Table{
+		Name:       "curricula",
+		Columns:    CurriculaColumns,
+		PrimaryKey: []*schema.Column{CurriculaColumns[0]},
+	}
+	// CurriculumVersionsColumns holds the columns for the "curriculum_versions" table.
+	CurriculumVersionsColumns = []*schema.Column{
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "version_label", Type: field.TypeString, Size: 16},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "draft"},
+		{Name: "effective_from", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "effective_to", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "supersedes_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "author_id", Type: field.TypeUUID},
+		{Name: "reviewer_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "content_language", Type: field.TypeString, Size: 64, Default: "vi"},
+		{Name: "cloned_from_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// CurriculumVersionsTable holds the schema information for the "curriculum_versions" table.
+	CurriculumVersionsTable = &schema.Table{
+		Name:       "curriculum_versions",
+		Columns:    CurriculumVersionsColumns,
+		PrimaryKey: []*schema.Column{CurriculumVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "curriculum_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CurriculumVersionsColumns[11], CurriculumVersionsColumns[12]},
+			},
+			{
+				Name:    "curriculum_versions_label_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CurriculumVersionsColumns[11], CurriculumVersionsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ImportJobsColumns holds the columns for the "import_jobs" table.
+	ImportJobsColumns = []*schema.Column{
+		{Name: "import_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "source_ref", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "dry_run", Type: field.TypeBool, Default: false},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "queued"},
+		{Name: "created_count", Type: field.TypeInt32, Default: 0},
+		{Name: "rejected_count", Type: field.TypeInt32, Default: 0},
+		{Name: "errors", Type: field.TypeJSON},
+		{Name: "result_refs", Type: field.TypeJSON},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ImportJobsTable holds the schema information for the "import_jobs" table.
+	ImportJobsTable = &schema.Table{
+		Name:       "import_jobs",
+		Columns:    ImportJobsColumns,
+		PrimaryKey: []*schema.Column{ImportJobsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "import_jobs_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ImportJobsColumns[3], ImportJobsColumns[20]},
+			},
+			{
+				Name:    "import_jobs_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ImportJobsColumns[15], ImportJobsColumns[2]},
+			},
+		},
+	}
+	// LearningObjectivesColumns holds the columns for the "learning_objectives" table.
+	LearningObjectivesColumns = []*schema.Column{
+		{Name: "objective_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "topic_id", Type: field.TypeUUID},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "stable_key", Type: field.TypeString, Size: 64},
+		{Name: "description", Type: field.TypeString, Size: 1000},
+		{Name: "bloom_level", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "yccd_ref", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "competency_ids", Type: field.TypeJSON},
+		{Name: "prerequisite_ids", Type: field.TypeJSON},
+		{Name: "sort_order", Type: field.TypeInt32, Default: 1},
+	}
+	// LearningObjectivesTable holds the schema information for the "learning_objectives" table.
+	LearningObjectivesTable = &schema.Table{
+		Name:       "learning_objectives",
+		Columns:    LearningObjectivesColumns,
+		PrimaryKey: []*schema.Column{LearningObjectivesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "learning_objectives_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LearningObjectivesColumns[12], LearningObjectivesColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "learning_objectives_topic_idx",
+				Unique:  false,
+				Columns: []*schema.Column{LearningObjectivesColumns[12], LearningObjectivesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// LoVersionMappingsColumns holds the columns for the "lo_version_mappings" table.
+	LoVersionMappingsColumns = []*schema.Column{
+		{Name: "mapping_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "from_lo_id", Type: field.TypeUUID},
+		{Name: "to_lo_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "relation", Type: field.TypeString, Size: 64},
+	}
+	// LoVersionMappingsTable holds the schema information for the "lo_version_mappings" table.
+	LoVersionMappingsTable = &schema.Table{
+		Name:       "lo_version_mappings",
+		Columns:    LoVersionMappingsColumns,
+		PrimaryKey: []*schema.Column{LoVersionMappingsColumns[0]},
+	}
+	// SubjectsColumns holds the columns for the "subjects" table.
+	SubjectsColumns = []*schema.Column{
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeJSON},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "icon_key", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// SubjectsTable holds the schema information for the "subjects" table.
+	SubjectsTable = &schema.Table{
+		Name:       "subjects",
+		Columns:    SubjectsColumns,
+		PrimaryKey: []*schema.Column{SubjectsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "subjects_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SubjectsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SubjectGradesColumns holds the columns for the "subject_grades" table.
+	SubjectGradesColumns = []*schema.Column{
+		{Name: "subject_grade_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "periods_per_year", Type: field.TypeInt16, Nullable: true},
+	}
+	// SubjectGradesTable holds the schema information for the "subject_grades" table.
+	SubjectGradesTable = &schema.Table{
+		Name:       "subject_grades",
+		Columns:    SubjectGradesColumns,
+		PrimaryKey: []*schema.Column{SubjectGradesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "subject_grades_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SubjectGradesColumns[12], SubjectGradesColumns[13], SubjectGradesColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// TenantResourceAssignmentsColumns holds the columns for the "tenant_resource_assignments" table.
 	TenantResourceAssignmentsColumns = []*schema.Column{
 		{Name: "assignment_id", Type: field.TypeUUID},
@@ -112,22 +413,254 @@ var (
 			},
 		},
 	}
+	// TextbooksColumns holds the columns for the "textbooks" table.
+	TextbooksColumns = []*schema.Column{
+		{Name: "textbook_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "series_id", Type: field.TypeUUID},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "volume", Type: field.TypeInt16},
+	}
+	// TextbooksTable holds the schema information for the "textbooks" table.
+	TextbooksTable = &schema.Table{
+		Name:       "textbooks",
+		Columns:    TextbooksColumns,
+		PrimaryKey: []*schema.Column{TextbooksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "textbooks_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TextbooksColumns[9], TextbooksColumns[10], TextbooksColumns[11], TextbooksColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TextbookSectionsColumns holds the columns for the "textbook_sections" table.
+	TextbookSectionsColumns = []*schema.Column{
+		{Name: "section_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "textbook_id", Type: field.TypeUUID},
+		{Name: "chapter", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "lesson_no", Type: field.TypeInt16},
+		{Name: "title", Type: field.TypeString, Size: 255},
+		{Name: "page_range", Type: field.TypeString, Nullable: true, Size: 16},
+	}
+	// TextbookSectionsTable holds the schema information for the "textbook_sections" table.
+	TextbookSectionsTable = &schema.Table{
+		Name:       "textbook_sections",
+		Columns:    TextbookSectionsColumns,
+		PrimaryKey: []*schema.Column{TextbookSectionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "textbook_sections_textbook_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TextbookSectionsColumns[9], TextbookSectionsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TextbookSectionObjectivesColumns holds the columns for the "textbook_section_objectives" table.
+	TextbookSectionObjectivesColumns = []*schema.Column{
+		{Name: "section_objective_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "section_id", Type: field.TypeUUID},
+		{Name: "objective_id", Type: field.TypeUUID},
+	}
+	// TextbookSectionObjectivesTable holds the schema information for the "textbook_section_objectives" table.
+	TextbookSectionObjectivesTable = &schema.Table{
+		Name:       "textbook_section_objectives",
+		Columns:    TextbookSectionObjectivesColumns,
+		PrimaryKey: []*schema.Column{TextbookSectionObjectivesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "textbook_section_objectives_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TextbookSectionObjectivesColumns[9], TextbookSectionObjectivesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "textbook_section_objectives_lo_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TextbookSectionObjectivesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TextbookSeriesColumns holds the columns for the "textbook_series" table.
+	TextbookSeriesColumns = []*schema.Column{
+		{Name: "series_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "publisher", Type: field.TypeString, Nullable: true, Size: 255},
+	}
+	// TextbookSeriesTable holds the schema information for the "textbook_series" table.
+	TextbookSeriesTable = &schema.Table{
+		Name:       "textbook_series",
+		Columns:    TextbookSeriesColumns,
+		PrimaryKey: []*schema.Column{TextbookSeriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "textbook_series_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TextbookSeriesColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TopicsColumns holds the columns for the "topics" table.
+	TopicsColumns = []*schema.Column{
+		{Name: "topic_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "tenant"},
+		{Name: "curriculum_id", Type: field.TypeUUID},
+		{Name: "curriculum_version_id", Type: field.TypeUUID},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "parent_topic_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "sort_order", Type: field.TypeInt32, Default: 1},
+	}
+	// TopicsTable holds the schema information for the "topics" table.
+	TopicsTable = &schema.Table{
+		Name:       "topics",
+		Columns:    TopicsColumns,
+		PrimaryKey: []*schema.Column{TopicsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "topics_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TopicsColumns[12], TopicsColumns[16]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "topics_tree_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TopicsColumns[12], TopicsColumns[13], TopicsColumns[14], TopicsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CompetenciesTable,
 		ContentReleasesTable,
 		ContentTransitionsTable,
+		CurriculaTable,
+		CurriculumVersionsTable,
+		ImportJobsTable,
+		LearningObjectivesTable,
+		LoVersionMappingsTable,
+		SubjectsTable,
+		SubjectGradesTable,
 		TenantResourceAssignmentsTable,
+		TextbooksTable,
+		TextbookSectionsTable,
+		TextbookSectionObjectivesTable,
+		TextbookSeriesTable,
+		TopicsTable,
 	}
 )
 
 func init() {
+	CompetenciesTable.Annotation = &entsql.Annotation{
+		Table: "competencies",
+	}
 	ContentReleasesTable.Annotation = &entsql.Annotation{
 		Table: "content_releases",
 	}
 	ContentTransitionsTable.Annotation = &entsql.Annotation{
 		Table: "content_transitions",
 	}
+	CurriculaTable.Annotation = &entsql.Annotation{
+		Table: "curricula",
+	}
+	CurriculumVersionsTable.Annotation = &entsql.Annotation{
+		Table: "curriculum_versions",
+	}
+	ImportJobsTable.Annotation = &entsql.Annotation{
+		Table: "import_jobs",
+	}
+	LearningObjectivesTable.Annotation = &entsql.Annotation{
+		Table: "learning_objectives",
+	}
+	LoVersionMappingsTable.Annotation = &entsql.Annotation{
+		Table: "lo_version_mappings",
+	}
+	SubjectsTable.Annotation = &entsql.Annotation{
+		Table: "subjects",
+	}
+	SubjectGradesTable.Annotation = &entsql.Annotation{
+		Table: "subject_grades",
+	}
 	TenantResourceAssignmentsTable.Annotation = &entsql.Annotation{
 		Table: "tenant_resource_assignments",
+	}
+	TextbooksTable.Annotation = &entsql.Annotation{
+		Table: "textbooks",
+	}
+	TextbookSectionsTable.Annotation = &entsql.Annotation{
+		Table: "textbook_sections",
+	}
+	TextbookSectionObjectivesTable.Annotation = &entsql.Annotation{
+		Table: "textbook_section_objectives",
+	}
+	TextbookSeriesTable.Annotation = &entsql.Annotation{
+		Table: "textbook_series",
+	}
+	TopicsTable.Annotation = &entsql.Annotation{
+		Table: "topics",
 	}
 }

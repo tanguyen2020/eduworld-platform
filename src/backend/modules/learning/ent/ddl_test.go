@@ -20,6 +20,9 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 // projections are hand-written (no entx mixin: DATABASE_DESIGN §2.17 minimal columns, F020 clarification).
 var migrations = map[string][]string{
 	"20261122000001_f020_foundation.sql": {"content_releases", "content_transitions", "tenant_resource_assignments"},
+	"20261124000001_f021_curriculum.sql": {"curricula", "curriculum_versions", "subjects", "subject_grades", "topics",
+		"learning_objectives", "competencies", "lo_version_mappings", "textbook_series", "textbooks", "textbook_sections",
+		"textbook_section_objectives", "import_jobs"},
 }
 
 func schemas() map[string]string {
@@ -27,6 +30,10 @@ func schemas() map[string]string {
 	return map[string]string{
 		"content_releases": c.ContentRelease, "content_transitions": c.ContentTransition,
 		"tenant_resource_assignments": c.TenantResourceAssignment,
+		"curricula":                   c.Curriculum, "curriculum_versions": c.CurriculumVersion, "subjects": c.Subject, "subject_grades": c.SubjectGrade,
+		"topics": c.Topic, "learning_objectives": c.LearningObjective, "competencies": c.Competency,
+		"lo_version_mappings": c.LoVersionMapping, "textbook_series": c.TextbookSeries, "textbooks": c.Textbook,
+		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob,
 	}
 }
 

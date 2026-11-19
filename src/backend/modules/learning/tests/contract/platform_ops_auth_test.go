@@ -187,7 +187,7 @@ func TestPlatformOpsAuthorizePrincipal(t *testing.T) {
 	}
 	trashOp := map[string]bool{"listTrash": true, "restoreTrashItem": true}
 	for op, call := range ops {
-		authztest.Cover(t, op, authztest.RoleDenied, authztest.CrossTenant)
+		// Facade operations are not in the public route matrix (tools/routematrix): this loop is their role-denied test.
 		for who, p := range denied {
 			if trashOp[op] && who == "tenant admin A" {
 				continue

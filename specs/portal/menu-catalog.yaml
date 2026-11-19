@@ -545,7 +545,20 @@ workspaces:
             label_key: portal.action.content_studio.curriculum.view
             title: Xem chương trình học
             required_permissions: [curriculum.read]
-            operation_ids: [listCmsCurricula, getCmsCurriculum, listCmsSubjects, listCmsTopics, listCmsObjectives]
+            operation_ids:
+              - listCmsCurricula
+              - getCmsCurriculum
+              - listCmsSubjects
+              - listCmsTopics
+              - listCmsObjectives
+              - listCurriculumVersions
+              - getCurriculumVersion
+              - exportCurriculumVersion
+              - getCurriculumVersionLoMappings
+              - listCmsCompetencies
+              - listTextbookSeries
+              - listTextbooks
+              - listTextbookSections
             can_disable: true
           - key: action.content_studio.curriculum.edit
             label_key: portal.action.content_studio.curriculum.edit
@@ -560,12 +573,26 @@ workspaces:
               - updateTopic
               - createObjective
               - updateObjective
+              - deleteCurriculum
+              - deleteTopic
+              - deleteObjective
+              - createCurriculumVersion
+              - updateCurriculumVersionDraft
+              - transitionCurriculumVersion
+              - putCurriculumVersionLoMappings
+              - createCompetency
+              - updateCompetency
+              - createTextbookSeries
+              - createTextbook
+              - createTextbookSection
+              - updateTextbookSection
+              - putTextbookSectionObjectives
             can_disable: true
           - key: action.content_studio.curriculum.publish
             label_key: portal.action.content_studio.curriculum.publish
             title: Xuất bản chương trình học của tenant/platform
             required_permissions: [curriculum.publish]
-            operation_ids: []
+            operation_ids: [publishCurriculumVersion]
             can_disable: true
       - key: menu.content_studio.lessons
         label_key: portal.menu.content_studio.lessons

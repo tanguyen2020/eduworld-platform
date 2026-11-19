@@ -15,9 +15,22 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbook"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksectionobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbookseries"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/topic"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/internal"
 )
@@ -27,12 +40,38 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Competency is the client for interacting with the Competency builders.
+	Competency *CompetencyClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// ContentTransition is the client for interacting with the ContentTransition builders.
 	ContentTransition *ContentTransitionClient
+	// Curriculum is the client for interacting with the Curriculum builders.
+	Curriculum *CurriculumClient
+	// CurriculumVersion is the client for interacting with the CurriculumVersion builders.
+	CurriculumVersion *CurriculumVersionClient
+	// ImportJob is the client for interacting with the ImportJob builders.
+	ImportJob *ImportJobClient
+	// LearningObjective is the client for interacting with the LearningObjective builders.
+	LearningObjective *LearningObjectiveClient
+	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
+	LoVersionMapping *LoVersionMappingClient
+	// Subject is the client for interacting with the Subject builders.
+	Subject *SubjectClient
+	// SubjectGrade is the client for interacting with the SubjectGrade builders.
+	SubjectGrade *SubjectGradeClient
 	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
 	TenantResourceAssignment *TenantResourceAssignmentClient
+	// Textbook is the client for interacting with the Textbook builders.
+	Textbook *TextbookClient
+	// TextbookSection is the client for interacting with the TextbookSection builders.
+	TextbookSection *TextbookSectionClient
+	// TextbookSectionObjective is the client for interacting with the TextbookSectionObjective builders.
+	TextbookSectionObjective *TextbookSectionObjectiveClient
+	// TextbookSeries is the client for interacting with the TextbookSeries builders.
+	TextbookSeries *TextbookSeriesClient
+	// Topic is the client for interacting with the Topic builders.
+	Topic *TopicClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -44,9 +83,22 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Competency = NewCompetencyClient(c.config)
 	c.ContentRelease = NewContentReleaseClient(c.config)
 	c.ContentTransition = NewContentTransitionClient(c.config)
+	c.Curriculum = NewCurriculumClient(c.config)
+	c.CurriculumVersion = NewCurriculumVersionClient(c.config)
+	c.ImportJob = NewImportJobClient(c.config)
+	c.LearningObjective = NewLearningObjectiveClient(c.config)
+	c.LoVersionMapping = NewLoVersionMappingClient(c.config)
+	c.Subject = NewSubjectClient(c.config)
+	c.SubjectGrade = NewSubjectGradeClient(c.config)
 	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
+	c.Textbook = NewTextbookClient(c.config)
+	c.TextbookSection = NewTextbookSectionClient(c.config)
+	c.TextbookSectionObjective = NewTextbookSectionObjectiveClient(c.config)
+	c.TextbookSeries = NewTextbookSeriesClient(c.config)
+	c.Topic = NewTopicClient(c.config)
 }
 
 type (
@@ -142,9 +194,22 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:                      ctx,
 		config:                   cfg,
+		Competency:               NewCompetencyClient(cfg),
 		ContentRelease:           NewContentReleaseClient(cfg),
 		ContentTransition:        NewContentTransitionClient(cfg),
+		Curriculum:               NewCurriculumClient(cfg),
+		CurriculumVersion:        NewCurriculumVersionClient(cfg),
+		ImportJob:                NewImportJobClient(cfg),
+		LearningObjective:        NewLearningObjectiveClient(cfg),
+		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		Subject:                  NewSubjectClient(cfg),
+		SubjectGrade:             NewSubjectGradeClient(cfg),
 		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		Textbook:                 NewTextbookClient(cfg),
+		TextbookSection:          NewTextbookSectionClient(cfg),
+		TextbookSectionObjective: NewTextbookSectionObjectiveClient(cfg),
+		TextbookSeries:           NewTextbookSeriesClient(cfg),
+		Topic:                    NewTopicClient(cfg),
 	}, nil
 }
 
@@ -164,16 +229,29 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:                      ctx,
 		config:                   cfg,
+		Competency:               NewCompetencyClient(cfg),
 		ContentRelease:           NewContentReleaseClient(cfg),
 		ContentTransition:        NewContentTransitionClient(cfg),
+		Curriculum:               NewCurriculumClient(cfg),
+		CurriculumVersion:        NewCurriculumVersionClient(cfg),
+		ImportJob:                NewImportJobClient(cfg),
+		LearningObjective:        NewLearningObjectiveClient(cfg),
+		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		Subject:                  NewSubjectClient(cfg),
+		SubjectGrade:             NewSubjectGradeClient(cfg),
 		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		Textbook:                 NewTextbookClient(cfg),
+		TextbookSection:          NewTextbookSectionClient(cfg),
+		TextbookSectionObjective: NewTextbookSectionObjectiveClient(cfg),
+		TextbookSeries:           NewTextbookSeriesClient(cfg),
+		Topic:                    NewTopicClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		ContentRelease.
+//		Competency.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -195,30 +273,201 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.ContentRelease.Use(hooks...)
-	c.ContentTransition.Use(hooks...)
-	c.TenantResourceAssignment.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
+		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
+		c.Subject, c.SubjectGrade, c.TenantResourceAssignment, c.Textbook,
+		c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.ContentRelease.Intercept(interceptors...)
-	c.ContentTransition.Intercept(interceptors...)
-	c.TenantResourceAssignment.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
+		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
+		c.Subject, c.SubjectGrade, c.TenantResourceAssignment, c.Textbook,
+		c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *CompetencyMutation:
+		return c.Competency.mutate(ctx, m)
 	case *ContentReleaseMutation:
 		return c.ContentRelease.mutate(ctx, m)
 	case *ContentTransitionMutation:
 		return c.ContentTransition.mutate(ctx, m)
+	case *CurriculumMutation:
+		return c.Curriculum.mutate(ctx, m)
+	case *CurriculumVersionMutation:
+		return c.CurriculumVersion.mutate(ctx, m)
+	case *ImportJobMutation:
+		return c.ImportJob.mutate(ctx, m)
+	case *LearningObjectiveMutation:
+		return c.LearningObjective.mutate(ctx, m)
+	case *LoVersionMappingMutation:
+		return c.LoVersionMapping.mutate(ctx, m)
+	case *SubjectMutation:
+		return c.Subject.mutate(ctx, m)
+	case *SubjectGradeMutation:
+		return c.SubjectGrade.mutate(ctx, m)
 	case *TenantResourceAssignmentMutation:
 		return c.TenantResourceAssignment.mutate(ctx, m)
+	case *TextbookMutation:
+		return c.Textbook.mutate(ctx, m)
+	case *TextbookSectionMutation:
+		return c.TextbookSection.mutate(ctx, m)
+	case *TextbookSectionObjectiveMutation:
+		return c.TextbookSectionObjective.mutate(ctx, m)
+	case *TextbookSeriesMutation:
+		return c.TextbookSeries.mutate(ctx, m)
+	case *TopicMutation:
+		return c.Topic.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// CompetencyClient is a client for the Competency schema.
+type CompetencyClient struct {
+	config
+}
+
+// NewCompetencyClient returns a client for the Competency from the given config.
+func NewCompetencyClient(c config) *CompetencyClient {
+	return &CompetencyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `competency.Hooks(f(g(h())))`.
+func (c *CompetencyClient) Use(hooks ...Hook) {
+	c.hooks.Competency = append(c.hooks.Competency, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `competency.Intercept(f(g(h())))`.
+func (c *CompetencyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Competency = append(c.inters.Competency, interceptors...)
+}
+
+// Create returns a builder for creating a Competency entity.
+func (c *CompetencyClient) Create() *CompetencyCreate {
+	mutation := newCompetencyMutation(c.config, OpCreate)
+	return &CompetencyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Competency entities.
+func (c *CompetencyClient) CreateBulk(builders ...*CompetencyCreate) *CompetencyCreateBulk {
+	return &CompetencyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CompetencyClient) MapCreateBulk(slice any, setFunc func(*CompetencyCreate, int)) *CompetencyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CompetencyCreateBulk{err: fmt.Errorf("calling to CompetencyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CompetencyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CompetencyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Competency.
+func (c *CompetencyClient) Update() *CompetencyUpdate {
+	mutation := newCompetencyMutation(c.config, OpUpdate)
+	return &CompetencyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CompetencyClient) UpdateOne(_m *Competency) *CompetencyUpdateOne {
+	mutation := newCompetencyMutation(c.config, OpUpdateOne, withCompetency(_m))
+	return &CompetencyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CompetencyClient) UpdateOneID(id uuid.UUID) *CompetencyUpdateOne {
+	mutation := newCompetencyMutation(c.config, OpUpdateOne, withCompetencyID(id))
+	return &CompetencyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Competency.
+func (c *CompetencyClient) Delete() *CompetencyDelete {
+	mutation := newCompetencyMutation(c.config, OpDelete)
+	return &CompetencyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CompetencyClient) DeleteOne(_m *Competency) *CompetencyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CompetencyClient) DeleteOneID(id uuid.UUID) *CompetencyDeleteOne {
+	builder := c.Delete().Where(competency.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CompetencyDeleteOne{builder}
+}
+
+// Query returns a query builder for Competency.
+func (c *CompetencyClient) Query() *CompetencyQuery {
+	return &CompetencyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCompetency},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Competency entity by its id.
+func (c *CompetencyClient) Get(ctx context.Context, id uuid.UUID) (*Competency, error) {
+	return c.Query().Where(competency.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CompetencyClient) GetX(ctx context.Context, id uuid.UUID) *Competency {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CompetencyClient) Hooks() []Hook {
+	hooks := c.hooks.Competency
+	return append(hooks[:len(hooks):len(hooks)], competency.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CompetencyClient) Interceptors() []Interceptor {
+	inters := c.inters.Competency
+	return append(inters[:len(inters):len(inters)], competency.Interceptors[:]...)
+}
+
+func (c *CompetencyClient) mutate(ctx context.Context, m *CompetencyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CompetencyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CompetencyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CompetencyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CompetencyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Competency mutation op: %q", m.Op())
 	}
 }
 
@@ -492,6 +741,951 @@ func (c *ContentTransitionClient) mutate(ctx context.Context, m *ContentTransiti
 	}
 }
 
+// CurriculumClient is a client for the Curriculum schema.
+type CurriculumClient struct {
+	config
+}
+
+// NewCurriculumClient returns a client for the Curriculum from the given config.
+func NewCurriculumClient(c config) *CurriculumClient {
+	return &CurriculumClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `curriculum.Hooks(f(g(h())))`.
+func (c *CurriculumClient) Use(hooks ...Hook) {
+	c.hooks.Curriculum = append(c.hooks.Curriculum, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `curriculum.Intercept(f(g(h())))`.
+func (c *CurriculumClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Curriculum = append(c.inters.Curriculum, interceptors...)
+}
+
+// Create returns a builder for creating a Curriculum entity.
+func (c *CurriculumClient) Create() *CurriculumCreate {
+	mutation := newCurriculumMutation(c.config, OpCreate)
+	return &CurriculumCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Curriculum entities.
+func (c *CurriculumClient) CreateBulk(builders ...*CurriculumCreate) *CurriculumCreateBulk {
+	return &CurriculumCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CurriculumClient) MapCreateBulk(slice any, setFunc func(*CurriculumCreate, int)) *CurriculumCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CurriculumCreateBulk{err: fmt.Errorf("calling to CurriculumClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CurriculumCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CurriculumCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Curriculum.
+func (c *CurriculumClient) Update() *CurriculumUpdate {
+	mutation := newCurriculumMutation(c.config, OpUpdate)
+	return &CurriculumUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CurriculumClient) UpdateOne(_m *Curriculum) *CurriculumUpdateOne {
+	mutation := newCurriculumMutation(c.config, OpUpdateOne, withCurriculum(_m))
+	return &CurriculumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CurriculumClient) UpdateOneID(id uuid.UUID) *CurriculumUpdateOne {
+	mutation := newCurriculumMutation(c.config, OpUpdateOne, withCurriculumID(id))
+	return &CurriculumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Curriculum.
+func (c *CurriculumClient) Delete() *CurriculumDelete {
+	mutation := newCurriculumMutation(c.config, OpDelete)
+	return &CurriculumDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CurriculumClient) DeleteOne(_m *Curriculum) *CurriculumDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CurriculumClient) DeleteOneID(id uuid.UUID) *CurriculumDeleteOne {
+	builder := c.Delete().Where(curriculum.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CurriculumDeleteOne{builder}
+}
+
+// Query returns a query builder for Curriculum.
+func (c *CurriculumClient) Query() *CurriculumQuery {
+	return &CurriculumQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCurriculum},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Curriculum entity by its id.
+func (c *CurriculumClient) Get(ctx context.Context, id uuid.UUID) (*Curriculum, error) {
+	return c.Query().Where(curriculum.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CurriculumClient) GetX(ctx context.Context, id uuid.UUID) *Curriculum {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CurriculumClient) Hooks() []Hook {
+	hooks := c.hooks.Curriculum
+	return append(hooks[:len(hooks):len(hooks)], curriculum.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CurriculumClient) Interceptors() []Interceptor {
+	inters := c.inters.Curriculum
+	return append(inters[:len(inters):len(inters)], curriculum.Interceptors[:]...)
+}
+
+func (c *CurriculumClient) mutate(ctx context.Context, m *CurriculumMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CurriculumCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CurriculumUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CurriculumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CurriculumDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Curriculum mutation op: %q", m.Op())
+	}
+}
+
+// CurriculumVersionClient is a client for the CurriculumVersion schema.
+type CurriculumVersionClient struct {
+	config
+}
+
+// NewCurriculumVersionClient returns a client for the CurriculumVersion from the given config.
+func NewCurriculumVersionClient(c config) *CurriculumVersionClient {
+	return &CurriculumVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `curriculumversion.Hooks(f(g(h())))`.
+func (c *CurriculumVersionClient) Use(hooks ...Hook) {
+	c.hooks.CurriculumVersion = append(c.hooks.CurriculumVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `curriculumversion.Intercept(f(g(h())))`.
+func (c *CurriculumVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CurriculumVersion = append(c.inters.CurriculumVersion, interceptors...)
+}
+
+// Create returns a builder for creating a CurriculumVersion entity.
+func (c *CurriculumVersionClient) Create() *CurriculumVersionCreate {
+	mutation := newCurriculumVersionMutation(c.config, OpCreate)
+	return &CurriculumVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CurriculumVersion entities.
+func (c *CurriculumVersionClient) CreateBulk(builders ...*CurriculumVersionCreate) *CurriculumVersionCreateBulk {
+	return &CurriculumVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CurriculumVersionClient) MapCreateBulk(slice any, setFunc func(*CurriculumVersionCreate, int)) *CurriculumVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CurriculumVersionCreateBulk{err: fmt.Errorf("calling to CurriculumVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CurriculumVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CurriculumVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CurriculumVersion.
+func (c *CurriculumVersionClient) Update() *CurriculumVersionUpdate {
+	mutation := newCurriculumVersionMutation(c.config, OpUpdate)
+	return &CurriculumVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CurriculumVersionClient) UpdateOne(_m *CurriculumVersion) *CurriculumVersionUpdateOne {
+	mutation := newCurriculumVersionMutation(c.config, OpUpdateOne, withCurriculumVersion(_m))
+	return &CurriculumVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CurriculumVersionClient) UpdateOneID(id uuid.UUID) *CurriculumVersionUpdateOne {
+	mutation := newCurriculumVersionMutation(c.config, OpUpdateOne, withCurriculumVersionID(id))
+	return &CurriculumVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CurriculumVersion.
+func (c *CurriculumVersionClient) Delete() *CurriculumVersionDelete {
+	mutation := newCurriculumVersionMutation(c.config, OpDelete)
+	return &CurriculumVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CurriculumVersionClient) DeleteOne(_m *CurriculumVersion) *CurriculumVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CurriculumVersionClient) DeleteOneID(id uuid.UUID) *CurriculumVersionDeleteOne {
+	builder := c.Delete().Where(curriculumversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CurriculumVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for CurriculumVersion.
+func (c *CurriculumVersionClient) Query() *CurriculumVersionQuery {
+	return &CurriculumVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCurriculumVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CurriculumVersion entity by its id.
+func (c *CurriculumVersionClient) Get(ctx context.Context, id uuid.UUID) (*CurriculumVersion, error) {
+	return c.Query().Where(curriculumversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CurriculumVersionClient) GetX(ctx context.Context, id uuid.UUID) *CurriculumVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CurriculumVersionClient) Hooks() []Hook {
+	hooks := c.hooks.CurriculumVersion
+	return append(hooks[:len(hooks):len(hooks)], curriculumversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CurriculumVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.CurriculumVersion
+	return append(inters[:len(inters):len(inters)], curriculumversion.Interceptors[:]...)
+}
+
+func (c *CurriculumVersionClient) mutate(ctx context.Context, m *CurriculumVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CurriculumVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CurriculumVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CurriculumVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CurriculumVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CurriculumVersion mutation op: %q", m.Op())
+	}
+}
+
+// ImportJobClient is a client for the ImportJob schema.
+type ImportJobClient struct {
+	config
+}
+
+// NewImportJobClient returns a client for the ImportJob from the given config.
+func NewImportJobClient(c config) *ImportJobClient {
+	return &ImportJobClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `importjob.Hooks(f(g(h())))`.
+func (c *ImportJobClient) Use(hooks ...Hook) {
+	c.hooks.ImportJob = append(c.hooks.ImportJob, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `importjob.Intercept(f(g(h())))`.
+func (c *ImportJobClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ImportJob = append(c.inters.ImportJob, interceptors...)
+}
+
+// Create returns a builder for creating a ImportJob entity.
+func (c *ImportJobClient) Create() *ImportJobCreate {
+	mutation := newImportJobMutation(c.config, OpCreate)
+	return &ImportJobCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ImportJob entities.
+func (c *ImportJobClient) CreateBulk(builders ...*ImportJobCreate) *ImportJobCreateBulk {
+	return &ImportJobCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ImportJobClient) MapCreateBulk(slice any, setFunc func(*ImportJobCreate, int)) *ImportJobCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ImportJobCreateBulk{err: fmt.Errorf("calling to ImportJobClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ImportJobCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ImportJobCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ImportJob.
+func (c *ImportJobClient) Update() *ImportJobUpdate {
+	mutation := newImportJobMutation(c.config, OpUpdate)
+	return &ImportJobUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ImportJobClient) UpdateOne(_m *ImportJob) *ImportJobUpdateOne {
+	mutation := newImportJobMutation(c.config, OpUpdateOne, withImportJob(_m))
+	return &ImportJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ImportJobClient) UpdateOneID(id uuid.UUID) *ImportJobUpdateOne {
+	mutation := newImportJobMutation(c.config, OpUpdateOne, withImportJobID(id))
+	return &ImportJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ImportJob.
+func (c *ImportJobClient) Delete() *ImportJobDelete {
+	mutation := newImportJobMutation(c.config, OpDelete)
+	return &ImportJobDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ImportJobClient) DeleteOne(_m *ImportJob) *ImportJobDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ImportJobClient) DeleteOneID(id uuid.UUID) *ImportJobDeleteOne {
+	builder := c.Delete().Where(importjob.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ImportJobDeleteOne{builder}
+}
+
+// Query returns a query builder for ImportJob.
+func (c *ImportJobClient) Query() *ImportJobQuery {
+	return &ImportJobQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeImportJob},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ImportJob entity by its id.
+func (c *ImportJobClient) Get(ctx context.Context, id uuid.UUID) (*ImportJob, error) {
+	return c.Query().Where(importjob.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ImportJobClient) GetX(ctx context.Context, id uuid.UUID) *ImportJob {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ImportJobClient) Hooks() []Hook {
+	hooks := c.hooks.ImportJob
+	return append(hooks[:len(hooks):len(hooks)], importjob.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ImportJobClient) Interceptors() []Interceptor {
+	inters := c.inters.ImportJob
+	return append(inters[:len(inters):len(inters)], importjob.Interceptors[:]...)
+}
+
+func (c *ImportJobClient) mutate(ctx context.Context, m *ImportJobMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ImportJobCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ImportJobUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ImportJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ImportJobDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ImportJob mutation op: %q", m.Op())
+	}
+}
+
+// LearningObjectiveClient is a client for the LearningObjective schema.
+type LearningObjectiveClient struct {
+	config
+}
+
+// NewLearningObjectiveClient returns a client for the LearningObjective from the given config.
+func NewLearningObjectiveClient(c config) *LearningObjectiveClient {
+	return &LearningObjectiveClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `learningobjective.Hooks(f(g(h())))`.
+func (c *LearningObjectiveClient) Use(hooks ...Hook) {
+	c.hooks.LearningObjective = append(c.hooks.LearningObjective, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `learningobjective.Intercept(f(g(h())))`.
+func (c *LearningObjectiveClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LearningObjective = append(c.inters.LearningObjective, interceptors...)
+}
+
+// Create returns a builder for creating a LearningObjective entity.
+func (c *LearningObjectiveClient) Create() *LearningObjectiveCreate {
+	mutation := newLearningObjectiveMutation(c.config, OpCreate)
+	return &LearningObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LearningObjective entities.
+func (c *LearningObjectiveClient) CreateBulk(builders ...*LearningObjectiveCreate) *LearningObjectiveCreateBulk {
+	return &LearningObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LearningObjectiveClient) MapCreateBulk(slice any, setFunc func(*LearningObjectiveCreate, int)) *LearningObjectiveCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LearningObjectiveCreateBulk{err: fmt.Errorf("calling to LearningObjectiveClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LearningObjectiveCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LearningObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LearningObjective.
+func (c *LearningObjectiveClient) Update() *LearningObjectiveUpdate {
+	mutation := newLearningObjectiveMutation(c.config, OpUpdate)
+	return &LearningObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LearningObjectiveClient) UpdateOne(_m *LearningObjective) *LearningObjectiveUpdateOne {
+	mutation := newLearningObjectiveMutation(c.config, OpUpdateOne, withLearningObjective(_m))
+	return &LearningObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LearningObjectiveClient) UpdateOneID(id uuid.UUID) *LearningObjectiveUpdateOne {
+	mutation := newLearningObjectiveMutation(c.config, OpUpdateOne, withLearningObjectiveID(id))
+	return &LearningObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LearningObjective.
+func (c *LearningObjectiveClient) Delete() *LearningObjectiveDelete {
+	mutation := newLearningObjectiveMutation(c.config, OpDelete)
+	return &LearningObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LearningObjectiveClient) DeleteOne(_m *LearningObjective) *LearningObjectiveDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LearningObjectiveClient) DeleteOneID(id uuid.UUID) *LearningObjectiveDeleteOne {
+	builder := c.Delete().Where(learningobjective.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LearningObjectiveDeleteOne{builder}
+}
+
+// Query returns a query builder for LearningObjective.
+func (c *LearningObjectiveClient) Query() *LearningObjectiveQuery {
+	return &LearningObjectiveQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLearningObjective},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LearningObjective entity by its id.
+func (c *LearningObjectiveClient) Get(ctx context.Context, id uuid.UUID) (*LearningObjective, error) {
+	return c.Query().Where(learningobjective.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LearningObjectiveClient) GetX(ctx context.Context, id uuid.UUID) *LearningObjective {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LearningObjectiveClient) Hooks() []Hook {
+	hooks := c.hooks.LearningObjective
+	return append(hooks[:len(hooks):len(hooks)], learningobjective.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LearningObjectiveClient) Interceptors() []Interceptor {
+	inters := c.inters.LearningObjective
+	return append(inters[:len(inters):len(inters)], learningobjective.Interceptors[:]...)
+}
+
+func (c *LearningObjectiveClient) mutate(ctx context.Context, m *LearningObjectiveMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LearningObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LearningObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LearningObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LearningObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LearningObjective mutation op: %q", m.Op())
+	}
+}
+
+// LoVersionMappingClient is a client for the LoVersionMapping schema.
+type LoVersionMappingClient struct {
+	config
+}
+
+// NewLoVersionMappingClient returns a client for the LoVersionMapping from the given config.
+func NewLoVersionMappingClient(c config) *LoVersionMappingClient {
+	return &LoVersionMappingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `loversionmapping.Hooks(f(g(h())))`.
+func (c *LoVersionMappingClient) Use(hooks ...Hook) {
+	c.hooks.LoVersionMapping = append(c.hooks.LoVersionMapping, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `loversionmapping.Intercept(f(g(h())))`.
+func (c *LoVersionMappingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LoVersionMapping = append(c.inters.LoVersionMapping, interceptors...)
+}
+
+// Create returns a builder for creating a LoVersionMapping entity.
+func (c *LoVersionMappingClient) Create() *LoVersionMappingCreate {
+	mutation := newLoVersionMappingMutation(c.config, OpCreate)
+	return &LoVersionMappingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LoVersionMapping entities.
+func (c *LoVersionMappingClient) CreateBulk(builders ...*LoVersionMappingCreate) *LoVersionMappingCreateBulk {
+	return &LoVersionMappingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LoVersionMappingClient) MapCreateBulk(slice any, setFunc func(*LoVersionMappingCreate, int)) *LoVersionMappingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LoVersionMappingCreateBulk{err: fmt.Errorf("calling to LoVersionMappingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LoVersionMappingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LoVersionMappingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LoVersionMapping.
+func (c *LoVersionMappingClient) Update() *LoVersionMappingUpdate {
+	mutation := newLoVersionMappingMutation(c.config, OpUpdate)
+	return &LoVersionMappingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LoVersionMappingClient) UpdateOne(_m *LoVersionMapping) *LoVersionMappingUpdateOne {
+	mutation := newLoVersionMappingMutation(c.config, OpUpdateOne, withLoVersionMapping(_m))
+	return &LoVersionMappingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LoVersionMappingClient) UpdateOneID(id uuid.UUID) *LoVersionMappingUpdateOne {
+	mutation := newLoVersionMappingMutation(c.config, OpUpdateOne, withLoVersionMappingID(id))
+	return &LoVersionMappingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LoVersionMapping.
+func (c *LoVersionMappingClient) Delete() *LoVersionMappingDelete {
+	mutation := newLoVersionMappingMutation(c.config, OpDelete)
+	return &LoVersionMappingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LoVersionMappingClient) DeleteOne(_m *LoVersionMapping) *LoVersionMappingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LoVersionMappingClient) DeleteOneID(id uuid.UUID) *LoVersionMappingDeleteOne {
+	builder := c.Delete().Where(loversionmapping.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LoVersionMappingDeleteOne{builder}
+}
+
+// Query returns a query builder for LoVersionMapping.
+func (c *LoVersionMappingClient) Query() *LoVersionMappingQuery {
+	return &LoVersionMappingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLoVersionMapping},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LoVersionMapping entity by its id.
+func (c *LoVersionMappingClient) Get(ctx context.Context, id uuid.UUID) (*LoVersionMapping, error) {
+	return c.Query().Where(loversionmapping.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LoVersionMappingClient) GetX(ctx context.Context, id uuid.UUID) *LoVersionMapping {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LoVersionMappingClient) Hooks() []Hook {
+	hooks := c.hooks.LoVersionMapping
+	return append(hooks[:len(hooks):len(hooks)], loversionmapping.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LoVersionMappingClient) Interceptors() []Interceptor {
+	inters := c.inters.LoVersionMapping
+	return append(inters[:len(inters):len(inters)], loversionmapping.Interceptors[:]...)
+}
+
+func (c *LoVersionMappingClient) mutate(ctx context.Context, m *LoVersionMappingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LoVersionMappingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LoVersionMappingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LoVersionMappingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LoVersionMappingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LoVersionMapping mutation op: %q", m.Op())
+	}
+}
+
+// SubjectClient is a client for the Subject schema.
+type SubjectClient struct {
+	config
+}
+
+// NewSubjectClient returns a client for the Subject from the given config.
+func NewSubjectClient(c config) *SubjectClient {
+	return &SubjectClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `subject.Hooks(f(g(h())))`.
+func (c *SubjectClient) Use(hooks ...Hook) {
+	c.hooks.Subject = append(c.hooks.Subject, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `subject.Intercept(f(g(h())))`.
+func (c *SubjectClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Subject = append(c.inters.Subject, interceptors...)
+}
+
+// Create returns a builder for creating a Subject entity.
+func (c *SubjectClient) Create() *SubjectCreate {
+	mutation := newSubjectMutation(c.config, OpCreate)
+	return &SubjectCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Subject entities.
+func (c *SubjectClient) CreateBulk(builders ...*SubjectCreate) *SubjectCreateBulk {
+	return &SubjectCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SubjectClient) MapCreateBulk(slice any, setFunc func(*SubjectCreate, int)) *SubjectCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SubjectCreateBulk{err: fmt.Errorf("calling to SubjectClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SubjectCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SubjectCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Subject.
+func (c *SubjectClient) Update() *SubjectUpdate {
+	mutation := newSubjectMutation(c.config, OpUpdate)
+	return &SubjectUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SubjectClient) UpdateOne(_m *Subject) *SubjectUpdateOne {
+	mutation := newSubjectMutation(c.config, OpUpdateOne, withSubject(_m))
+	return &SubjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SubjectClient) UpdateOneID(id uuid.UUID) *SubjectUpdateOne {
+	mutation := newSubjectMutation(c.config, OpUpdateOne, withSubjectID(id))
+	return &SubjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Subject.
+func (c *SubjectClient) Delete() *SubjectDelete {
+	mutation := newSubjectMutation(c.config, OpDelete)
+	return &SubjectDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SubjectClient) DeleteOne(_m *Subject) *SubjectDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SubjectClient) DeleteOneID(id uuid.UUID) *SubjectDeleteOne {
+	builder := c.Delete().Where(subject.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SubjectDeleteOne{builder}
+}
+
+// Query returns a query builder for Subject.
+func (c *SubjectClient) Query() *SubjectQuery {
+	return &SubjectQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSubject},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Subject entity by its id.
+func (c *SubjectClient) Get(ctx context.Context, id uuid.UUID) (*Subject, error) {
+	return c.Query().Where(subject.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SubjectClient) GetX(ctx context.Context, id uuid.UUID) *Subject {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SubjectClient) Hooks() []Hook {
+	hooks := c.hooks.Subject
+	return append(hooks[:len(hooks):len(hooks)], subject.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SubjectClient) Interceptors() []Interceptor {
+	inters := c.inters.Subject
+	return append(inters[:len(inters):len(inters)], subject.Interceptors[:]...)
+}
+
+func (c *SubjectClient) mutate(ctx context.Context, m *SubjectMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SubjectCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SubjectUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SubjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SubjectDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Subject mutation op: %q", m.Op())
+	}
+}
+
+// SubjectGradeClient is a client for the SubjectGrade schema.
+type SubjectGradeClient struct {
+	config
+}
+
+// NewSubjectGradeClient returns a client for the SubjectGrade from the given config.
+func NewSubjectGradeClient(c config) *SubjectGradeClient {
+	return &SubjectGradeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `subjectgrade.Hooks(f(g(h())))`.
+func (c *SubjectGradeClient) Use(hooks ...Hook) {
+	c.hooks.SubjectGrade = append(c.hooks.SubjectGrade, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `subjectgrade.Intercept(f(g(h())))`.
+func (c *SubjectGradeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SubjectGrade = append(c.inters.SubjectGrade, interceptors...)
+}
+
+// Create returns a builder for creating a SubjectGrade entity.
+func (c *SubjectGradeClient) Create() *SubjectGradeCreate {
+	mutation := newSubjectGradeMutation(c.config, OpCreate)
+	return &SubjectGradeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SubjectGrade entities.
+func (c *SubjectGradeClient) CreateBulk(builders ...*SubjectGradeCreate) *SubjectGradeCreateBulk {
+	return &SubjectGradeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SubjectGradeClient) MapCreateBulk(slice any, setFunc func(*SubjectGradeCreate, int)) *SubjectGradeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SubjectGradeCreateBulk{err: fmt.Errorf("calling to SubjectGradeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SubjectGradeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SubjectGradeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SubjectGrade.
+func (c *SubjectGradeClient) Update() *SubjectGradeUpdate {
+	mutation := newSubjectGradeMutation(c.config, OpUpdate)
+	return &SubjectGradeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SubjectGradeClient) UpdateOne(_m *SubjectGrade) *SubjectGradeUpdateOne {
+	mutation := newSubjectGradeMutation(c.config, OpUpdateOne, withSubjectGrade(_m))
+	return &SubjectGradeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SubjectGradeClient) UpdateOneID(id uuid.UUID) *SubjectGradeUpdateOne {
+	mutation := newSubjectGradeMutation(c.config, OpUpdateOne, withSubjectGradeID(id))
+	return &SubjectGradeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SubjectGrade.
+func (c *SubjectGradeClient) Delete() *SubjectGradeDelete {
+	mutation := newSubjectGradeMutation(c.config, OpDelete)
+	return &SubjectGradeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SubjectGradeClient) DeleteOne(_m *SubjectGrade) *SubjectGradeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SubjectGradeClient) DeleteOneID(id uuid.UUID) *SubjectGradeDeleteOne {
+	builder := c.Delete().Where(subjectgrade.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SubjectGradeDeleteOne{builder}
+}
+
+// Query returns a query builder for SubjectGrade.
+func (c *SubjectGradeClient) Query() *SubjectGradeQuery {
+	return &SubjectGradeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSubjectGrade},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SubjectGrade entity by its id.
+func (c *SubjectGradeClient) Get(ctx context.Context, id uuid.UUID) (*SubjectGrade, error) {
+	return c.Query().Where(subjectgrade.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SubjectGradeClient) GetX(ctx context.Context, id uuid.UUID) *SubjectGrade {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SubjectGradeClient) Hooks() []Hook {
+	hooks := c.hooks.SubjectGrade
+	return append(hooks[:len(hooks):len(hooks)], subjectgrade.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SubjectGradeClient) Interceptors() []Interceptor {
+	inters := c.inters.SubjectGrade
+	return append(inters[:len(inters):len(inters)], subjectgrade.Interceptors[:]...)
+}
+
+func (c *SubjectGradeClient) mutate(ctx context.Context, m *SubjectGradeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SubjectGradeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SubjectGradeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SubjectGradeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SubjectGradeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SubjectGrade mutation op: %q", m.Op())
+	}
+}
+
 // TenantResourceAssignmentClient is a client for the TenantResourceAssignment schema.
 type TenantResourceAssignmentClient struct {
 	config
@@ -627,24 +1821,718 @@ func (c *TenantResourceAssignmentClient) mutate(ctx context.Context, m *TenantRe
 	}
 }
 
+// TextbookClient is a client for the Textbook schema.
+type TextbookClient struct {
+	config
+}
+
+// NewTextbookClient returns a client for the Textbook from the given config.
+func NewTextbookClient(c config) *TextbookClient {
+	return &TextbookClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `textbook.Hooks(f(g(h())))`.
+func (c *TextbookClient) Use(hooks ...Hook) {
+	c.hooks.Textbook = append(c.hooks.Textbook, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `textbook.Intercept(f(g(h())))`.
+func (c *TextbookClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Textbook = append(c.inters.Textbook, interceptors...)
+}
+
+// Create returns a builder for creating a Textbook entity.
+func (c *TextbookClient) Create() *TextbookCreate {
+	mutation := newTextbookMutation(c.config, OpCreate)
+	return &TextbookCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Textbook entities.
+func (c *TextbookClient) CreateBulk(builders ...*TextbookCreate) *TextbookCreateBulk {
+	return &TextbookCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TextbookClient) MapCreateBulk(slice any, setFunc func(*TextbookCreate, int)) *TextbookCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TextbookCreateBulk{err: fmt.Errorf("calling to TextbookClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TextbookCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TextbookCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Textbook.
+func (c *TextbookClient) Update() *TextbookUpdate {
+	mutation := newTextbookMutation(c.config, OpUpdate)
+	return &TextbookUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TextbookClient) UpdateOne(_m *Textbook) *TextbookUpdateOne {
+	mutation := newTextbookMutation(c.config, OpUpdateOne, withTextbook(_m))
+	return &TextbookUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TextbookClient) UpdateOneID(id uuid.UUID) *TextbookUpdateOne {
+	mutation := newTextbookMutation(c.config, OpUpdateOne, withTextbookID(id))
+	return &TextbookUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Textbook.
+func (c *TextbookClient) Delete() *TextbookDelete {
+	mutation := newTextbookMutation(c.config, OpDelete)
+	return &TextbookDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TextbookClient) DeleteOne(_m *Textbook) *TextbookDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TextbookClient) DeleteOneID(id uuid.UUID) *TextbookDeleteOne {
+	builder := c.Delete().Where(textbook.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TextbookDeleteOne{builder}
+}
+
+// Query returns a query builder for Textbook.
+func (c *TextbookClient) Query() *TextbookQuery {
+	return &TextbookQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTextbook},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Textbook entity by its id.
+func (c *TextbookClient) Get(ctx context.Context, id uuid.UUID) (*Textbook, error) {
+	return c.Query().Where(textbook.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TextbookClient) GetX(ctx context.Context, id uuid.UUID) *Textbook {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TextbookClient) Hooks() []Hook {
+	hooks := c.hooks.Textbook
+	return append(hooks[:len(hooks):len(hooks)], textbook.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TextbookClient) Interceptors() []Interceptor {
+	inters := c.inters.Textbook
+	return append(inters[:len(inters):len(inters)], textbook.Interceptors[:]...)
+}
+
+func (c *TextbookClient) mutate(ctx context.Context, m *TextbookMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TextbookCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TextbookUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TextbookUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TextbookDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Textbook mutation op: %q", m.Op())
+	}
+}
+
+// TextbookSectionClient is a client for the TextbookSection schema.
+type TextbookSectionClient struct {
+	config
+}
+
+// NewTextbookSectionClient returns a client for the TextbookSection from the given config.
+func NewTextbookSectionClient(c config) *TextbookSectionClient {
+	return &TextbookSectionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `textbooksection.Hooks(f(g(h())))`.
+func (c *TextbookSectionClient) Use(hooks ...Hook) {
+	c.hooks.TextbookSection = append(c.hooks.TextbookSection, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `textbooksection.Intercept(f(g(h())))`.
+func (c *TextbookSectionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TextbookSection = append(c.inters.TextbookSection, interceptors...)
+}
+
+// Create returns a builder for creating a TextbookSection entity.
+func (c *TextbookSectionClient) Create() *TextbookSectionCreate {
+	mutation := newTextbookSectionMutation(c.config, OpCreate)
+	return &TextbookSectionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TextbookSection entities.
+func (c *TextbookSectionClient) CreateBulk(builders ...*TextbookSectionCreate) *TextbookSectionCreateBulk {
+	return &TextbookSectionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TextbookSectionClient) MapCreateBulk(slice any, setFunc func(*TextbookSectionCreate, int)) *TextbookSectionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TextbookSectionCreateBulk{err: fmt.Errorf("calling to TextbookSectionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TextbookSectionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TextbookSectionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TextbookSection.
+func (c *TextbookSectionClient) Update() *TextbookSectionUpdate {
+	mutation := newTextbookSectionMutation(c.config, OpUpdate)
+	return &TextbookSectionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TextbookSectionClient) UpdateOne(_m *TextbookSection) *TextbookSectionUpdateOne {
+	mutation := newTextbookSectionMutation(c.config, OpUpdateOne, withTextbookSection(_m))
+	return &TextbookSectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TextbookSectionClient) UpdateOneID(id uuid.UUID) *TextbookSectionUpdateOne {
+	mutation := newTextbookSectionMutation(c.config, OpUpdateOne, withTextbookSectionID(id))
+	return &TextbookSectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TextbookSection.
+func (c *TextbookSectionClient) Delete() *TextbookSectionDelete {
+	mutation := newTextbookSectionMutation(c.config, OpDelete)
+	return &TextbookSectionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TextbookSectionClient) DeleteOne(_m *TextbookSection) *TextbookSectionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TextbookSectionClient) DeleteOneID(id uuid.UUID) *TextbookSectionDeleteOne {
+	builder := c.Delete().Where(textbooksection.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TextbookSectionDeleteOne{builder}
+}
+
+// Query returns a query builder for TextbookSection.
+func (c *TextbookSectionClient) Query() *TextbookSectionQuery {
+	return &TextbookSectionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTextbookSection},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TextbookSection entity by its id.
+func (c *TextbookSectionClient) Get(ctx context.Context, id uuid.UUID) (*TextbookSection, error) {
+	return c.Query().Where(textbooksection.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TextbookSectionClient) GetX(ctx context.Context, id uuid.UUID) *TextbookSection {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TextbookSectionClient) Hooks() []Hook {
+	hooks := c.hooks.TextbookSection
+	return append(hooks[:len(hooks):len(hooks)], textbooksection.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TextbookSectionClient) Interceptors() []Interceptor {
+	inters := c.inters.TextbookSection
+	return append(inters[:len(inters):len(inters)], textbooksection.Interceptors[:]...)
+}
+
+func (c *TextbookSectionClient) mutate(ctx context.Context, m *TextbookSectionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TextbookSectionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TextbookSectionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TextbookSectionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TextbookSectionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TextbookSection mutation op: %q", m.Op())
+	}
+}
+
+// TextbookSectionObjectiveClient is a client for the TextbookSectionObjective schema.
+type TextbookSectionObjectiveClient struct {
+	config
+}
+
+// NewTextbookSectionObjectiveClient returns a client for the TextbookSectionObjective from the given config.
+func NewTextbookSectionObjectiveClient(c config) *TextbookSectionObjectiveClient {
+	return &TextbookSectionObjectiveClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `textbooksectionobjective.Hooks(f(g(h())))`.
+func (c *TextbookSectionObjectiveClient) Use(hooks ...Hook) {
+	c.hooks.TextbookSectionObjective = append(c.hooks.TextbookSectionObjective, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `textbooksectionobjective.Intercept(f(g(h())))`.
+func (c *TextbookSectionObjectiveClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TextbookSectionObjective = append(c.inters.TextbookSectionObjective, interceptors...)
+}
+
+// Create returns a builder for creating a TextbookSectionObjective entity.
+func (c *TextbookSectionObjectiveClient) Create() *TextbookSectionObjectiveCreate {
+	mutation := newTextbookSectionObjectiveMutation(c.config, OpCreate)
+	return &TextbookSectionObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TextbookSectionObjective entities.
+func (c *TextbookSectionObjectiveClient) CreateBulk(builders ...*TextbookSectionObjectiveCreate) *TextbookSectionObjectiveCreateBulk {
+	return &TextbookSectionObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TextbookSectionObjectiveClient) MapCreateBulk(slice any, setFunc func(*TextbookSectionObjectiveCreate, int)) *TextbookSectionObjectiveCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TextbookSectionObjectiveCreateBulk{err: fmt.Errorf("calling to TextbookSectionObjectiveClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TextbookSectionObjectiveCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TextbookSectionObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TextbookSectionObjective.
+func (c *TextbookSectionObjectiveClient) Update() *TextbookSectionObjectiveUpdate {
+	mutation := newTextbookSectionObjectiveMutation(c.config, OpUpdate)
+	return &TextbookSectionObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TextbookSectionObjectiveClient) UpdateOne(_m *TextbookSectionObjective) *TextbookSectionObjectiveUpdateOne {
+	mutation := newTextbookSectionObjectiveMutation(c.config, OpUpdateOne, withTextbookSectionObjective(_m))
+	return &TextbookSectionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TextbookSectionObjectiveClient) UpdateOneID(id uuid.UUID) *TextbookSectionObjectiveUpdateOne {
+	mutation := newTextbookSectionObjectiveMutation(c.config, OpUpdateOne, withTextbookSectionObjectiveID(id))
+	return &TextbookSectionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TextbookSectionObjective.
+func (c *TextbookSectionObjectiveClient) Delete() *TextbookSectionObjectiveDelete {
+	mutation := newTextbookSectionObjectiveMutation(c.config, OpDelete)
+	return &TextbookSectionObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TextbookSectionObjectiveClient) DeleteOne(_m *TextbookSectionObjective) *TextbookSectionObjectiveDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TextbookSectionObjectiveClient) DeleteOneID(id uuid.UUID) *TextbookSectionObjectiveDeleteOne {
+	builder := c.Delete().Where(textbooksectionobjective.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TextbookSectionObjectiveDeleteOne{builder}
+}
+
+// Query returns a query builder for TextbookSectionObjective.
+func (c *TextbookSectionObjectiveClient) Query() *TextbookSectionObjectiveQuery {
+	return &TextbookSectionObjectiveQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTextbookSectionObjective},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TextbookSectionObjective entity by its id.
+func (c *TextbookSectionObjectiveClient) Get(ctx context.Context, id uuid.UUID) (*TextbookSectionObjective, error) {
+	return c.Query().Where(textbooksectionobjective.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TextbookSectionObjectiveClient) GetX(ctx context.Context, id uuid.UUID) *TextbookSectionObjective {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TextbookSectionObjectiveClient) Hooks() []Hook {
+	hooks := c.hooks.TextbookSectionObjective
+	return append(hooks[:len(hooks):len(hooks)], textbooksectionobjective.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TextbookSectionObjectiveClient) Interceptors() []Interceptor {
+	inters := c.inters.TextbookSectionObjective
+	return append(inters[:len(inters):len(inters)], textbooksectionobjective.Interceptors[:]...)
+}
+
+func (c *TextbookSectionObjectiveClient) mutate(ctx context.Context, m *TextbookSectionObjectiveMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TextbookSectionObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TextbookSectionObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TextbookSectionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TextbookSectionObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TextbookSectionObjective mutation op: %q", m.Op())
+	}
+}
+
+// TextbookSeriesClient is a client for the TextbookSeries schema.
+type TextbookSeriesClient struct {
+	config
+}
+
+// NewTextbookSeriesClient returns a client for the TextbookSeries from the given config.
+func NewTextbookSeriesClient(c config) *TextbookSeriesClient {
+	return &TextbookSeriesClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `textbookseries.Hooks(f(g(h())))`.
+func (c *TextbookSeriesClient) Use(hooks ...Hook) {
+	c.hooks.TextbookSeries = append(c.hooks.TextbookSeries, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `textbookseries.Intercept(f(g(h())))`.
+func (c *TextbookSeriesClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TextbookSeries = append(c.inters.TextbookSeries, interceptors...)
+}
+
+// Create returns a builder for creating a TextbookSeries entity.
+func (c *TextbookSeriesClient) Create() *TextbookSeriesCreate {
+	mutation := newTextbookSeriesMutation(c.config, OpCreate)
+	return &TextbookSeriesCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TextbookSeries entities.
+func (c *TextbookSeriesClient) CreateBulk(builders ...*TextbookSeriesCreate) *TextbookSeriesCreateBulk {
+	return &TextbookSeriesCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TextbookSeriesClient) MapCreateBulk(slice any, setFunc func(*TextbookSeriesCreate, int)) *TextbookSeriesCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TextbookSeriesCreateBulk{err: fmt.Errorf("calling to TextbookSeriesClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TextbookSeriesCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TextbookSeriesCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TextbookSeries.
+func (c *TextbookSeriesClient) Update() *TextbookSeriesUpdate {
+	mutation := newTextbookSeriesMutation(c.config, OpUpdate)
+	return &TextbookSeriesUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TextbookSeriesClient) UpdateOne(_m *TextbookSeries) *TextbookSeriesUpdateOne {
+	mutation := newTextbookSeriesMutation(c.config, OpUpdateOne, withTextbookSeries(_m))
+	return &TextbookSeriesUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TextbookSeriesClient) UpdateOneID(id uuid.UUID) *TextbookSeriesUpdateOne {
+	mutation := newTextbookSeriesMutation(c.config, OpUpdateOne, withTextbookSeriesID(id))
+	return &TextbookSeriesUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TextbookSeries.
+func (c *TextbookSeriesClient) Delete() *TextbookSeriesDelete {
+	mutation := newTextbookSeriesMutation(c.config, OpDelete)
+	return &TextbookSeriesDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TextbookSeriesClient) DeleteOne(_m *TextbookSeries) *TextbookSeriesDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TextbookSeriesClient) DeleteOneID(id uuid.UUID) *TextbookSeriesDeleteOne {
+	builder := c.Delete().Where(textbookseries.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TextbookSeriesDeleteOne{builder}
+}
+
+// Query returns a query builder for TextbookSeries.
+func (c *TextbookSeriesClient) Query() *TextbookSeriesQuery {
+	return &TextbookSeriesQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTextbookSeries},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TextbookSeries entity by its id.
+func (c *TextbookSeriesClient) Get(ctx context.Context, id uuid.UUID) (*TextbookSeries, error) {
+	return c.Query().Where(textbookseries.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TextbookSeriesClient) GetX(ctx context.Context, id uuid.UUID) *TextbookSeries {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TextbookSeriesClient) Hooks() []Hook {
+	hooks := c.hooks.TextbookSeries
+	return append(hooks[:len(hooks):len(hooks)], textbookseries.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TextbookSeriesClient) Interceptors() []Interceptor {
+	inters := c.inters.TextbookSeries
+	return append(inters[:len(inters):len(inters)], textbookseries.Interceptors[:]...)
+}
+
+func (c *TextbookSeriesClient) mutate(ctx context.Context, m *TextbookSeriesMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TextbookSeriesCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TextbookSeriesUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TextbookSeriesUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TextbookSeriesDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TextbookSeries mutation op: %q", m.Op())
+	}
+}
+
+// TopicClient is a client for the Topic schema.
+type TopicClient struct {
+	config
+}
+
+// NewTopicClient returns a client for the Topic from the given config.
+func NewTopicClient(c config) *TopicClient {
+	return &TopicClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `topic.Hooks(f(g(h())))`.
+func (c *TopicClient) Use(hooks ...Hook) {
+	c.hooks.Topic = append(c.hooks.Topic, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `topic.Intercept(f(g(h())))`.
+func (c *TopicClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Topic = append(c.inters.Topic, interceptors...)
+}
+
+// Create returns a builder for creating a Topic entity.
+func (c *TopicClient) Create() *TopicCreate {
+	mutation := newTopicMutation(c.config, OpCreate)
+	return &TopicCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Topic entities.
+func (c *TopicClient) CreateBulk(builders ...*TopicCreate) *TopicCreateBulk {
+	return &TopicCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TopicClient) MapCreateBulk(slice any, setFunc func(*TopicCreate, int)) *TopicCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TopicCreateBulk{err: fmt.Errorf("calling to TopicClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TopicCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TopicCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Topic.
+func (c *TopicClient) Update() *TopicUpdate {
+	mutation := newTopicMutation(c.config, OpUpdate)
+	return &TopicUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TopicClient) UpdateOne(_m *Topic) *TopicUpdateOne {
+	mutation := newTopicMutation(c.config, OpUpdateOne, withTopic(_m))
+	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TopicClient) UpdateOneID(id uuid.UUID) *TopicUpdateOne {
+	mutation := newTopicMutation(c.config, OpUpdateOne, withTopicID(id))
+	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Topic.
+func (c *TopicClient) Delete() *TopicDelete {
+	mutation := newTopicMutation(c.config, OpDelete)
+	return &TopicDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TopicClient) DeleteOne(_m *Topic) *TopicDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TopicClient) DeleteOneID(id uuid.UUID) *TopicDeleteOne {
+	builder := c.Delete().Where(topic.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TopicDeleteOne{builder}
+}
+
+// Query returns a query builder for Topic.
+func (c *TopicClient) Query() *TopicQuery {
+	return &TopicQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTopic},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Topic entity by its id.
+func (c *TopicClient) Get(ctx context.Context, id uuid.UUID) (*Topic, error) {
+	return c.Query().Where(topic.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TopicClient) GetX(ctx context.Context, id uuid.UUID) *Topic {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TopicClient) Hooks() []Hook {
+	hooks := c.hooks.Topic
+	return append(hooks[:len(hooks):len(hooks)], topic.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TopicClient) Interceptors() []Interceptor {
+	inters := c.inters.Topic
+	return append(inters[:len(inters):len(inters)], topic.Interceptors[:]...)
+}
+
+func (c *TopicClient) mutate(ctx context.Context, m *TopicMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TopicCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TopicUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TopicDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Topic mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ContentRelease, ContentTransition, TenantResourceAssignment []ent.Hook
+		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
+		ImportJob, LearningObjective, LoVersionMapping, Subject, SubjectGrade,
+		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
+		TextbookSeries, Topic []ent.Hook
 	}
 	inters struct {
-		ContentRelease, ContentTransition, TenantResourceAssignment []ent.Interceptor
+		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
+		ImportJob, LearningObjective, LoVersionMapping, Subject, SubjectGrade,
+		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
+		TextbookSeries, Topic []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
+		Competency:               tableSchemas[1],
 		ContentRelease:           tableSchemas[0],
 		ContentTransition:        tableSchemas[0],
-		TenantResourceAssignment: tableSchemas[1],
+		Curriculum:               tableSchemas[1],
+		CurriculumVersion:        tableSchemas[1],
+		ImportJob:                tableSchemas[0],
+		LearningObjective:        tableSchemas[1],
+		LoVersionMapping:         tableSchemas[1],
+		Subject:                  tableSchemas[1],
+		SubjectGrade:             tableSchemas[1],
+		TenantResourceAssignment: tableSchemas[2],
+		Textbook:                 tableSchemas[1],
+		TextbookSection:          tableSchemas[1],
+		TextbookSectionObjective: tableSchemas[1],
+		TextbookSeries:           tableSchemas[1],
+		Topic:                    tableSchemas[1],
 	}
-	tableSchemas = [...]string{"content", "infra"}
+	tableSchemas = [...]string{"content", "curriculum", "infra"}
 )
 
 // SchemaConfig represents alternative schema names for all tables

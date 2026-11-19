@@ -12,9 +12,22 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbook"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksectionobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbookseries"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/topic"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -75,9 +88,22 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			competency.Table:               competency.ValidColumn,
 			contentrelease.Table:           contentrelease.ValidColumn,
 			contenttransition.Table:        contenttransition.ValidColumn,
+			curriculum.Table:               curriculum.ValidColumn,
+			curriculumversion.Table:        curriculumversion.ValidColumn,
+			importjob.Table:                importjob.ValidColumn,
+			learningobjective.Table:        learningobjective.ValidColumn,
+			loversionmapping.Table:         loversionmapping.ValidColumn,
+			subject.Table:                  subject.ValidColumn,
+			subjectgrade.Table:             subjectgrade.ValidColumn,
 			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
+			textbook.Table:                 textbook.ValidColumn,
+			textbooksection.Table:          textbooksection.ValidColumn,
+			textbooksectionobjective.Table: textbooksectionobjective.ValidColumn,
+			textbookseries.Table:           textbookseries.ValidColumn,
+			topic.Table:                    topic.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -1,0 +1,244 @@
+{
+  "format_version": 1,
+  "curriculum": {
+    "code": "GDPT2018_SAMPLE",
+    "name": {
+      "vi": "Chương trình GDPT 2018 (mẫu dev/pilot)"
+    },
+    "framework": "GDPT_2018"
+  },
+  "version": {
+    "version_label": "2018.1",
+    "content_language": "vi",
+    "change_note": "Seed mẫu dev/pilot, chưa rà soát theo văn bản chương trình chính thức (OQ-08)"
+  },
+  "subject_grades": [
+    {
+      "subject_code": "math",
+      "grade_level": 1,
+      "topics": [
+        {
+          "code": "MATH.G1.T01",
+          "name": "Các số đến 10",
+          "objectives": [
+            {
+              "code": "MATH.G1.NUM.COUNT_10",
+              "description": "Đếm, đọc, viết các số trong phạm vi 10",
+              "bloom_level": "remember"
+            },
+            {
+              "code": "MATH.G1.NUM.COMPARE_10",
+              "description": "So sánh các số trong phạm vi 10",
+              "bloom_level": "understand",
+              "prerequisite_codes": [
+                "MATH.G1.NUM.COUNT_10"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G1.T02",
+          "name": "Phép cộng, trừ trong phạm vi 10",
+          "objectives": [
+            {
+              "code": "MATH.G1.NUM.ADD_SUB_10",
+              "description": "Thực hiện cộng, trừ trong phạm vi 10",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G1.NUM.COUNT_10"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G1.T03",
+          "name": "Hình phẳng",
+          "objectives": [
+            {
+              "code": "MATH.G1.GEO.SHAPES_2D",
+              "description": "Nhận biết hình vuông, tròn, tam giác, chữ nhật",
+              "bloom_level": "remember"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subject_code": "math",
+      "grade_level": 2,
+      "topics": [
+        {
+          "code": "MATH.G2.T01",
+          "name": "Phép cộng, trừ có nhớ trong phạm vi 100",
+          "objectives": [
+            {
+              "code": "MATH.G2.NUM.ADD_SUB_100_CARRY",
+              "description": "Cộng, trừ có nhớ trong phạm vi 100",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G1.NUM.ADD_SUB_10"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G2.T02",
+          "name": "Bảng nhân 2, 5",
+          "objectives": [
+            {
+              "code": "MATH.G2.NUM.MUL_TABLE.1",
+              "description": "Thuộc bảng nhân 2, 5",
+              "bloom_level": "remember"
+            }
+          ]
+        },
+        {
+          "code": "MATH.G2.T03",
+          "name": "Đo độ dài",
+          "objectives": [
+            {
+              "code": "MATH.G2.GEO.LENGTH_CM_DM",
+              "description": "Đo và đổi đơn vị cm, dm",
+              "bloom_level": "apply"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subject_code": "math",
+      "grade_level": 3,
+      "topics": [
+        {
+          "code": "MATH.G3.T01",
+          "name": "Bảng nhân, chia 6–9",
+          "objectives": [
+            {
+              "code": "MATH.G3.NUM.MUL_TABLE.2",
+              "description": "Thuộc bảng nhân 6, 7, 8, 9",
+              "bloom_level": "remember",
+              "prerequisite_codes": [
+                "MATH.G2.NUM.MUL_TABLE.1"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G3.T02",
+          "name": "Phép chia có dư",
+          "objectives": [
+            {
+              "code": "MATH.G3.NUM.DIV_REMAINDER",
+              "description": "Thực hiện phép chia có dư",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G3.NUM.MUL_TABLE.2"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G3.T03",
+          "name": "Chu vi",
+          "objectives": [
+            {
+              "code": "MATH.G3.GEO.PERIMETER",
+              "description": "Tính chu vi hình chữ nhật, hình vuông",
+              "bloom_level": "apply"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subject_code": "math",
+      "grade_level": 4,
+      "topics": [
+        {
+          "code": "MATH.G4.T01",
+          "name": "Số có nhiều chữ số",
+          "objectives": [
+            {
+              "code": "MATH.G4.NUM.LARGE_NUMBERS",
+              "description": "Đọc, viết, so sánh số đến lớp triệu",
+              "bloom_level": "understand"
+            }
+          ]
+        },
+        {
+          "code": "MATH.G4.T02",
+          "name": "Phân số",
+          "objectives": [
+            {
+              "code": "MATH.G4.NUM.FRACTION_BASIC",
+              "description": "Nhận biết, rút gọn, so sánh phân số",
+              "bloom_level": "understand",
+              "prerequisite_codes": [
+                "MATH.G3.NUM.DIV_REMAINDER"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G4.T03",
+          "name": "Biểu đồ cột",
+          "objectives": [
+            {
+              "code": "MATH.G4.STAT.BAR_CHART",
+              "description": "Đọc, mô tả số liệu trên biểu đồ cột",
+              "bloom_level": "analyze"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subject_code": "math",
+      "grade_level": 5,
+      "topics": [
+        {
+          "code": "MATH.G5.T01",
+          "name": "Số thập phân",
+          "objectives": [
+            {
+              "code": "MATH.G5.NUM.DECIMAL_OPS",
+              "description": "Cộng, trừ, nhân, chia số thập phân",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G4.NUM.FRACTION_BASIC"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G5.T02",
+          "name": "Tỉ số phần trăm",
+          "objectives": [
+            {
+              "code": "MATH.G5.NUM.PERCENT",
+              "description": "Giải bài toán tỉ số phần trăm",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G5.NUM.DECIMAL_OPS"
+              ]
+            }
+          ]
+        },
+        {
+          "code": "MATH.G5.T03",
+          "name": "Diện tích, thể tích",
+          "objectives": [
+            {
+              "code": "MATH.G5.GEO.AREA_VOLUME",
+              "description": "Tính diện tích hình thang, thể tích hình hộp chữ nhật",
+              "bloom_level": "apply",
+              "prerequisite_codes": [
+                "MATH.G3.GEO.PERIMETER"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

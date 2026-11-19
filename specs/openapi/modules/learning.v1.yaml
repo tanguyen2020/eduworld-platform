@@ -129,10 +129,14 @@ paths:
       tags:
         - learning
       operationId: listTopics
-      summary: Cây chủ đề theo môn và khối
+      summary: Cây chủ đề theo môn và khối của version đang áp dụng cho trường (F021-AC-19, AC-20)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: curriculum_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
       responses:
@@ -160,10 +164,14 @@ paths:
       tags:
         - learning
       operationId: listLearningObjectives
-      summary: Danh sách learning objective
+      summary: Learning objective của version đang áp dụng cho trường
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: curriculum_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - name: topic_id
           in: query
           schema:
@@ -194,6 +202,31 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /learning/objectives/{objective_id}:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getLearningObjective
+      summary: Chi tiết một LO đã publish theo ID, kể cả LO của version cũ (lịch sử attempt, F021-AC-21)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/ObjectiveIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningObjective'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /learning/progress/me:
     get:
       x-service: learning
@@ -1274,11 +1307,16 @@ paths:
         - cms
       operationId: listCmsCurricula
       x-portal-action: action.content_studio.curriculum.view
-      summary: Danh sách curriculum (chương trình theo môn × khối, có version) (curriculum.read)
+      summary: Danh sách curriculum của tenant phiên và curriculum platform được gán (curriculum.read)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
-        - $ref: '#/components/parameters/SubjectIdQuery'
-        - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: owner_scope
+          in: query
+          schema:
+            type: string
+            enum:
+              - platform
+              - tenant
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -1308,7 +1346,7 @@ paths:
         - cms
       operationId: createCurriculum
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Tạo curriculum (chương trình theo môn × khối, có version) — curriculum.write (content_admin; academic_manager trong scope tenant)
+      summary: Tạo curriculum kèm version 1 ở draft — curriculum.write (content_admin platform; academic_manager trong tenant phiên)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1345,7 +1383,7 @@ paths:
         - cms
       operationId: getCmsCurriculum
       x-portal-action: action.content_studio.curriculum.view
-      summary: Chi tiết curriculum (chương trình theo môn × khối, có version)
+      summary: Chi tiết curriculum (curriculum.read)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/CurriculumIdPath'
@@ -1361,15 +1399,54 @@ paths:
                 $ref: '#/components/schemas/Curriculum'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteCurriculum
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Xóa curriculum chưa từng publish = soft-delete vào Thùng rác (ADR-0028); đã có version published thì chỉ archive (409) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
     patch:
       x-service: learning
       tags:
         - cms
       operationId: updateCurriculum
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Sửa curriculum (chương trình theo môn × khối, có version) (If-Match) — curriculum.write (content_admin; academic_manager trong scope tenant)
+      summary: Sửa tên/khung của curriculum (If-Match) — curriculum.write
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/CurriculumIdPath'
@@ -1379,7 +1456,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/CurriculumInput'
+              $ref: '#/components/schemas/CurriculumPatch'
       responses:
         '200':
           description: OK
@@ -1402,6 +1479,344 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/curricula/{curriculum_id}/versions:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listCurriculumVersions
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Các version của curriculum, mới nhất trước (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CurriculumVersion'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createCurriculumVersion
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Tạo version draft mới sao sâu từ một version (môn × khối, topic, LO, competency); chỉ một version draft/in_review mở (409) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurriculumVersionCreateRequest'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculumVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/curricula/{curriculum_id}/versions/{version}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getCurriculumVersion
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Chi tiết một version của curriculum (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculumVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateCurriculumVersionDraft
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Sửa version ở draft (nhãn, hiệu lực, ghi chú, môn × khối) (If-Match); version không ở draft → 409 CONTENT_NOT_EDITABLE — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CurriculumVersionPatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculumVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/curricula/{curriculum_id}/versions/{version}:transition:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: transitionCurriculumVersion
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Workflow CurriculumVersion (submit_review, revise — curriculum.write; approve, reject, archive — curriculum.publish); người duyệt khác tác giả, reject cần note; chuyển sai → 422 INVALID_STATE_TRANSITION
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurriculumTransitionRequest'
+      responses:
+        '200':
+          description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculumVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/curricula/{curriculum_id}/versions/{version}:publish:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: publishCurriculumVersion
+      x-portal-action: action.content_studio.curriculum.publish
+      summary: Publish version approved trong một transaction (con trỏ current_version_id, content_releases, audit, outbox curriculum.version_published) — curriculum.publish
+      description: |
+        Chặn với 422 VALIDATION_FAILED khi curriculum GDPT2018 còn LO thiếu yccd_ref (F021-AC-14) hoặc version có
+        supersedes_version_id còn LO cũ chưa có mapping (F021-AC-26); version không ở approved → 422 INVALID_STATE_TRANSITION.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã publish
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculumVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/curricula/{curriculum_id}/versions/{version}:export:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: exportCurriculumVersion
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Xuất cây của một version (YAML theo specs/schemas/curriculum-import.schema.json hoặc CSV) để rà soát/import lại (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - yaml
+              - csv
+            default: yaml
+      responses:
+        '200':
+          description: File xuất
+          content:
+            application/yaml:
+              schema:
+                type: string
+                maxLength: 10485760
+            text/csv:
+              schema:
+                type: string
+                maxLength: 10485760
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/curricula/{curriculum_id}/versions/{version}/lo-mappings:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getCurriculumVersionLoMappings
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Bảng mapping LO từ version bị thay thế sang version này, kèm LO cũ chưa có mapping (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoMappingList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      x-service: learning
+      tags:
+        - cms
+      operationId: putCurriculumVersionLoMappings
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Thay toàn bộ mapping LO của version draft (If-Match của version) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/CurriculumIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoMappingPut'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoMappingList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /cms/learning/subjects:
     get:
       x-service: learning
@@ -1409,7 +1824,7 @@ paths:
         - cms
       operationId: listCmsSubjects
       x-portal-action: action.content_studio.curriculum.view
-      summary: Danh sách môn học (curriculum.read)
+      summary: Danh sách môn học (danh mục platform) (curriculum.read)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/GradeLevelQuery'
@@ -1442,7 +1857,7 @@ paths:
         - cms
       operationId: createSubject
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Tạo môn học — curriculum.write (content_admin)
+      summary: Tạo môn học (danh mục platform) — curriculum.write, chỉ nhân sự platform (người dùng tenant → 403)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1479,7 +1894,7 @@ paths:
         - cms
       operationId: updateSubject
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Sửa môn học (If-Match) — curriculum.write (content_admin)
+      summary: Sửa môn học (If-Match) — curriculum.write, chỉ nhân sự platform
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/SubjectIdPath'
@@ -1489,7 +1904,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/SubjectInput'
+              $ref: '#/components/schemas/SubjectPatch'
       responses:
         '200':
           description: OK
@@ -1519,15 +1934,16 @@ paths:
         - cms
       operationId: listCmsTopics
       x-portal-action: action.content_studio.curriculum.view
-      summary: Danh sách chủ đề (cây) (curriculum.read)
+      summary: Chủ đề của một curriculum version, theo môn × khối (curriculum.read)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
-        - $ref: '#/components/parameters/SubjectIdQuery'
-        - $ref: '#/components/parameters/GradeLevelQuery'
-        - name: curriculum_id
+        - name: curriculum_version_id
           in: query
+          required: true
           schema:
             $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -1557,7 +1973,7 @@ paths:
         - cms
       operationId: createTopic
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Tạo chủ đề (cây) — curriculum.write (content_admin, academic_manager)
+      summary: Tạo chủ đề trong version draft (topic cha cùng version/môn/khối, không vòng) — curriculum.write
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1583,18 +1999,59 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /cms/learning/topics/{topic_id}:
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteTopic
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Xóa chủ đề của version draft = soft-delete (còn chủ đề con hoặc LO → 422) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/TopicIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
     patch:
       x-service: learning
       tags:
         - cms
       operationId: updateTopic
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Sửa chủ đề (cây) (If-Match) — curriculum.write (content_admin, academic_manager)
+      summary: Sửa chủ đề trong version draft (If-Match) — curriculum.write
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/TopicIdPath'
@@ -1604,7 +2061,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/TopicInput'
+              $ref: '#/components/schemas/TopicPatch'
       responses:
         '200':
           description: OK
@@ -1621,6 +2078,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
@@ -1634,12 +2093,20 @@ paths:
         - cms
       operationId: listCmsObjectives
       x-portal-action: action.content_studio.curriculum.view
-      summary: Danh sách learning objective (có yccd_ref GDPT 2018, competency_ids) (curriculum.read)
+      summary: Learning objective (có yccd_ref GDPT 2018, competency_ids, prerequisite_ids) theo version/chủ đề/bài sách (curriculum.read)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: curriculum_version_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
         - name: topic_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: textbook_section_id
           in: query
           schema:
             $ref: '#/components/schemas/Uuid'
@@ -1671,13 +2138,15 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
     post:
       x-service: learning
       tags:
         - cms
       operationId: createObjective
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Tạo learning objective (có yccd_ref GDPT 2018, competency_ids) — curriculum.write (content_admin, academic_manager)
+      summary: Tạo learning objective trong version draft (mã chuẩn, yccd_ref, competency_ids, prerequisite_ids không chu trình) — curriculum.write
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1703,18 +2172,59 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /cms/learning/objectives/{objective_id}:
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteObjective
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Xóa learning objective của version draft = soft-delete (đang là tiên quyết của LO khác → 422 liệt kê LO phụ thuộc) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/ObjectiveIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
     patch:
       x-service: learning
       tags:
         - cms
       operationId: updateObjective
       x-portal-action: action.content_studio.curriculum.edit
-      summary: Sửa learning objective (có yccd_ref GDPT 2018, competency_ids) (If-Match) — curriculum.write (content_admin, academic_manager)
+      summary: Sửa learning objective trong version draft (If-Match) — curriculum.write
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/ObjectiveIdPath'
@@ -1724,7 +2234,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/LearningObjectiveInput'
+              $ref: '#/components/schemas/LearningObjectivePatch'
       responses:
         '200':
           description: OK
@@ -1741,12 +2251,432 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/competencies:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listCmsCompetencies
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Danh mục năng lực/phẩm chất của một curriculum version (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: curriculum_version_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Competency'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createCompetency
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Thêm năng lực/phẩm chất vào version draft — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetencyInput'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competency'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/competencies/{competency_id}:
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateCompetency
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Sửa tên năng lực/phẩm chất của version draft (If-Match) — curriculum.write
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: competency_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CompetencyPatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competency'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/textbook-series:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listTextbookSeries
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Bộ sách giáo khoa (danh mục platform, chỉ metadata) (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TextbookSeries'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createTextbookSeries
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Tạo bộ sách — curriculum.write, chỉ nhân sự platform
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookSeriesInput'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextbookSeries'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/textbooks:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listTextbooks
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Tập sách theo bộ sách/môn/khối (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: series_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Textbook'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createTextbook
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Tạo tập sách — curriculum.write, chỉ nhân sự platform
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookInput'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Textbook'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/textbook-sections:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listTextbookSections
+      x-portal-action: action.content_studio.curriculum.view
+      summary: Bài trong một tập sách, kèm LO đã gán thấy được (curriculum.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: textbook_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TextbookSection'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createTextbookSection
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Tạo bài sách (chỉ metadata) — curriculum.write, chỉ nhân sự platform
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookSectionInput'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextbookSection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/textbook-sections/{section_id}:
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateTextbookSection
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Sửa bài sách (If-Match) — curriculum.write, chỉ nhân sự platform
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/SectionIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/TextbookSectionPatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextbookSection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/textbook-sections/{section_id}/objectives:
+    put:
+      x-service: learning
+      tags:
+        - cms
+      operationId: putTextbookSectionObjectives
+      x-portal-action: action.content_studio.curriculum.edit
+      summary: Thay danh sách LO gán cho bài sách (n–n) — curriculum.write, chỉ nhân sự platform
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/SectionIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookSectionObjectives'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextbookSection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /cms/learning/question-sets:
     get:
       x-service: learning
@@ -5636,6 +6566,12 @@ components:
       schema:
         type: string
         maxLength: 512
+    ObjectiveIdPath:
+      name: objective_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     LessonIdPath:
       name: lesson_id
       in: path
@@ -5746,8 +6682,8 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    ObjectiveIdPath:
-      name: objective_id
+    SectionIdPath:
+      name: section_id
       in: path
       required: true
       schema:
@@ -6191,6 +7127,11 @@ components:
           type: integer
           minimum: 1
           description: Version đang áp dụng cho trường (ADR-0043)
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version_label:
+          type: string
+          maxLength: 16
     LearningName:
       type: object
       minProperties: 1
@@ -6226,6 +7167,9 @@ components:
           type: string
           maxLength: 2048
           format: uri
+        icon_key:
+          type: string
+          maxLength: 64
     Topic:
       type: object
       required:
@@ -6234,8 +7178,13 @@ components:
       properties:
         topic_id:
           $ref: '#/components/schemas/Uuid'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
         parent_topic_id:
           $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
         name:
           type: string
           maxLength: 255
@@ -6243,6 +7192,9 @@ components:
           $ref: '#/components/schemas/Uuid'
         grade_level:
           $ref: '#/components/schemas/GradeLevel'
+        sort_order:
+          type: integer
+          minimum: 1
     LearningObjective:
       type: object
       required:
@@ -6252,19 +7204,28 @@ components:
       properties:
         objective_id:
           $ref: '#/components/schemas/Uuid'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
         code:
           type: string
           maxLength: 64
           examples:
             - MATH.G3.NUM.MUL_TABLE
+        stable_key:
+          type: string
+          maxLength: 64
+          readOnly: true
+          description: Khóa ổn định qua các version (CURRICULUM_MODEL §4)
         description:
           type: string
           maxLength: 1000
         topic_id:
           $ref: '#/components/schemas/Uuid'
+        sort_order:
+          type: integer
+          minimum: 1
         bloom_level:
-          type: string
-          maxLength: 64
+          $ref: '#/components/schemas/BloomLevel'
         yccd_ref:
           type: string
           maxLength: 64
@@ -6279,6 +7240,15 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/Uuid'
+    BloomLevel:
+      type: string
+      enum:
+        - remember
+        - understand
+        - apply
+        - analyze
+        - evaluate
+        - create
     PageInfo:
       type: object
       required:
@@ -7721,6 +8691,9 @@ components:
             - questions_xlsx
             - questions_csv
             - lessons_docx
+            - curriculum_yaml
+            - curriculum_csv
+          description: curriculum_yaml/curriculum_csv cần curriculum.write (F021); file theo specs/schemas/curriculum-import.schema.json
         dry_run:
           type: boolean
           default: false
@@ -7737,6 +8710,9 @@ components:
       properties:
         import_id:
           $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          maxLength: 64
         status:
           type: string
           enum:
@@ -7744,6 +8720,14 @@ components:
             - running
             - succeeded
             - failed
+        result:
+          type: object
+          description: Bản ghi đã tạo (import curriculum, F021)
+          properties:
+            curriculum_id:
+              $ref: '#/components/schemas/Uuid'
+            curriculum_version_id:
+              $ref: '#/components/schemas/Uuid'
         dry_run:
           type: boolean
         created_count:
@@ -7808,50 +8792,336 @@ components:
         submitted_at:
           $ref: '#/components/schemas/Timestamp'
     Curriculum:
-      allOf:
-        - $ref: '#/components/schemas/CurriculumInput'
-        - type: object
-          required:
-            - curriculum_id
-            - version
-            - status
-          properties:
-            curriculum_id:
-              $ref: '#/components/schemas/Uuid'
-            version:
-              type: integer
-              minimum: 1
-            status:
-              $ref: '#/components/schemas/ContentStatus'
-            updated_at:
-              $ref: '#/components/schemas/Timestamp'
+      type: object
+      required:
+        - curriculum_id
+        - code
+        - name
+        - owner_scope
+        - latest_version_no
+      properties:
+        curriculum_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+        name:
+          $ref: '#/components/schemas/LearningName'
+        framework:
+          type: string
+          maxLength: 64
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+        tenant_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        current_version:
+          description: Version đang phát hành (con trỏ current_version_id); null khi chưa publish
+          oneOf:
+            - $ref: '#/components/schemas/CurriculumVersionRef'
+            - type: 'null'
+        latest_version:
+          $ref: '#/components/schemas/CurriculumVersionRef'
+        latest_version_no:
+          type: integer
+          minimum: 0
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    CurriculumVersionRef:
+      type: object
+      required:
+        - curriculum_version_id
+        - version
+        - version_label
+        - status
+      properties:
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        version_label:
+          type: string
+          maxLength: 16
+        status:
+          $ref: '#/components/schemas/ContentStatus'
     CurriculumInput:
       type: object
       required:
         - code
         - name
-        - subject_id
-        - grade_level
+      additionalProperties: false
+      description: 'Curriculum (CURRICULUM_MODEL §3.1, F021): tạo kèm version 1 ở draft (initial_version, nhãn mặc định 1.0)'
       properties:
         code:
           type: string
-          minLength: 1
+          minLength: 2
           maxLength: 64
+          pattern: ^[A-Z][A-Z0-9_]{1,63}$
+          description: UPPER_SNAKE, duy nhất trong phạm vi sở hữu
         name:
           $ref: '#/components/schemas/LearningName'
-        subject_id:
-          $ref: '#/components/schemas/Uuid'
-        grade_level:
-          $ref: '#/components/schemas/GradeLevel'
         framework:
           type: string
           maxLength: 64
           description: vd. GDPT_2018
-        textbook_series_id:
-          $ref: '#/components/schemas/Uuid'
         tenant_id:
           $ref: '#/components/schemas/Uuid'
-          description: Tenant đích khi System Admin/content_admin tạo cho tenant; vắng = platform
+          description: Tenant đích khi System Admin tạo curriculum của tenant; vắng = platform (người dùng tenant luôn tạo cho tenant phiên)
+        initial_version:
+          $ref: '#/components/schemas/CurriculumVersionInput'
+    CurriculumVersionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        version_label:
+          type: string
+          maxLength: 9
+          pattern: ^[0-9]{1,4}\.[0-9]{1,4}$
+          description: MAJOR.MINOR
+        effective_from:
+          type: string
+          format: date
+        effective_to:
+          type: string
+          format: date
+        change_note:
+          type: string
+          maxLength: 1000
+          description: Biên bản rà soát (CURRICULUM_MODEL §7)
+        content_language:
+          type: string
+          enum:
+            - vi
+            - en
+    CurriculumPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/LearningName'
+        framework:
+          type: string
+          maxLength: 64
+    CurriculumVersion:
+      type: object
+      required:
+        - curriculum_version_id
+        - curriculum_id
+        - version
+        - version_label
+        - status
+      properties:
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        curriculum_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        version_label:
+          type: string
+          maxLength: 16
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        is_current:
+          type: boolean
+          description: Version là con trỏ current_version_id
+        effective_from:
+          type: string
+          format: date
+        effective_to:
+          type: string
+          format: date
+        supersedes_version_id:
+          $ref: '#/components/schemas/Uuid'
+        based_on_version_id:
+          $ref: '#/components/schemas/Uuid'
+        change_note:
+          type: string
+          maxLength: 1000
+        content_language:
+          type: string
+          enum:
+            - vi
+            - en
+        author_id:
+          $ref: '#/components/schemas/Uuid'
+        reviewer_id:
+          $ref: '#/components/schemas/Uuid'
+        published_at:
+          $ref: '#/components/schemas/Timestamp'
+        subject_grades:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/SubjectGrade'
+        warnings:
+          type: array
+          maxItems: 50
+          description: Cảnh báo không chặn (vd. EFFECTIVE_RANGE_OVERLAP khi submit_review)
+          items:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                maxLength: 64
+              message:
+                type: string
+                maxLength: 500
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    SubjectGrade:
+      type: object
+      required:
+        - subject_id
+        - grade_level
+      additionalProperties: false
+      properties:
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        periods_per_year:
+          type: integer
+          minimum: 1
+          maximum: 1000
+    CurriculumVersionCreateRequest:
+      type: object
+      required:
+        - from_version
+        - version_label
+      additionalProperties: false
+      description: Tạo version draft mới sao sâu từ from_version (F021-AC-17); supersedes_version_id = version nguồn
+      properties:
+        from_version:
+          type: integer
+          minimum: 1
+        version_label:
+          type: string
+          maxLength: 9
+          pattern: ^[0-9]{1,4}\.[0-9]{1,4}$
+        effective_from:
+          type: string
+          format: date
+        effective_to:
+          type: string
+          format: date
+        change_note:
+          type: string
+          maxLength: 1000
+    CurriculumVersionPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        version_label:
+          type: string
+          maxLength: 9
+          pattern: ^[0-9]{1,4}\.[0-9]{1,4}$
+        effective_from:
+          oneOf:
+            - type: string
+              format: date
+            - type: 'null'
+        effective_to:
+          oneOf:
+            - type: string
+              format: date
+            - type: 'null'
+        change_note:
+          type: string
+          maxLength: 1000
+        subject_grades:
+          type: array
+          maxItems: 200
+          description: Thay toàn bộ danh sách môn × khối của version draft (môn × khối còn topic thì không gỡ được)
+          items:
+            $ref: '#/components/schemas/SubjectGrade'
+    CurriculumTransitionRequest:
+      type: object
+      required:
+        - action
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum:
+            - submit_review
+            - approve
+            - reject
+            - revise
+            - archive
+          description: 'submit_review, revise: curriculum.write; approve, reject, archive: curriculum.publish. Publish dùng :publish'
+        note:
+          type: string
+          maxLength: 2000
+          description: Bắt buộc với reject
+    LoMappingList:
+      type: object
+      required:
+        - curriculum_version_id
+        - items
+      properties:
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        supersedes_version_id:
+          $ref: '#/components/schemas/Uuid'
+        items:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: '#/components/schemas/LoMapping'
+        unmapped_lo_ids:
+          type: array
+          maxItems: 5000
+          description: LO của version bị thay thế chưa có mapping (publish bị chặn khi khác rỗng, F021-AC-26)
+          items:
+            $ref: '#/components/schemas/Uuid'
+    LoMapping:
+      type: object
+      required:
+        - from_lo_id
+        - relation
+      additionalProperties: false
+      properties:
+        from_lo_id:
+          $ref: '#/components/schemas/Uuid'
+        to_lo_id:
+          description: NULL khi và chỉ khi relation = removed
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        relation:
+          $ref: '#/components/schemas/LoMappingRelation'
+    LoMappingRelation:
+      type: string
+      enum:
+        - same
+        - split
+        - merge
+        - replaces
+        - removed
+    LoMappingPut:
+      type: object
+      required:
+        - items
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: '#/components/schemas/LoMapping'
     SubjectInput:
       type: object
       required:
@@ -7874,13 +9144,40 @@ components:
         icon_key:
           type: string
           maxLength: 64
+    SubjectPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/LearningName'
+        grade_levels:
+          type: array
+          minItems: 1
+          maxItems: 9
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        icon_key:
+          type: string
+          maxLength: 64
     TopicInput:
       type: object
       required:
+        - curriculum_version_id
+        - code
         - name
         - subject_id
         - grade_level
+      additionalProperties: false
       properties:
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[A-Z0-9][A-Z0-9_.]{0,63}$
+          description: Duy nhất trong curriculum version
         name:
           type: string
           minLength: 1
@@ -7889,11 +9186,30 @@ components:
           $ref: '#/components/schemas/Uuid'
         grade_level:
           $ref: '#/components/schemas/GradeLevel'
-        curriculum_id:
-          $ref: '#/components/schemas/Uuid'
         parent_topic_id:
           $ref: '#/components/schemas/Uuid'
-        position:
+        sort_order:
+          type: integer
+          minimum: 1
+    TopicPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[A-Z0-9][A-Z0-9_.]{0,63}$
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        parent_topic_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        sort_order:
           type: integer
           minimum: 1
     LearningObjectiveInput:
@@ -7902,20 +9218,24 @@ components:
         - code
         - description
         - topic_id
+      additionalProperties: false
       properties:
         code:
           type: string
           minLength: 1
           maxLength: 64
+          description: <SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>] (CURRICULUM_MODEL §4)
         description:
           type: string
           minLength: 1
           maxLength: 1000
         topic_id:
           $ref: '#/components/schemas/Uuid'
+        sort_order:
+          type: integer
+          minimum: 1
         bloom_level:
-          type: string
-          maxLength: 64
+          $ref: '#/components/schemas/BloomLevel'
         yccd_ref:
           type: string
           maxLength: 64
@@ -7928,6 +9248,264 @@ components:
         prerequisite_ids:
           type: array
           maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+    LearningObjectivePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: 'Lỗi chu trình tiên quyết: 422 với errors[].code = PREREQUISITE_CYCLE và danh sách mã LO trên chu trình (F021-AC-12)'
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        sort_order:
+          type: integer
+          minimum: 1
+        bloom_level:
+          $ref: '#/components/schemas/BloomLevel'
+        yccd_ref:
+          oneOf:
+            - type: string
+              maxLength: 64
+            - type: 'null'
+        competency_ids:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+        prerequisite_ids:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
+    Competency:
+      type: object
+      required:
+        - competency_id
+        - curriculum_version_id
+        - code
+        - name
+        - kind
+      properties:
+        competency_id:
+          $ref: '#/components/schemas/Uuid'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+        name:
+          $ref: '#/components/schemas/LearningName'
+        kind:
+          $ref: '#/components/schemas/CompetencyKind'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+    CompetencyKind:
+      type: string
+      enum:
+        - general_competency
+        - subject_competency
+        - quality
+    CompetencyInput:
+      type: object
+      required:
+        - curriculum_version_id
+        - code
+        - name
+        - kind
+      additionalProperties: false
+      properties:
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          minLength: 2
+          maxLength: 64
+          pattern: ^[A-Z][A-Z0-9_]{1,63}$
+        name:
+          $ref: '#/components/schemas/LearningName'
+        kind:
+          $ref: '#/components/schemas/CompetencyKind'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Chỉ với kind = subject_competency
+    CompetencyPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/LearningName'
+    TextbookSeries:
+      type: object
+      required:
+        - series_id
+        - code
+        - name
+      properties:
+        series_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 64
+        name:
+          type: string
+          maxLength: 255
+        publisher:
+          type: string
+          maxLength: 255
+    TextbookSeriesInput:
+      type: object
+      required:
+        - code
+        - name
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          minLength: 2
+          maxLength: 64
+          pattern: ^[A-Z][A-Z0-9_]{1,63}$
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        publisher:
+          type: string
+          maxLength: 255
+    Textbook:
+      type: object
+      required:
+        - textbook_id
+        - series_id
+        - subject_id
+        - grade_level
+        - volume
+      properties:
+        textbook_id:
+          $ref: '#/components/schemas/Uuid'
+        series_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        volume:
+          type: integer
+          minimum: 1
+          maximum: 9
+    TextbookInput:
+      type: object
+      required:
+        - series_id
+        - subject_id
+        - grade_level
+        - volume
+      additionalProperties: false
+      properties:
+        series_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        volume:
+          type: integer
+          minimum: 1
+          maximum: 9
+    TextbookSection:
+      type: object
+      required:
+        - section_id
+        - textbook_id
+        - lesson_no
+        - title
+      properties:
+        section_id:
+          $ref: '#/components/schemas/Uuid'
+        textbook_id:
+          $ref: '#/components/schemas/Uuid'
+        chapter:
+          type: string
+          maxLength: 128
+        lesson_no:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          maxLength: 255
+        page_range:
+          type: string
+          maxLength: 9
+        objective_ids:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/Uuid'
+    TextbookSectionInput:
+      type: object
+      required:
+        - textbook_id
+        - lesson_no
+        - title
+      additionalProperties: false
+      description: Chỉ metadata bài sách (CURRICULUM_MODEL §6) — không có trường lưu nguyên văn sách
+      properties:
+        textbook_id:
+          $ref: '#/components/schemas/Uuid'
+        chapter:
+          type: string
+          maxLength: 128
+        lesson_no:
+          type: integer
+          minimum: 1
+          maximum: 999
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        page_range:
+          type: string
+          maxLength: 9
+          pattern: ^[0-9]{1,4}(-[0-9]{1,4})?$
+    TextbookSectionPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        chapter:
+          type: string
+          maxLength: 128
+        lesson_no:
+          type: integer
+          minimum: 1
+          maximum: 999
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        page_range:
+          type: string
+          maxLength: 9
+          pattern: ^[0-9]{1,4}(-[0-9]{1,4})?$
+    TextbookSectionObjectives:
+      type: object
+      required:
+        - objective_ids
+      additionalProperties: false
+      properties:
+        objective_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
           items:
             $ref: '#/components/schemas/Uuid'
     QuestionSetAuthoring:

@@ -6,11 +6,50 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Competency is the predicate function for competency builders.
+type Competency func(*sql.Selector)
+
 // ContentRelease is the predicate function for contentrelease builders.
 type ContentRelease func(*sql.Selector)
 
 // ContentTransition is the predicate function for contenttransition builders.
 type ContentTransition func(*sql.Selector)
 
+// Curriculum is the predicate function for curriculum builders.
+type Curriculum func(*sql.Selector)
+
+// CurriculumVersion is the predicate function for curriculumversion builders.
+type CurriculumVersion func(*sql.Selector)
+
+// ImportJob is the predicate function for importjob builders.
+type ImportJob func(*sql.Selector)
+
+// LearningObjective is the predicate function for learningobjective builders.
+type LearningObjective func(*sql.Selector)
+
+// LoVersionMapping is the predicate function for loversionmapping builders.
+type LoVersionMapping func(*sql.Selector)
+
+// Subject is the predicate function for subject builders.
+type Subject func(*sql.Selector)
+
+// SubjectGrade is the predicate function for subjectgrade builders.
+type SubjectGrade func(*sql.Selector)
+
 // TenantResourceAssignment is the predicate function for tenantresourceassignment builders.
 type TenantResourceAssignment func(*sql.Selector)
+
+// Textbook is the predicate function for textbook builders.
+type Textbook func(*sql.Selector)
+
+// TextbookSection is the predicate function for textbooksection builders.
+type TextbookSection func(*sql.Selector)
+
+// TextbookSectionObjective is the predicate function for textbooksectionobjective builders.
+type TextbookSectionObjective func(*sql.Selector)
+
+// TextbookSeries is the predicate function for textbookseries builders.
+type TextbookSeries func(*sql.Selector)
+
+// Topic is the predicate function for topic builders.
+type Topic func(*sql.Selector)

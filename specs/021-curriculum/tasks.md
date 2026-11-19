@@ -4,16 +4,16 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Tạo package domain/application/infrastructure cho module curriculum — file: `src/backend/modules/learning/internal/domain/curriculum/doc.go`
-- [ ] T002 [P] File seed `GDPT2018_SAMPLE` Toán 1–5 (16 LO theo CURRICULUM_MODEL §7, `yccd_ref` trống) — file: `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml`
+- [x] T001 Tạo package domain/application/infrastructure cho module curriculum — file: `src/backend/modules/learning/internal/domain/curriculum/doc.go` — ✅ 2026-11-19: package `internal/domain/curriculum` (codes, objective, prerequisite_dag, topic_tree, version, mapping); command/query trong package `command`/`query` phẳng (Clarifications 2026-11-19)
+- [x] T002 [P] File seed `GDPT2018_SAMPLE` Toán 1–5 (16 LO theo CURRICULUM_MODEL §7, `yccd_ref` trống) — file: `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` — ✅ 2026-11-19: 5 khối, 15 topic, 16 LO, `yccd_ref` trống, có tiên quyết mẫu
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Sửa/thêm OpenAPI theo contracts §6 (schema `Curriculum*`, `CurriculumVersion*`, `Topic*`, `Competency*`, `Textbook*`, `LoMappingList`; operation Cần thêm; `ContentImportRequest.kind`) rồi tách spec — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `node scripts/openapi/split-public.mjs`, `make specs-lint`, `make specs-breaking`, `make gen MOD=learning`
-- [ ] T004 [P] JSON Schema import/export + example — file: `specs/schemas/curriculum-import.schema.json`, `specs/examples/curriculum.gdpt2018-sample-math.json` — kiểm: `make specs-lint`
-- [ ] T005 [P] Payload `curriculum.version_published.v1` — file: `specs/events/payloads/learning/curriculum.version_published.v1.schema.json` — kiểm: `make specs-lint`
-- [ ] T006 ent schema curriculum (13 entity theo data-model, MaxLen, CHECK) — file: `src/backend/modules/learning/ent/schema/` — kiểm: `make gen MOD=learning`
-- [ ] T007 Migration + trigger bất biến version và bảng con, RLS loại H/G — file: `src/backend/modules/learning/migrations/` — kiểm: `make migrate-diff MOD=learning name=f021_curriculum`, `make migrate-lint MOD=learning`
+- [x] T003 Sửa/thêm OpenAPI theo contracts §6 (schema `Curriculum*`, `CurriculumVersion*`, `Topic*`, `Competency*`, `Textbook*`, `LoMappingList`; operation Cần thêm; `ContentImportRequest.kind`) rồi tách spec — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `node scripts/openapi/split-public.mjs`, `make specs-lint`, `make specs-breaking`, `make gen MOD=learning` — ✅ 2026-11-19: schema `Curriculum*`, `CurriculumVersion*`, `*Patch`, `Competency*`, `Textbook*`, `LoMapping*`, `BloomLevel`; 24 operation Cần thêm + `getLearningObjective`; split, check-maxlength/enums/portal-catalog 0 lỗi
+- [x] T004 [P] JSON Schema import/export + example — file: `specs/schemas/curriculum-import.schema.json`, `specs/examples/curriculum.gdpt2018-sample-math.json` — kiểm: `make specs-lint` — ✅ 2026-11-19: `validate-schemas` 0 lỗi (example đăng ký trong scripts/specs/validate-schemas.mjs)
+- [x] T005 [P] Payload `curriculum.version_published.v1` — file: `specs/events/payloads/learning/curriculum.version_published.v1.schema.json` — kiểm: `make specs-lint` — ✅ 2026-11-19: có `examples`, `validate-schemas` 0 lỗi
+- [x] T006 ent schema curriculum (13 entity theo data-model, MaxLen, CHECK) — file: `src/backend/modules/learning/ent/schema/` — kiểm: `make gen MOD=learning` — ✅ 2026-11-19: `ent/schema/curriculum.go` 13 entity, `go run ./tools/entlint` sạch
+- [x] T007 Migration + trigger bất biến version và bảng con, RLS loại H/G — file: `src/backend/modules/learning/migrations/` — kiểm: `make migrate-diff MOD=learning name=f021_curriculum`, `make migrate-lint MOD=learning` — ✅ 2026-11-19: `20261124000001_f021_curriculum.sql` (entddl khớp `TestMigrationMatchesEnt`, CHECK, RLS H/T*, `_live`, trigger `curriculum_versions_immutable` + `*_draft_only`), áp dụng trong `TestStringsAreBounded` (testcontainers) pass
 - [ ] T008 Đăng ký permission `curriculum.read/write/publish` cho handler; đăng ký `ResourceHandler` `curriculum` (trash, restore, clone cây version, assignable) — file: `src/backend/modules/learning/internal/application/command/curriculum/resource_handler.go`
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.

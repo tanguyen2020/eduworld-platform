@@ -27,6 +27,7 @@ const EXAMPLES = {
   'event.mid-autumn-festival.json': 'schemas/event.schema.json',
   'season-track.season-1.json': 'schemas/season-track.schema.json',
   'activity.video-lesson.science-g4-water-cycle.json': 'schemas/activities/video-lesson.schema.json',
+  'curriculum.gdpt2018-sample-math.json': 'schemas/curriculum-import.schema.json',
 };
 
 const warnings = [];

@@ -9,6 +9,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
 )
 
+// The CompetencyFunc type is an adapter to allow the use of ordinary
+// function as Competency mutator.
+type CompetencyFunc func(context.Context, *ent.CompetencyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CompetencyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CompetencyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompetencyMutation", m)
+}
+
 // The ContentReleaseFunc type is an adapter to allow the use of ordinary
 // function as ContentRelease mutator.
 type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
@@ -33,6 +45,90 @@ func (f ContentTransitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentTransitionMutation", m)
 }
 
+// The CurriculumFunc type is an adapter to allow the use of ordinary
+// function as Curriculum mutator.
+type CurriculumFunc func(context.Context, *ent.CurriculumMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CurriculumFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CurriculumMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CurriculumMutation", m)
+}
+
+// The CurriculumVersionFunc type is an adapter to allow the use of ordinary
+// function as CurriculumVersion mutator.
+type CurriculumVersionFunc func(context.Context, *ent.CurriculumVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CurriculumVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CurriculumVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CurriculumVersionMutation", m)
+}
+
+// The ImportJobFunc type is an adapter to allow the use of ordinary
+// function as ImportJob mutator.
+type ImportJobFunc func(context.Context, *ent.ImportJobMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ImportJobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ImportJobMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ImportJobMutation", m)
+}
+
+// The LearningObjectiveFunc type is an adapter to allow the use of ordinary
+// function as LearningObjective mutator.
+type LearningObjectiveFunc func(context.Context, *ent.LearningObjectiveMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LearningObjectiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LearningObjectiveMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LearningObjectiveMutation", m)
+}
+
+// The LoVersionMappingFunc type is an adapter to allow the use of ordinary
+// function as LoVersionMapping mutator.
+type LoVersionMappingFunc func(context.Context, *ent.LoVersionMappingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LoVersionMappingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LoVersionMappingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoVersionMappingMutation", m)
+}
+
+// The SubjectFunc type is an adapter to allow the use of ordinary
+// function as Subject mutator.
+type SubjectFunc func(context.Context, *ent.SubjectMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubjectFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubjectMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubjectMutation", m)
+}
+
+// The SubjectGradeFunc type is an adapter to allow the use of ordinary
+// function as SubjectGrade mutator.
+type SubjectGradeFunc func(context.Context, *ent.SubjectGradeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubjectGradeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubjectGradeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubjectGradeMutation", m)
+}
+
 // The TenantResourceAssignmentFunc type is an adapter to allow the use of ordinary
 // function as TenantResourceAssignment mutator.
 type TenantResourceAssignmentFunc func(context.Context, *ent.TenantResourceAssignmentMutation) (ent.Value, error)
@@ -43,6 +139,66 @@ func (f TenantResourceAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantResourceAssignmentMutation", m)
+}
+
+// The TextbookFunc type is an adapter to allow the use of ordinary
+// function as Textbook mutator.
+type TextbookFunc func(context.Context, *ent.TextbookMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TextbookFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TextbookMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TextbookMutation", m)
+}
+
+// The TextbookSectionFunc type is an adapter to allow the use of ordinary
+// function as TextbookSection mutator.
+type TextbookSectionFunc func(context.Context, *ent.TextbookSectionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TextbookSectionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TextbookSectionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TextbookSectionMutation", m)
+}
+
+// The TextbookSectionObjectiveFunc type is an adapter to allow the use of ordinary
+// function as TextbookSectionObjective mutator.
+type TextbookSectionObjectiveFunc func(context.Context, *ent.TextbookSectionObjectiveMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TextbookSectionObjectiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TextbookSectionObjectiveMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TextbookSectionObjectiveMutation", m)
+}
+
+// The TextbookSeriesFunc type is an adapter to allow the use of ordinary
+// function as TextbookSeries mutator.
+type TextbookSeriesFunc func(context.Context, *ent.TextbookSeriesMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TextbookSeriesFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TextbookSeriesMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TextbookSeriesMutation", m)
+}
+
+// The TopicFunc type is an adapter to allow the use of ordinary
+// function as Topic mutator.
+type TopicFunc func(context.Context, *ent.TopicMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TopicFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TopicMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TopicMutation", m)
 }
 
 // Condition is a hook condition function.

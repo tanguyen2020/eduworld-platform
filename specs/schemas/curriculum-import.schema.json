@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/curriculum-import.schema.json",
+  "title": "EduWorld Curriculum Import/Export (YAML/JSON)",
+  "description": "Cây một CurriculumVersion để import/export (FR-CUR-010, F021): curriculum → version → subject_grades[] → topics[] → objectives[] (CURRICULUM_MODEL §2–§4, §7). Môn học tham chiếu theo mã danh mục platform (subject_code); tiên quyết và năng lực tham chiếu theo mã trong cùng file. Import tạo version draft (curriculum mới, hoặc version mới của curriculum cùng mã); validator là validator của CMS. CSV dùng cùng cây ở dạng phẳng (mỗi dòng một LO, cột curriculum_code, curriculum_name_vi, version_label, subject_code, grade_level, topic_code, topic_name, parent_topic_code, objective_code, description, bloom_level, yccd_ref, prerequisite_codes với dấu '|'), không có competency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "curriculum", "version", "subject_grades"],
+  "properties": {
+    "format_version": { "const": 1 },
+    "curriculum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$", "maxLength": 64 },
+        "name": { "$ref": "#/$defs/learningName" },
+        "framework": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version_label"],
+      "properties": {
+        "version_label": { "type": "string", "pattern": "^[0-9]{1,4}\\.[0-9]{1,4}$", "maxLength": 9 },
+        "effective_from": { "type": "string", "format": "date" },
+        "effective_to": { "type": "string", "format": "date" },
+        "change_note": { "type": "string", "maxLength": 1000 },
+        "content_language": { "enum": ["vi", "en"] }
+      }
+    },
+    "competencies": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "name", "kind"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$", "maxLength": 64 },
+          "name": { "$ref": "#/$defs/learningName" },
+          "kind": { "enum": ["general_competency", "subject_competency", "quality"] },
+          "subject_code": { "$ref": "#/$defs/subjectCode" }
+        }
+      }
+    },
+    "subject_grades": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subject_code", "grade_level", "topics"],
+        "properties": {
+          "subject_code": { "$ref": "#/$defs/subjectCode" },
+          "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+          "periods_per_year": { "type": "integer", "minimum": 1, "maximum": 1000 },
+          "topics": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/topic" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "learningName": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "vi": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "en": { "type": "string", "minLength": 1, "maxLength": 255 }
+      }
+    },
+    "subjectCode": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$", "maxLength": 64 },
+    "topic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9_.]{0,63}$", "maxLength": 64 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "parent_code": { "type": "string", "maxLength": 64, "description": "Mã topic cha cùng môn × khối (cây chủ đề)" },
+        "sort_order": { "type": "integer", "minimum": 1 },
+        "objectives": { "type": "array", "maxItems": 200, "items": { "$ref": "#/$defs/objective" } }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "description"],
+      "properties": {
+        "code": { "type": "string", "maxLength": 64, "description": "<SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>] (CURRICULUM_MODEL §4)" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "bloom_level": { "enum": ["remember", "understand", "apply", "analyze", "evaluate", "create"] },
+        "sort_order": { "type": "integer", "minimum": 1 },
+        "yccd_ref": { "type": ["string", "null"], "maxLength": 64 },
+        "competency_codes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+        "prerequisite_codes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } }
+      }
+    }
+  }
+}
