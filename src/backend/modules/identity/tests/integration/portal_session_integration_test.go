@@ -193,6 +193,9 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 	if err := identityhttp.Register(srv, h); err != nil {
 		t.Fatal(err)
 	}
+	if err := identityhttp.RegisterSettings(srv, settingsHandlers(e, codec)); err != nil { // F015
+		t.Fatal(err)
+	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	return &httpEnv{env: e, srv: hs, idp: idp, kc: kc}, idp

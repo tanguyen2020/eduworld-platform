@@ -4,6 +4,7 @@ package read
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -138,4 +139,27 @@ type SisAdminReadModel interface {
 // chosen tenant; nothing from other modules (ADR-0074).
 type BootstrapReader interface {
 	Bootstrap(ctx context.Context, userID uuid.UUID) (dto.PlayerBootstrap, error)
+}
+
+// AuditFilter selects audit entries (F015 US2). Exactly one of TenantIDs (tenant or cross-tenant read) and
+// PlatformOnly is set by the query; SchoolIDs limits a School Admin to the schools of their grants.
+type AuditFilter struct {
+	TenantIDs    []uuid.UUID
+	PlatformOnly bool
+	SchoolIDs    []uuid.UUID // nil = every school of the tenants
+	SchoolID     *uuid.UUID
+	ActorID      *uuid.UUID
+	Action       string
+	TargetType   string
+	TargetID     string
+	From, To     time.Time
+	After        *page.Cursor // occurred_at (RFC 3339 nano) + audit_id, descending
+	Limit        int
+	NoModeration bool // the tenant view never shows the moderation journal
+}
+
+// AuditReadModel reads audit.audit_logs with explicit tenant, time-range and soft conditions.
+type AuditReadModel interface {
+	// AuditLogs returns up to f.Limit+1 entries, newest first.
+	AuditLogs(ctx context.Context, f AuditFilter) ([]dto.AuditLogEntry, error)
 }
