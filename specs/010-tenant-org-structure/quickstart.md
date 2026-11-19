@@ -88,4 +88,28 @@ Chuẩn bị (không có `make` trên máy dev nên chạy lệnh tương đươ
 
 Lệnh tự động của phần nối: `go test ./cmd/internal/wiring/` (`TestCoreAPIMountsEveryImplementedOperation`: mọi operation có trong `presentation/http` của identity, learning, game và trong spec module được mount đúng một lần dưới module sở hữu; `TestWorkerProfilesRegisterRelaysConsumersAndJobs`: relay, mọi consumer khai báo trong `presentation/consumer` + `infrastructure/messaging`, mọi job chạy đúng profile; `TestWorkerChatProfileLoadsChatOnly`), `go test ./pkg/module/` (pool theo role, vai trò theo binary/profile, hook audit theo module, khóa cursor).
 
-Chưa đủ: đăng nhập game/portal **thành công** cần dữ liệu identity (học sinh, nhân sự, `external_identities`, `user_roles`); module identity chưa có seed (`modules/identity/seed/README.md`) và tạo System Admin đầu tiên bằng SQL không được cấp quyền trong phiên này → kịch bản 4/10/12 của §2 vẫn kiểm bằng test tích hợp.
+Lúc đó đăng nhập game/portal chưa **thành công** vì module identity chưa có seed — đã giải quyết bằng seed dev (§6.1).
+
+### 6.1. Seed identity và đăng nhập thành công (2026-11-20, compose project riêng `ewseed`)
+
+Chuẩn bị như trên với `COMPOSE_PROJECT_NAME=ewseed` (Atlas qua bản sao `scripts/dev/atlas.sh` dùng mạng `ewseed_default`): hạ tầng → realm (`keycloak-config` + `post-apply.mjs` + `seed-dev.mjs`: 33 user, 4 Organization) → migrate 5 module → seed identity (lệnh của `make seed-identity`) → seed learning → `up-app` → `scripts/dev/seed-check.sh`. Không chèn dòng bằng SQL: mọi dữ liệu đi qua use case (Clarifications "seed identity").
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Seed identity lần 1 | `tenants=2 schools=3 sis_connections=2 csv_imports=3 students_linked=14 platform_staff=9 tenant_staff=6 grants=16 locked=1 changed=true`; DB: 3 tenant (gồm `common`), 4 trường, 16 lớp, 29 user, 29 `external_identities`, 16 `user_roles`, 14 enrollment, 3 sync run |
+| Seed identity lần 2 và 3 | `changed=false` (mọi bộ đếm 0); `infra.outbox_events` giữ 203, số dòng không đổi |
+| Seed learning | `subjects_created=3 curricula=1` |
+| `GET :9100/readyz`, `GET :9200/readyz` | `200`, `200` |
+| `make seed-check` | `ref.students complete (identity=14 learning=14 game=14)` |
+| `POST /api/v1/auth/game/login` (gateway `:9080`) `hs.an.3a`, `hs.dung.7a`, `hs.em.4a` | `200` + token; `bootstrap.tenant_id` = `th-demo-a`, `pgd-demo`, `pgd-demo`; lớp `3A`, `7A`, `4A`. Lần gọi đầu mỗi user lúc máy tải cao có thể `503 UNAVAILABLE` (password grant vượt `keycloak_token_call_timeout` 3 s, retryable), gọi lại `200` |
+| Game login `hs.locked` / `hs.nosis` | `403 ACCOUNT_LOCKED` / `403 ACCOUNT_NOT_PROVISIONED` |
+| `POST /api/v1/game/sessions` (`hs.an.3a`, `X-Tenant-Id`, `X-Device-Id`, `Idempotency-Key`) | `201`, `game_session_id` trả về |
+| `POST /api/v1/auth/portal/login` `ad.truong.a` | `200`; `GET /me/tenants` `200` [`th-demo-a`]; `GET /me/permissions` (`X-Tenant-Id` = `th-demo-a`) `200`: role `school_admin` scope trường `DEMOA1`, 31 permission |
+| Portal login `sa.admin` không OTP / có OTP (`totp.mjs`) | `401 INVALID_CREDENTIALS` / `200`; `GET /me/permissions` (platform) `200`: `system_admin`, 123 permission; `GET /me/tenants` `200` `[]` |
+
+Ghi chú của lần chạy:
+- Smoke chạy lúc 04:50 ICT, trong `platform_curfew` mặc định 21:30–06:30: login game trả `403 CURFEW_ACTIVE` đúng thiết kế. Đã đổi giờ giới nghiêm bằng `putPlatformCurfewSettings` (`sa.admin`, `If-Match`, lý do) thành 21:30–04:00 cho module identity; module game không theo `platform_settings.changed` mà đọc `EW_PLATFORM_CURFEW` (`createGameSession` vẫn `403 CURFEW_ACTIVE`) nên `core-api` được tạo lại với override compose `EW_PLATFORM_CURFEW=21:30-04:00` chỉ trên stack `ewseed` [câu hỏi mở: game đọc giới nghiêm từ cài đặt platform].
+- Route có bearer token qua APISIX (`:9080`, `:9180`) trả `401` từ gateway: `deploy/apisix/routes/env/local.env` có `EW_OIDC_ISSUERS=http://localhost:8180/...` trong khi token do backend lấy có `iss = http://keycloak:8180/...` (Clarifications "nối binary"); smoke gọi `core-api :8100` trực tiếp cho `/game/sessions`, `/me/*`, `/admin/settings/curfew` [câu hỏi mở: thêm issuer `keycloak:8180` vào allowlist của APISIX local].
+- `sa.admin` `/me/tenants` = `[]` (System Admin không có membership; chọn tenant qua `listTenants`).
+
+Lệnh tự động: `go test ./modules/identity/internal/presentation/devseed/` (plan khớp realm import, từ chối plan sai), `go test ./modules/identity/internal/infrastructure/keycloak/ -run DevAdopter`, `go test -tags integration ./modules/identity/tests/integration/ -run TestDevSeedIsIdempotent` (PostgreSQL mọi migration, seed hai lần, lần hai không ghi outbox/dòng nào).

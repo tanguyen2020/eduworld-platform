@@ -1,0 +1,9 @@
+student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username
+DEMOA1-HS001,DEMOA1,A001,Nguyễn Văn An,3,active,hs.an.3a
+DEMOA1-HS002,DEMOA1,A002,Trần Thị Bình,3,active,hs.binh.3a
+DEMOA1-HS003,DEMOA1,A003,Lê Minh Chi,3,active,hs.chi.3b
+DEMOA1-HS004,DEMOA1,A004,Phạm Quốc Trung,3,active,hs.trung.a1
+DEMOA1-HS005,DEMOA1,A005,Phạm Quốc Trung,3,active,hs.trung.a2
+DEMOA1-HS006,DEMOA1,A006,Đỗ Văn Khóa,3,active,hs.locked
+DEMOA1-HS007,DEMOA1,A007,Vũ Thị Lâu,3,active,hs.lau.khongvao
+DEMOA1-HS008,DEMOA1,A008,Hoàng Văn Sắp,3,active,hs.sapbidon

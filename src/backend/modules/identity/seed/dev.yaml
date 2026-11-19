@@ -1,0 +1,118 @@
+# Dev seed of module identity (LOCAL_DEVELOPMENT §5), loaded by `make seed` (go run ./modules/identity/cmd/seed).
+# Fake data only. Every username is a user of the realm import deploy/keycloak/realm-eduworld.dev.json, which holds
+# the demo password; the seed links accounts to those users and never sets a password.
+# The common tenant "common" (EduWorld chung) comes with the migrations. Not seeded yet [Proposed]: qa-probe
+# (createTenant cannot set is_qa), hs.tudo (createCommonStudents sets a generated password), hs.nosis (on purpose:
+# ACCOUNT_NOT_PROVISIONED), sa.moi (required actions UPDATE_PASSWORD + CONFIGURE_TOTP).
+tenants:
+  - code: th-demo-a
+    name: TH Demo A
+    type: school
+    alias: th-demo-a
+    schools:
+      - code: DEMOA1
+        name_vi: Trường Tiểu học Demo A
+        name_en: Demo Primary School A
+        province: vn.ha-noi
+        level: primary
+        grade_min: 1
+        grade_max: 5
+        sis: sis/DEMOA1
+  - code: pgd-demo
+    name: PGD Demo
+    type: unit
+    alias: pgd-demo
+    schools:
+      - code: DEMOB1
+        name_vi: Trường THCS Demo B
+        name_en: Demo Lower Secondary School B
+        province: vn.ha-noi
+        level: lower_secondary
+        grade_min: 6
+        grade_max: 9
+        sis: sis/DEMOB1
+      - code: DEMOC1
+        name_vi: Trường Tiểu học Demo C
+        name_en: Demo Primary School C
+        province: vn.ha-noi
+        level: primary
+        grade_min: 1
+        grade_max: 5
+        sis: sis/DEMOC1
+
+# The first entry is the bootstrap System Admin (no System Admin exists yet); the others are granted by it.
+platform_staff:
+  - username: sa.admin
+    email: sa.admin@example.invalid
+    display_name: Quản trị hệ thống (demo)
+    roles: [{role: system_admin}]
+  - username: sa.admin2
+    email: sa.admin2@example.invalid
+    display_name: Quản trị hệ thống 2 (demo)
+    roles: [{role: system_admin}]
+  - username: cm.noidung
+    email: cm.noidung@example.invalid
+    display_name: Biên tập nội dung (demo)
+    roles: [{role: content_admin}]
+  - username: cm.duyet
+    email: cm.duyet@example.invalid
+    display_name: Duyệt nội dung (demo)
+    roles: [{role: content_reviewer}]
+  - username: gd.thietke
+    email: gd.thietke@example.invalid
+    display_name: Thiết kế game (demo)
+    roles: [{role: game_designer}]
+  - username: lo.vanhanh
+    email: lo.vanhanh@example.invalid
+    display_name: Vận hành game (demo)
+    roles: [{role: liveops}]
+  - username: tc.thidau
+    email: tc.thidau@example.invalid
+    display_name: Quản trị thi đấu (demo)
+    roles: [{role: competition_admin}]
+  - username: sm.antoan
+    email: sm.antoan@example.invalid
+    display_name: Kiểm duyệt an toàn (demo)
+    roles: [{role: safety_moderator, training: true}]
+  - username: sm.truongca
+    email: sm.truongca@example.invalid
+    display_name: Trưởng ca an toàn (demo)
+    roles: [{role: safety_moderator, training: true}]
+
+# tenant = home tenant (primary_tenant_id); a role without tenant is granted in the home tenant.
+tenant_staff:
+  - username: ad.donvi
+    email: ad.donvi@example.invalid
+    display_name: Quản trị đơn vị (demo)
+    tenant: pgd-demo
+    roles: [{role: tenant_admin}]
+  - username: ad.truong.a
+    email: ad.truong.a@example.invalid
+    display_name: Quản trị TH Demo A (demo)
+    tenant: th-demo-a
+    roles: [{role: school_admin, school: DEMOA1}]
+  - username: ad.truong.b
+    email: ad.truong.b@example.invalid
+    display_name: Quản trị THCS Demo B (demo)
+    tenant: pgd-demo
+    roles: [{role: school_admin, school: DEMOB1}]
+  - username: qlcm.truong.a
+    email: qlcm.truong.a@example.invalid
+    display_name: Quản lý chuyên môn (demo)
+    tenant: th-demo-a
+    roles:
+      - {role: academic_manager}
+      - {role: academic_manager, tenant: pgd-demo}
+  - username: bt.noidung.dv
+    email: bt.noidung.dv@example.invalid
+    display_name: Biên tập nội dung đơn vị (demo)
+    tenant: pgd-demo
+    roles: [{role: tenant_content_editor}]
+  - username: bt.duyet.dv
+    email: bt.duyet.dv@example.invalid
+    display_name: Duyệt nội dung đơn vị (demo)
+    tenant: pgd-demo
+    roles: [{role: tenant_content_reviewer}]
+
+locked_students:
+  - {username: hs.locked, tenant: th-demo-a}
