@@ -157,11 +157,14 @@ func (TenantOptionalAppendOnly) Hooks() []ent.Hook { return []ent.Hook{mutationH
 
 // HybridContent is the mixin of H tables (former PlatformBase): tenant rows, plus platform rows
 // (tenant_id NULL) visible to a tenant only when assigned in infra.tenant_resource_assignments
-// (ADR-0029). ResourceType is the resource_type of the assignment; the row id is matched.
+// (ADR-0029). ResourceType is the resource_type of the assignment. The assignment's resource_id is
+// matched against the row id, or against ResourceIDColumn when set: version tables of an item
+// (question_versions) are assigned through their item (question_id), F020.
 type HybridContent struct {
 	mixin.Schema
-	ResourceType string
-	PK           PK
+	ResourceType     string
+	PK               PK
+	ResourceIDColumn string
 }
 
 func (HybridContent) TableKind() Kind { return KindH }
@@ -171,10 +174,18 @@ func (h HybridContent) Fields() []ent.Field {
 	return append(fields(KindH, h.PK), field.String("owner_scope").MaxLen(64).Default("tenant"))
 }
 func (h HybridContent) Interceptors() []ent.Interceptor {
-	return []ent.Interceptor{filter(KindH, &hybrid{resourceType: h.ResourceType, idColumn: h.PK.column()})}
+	return []ent.Interceptor{filter(KindH, h.hybrid())}
 }
 func (h HybridContent) Hooks() []ent.Hook {
-	return []ent.Hook{mutationHook(KindH, &hybrid{resourceType: h.ResourceType, idColumn: h.PK.column()})}
+	return []ent.Hook{mutationHook(KindH, h.hybrid())}
+}
+
+func (h HybridContent) hybrid() *hybrid {
+	col := h.ResourceIDColumn
+	if col == "" {
+		col = h.PK.column()
+	}
+	return &hybrid{resourceType: h.ResourceType, idColumn: col}
 }
 
 // GlobalBase is the mixin of G tables (no tenant, soft-delete); no scope needed.

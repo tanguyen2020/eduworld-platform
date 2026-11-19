@@ -408,8 +408,11 @@ type CommonInternalCommonV1TrashItem struct {
 
 	// ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
 	ResourceType CommonInternalCommonV1ResourceType `json:"resource_type"`
-	TenantId     *openapi_types.UUID                `json:"tenant_id,omitempty"`
-	Title        *string                            `json:"title,omitempty"`
+
+	// Restorable false khi một bản ghi đang hoạt động đã giữ khóa unique của bản ghi này (khôi phục sẽ trả 409 CONFLICT, F020-AC-26)
+	Restorable *bool               `json:"restorable,omitempty"`
+	TenantId   *openapi_types.UUID `json:"tenant_id,omitempty"`
+	Title      *string             `json:"title,omitempty"`
 }
 
 // CommonInternalCommonV1TrashPage defines model for common_internal-common.v1_TrashPage.

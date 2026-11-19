@@ -63,9 +63,10 @@ func TestRLSPoliciesIsolateTenants(t *testing.T) {
 	app := connect(t, cl.ModuleDSN("learning", "app"))
 	a, b := uuid.New(), uuid.New()
 
-	exec(t, mig, `CREATE TABLE IF NOT EXISTS infra.tenant_resource_assignments (
-		resource_type varchar(64) NOT NULL, resource_id uuid NOT NULL, tenant_id uuid NOT NULL, deleted_at timestamptz)`)
-	exec(t, mig, `GRANT SELECT ON infra.tenant_resource_assignments TO learning_app`)
+	// infra.tenant_resource_assignments comes with the learning migrations (F020); its tenant_id references the
+	// projection ref.tenants.
+	exec(t, mig, `INSERT INTO ref.tenants (tenant_id, code, tenant_type, status, source_version)
+		VALUES ($1, 'rls-a', 'school', 'active', 1), ($2, 'rls-b', 'school', 'active', 1)`, a, b)
 
 	tables := map[tenancy.TableKind]string{
 		tenancy.KindT: "content.k_t", tenancy.KindTA: "content.k_ta", tenancy.KindTStar: "content.k_tstar",
@@ -99,7 +100,9 @@ func TestRLSPoliciesIsolateTenants(t *testing.T) {
 	if err := plat.QueryRow(ctx, `SELECT id FROM content.k_h WHERE tenant_id IS NULL`).Scan(&pid); err != nil {
 		t.Fatal(err)
 	}
-	exec(t, mig, `INSERT INTO infra.tenant_resource_assignments VALUES ('question', $1, $2, NULL)`, pid, a)
+	exec(t, mig, `INSERT INTO infra.tenant_resource_assignments
+		(assignment_id, tenant_id, created_at, updated_at, resource_type, resource_id, assigned_by, assigned_at)
+		VALUES ($1, $2, now(), now(), 'question', $3, $1, now())`, uuid.New(), a, pid)
 	if n := countAs(t, app, &a, "SELECT count(*) FROM content.k_h"); n != 2 {
 		t.Fatalf("H: %d rows as tenant A after assignment, want 2", n)
 	}
