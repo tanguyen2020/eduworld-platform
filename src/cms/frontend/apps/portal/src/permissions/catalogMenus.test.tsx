@@ -77,8 +77,9 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
     backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.classes' }) : undefined));
     backend.disabledMenus = ['menu.school_lms.classes'];
     await runtime.api.call(runtime.api.client.GET('/auth/me', {})).catch(() => undefined);
-    expect(await screen.findByText(/Khóa tính năng: menu\.school_lms\.classes/)).toBeInTheDocument();
-    expect(screen.getByText(/Mã truy vết: trace-feature_disabled/)).toBeInTheDocument();
+    // the notice and the "Tính năng đang tắt" page (permissions reloaded) may render in either order (F052 screen)
+    expect((await screen.findAllByText(/Khóa tính năng: menu\.school_lms\.classes/)).length).toBeGreaterThan(0);
+    expect(await screen.findByText(/Mã truy vết: trace-feature_disabled/)).toBeInTheDocument();
     await waitFor(() => expect(backend.calls('GET', '/me/permissions').length).toBeGreaterThan(before));
     expect(await screen.findByTestId('feature-disabled')).toBeInTheDocument();
     expect(runtime.tokens.get()).not.toBeNull();

@@ -390,7 +390,7 @@ Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp
 
 - Credential (API key, client secret, cert) lưu secret manager; `sis_connections.secret_ref` chỉ là tham chiếu. Worker đọc lúc chạy, không log.
 - Outbound tới SIS qua egress cố định (IP tĩnh để SIS allowlist), TLS 1.2+, kiểm tra cert; mTLS nếu SIS hỗ trợ.
-- Endpoint `/api/v1/sis/*` (API quản trị cho người, **chỉ trên APISIX internal**/VPN quản trị — ADR-0009, [API_DESIGN §9.15](../07-backend/API_DESIGN.md)) chỉ cho School Admin/Platform Admin: upload CSV, xem run, xử lý issue — không bao giờ trả credential. Endpoint machine-to-machine (webhook SIS, trigger nội bộ) ở `/internal/sis/*`, không publish ra public gateway.
+- Endpoint `/api/v1/sis/*` (API quản trị cho người, **chỉ trên APISIX internal**/VPN quản trị — ADR-0009, [API_DESIGN §9.15](../07-backend/API_DESIGN.md)) chỉ cho School Admin/Platform Admin: xem run, quản trị kết nối — không bao giờ trả credential. School Admin dùng gateway public theo trường cho upload CSV (`/api/v1/schools/{school_id}/sis-imports`) và xung đột đồng bộ (`/api/v1/schools/{school_id}/reconciliation-issues`, F052). Endpoint machine-to-machine (webhook SIS, trigger nội bộ) ở `/internal/sis/*`, không publish ra public gateway.
 - File CSV upload: mã hóa at-rest, xóa sau 30 ngày, quét malware, giới hạn kích thước, chống CSV injection khi xuất lại (prefix `'` cho ô bắt đầu bằng `=+-@`).
 
 ## 10. API
@@ -407,8 +407,10 @@ Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp
 | POST | `/api/v1/sis/connections/{connection_id}/sync-runs` | school_admin (scope trường, `school_id` bắt buộc), system_admin (Idempotency-Key; `dry_run`) |
 | GET | `/api/v1/sis/connections/{connection_id}/sync-runs` · `/api/v1/sis/runs/{run_id}` · `/errors` | school_admin |
 | PUT | `/api/v1/admin/sis/connections/{connection_id}/schools` | system_admin (bảng nối `sis_connection_schools`) |
-| GET | `/api/v1/sis/reconciliation-issues` | school_admin |
-| POST | `/api/v1/sis/reconciliation-issues/{id}:resolve` | school_admin (audit) |
+| GET | `/api/v1/schools/{school_id}/reconciliation-issues` (gateway public, `listSchoolReconciliationIssues`) | school_admin, tenant_admin (scope trường; `tenant.sis.read`) |
+| POST | `/api/v1/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` (gateway public, `resolveSchoolReconciliationIssue`; `fixed_in_source`/`ignore`, `reason` bắt buộc, Idempotency-Key) | school_admin (scope trường; `tenant.sis.import`, audit `sis.reconciliation_issue.resolved`) |
+| GET | `/api/v1/sis/reconciliation-issues` (gateway nội bộ) | system_admin (`platform.sis_connection.manage`, lọc `tenant_ids`) |
+| POST | `/api/v1/sis/reconciliation-issues/{id}:resolve` (gateway nội bộ) | system_admin (audit) |
 | POST | `/internal/sis/webhooks/{connection_id}` | SIS (HMAC), chỉ mạng nội bộ/allowlist |
 
 ## 11. Kiểm thử

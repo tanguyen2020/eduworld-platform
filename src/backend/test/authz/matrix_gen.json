@@ -3850,6 +3850,18 @@
     ]
   },
   {
+    "operation_id": "listSchoolReconciliationIssues",
+    "module": "identity",
+    "method": "GET",
+    "path": "/schools/{school_id}/reconciliation-issues",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listSchoolSafetyNotifications",
     "module": "chat",
     "method": "GET",
@@ -4061,6 +4073,18 @@
     "method": "GET",
     "path": "/tenant/audit-logs",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listTenantClassStudents",
+    "module": "identity",
+    "method": "GET",
+    "path": "/tenant/schools/{school_id}/classes/{class_id}/students",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -4816,6 +4840,18 @@
     "module": "identity",
     "method": "POST",
     "path": "/tenant/students/{student_id}/password:reset",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "resolveSchoolReconciliationIssue",
+    "module": "identity",
+    "method": "POST",
+    "path": "/schools/{school_id}/reconciliation-issues/{issue_id}:resolve",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

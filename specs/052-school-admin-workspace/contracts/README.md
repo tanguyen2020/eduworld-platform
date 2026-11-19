@@ -14,16 +14,16 @@ Nguồn contract: [`specs/openapi/eduworld-api.v1.yaml`](../../openapi/eduworld-
 | `approveTenantSchool` | `POST /api/v1/tenant/schools/{school_id}:approve` (`If-Match`) | như trên | `tenant.school.write` | Có sẵn |
 | `listProvinces` | `GET /api/v1/catalog/provinces?status=active` | như trên | đã đăng nhập | Có sẵn |
 | `listTenantSchoolClasses` | `GET /api/v1/tenant/schools/{school_id}/classes` | như trên | `tenant.class.read` | Có sẵn |
-| `listTenantClassStudents` | `GET /api/v1/tenant/schools/{school_id}/classes/{class_id}/students` | như trên | `tenant.class.read` | Cần thêm |
+| `listTenantClassStudents` | `GET /api/v1/tenant/schools/{school_id}/classes/{class_id}/students` | như trên | `tenant.class.read` | Đã thêm contract 2026-11-19 (T004); backend owner F010 chưa có |
 | `listUnassignedStudents` | `GET /api/v1/tenant/students/unassigned` | như trên | `tenant.class.read` | Có sẵn |
 | `listTenantStudentLoginEvents` | `GET /api/v1/tenant/students/{student_id}/login-events` | như trên | `lms.student_activity.read` | Có sẵn |
 | `createSisImport` | `POST /api/v1/schools/{school_id}/sis-imports` (`Idempotency-Key`) | như trên | `tenant.sis.import` | Có sẵn |
 | `getSisImport` | `GET /api/v1/schools/{school_id}/sis-imports/{import_id}` | như trên | `tenant.sis.read` | Có sẵn |
-| `listSchoolReconciliationIssues` | `GET /api/v1/schools/{school_id}/reconciliation-issues` | như trên | `tenant.sis.read` | Cần thêm |
+| `listSchoolReconciliationIssues` | `GET /api/v1/schools/{school_id}/reconciliation-issues` | như trên | `tenant.sis.read` | Đã thêm contract 2026-11-19 (T005); backend owner F011 chưa có |
 | `resetStudentPassword` | `POST /api/v1/tenant/students/{student_id}/password:reset` (`reason`, `Idempotency-Key`) | eduworld-api (identity) | `lms.student.password_reset` | Có sẵn (áp 2026-11-17, owner F016) |
-| `resolveSchoolReconciliationIssue` | `POST /api/v1/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` (`Idempotency-Key`) | như trên | `tenant.sis.import` | Cần thêm |
+| `resolveSchoolReconciliationIssue` | `POST /api/v1/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` (`Idempotency-Key`) | như trên | `tenant.sis.import` | Đã thêm contract 2026-11-19 (T005); backend owner F011 chưa có |
 | `listTenantUsers` | `GET /api/v1/tenant/users` | như trên | `tenant.user.read` | Có sẵn |
-| `createTenantUser` | `POST /api/v1/tenant/users` (`Idempotency-Key`) | như trên | `tenant.user.write` | Có sẵn (Cần sửa `scope_type`) |
+| `createTenantUser` | `POST /api/v1/tenant/users` (`Idempotency-Key`) | như trên | `tenant.user.write` | Có sẵn (`scope_type` bỏ `class` 2026-11-19, T007) |
 | `updateTenantUser` | `PATCH /api/v1/tenant/users/{user_id}` (`If-Match`) | như trên | `tenant.user.write` | Có sẵn |
 | `listTenantPermissions` | `GET /api/v1/tenant/permissions` | như trên | `tenant.role.read` | Có sẵn |
 | `listTenantRoles` / `getTenantRole` | `GET /api/v1/tenant/roles`, `/{role_id}` | như trên | `tenant.role.read` | Có sẵn |
@@ -31,7 +31,7 @@ Nguồn contract: [`specs/openapi/eduworld-api.v1.yaml`](../../openapi/eduworld-
 | `updateTenantRole` | `PATCH /api/v1/tenant/roles/{role_id}` (`If-Match`) | như trên | `tenant.role.write` | Có sẵn |
 | `deleteTenantRole` | `DELETE /api/v1/tenant/roles/{role_id}` (`If-Match`, `reason`) | như trên | `tenant.role.write` | Có sẵn |
 | `listTenantUserRoles` | `GET /api/v1/tenant/user-roles` | như trên | `tenant.user.read` | Có sẵn |
-| `grantTenantUserRole` | `POST /api/v1/tenant/user-roles` (`Idempotency-Key`) | như trên | `tenant.user_role.write` | Có sẵn (Cần sửa `scope_type`) |
+| `grantTenantUserRole` | `POST /api/v1/tenant/user-roles` (`Idempotency-Key`) | như trên | `tenant.user_role.write` | Có sẵn (`scope_type` bỏ `class` 2026-11-19, T007) |
 | `revokeTenantUserRole` | `DELETE /api/v1/tenant/user-roles/{user_role_id}` (`reason`) | như trên | `tenant.user_role.write` | Có sẵn |
 | `listSchoolUserRoles` / `grantSchoolUserRole` | `GET`/`POST /api/v1/schools/{school_id}/user-roles` | như trên | `tenant.user.read` / `tenant.user_role.write` (scope trường) | Có sẵn |
 | `listTenantAuditLogs` | `GET /api/v1/tenant/audit-logs` | như trên | `tenant.audit.read` | Có sẵn |
@@ -70,8 +70,8 @@ Mã lỗi xử lý: `PERMISSION_DENIED`, `NOT_FOUND`, `CONFLICT`, `VALIDATION_FA
 
 Owner backend: F010 (lớp/học sinh), F011 (reconciliation), F015 (school settings). Mỗi endpoint mới cần `maxLength` cho mọi string (R28), test tenant isolation + authorization ở backend.
 
-- **Cần thêm** `listTenantClassStudents` — query `q` (maxLength 100), `Limit`, `Cursor`; item `{ student_id, display_name (≤128), student_code (≤64), username (≤128), status, last_login_at?, days_since_last_login?, source: sis|csv }`; không có ngày sinh/liên hệ phụ huynh. Task T004.
-- **Cần thêm** `listSchoolReconciliationIssues` (query `issue_type`, `status` ∈ {open, resolved, ignored}, `import_id`, `Limit`, `Cursor`) và `resolveSchoolReconciliationIssue` (body `{ resolution: resolved|ignored, reason (3–500) }`, `Idempotency-Key`, audit `sis.reconciliation_issue.resolved`); schema `ReconciliationIssue { issue_id, school_id, issue_type (≤64), entity_refs (object), suggested_action (≤255), status, resolved_by?, resolved_at?, created_at }`. Task T005.
+- **Đã thêm (2026-11-19)** `listTenantClassStudents` — query `q` (maxLength 100), `Limit`, `Cursor`; item `{ student_id, display_name (≤128), student_code (≤64), username (≤128), status, last_login_at?, days_since_last_login?, source: sis|csv }`; không có ngày sinh/liên hệ phụ huynh. Task T004.
+- **Đã thêm (2026-11-19)** `listSchoolReconciliationIssues` (query `issue_type`, `status` ∈ {open, resolved, ignored}, `import_id`, `Limit`, `Cursor`) và `resolveSchoolReconciliationIssue` (body `{ resolution: resolved|ignored, reason (3–500) }`, `Idempotency-Key`, audit `sis.reconciliation_issue.resolved`); schema `ReconciliationIssue { issue_id, school_id, issue_type (≤64), entity_refs (object), suggested_action (≤255), status, resolved_by?, resolved_at?, created_at }`. Task T005. **Triển khai:** dùng lại `SisReconciliationIssue`/`SisReconciliationIssuePage` (F011) và body `SchoolReconciliationResolve { resolution: fixed_in_source|ignore, reason 3–500 }` (spec Clarifications 2026-11-19); catalog: `listTenantClassStudents` → `action.school_lms.classes.view`, `listSchoolReconciliationIssues` → `action.school_lms.sis_sync.view`, `resolveSchoolReconciliationIssue` → `action.school_lms.sis_sync.import` (catalog_version 2026.11.19.2).
 - **Đã thêm** (2026-11-17) `getSchoolSettings` / `updateSchoolSettings` — schema `SchoolSettings { allowed_hours (object), class_leaderboard_enabled, school_leaderboard_enabled, student_club_creation, curfew_window, platform_curfew (readOnly), effective_curfew (readOnly), reason (writeOnly) }`, `CurfewWindow` (HH:MM ICT), `ETag`/`If-Match`, JSON Merge Patch; khung trường không chứa trọn `platform_curfew` → `422 VALIDATION_FAILED`. Chat policy trường để F122 bổ sung. Task T006.
-- **Cần sửa** `TenantUserCreateRequest.initial_user_roles[].scope_type` và `UserRoleScopeType` bỏ `class` (ADR-0072, mâu thuẫn D18 của CODE_PLAN §3). Task T007.
+- **Đã sửa (2026-11-19)** `TenantUserCreateRequest.initial_user_roles[].scope_type`, query `listTenantUserRoles.scope_type` (và `UserRoleScopeType` từ trước) bỏ `class` (ADR-0072, mâu thuẫn D18 của CODE_PLAN §3). Task T007.
 - **Mâu thuẫn ghi nhận**: [SIS_INTEGRATION §9–§10](../../../docs/09-identity/SIS_INTEGRATION.md) đặt `/api/v1/sis/imports`, `/api/v1/sis/reconciliation-issues` cho `school_admin` nhưng chỉ ở gateway nội bộ; contract dùng route public `/schools/{school_id}/sis-imports`. Task T050 cập nhật SIS_INTEGRATION theo contract.

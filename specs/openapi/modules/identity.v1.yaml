@@ -1045,6 +1045,100 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/NotFound'
+  /schools/{school_id}/reconciliation-issues:
+    get:
+      x-service: identity
+      tags:
+        - schools
+      operationId: listSchoolReconciliationIssues
+      x-portal-action: action.school_lms.sis_sync.view
+      summary: Xung đột đồng bộ SIS/CSV của một trường (tenant.sis.read) — route public cho School Admin
+      description: |
+        Bản public theo trường của `listSisReconciliationIssues` (gateway nội bộ) cho School Admin/Tenant Admin dùng gateway public
+        (F052 Clarification 2026-11-16). Quyền `tenant.sis.read` hoặc `tenant.sis.import` trong scope trường; trường ngoài tenant/scope
+        → `404`. `entity_refs` là ID nội bộ/external, không PII thô. `missing_class` cũng có ở `listUnassignedStudents`.
+        Contract F052 (T005); backend: owner F011.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - name: issue_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/SisReconciliationIssueType'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - resolved
+              - ignored
+        - name: import_id
+          in: query
+          description: Chỉ issue phát sinh từ một lần nhập CSV
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisReconciliationIssuePage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /schools/{school_id}/reconciliation-issues/{issue_id}:resolve:
+    post:
+      x-service: identity
+      tags:
+        - schools
+      operationId: resolveSchoolReconciliationIssue
+      x-portal-action: action.school_lms.sis_sync.import
+      summary: Đánh dấu đã xử lý / bỏ qua một xung đột đồng bộ của trường (tenant.sis.import, lý do bắt buộc)
+      description: |
+        Quyền `tenant.sis.import` trong scope trường của issue; trường/issue ngoài tenant hoặc scope → `404`. `fixed_in_source` → issue
+        `resolved`, `ignore` → `ignored`; lưu `resolved_by`, `resolved_at`, `resolution_note` = `reason`; ghi audit
+        `sis.reconciliation_issue.resolved`. Issue không ở `open` → `409 CONFLICT`. Gửi lại cùng `Idempotency-Key` trả lại kết quả cũ.
+        Contract F052 (T005); backend: owner F011.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - $ref: '#/components/parameters/ReconciliationIssueIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchoolReconciliationResolve'
+      responses:
+        '200':
+          description: Đã xử lý
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SisReconciliationIssue'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /schools/{school_id}/user-roles:
     get:
       x-service: identity
@@ -3086,6 +3180,50 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /tenant/schools/{school_id}/classes/{class_id}/students:
+    get:
+      x-service: identity
+      tags:
+        - tenant
+      operationId: listTenantClassStudents
+      x-portal-action: action.school_lms.classes.view
+      summary: Học sinh của lớp, chỉ đọc (tenant.class.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
+      description: |
+        Quyền `tenant.class.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
+        tenant hoặc scope → `404` (không tiết lộ tồn tại). Chỉ đọc: học sinh do SIS/CSV sở hữu (ADR-0060); không trả ngày sinh,
+        liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031). `days_since_last_login` do server tính (null khi chưa từng vào game).
+        Contract F052 (T004); backend: owner F010.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - name: class_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: q
+          in: query
+          required: false
+          description: Tìm theo tên hiển thị, username hoặc mã học sinh
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassStudentPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /tenant/students/unassigned:
     get:
       x-service: identity
@@ -3444,8 +3582,8 @@ paths:
             enum:
               - tenant
               - school
-              - class
               - subject
+            description: Không có scope lớp (ADR-0072)
         - name: scope_id
           in: query
           required: false
@@ -4687,6 +4825,12 @@ components:
       schema:
         type: string
         maxLength: 512
+    ReconciliationIssueIdPath:
+      name: issue_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     ConnectionIdPath:
       name: connection_id
       in: path
@@ -4695,12 +4839,6 @@ components:
         $ref: '#/components/schemas/Uuid'
     SyncRunIdPath:
       name: run_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    ReconciliationIssueIdPath:
-      name: issue_id
       in: path
       required: true
       schema:
@@ -6300,6 +6438,124 @@ components:
           maxLength: 1000
         occurred_at:
           $ref: '#/components/schemas/Timestamp'
+    SisReconciliationIssueType:
+      type: string
+      description: Loại xung đột (conflict matrix SIS_INTEGRATION §6.3, F011-AC-14; `unexpected_org_member`, `school_duplicate` do F010)
+      enum:
+        - possible_duplicate
+        - transfer_confirmation
+        - missing_class
+        - class_school_mismatch
+        - orphan_enrollment
+        - multi_school_enrollment
+        - school_province_missing
+        - unmapped_school
+        - cleaned_up_student_in_sis
+        - duplicate_identifier
+        - grade_mismatch
+        - deactivation_review
+        - ambiguous_login
+        - school_duplicate
+        - unexpected_org_member
+    SisReconciliationIssuePage:
+      type: object
+      required:
+        - data
+        - page
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SisReconciliationIssue'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SisReconciliationIssue:
+      type: object
+      required:
+        - issue_id
+        - tenant_id
+        - issue_type
+        - status
+        - created_at
+      properties:
+        issue_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        school_id:
+          description: null với `unmapped_school`
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        sis_connection_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        issue_type:
+          $ref: '#/components/schemas/SisReconciliationIssueType'
+        entity_refs:
+          type: object
+          maxProperties: 20
+          description: ID nội bộ/external của bản ghi liên quan (không PII thô)
+          additionalProperties:
+            type: string
+            maxLength: 128
+        suggested_action:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        status:
+          type: string
+          enum:
+            - open
+            - resolved
+            - ignored
+        resolution:
+          type:
+            - string
+            - 'null'
+          enum:
+            - link
+            - same_person
+            - ignore
+            - fixed_in_source
+            - merge_requested
+            - merged
+            - null
+        resolution_note:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
+        resolved_by:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        resolved_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    SchoolReconciliationResolve:
+      type: object
+      additionalProperties: false
+      required:
+        - resolution
+        - reason
+      description: 'Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `reason` bắt buộc, ghi vào `resolution_note` và audit.'
+      properties:
+        resolution:
+          type: string
+          enum:
+            - fixed_in_source
+            - ignore
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
     UserRolePage:
       type: object
       required:
@@ -6384,7 +6640,7 @@ components:
         scope_type:
           $ref: '#/components/schemas/UserRoleScopeType'
         scope_id:
-          description: school_id / class_id / subject_id theo scope_type; null với tenant/platform
+          description: school_id / subject_id theo scope_type (không có scope lớp, ADR-0072); null với tenant/platform
           oneOf:
             - $ref: '#/components/schemas/Uuid'
             - type: 'null'
@@ -6763,107 +7019,6 @@ components:
           properties:
             school_id:
               $ref: '#/components/schemas/Uuid'
-    SisReconciliationIssueType:
-      type: string
-      description: Loại xung đột (conflict matrix SIS_INTEGRATION §6.3, F011-AC-14; `unexpected_org_member`, `school_duplicate` do F010)
-      enum:
-        - possible_duplicate
-        - transfer_confirmation
-        - missing_class
-        - class_school_mismatch
-        - orphan_enrollment
-        - multi_school_enrollment
-        - school_province_missing
-        - unmapped_school
-        - cleaned_up_student_in_sis
-        - duplicate_identifier
-        - grade_mismatch
-        - deactivation_review
-        - ambiguous_login
-        - school_duplicate
-        - unexpected_org_member
-    SisReconciliationIssuePage:
-      type: object
-      required:
-        - data
-        - page
-      properties:
-        data:
-          type: array
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/SisReconciliationIssue'
-        page:
-          $ref: '#/components/schemas/PageInfo'
-    SisReconciliationIssue:
-      type: object
-      required:
-        - issue_id
-        - tenant_id
-        - issue_type
-        - status
-        - created_at
-      properties:
-        issue_id:
-          $ref: '#/components/schemas/Uuid'
-        tenant_id:
-          $ref: '#/components/schemas/Uuid'
-        school_id:
-          description: null với `unmapped_school`
-          oneOf:
-            - $ref: '#/components/schemas/Uuid'
-            - type: 'null'
-        sis_connection_id:
-          oneOf:
-            - $ref: '#/components/schemas/Uuid'
-            - type: 'null'
-        issue_type:
-          $ref: '#/components/schemas/SisReconciliationIssueType'
-        entity_refs:
-          type: object
-          maxProperties: 20
-          description: ID nội bộ/external của bản ghi liên quan (không PII thô)
-          additionalProperties:
-            type: string
-            maxLength: 128
-        suggested_action:
-          type:
-            - string
-            - 'null'
-          maxLength: 64
-        status:
-          type: string
-          enum:
-            - open
-            - resolved
-            - ignored
-        resolution:
-          type:
-            - string
-            - 'null'
-          enum:
-            - link
-            - same_person
-            - ignore
-            - fixed_in_source
-            - merge_requested
-            - merged
-            - null
-        resolution_note:
-          type:
-            - string
-            - 'null'
-          maxLength: 1000
-        resolved_by:
-          oneOf:
-            - $ref: '#/components/schemas/Uuid'
-            - type: 'null'
-        resolved_at:
-          oneOf:
-            - $ref: '#/components/schemas/Timestamp'
-            - type: 'null'
-        created_at:
-          $ref: '#/components/schemas/Timestamp'
     SisReconciliationResolve:
       type: object
       additionalProperties: false
@@ -7724,6 +7879,64 @@ components:
             $ref: '#/components/schemas/Class'
         page:
           $ref: '#/components/schemas/PageInfo'
+    ClassStudentPage:
+      type: object
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ClassStudent'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    ClassStudent:
+      type: object
+      description: Học sinh của lớp (chỉ đọc, dữ liệu SIS/CSV — ADR-0060). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031).
+      required:
+        - student_id
+        - display_name
+        - username
+        - status
+        - source
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        display_name:
+          type: string
+          maxLength: 128
+        student_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+        username:
+          type: string
+          maxLength: 128
+        status:
+          type: string
+          enum:
+            - pending
+            - active
+            - locked
+            - deactivated
+        source:
+          type: string
+          enum:
+            - sis
+            - manual
+            - import
+        last_login_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        days_since_last_login:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
     UnassignedStudentPage:
       type: object
       required:
@@ -7894,8 +8107,8 @@ components:
                 enum:
                   - tenant
                   - school
-                  - class
                   - subject
+                description: Không có scope lớp (ADR-0072)
               scope_id:
                 $ref: '#/components/schemas/Uuid'
     TenantUserUpdateRequest:

@@ -6579,6 +6579,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schools/{school_id}/reconciliation-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Xung đột đồng bộ SIS/CSV của một trường (tenant.sis.read) — route public cho School Admin
+         * @description Bản public theo trường của `listSisReconciliationIssues` (gateway nội bộ) cho School Admin/Tenant Admin dùng gateway public
+         *     (F052 Clarification 2026-11-16). Quyền `tenant.sis.read` hoặc `tenant.sis.import` trong scope trường; trường ngoài tenant/scope
+         *     → `404`. `entity_refs` là ID nội bộ/external, không PII thô. `missing_class` cũng có ở `listUnassignedStudents`.
+         *     Contract F052 (T005); backend: owner F011.
+         */
+        get: operations["listSchoolReconciliationIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schools/{school_id}/reconciliation-issues/{issue_id}:resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đánh dấu đã xử lý / bỏ qua một xung đột đồng bộ của trường (tenant.sis.import, lý do bắt buộc)
+         * @description Quyền `tenant.sis.import` trong scope trường của issue; trường/issue ngoài tenant hoặc scope → `404`. `fixed_in_source` → issue
+         *     `resolved`, `ignore` → `ignored`; lưu `resolved_by`, `resolved_at`, `resolution_note` = `reason`; ghi audit
+         *     `sis.reconciliation_issue.resolved`. Issue không ở `open` → `409 CONFLICT`. Gửi lại cùng `Idempotency-Key` trả lại kết quả cũ.
+         *     Contract F052 (T005); backend: owner F011.
+         */
+        post: operations["resolveSchoolReconciliationIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schools/{school_id}/settings": {
         parameters: {
             query?: never;
@@ -7635,6 +7681,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenant/schools/{school_id}/classes/{class_id}/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Học sinh của lớp, chỉ đọc (tenant.class.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
+         * @description Quyền `tenant.class.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
+         *     tenant hoặc scope → `404` (không tiết lộ tồn tại). Chỉ đọc: học sinh do SIS/CSV sở hữu (ADR-0060); không trả ngày sinh,
+         *     liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031). `days_since_last_login` do server tính (null khi chưa từng vào game).
+         *     Contract F052 (T004); backend: owner F010.
+         */
+        get: operations["listTenantClassStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenant/settings": {
         parameters: {
             query?: never;
@@ -8669,6 +8738,23 @@ export interface components {
         };
         ClassPage: {
             items: components["schemas"]["Class"][];
+            page: components["schemas"]["PageInfo"];
+        };
+        /** @description Học sinh của lớp (chỉ đọc, dữ liệu SIS/CSV — ADR-0060). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031). */
+        ClassStudent: {
+            days_since_last_login?: number | null;
+            display_name: string;
+            last_login_at?: components["schemas"]["Timestamp"] | null;
+            /** @enum {string} */
+            source: "sis" | "manual" | "import";
+            /** @enum {string} */
+            status: "pending" | "active" | "locked" | "deactivated";
+            student_code?: string | null;
+            student_id: components["schemas"]["Uuid"];
+            username: string;
+        };
+        ClassStudentPage: {
+            items: components["schemas"]["ClassStudent"][];
             page: components["schemas"]["PageInfo"];
         };
         CleanupExclusionRequest: {
@@ -12117,6 +12203,12 @@ export interface components {
             items: components["schemas"]["School"][];
             page: components["schemas"]["PageInfo"];
         };
+        /** @description Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `reason` bắt buộc, ghi vào `resolution_note` và audit. */
+        SchoolReconciliationResolve: {
+            reason: string;
+            /** @enum {string} */
+            resolution: "fixed_in_source" | "ignore";
+        };
         /** @description Thông báo vụ việc cho nhà trường (MODERATION §6.4) — không có nội dung chat thô, chỉ học sinh của trường nhận */
         SchoolSafetyNotification: {
             ack_due_at?: components["schemas"]["Timestamp"];
@@ -12927,8 +13019,11 @@ export interface components {
             initial_user_roles: {
                 role_id: components["schemas"]["Uuid"];
                 scope_id?: components["schemas"]["Uuid"];
-                /** @enum {string} */
-                scope_type: "tenant" | "school" | "class" | "subject";
+                /**
+                 * @description Không có scope lớp (ADR-0072)
+                 * @enum {string}
+                 */
+                scope_type: "tenant" | "school" | "subject";
             }[];
             locale?: components["schemas"]["Locale"];
             /** @enum {string} */
@@ -13192,7 +13287,7 @@ export interface components {
         UserRoleGrantRequest: {
             reason?: string;
             role_id: components["schemas"]["Uuid"];
-            /** @description school_id / class_id / subject_id theo scope_type; null với tenant/platform */
+            /** @description school_id / subject_id theo scope_type (không có scope lớp, ADR-0072); null với tenant/platform */
             scope_id?: components["schemas"]["Uuid"] | null;
             scope_type: components["schemas"]["UserRoleScopeType"];
             /** @description Bắt buộc khi gán role `safety_moderator` (F012-AC-24, ADR-0072) */
@@ -30480,6 +30575,93 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listSchoolReconciliationIssues: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Chỉ issue phát sinh từ một lần nhập CSV */
+                import_id?: components["schemas"]["Uuid"];
+                issue_type?: components["schemas"]["SisReconciliationIssueType"];
+                limit?: components["parameters"]["Limit"];
+                status?: "open" | "resolved" | "ignored";
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SisReconciliationIssuePage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    resolveSchoolReconciliationIssue: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                issue_id: components["parameters"]["ReconciliationIssueIdPath"];
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SchoolReconciliationResolve"];
+            };
+        };
+        responses: {
+            /** @description Đã xử lý */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SisReconciliationIssue"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
     getSchoolSettings: {
         parameters: {
             query?: never;
@@ -33291,6 +33473,45 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listTenantClassStudents: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                /** @description Tìm theo tên hiển thị, username hoặc mã học sinh */
+                q?: string;
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                class_id: components["schemas"]["Uuid"];
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassStudentPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     getTenantSettings: {
         parameters: {
             query?: never;
@@ -33663,7 +33884,7 @@ export interface operations {
                 limit?: components["parameters"]["Limit"];
                 role_id?: components["schemas"]["Uuid"];
                 scope_id?: components["schemas"]["Uuid"];
-                scope_type?: "tenant" | "school" | "class" | "subject";
+                scope_type?: "tenant" | "school" | "subject";
                 user_id?: components["schemas"]["Uuid"];
             };
             header?: {

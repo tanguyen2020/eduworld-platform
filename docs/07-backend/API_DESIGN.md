@@ -744,8 +744,10 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET / POST | `/schools/{school_id}/user-roles` | Xem / gán UserRole thủ công (`source = manual`) trong phạm vi trường (`scope_type` = `school`/`subject` thuộc trường; không có scope lớp — ADR-0072) — chỉ role tenant mà người gán được phép cấp (ADR-0066); thay `PUT /schools/{id}/role-assignments/{id}` cũ — `listSchoolUserRoles`, `grantSchoolUserRole` | SA · `tenant.user_role.write` (scope trường) | T / B | P3 |
 | POST | `/schools/{school_id}/sis-imports` | School Admin tải CSV SIS (`csv_import`, cột theo EduWorld SIS Contract): trả presigned URL, file ≤ 10 MB [Proposed], worker xử lý bất đồng bộ → SyncRun | SA (school) | B | P1 |
 | GET | `/schools/{school_id}/sis-imports/{import_id}` | Trạng thái import (dòng hợp lệ/bị từ chối, số reconciliation issue) | SA (school) | T | P1 |
+| GET | `/schools/{school_id}/reconciliation-issues` | Xung đột đồng bộ của trường (`listSchoolReconciliationIssues`, F052) | SA (school), TA · `tenant.sis.read` | T | P1 |
+| POST | `/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` | Đánh dấu đã xử lý/bỏ qua, `reason` bắt buộc, Idempotency-Key (`resolveSchoolReconciliationIssue`, F052) | SA (school) · `tenant.sis.import` | B | P1 |
 
-`sis-imports` là **đường public duy nhất** chạm tới SIS: chỉ role `school_admin` trong scope trường, không lộ cấu hình kết nối/credential. Mọi thao tác SIS khác ở `/api/v1/sis/*` (gateway nội bộ).
+`sis-imports` và `reconciliation-issues` theo trường là **đường public duy nhất** chạm tới SIS: chỉ nhân sự trong scope trường, không lộ cấu hình kết nối/credential. Mọi thao tác SIS khác ở `/api/v1/sis/*` (gateway nội bộ).
 
 ### 9.13. CMS nội dung học tập — `/api/v1/cms/learning`
 
@@ -952,6 +954,7 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | GET / PATCH | `/tenant/schools/{school_id}` | Xem / sửa thông tin hiển thị (tên song ngữ, tỉnh `active`, `moet_code`, cấp học, khối, địa chỉ; `If-Match`). Trường SIS chỉ sửa phần hiển thị, dữ liệu nguồn ghi đè ở lần đồng bộ sau (ADR-0061) — `getTenantSchool`, `updateTenantSchool` | TA, SA · `tenant.school.write` | T | P1 |
 | POST | `/tenant/schools/{school_id}:approve` | Duyệt trường `pending_review` → `active` — `approveTenantSchool` | TA · `tenant.school.write` | T | P1 |
 | GET | `/tenant/schools/{school_id}/classes?academic_year=&grade=` | Lớp và sĩ số — `listTenantSchoolClasses` | TA, SA · `tenant.class.read` | T | P1 |
+| GET | `/tenant/schools/{school_id}/classes/{class_id}/students?q=` | Học sinh của lớp, chỉ đọc, kèm lần vào game cuối — `listTenantClassStudents` (F052) | TA, SA · `tenant.class.read` | T | P1 |
 | GET | `/tenant/students/unassigned?school_id=` | Học sinh SIS chưa có lớp hợp lệ (`missing_class`; học sinh phải thuộc đúng một trường và một lớp — ADR-0060) — `listUnassignedStudents` | TA, SA · `tenant.class.read` | T | P1 |
 | GET | `/tenant/users?q=&user_type=&school_id=&role_code=` | Người dùng có membership trong tenant (nhân sự + học sinh), kèm UserRole hiệu lực. — `listTenantUsers` | TA, SA (trường) · `tenant.user.read` | T | P3 |
 | POST | `/tenant/users` | Tạo tài khoản nhân sự thủ công (ngoài SIS) trong tenant của phiên (`user_type = staff`, `primary_tenant_id` = tenant của phiên, chỉ nhận role tenant — ADR-0081): username, email **bắt buộc** với nhân sự, tên, ít nhất một UserRole ban đầu. Một người một tài khoản SSO (ADR-0069): username/email đã thuộc tài khoản khác (trong tenant hoặc trên SSO) → `409 USERNAME_TAKEN` / `409 EMAIL_TAKEN`; nếu là **cùng một người** đã có tài khoản ở tenant khác thì thêm membership/UserRole qua `POST /tenant/user-roles` thay vì tạo tài khoản mới — `createTenantUser` | TA · `tenant.user.write` | B | P3 |

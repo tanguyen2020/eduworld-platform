@@ -17,6 +17,17 @@
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 
+### Session 2026-11-19 (triển khai)
+
+- Q: Schema của xung đột đồng bộ theo trường? → A: [Proposed] Dùng lại `SisReconciliationIssue`/`SisReconciliationIssuePage` của F011 (một nguồn, R33) thay cho schema mới `ReconciliationIssue`; body xử lý là `SchoolReconciliationResolve { resolution: fixed_in_source | ignore, reason (3–500) }` (portal trường không gộp tài khoản). `ClassStudent.source` dùng lại enum `User.source` (`sis`/`manual`/`import`).
+- Q: Ba operation contract-only (`listTenantClassStudents`, `listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue`) đã có backend chưa? → A: Chưa — F052 chỉ thêm contract (T004–T005) và màn hình; backend thuộc owner F010/F011 (Ngoài phạm vi). Test tenant isolation/authorization phía backend của ba operation làm cùng backend (`routematrix` đã có dòng ma trận). **Câu hỏi mở F052-1.**
+- Q: "Nhật ký phân quyền" lọc `role.*`, `user_role.*` thế nào khi `listTenantAuditLogs.action` so khớp tuyệt đối? → A: [Proposed] Chọn một trong sáu action module identity ghi (`role.created/updated/deleted`, `user_role.granted/revoked/expired`), khoảng 90 ngày (API bắt buộc `from`/`to`); lọc theo tiền tố ở server là **Câu hỏi mở F052-2**.
+- Q: Đối tượng của phạm vi "Môn"? → A: [Proposed] Danh sách môn lấy từ `listSubjects` (API public chỉ đọc của module learning); UserRole vẫn chỉ gọi API identity.
+- Q: Lý do chờ duyệt khi `School` không có trường lý do? → A: [Proposed] Portal suy ra: thiếu tỉnh/thành (SIS không gửi) + thông điệp chung "trường mới từ SIS/CSV cần xác nhận". Trường `source = sis`: tên, cấp học, khối, địa chỉ chỉ đọc; tỉnh/thành sửa được khi SIS chưa gửi (ADMIN_PORTAL §3.16).
+- Q: `sis_sync_schedule` hiển thị thế nào khi API public không trả? → A: [Proposed] Màn nhập CSV chỉ ghi chú lịch đồng bộ do EduWorld cấu hình theo kết nối (không hardcode giá trị, R33). `dry_run` mặc định bật theo contract.
+- Q: `ResponsiveTable` (plan ghi thuộc ops-ui) chưa có trong ops-ui? → A: [Proposed] Đặt ở `workspaces/school-lms/common/ResponsiveTable.tsx`; chuyển sang ops-ui khi workspace thứ hai cần.
+- Q: Test và E2E đặt ở đâu? → A: Theo tiền lệ F051: test đặt cạnh mã trong `src/workspaces/school-lms/**` (Vitest chỉ chạy `src/**/*.test.*`), dựng toàn portal với **MOCK backend** (`src/test/school-lms-mock.ts`); E2E Playwright `@F052` với backend thật chờ backend local chạy được (OQ F051-9) và ba endpoint ở trên.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trường, lớp, học sinh và hoạt động đăng nhập (Priority: P1)

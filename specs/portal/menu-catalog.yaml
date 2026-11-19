@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.19.1"
+catalog_version: "2026.11.19.2"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -77,7 +77,7 @@ workspaces:
             label_key: portal.action.school_lms.classes.view
             title: Xem lớp, sĩ số, học sinh, hồ sơ và tiến độ học sinh
             required_permissions: [tenant.class.read, lms.class.read]
-            operation_ids: [listClasses, listTenantSchoolClasses, listUnassignedStudents, getStudentProfile, getStudentProgress]
+            operation_ids: [listClasses, listTenantSchoolClasses, listTenantClassStudents, listUnassignedStudents, getStudentProfile, getStudentProgress]
             can_disable: true
           - key: action.school_lms.classes.reset_student_password
             label_key: portal.action.school_lms.classes.reset_student_password
@@ -101,15 +101,15 @@ workspaces:
         actions:
           - key: action.school_lms.sis_sync.view
             label_key: portal.action.school_lms.sis_sync.view
-            title: Xem lần import
+            title: Xem lần import và xung đột đồng bộ
             required_permissions: [tenant.sis.read, tenant.sis.import]
-            operation_ids: [getSisImport]
+            operation_ids: [getSisImport, listSchoolReconciliationIssues]
             can_disable: true
           - key: action.school_lms.sis_sync.import
             label_key: portal.action.school_lms.sis_sync.import
-            title: Import SIS/CSV
+            title: Import SIS/CSV, xử lý xung đột đồng bộ
             required_permissions: [tenant.sis.import]
-            operation_ids: [createSisImport]
+            operation_ids: [createSisImport, resolveSchoolReconciliationIssue]
             can_disable: true
       - key: menu.school_lms.courses
         label_key: portal.menu.school_lms.courses
