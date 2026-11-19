@@ -123,3 +123,25 @@ func TestResolverDownIs503(t *testing.T) {
 		t.Fatalf("resolver down: %d %q %v", r.status, r.code, r.raw)
 	}
 }
+
+// F013-AC-25 (TC-TEN-007): a token whose organization claim names several tenants (list or object form)
+// is refused with 403 TENANT_NOT_SELECTED whatever X-Tenant-Id says; one organization passes.
+func TestOrganizationClaimOfSeveralTenants(t *testing.T) {
+	e := newEnv(t, classesOp)
+	ta := uuid.New()
+	for _, org := range []any{[]string{"th-a", "th-b"}, map[string]any{"th-a": map[string]string{"id": "1"}, "th-b": map[string]string{"id": "2"}}} {
+		c := e.idp.baseClaims(portalClient)
+		staffFor(e, c, &ta)
+		c["organization"] = org
+		r := e.do(t, http.MethodGet, "/api/v1/lms/classes", e.idp.sign(tok{claims: c}), map[string]string{"X-Tenant-Id": ta.String()})
+		if r.status != 403 || r.code != "TENANT_NOT_SELECTED" {
+			t.Fatalf("organization %v: %d %q", org, r.status, r.code)
+		}
+	}
+	c := e.idp.baseClaims(portalClient)
+	staffFor(e, c, &ta)
+	c["organization"] = []string{"th-a"}
+	if r := e.do(t, http.MethodGet, "/api/v1/lms/classes", e.idp.sign(tok{claims: c}), map[string]string{"X-Tenant-Id": ta.String()}); r.status != 200 {
+		t.Fatalf("one organization: %d %q", r.status, r.code)
+	}
+}

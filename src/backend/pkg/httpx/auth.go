@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -70,6 +71,8 @@ type tokenClaims struct {
 	AuthTime          int64    `json:"auth_time"`
 	ClientID          string   `json:"client_id"`
 	PreferredUsername string   `json:"preferred_username"`
+	// Organization is the Keycloak Organizations claim: a list of aliases or an object keyed by alias.
+	Organization json.RawMessage `json:"organization"`
 }
 
 // Verifier checks access tokens itself, independent of APISIX (F002-AC-01, ADR-0009).
@@ -136,7 +139,7 @@ func (v *Verifier) Verify(ctx context.Context, raw string) (authz.Claims, error)
 		return authz.Claims{}, unauthenticated("token has no user")
 	}
 	out := authz.Claims{Issuer: c.Issuer, Subject: c.Subject, AZP: c.AZP, SessionID: c.SID, ACR: c.ACR, AMR: c.AMR,
-		Expiry: c.Expiry.Time()}
+		Expiry: c.Expiry.Time(), Organizations: organizations(c.Organization)}
 	switch {
 	case c.AuthTime > 0:
 		out.AuthTime = time.Unix(c.AuthTime, 0).UTC()
@@ -146,6 +149,27 @@ func (v *Verifier) Verify(ctx context.Context, raw string) (authz.Claims, error)
 		out.AuthTime = c.IssuedAt.Time().UTC()
 	}
 	return out, nil
+}
+
+// organizations reads the aliases of the organization claim (list of aliases, or object keyed by alias).
+func organizations(raw json.RawMessage) []string {
+	if len(raw) == 0 {
+		return nil
+	}
+	var list []string
+	if json.Unmarshal(raw, &list) == nil {
+		return list
+	}
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(raw, &obj) == nil {
+		out := make([]string, 0, len(obj))
+		for k := range obj {
+			out = append(out, k)
+		}
+		slices.Sort(out)
+		return out
+	}
+	return nil
 }
 
 func trimJWTErr(err error) string { return strings.TrimPrefix(err.Error(), "go-jose/go-jose/jwt: ") }

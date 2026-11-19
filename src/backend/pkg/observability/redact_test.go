@@ -135,3 +135,15 @@ func TestAccessLogFields(t *testing.T) {
 		t.Fatal("duration_ms missing")
 	}
 }
+
+// F013 T002: the game login fields never reach the log (F013-AC-16).
+func TestLoggerRedactsGameLoginFields(t *testing.T) {
+	var buf bytes.Buffer
+	newLogger(&buf).Info("game login", "username", "hs.an.3a", "password", "Mat-khau-1", "login_ticket", "tk-123456789",
+		"refresh_token", "rt-abc", "setup_ticket", "st-1", "new_password", "Moi-1")
+	for _, leak := range []string{"hs.an.3a", "Mat-khau-1", "tk-123456789", "rt-abc", "st-1", "Moi-1"} {
+		if strings.Contains(buf.String(), leak) {
+			t.Errorf("log leaks %q: %s", leak, buf.String())
+		}
+	}
+}

@@ -66,6 +66,8 @@ type gameIntegration struct {
 	auth    *command.GameAuth
 	metrics *gameauth.Metrics
 	members *extraMembership
+	deps    httpx.Deps // to build more servers over the same use cases (security test)
+	handler http.Handler
 }
 
 type gameOpts struct {
@@ -125,6 +127,7 @@ func newGameIntegration(ctx context.Context, t *testing.T, o gameOpts) *gameInte
 	if err := identityhttp.RegisterGameAuth(s, identityhttp.GameAuthHandlers{Session: auth, IPHashKey: []byte("ip-hash-key")}); err != nil {
 		t.Fatal(err)
 	}
+	g.deps, g.handler = httpx.Deps{Auth: idp.AuthConfig(), Keys: idp.JWKS(t), Resolver: &httpxtest.Resolver{}, Spec: spec}, s
 	g.srv = httptest.NewServer(s)
 	t.Cleanup(g.srv.Close)
 	return g

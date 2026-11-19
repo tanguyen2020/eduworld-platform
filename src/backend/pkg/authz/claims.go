@@ -16,6 +16,9 @@ type Claims struct {
 	AMR       []string
 	AuthTime  time.Time
 	Expiry    time.Time
+	// Organizations are the Keycloak Organization aliases of the token (claim organization); none for the
+	// clients of the realm today. More than one → 403 TENANT_NOT_SELECTED (IDENTITY_MAPPING §4.1 step 5).
+	Organizations []string
 }
 
 // SubjectRef returns the identity of the token subject.

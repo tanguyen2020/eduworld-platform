@@ -31,6 +31,7 @@ var sensitiveKeys = map[string]bool{
 	"authorization": true, "cookie": true, "set-cookie": true, "headers": true, "header": true,
 	"password": true, "passwd": true, "pin": true, "secret": true, "client_secret": true,
 	"token": true, "access_token": true, "refresh_token": true, "id_token": true, "ticket": true, "otp": true, "totp": true,
+	"login_ticket": true, "setup_ticket": true, "reset_token": true, "new_password": true, "username": true, // F013 T002
 	"email": true, "phone": true, "full_name": true, "first_name": true, "last_name": true, "given_name": true,
 	"family_name": true, "dob": true, "date_of_birth": true, "birth_date": true,
 	"answer": true, "answers": true, "response_text": true, "content": true, "chat_content": true, "message_content": true,

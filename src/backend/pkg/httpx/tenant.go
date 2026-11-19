@@ -72,6 +72,12 @@ func (s *Server) principal(op Operation, next http.Handler) http.Handler {
 			WriteError(w, r, unauthenticated(""))
 			return
 		}
+		if len(c.Organizations) > 1 {
+			// A token of several organizations never selects a tenant by itself (F013-AC-25, ADR-0063).
+			authz.RecordDenied(ctx, string(problem.TenantNotSelected), map[string]any{"operation": op.ID})
+			WriteError(w, r, problem.New(problem.TenantNotSelected, ""))
+			return
+		}
 		var hdr *uuid.UUID
 		if t, ok := HeaderTenant(ctx); ok {
 			hdr = &t
