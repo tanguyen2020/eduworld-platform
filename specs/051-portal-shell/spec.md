@@ -21,6 +21,23 @@
 - Q: Menu/workspace khai báo ở đâu? → A: Sinh từ `specs/portal/menu-catalog.yaml` bằng `make portal-catalog` → `src/cms/frontend/apps/portal/src/generated/menu-catalog.ts` ([ADR-0090](../../docs/adr/ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md)); không khai báo menu tay trong TSX; workspace feature chỉ gắn component màn hình vào khóa menu. Menu ẩn khi thiếu permission hoặc nằm trong `disabled_menus`; nút action ẩn/khóa khi thiếu permission hoặc nằm trong `disabled_actions` (`<ActionGate actionKey>`); `403 FEATURE_DISABLED` → thông báo + tải lại quyền. Ẩn chỉ là tiện ích, backend chặn bằng `featuregate` (F012).
 - Q: Phần đăng nhập portal có chờ kết quả spike Keycloak? → A: Có — F004 T039 (`amr`/`acr`, required action) trước T055–T059 [Proposed].
 
+### Session 2026-11-19 (triển khai)
+
+Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Proposed], chờ Technical Architect/UX Lead duyệt.
+
+- OQ F051-1 — Đường dẫn route workspace? → A: [Proposed] Lấy `path` của danh mục `specs/portal/menu-catalog.yaml` (`/school-lms`, `/content-studio`, `/game-ops`, `/live-ops`, `/platform-admin` — nguồn duy nhất, ADR-0090, khớp Assumptions), thay route `/school`, `/content`, `/platform` F050 đặt tạm; thư mục `src/workspaces/<slug>` giữ nguyên.
+- OQ F051-2 — `.env.example` (T001)? → A: [Proposed] Theo quyết định F050 (cấu hình runtime `/config.json`, mẫu `apps/portal/public/config.example.json`, `VITE_*` chỉ là fallback khi dev): bỏ `oidcIssuer`/`oidcClientId` (ADR-0091), thêm `principalCacheTtlSeconds` (`principal_cache_ttl`) và `sessionIdleTimeoutSeconds` (idle của `portal_session_sso`); không có `VITE_PORTAL_BASE_PATH` (portal phục vụ ở gốc origin).
+- OQ F051-3 — `getMe` khai báo `TenantIdHeader` bắt buộc nhưng nhân sự platform không có tenant? → A: [Proposed] Portal gọi `getMe` không kèm header ở phạm vi platform, chỉ dùng `display_name` cho user menu và hiển thị nhãn chung khi lỗi; sửa contract thuộc F012.
+- OQ F051-4 — Breakpoint 1280 px chưa có trong `design/admin-tokens`? → A: [Proposed] Hằng `DESKTOP_MIN_WIDTH_PX = 1280` và vùng chạm 44 px trong shell, trỏ ADMIN_PORTAL §1.5; 768 px lấy từ token Ant Design `screenMD`. Thêm token breakpoint là việc của design system.
+- OQ F051-5 — ProLayout? → A: [Proposed] Dùng `Layout` + `Menu` + `Drawer` của Ant Design 5 (cùng design system, kiểm soát a11y và bundle tốt hơn); ProLayout không bắt buộc cho shell.
+- OQ F051-6 — Khóa per-viewer `ew.portal.<userSub>.*` cần `sub` trước khi gọi `getMe`? → A: [Proposed] Đọc `sub` từ payload của access token (không xác minh, chỉ làm khóa lưu trữ); tùy chọn hiển thị giữ khóa F050 `ew.portal.prefs` (cần trước đăng nhập).
+- OQ F051-7 — Nhiều tab làm mới đồng thời? → A: [Proposed] Web Locks API (`navigator.locks`, khóa `ew.portal.refresh`) tuần tự hóa `refreshPortalToken` giữa tab; tab nhận `401 REFRESH_TOKEN_INVALID`/`403 CSRF_TOKEN_INVALID` khi cookie CSRF đã đổi thì đọc lại cookie và thử lại một lần; `BroadcastChannel` chỉ báo đăng xuất (không mang token).
+- OQ F051-8 — Nhãn 232 action (`portal.action.*`)? → A: [Proposed] F051 chỉ dịch nhãn workspace và menu (shell hiển thị); nhãn action do F059 (màn Bật/tắt) và feature workspace bổ sung.
+- OQ F051-9 — E2E Playwright `@F051` với backend local thật (T015, T016, T027, T039, T044, T055–T057, T060) và kiểm cấu hình realm (T052)? → A: [Proposed] Chưa chạy được: binary backend chưa nối (OQ F010-2), spike F004 T039 chưa xong. Mọi tiêu chí được kiểm ở mức unit/integration bằng MOCK backend hợp đồng (`src/test/mock-backend.ts`, gắn nhãn MOCK — R17); E2E chạy khi F004/F012 có môi trường.
+- OQ F051-10 — Đếm `portal_login_route{result}`? → A: [Proposed] Chưa làm: F050 chưa có kênh telemetry.
+- OQ F051-11 — Vị trí test và hook? → A: [Proposed] Theo quy ước F050: test đặt cạnh mã (`src/**/*.test.ts(x)`), hook API ở `src/shared/api/hooks/`.
+- OQ F051-12 — Placeholder "Tất cả tenant" (màu mặc định Ant Design `#bfbfbf`, 1,83:1) bị axe chặn? → A: [Proposed] Thêm seed `antd.colorTextPlaceholder` = `ops.color.text.secondary` vào `design/admin-tokens` (tokens@0.3.0, MINOR), như F050 đã làm với `colorText*`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Đăng nhập portal và vào đúng phạm vi (Priority: P1)

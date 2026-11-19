@@ -270,13 +270,13 @@ Kiểm tra: `curl http://localhost:9100/readyz` (trạng thái từng module tro
 ### 6.4. Web CMS/LMS
 ```bash
 cd src/cms/frontend && pnpm install
-pnpm gen:api      # sinh type TS (schema.gen.d.ts) + metadata operation (operation-meta.gen.ts) từ specs/openapi/eduworld-api.v1.yaml; pnpm gen:check báo lệch
+pnpm gen:api      # sinh type TS (schema.gen.d.ts) + metadata operation (operation-meta.gen.ts) từ specs/openapi/eduworld-api.v1.yaml và danh mục menu (src/generated/menu-catalog.ts, = make portal-catalog / pnpm gen:catalog) từ specs/portal/menu-catalog.yaml; pnpm gen:check báo lệch
 pnpm dev          # http://localhost:5173 — Admin Portal (src/cms/frontend/apps/portal), mọi workspace; gọi APISIX local (public + internal cùng máy)
                   # MathJax 4 (mathjax@4.x) + MathLive (mathlive) ghim phiên bản cố định trong src/cms/frontend/apps/portal/package.json (ADR-0055)
-pnpm storybook    # http://localhost:6006 — ops-ui + theme Ant Design (sáng/tối/compact)
+pnpm storybook    # http://localhost:6006 — ops-ui + component khung portal (F051) + theme Ant Design (sáng/tối/compact)
 pnpm lint && pnpm test   # ESLint + stylelint (chặn hardcode màu/font/khoảng cách, import game, URL môi trường, chuỗi UI literal) · Vitest 1 worker
 ```
-Cấu hình runtime của portal: `/config.json` (`apiBaseUrl`, `apiInternalBaseUrl`, `oidcIssuer`, `oidcClientId`, `env`) sinh lúc deploy. Khi dev, Vite phục vụ `apps/portal/public/config.json` nếu có (gitignore), nếu không thì `public/config.example.json` (gateway public `:9080`, nội bộ `:9180`); khi `/config.json` không đọc được (chỉ ở dev) thì dùng biến `VITE_API_BASE_URL`, `VITE_API_INTERNAL_BASE_URL`, `VITE_OIDC_ISSUER`, `VITE_OIDC_CLIENT_ID`, `VITE_APP_ENV`. Trình duyệt Playwright cho axe/visual: `pnpm exec playwright install --only-shell chromium`.
+Cấu hình runtime của portal: `/config.json` (`apiBaseUrl`, `apiInternalBaseUrl`, `env`, `principalCacheTtlSeconds` = `principal_cache_ttl`, `sessionIdleTimeoutSeconds` = idle của `portal_session_sso` — CONFIG_DEFAULTS) sinh lúc deploy; không có khóa OIDC vì portal đăng nhập bằng form riêng qua `/api/v1/auth/portal/*` (ADR-0091, F051). Khi dev, Vite phục vụ `apps/portal/public/config.json` nếu có (gitignore), nếu không thì `public/config.example.json` (gateway public `:9080`, nội bộ `:9180`); khi `/config.json` không đọc được (chỉ ở dev) thì dùng biến `VITE_API_BASE_URL`, `VITE_API_INTERNAL_BASE_URL`, `VITE_APP_ENV`, `VITE_PRINCIPAL_CACHE_TTL_SECONDS`, `VITE_SESSION_IDLE_TIMEOUT_SECONDS`. Cookie refresh/CSRF của phiên portal là first-party khi API phục vụ cùng origin với portal (APISIX, [Proposed] — F004). Trình duyệt Playwright cho axe/visual: `pnpm exec playwright install --only-shell chromium`.
 
 ### 6.5. API test bằng Postman CLI
 ```bash
