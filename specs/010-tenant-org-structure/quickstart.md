@@ -67,3 +67,25 @@ Kịch bản §2 được tự động hóa bằng test (gói `src/backend/modul
 Chưa đủ: AC-03 phần resolve thành viên → `TENANT_ACCESS_DISABLED` và AC-21 (realm role nhân sự theo UserRole) cần resolver/`user_roles` của F012; `importSchools` bất đồng bộ (OQ F010-1, F011); kịch bản 4/10/12 trên stack thật (OQ F010-2).
 
 Lệnh: `go test ./modules/identity/...` (unit + contract) và `TESTCONTAINERS_RYUK_DISABLED=true go test -tags integration -timeout 45m ./modules/identity/...` — 11/11 + 2 test tích hợp mới pass; gate local (vet, golangci-lint, ewlint, archgen, entlint, tenancyguard, gofmt, unit) `CHECK OK`.
+
+## 6. Bằng chứng nối binary trên stack (OQ F010-2, 2026-11-20, Windows 11 + Docker Desktop; compose project riêng `ewwire`)
+
+Chuẩn bị (không có `make` trên máy dev nên chạy lệnh tương đương của Makefile): hạ tầng `docker compose -p ewwire -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.app.yml -f deploy/compose/docker-compose.observability.yml up -d --wait postgres valkey nats keycloak apisix apisix-internal mailpit floci cdn sis-mock` + `up s3-init`; migrate 5 module bằng `cmd/migrate` (Atlas trong container, `EW_PORTAL_MENU_CATALOG` trỏ `specs/portal/menu-catalog.yaml`); realm `eduworld` + user/organization dev bằng `keycloak-config` + `post-apply.mjs` + `seed-dev.mjs`; ứng dụng `--profile app up -d --wait core-api realtime worker` (worker `--profile=all`). Volume `postgres-data` dùng chung của project `eduworld` trên máy dev có quyền bảng cũ (thiếu `GRANT` của `identity_app`/`identity_platform`, `pg_default_acl` rỗng) nên smoke chạy trên database mới của project `ewwire`; volume đó cần dựng lại (`make down` + xóa volume) hoặc cấp lại quyền — không phải lỗi của phần nối.
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `GET :9100/readyz` (`core-api`) | `200`: `atlas:*`, `db:*` của 5 module, `jwks`, `nats`, `valkey` đều `ok` |
+| `GET :9200/readyz` (`worker --profile=all`), `GET :9106/readyz` (`realtime`) | `200` |
+| `GET /api/v1/game/client-config?platform=windows&version=0.1.0` (route public module game) | `200`, `min_client_version` `0.1.0`, `login_url`, `supported_locales` từ `x-module-env` |
+| `POST /api/v1/auth/game/login` `hs.an.3a` sai mật khẩu | `401 INVALID_CREDENTIALS` (password grant thật của `eduworld-game-backend` tới Keycloak) |
+| `POST /api/v1/auth/game/login` `hs.an.3a` đúng mật khẩu | `403 ACCOUNT_NOT_PROVISIONED` + logout phiên Keycloak (`eduworld_keycloak_token_call_duration_seconds_count{op="game_logout"}`): đúng ADR-0063 vì module identity chưa có seed học sinh (`modules/identity/seed/README.md`); lần gọi đầu sau khi Keycloak vừa khởi động vượt `keycloak_token_call_timeout` 3 s → `503 UNAVAILABLE` (retryable) |
+| `POST /api/v1/auth/portal/login` `sa.admin` + OTP (`totp.mjs`) | `403 PORTAL_ACCESS_STAFF_ONLY` (Keycloak OTP grant thành công, identity chưa có tài khoản nhân sự) |
+| `GET /api/v1/me/tenants`, `/me/permissions` với access token thật của `eduworld-portal` (`ad.truong.a`) | `403 TENANT_MISMATCH`: token qua JWKS của `http://keycloak:8180/realms/eduworld`, resolver Principal (facade `resolvePrincipal`) trả "không phải thành viên" |
+| Không token / token hỏng | `401 UNAUTHENTICATED` (`missing bearer token` / `malformed token`) |
+| Outbox relay (worker `events`) | `identity.infra.outbox_events`: 159 `audit.recorded`, 159 có `published_at`; JetStream `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_COMPETITION`, `EVT_CHAT`, `DLQ_*`, `IDENTITY_SIS_JOBS` được tạo |
+| Consumer (`identity.audit_sink`, một durable mỗi stream) | `infra.processed_events` 437 dòng `identity.audit_sink`; `audit.audit_logs`: `auth.account_not_provisioned` 4, `auth.portal_login` (denied) 2, `authz.denied` 4, `cross_tenant.accessed` 427; `eduworld_events_consumed_total{consumer="identity.audit_sink",result="ok"}` 439; `infra.dead_letters` 0. Lần smoke đầu phát hiện lỗi nối (tên durable `identity.audit_sink@EVT_*` ≠ tên consumer) — đã sửa trong commit `fix(wiring)` |
+| Job (worker `jobs`) | `eduworld_job_runs_total{result="ok"}` trên `:9200/metrics` cho cả 16 job (identity 11, learning 3, game 2 — mỗi job chạy ngay khi khởi động rồi theo chu kỳ), ví dụ `platform-saga` 8, `session-timeout` 5, `import-jobs` 8 sau ~2 phút |
+
+Lệnh tự động của phần nối: `go test ./cmd/internal/wiring/` (`TestCoreAPIMountsEveryImplementedOperation`: mọi operation có trong `presentation/http` của identity, learning, game và trong spec module được mount đúng một lần dưới module sở hữu; `TestWorkerProfilesRegisterRelaysConsumersAndJobs`: relay, mọi consumer khai báo trong `presentation/consumer` + `infrastructure/messaging`, mọi job chạy đúng profile; `TestWorkerChatProfileLoadsChatOnly`), `go test ./pkg/module/` (pool theo role, vai trò theo binary/profile, hook audit theo module, khóa cursor).
+
+Chưa đủ: đăng nhập game/portal **thành công** cần dữ liệu identity (học sinh, nhân sự, `external_identities`, `user_roles`); module identity chưa có seed (`modules/identity/seed/README.md`) và tạo System Admin đầu tiên bằng SQL không được cấp quyền trong phiên này → kịch bản 4/10/12 của §2 vẫn kiểm bằng test tích hợp.

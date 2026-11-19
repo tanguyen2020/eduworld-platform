@@ -117,7 +117,7 @@
 
 - [x] T039 [P] Cập nhật DATABASE_DESIGN nếu cột/enum thay đổi (`enrollments.source` thêm `platform_common`), CHANGELOG — file: `docs/07-backend/DATABASE_DESIGN.md`, `CHANGELOG.md` — **xong 2026-11-19 — DATABASE_DESIGN (trạng thái trường, `enrollments.source`, `effective_from` nullable, view `security_invoker`, quyền infra `_platform`), ADR-0089 (làm rõ), MONITORING, CHANGELOG**
 - [x] T040 [P] Metric `eduworld_identity_org_sync_total`, `eduworld_auth_common_tenant_total`; span Keycloak — file: `src/backend/modules/identity/internal/infrastructure/keycloak/metrics.go` — **xong 2026-11-19 — `eduworld_identity_org_sync_total{op,result}` trong adapter (test `TestOrgSyncMetric`), `eduworld_auth_common_tenant_total{result}` ở handler; MONITORING cập nhật**
-- [x] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19 — bằng chứng test tự động ở quickstart §5; kịch bản trên stack chờ OQ F010-2**
+- [x] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19 — bằng chứng test tự động ở quickstart §5; kịch bản trên stack chờ OQ F010-2**; 2026-11-20: binary đã nối, smoke trên stack ở quickstart §6 (kịch bản thành công cần seed identity — chưa có)
 
 ## Dependencies & Execution Order
 

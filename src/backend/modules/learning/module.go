@@ -46,8 +46,8 @@ const Name = "learning"
 // Intervals of the learning jobs [Proposed] (OQ F020-3): queued imports and translation jobs are picked up within
 // seconds of their creation.
 const (
-	ImportJobInterval      = 10 * time.Second
-	TranslationJobInterval = 10 * time.Second
+	ImportJobInterval      = 30 * time.Second
+	TranslationJobInterval = 30 * time.Second
 	// ScheduledPublishInterval: F026 T036 applies due scheduled publications every minute.
 	ScheduledPublishInterval = time.Minute
 )
