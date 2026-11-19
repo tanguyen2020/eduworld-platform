@@ -89,7 +89,7 @@ type curEnv struct {
 	assets *memAssets
 	users  map[string]authz.PrincipalData
 	tokens map[string]string
-	media  *mediaKit // F027 (newCurEnv(..., withMedia))
+	media  *mediaKit        // F027 (newCurEnv(..., withMedia))
 	att    command.Attempts // F030
 	attq   query.Attempts   // F030
 	clk    *testClock       // F030

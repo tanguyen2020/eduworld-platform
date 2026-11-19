@@ -208,6 +208,10 @@ func TestCoreAPIMountsEveryImplementedOperation(t *testing.T) {
 	if !contains(r.Health().CheckNames(), "jwks") {
 		t.Fatal("readiness check jwks not registered")
 	}
+	// F030-AC-23: the Activity Registry readiness of module learning.
+	if !contains(r.Health().CheckNames(), "activity_registry:learning") {
+		t.Fatal("readiness check activity_registry:learning not registered")
+	}
 	t.Logf("mounted %d operations", len(mounted))
 }
 
@@ -217,7 +221,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 	jobs := map[string][]string{
 		"identity": {"partition-maintainer", "audit-retention", "student-inactive-cleanup", "saga-retry", "retention-anonymizer",
 			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler"},
-		"learning": {"import-jobs", "translation-jobs", "content-scheduled-publish"},
+		"learning": {"import-jobs", "translation-jobs", "content-scheduled-publish", "attempt-lifecycle"},
 		"game":     {"session-timeout", "curfew-session-closer"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {

@@ -16,9 +16,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
+	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/mediaproc"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
@@ -50,12 +53,14 @@ const (
 	TranslationJobInterval = 30 * time.Second
 	// ScheduledPublishInterval: F026 T036 applies due scheduled publications every minute.
 	ScheduledPublishInterval = time.Minute
+	// AttemptLifecycleInterval: F030 T003/T035 pauses idle attempts, abandons and expires due attempts every minute.
+	AttemptLifecycleInterval = time.Minute
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
-// implemented in this release: the platform-ops operations of F020 and the student lifecycle steps of F016. The
-// attempt and question-plan operations (createAttempt, getAttemptResult, createQuestionPlan, scorePlanAnswer) and
-// mergeUserData belong to later features (OQ F045-3): no binary calls them yet.
+// implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
+// attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072). The
+// question-plan operations (createQuestionPlan, scorePlanAnswer) and mergeUserData belong to later features (OQ F045-3).
 type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
@@ -66,6 +71,8 @@ type Facade interface {
 	CleanupStudentData(ctx context.Context, req api.CleanupStudentDataRequestObject) (api.CleanupStudentDataResponseObject, error)
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
+	CreateAttempt(ctx context.Context, req api.CreateAttemptRequestObject) (api.CreateAttemptResponseObject, error)
+	GetAttemptResult(ctx context.Context, req api.GetAttemptResultRequestObject) (api.GetAttemptResultResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -84,9 +91,10 @@ func (m *Module) Facade() Facade { return m.facade }
 // Wire connects the facades of other modules (none for module learning).
 func (m *Module) Wire(Imports) {}
 
-// Register wires the module into the running binary (OQ F020-3, F010-2): health checks everywhere; the CMS routes
-// (F021–F027) in core-api; the outbox relay and the consumers projection_identity, qb_pool_invalidation and
-// media_worker in worker events; the import and translation jobs in worker jobs.
+// Register wires the module into the running binary (OQ F020-3, F010-2): health checks everywhere (plus the Activity
+// Registry readiness of F030 where the use cases load); the CMS and attempt routes (F021–F027, F030) in core-api; the
+// outbox relay and the consumers projection_identity, qb_pool_invalidation, media_worker and release_pointer_cache in
+// worker events; the import, translation, scheduled-publish and attempt-lifecycle jobs in worker jobs.
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
 	if err != nil {
@@ -101,6 +109,9 @@ func Register(r *module.Registry) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("learning: %w", err)
 	}
+	// F030-AC-23: not ready while published content has an activity type without plugin (platform role: every tenant).
+	r.Health().Register("activity_registry:"+Name, health.Readiness,
+		learninghealth.RegistryCheck(w.activities, learninghealth.SQLPublishedTypes(learninghealth.FromSQL(w.core.Platform))))
 	r.HTTP(Name, func(s *httpx.Server) error { return learninghttp.Register(s, w.http) })
 	if err := r.Relay(Name); err != nil {
 		return nil, fmt.Errorf("learning: %w", err)
@@ -122,6 +133,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, "import-jobs", ImportJobInterval, job.ImportWorker{Runner: w.curriculum}.RunOnce)
 	r.Job(Name, "translation-jobs", TranslationJobInterval, job.TranslationWorker{Runner: w.translations}.RunOnce)
 	r.Job(Name, "content-scheduled-publish", ScheduledPublishInterval, job.ScheduleWorker{Runner: w.releases}.RunOnce)
+	r.Job(Name, "attempt-lifecycle", AttemptLifecycleInterval, job.AttemptLifecycle{Runner: w.attempts}.Count)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -134,6 +146,8 @@ type wiring struct {
 	translations command.Translations
 	media        command.Media
 	releases     command.Releases
+	attempts     command.Attempts
+	activities   *activity.Registry
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -175,6 +189,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterContent(reg)
 	observability.RegisterWorkflow(reg)
 	observability.RegisterRelease(reg)
+	observability.RegisterAttempts(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -198,7 +213,12 @@ func build(r *module.Registry) (*wiring, error) {
 		Processor: mediaproc.New(strings.TrimPrefix(scan, "clamd://")), Events: events, Audit: auditor, ScanDisabled: scanDisabled,
 		WorkDir: cfg.StringOr("EW_MEDIA_WORK_DIR", os.TempDir()), Metrics: observability.MediaCounter{}}
 	math := &command.MathAssets{Store: write.MathRepo{}, Storage: s3, Metrics: observability.MediaCounter{}}
-	registry := question.Full() // F023 Done: the 11 question types (OQ F023-2 [Proposed])
+	registry := question.Full()      // F023 Done: the 11 question types (OQ F023-2 [Proposed])
+	activities := plugins.Registry() // F030: quiz, interactive_exercise
+	activitySchema, err := qbschema.NewActivities()
+	if err != nil {
+		return nil, err
+	}
 
 	cur := command.Curriculum{UoW: core.UoW, Store: write.CurriculumRepo{}, Catalog: write.CatalogRepo{}, Imports: write.ImportJobRepo{},
 		Resources: resources, Events: events, Audit: auditor, Assets: assets, Codec: importer.Codec{}, Metrics: observability.CurriculumCounter{}}
@@ -207,7 +227,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: write.DocRepo{}}
 	dcmd := command.Docs{UoW: core.UoW, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{},
 		Catalog: write.CatalogRepo{}, Schema: docSchema, Media: write.MediaRepo{}, Read: core.ReadSession, Resources: resources,
-		Events: events, Audit: auditor, Math: math}
+		Events: events, Audit: auditor, Math: math, Activities: activities, ActivitySchema: activitySchema}
 	wf := command.Workflow{UoW: core.UoW, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{},
 		Docs: write.DocRepo{}, Schema: schema, Media: write.MediaRepo{}, Guard: readiness.Default(), Events: events, Audit: auditor,
 		Metrics: observability.WorkflowCounter{}}
@@ -216,8 +236,17 @@ func build(r *module.Registry) (*wiring, error) {
 	cur.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	snapshots := cache.SnapshotCache{C: vk}
 	rel := command.Releases{UoW: core.UoW, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: events,
-		Audit: auditor, Metrics: observability.ReleaseCounter{}, Cache: snapshots, CDN: s3, Signer: signer}
+		Audit: auditor, Metrics: observability.ReleaseCounter{}, Cache: snapshots, CDN: s3, Signer: signer,
+		Activities: activities, ActivitySchema: activitySchema}
 	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}, Cache: snapshots}
+	docQueries := query.Docs{Session: core.ReadSession, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: cursors}
+	delivery := query.Delivery{Session: core.ReadSession, Reader: read.Delivery{}, Cache: cache.Pool{C: vk}, Registry: registry, Schema: schema,
+		Metrics: observability.QuestionCounter{}}
+	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
+		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
+		Metrics: observability.AttemptCounter{}}
+	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
+		Registry: activities, Cursors: cursors}
 
 	h := learninghttp.Handlers{Commands: cur,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},
@@ -225,11 +254,13 @@ func build(r *module.Registry) (*wiring, error) {
 		Media: media, MediaQueries: query.MediaLibrary{Session: core.ReadSession, Model: read.MediaModel{}, Signer: signer, Cursors: cursors},
 		Preview: command.Preview{UoW: core.UoW, Session: core.ReadSession, Questions: read.QuestionModel{}, Registry: registry, Schema: schema,
 			Store: cache.PreviewStore{C: vk}},
-		Docs: dcmd, DocQueries: query.Docs{Session: core.ReadSession, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: cursors},
+		Docs: dcmd, DocQueries: docQueries,
 		Widgets:  query.QuestionWidgets{Widgets: registry.Widgets()},
 		Workflow: wf, Reviews: query.ReviewTasks{Session: core.ReadSession, Model: read.ReviewTaskModel{}, Cursors: cursors},
 		Translations: tr, TranslationJobs: query.TranslationJobs{Session: core.ReadSession, Model: read.TranslationJobModel{}, Files: files},
-		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors}}
+		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors},
+		CmsActivities: query.CmsActivities{Docs: docQueries}, ActivityTypes: query.ActivityTypes{Registry: activities},
+		Attempts: att, AttemptQueries: attq}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}
@@ -240,6 +271,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Restore:     command.RestoreResource{TrashDeps: trash},
 		Clone: command.ExecuteCloneStep{CloneDeps: command.CloneDeps{UoW: core.UoW, Resources: resources, Tenants: read.TenantDirectory{},
 			Audit: auditor}},
+		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
-	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel}, nil
+	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
+		attempts: att, activities: activities}, nil
 }

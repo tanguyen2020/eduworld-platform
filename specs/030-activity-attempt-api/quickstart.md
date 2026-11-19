@@ -63,3 +63,14 @@ make migrate-lint MOD=learning
 | Domain | `internal/domain/activity` (registry), `internal/domain/attempt` (start, chấm §7.2, feedback, vòng đời) | pass |
 
 SC-001: quét khóa đáp án trên mọi response attempt/activity của học sinh trong test (0 khóa). trace_id kịch bản 1 và 9 lấy khi chạy trên stack thật sau wiring.
+
+## 6. Bằng chứng nối binary (2026-11-20, T001/T003)
+
+| Kiểm | Lệnh / môi trường | Kết quả |
+|---|---|---|
+| Mọi operation đã hiện thực mount đúng một lần, check `activity_registry:learning` có trong `core-api` | `go test ./cmd/internal/wiring/` (TestCoreAPIMountsEveryImplementedOperation) | pass — 240 operation mount |
+| Relay, consumer, job theo profile (`attempt-lifecycle` có trong `jobs`/`all`, không chạy ở `events`) | TestWorkerProfilesRegisterRelaysConsumersAndJobs (events, jobs, all) | pass |
+| Luồng F030 không đổi sau khi nối | `TESTCONTAINERS_RYUK_DISABLED=true go test -tags integration -run 'TestAttemptFacade\|TestActivityRegistryAndConfig\|TestAttemptStart\|TestAttemptRespondSubmitReview' ./modules/learning/tests/integration/` | 4/4 pass (221 s) |
+| Stack thật cô lập | compose project `ewf030` (`up` hạ tầng → import realm → migrate 5 module → seed identity + learning), `core-api` và `worker --profile=all` chạy native với cấu hình local của `docker-compose.app.yml` | `/readyz` của `core-api` và `worker`: `activity_registry:learning` ok cùng mọi check khác; worker log `usecase=learning.job.AttemptLifecycle result=ok`, `eduworld_job_runs_total{module="learning",job="attempt-lifecycle",result="ok"} 1`; `docker compose -p ewf030 down -v` sau khi xong |
+
+Giới hạn: bước đăng nhập game bằng tài khoản demo (`hs.an.3a`) để publish quiz rồi bắt đầu/nộp attempt trên stack thật **không chạy** — lệnh gọi `/auth/game/login` với mật khẩu demo bị chặn bởi quyền của phiên agent; luồng HTTP đầy đủ vẫn được phủ bởi test tích hợp ở §5 (chuỗi `pkg/httpx` thật, PostgreSQL thật). Cần chạy tay kịch bản 1, 9 trên stack thật để lấy `trace_id` (T051 vẫn mở).

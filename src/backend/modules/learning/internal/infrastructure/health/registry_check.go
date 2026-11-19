@@ -3,6 +3,7 @@ package health
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -65,3 +66,21 @@ func RegistryCheck(reg *activity.Registry, published PublishedTypes) func(ctx co
 		return nil
 	}
 }
+
+// FromSQL adapts a database/sql pool (the learning_platform pool of the composition root) to Querier.
+func FromSQL(db *sql.DB) Querier { return sqlQuerier{db: db} }
+
+type sqlQuerier struct{ db *sql.DB }
+
+func (q sqlQuerier) Query(ctx context.Context, query string, args ...any) (Rows, error) {
+	rows, err := q.db.QueryContext(ctx, query, args...) //nolint:rowserrcheck // returned as Rows: SQLPublishedTypes checks Err
+	if err != nil {
+		return nil, err
+	}
+	return sqlRows{rows}, nil
+}
+
+// sqlRows adapts *sql.Rows (Close returns an error) to Rows.
+type sqlRows struct{ *sql.Rows }
+
+func (r sqlRows) Close() { _ = r.Rows.Close() }

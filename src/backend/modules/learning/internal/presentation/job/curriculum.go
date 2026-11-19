@@ -169,3 +169,9 @@ func (w AttemptLifecycle) RunOnce(ctx context.Context) (command.LifecycleReport,
 	}
 	return w.Runner.RunLifecycle(ctx, batch)
 }
+
+// Count is RunOnce as a module.JobFunc: the number of attempts changed (paused, abandoned, expired).
+func (w AttemptLifecycle) Count(ctx context.Context) (int, error) {
+	rep, err := w.RunOnce(ctx)
+	return rep.Paused + rep.Abandoned + rep.Expired, err
+}
