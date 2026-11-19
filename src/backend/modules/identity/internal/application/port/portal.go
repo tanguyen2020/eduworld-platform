@@ -18,3 +18,8 @@ type WorkspaceCatalog interface {
 type FeatureToggles interface {
 	Disabled(ctx context.Context, tenantID *uuid.UUID) (menus, actions []string, err error)
 }
+
+// FeatureToggleCache drops the cached disabled menus/actions of a scope (nil tenant = every scope).
+type FeatureToggleCache interface {
+	Invalidate(ctx context.Context, tenantID *uuid.UUID) error
+}

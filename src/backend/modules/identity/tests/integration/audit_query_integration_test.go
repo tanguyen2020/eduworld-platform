@@ -29,7 +29,9 @@ func settingsHandlers(e *env, codec *page.Codec) identityhttp.SettingsHandlers {
 	}
 	return identityhttp.SettingsHandlers{AuditLogs: query.AuditLogs{Model: read.AuditModel{Session: e.read}, Cursors: codec},
 		Settings:    command.Settings{UoW: e.uow, Repo: write.SettingsRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, Defaults: defaults},
-		SettingsGet: query.Settings{Reader: read.SettingsModel{Session: e.read}, Defaults: defaults}}
+		SettingsGet: query.Settings{Reader: read.SettingsModel{Session: e.read}, Defaults: defaults},
+		Flags:       command.FeatureFlags{UoW: e.uow, Repo: write.FeatureFlagRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
+		FlagList:    query.FeatureFlags{Reader: read.FeatureFlagModel{Session: e.read}, Cursors: codec}}
 }
 
 // portalUser creates a staff user linked to the test IDP with one role.

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
@@ -22,6 +24,8 @@ type SettingsHandlers struct {
 	AuditLogs   query.AuditLogs
 	Settings    command.Settings
 	SettingsGet query.Settings
+	Flags       command.FeatureFlags
+	FlagList    query.FeatureFlags
 }
 
 // SettingsOperations are the F015 operations; the contract test checks them against the merged spec.
@@ -38,6 +42,9 @@ var SettingsOperations = map[string]httpx.Operation{
 	"updateTenantSettings":      portalOp2("updateTenantSettings", http.MethodPatch, "/tenant/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
 	"getSchoolSettings":         portalOp2("getSchoolSettings", http.MethodGet, "/schools/{school_id}/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
 	"updateSchoolSettings":      portalOp2("updateSchoolSettings", http.MethodPatch, "/schools/{school_id}/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listFeatureFlags":          portalOp2("listFeatureFlags", http.MethodGet, "/admin/feature-flags", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"putFeatureFlag":            portalOp2("putFeatureFlag", http.MethodPut, "/admin/feature-flags/{flag_key}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+	"listPortalMenuCatalog":     portalOp2("listPortalMenuCatalog", http.MethodGet, "/admin/portal-menu-catalog", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 
 // RegisterSettings mounts the F015 operations.
@@ -55,6 +62,9 @@ func RegisterSettings(s *httpx.Server, h SettingsHandlers) error {
 		"updateTenantSettings":      h.updateTenantSettings,
 		"getSchoolSettings":         h.getSchoolSettings,
 		"updateSchoolSettings":      h.updateSchoolSettings,
+		"listFeatureFlags":          h.listFeatureFlags,
+		"putFeatureFlag":            h.putFeatureFlag,
+		"listPortalMenuCatalog":     h.listPortalMenuCatalog,
 	}
 	for id, fn := range routes {
 		o, ok := SettingsOperations[id]
@@ -316,4 +326,67 @@ func (h SettingsHandlers) updateSchoolSettings(w http.ResponseWriter, r *http.Re
 		return
 	}
 	writeVersioned(w, out.Version, out)
+}
+
+func (h SettingsHandlers) listFeatureFlags(w http.ResponseWriter, r *http.Request) {
+	tenant, err := optUUID(r, "tenant_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.FlagList.List(r.Context(), r.URL.Query().Get("flag_kind"), tenant, queryInt(r, "limit"), r.URL.Query().Get("cursor"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h SettingsHandlers) listPortalMenuCatalog(w http.ResponseWriter, r *http.Request) {
+	tenant, err := optUUID(r, "tenant_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.FlagList.Catalog(r.Context(), tenant)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h SettingsHandlers) putFeatureFlag(w http.ResponseWriter, r *http.Request) {
+	key := chi.URLParam(r, "flag_key")
+	v, err := settingsVersion(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		Scope       string `json:"scope"`
+		State       string `json:"state"`
+		Description string `json:"description"`
+		Reason      string `json:"reason"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	in := command.FeatureFlagWrite{Scope: b.Scope, State: b.State, Description: b.Description, Reason: b.Reason}
+	if t, ok := httpx.HeaderTenant(r.Context()); ok {
+		in.TenantID = &t
+	}
+	f, canDisable, err := h.Flags.Put(r.Context(), key, in, v)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out := query.FeatureFlagView{FlagKey: f.Key, FlagKind: f.Kind, Description: f.Description, DefaultEnabled: f.Default,
+		TenantOverride: f.Override(in.TenantID), EffectiveEnabled: f.ValueFor(in.TenantID), CanDisable: canDisable, Version: f.Version}
+	if f.Parent != "" {
+		parent := f.Parent
+		out.ParentKey = &parent
+	}
+	writeVersioned(w, f.Version, out)
 }

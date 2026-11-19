@@ -52,6 +52,9 @@ func (r BootstrapReader) Bootstrap(ctx context.Context, userID uuid.UUID) (out d
 			return fmt.Errorf("bootstrap tenant: %w", err)
 		}
 		out.IsCommonTenant = out.TenantType == "common"
+		if err := r.featureFlags(ctx, tx, &out); err != nil {
+			return err
+		}
 		return r.student(ctx, tx, userID, &out)
 	})
 	return out, err
@@ -135,4 +138,25 @@ func orVI(n dto.LocalizedText) string {
 		return n.EN
 	}
 	return n.VI
+}
+
+// featureFlags fills PlayerBootstrap.feature_flags with the flags of kind feature only (menu/action flags
+// concern the Admin Portal, F015-AC-29): the tenant override, else the platform default.
+func (r BootstrapReader) featureFlags(ctx context.Context, tx *sql.Tx, out *dto.PlayerBootstrap) error {
+	// tenancyguard:ok platform.feature_flags is global (G); deleted_at filtered; the override of the scope tenant
+	rows, err := tx.QueryContext(ctx, `SELECT flag_key, coalesce((tenant_overrides ->> $1::text)::boolean, default_enabled)
+		FROM platform.feature_flags WHERE flag_kind = 'feature' AND deleted_at IS NULL`, out.TenantID.String())
+	if err != nil {
+		return fmt.Errorf("bootstrap flags: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var k string
+		var v bool
+		if err := rows.Scan(&k, &v); err != nil {
+			return fmt.Errorf("bootstrap flags: %w", err)
+		}
+		out.FeatureFlags[k] = v
+	}
+	return rows.Err()
 }

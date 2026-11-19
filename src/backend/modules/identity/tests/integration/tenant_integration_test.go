@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -42,6 +43,10 @@ func setup(ctx context.Context, t *testing.T) *env {
 	t.Helper()
 	cl := testkit.Isolated(ctx, t)
 	if _, err := identity.SyncAuthzCatalog(ctx, open(t, cl.ModuleDSN("identity", "migrator"))); err != nil { // F012 catalog + system roles
+		t.Fatal(err)
+	}
+	if _, err := identity.SyncPortalCatalog(ctx, open(t, cl.ModuleDSN("identity", "migrator")), // F015 menu catalog
+		filepath.Join(testkit.RepoRoot(t), "specs", "portal", "menu-catalog.yaml")); err != nil {
 		t.Fatal(err)
 	}
 	e := &env{app: open(t, cl.ModuleDSN("identity", "app")), platform: open(t, cl.ModuleDSN("identity", "platform")),

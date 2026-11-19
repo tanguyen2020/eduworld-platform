@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 )
 
@@ -178,4 +179,10 @@ type SettingsReader interface {
 	PlatformSetting(ctx context.Context, key string) (StoredSettings, error)
 	TenantSettings(ctx context.Context, tenantID uuid.UUID) (s StoredSettings, found bool, err error)
 	SchoolSettings(ctx context.Context, schoolID uuid.UUID) (s StoredSettings, found bool, err error)
+}
+
+// FeatureFlagReader reads the portal menu catalog and the feature flags (F015 US5); both are global (G).
+type FeatureFlagReader interface {
+	Catalog(ctx context.Context) (version string, items []settings.CatalogItem, err error)
+	Flags(ctx context.Context) ([]settings.Flag, error)
 }

@@ -16,6 +16,7 @@ import (
 	identityapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/featuretoggle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalcatalog"
@@ -181,7 +182,7 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 		t.Fatal(err)
 	}
 	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
-	h := identityhttp.Handlers{Me: query.Me{Model: model, Workspaces: ws},
+	h := identityhttp.Handlers{Me: query.Me{Model: model, Workspaces: ws, Toggles: featuretoggle.Source{Reader: read.FeatureFlagModel{Session: e.read}}},
 		UserRoles:    command.UserRoles{UoW: e.uow, Repo: write.UserRoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
 		UserRoleList: query.UserRoles{Model: model, Cursors: codec},
 		Roles:        command.Roles{UoW: e.uow, Repo: write.RoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},

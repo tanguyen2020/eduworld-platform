@@ -6,8 +6,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/seed"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalcatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/migrations"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
@@ -41,4 +43,22 @@ func SyncAuthzCatalog(ctx context.Context, db *sql.DB) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%d permissions, %d system roles, %d grants, %d retired", st.Permissions, st.Roles, st.RolePermissions, st.Retired), nil
+}
+
+// SyncPortalCatalog writes specs/portal/menu-catalog.yaml (the file at path) into platform.portal_menu_catalog
+// (F015 T040, ADR-0090); cmd/migrate calls it after SyncAuthzCatalog with the identity_migrator connection.
+func SyncPortalCatalog(ctx context.Context, db *sql.DB, path string) (string, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("portal catalog: %w", err)
+	}
+	version, items, err := portalcatalog.Items(b)
+	if err != nil {
+		return "", err
+	}
+	st, err := seed.SyncPortalCatalog(ctx, db, version, items)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("catalog %s: %d items, %d retired, %d flags retired", version, st.Items, st.Retired, st.FlagsRetired), nil
 }

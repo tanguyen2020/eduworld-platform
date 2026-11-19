@@ -125,6 +125,16 @@ func seedIdentity(ctx context.Context, dsn string) error {
 		return fmt.Errorf("identity: authz catalog: %w", err)
 	}
 	fmt.Printf("migrate: identity: authz catalog synced (%s)\n", summary)
+	// F015 T040: the Admin Portal menu catalog (ADR-0090); EW_PORTAL_MENU_CATALOG overrides the repository path.
+	path := strings.TrimSpace(os.Getenv("EW_PORTAL_MENU_CATALOG"))
+	if path == "" {
+		path = filepath.Join("specs", "portal", "menu-catalog.yaml")
+	}
+	summary, err = identity.SyncPortalCatalog(ctx, db, path)
+	if err != nil {
+		return fmt.Errorf("identity: portal menu catalog: %w", err)
+	}
+	fmt.Printf("migrate: identity: portal menu catalog synced (%s)\n", summary)
 	return nil
 }
 

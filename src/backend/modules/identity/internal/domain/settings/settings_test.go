@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func TestCurfewRules(t *testing.T) {
@@ -69,5 +71,40 @@ func TestValuesAndEffective(t *testing.T) {
 	c := ChatRetention{GameplayChatRetentionDays: 2, EphemeralRetentionHours: 24}
 	if !errors.Is(c.Validate(3), ErrRetentionBelowMinimum) {
 		t.Fatal("minimum")
+	}
+}
+
+func TestToggles(t *testing.T) {
+	ta := uuid.New()
+	items := []CatalogItem{{Key: "school_lms", Kind: "workspace"}, {Key: "menu.s.a", Kind: "menu", Parent: "school_lms"},
+		{Key: "action.s.a.view", Kind: "action", Parent: "menu.s.a"}, {Key: "action.s.a.edit", Kind: "action", Parent: "menu.s.a"},
+		{Key: "menu.s.b", Kind: "menu", Parent: "school_lms"}}
+	// No row = enabled.
+	if m, a := Disabled(items, nil, &ta); len(m)+len(a) != 0 {
+		t.Fatal("no rows must enable everything")
+	}
+	flags := map[string]Flag{
+		"action.s.a.edit": {Key: "action.s.a.edit", Default: false},
+		"menu.s.b":        {Key: "menu.s.b", Default: true, Overrides: map[string]bool{ta.String(): false}},
+	}
+	m, a := Disabled(items, flags, &ta)
+	if len(m) != 1 || m[0] != "menu.s.b" || len(a) != 1 || a[0] != "action.s.a.edit" {
+		t.Fatalf("tenant: %v %v", m, a)
+	}
+	if m, _ := Disabled(items, flags, nil); len(m) != 0 {
+		t.Fatal("platform scope uses the platform default")
+	}
+	// Menu off → its actions off (AND), even an action enabled on its own.
+	flags["menu.s.a"] = Flag{Key: "menu.s.a", Default: false}
+	flags["action.s.a.view"] = Flag{Key: "action.s.a.view", Default: true}
+	_, a = Disabled(items, flags, nil)
+	if len(a) != 2 {
+		t.Fatalf("actions of a disabled menu: %v", a)
+	}
+	if KindOfKey("menu.x.y") != "menu" || KindOfKey("action.x.y.z") != "action" || KindOfKey("preview_game_frame") != "feature" {
+		t.Fatal("kind of key")
+	}
+	if o := flags["menu.s.b"].Override(&ta); o == nil || *o {
+		t.Fatal("override")
 	}
 }

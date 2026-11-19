@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
 )
 
 // StoredSetting is a JSON settings value with its version (0 = not configured yet: defaults apply).
@@ -29,4 +31,14 @@ type SettingsRepository interface {
 	// School returns the settings of a live school of the scope tenant.
 	School(ctx context.Context, schoolID uuid.UUID) (s StoredSetting, tenantID uuid.UUID, found bool, err error)
 	PutSchool(ctx context.Context, schoolID uuid.UUID, value []byte, expected int64, by uuid.UUID) (int64, error)
+}
+
+// FeatureFlagRepository writes platform.feature_flags (G, platform scope, soft-delete only).
+type FeatureFlagRepository interface {
+	// Flag locks the live flag row (nil = no row: enabled by default).
+	Flag(ctx context.Context, key string) (*settings.Flag, error)
+	// CatalogItem returns the live catalog item of a menu/action key (nil when absent).
+	CatalogItem(ctx context.Context, key string) (*settings.CatalogItem, error)
+	// Save inserts (expected 0) or updates (expected = version) the flag; returns the new version.
+	Save(ctx context.Context, f settings.Flag, expected int64, by uuid.UUID) (int64, error)
 }
