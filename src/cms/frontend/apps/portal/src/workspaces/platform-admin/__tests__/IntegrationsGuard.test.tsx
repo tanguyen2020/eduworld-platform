@@ -1,5 +1,6 @@
 // F059 T044/T045/T047/T048/T057 — F059-AC-22…25, F059-AC-28 (TC-CMS-AUTHZ-05, TC-CMS-WS-02, TC-CMS-MENU-02):
-// Integrations read only (Keycloak/APISIX reference waits for getIntegrationOverview; SIS connections with schools and
+// Integrations read only (Keycloak/APISIX reference from getIntegrationOverview, route groups "Chưa có dữ liệu" — OQ
+// F059-12; SIS connections with schools and
 // sync runs; no input that writes, no secret/credential/token even when the response carries fields outside the
 // schema); F059 screens are platform-only (403 page, chunk D not loaded for ad.truong.a / cm.noidung / sm.antoan);
 // 403 PERMISSION_DENIED shows its trace id, MFA_REQUIRED opens the step-up; a turned-off menu is hidden and its
@@ -22,9 +23,19 @@ afterEach(() => {
 const F059_URLS = ['/platform-admin/access-control', '/platform-admin/audit-logs', '/platform-admin/student-activity', '/platform-admin/feature-toggles', '/platform-admin/integrations'];
 
 describe('Tích hợp chỉ xem (F059-AC-22/23)', () => {
-  it('reference tab says getIntegrationOverview is pending; SIS tab lists connections, schools, runs; no secret, no write input', async () => {
+  it('reference tab shows getIntegrationOverview (route groups "Chưa có dữ liệu"); SIS tab lists connections, schools, runs; no secret, no write input', async () => {
     const { backend, user } = await renderAccess('/platform-admin/integrations');
-    expect(await screen.findByText(/getIntegrationOverview/)).toBeInTheDocument();
+    expect(await screen.findByText('https://sso.eduworld.local/realms/eduworld')).toBeInTheDocument();
+    expect(backend.calls('GET', '/admin/integrations')[0]!.headers['x-tenant-id']).toBeUndefined();
+    expect(screen.getByText('eduworld-portal')).toBeInTheDocument();
+    expect(screen.getByText('Admin API (module identity)')).toBeInTheDocument();
+    expect(screen.getByText('Bắt buộc')).toBeInTheDocument();
+    expect(screen.getByText('900 giây')).toBeInTheDocument();
+    expect(screen.getByText('https://api.eduworld.local')).toBeInTheDocument();
+    expect(screen.getByText('Chưa cấu hình')).toBeInTheDocument();
+    expect(screen.getByText('Chưa có dữ liệu')).toBeInTheDocument();
+    expect(screen.getByText('Lỗi xác thực: 1')).toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('kc-secret-should-not-show');
     await user.click(screen.getByRole('tab', { name: 'SIS' }));
     expect(await screen.findByText('API SIS (contract v1)')).toBeInTheDocument();
     expect(screen.getByText('Đã cấu hình (ẩn)')).toBeInTheDocument();

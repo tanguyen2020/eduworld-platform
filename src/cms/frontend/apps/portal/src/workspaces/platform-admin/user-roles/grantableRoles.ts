@@ -13,6 +13,15 @@ export const TRAINING_REQUIRED_ROLE = 'safety_moderator';
 
 export const accountKindOf = (user: Pick<User, 'primary_tenant_id'>): AccountKind => (user.primary_tenant_id ? 'tenant' : 'platform');
 
+/**
+ * Tenants a `tenant` role can target for this account (OQ F059-5): its memberships as listed by listPlatformUsers
+ * (`User.tenant_ids`, within the tenant filter), else its home tenant; none for platform staff. The server re-checks (422).
+ */
+export function memberTenantsOf(user: Pick<User, 'primary_tenant_id' | 'tenant_ids'>): string[] {
+  if (user.tenant_ids?.length) return [...user.tenant_ids];
+  return user.primary_tenant_id ? [user.primary_tenant_id] : [];
+}
+
 export function canHavePortalRole(user: Pick<User, 'user_type'> | undefined): boolean {
   return user?.user_type !== 'student';
 }

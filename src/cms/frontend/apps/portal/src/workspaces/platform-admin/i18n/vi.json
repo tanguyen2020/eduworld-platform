@@ -208,7 +208,8 @@
       "import": "Import"
     },
     "schoolSearch": "Tìm theo tên/mã trường (từ 2 ký tự)",
-    "statusFilterGap": "Lọc theo trạng thái trường chưa có tham số trong API listCatalogSchools; cột Trạng thái hiển thị giá trị của từng trường.",
+    "allSchoolStatuses": "Mọi trạng thái",
+    "selectTenants": "Chọn ít nhất một tenant ở bộ lọc tenant để xem danh mục trường.",
     "sameProvince": "Đơn vị mới phải khác đơn vị cũ."
   },
   "import": {
@@ -262,7 +263,10 @@
     "approveTitle": "Xác nhận lần dọn của {{tenant}}?",
     "approveContent": "Worker sẽ dọn {{count}} học sinh (xóa mềm, khôi phục được khi đăng nhập lại).",
     "approved": "Đã xác nhận lần dọn.",
-    "cancelPending": "Nút Hủy có khi API cancelStudentCleanupRun được bổ sung.",
+    "cancelRun": "Hủy lần dọn",
+    "cancelRunTitle": "Hủy lần dọn của {{tenant}}?",
+    "cancelRunContent": "Lần dọn chuyển sang Đã hủy, không học sinh nào bị dọn ({{count}} học sinh trong danh sách). Lần chạy job sau sẽ tạo lần dọn mới.",
+    "runCancelled": "Đã hủy lần dọn.",
     "chatTitle": "Thời hạn lưu chat gameplay",
     "chatDays": "Số ngày lưu chat gameplay",
     "chatMinimum": "Tối thiểu {{min}} ngày.",
@@ -338,6 +342,7 @@
     "gone": "Role không còn tồn tại (đã bị xóa). Quay về danh sách."
   },
   "userRoles": {
+    "memberTenantsHelp": "Chỉ các tenant mà tài khoản đang thuộc.",
     "user": "Người dùng",
     "userId": "Mã người dùng (UUID)",
     "role": "Role",
@@ -378,7 +383,11 @@
     "revoked": "Đã thu hồi. Thay đổi áp dụng trong ≤ {{seconds}} giây."
   },
   "users": {
-    "listUnavailable": "Danh sách tài khoản mọi tenant có khi API listPlatformUsers được bổ sung. Hiện xem theo từng tenant hoặc tra cứu theo mã người dùng.",
+    "platformOnlyHint": "Chưa chọn tenant: danh sách chỉ gồm nhân sự platform. Chọn tenant ở bộ lọc tenant để xem tài khoản thuộc các tenant đó.",
+    "membersHint": "Tài khoản thuộc các tenant đang chọn; cột Thuộc tenant liệt kê tenant của tài khoản trong phạm vi lọc.",
+    "memberTenants": "Thuộc tenant",
+    "allTypes": "Mọi loại tài khoản",
+    "allStatuses": "Mọi trạng thái",
     "tenant": "Tenant",
     "userType": "Loại tài khoản",
     "type": {
@@ -387,7 +396,6 @@
     },
     "search": "Tìm theo tên đăng nhập, email, họ tên",
     "searchMin": "Nhập ít nhất {{min}} ký tự để tìm.",
-    "pickTenant": "Chọn một tenant để xem tài khoản.",
     "displayName": "Họ tên",
     "username": "Tên đăng nhập",
     "email": "Email",
@@ -419,7 +427,8 @@
     "createStaff": "Tạo nhân sự",
     "createTitle": "Tạo tài khoản nhân sự",
     "accountKind": "Loại nhân sự",
-    "platformCreateUnavailable": "Tạo nhân sự platform có khi API createPlatformUser được bổ sung.",
+    "initialPlatformRoles": "Role platform ban đầu",
+    "safetyLater": "Role safety_moderator được gán sau ở tab UserRole (cần ngày hoàn thành đào tạo).",
     "locale": "Ngôn ngữ",
     "initialRole": "Role ban đầu",
     "created": "Đã tạo tài khoản.",
@@ -478,7 +487,8 @@
     "occurredAt": "Thời điểm",
     "apply": "Lọc",
     "tenantHint": "Không chọn tenant: chỉ bản ghi platform.",
-    "permissionsHint": "Chỉ các hành động role.* và user_role.* (một hành động mỗi lần tra cứu)."
+    "permissionsHint": "Mọi hành động role.* và user_role.* trong một danh sách; chọn Hành động để xem riêng một loại.",
+    "allPermissionActions": "Mọi hành động role.*, user_role.*"
   },
   "loginEvents": {
     "student": "Học sinh",
@@ -553,7 +563,29 @@
     "readOnly": "Chỉ xem, để đối chiếu khi hỗ trợ trường. Không hiển thị secret, credential hay token.",
     "tabReference": "Keycloak · APISIX",
     "tabSis": "SIS",
-    "overviewUnavailable": "Thông tin Keycloak (issuer, realm, client) và APISIX (nhóm route) có khi API getIntegrationOverview được bổ sung.",
+    "keycloak": "Keycloak",
+    "issuer": "Issuer",
+    "realm": "Realm",
+    "clients": "Client",
+    "clientPurpose": {
+      "portal": "Admin Portal",
+      "game": "Game backend",
+      "admin_api": "Admin API (module identity)"
+    },
+    "platformMfa": "MFA cho role platform",
+    "maxAuthAge": "Tuổi tối đa lần xác thực (route platform)",
+    "seconds": "{{count}} giây",
+    "yes": "Bắt buộc",
+    "no": "Không bắt buộc",
+    "apisix": "APISIX",
+    "publicGateway": "Gateway public",
+    "internalGateway": "Gateway nội bộ",
+    "notConfigured": "Chưa cấu hình",
+    "routeGroups": "Nhóm route (prefix → service)",
+    "noData": "Chưa có dữ liệu",
+    "connectionsTotal": "Tổng số kết nối",
+    "connectionsByStatus": "Theo trạng thái",
+    "generatedAt": "Số liệu lúc {{at}}",
     "asCode": "Cấu hình Keycloak và APISIX được quản lý bằng realm-as-code và route-as-code, không sửa ở portal.",
     "allStatuses": "Mọi trạng thái",
     "provider": "Nguồn",

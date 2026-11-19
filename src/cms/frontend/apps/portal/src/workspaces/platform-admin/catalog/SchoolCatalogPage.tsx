@@ -1,23 +1,30 @@
-// School catalog (F057 T033, F057-AC-13, ADMIN_PORTAL §3.16): listCatalogSchools filtered by tenant, province, level
-// and name/code search (`q` 2–100). The operation only accepts X-Tenant-Id, so the System Admin picks exactly one tenant
-// in the tenant filter (F051-AC-24); status is a column (the contract has no status parameter — Câu hỏi mở F057-Q4).
+// School catalog (F057 T033, F057-AC-13, ADMIN_PORTAL §3.16): listCatalogSchools filtered by tenant, province, level,
+// status and name/code search (`q` 2–100). The System Admin reads one or more tenants of the tenant filter with
+// `tenant_ids[]` (CrossTenantScope, no X-Tenant-Id) and must pick at least one — the backend refuses a cross-tenant read
+// without tenant_ids (OQ F057-4); the Tenant column shows the tenant of each school.
 import { Alert, Button, Input, Select, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
+import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { TenantFilter } from '../../../shell/TenantControls';
-import { SCHOOL_LEVELS, useCatalogSchools, useProvinces, type School, type SchoolFilter, type SchoolLevel } from '../api/catalog';
+import { SCHOOL_LEVELS, SCHOOL_STATUSES, useCatalogSchools, useProvinces, type School, type SchoolFilter, type SchoolLevel, type SchoolStatus } from '../api/catalog';
+import { useTenantDirectory } from '../api/tenants';
 import { LIMITS } from '../limits';
+import { TenantCell } from '../ui';
 
 export function SchoolCatalogPage() {
   const { t, i18n } = useTranslation();
   const [filter, setFilter] = useState<SchoolFilter>({});
   const provinces = useProvinces('active');
   const list = useCatalogSchools(filter);
+  const scope = useCrossTenantScope();
+  const directory = useTenantDirectory(scope.crossTenant);
   const en = i18n.language.startsWith('en');
 
   const columns: ColumnsType<School> = [
+    ...(scope.crossTenant ? [{ key: 'tenant', title: t('platform.common.tenant'), render: (_: unknown, r: School) => <TenantCell tenantId={r.tenant_id} directory={directory} /> }] : []),
     { key: 'code', title: t('platform.catalog.schoolCode'), dataIndex: 'code' },
     { key: 'name', title: t('platform.catalog.schoolName'), render: (_, r) => (en && r.name.en ? r.name.en : r.name.vi) },
     { key: 'province', title: t('platform.catalog.province'), render: (_, r) => (r.province ? (en ? r.province.name.en : r.province.name.vi) : '') },
@@ -48,6 +55,14 @@ export function SchoolCatalogPage() {
           onChange={(school_level?: SchoolLevel) => setFilter((f) => ({ ...f, school_level }))}
           options={SCHOOL_LEVELS.map((x) => ({ value: x, label: t(`platform.catalog.schoolLevels.${x}`) }))}
         />
+        <Select
+          aria-label={t('platform.common.status')}
+          placeholder={t('platform.catalog.allSchoolStatuses')}
+          allowClear
+          value={filter.status}
+          onChange={(status?: SchoolStatus) => setFilter((f) => ({ ...f, status }))}
+          options={SCHOOL_STATUSES.map((x) => ({ value: x, label: t(`platform.catalog.schoolStatus.${x}`) }))}
+        />
         <Input.Search
           aria-label={t('platform.catalog.schoolSearch')}
           placeholder={t('platform.catalog.schoolSearch')}
@@ -57,8 +72,7 @@ export function SchoolCatalogPage() {
           onSearch={(v) => setFilter((f) => ({ ...f, q: v.trim().length >= LIMITS.schoolSearch.minLength ? v.trim() : undefined }))}
         />
       </Space>
-      <Alert type="info" message={t('platform.catalog.statusFilterGap')} />
-      {list.ready ? null : <Alert type="warning" showIcon message={t('shell.tenantTarget.selectOne')} />}
+      {list.ready ? null : <Alert type="warning" showIcon message={t('platform.catalog.selectTenants')} />}
       {list.error ? <ProblemMessage error={list.error} /> : null}
       {list.ready ? (
         <>

@@ -1,6 +1,7 @@
 // F057 T029/T030/T031 — F057-AC-11, F057-AC-12, F057-AC-13, F057-AC-03 (TC-ORG-101, TC-ORG-103, TC-CMS-TEN-03):
 // countries (only on/off + bilingual name with a reason, no delete), provinces (`status=all`, search, effective dates,
-// successor, edit = names/official_code only, new unit + succession), school catalog (one tenant → X-Tenant-Id),
+// successor, edit = names/official_code only, new unit + succession; edits send If-Match = row `version`, OQ F057-3),
+// school catalog (System Admin: ≥ 1 tenant → `tenant_ids[]` without X-Tenant-Id, Tenant column, status filter — OQ F057-4),
 // school CSV import (target tenant mandatory, dry-run with Idempotency-Key, errors per row, apply only after
 // confirmation). Backend = MOCK.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -28,7 +29,7 @@ async function openTab(name: string) {
 }
 
 describe('Quốc gia (F057-AC-11)', () => {
-  it('lists countries; toggling status needs a reason and calls updateCountry; no delete action', async () => {
+  it('lists countries; toggling status needs a reason and calls updateCountry with If-Match = row version; no delete action', async () => {
     const { backend, user } = await openTab('Quốc gia');
     const row = (await screen.findByText('Việt Nam')).closest('tr')!;
     expect(within(row).queryByRole('button', { name: /xóa/i })).toBeNull();
@@ -39,9 +40,10 @@ describe('Quốc gia (F057-AC-11)', () => {
     fireEvent.change(within(dialog).getByLabelText('Lý do'), { target: { value: 'Thử nghiệm môi trường local' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     await waitFor(() => expect(backend.calls('PATCH', '/admin/catalog/countries/VN')).toHaveLength(1));
-    expect(backend.calls('PATCH', '/admin/catalog/countries/VN')[0]!.body).toEqual({ status: 'inactive', reason: 'Thử nghiệm môi trường local' });
-    // no per-country version in listCountries (Câu hỏi mở F057-Q3): the server's 428 is shown by its code
-    expect(await within(dialog).findByText('Thiếu phiên bản dữ liệu. Tải lại rồi thử lại.')).toBeInTheDocument();
+    const req = backend.calls('PATCH', '/admin/catalog/countries/VN')[0]!;
+    expect(req.body).toEqual({ status: 'inactive', reason: 'Thử nghiệm môi trường local' });
+    expect(req.headers['if-match']).toBe('W/"1"');
+    expect(await screen.findByText('Đã lưu.')).toBeInTheDocument();
   });
 });
 
@@ -75,6 +77,7 @@ describe('Tỉnh/thành (F057-AC-12)', () => {
       official_code: '01',
       reason: 'Đối chiếu Nghị quyết',
     });
+    expect(backend.calls('PATCH', `/admin/catalog/provinces/${IDS.provinceHn}`)[0]!.headers['if-match']).toBe('W/"1"');
   });
 
   it('boundary change = new unit (createProvince) + succession (createProvinceSuccession), both with Idempotency-Key', async () => {
@@ -103,17 +106,25 @@ describe('Tỉnh/thành (F057-AC-12)', () => {
 });
 
 describe('Danh mục trường (F057-AC-13)', () => {
-  it('needs exactly one tenant: then listCatalogSchools with that X-Tenant-Id and filters', async () => {
+  it('System Admin: at least one tenant, then listCatalogSchools with tenant_ids[] (no X-Tenant-Id), Tenant column, status filter', async () => {
     const { backend, user } = await openTab('Danh mục trường');
-    expect(await screen.findByText('Chọn đúng một tenant để xem dữ liệu của màn này.')).toBeInTheDocument();
+    expect(await screen.findByText('Chọn ít nhất một tenant ở bộ lọc tenant để xem danh mục trường.')).toBeInTheDocument();
     expect(backend.calls('GET', '/catalog/schools')).toHaveLength(0);
-    tenantFilterStore.set([TENANTS.pgdDemo.tenant_id]);
+    tenantFilterStore.set([TENANTS.thDemoA.tenant_id, TENANTS.pgdDemo.tenant_id]);
     expect(await screen.findByText('Trường TH A')).toBeInTheDocument();
-    expect(backend.calls('GET', '/catalog/schools')[0]!.headers['x-tenant-id']).toBe(TENANTS.pgdDemo.tenant_id);
+    const first = backend.calls('GET', '/catalog/schools')[0]!;
+    expect(first.headers['x-tenant-id']).toBeUndefined();
+    expect(new URLSearchParams(first.search).getAll('tenant_ids')).toEqual([TENANTS.thDemoA.tenant_id, TENANTS.pgdDemo.tenant_id]);
+    const other = screen.getByText('Trường TH 2').closest('tr')!;
+    expect(within(other).getByText('Phòng GD Demo')).toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Cấp học' }));
     await user.click((await screen.findAllByTitle('Tiểu học')).at(-1)!);
     await waitFor(() => expect(backend.calls('GET', '/catalog/schools').some((r) => new URLSearchParams(r.search).get('school_level') === 'primary')).toBe(true));
-    expect(screen.getByText('Chờ duyệt')).toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Trạng thái' }));
+    await user.click((await screen.findAllByTitle('Chờ duyệt')).at(-1)!);
+    await waitFor(() => expect(backend.calls('GET', '/catalog/schools').some((r) => new URLSearchParams(r.search).get('status') === 'pending_review')).toBe(true));
+    await waitFor(() => expect(screen.queryByText('Trường TH 2')).toBeNull());
+    expect(screen.getByText('Trường TH A')).toBeInTheDocument();
   });
 });
 

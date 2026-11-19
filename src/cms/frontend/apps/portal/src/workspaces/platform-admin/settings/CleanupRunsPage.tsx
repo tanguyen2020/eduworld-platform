@@ -1,15 +1,19 @@
 // Cleanup runs of every tenant (F057 T037, F057-AC-15, ADR-0032): listStudentCleanupRuns (tenant filter → `tenant_ids[]`,
 // cursor) with candidates / cleaned / excluded / skipped; a run `awaiting_approval` gets "Xác nhận" (ActionGate
-// approve_cleanup) → confirmation → approveStudentCleanupRun (Idempotency-Key, X-Tenant-Id = tenant of the run).
-// No "Hủy" until cancelStudentCleanupRun exists (Câu hỏi mở F057-Q2).
-import { App as AntApp, Button, Card, Space, Table, Tag, Typography } from 'antd';
+// approve_cleanup) → confirmation → approveStudentCleanupRun, and "Hủy" (same action, ADR-0090) → ReasonDialog
+// (reason 3..500) → cancelStudentCleanupRun (OQ F057-2). Both send Idempotency-Key (kept when the same request is
+// retried) and X-Tenant-Id = tenant of the run. The backend decides whether the run can still be approved/cancelled (409).
+import { App as AntApp, Button, Card, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
+import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { TenantFilter } from '../../../shell/TenantControls';
-import { CLEANUP_CANCEL_AVAILABLE, useApproveRun, useCleanupRuns, type StudentCleanupRun } from '../api/cleanup';
+import { useApproveRun, useCancelRun, useCleanupRuns, type StudentCleanupRun } from '../api/cleanup';
 import { useTenantDirectory } from '../api/tenants';
+import { LIMITS } from '../limits';
 import { formatTime, TenantCell } from '../ui';
 
 export function CleanupRunsCard() {
@@ -18,10 +22,13 @@ export function CleanupRunsCard() {
   const runs = useCleanupRuns();
   const directory = useTenantDirectory();
   const approve = useApproveRun();
+  const cancel = useCancelRun();
+  const [cancelling, setCancelling] = useState<StudentCleanupRun | null>(null);
+  const tenantName = (run: StudentCleanupRun) => directory.get(run.tenant_id)?.name ?? run.tenant_id;
 
   const confirmApprove = (run: StudentCleanupRun) =>
     modal.confirm({
-      title: t('platform.settings.approveTitle', { tenant: directory.get(run.tenant_id)?.name ?? run.tenant_id }),
+      title: t('platform.settings.approveTitle', { tenant: tenantName(run) }),
       content: t('platform.settings.approveContent', { count: run.candidates ?? 0 }),
       okText: t('platform.settings.approve'),
       cancelText: t('platform.common.cancel'),
@@ -52,9 +59,14 @@ export function CleanupRunsCard() {
       render: (_, r) =>
         r.status === 'awaiting_approval' ? (
           <ActionGate actionKey="action.platform_admin.system_settings.approve_cleanup">
-            <Button size="small" type="primary" onClick={() => confirmApprove(r)}>
-              {t('platform.settings.approve')}
-            </Button>
+            <Space>
+              <Button size="small" type="primary" onClick={() => confirmApprove(r)}>
+                {t('platform.settings.approve')}
+              </Button>
+              <Button size="small" danger onClick={() => setCancelling(r)}>
+                {t('platform.settings.cancelRun')}
+              </Button>
+            </Space>
           </ActionGate>
         ) : null,
     },
@@ -64,7 +76,6 @@ export function CleanupRunsCard() {
     <Card title={t('platform.settings.runsTitle')}>
       <Space wrap>
         <TenantFilter />
-        {CLEANUP_CANCEL_AVAILABLE ? null : <Typography.Text type="secondary">{t('platform.settings.cancelPending')}</Typography.Text>}
       </Space>
       {runs.error ? <ProblemMessage error={runs.error} /> : null}
       {approve.error ? <ProblemMessage error={approve.error} /> : null}
@@ -74,6 +85,31 @@ export function CleanupRunsCard() {
           {t('platform.common.loadMore')}
         </Button>
       ) : null}
+      <ReasonDialog
+        open={!!cancelling}
+        title={cancelling ? t('platform.settings.cancelRunTitle', { tenant: tenantName(cancelling) }) : ''}
+        description={cancelling ? t('platform.settings.cancelRunContent', { count: cancelling.candidates ?? 0 }) : undefined}
+        minLength={LIMITS.cancelRunReason.minLength}
+        maxLength={LIMITS.cancelRunReason.maxLength}
+        confirmLoading={cancel.isPending}
+        error={cancel.error ? <ProblemMessage error={cancel.error} /> : null}
+        onCancel={() => {
+          setCancelling(null);
+          cancel.reset();
+        }}
+        onSubmit={(reason) =>
+          cancelling &&
+          cancel.mutate(
+            { run: cancelling, reason },
+            {
+              onSuccess: () => {
+                message.success(t('platform.settings.runCancelled'));
+                setCancelling(null);
+              },
+            },
+          )
+        }
+      />
     </Card>
   );
 }

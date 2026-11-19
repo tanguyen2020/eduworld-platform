@@ -1,6 +1,7 @@
 // Menu "Nhật ký toàn hệ thống" (F059 US4, F059-AC-15…17, FR-AUD-001/002, ADMIN_PORTAL §7): tab "Toàn hệ thống" =
 // listPlatformAuditLogs with mandatory `from`/`to` (default last 24 h), tenant filter (`tenant_ids[]`), actor, action,
-// resource type/id; tab "Phân quyền" = the same query restricted to the `role.*` / `user_role.*` actions. Filters live
+// resource type/id; tab "Phân quyền" = the same query with `action_prefix=role&action_prefix=user_role` (every
+// `role.*` / `user_role.*` action in one list, optionally one exact action — OQ F059-3). Filters live
 // in the URL query string (shareable link). A `422` (range over `audit_query_max_range_days`) is shown with the limit
 // and the filters are kept. Read only: no edit/delete of an audit entry anywhere.
 import { Alert, Button, DatePicker, Form, Input, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
@@ -107,7 +108,7 @@ function AuditLogView({ mode }: { mode: Mode }) {
         </Form.Item>
         <Form.Item name="action" label={t('platform.audit.action')}>
           {mode === 'permissions' ? (
-            <Select options={PERMISSION_AUDIT_ACTIONS.map((a) => ({ value: a, label: a }))} />
+            <Select allowClear placeholder={t('platform.audit.allPermissionActions')} options={PERMISSION_AUDIT_ACTIONS.map((a) => ({ value: a, label: a }))} />
           ) : (
             <Input allowClear {...limitInputProps(LIMITS.auditAction)} />
           )}

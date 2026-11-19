@@ -71,7 +71,19 @@ Chạy trong `src/cms/frontend` (tối đa 3 worker), commit `6b7a82d`. Backend 
 | 5–6, 20 | `AssignToTenantsDialog.test.tsx` (gán 2 tenant, gỡ gán có thông điệp lịch sử giữ nguyên, thử lại giữ `Idempotency-Key`, lỗi có `trace_id`) |
 | 7–8 | `CloneWizard.test.tsx` (`succeeded` + `id_map`, `partially_failed` không tự chạy lại, không loại dữ liệu học sinh, đích ≠ nguồn); bước xem trước chờ `previewTenantClone` (OQ F057-1) |
 | 9–10 | `TrashPage.test.tsx` (lý do 3–1000 + bộ đếm, `X-Tenant-Id` của bản ghi, `restorable=false`/`409`, không "Xóa vĩnh viễn") |
-| 11–13 | `Catalog.test.tsx` (quốc gia có lý do, sửa không biết version → `428` theo code — OQ F057-3; tỉnh `status=all`, kế thừa; danh mục trường một tenant; import dry-run → lỗi theo dòng → xác nhận áp dụng) |
-| 14–16b | `SystemSettings.test.tsx` (cảnh báo < 60 ngày, `default_days=null`, duyệt lần dọn, `RETENTION_BELOW_MINIMUM`, giới nghiêm "Mặc định", "hôm sau", HH:MM, xác nhận, `If-Match`, `422`/`412` theo code) |
+| 11–13 | `Catalog.test.tsx` (quốc gia có lý do, sửa gửi `If-Match` = `version` của dòng — OQ F057-3; tỉnh `status=all`, kế thừa; danh mục trường `tenant_ids[]` nhiều tenant + cột Tenant + lọc `status` — OQ F057-4; import dry-run → lỗi theo dòng → xác nhận áp dụng) |
+| 14–16b | `SystemSettings.test.tsx` (cảnh báo < 60 ngày, `default_days=null`, duyệt lần dọn, "Hủy lần dọn" có lý do + thử lại giữ `Idempotency-Key` — OQ F057-2, `RETENTION_BELOW_MINIMUM`, giới nghiêm "Mặc định", "hôm sau", HH:MM, xác nhận, `If-Match`, `422`/`412` theo code) |
 | 17, 21 | `TenantListPage.test.tsx` (lọc `q`/`tenant_type`, `maxlength` + bộ đếm, `409`, tắt có lý do + `If-Match`); `limits.test.ts` (mọi giới hạn = OpenAPI) |
 | 18–19, 22 | `workspaceGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan`, MFA step-up giữ URL, VPN, tab ẩn khi action tắt, `403 FEATURE_DISABLED` tải lại quyền) |
+
+### Bằng chứng 2026-11-20 (portal bật màn chờ backend — OQ F057-2/3/4, F059-1/2/3/5)
+
+Chạy trong `src/cms/frontend` (tối đa 2 worker), sau rebase lên `origin/main` (`7e0a59a`). Backend là MOCK theo contract mới (`src/test/platform-backend.ts`, `src/test/platform-access-backend.ts`); backend thật chờ compose (OQ F057-10, F059-9).
+
+| Lệnh | Kết quả |
+|---|---|
+| `pnpm lint` · `pnpm typecheck` · `pnpm gen:check` | xanh |
+| `pnpm build` (+ `check-chunks`) | 5 chunk workspace, không chunk nào do entry tải |
+| `npx vitest run --maxWorkers=2` (toàn bộ web) | 77 file, 575 test: 573 pass, 2 lỗi → sửa: `groupPermissions.test.ts` (kỳ vọng cũ `role.created`, đổi theo `action_prefix`) và `TrashPage.test.tsx` (click khi lớp loading còn `pointer-events: none` dưới tải CPU → click thường); chạy lại 2 file: 16/16 pass (thêm 1 test `memberTenantsOf`) |
+| Test thay đổi (`SystemSettings`, `TenantListPage`, `Catalog`, `Users`, `AuditLogs`, `IntegrationsGuard`, `limits.test.ts`) | 7 file, 102 test pass (Users 8/8 sau khi tách test ngăn chi tiết) |
+| `node scripts/specs/check-features.mjs` · `node scripts/specs/check-portal-catalog.mjs` | 93 feature, 0 lỗi, 0 cảnh báo · 0 lỗi |

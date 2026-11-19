@@ -1,6 +1,8 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the workspace D operations of specs/openapi/eduworld-api.v1.yaml
-// (identity module, F010/F016/F045) plugged into MockPortalBackend as overrides — tenants (cursor, create/update with
-// ETag/If-Match), tenant assignments, clone jobs, trash, catalog, school imports, platform settings and cleanup runs.
+// (identity module, F010/F016/F045) plugged into MockPortalBackend as overrides — tenants (cursor, `version` on list rows,
+// create/update with ETag/If-Match), tenant assignments, clone jobs, trash, catalog (countries/provinces with `version`,
+// listCatalogSchools with X-Tenant-Id or `tenant_ids[]` + `status`), school imports, platform settings, cleanup runs
+// (approve, cancel with reason + Idempotency-Key replay).
 // It records requests only; it is NOT a backend, enforces no authorization and is never imported by application code.
 import { MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
 
@@ -72,6 +74,8 @@ export interface PlatformState {
   chat: Record<string, unknown>;
   curfew: Record<string, unknown>;
   runs: Record<string, unknown>[];
+  /** Idempotency-Key → run id of a cancelStudentCleanupRun already applied (replay answers 204 again). */
+  cancels: Map<string, string>;
   importPolls: number;
 }
 
@@ -95,6 +99,7 @@ export function platformState(): PlatformState {
       { run_id: IDS.runAwaiting, tenant_id: TENANTS.thDemoA.tenant_id, status: 'awaiting_approval', candidates: 42, cleaned: 0, excluded: 3, skipped_active: 1, started_at: '2026-11-19T02:00:00Z', finished_at: null },
       { run_id: IDS.runDone, tenant_id: TENANTS.pgdDemo.tenant_id, status: 'completed', candidates: 5, cleaned: 5, excluded: 0, skipped_active: 0, started_at: '2026-11-18T02:00:00Z', finished_at: '2026-11-18T02:05:00Z' },
     ],
+    cancels: new Map(),
     importPolls: 0,
   };
 }
@@ -125,7 +130,7 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
       const all = s.tenants.filter((t) => (!text || t.code.includes(text) || t.name.toLowerCase().includes(text)) && (!type || t.tenant_type === type));
       const from = Number(q.get('cursor') ?? 0);
       const size = Math.min(Number(q.get('limit') ?? s.tenantPageSize), s.tenantPageSize);
-      const data = all.slice(from, from + size);
+      const data = all.slice(from, from + size).map((t) => ({ ...t, version: s.versions.get(`/admin/tenants/${t.tenant_id}`) ?? 1 }));
       const more = from + size < all.length;
       return json(200, { data, page: { has_more: more, next_cursor: more ? String(from + size) : null, limit: size } });
     }
@@ -199,15 +204,24 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
       return new Response(null, { status: 204 });
     }
     // catalog
-    if (route === 'GET /catalog/countries') return json(200, { items: [{ country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: 'active' }] }, { ETag: 'W/"catalog-1"' });
+    const version = (path: string) => s.versions.get(path) ?? 1;
+    const bump = (path: string) => {
+      const v = version(path) + 1;
+      s.versions.set(path, v);
+      return v;
+    };
+    if (route === 'GET /catalog/countries') {
+      return json(200, { items: [{ country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: 'active', version: version('/admin/catalog/countries/VN') }] }, { ETag: 'W/"catalog-1"' });
+    }
     if (rec.method === 'PATCH' && rec.path.startsWith('/admin/catalog/countries/')) {
       const bad = ifMatchOk(rec, rec.path, s);
       if (bad) return bad;
-      return json(200, { country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: body.status ?? 'active' });
+      const v = bump(rec.path);
+      return json(200, { country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: body.status ?? 'active', version: v }, { ETag: `W/"${v}"` });
     }
     if (route === 'GET /catalog/provinces') {
       const st = q.get('status') ?? 'active';
-      return json(200, { items: PROVINCES.filter((p) => st === 'all' || p.status === st) });
+      return json(200, { items: PROVINCES.filter((p) => st === 'all' || p.status === st).map((p) => ({ ...p, version: version(`/admin/catalog/provinces/${p.province_id}`) })) });
     }
     if (route === 'POST /admin/catalog/provinces') {
       const p = { ...PROVINCES[0], ...body, province_id: '0193a4d2-7777-7000-8000-000000000099' };
@@ -217,15 +231,32 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
     if (rec.method === 'PATCH' && rec.path.startsWith('/admin/catalog/provinces/')) {
       const bad = ifMatchOk(rec, rec.path, s);
       if (bad) return bad;
-      return json(200, { ...PROVINCES[0], ...body });
+      const v = bump(rec.path);
+      return json(200, { ...PROVINCES[0], ...body, version: v }, { ETag: `W/"${v}"` });
     }
     if (route === 'POST /admin/catalog/province-successions') return json(201, body);
     if (route === 'GET /catalog/schools') {
-      if (!rec.headers['x-tenant-id']) return problem(400, 'TENANT_HEADER_REQUIRED');
-      return json(200, {
-        items: [{ school_id: IDS.school, tenant_id: rec.headers['x-tenant-id'], code: 'th-a', name: { vi: 'Trường TH A' }, school_level: 'primary', grade_min: 1, grade_max: 5, status: 'pending_review', is_virtual: false, source: 'import', province: { code: 'vn.ha-noi', name: { vi: 'Hà Nội', en: 'Hanoi' } } }],
-        page: { has_more: false, limit: 50 },
-      });
+      // X-Tenant-Id (tenant session) or tenant_ids[] (System Admin, CrossTenantScope); neither → 403 (OQ F057-4)
+      const header = rec.headers['x-tenant-id'];
+      const ids = header ? [header] : q.getAll('tenant_ids');
+      if (!ids.length) return problem(403, 'PERMISSION_DENIED');
+      const status = q.get('status');
+      const items = ids
+        .map((tenant, i) => ({
+          school_id: `${IDS.school.slice(0, -2)}${String(i + 1).padStart(2, '0')}`,
+          tenant_id: tenant,
+          code: `th-${i + 1}`,
+          name: { vi: i === 0 ? 'Trường TH A' : `Trường TH ${i + 1}` },
+          school_level: 'primary',
+          grade_min: 1,
+          grade_max: 5,
+          status: i === 0 ? 'pending_review' : 'active',
+          is_virtual: false,
+          source: 'import',
+          province: { code: 'vn.ha-noi', name: { vi: 'Hà Nội', en: 'Hanoi' } },
+        }))
+        .filter((x) => !status || x.status === status);
+      return json(200, { items, page: { has_more: false, limit: 50 } });
     }
     if (route === 'POST /admin/schools:import') {
       const dry = String(rec.body).includes('name="dry_run"\r\n\r\ntrue');
@@ -271,6 +302,19 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
       if (!run) return problem(404, 'NOT_FOUND');
       run.status = 'approved';
       return new Response(null, { status: 202 });
+    }
+    const cancel = /^\/admin\/student-cleanup\/runs\/([^/:]+):cancel$/.exec(rec.path);
+    if (rec.method === 'POST' && cancel) {
+      const key = rec.headers['idempotency-key'] ?? '';
+      if (s.cancels.get(key) === cancel[1]) return new Response(null, { status: 204, headers: { 'Idempotent-Replayed': 'true' } });
+      const reason = typeof body.reason === 'string' ? body.reason : '';
+      if (reason.length < 3 || reason.length > 500) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'reason', code: 'INVALID' }] });
+      const run = s.runs.find((r) => r.run_id === cancel[1]);
+      if (!run) return problem(404, 'NOT_FOUND');
+      if (run.status !== 'awaiting_approval') return problem(409, 'INVALID_STATE_TRANSITION');
+      run.status = 'cancelled';
+      s.cancels.set(key, String(run.run_id));
+      return new Response(null, { status: 204 });
     }
     return undefined;
   });

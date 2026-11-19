@@ -1,6 +1,7 @@
 // F057 T034/T035/T036/T051 — F057-AC-14, F057-AC-15, F057-AC-16, F057-AC-23 (TC-AUTH-020, TC-AUTH-021, TC-AUTH-092):
 // student cleanup settings (schema bounds, mandatory reason, low-days warning, PUT + If-Match), cleanup runs (counts,
-// "Xác nhận" → approveStudentCleanupRun with Idempotency-Key + X-Tenant-Id of the run, no "Hủy" yet), chat retention
+// "Xác nhận" → approveStudentCleanupRun with Idempotency-Key + X-Tenant-Id of the run; "Hủy" → reason 3..500 →
+// cancelStudentCleanupRun, same Idempotency-Key on retry, run "Đã hủy" — OQ F057-2), chat retention
 // (blocked under minimum_days, RETENTION_BELOW_MINIMUM by code), platform curfew ("Mặc định", next-day window, HH:MM
 // errors on the field, reason, confirmation, If-Match, 412/422 by code). Backend = MOCK.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -54,14 +55,16 @@ describe('Dọn học sinh (F057-AC-14)', () => {
 });
 
 describe('Lần dọn chờ xác nhận (F057-AC-15)', () => {
-  it('lists runs with counts; "Xác nhận" → approveStudentCleanupRun with Idempotency-Key + X-Tenant-Id; no "Hủy" yet', async () => {
+  it('lists runs with counts; "Xác nhận" → approveStudentCleanupRun with Idempotency-Key + X-Tenant-Id', async () => {
     const { backend, user } = await open();
     const c = card('Lần dọn chờ xác nhận');
     const row = (await within(c).findByText('Chờ xác nhận')).closest('tr')!;
     expect(within(row).getByText('TH Demo A')).toBeInTheDocument();
     expect(within(row).getByText('42')).toBeInTheDocument();
-    expect(within(c).getByText('Nút Hủy có khi API cancelStudentCleanupRun được bổ sung.')).toBeInTheDocument();
-    expect(within(c).queryByRole('button', { name: 'Hủy' })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Hủy lần dọn' })).toBeInTheDocument();
+    // a finished run has neither action
+    const done = within(c).getByText('Hoàn tất').closest('tr')!;
+    expect(within(done).queryByRole('button', { name: 'Hủy lần dọn' })).toBeNull();
     await user.click(within(row).getByRole('button', { name: 'Xác nhận' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Worker sẽ dọn 42 học sinh (xóa mềm, khôi phục được khi đăng nhập lại).')).toBeInTheDocument();
@@ -71,6 +74,37 @@ describe('Lần dọn chờ xác nhận (F057-AC-15)', () => {
     expect(req.headers['idempotency-key']).toMatch(UUIDV7);
     expect(req.headers['x-tenant-id']).toBe(TENANTS.thDemoA.tenant_id);
     expect(await within(c).findByText('Đã xác nhận')).toBeInTheDocument();
+  });
+
+  it('"Hủy lần dọn" → reason 3..500 → cancelStudentCleanupRun; retry keeps the Idempotency-Key; run "Đã hủy" (OQ F057-2)', async () => {
+    const { backend, user } = await open();
+    let failed = false;
+    const path = `/admin/student-cleanup/runs/${IDS.runAwaiting}:cancel`;
+    backend.overrides.unshift((r) => (r.method === 'POST' && r.path === path && !failed ? ((failed = true), problem(500, 'INTERNAL')) : undefined));
+    const c = card('Lần dọn chờ xác nhận');
+    const row = (await within(c).findByText('Chờ xác nhận')).closest('tr')!;
+    await user.click(within(row).getByRole('button', { name: 'Hủy lần dọn' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/không học sinh nào bị dọn \(42 học sinh/)).toBeInTheDocument();
+    const reason = within(dialog).getByLabelText('Lý do');
+    expect(reason).toHaveAttribute('maxlength', '500');
+    fireEvent.change(reason, { target: { value: 'ab' } });
+    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
+    expect(await within(dialog).findByText('Tối thiểu 3 ký tự.')).toBeInTheDocument();
+    expect(backend.calls('POST', path)).toHaveLength(0);
+    fireEvent.change(reason, { target: { value: 'Danh sách học sinh chưa đúng' } });
+    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
+    expect(await within(dialog).findByText('Mã truy vết: trace-internal')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
+    await waitFor(() => expect(backend.calls('POST', path)).toHaveLength(2));
+    const [first, second] = backend.calls('POST', path);
+    expect(first!.headers['idempotency-key']).toMatch(UUIDV7);
+    expect(second!.headers['idempotency-key']).toBe(first!.headers['idempotency-key']);
+    expect(second!.headers['x-tenant-id']).toBe(TENANTS.thDemoA.tenant_id);
+    expect(second!.body).toEqual({ reason: 'Danh sách học sinh chưa đúng' });
+    expect(await screen.findByText('Đã hủy lần dọn.')).toBeInTheDocument();
+    expect(await within(c).findByText('Đã hủy')).toBeInTheDocument();
+    expect(backend.calls('POST', `/admin/student-cleanup/runs/${IDS.runAwaiting}:approve`)).toHaveLength(0);
   });
 });
 

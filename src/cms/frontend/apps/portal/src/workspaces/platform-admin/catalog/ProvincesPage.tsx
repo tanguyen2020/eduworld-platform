@@ -43,7 +43,7 @@ function ProvinceForm({ province, onClose }: { province: Province | null; onClos
     const official = v.official_code?.trim() ? v.official_code.trim() : null;
     const ok = () => (message.success(t('platform.common.saved')), onClose());
     if (province) {
-      update.mutate({ id: province.province_id, input: { ...names, official_code: official, reason: v.reason.trim() } }, { onSuccess: ok });
+      update.mutate({ id: province.province_id, version: province.version, input: { ...names, official_code: official, reason: v.reason.trim() } }, { onSuccess: ok });
     } else {
       const input: ProvinceInput = {
         ...names,

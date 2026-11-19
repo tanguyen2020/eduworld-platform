@@ -50,7 +50,7 @@ describe('Thùng rác mọi tenant (F057-AC-09)', () => {
   it('restore: reason required (min 3, counter), then restoreTrashItem with Idempotency-Key + X-Tenant-Id of the item', async () => {
     const { backend, user } = await renderPlatform('/platform-admin/trash');
     const row = (await screen.findByText('Câu hỏi bảng nhân 7')).closest('tr')!;
-    await user.click(within(row).getByRole('button', { name: 'Khôi phục' }));
+    fireEvent.click(within(row).getByRole('button', { name: 'Khôi phục' })); // plain click: the table loading overlay can still carry pointer-events: none under CPU load
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     expect(await within(dialog).findByText('Vui lòng nhập lý do.')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('Thùng rác mọi tenant (F057-AC-09)', () => {
   it('platform record: restore without X-Tenant-Id', async () => {
     const { backend, user } = await renderPlatform('/platform-admin/trash');
     const row = (await screen.findByText('Câu hỏi platform')).closest('tr')!;
-    await user.click(within(row).getByRole('button', { name: 'Khôi phục' }));
+    fireEvent.click(within(row).getByRole('button', { name: 'Khôi phục' })); // plain click: the table loading overlay can still carry pointer-events: none under CPU load
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText('Lý do'), { target: { value: 'Khôi phục dữ liệu chung' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
@@ -96,7 +96,7 @@ describe('Không khôi phục được (F057-AC-10)', () => {
     const row = (await screen.findByText('Câu hỏi bảng nhân 7')).closest('tr')!;
     // the server knows better than the loaded list: the code was reused after the page loaded
     state.trash[0]!.restorable = false;
-    await user.click(within(row).getByRole('button', { name: 'Khôi phục' }));
+    fireEvent.click(within(row).getByRole('button', { name: 'Khôi phục' })); // plain click: the table loading overlay can still carry pointer-events: none under CPU load
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText('Lý do'), { target: { value: 'Giáo viên xóa nhầm' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));

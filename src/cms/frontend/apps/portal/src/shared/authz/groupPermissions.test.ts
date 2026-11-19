@@ -8,7 +8,7 @@ import { ApiError } from '../api/middleware/problem';
 import { filterFromParams, isPermissionAction, PERMISSION_AUDIT_ACTIONS } from '../../workspaces/platform-admin/api/audit';
 import { endReasonKey } from '../../workspaces/platform-admin/api/loginEvents';
 import { rejectedPermissions } from '../../workspaces/platform-admin/api/roles';
-import { accountKindOf, canHavePortalRole, grantableRoles, grantableScopes, scopeNeedsId, validRange } from '../../workspaces/platform-admin/user-roles/grantableRoles';
+import { accountKindOf, canHavePortalRole, memberTenantsOf, grantableRoles, grantableScopes, scopeNeedsId, validRange } from '../../workspaces/platform-admin/user-roles/grantableRoles';
 import { groupByTenant } from '../../workspaces/platform-admin/api/userRoles';
 import { filterPermissions, groupPermissions, pickablePermissions, rolesByPermission, type Permission } from './groupPermissions';
 
@@ -81,13 +81,26 @@ describe('grant dialog offer (F059-AC-07/08)', () => {
   });
 });
 
+describe('member tenants of an account (OQ F059-5)', () => {
+  it('User.tenant_ids first, else the home tenant, none for platform staff', () => {
+    expect(memberTenantsOf({ primary_tenant_id: 'tA', tenant_ids: ['tA', 'tB'] })).toEqual(['tA', 'tB']);
+    expect(memberTenantsOf({ primary_tenant_id: 'tA' })).toEqual(['tA']);
+    expect(memberTenantsOf({ primary_tenant_id: 'tA', tenant_ids: [] })).toEqual(['tA']);
+    expect(memberTenantsOf({ primary_tenant_id: null })).toEqual([]);
+  });
+});
+
 describe('audit and login labels (F059-AC-15/16/18)', () => {
-  it('audit filter defaults to the last 24 hours; the permission log only asks role.* / user_role.* actions', () => {
+  it('audit filter defaults to the last 24 hours; the permission log asks action_prefix role + user_role', () => {
     const now = dayjs('2026-11-19T12:00:00Z');
     const f = filterFromParams(new URLSearchParams(''), 'system', now);
     expect(f.from).toBe('2026-11-18T12:00:00.000Z');
     expect(f.to).toBe('2026-11-19T12:00:00.000Z');
-    expect(filterFromParams(new URLSearchParams('action=tenant.created'), 'permissions', now).action).toBe('role.created');
+    // permission log: always action_prefix role + user_role (OQ F059-3); an action outside the groups is dropped
+    const perm = filterFromParams(new URLSearchParams('action=tenant.created'), 'permissions', now);
+    expect(perm.action).toBeUndefined();
+    expect(perm.actionPrefixes).toEqual(['role', 'user_role']);
+    expect(f.actionPrefixes).toBeUndefined();
     expect(filterFromParams(new URLSearchParams('action=user_role.revoked'), 'permissions', now).action).toBe('user_role.revoked');
     expect(PERMISSION_AUDIT_ACTIONS.every(isPermissionAction)).toBe(true);
   });

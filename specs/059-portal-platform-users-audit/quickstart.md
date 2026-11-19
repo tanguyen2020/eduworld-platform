@@ -74,10 +74,22 @@ Chạy trong `src/cms/frontend` (tối đa 2 worker), commit `b75d83a`. Backend 
 | 1 | `AccessControlRoles.test.tsx` › Permission catalog (nhóm `group_code`, `catalog_version`, role chứa, lọc phạm vi, không nút ghi) |
 | 2–5 | `AccessControlRoles.test.tsx` (không `X-Tenant-Id`, "Hệ thống"/"Dùng chung", role tenant chỉ xem; tạo + `Idempotency-Key`, picker theo `scope_kind`; `422 PERMISSION_NOT_ALLOWED_FOR_SCOPE` giữ form, thử lại giữ khóa; sửa `If-Match` + lý do, `412`/`403` theo code; `404` đóng editor; xóa `409` khi còn người dùng, `If-Match` + `reason`; nhân bản role hệ thống) |
 | 6–10, 26 | `UserRoles.test.tsx` (cột, lọc `user_id`/`tenant_ids[]`; nhân sự platform → role platform, không header, mất mạng → thử lại cùng `Idempotency-Key`, `409`; nhân sự tenant → tenant đích, role của tenant, scope `school` + id, `X-Tenant-Id`; `safety_moderator` bắt buộc ngày đào tạo, `422 ROLE_NOT_FOUND`; thu hồi có lý do + header tenant của UserRole) |
-| 11–14 | `Users.test.tsx` (tài khoản theo tenant với `X-Tenant-Id`, nhãn SIS, học sinh chỉ đọc; ngăn chi tiết UserRole mọi tenant, không mật khẩu/token/IP; khóa/mở khóa/vô hiệu hóa có lý do; tạo nhân sự trường `409 EMAIL_TAKEN` + gợi ý; nhân sự platform khóa — OQ F059-1) |
-| 15–17 | `AuditLogs.test.tsx` (24 giờ mặc định, lọc vào URL, `tenant_ids[]`, `changes` escape, `trace_id`; nhật ký phân quyền chỉ `role.*`/`user_role.*`; `422` giữ bộ lọc + giới hạn 93 ngày) |
+| 11–14 | `Users.test.tsx` (`listPlatformUsers`: chỉ nhân sự platform khi chưa chọn tenant, `tenant_ids[]` + cột "Thuộc tenant", `q`/loại/`status`, nhãn SIS, học sinh chỉ đọc; gán role từ dòng chỉ tenant thành viên — OQ F059-5; ngăn chi tiết UserRole mọi tenant, không mật khẩu/token/IP; khóa/mở khóa/vô hiệu hóa có lý do; tạo nhân sự trường `409 EMAIL_TAKEN` + gợi ý; tạo nhân sự platform `createPlatformUser` không `X-Tenant-Id`, `409 USERNAME_TAKEN` + gợi ý — OQ F059-1) |
+| 15–17 | `AuditLogs.test.tsx` (24 giờ mặc định, lọc vào URL, `tenant_ids[]`, `changes` escape, `trace_id`; nhật ký phân quyền một truy vấn `action_prefix=role&action_prefix=user_role` — OQ F059-3; `422` giữ bộ lọc + giới hạn 93 ngày) |
 | 18–19 | `LoginEventsFlags.test.tsx` (7 ngày, nhãn `end_reason`, cursor "Tải thêm", không IP) |
 | 20–21 | `LoginEventsFlags.test.tsx` (mặc định platform + `If-Match` + lý do, mục bảo vệ không tắt được, ghi đè tenant `X-Tenant-Id`, `412` tải lại + "Đã có người sửa") |
-| 22–23 | `IntegrationsGuard.test.tsx` (tab SIS: connection, trường, lần sync; trường ngoài schema không vào DOM, không ô nhập; Keycloak/APISIX chờ OQ F059-2) |
+| 22–23 | `IntegrationsGuard.test.tsx` (tab SIS: connection, trường, lần sync; trường ngoài schema không vào DOM, không ô nhập; Keycloak/APISIX từ `getIntegrationOverview`, nhóm route "Chưa có dữ liệu" — OQ F059-2, F059-12) |
 | 24–25, 28 | `IntegrationsGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan` ở cả 5 URL; menu ẩn khi thiếu `platform.audit.read`; `PERMISSION_DENIED` + `trace_id`; MFA step-up; menu tắt → "Tính năng đang tắt", mục bảo vệ còn; action tắt ẩn nút; `403 FEATURE_DISABLED` tải lại quyền) |
 | 27 | `limits.test.ts` (giới hạn = OpenAPI, `principal_cache_ttl`/`audit_query_max_range_days` = CONFIG_DEFAULTS) + `maxlength`/bộ đếm trong test màn |
+
+### Bằng chứng 2026-11-20 (portal bật màn chờ backend — OQ F057-2/3/4, F059-1/2/3/5)
+
+Chạy trong `src/cms/frontend` (tối đa 2 worker), sau rebase lên `origin/main` (`7e0a59a`). Backend là MOCK theo contract mới (`src/test/platform-backend.ts`, `src/test/platform-access-backend.ts`); backend thật chờ compose (OQ F057-10, F059-9).
+
+| Lệnh | Kết quả |
+|---|---|
+| `pnpm lint` · `pnpm typecheck` · `pnpm gen:check` | xanh |
+| `pnpm build` (+ `check-chunks`) | 5 chunk workspace, không chunk nào do entry tải |
+| `npx vitest run --maxWorkers=2` (toàn bộ web) | 77 file, 575 test: 573 pass, 2 lỗi → sửa: `groupPermissions.test.ts` (kỳ vọng cũ `role.created`, đổi theo `action_prefix`) và `TrashPage.test.tsx` (click khi lớp loading còn `pointer-events: none` dưới tải CPU → click thường); chạy lại 2 file: 16/16 pass (thêm 1 test `memberTenantsOf`) |
+| Test thay đổi (`SystemSettings`, `TenantListPage`, `Catalog`, `Users`, `AuditLogs`, `IntegrationsGuard`, `limits.test.ts`) | 7 file, 102 test pass (Users 8/8 sau khi tách test ngăn chi tiết) |
+| `node scripts/specs/check-features.mjs` · `node scripts/specs/check-portal-catalog.mjs` | 93 feature, 0 lỗi, 0 cảnh báo · 0 lỗi |

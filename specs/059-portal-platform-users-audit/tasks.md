@@ -60,27 +60,27 @@
 
 ### Tests cho User Story 3
 
-- [x] T029 [P] [US3] Test F059-AC-11: `listPlatformUsers` lọc `q`/`user_type`/`status`/`tenant_ids[]`/`platform_only`; nhãn SIS; học sinh không nút gán role (TC-CMS-RBAC-02) — file: `…/platform/__tests__/PlatformUserListPage.test.tsx` — phải FAIL trước khi code — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/Users.test.tsx` › tenant accounts… (theo phạm vi contract có — OQ F059-1)
-- [x] T030 [P] [US3] Test F059-AC-12: tạo nhân sự platform (`createPlatformUser`) / trường (`createTenantUser` + `X-Tenant-Id`), email bắt buộc, `409` + gợi ý (TC-CMS-LOGIN-04, TC-AUTH-081) — file: `…/platform/__tests__/CreateUserDialog.test.tsx` — **2026-11-20:** `Users.test.tsx` › Tạo nhân sự (nhân sự platform khóa tới khi có `createPlatformUser`)
+- [x] T029 [P] [US3] Test F059-AC-11: `listPlatformUsers` lọc `q`/`user_type`/`status`/`tenant_ids[]`/`platform_only`; nhãn SIS; học sinh không nút gán role (TC-CMS-RBAC-02) — file: `…/platform/__tests__/PlatformUserListPage.test.tsx` — phải FAIL trước khi code — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/Users.test.tsx` › tenant accounts… (theo phạm vi contract có — OQ F059-1) — **2026-11-20 (portal):** `listPlatformUsers` thật: không chọn tenant = chỉ nhân sự platform, bộ lọc tenant → `tenant_ids[]` + cột "Thuộc tenant", `q`/loại/`status` (OQ F059-1) — `Users.test.tsx` › platform staff without tenant filter…, status filter
+- [x] T030 [P] [US3] Test F059-AC-12: tạo nhân sự platform (`createPlatformUser`) / trường (`createTenantUser` + `X-Tenant-Id`), email bắt buộc, `409` + gợi ý (TC-CMS-LOGIN-04, TC-AUTH-081) — file: `…/platform/__tests__/CreateUserDialog.test.tsx` — **2026-11-20:** `Users.test.tsx` › Tạo nhân sự (nhân sự platform khóa tới khi có `createPlatformUser`) — **2026-11-20 (portal):** "Nhân sự platform" bật: `createPlatformUser` không `X-Tenant-Id`, role platform ban đầu (không `safety_moderator`), lý do, `Idempotency-Key`, `409 USERNAME_TAKEN` + gợi ý — `Users.test.tsx` › platform staff: createPlatformUser…
 - [x] T031 [P] [US3] Test F059-AC-13: khóa có lý do + `Idempotency-Key`; nút mở khóa/vô hiệu hóa chỉ khi contract có — file: `…/platform/__tests__/LockUserDialog.test.tsx` — **2026-11-20:** `Users.test.tsx` › lock / unlock / deactivate
-- [x] T032 [P] [US3] Test F059-AC-14: chi tiết UserRole theo tenant; DOM không có token/IP — file: `…/platform/__tests__/UserDetailDrawer.test.tsx` — **2026-11-20:** `Users.test.tsx` › detail drawer without secrets
+- [x] T032 [P] [US3] Test F059-AC-14: chi tiết UserRole theo tenant; DOM không có token/IP — file: `…/platform/__tests__/UserDetailDrawer.test.tsx` — **2026-11-20:** `Users.test.tsx` › detail drawer without secrets — **2026-11-20 (portal):** `Users.test.tsx` › detail drawer (tách test riêng)
 
 ### Implementation cho User Story 3
 
-- [x] T033 [P] [US3] Hook người dùng — file: `…/platform/api/users.ts` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/users.ts`
-- [x] T034 [US3] Trang người dùng, ngăn chi tiết, hộp tạo/khóa — file: `…/platform/users/PlatformUserListPage.tsx`, `UserDetailDrawer.tsx`, `CreateUserDialog.tsx`, `LockUserDialog.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/users/PlatformUserPage.tsx`, `UserDetailDrawer.tsx`, `CreateUserDialog.tsx` (khóa = `ReasonDialog` trong ngăn chi tiết)
+- [x] T033 [P] [US3] Hook người dùng — file: `…/platform/api/users.ts` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/users.ts` — **2026-11-20 (portal):** `usePlatformUsers`, `useCreatePlatformUser`; cờ `PLATFORM_USERS_AVAILABLE` đã gỡ
+- [x] T034 [US3] Trang người dùng, ngăn chi tiết, hộp tạo/khóa — file: `…/platform/users/PlatformUserListPage.tsx`, `UserDetailDrawer.tsx`, `CreateUserDialog.tsx`, `LockUserDialog.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/users/PlatformUserPage.tsx`, `UserDetailDrawer.tsx`, `CreateUserDialog.tsx` (khóa = `ReasonDialog` trong ngăn chi tiết) — **2026-11-20 (portal):** `PlatformUserPage.tsx` theo `listPlatformUsers` (bỏ xem theo một tenant bằng `listTenantUsers`), `CreateUserDialog.tsx` hai loại theo action; gán role từ dòng chỉ cho tenant trong `User.tenant_ids` (OQ F059-5) — `Users.test.tsx` › grant from a row
 
 ## Phase 6: User Story 4 — Audit toàn hệ thống (Priority: P1)
 
 ### Tests cho User Story 4
 
 - [x] T035 [P] [US4] Test F059-AC-15: `from`/`to` bắt buộc (mặc định 24 giờ), lọc đủ tham số, ngăn chi tiết `changes` escape, `trace_id` (TC-CMS-TEN-02) — file: `…/platform/__tests__/PlatformAuditLogPage.test.tsx` — phải FAIL trước khi code — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/AuditLogs.test.tsx` › Nhật ký toàn hệ thống
-- [x] T036 [P] [US4] Test F059-AC-16: nhật ký phân quyền chỉ `role.*`/`user_role.*` — file: `…/platform/__tests__/PermissionAuditPage.test.tsx` — **2026-11-20:** `AuditLogs.test.tsx` › Nhật ký phân quyền (OQ F059-3)
+- [x] T036 [P] [US4] Test F059-AC-16: nhật ký phân quyền chỉ `role.*`/`user_role.*` — file: `…/platform/__tests__/PermissionAuditPage.test.tsx` — **2026-11-20:** `AuditLogs.test.tsx` › Nhật ký phân quyền (OQ F059-3) — **2026-11-20 (portal):** một truy vấn `action_prefix=role&action_prefix=user_role`, "Hành động" tùy chọn (AND) — `AuditLogs.test.tsx` › Nhật ký phân quyền (OQ F059-3)
 - [x] T037 [P] [US4] Test F059-AC-17: `422` khoảng thời gian giữ bộ lọc; không nút sửa/xóa — file: `…/platform/__tests__/PlatformAuditLogPage.errors.test.tsx` — **2026-11-20:** `AuditLogs.test.tsx` › 422 over the maximum range
 
 ### Implementation cho User Story 4
 
-- [x] T038 [US4] Hook + trang audit, nhật ký phân quyền, ngăn chi tiết — file: `…/platform/api/audit.ts`, `…/platform/audit/PlatformAuditLogPage.tsx`, `PermissionAuditPage.tsx`, `AuditDetailDrawer.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/audit.ts`, `audit/AuditLogsPage.tsx` (hai tab), `audit/AuditDetailDrawer.tsx`
+- [x] T038 [US4] Hook + trang audit, nhật ký phân quyền, ngăn chi tiết — file: `…/platform/api/audit.ts`, `…/platform/audit/PlatformAuditLogPage.tsx`, `PermissionAuditPage.tsx`, `AuditDetailDrawer.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/audit.ts`, `audit/AuditLogsPage.tsx` (hai tab), `audit/AuditDetailDrawer.tsx` — **2026-11-20 (portal):** `api/audit.ts` `PERMISSION_AUDIT_PREFIXES` → `action_prefix[]`
 
 ## Phase 7: User Story 5 — Đăng nhập game liên tenant (Priority: P2)
 
@@ -107,12 +107,12 @@
 
 ### Tests cho User Story 7
 
-- [x] T044 [P] [US7] Test F059-AC-22: panel Keycloak/APISIX từ `getIntegrationOverview`, tab SIS `listSisConnections`/`listSisConnectionSchools`/`listSisSyncRuns` — file: `…/platform/__tests__/IntegrationsPage.test.tsx` — phải FAIL trước khi code — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/IntegrationsGuard.test.tsx` › Tích hợp chỉ xem (panel Keycloak/APISIX chờ OQ F059-2)
+- [x] T044 [P] [US7] Test F059-AC-22: panel Keycloak/APISIX từ `getIntegrationOverview`, tab SIS `listSisConnections`/`listSisConnectionSchools`/`listSisSyncRuns` — file: `…/platform/__tests__/IntegrationsPage.test.tsx` — phải FAIL trước khi code — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/IntegrationsGuard.test.tsx` › Tích hợp chỉ xem (panel Keycloak/APISIX chờ OQ F059-2) — **2026-11-20 (portal):** tab Keycloak · APISIX từ `getIntegrationOverview` (issuer, realm, client, MFA, URL gateway, "Chưa cấu hình", nhóm route "Chưa có dữ liệu" — OQ F059-12, SIS theo trạng thái); trường ngoài schema `client_secret` không vào DOM — `IntegrationsGuard.test.tsx` › Tích hợp
 - [x] T045 [P] [US7] Test F059-AC-23: không ô nhập, không render trường ngoài schema; E2E quét secret trong response/DOM — file: `src/cms/frontend/apps/portal/e2e/platform/integrations.spec.ts` — **2026-11-20:** mức integration: `IntegrationsGuard.test.tsx` (trường ngoài schema `secret_ref`/`api_token` không vào DOM, không ô nhập); quét response ở E2E chờ compose (OQ F059-9)
 
 ### Implementation cho User Story 7
 
-- [x] T046 [US7] Hook + trang Tích hợp — file: `…/platform/api/integrations.ts`, `…/platform/api/sisConnections.ts`, `…/platform/integrations/IntegrationsPage.tsx`, `KeycloakPanel.tsx`, `ApisixPanel.tsx`, `SisConnectionsTab.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/integrations.ts`, `integrations/IntegrationsPage.tsx`, `integrations/SisConnectionsTab.tsx` (panel Keycloak/APISIX chờ OQ F059-2)
+- [x] T046 [US7] Hook + trang Tích hợp — file: `…/platform/api/integrations.ts`, `…/platform/api/sisConnections.ts`, `…/platform/integrations/IntegrationsPage.tsx`, `KeycloakPanel.tsx`, `ApisixPanel.tsx`, `SisConnectionsTab.tsx` — **2026-11-20:** `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/integrations.ts`, `integrations/IntegrationsPage.tsx`, `integrations/SisConnectionsTab.tsx` (panel Keycloak/APISIX chờ OQ F059-2) — **2026-11-20 (portal):** `useIntegrationOverview`, `integrations/IntegrationOverviewTab.tsx`; cờ `INTEGRATION_OVERVIEW_AVAILABLE` đã gỡ
 
 ## Phase 10: User Story 8 — Bảo vệ màn và đầu vào (Priority: P1)
 

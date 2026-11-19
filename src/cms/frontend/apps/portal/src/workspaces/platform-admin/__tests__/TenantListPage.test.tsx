@@ -1,12 +1,12 @@
 // F057 T038/T043 + T010 — F057-AC-17, F057-AC-21, F057-AC-01 edge cases (TC-TEN-024, TC-TEN-018): tenant list filtered
 // by `q`/`tenant_type`, cursor paging ("Tải thêm"), create form limited by the schema with counters, 409 CONFLICT
-// shown on duplicate code, disable asks for a reason then updateTenant (merge patch, If-Match from the last write,
-// Idempotency-Key); without a known version the server's 428 is shown by its code (Câu hỏi mở F057-Q3). Topbar tenant
+// shown on duplicate code, disable asks for a reason then updateTenant (merge patch, If-Match = `version` of the list
+// row, Idempotency-Key); a stale version gets the server's 412 shown by its code (OQ F057-3). Topbar tenant
 // filter pages by cursor while scrolling and marks a disabled tenant "đã tắt". Backend = MOCK.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tenantFilterStore } from '../../../shell/tenantFilterStore';
-import { stopPortals } from '../../../test/portal-harness';
+import { stopPortals, TENANTS } from '../../../test/portal-harness';
 import { platformState, renderPlatform } from '../../../test/platform-backend';
 
 // whole-portal flows with several Ant Design selects and dialogs are slow on the throttled shared CPU (2 workers max)
@@ -75,9 +75,8 @@ describe('Quản lý tenant (F057-AC-17)', () => {
     expect(await screen.findByText('th-moi')).toBeInTheDocument();
   });
 
-  it('disable asks for a reason; updateTenant sends status + reason with If-Match of the last write', async () => {
+  it('disable asks for a reason; updateTenant sends status + reason with If-Match = version of the row', async () => {
     const { backend, user } = await renderPlatform('/platform-admin/tenants');
-    // create first: its ETag is the version the edit needs (the list has none — Câu hỏi mở F057-Q3)
     await user.click(await screen.findByRole('button', { name: 'Tạo tenant' }));
     const create = await screen.findByRole('dialog');
     fireEvent.change(within(create).getByLabelText('Mã'), { target: { value: 'th-tam' } });
@@ -99,14 +98,30 @@ describe('Quản lý tenant (F057-AC-17)', () => {
     await waitFor(() => expect(within(screen.getByText('th-tam').closest('tr')!).getByText('Đã tắt')).toBeInTheDocument());
   });
 
-  it('edit without a known version → 428 PRECONDITION_REQUIRED shown by code', async () => {
-    const { user } = await renderPlatform('/platform-admin/tenants');
+  it('edit of a tenant not written in this session: If-Match = row version (OQ F057-3); stale version → 412 by code', async () => {
+    const state = platformState();
+    const path = `/admin/tenants/${TENANTS.pgdDemo.tenant_id}`;
+    state.versions.set(path, 3);
+    const { backend, user } = await renderPlatform('/platform-admin/tenants', { state });
     const row = (await screen.findByText('pgd-demo')).closest('tr')!;
     await user.click(within(row).getByRole('button', { name: 'Sửa' }));
     const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Tên'), { target: { value: 'Phòng GD Demo mới' } });
     fireEvent.change(within(dialog).getByLabelText('Lý do'), { target: { value: 'Đổi tên đơn vị' } });
+    state.versions.set(path, 4); // someone else saved meanwhile
     await user.click(within(dialog).getByRole('button', { name: 'Lưu' }));
-    expect(await within(dialog).findByText('Thiếu phiên bản dữ liệu. Tải lại rồi thử lại.')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Dữ liệu đã được người khác cập nhật. Tải lại rồi thử lại.')).toBeInTheDocument();
+    expect(backend.calls('PATCH', path)[0]!.headers['if-match']).toBe('W/"3"');
+    await user.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+    // reloaded list carries version 4: the next edit succeeds
+    await waitFor(() => expect(backend.calls('GET', '/admin/tenants').length).toBeGreaterThan(1));
+    await user.click(within((await screen.findByText('pgd-demo')).closest('tr')!).getByRole('button', { name: 'Sửa' }));
+    const again = (await screen.findAllByRole('dialog')).at(-1)!;
+    fireEvent.change(within(again).getByLabelText('Lý do'), { target: { value: 'Đổi tên đơn vị' } });
+    await user.click(within(again).getByRole('button', { name: 'Lưu' }));
+    await waitFor(() => expect(backend.calls('PATCH', path)).toHaveLength(2));
+    expect(backend.calls('PATCH', path)[1]!.headers['if-match']).toBe('W/"4"');
+    expect(await screen.findByText('Đã cập nhật tenant.')).toBeInTheDocument();
   });
 });
 

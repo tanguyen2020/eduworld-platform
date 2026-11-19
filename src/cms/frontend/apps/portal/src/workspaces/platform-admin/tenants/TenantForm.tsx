@@ -26,7 +26,7 @@ export function TenantForm({ tenant, onClose }: { tenant: TenantSummary | null; 
     const onError = (e: unknown) => applyFieldErrors(form, e, ['code', 'name', 'keycloak_org_alias', 'reason'], t, (k) => i18n.exists(k));
     if (tenant) {
       update.mutate(
-        { tenantId: tenant.tenant_id, patch: { name: v.name.trim(), reason: v.reason.trim() } },
+        { tenantId: tenant.tenant_id, version: tenant.version, patch: { name: v.name.trim(), reason: v.reason.trim() } },
         { onSuccess: () => (message.success(t('platform.tenants.updated')), onClose()), onError },
       );
     } else {

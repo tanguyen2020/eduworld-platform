@@ -208,7 +208,8 @@
       "import": "Import"
     },
     "schoolSearch": "Search by school name/code (2+ characters)",
-    "statusFilterGap": "listCatalogSchools has no status parameter yet; the Status column shows the value of each school.",
+    "allSchoolStatuses": "All statuses",
+    "selectTenants": "Pick at least one tenant in the tenant filter to see the school catalog.",
     "sameProvince": "The new unit must differ from the old unit."
   },
   "import": {
@@ -262,7 +263,10 @@
     "approveTitle": "Approve the cleanup run of {{tenant}}?",
     "approveContent": "The worker will clean up {{count}} student(s) (soft delete, restored when they sign in again).",
     "approved": "Cleanup run approved.",
-    "cancelPending": "The Cancel button arrives with the cancelStudentCleanupRun API.",
+    "cancelRun": "Cancel run",
+    "cancelRunTitle": "Cancel the cleanup run of {{tenant}}?",
+    "cancelRunContent": "The run becomes Cancelled and no student is cleaned up ({{count}} student(s) listed). The next job run creates a new cleanup run.",
+    "runCancelled": "Cleanup run cancelled.",
     "chatTitle": "Gameplay chat retention",
     "chatDays": "Gameplay chat retention (days)",
     "chatMinimum": "At least {{min}} days.",
@@ -338,6 +342,7 @@
     "gone": "The role no longer exists (deleted). Back to the list."
   },
   "userRoles": {
+    "memberTenantsHelp": "Only the tenants the account belongs to.",
     "user": "User",
     "userId": "User id (UUID)",
     "role": "Role",
@@ -378,7 +383,11 @@
     "revoked": "Revoked. The change applies within {{seconds}} seconds."
   },
   "users": {
-    "listUnavailable": "The account list of every tenant comes with the listPlatformUsers API. For now browse one tenant or look an account up by id.",
+    "platformOnlyHint": "No tenant selected: the list holds platform staff only. Pick tenants in the tenant filter to see their accounts.",
+    "membersHint": "Accounts of the selected tenants; the Member of column lists the account tenants within the filter.",
+    "memberTenants": "Member of",
+    "allTypes": "All account types",
+    "allStatuses": "All statuses",
     "tenant": "Tenant",
     "userType": "Account type",
     "type": {
@@ -387,7 +396,6 @@
     },
     "search": "Search by username, email, name",
     "searchMin": "Type at least {{min}} characters to search.",
-    "pickTenant": "Pick a tenant to see its accounts.",
     "displayName": "Full name",
     "username": "Username",
     "email": "Email",
@@ -419,7 +427,8 @@
     "createStaff": "Create staff",
     "createTitle": "Create a staff account",
     "accountKind": "Staff kind",
-    "platformCreateUnavailable": "Creating platform staff comes with the createPlatformUser API.",
+    "initialPlatformRoles": "Initial platform roles",
+    "safetyLater": "The safety_moderator role is granted later in the UserRole tab (training date required).",
     "locale": "Language",
     "initialRole": "Initial role",
     "created": "Account created.",
@@ -478,7 +487,8 @@
     "occurredAt": "Time",
     "apply": "Filter",
     "tenantHint": "No tenant picked: platform entries only.",
-    "permissionsHint": "role.* and user_role.* actions only (one action per query)."
+    "permissionsHint": "Every role.* and user_role.* action in one list; pick an Action to see one kind only.",
+    "allPermissionActions": "Every role.*, user_role.* action"
   },
   "loginEvents": {
     "student": "Student",
@@ -553,7 +563,29 @@
     "readOnly": "View only, to check settings while supporting schools. No secret, credential or token is shown.",
     "tabReference": "Keycloak · APISIX",
     "tabSis": "SIS",
-    "overviewUnavailable": "Keycloak (issuer, realm, clients) and APISIX (route groups) come with the getIntegrationOverview API.",
+    "keycloak": "Keycloak",
+    "issuer": "Issuer",
+    "realm": "Realm",
+    "clients": "Clients",
+    "clientPurpose": {
+      "portal": "Admin Portal",
+      "game": "Game backend",
+      "admin_api": "Admin API (identity module)"
+    },
+    "platformMfa": "MFA for platform roles",
+    "maxAuthAge": "Max authentication age (platform routes)",
+    "seconds": "{{count}} s",
+    "yes": "Required",
+    "no": "Not required",
+    "apisix": "APISIX",
+    "publicGateway": "Public gateway",
+    "internalGateway": "Internal gateway",
+    "notConfigured": "Not configured",
+    "routeGroups": "Route groups (prefix → service)",
+    "noData": "No data yet",
+    "connectionsTotal": "Connections",
+    "connectionsByStatus": "By status",
+    "generatedAt": "Figures as of {{at}}",
     "asCode": "Keycloak and APISIX are configured as code (realm-as-code, route-as-code), not in the portal.",
     "allStatuses": "All statuses",
     "provider": "Source",

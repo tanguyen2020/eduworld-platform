@@ -1,7 +1,9 @@
 // Shared plumbing of the workspace D API hooks (F057, plan "application" layer): typed apiClient of F050, cursor
 // pages, job polling. Hooks only call the API and shape requests — every rule is enforced by the backend (AGENTS R1, R7).
-import { useInfiniteQuery, type QueryKey } from '@tanstack/react-query';
+import { useInfiniteQuery, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
+import { IF_MATCH_HEADER } from '../../../shared/api/middleware/ifmatch';
+import { ApiError } from '../../../shared/api/middleware/problem';
 import type { components } from '../../../shared/api/schema.gen';
 import { PAGE_SIZE } from '../limits';
 
@@ -38,3 +40,14 @@ export const pageQuery = (cursor: string | undefined) => (cursor ? { limit: PAGE
 export const FINAL_JOB_STATUSES: readonly string[] = ['succeeded', 'partially_failed', 'failed', 'cancelled'];
 
 export const isFinalJob = (status: string | undefined): boolean => !!status && FINAL_JOB_STATUSES.includes(status);
+
+/**
+ * If-Match from the `version` a list row carries (TenantSummary, Country, Province — OQ F057-3; the backend reads
+ * W/"n", "n" or n). No version → no header, and the apiClient falls back to the ETag of an earlier write in the session.
+ */
+export const versionIfMatch = (version?: number | null): Record<string, string> => (version == null ? {} : { [IF_MATCH_HEADER]: `W/"${version}"` });
+
+/** `onError` of an edit with a row version: on 412 VERSION_MISMATCH reload the list, so the next edit sends the new version. */
+export const reloadOnStaleVersion = (qc: QueryClient, queryKey: QueryKey) => (error: unknown) => {
+  if (error instanceof ApiError && error.code === 'VERSION_MISMATCH') void qc.invalidateQueries({ queryKey });
+};

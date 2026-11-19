@@ -1,6 +1,7 @@
 // F059 T035–T037 — F059-AC-15…17 (TC-CMS-TEN-02, TC-CMS-RBAC-04): system-wide audit with mandatory from/to (default
 // last 24 h), filters (tenant_ids[], actor, action within maxLength, resource) in the URL, detail drawer with `changes`
-// as escaped JSON and `trace_id`; permission log limited to role.* / user_role.* actions; `422` over the range keeps the
+// as escaped JSON and `trace_id`; permission log = one query with action_prefix=role&action_prefix=user_role (OQ F059-3),
+// optionally narrowed to one exact action; `422` over the range keeps the
 // filters and shows the limit; no edit/delete of audit entries. Backend = MOCK.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -65,10 +66,14 @@ describe('Nhật ký toàn hệ thống (F059-AC-15/17)', () => {
 });
 
 describe('Nhật ký phân quyền (F059-AC-16)', () => {
-  it('only role.* / user_role.* actions are queried', async () => {
+  it('one query with action_prefix=role&action_prefix=user_role; optional exact action', async () => {
     const { backend, user } = await renderAccess('/platform-admin/audit-logs?tab=permissions');
-    await waitFor(() => expect(backend.calls('GET', '/admin/audit-logs').length).toBeGreaterThan(0));
-    expect(new URLSearchParams(backend.calls('GET', '/admin/audit-logs').at(-1)!.search).get('action')).toBe('role.created');
+    expect(await screen.findByText('Bổ nhiệm')).toBeInTheDocument();
+    // platform_settings.changed is outside the permission groups
+    expect(screen.queryByText('Tắt báo cáo')).toBeNull();
+    const first = new URLSearchParams(backend.calls('GET', '/admin/audit-logs').at(-1)!.search);
+    expect(first.getAll('action_prefix')).toEqual(['role', 'user_role']);
+    expect(first.get('action')).toBeNull();
     await user.click(screen.getByRole('combobox', { name: 'Hành động' }));
     await screen.findAllByTitle('user_role.granted');
     const options = [...document.querySelectorAll('.ant-select-item-option')].map((o) => o.getAttribute('title'));
@@ -76,7 +81,8 @@ describe('Nhật ký phân quyền (F059-AC-16)', () => {
     for (const o of options) expect(o).toMatch(/^(role|user_role)\./);
     await user.click((await screen.findAllByTitle('user_role.granted')).at(-1)!);
     await user.click(screen.getByRole('button', { name: 'Lọc' }));
+    await waitFor(() => expect(new URLSearchParams(backend.calls('GET', '/admin/audit-logs').at(-1)!.search).get('action')).toBe('user_role.granted'));
     expect(await screen.findByText('Bổ nhiệm')).toBeInTheDocument();
-    for (const r of backend.calls('GET', '/admin/audit-logs')) expect(new URLSearchParams(r.search).get('action')).toMatch(/^(role|user_role)\./);
+    for (const r of backend.calls('GET', '/admin/audit-logs')) expect(new URLSearchParams(r.search).getAll('action_prefix')).toEqual(['role', 'user_role']);
   });
 });

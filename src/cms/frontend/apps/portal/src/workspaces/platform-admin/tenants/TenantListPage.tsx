@@ -110,7 +110,7 @@ export function TenantListPage({ title }: { title: string }) {
         onSubmit={(reason) =>
           toggling &&
           update.mutate(
-            { tenantId: toggling.tenant_id, patch: { status: disabling ? 'disabled' : 'active', reason } },
+            { tenantId: toggling.tenant_id, version: toggling.version, patch: { status: disabling ? 'disabled' : 'active', reason } },
             { onSuccess: () => setToggling(null) },
           )
         }

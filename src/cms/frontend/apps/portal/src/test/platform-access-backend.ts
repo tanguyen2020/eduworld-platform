@@ -1,6 +1,8 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the F059 operations of specs/openapi/eduworld-api.v1.yaml —
-// permission catalog, platform roles (ETag/If-Match), UserRoles (Idempotency-Key replay), tenant accounts, account
-// lock/unlock/deactivate, platform audit, cross-tenant login events, feature flags (If-Match) and SIS connections —
+// permission catalog, platform roles (ETag/If-Match), UserRoles (Idempotency-Key replay), tenant accounts,
+// listPlatformUsers (platform staff only without `tenant_ids`, members of the filtered tenants with `User.tenant_ids`
+// otherwise), createPlatformUser (Idempotency-Key replay), account lock/unlock/deactivate, platform audit (`action`,
+// `action_prefix[]`), cross-tenant login events, feature flags (If-Match), getIntegrationOverview and SIS connections —
 // plugged into MockPortalBackend after the workspace D mock of platform-backend.ts. It mimics the contract answers the
 // screens must display (422/409/412/403 codes); it is NOT a backend, enforces no authorization and is never imported
 // by application code.
@@ -68,6 +70,10 @@ export interface AccessState {
   flags: Obj[];
   /** Idempotency-Key → created UserRole (replay returns the same record). */
   grants: Map<string, Obj>;
+  /** user_id → tenants the account belongs to (source of `User.tenant_ids` in listPlatformUsers). */
+  memberships: Map<string, string[]>;
+  /** Idempotency-Key → platform user created by createPlatformUser (replay returns the same record). */
+  createdPlatformUsers: Map<string, Obj>;
 }
 
 export function accessState(): AccessState {
@@ -88,6 +94,7 @@ export function accessState(): AccessState {
       { user_role_id: AIDS.urPgd, user_id: AIDS.qlcm, role_id: AIDS.roleTenantAdmin, role_code: 'tenant_admin', tenant_id: TENANTS.pgdDemo.tenant_id, scope_type: 'school', scope_id: AIDS.school, valid_from: '2026-09-01T00:00:00Z', valid_to: null, source: 'manual', granted_by: null, created_at: '2026-09-01T00:00:00Z' },
     ],
     users: [
+      { user_id: AIDS.cmDuyet, user_type: 'staff', primary_tenant_id: null, status: 'active', username: 'cm.duyet', email: 'cm.duyet@eduworld.vn', display_name: 'Cán bộ duyệt nội dung', source: 'manual', version: 1 },
       { user_id: AIDS.qlcm, user_type: 'staff', primary_tenant_id: TENANTS.thDemoA.tenant_id, status: 'active', username: 'qlcm.truong.a', email: 'qlcm.truong.a@thdemo.edu.vn', display_name: 'Quản lý chuyên môn', source: 'manual', last_login_at: '2026-11-18T07:00:00Z', version: 1 },
       { user_id: AIDS.pgdStaff, user_type: 'staff', primary_tenant_id: TENANTS.pgdDemo.tenant_id, status: 'active', username: 'cv.pgd', email: 'cv.pgd@pgd.edu.vn', display_name: 'Chuyên viên PGD', source: 'manual', version: 1 },
       { user_id: AIDS.hsAn, user_type: 'student', primary_tenant_id: TENANTS.thDemoA.tenant_id, status: 'active', username: 'hs.an.3a', email: null, display_name: 'Nguyễn An', source: 'sis', version: 1 },
@@ -108,6 +115,12 @@ export function accessState(): AccessState {
       { flag_key: 'menu.platform_admin.audit_logs', flag_kind: 'menu', parent_key: null, default_enabled: true, tenant_override: null, effective_enabled: true, can_disable: false, version: 0 },
     ],
     grants: new Map(),
+    memberships: new Map([
+      [AIDS.qlcm, [TENANTS.thDemoA.tenant_id, TENANTS.pgdDemo.tenant_id]],
+      [AIDS.pgdStaff, [TENANTS.pgdDemo.tenant_id]],
+      [AIDS.hsAn, [TENANTS.thDemoA.tenant_id]],
+    ]),
+    createdPlatformUsers: new Map(),
   };
 }
 
@@ -208,6 +221,68 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
       s.users.push(u);
       return json(201, u);
     }
+    if (route === 'GET /admin/users') {
+      // without tenant_ids: platform staff only (AGENTS R8); with tenant_ids: members of those tenants + their tenant_ids
+      const type = q.get('user_type');
+      const status = q.get('status');
+      const text = q.get('q')?.toLowerCase() ?? '';
+      const match = (u: Obj) =>
+        (!type || u.user_type === type) && (!status || u.status === status) && (!text || [u.username, u.email, u.display_name].some((x) => String(x ?? '').toLowerCase().includes(text)));
+      const rows = tenantIds.length
+        ? s.users.flatMap((u) => {
+            const members = (s.memberships.get(String(u.user_id)) ?? []).filter((id) => tenantIds.includes(id));
+            return members.length && match(u) ? [{ ...u, tenant_ids: members }] : [];
+          })
+        : s.users.filter((u) => !u.primary_tenant_id && match(u));
+      return json(200, page(rows));
+    }
+    if (route === 'POST /admin/users') {
+      const key = rec.headers['idempotency-key'] ?? '';
+      const replay = s.createdPlatformUsers.get(key);
+      if (replay) return json(201, replay, { 'Idempotent-Replayed': 'true' });
+      if (rec.headers['x-tenant-id']) return problem(422, 'VALIDATION_FAILED');
+      if (s.users.some((u) => u.email === body.email)) return problem(409, 'EMAIL_TAKEN');
+      if (s.users.some((u) => u.username === body.username)) return problem(409, 'USERNAME_TAKEN');
+      const roles = (body.initial_role_ids as string[] | undefined) ?? [];
+      if (!roles.length || roles.some((id) => s.roles.find((r) => r.role_id === id)?.role_scope_kind !== 'platform')) {
+        return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'initial_role_ids', code: 'INVALID' }] });
+      }
+      const u = {
+        user_id: `0193a4d2-9100-7000-8000-0000000002${String(s.users.length).padStart(2, '0')}`,
+        user_type: 'staff',
+        primary_tenant_id: null,
+        status: 'pending',
+        username: body.username,
+        email: body.email,
+        display_name: body.display_name,
+        locale: body.locale,
+        source: 'manual',
+        version: 1,
+      };
+      s.users.push(u);
+      s.createdPlatformUsers.set(key, u);
+      return json(201, u);
+    }
+    if (route === 'GET /admin/integrations') {
+      return json(200, {
+        generated_at: '2026-11-20T08:00:00Z',
+        keycloak: {
+          issuer_url: 'https://sso.eduworld.local/realms/eduworld',
+          realm: 'eduworld',
+          clients: [
+            { client_id: 'eduworld-portal', purpose: 'portal' },
+            { client_id: 'eduworld-game-backend', purpose: 'game' },
+            { client_id: 'eduworld-identity-admin', purpose: 'admin_api' },
+          ],
+          platform_mfa_required: true,
+          platform_auth_max_age_seconds: 900,
+          // outside the schema (must never be rendered, F059-AC-23)
+          client_secret: 'kc-secret-should-not-show',
+        },
+        apisix: { public_base_url: 'https://api.eduworld.local', internal_base_url: null },
+        sis: { connections_total: 3, connections_by_status: { active: 2, auth_error: 1 } },
+      });
+    }
     if (rec.method === 'POST' && /^\/admin\/users\/[^/]+:(lock|unlock|deactivate)$/.test(rec.path)) return new Response(null, { status: 204 });
     const schools = /^\/admin\/tenants\/([^/]+)\/schools$/.exec(rec.path);
     if (rec.method === 'GET' && schools) {
@@ -219,7 +294,10 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
       if (!from || !to) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'from', code: 'REQUIRED' }] });
       if (new Date(to).getTime() - new Date(from).getTime() > 93 * 86_400_000) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'from', code: 'INVALID' }] });
       const action = q.get('action');
-      const rows = s.audit.filter((a) => (!action || a.action === action) && (tenantIds.length ? tenantIds.includes(String(a.tenant_id)) : true));
+      const prefixes = q.getAll('action_prefix');
+      if (prefixes.length > 10) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'action_prefix', code: 'INVALID' }] });
+      const inGroup = (a: string) => !prefixes.length || prefixes.some((p) => a === p || a.startsWith(`${p}.`));
+      const rows = s.audit.filter((a) => (!action || a.action === action) && inGroup(String(a.action)) && (tenantIds.length ? tenantIds.includes(String(a.tenant_id)) : true));
       return json(200, page(rows, 'data'));
     }
     if (route === 'GET /admin/login-events') {

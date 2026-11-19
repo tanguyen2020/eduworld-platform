@@ -71,7 +71,7 @@ export function CountriesPage() {
         error={update.error ? <ProblemMessage error={update.error} /> : null}
         onCancel={close}
         onSubmit={(reason) =>
-          toggling && update.mutate({ code: toggling.country_code, input: { status: toggling.status === 'active' ? 'inactive' : 'active', reason } }, { onSuccess: done })
+          toggling && update.mutate({ code: toggling.country_code, version: toggling.version, input: { status: toggling.status === 'active' ? 'inactive' : 'active', reason } }, { onSuccess: done })
         }
       />
       <Modal
@@ -84,7 +84,7 @@ export function CountriesPage() {
         forceRender
         onOk={async () => {
           const v = await form.validateFields().catch(() => null);
-          if (v && renaming) update.mutate({ code: renaming.country_code, input: { name: { vi: v.vi.trim(), en: v.en.trim() }, reason: v.reason.trim() } }, { onSuccess: done });
+          if (v && renaming) update.mutate({ code: renaming.country_code, version: renaming.version, input: { name: { vi: v.vi.trim(), en: v.en.trim() }, reason: v.reason.trim() } }, { onSuccess: done });
         }}
       >
         <Form form={form} name="country_name" layout="vertical">

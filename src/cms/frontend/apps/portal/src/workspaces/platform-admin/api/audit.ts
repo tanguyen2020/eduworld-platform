@@ -1,6 +1,8 @@
 // Audit hooks (F059 T038, F059-AC-15…17, FR-AUD-001/002, ADMIN_PORTAL §7): listPlatformAuditLogs with mandatory
 // `from`/`to`, `tenant_ids[]` of the tenant filter (no X-Tenant-Id; none selected = platform entries, as the backend
-// answers), `actor_id`, `action`, `resource_type`, `resource_id`, cursor. Read only: there is no write on audit.
+// answers), `actor_id`, `action`, `action_prefix[]`, `resource_type`, `resource_id`, cursor. The permission log is one
+// query with `action_prefix=role&action_prefix=user_role` (OQ F059-3 resolved 2026-11-20), optionally narrowed to one
+// exact `action` (AND). Read only: there is no write on audit.
 import dayjs, { type Dayjs } from 'dayjs';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { AUDIT_DEFAULT_HOURS, LIMITS } from '../limits';
@@ -13,14 +15,18 @@ export interface AuditFilter {
   to: string;
   actorId?: string;
   action?: string;
+  /** `action_prefix[]` (OR between the values, AND with `action`). */
+  actionPrefixes?: readonly string[];
   resourceType?: string;
   resourceId?: string;
 }
 
+/** Action groups of the permission log, sent as `action_prefix` values (dot-separated prefixes, F059-AC-16). */
+export const PERMISSION_AUDIT_PREFIXES = ['role', 'user_role'] as const;
+
 /**
- * Actions of the permission log (role.* and user_role.*), as emitted by module identity (F012 plan "Audit action").
- * The audit query matches `action` exactly (no prefix filter yet — delta T007 owner F015, Câu hỏi mở F059-Q3), so the
- * permission log asks for one of these at a time.
+ * Actions of the permission log (role.* and user_role.*), as emitted by module identity (F012 plan "Audit action"):
+ * the optional "Hành động" choice that narrows the permission log to one exact action.
  */
 export const PERMISSION_AUDIT_ACTIONS = ['role.created', 'role.updated', 'role.deleted', 'user_role.granted', 'user_role.revoked', 'user_role.expired'] as const;
 
@@ -37,7 +43,8 @@ export function filterFromParams(params: URLSearchParams, mode: AuditMode, now: 
     from,
     to,
     actorId: params.get('actor_id') ?? undefined,
-    action: mode === 'permissions' ? (action && (PERMISSION_AUDIT_ACTIONS as readonly string[]).includes(action) ? action : PERMISSION_AUDIT_ACTIONS[0]) : action,
+    action: mode === 'permissions' ? (action && (PERMISSION_AUDIT_ACTIONS as readonly string[]).includes(action) ? action : undefined) : action,
+    ...(mode === 'permissions' ? { actionPrefixes: PERMISSION_AUDIT_PREFIXES } : {}),
     resourceType: params.get('resource_type') ?? undefined,
     resourceId: params.get('resource_id') ?? undefined,
   };
@@ -51,6 +58,7 @@ export function useAuditLogs(f: AuditFilter) {
     to: f.to,
     ...(f.actorId ? { actor_id: f.actorId } : {}),
     ...(f.action ? { action: f.action } : {}),
+    ...(f.actionPrefixes?.length ? { action_prefix: [...f.actionPrefixes] } : {}),
     ...(f.resourceType ? { resource_type: f.resourceType } : {}),
     ...(f.resourceId ? { resource_id: f.resourceId } : {}),
   });

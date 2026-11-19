@@ -1,6 +1,7 @@
 // Grant a UserRole (F059 T028, F059-AC-07/08/10, ADR-0081, ADR-0072, AGENTS R20): platform staff (no home tenant) get
 // only `platform` roles at scope `platform`, sent without X-Tenant-Id; staff with a home tenant get only `tenant`
-// roles of the target tenant (`TenantTargetField`), scope `tenant`/`school`/`subject` with its id, sent with
+// roles of the target tenant (`TenantTargetField`, or only the account's member tenants when the caller knows them from
+// `User.tenant_ids` — OQ F059-5), scope `tenant`/`school`/`subject` with its id, sent with
 // X-Tenant-Id = target. Idempotency-Key per intent (kept on retry), mandatory reason, optional validity
 // (`valid_to` > `valid_from`), training date mandatory for `safety_moderator`. Server answers (422 incl.
 // ROLE_NOT_FOUND, 409) are shown by `code` without clearing the form.
@@ -10,8 +11,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { clampTenantSearch } from '../../../shared/api/hooks/useTenantOptions';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
-import { TenantTargetField } from '../../../shell/TenantControls';
+import { tenantLabel, TenantTargetField } from '../../../shell/TenantControls';
 import { useRoleOptions } from '../api/roles';
+import { useTenantDirectory } from '../api/tenants';
 import { useGrantUserRole, useTenantSchools, useTenantStaff, type UserRoleGrantRequest, type UserRoleScopeType } from '../api/userRoles';
 import { isUuid, LIMITS, PRINCIPAL_CACHE_TTL_SECONDS } from '../limits';
 import { applyFieldErrors, ReasonField } from '../ui';
@@ -35,6 +37,24 @@ export interface GrantPreset {
   kind?: AccountKind;
   userId?: string;
   tenantId?: string;
+  /** Member tenants of the account (`User.tenant_ids` or its home tenant): the only target tenants offered. */
+  tenantIds?: readonly string[];
+}
+
+/** Target tenant among the account's member tenants (names from listTenants; unknown ids shown raw). */
+function MemberTenantField({ tenantIds }: { tenantIds: readonly string[] }) {
+  const { t } = useTranslation();
+  const directory = useTenantDirectory();
+  return (
+    <Form.Item name="tenant_target" label={t('shell.tenantTarget.label')} extra={t('platform.userRoles.memberTenantsHelp')} rules={[{ required: true, message: t('shell.tenantTarget.required') }]}>
+      <Select
+        options={tenantIds.map((id) => {
+          const x = directory.get(id);
+          return { value: id, label: x ? tenantLabel(x, t) : id };
+        })}
+      />
+    </Form.Item>
+  );
 }
 
 export function GrantUserRoleDialog({ preset, onClose }: { preset?: GrantPreset; onClose: () => void }) {
@@ -95,7 +115,7 @@ export function GrantUserRoleDialog({ preset, onClose }: { preset?: GrantPreset;
         <Form.Item name="kind" label={t('platform.userRoles.accountKind')}>
           <Radio.Group disabled={!!preset?.kind} options={(['platform', 'tenant'] as const).map((x) => ({ value: x, label: t(`platform.userRoles.kind.${x}`) }))} />
         </Form.Item>
-        {kind === 'tenant' ? <TenantTargetField /> : null}
+        {kind === 'tenant' ? preset?.tenantIds?.length ? <MemberTenantField tenantIds={preset.tenantIds} /> : <TenantTargetField /> : null}
         {kind === 'platform' ? (
           <Form.Item name="user_id" label={t('platform.userRoles.userId')} extra={t('platform.userRoles.platformUserHelp')} rules={[{ required: true, whitespace: true, message: t('platform.userRoles.userRequired') }, uuidRule]}>
             <Input maxLength={36} disabled={!!preset?.userId} />

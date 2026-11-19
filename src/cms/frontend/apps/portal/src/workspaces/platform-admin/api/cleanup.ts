@@ -1,7 +1,7 @@
 // Inactive-student cleanup hooks (F057 T037, F057-AC-14/15, ADR-0032): platform settings (GET → ETag, PUT with
-// If-Match and a mandatory reason) and the cleanup runs of every tenant (cursor, `tenant_ids[]`), approval of a run
-// over the threshold (Idempotency-Key, X-Tenant-Id = tenant of the run). `cancelStudentCleanupRun` does not exist yet
-// (delta owner F016, Câu hỏi mở F057-Q2): no Cancel button until it does.
+// If-Match and a mandatory reason) and the cleanup runs of every tenant (cursor, `tenant_ids[]`); a run over the
+// threshold is approved (approveStudentCleanupRun) or cancelled (cancelStudentCleanupRun, reason 3..500 → `cancelled`,
+// nobody cleaned — OQ F057-2 resolved 2026-11-20), both with Idempotency-Key and X-Tenant-Id = tenant of the run.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
@@ -9,8 +9,6 @@ import { pageQuery, useCursorList, usePlatformApi, type CursorPage, type Schemas
 
 export type StudentCleanupSettings = Schemas['StudentCleanupSettings'];
 export type StudentCleanupRun = Schemas['StudentCleanupRun'];
-
-export const CLEANUP_CANCEL_AVAILABLE = false;
 
 export function useCleanupSettings() {
   const api = usePlatformApi();
@@ -44,6 +42,24 @@ export function useApproveRun() {
       api.call(
         api.client.POST('/admin/student-cleanup/runs/{run_id}:approve', {
           params: { path: { run_id: run.run_id } },
+          headers: { ...headers, ...scope.writeHeaders(run.tenant_id) },
+        }),
+      ),
+    { onSuccess: () => qc.invalidateQueries({ queryKey: ['platform', 'cleanup-runs'] }) },
+  );
+}
+
+/** cancelStudentCleanupRun: a run `awaiting_approval` → `cancelled` (204; 409 when it is no longer awaiting approval). */
+export function useCancelRun() {
+  const api = usePlatformApi();
+  const scope = useCrossTenantScope();
+  const qc = useQueryClient();
+  return useIdempotentMutation(
+    ({ run, reason }: { run: Pick<StudentCleanupRun, 'run_id' | 'tenant_id'>; reason: string }, headers) =>
+      api.call(
+        api.client.POST('/admin/student-cleanup/runs/{run_id}:cancel', {
+          params: { path: { run_id: run.run_id } },
+          body: { reason },
           headers: { ...headers, ...scope.writeHeaders(run.tenant_id) },
         }),
       ),
