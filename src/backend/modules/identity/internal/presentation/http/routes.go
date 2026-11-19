@@ -118,6 +118,59 @@ var Operations = map[string]httpx.Operation{
 	"listSisSyncRunErrors":   op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 
+// portalStaffOps are the operations of the Admin Portal (x-portal-action) declared before F012: every portal
+// route requires the portal_staff guard (F012-AC-05; tests/contract checks it against the spec).
+var portalStaffOps = []string{
+	"approveTenantSchool",
+	"createAdminTenantSchool",
+	"createCommonTenantStudents",
+	"createCountry",
+	"createPlatformRole",
+	"createPlatformSisImport",
+	"createProvince",
+	"createProvinceSuccession",
+	"createSisConnection",
+	"createSisImport",
+	"createTenant",
+	"deletePlatformRole",
+	"getPlatformRole",
+	"getSisImport",
+	"getSisSyncRun",
+	"getTenantSchool",
+	"grantPlatformUserRole",
+	"listAdminTenantSchools",
+	"listAllPermissions",
+	"listAllUserRoles",
+	"listClasses",
+	"listPlatformRoles",
+	"listSisConnectionSchools",
+	"listSisConnections",
+	"listSisReconciliationIssues",
+	"listSisSyncRunErrors",
+	"listSisSyncRuns",
+	"listTenantSchoolClasses",
+	"listTenantSchools",
+	"listTenants",
+	"listUnassignedStudents",
+	"resolveSisReconciliationIssue",
+	"revokePlatformUserRole",
+	"setSisConnectionSchools",
+	"updateAdminTenantSchool",
+	"updateCountry",
+	"updatePlatformRole",
+	"updateProvince",
+	"updateTenant",
+	"updateTenantSchool",
+}
+
+func init() {
+	for _, id := range portalStaffOps {
+		o := Operations[id]
+		o.Guard |= httpx.GuardPortalStaff
+		Operations[id] = o
+	}
+}
+
 func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {
 	o.Guard |= g
 	return o

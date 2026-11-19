@@ -194,3 +194,58 @@ func (UserRoleRepo) BumpUserVersion(ctx context.Context, userID uuid.UUID) error
 	_, err = tx.ExecContext(ctx, `UPDATE identity.users SET version = version + 1, updated_at = now() WHERE user_id = $1 AND deleted_at IS NULL`, userID)
 	return err
 }
+
+var _ write.UserRoleExpiry = UserRoleRepo{}
+
+// Expired lists live user roles past valid_to (platform pool: every tenant).
+func (UserRoleRepo) Expired(ctx context.Context, limit int) ([]write.UserRoleRow, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok job user-role-expiry runs under the platform_job bypass over every tenant; deleted_at filtered
+	rows, err := tx.QueryContext(ctx, `SELECT ur.user_role_id, ur.user_id, ur.role_id, r.code, ur.tenant_id, ur.scope_type, ur.scope_id, ur.valid_from,
+			ur.valid_to, ur.source
+		FROM identity.user_roles ur JOIN identity.roles r ON r.role_id = ur.role_id
+		WHERE ur.deleted_at IS NULL AND ur.valid_to IS NOT NULL AND ur.valid_to <= now() ORDER BY ur.valid_to LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	var out []write.UserRoleRow
+	for rows.Next() {
+		var r write.UserRoleRow
+		var tid, scope uuid.NullUUID
+		var validTo sql.NullTime
+		if err := rows.Scan(&r.ID, &r.UserID, &r.RoleID, &r.RoleCode, &tid, &r.ScopeType, &scope, &r.ValidFrom, &validTo, &r.Source); err != nil {
+			return nil, err
+		}
+		r.TenantID, r.ScopeID = nullID(tid), nullID(scope)
+		if validTo.Valid {
+			t := validTo.Time
+			r.ValidTo = &t
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// MarkExpired soft-deletes an expired user role.
+func (UserRoleRepo) MarkExpired(ctx context.Context, id uuid.UUID) error {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return err
+	}
+	// tenancyguard:ok job user-role-expiry (platform_job bypass); deleted_at filtered
+	_, err = tx.ExecContext(ctx, `UPDATE identity.user_roles SET deleted_at = now(), delete_reason = 'expired', updated_at = now(), version = version + 1
+		WHERE user_role_id = $1 AND deleted_at IS NULL`, id)
+	return err
+}
+
+func nullID(n uuid.NullUUID) *uuid.UUID {
+	if !n.Valid {
+		return nil
+	}
+	id := n.UUID
+	return &id
+}

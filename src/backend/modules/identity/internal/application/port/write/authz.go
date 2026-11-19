@@ -93,3 +93,11 @@ type RoleRepository interface {
 	// SoftDelete deletes the role when the version matches.
 	SoftDelete(ctx context.Context, id uuid.UUID, version int64, actor uuid.UUID, reason string) error
 }
+
+// UserRoleExpiry finds and closes the user roles past valid_to (job user-role-expiry, platform_job scope).
+type UserRoleExpiry interface {
+	// Expired returns up to limit live user roles whose valid_to has passed.
+	Expired(ctx context.Context, limit int) ([]UserRoleRow, error)
+	// MarkExpired soft-deletes the user role with delete_reason = expired.
+	MarkExpired(ctx context.Context, id uuid.UUID) error
+}

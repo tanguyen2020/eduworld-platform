@@ -262,6 +262,9 @@ func (h UserRoles) changed(ctx context.Context, r write.UserRoleRow, op string, 
 	payload := map[string]any{"user_role_id": r.ID.String(), "user_id": r.UserID.String(), "role_id": r.RoleID.String(), "role_code": r.RoleCode,
 		"tenant_id": nil, "scope_type": r.ScopeType, "scope_id": nil, "source": r.Source, "op": op, "valid_from": r.ValidFrom.Format(time.RFC3339),
 		"valid_to": nil, "actor_id": actor.String()}
+	if actor == uuid.Nil {
+		payload["actor_id"] = nil // job user-role-expiry
+	}
 	if r.TenantID != nil {
 		payload["tenant_id"] = r.TenantID.String()
 	}
@@ -278,4 +281,49 @@ func (h UserRoles) changed(ctx context.Context, r write.UserRoleRow, op string, 
 	}
 	return h.Audit.Record(ctx, audit.Event{Action: "user_role." + op, TargetType: "user", TargetID: r.UserID.String(), Result: audit.ResultSuccess,
 		Metadata: map[string]any{"role_code": r.RoleCode, "scope_type": r.ScopeType, "user_role_id": r.ID.String(), "reason": reason}})
+}
+
+// ExpireUserRoles is the job user-role-expiry (F012 T032): user roles past valid_to are closed (soft-delete,
+// delete_reason = expired) with user_role.changed op expired, so caches drop the permissions.
+type ExpireUserRoles struct {
+	UoW    write.UnitOfWork
+	Expiry write.UserRoleExpiry
+	Repo   write.UserRoleRepository
+	Events write.EventPublisher
+	Audit  write.Auditor
+	Batch  int
+}
+
+// RunOnce closes one batch and returns how many user roles expired.
+func (h ExpireUserRoles) RunOnce(ctx context.Context) (n int, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.job.UserRoleExpiry")
+	defer func() { done(err) }()
+	bctx, err := tenancy.Bypass(ctx, tenancy.ReasonPlatformJob)
+	if err != nil {
+		return 0, err
+	}
+	batch := h.Batch
+	if batch <= 0 {
+		batch = 500
+	}
+	err = h.UoW.Do(bctx, func(ctx context.Context) error {
+		rows, err := h.Expiry.Expired(ctx, batch)
+		if err != nil {
+			return err
+		}
+		for _, r := range rows {
+			if err := h.Expiry.MarkExpired(ctx, r.ID); err != nil {
+				return err
+			}
+			if err := h.Repo.BumpUserVersion(ctx, r.UserID); err != nil {
+				return err
+			}
+			if err := (UserRoles{Events: h.Events, Audit: h.Audit}).changed(ctx, r, "expired", uuid.Nil, "valid_to passed"); err != nil {
+				return err
+			}
+			n++
+		}
+		return nil
+	})
+	return n, err
 }
