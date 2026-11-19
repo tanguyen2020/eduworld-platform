@@ -62,3 +62,16 @@ func (h KeycloakAccess) Restored(ctx context.Context, userID uuid.UUID) (err err
 	}
 	return h.KC.EnableUser(ctx, sub)
 }
+
+// CleanedUp handles student.cleaned_up (F016-AC-13): every Keycloak session ends but the user stays enabled
+// so that a later login can restore the student (the Organization membership is removed by the membership
+// worker on tenant_membership.changed).
+func (h KeycloakAccess) CleanedUp(ctx context.Context, userID uuid.UUID) (err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.KeycloakAccessCleanedUp")
+	defer func() { done(err) }()
+	sub, err := h.subject(ctx, userID)
+	if err != nil || sub == "" {
+		return err
+	}
+	return h.KC.LogoutUser(ctx, sub)
+}

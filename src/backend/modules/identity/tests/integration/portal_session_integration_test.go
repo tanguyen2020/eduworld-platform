@@ -198,7 +198,7 @@ func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxte
 		t.Fatal(err)
 	}
 	rec := &revokeRecorder{}
-	if err := identityhttp.RegisterLifecycle(srv, lifecycleHandlers(e, kc, rec)); err != nil { // F016
+	if err := identityhttp.RegisterLifecycle(srv, lifecycleHandlers(e, kc, rec, codec)); err != nil { // F016
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)

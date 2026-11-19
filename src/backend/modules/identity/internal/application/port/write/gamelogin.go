@@ -37,6 +37,9 @@ type GameLoginRepository interface {
 	// AccountBySubject returns the account of the active external identity (issuer, subject); nil when none.
 	// users and external_identities are global (G).
 	AccountBySubject(ctx context.Context, issuer, subject string) (*GameAccount, error)
+	// CleanedUserBySubject returns the user of (issuer, subject) soft-deleted by the inactive cleanup (F016 US4);
+	// nil when none.
+	CleanedUserBySubject(ctx context.Context, issuer, subject string) (*uuid.UUID, error)
 	// AccountByID returns a live account; nil when none.
 	AccountByID(ctx context.Context, userID uuid.UUID) (*GameAccount, error)
 	// MarkLogin sets external_identities.last_login_at and moves the user pending → active; activated is true

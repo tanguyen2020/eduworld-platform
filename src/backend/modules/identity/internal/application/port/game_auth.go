@@ -98,3 +98,18 @@ type KeycloakAccessAdmin interface {
 type KeycloakPasswordAdmin interface {
 	SetPassword(ctx context.Context, userID, password string, temporary bool) error
 }
+
+// StudentDataResult is StudentLifecycleResult of a participant module.
+type StudentDataResult struct {
+	Status        string // done | blocked | nothing_to_do
+	BlockedReason string
+}
+
+// StudentDataParticipant is a module taking part in the student cleanup/restore sagas through its facade
+// (cleanupStudentData, restoreStudentData; F016-AC-13, AC-14, AC-17). The tenant scope and the step
+// Idempotency-Key are on ctx.
+type StudentDataParticipant interface {
+	Name() string
+	Cleanup(ctx context.Context, studentID, runID uuid.UUID, lastLogin *time.Time) (StudentDataResult, error)
+	Restore(ctx context.Context, studentID uuid.UUID, viaLogin bool) (StudentDataResult, error)
+}

@@ -14,10 +14,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	portwrite "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/settingscfg"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/consumer"
 	identityhttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/http"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 )
 
 // revokeRecorder is a TEST DOUBLE of command.GameAuthSessionRevoker (the real one is covered by F013 tests).
@@ -42,11 +45,18 @@ func (k *kcAccess) LogoutUser(_ context.Context, id string) error  { k.logouts[i
 
 const localIssuer = "http://kc/realms/eduworld"
 
-func lifecycleHandlers(e *env, kc *kcUsers, rec *revokeRecorder) identityhttp.LifecycleHandlers {
+func lifecycleHandlers(e *env, kc *kcUsers, rec *revokeRecorder, codec *page.Codec) identityhttp.LifecycleHandlers {
+	defaults, err := settingscfg.DefaultsFrom(config.Load())
+	if err != nil {
+		panic(err)
+	}
 	return identityhttp.LifecycleHandlers{
 		Lifecycle: command.UserLifecycle{UoW: e.uow, Repo: write.LifecycleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
 		ResetPassword: command.ResetStudentPassword{UoW: e.uow, Repo: write.LifecycleRepo{}, KC: kc, Sessions: rec, Events: e.deps.Events,
 			Audit: e.deps.Audit, Issuers: []string{localIssuer}},
+		// The HTTP side of cleanup (preview, exclusions, runs, approve); the run itself is driven by TestStudentCleanup.
+		Cleanup: command.StudentCleanup{UoW: e.uow, Repo: write.CleanupRepo{}, Settings: write.SettingsRepo{}, Defaults: defaults,
+			Lifecycle: write.LifecycleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, Cursors: codec},
 	}
 }
 

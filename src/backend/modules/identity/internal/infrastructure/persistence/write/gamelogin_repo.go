@@ -64,6 +64,26 @@ func (GameLoginRepo) AccountBySubject(ctx context.Context, issuer, subject strin
 	return oneGameAccount(ctx, gameAccountSelect+` WHERE e.issuer = $1 AND e.subject = $2 AND u.deleted_at IS NULL`, issuer, subject)
 }
 
+// CleanedUserBySubject implements write.GameLoginRepository.
+func (GameLoginRepo) CleanedUserBySubject(ctx context.Context, issuer, subject string) (*uuid.UUID, error) {
+	tx, err := portalTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var id uuid.UUID
+	// tenancyguard:ok users/external_identities are global (G); only a user removed by the inactive cleanup
+	err = tx.QueryRowContext(ctx, `SELECT u.user_id FROM identity.external_identities e JOIN identity.users u ON u.user_id = e.user_id
+		WHERE e.issuer = $1 AND e.subject = $2 AND e.deleted_at IS NULL AND u.deleted_at IS NOT NULL AND u.delete_reason = 'inactive_cleanup'
+		LIMIT 1`, issuer, subject).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cleaned user by subject: %w", err)
+	}
+	return &id, nil
+}
+
 // AccountByID implements write.GameLoginRepository (the identity of the most recent login when several).
 func (GameLoginRepo) AccountByID(ctx context.Context, userID uuid.UUID) (*write.GameAccount, error) {
 	// tenancyguard:ok users/external_identities are global (G); deleted_at filtered

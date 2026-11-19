@@ -91,6 +91,12 @@ type GameSessionHandler interface {
 	Logout(ctx context.Context, refreshToken string) error
 }
 
+// LoginRestorer restores a student removed by the inactive cleanup when the Keycloak login succeeded
+// (F016-AC-17, AC-18; command.StudentRestore).
+type LoginRestorer interface {
+	RestoreOnLogin(ctx context.Context, userID uuid.UUID) (restored bool, err error)
+}
+
 // GameAuthSessionRevoker revokes game login sessions (F013-AC-29): consumers of user.access_revoked,
 // user.status_changed and student.cleaned_up, takeover (F014) and password change (F016).
 type GameAuthSessionRevoker interface {
@@ -115,6 +121,7 @@ type GameAuth struct {
 	Curfew      port.CurfewSource
 	Hours       port.AccessHoursSource // F015: school/tenant access hours (nil = none)
 	Sync        LoginSyncFunc
+	Restore     LoginRestorer // F016 US4: restore of a cleaned-up student (nil = ACCOUNT_NOT_PROVISIONED)
 	Metrics     port.GameAuthMetrics
 	Cfg         GameAuthConfig
 	Clock       func() time.Time
@@ -257,6 +264,15 @@ func (h GameAuth) Login(ctx context.Context, in dto.GameLogin) (out dto.GameLogi
 	if err != nil {
 		h.revokeKC(ctx, tok.RefreshToken)
 		return fail(port.GameLoginUnavailable, unavailable(err))
+	}
+	if acct == nil && h.Restore != nil {
+		if acct, err = h.restoreOnLogin(ctx, tok.Issuer, tok.Subject); err != nil {
+			h.revokeKC(ctx, tok.RefreshToken)
+			if problem.From(err, "").Code == problem.AccountDeactivated {
+				return fail(port.GameLoginDeactivated, err)
+			}
+			return fail(port.GameLoginUnavailable, unavailable(err))
+		}
 	}
 	if acct != nil {
 		id := acct.UserID
@@ -604,4 +620,23 @@ func tokenSet(t port.PortalTokens) dto.GameTokenSet {
 		rexp = 1
 	}
 	return dto.GameTokenSet{AccessToken: t.AccessToken, RefreshToken: t.RefreshToken, TokenType: "Bearer", ExpiresIn: exp, RefreshExpiresIn: rexp}
+}
+
+// restoreOnLogin runs the restore of a cleaned-up student (F016 US4) and reads the account again; nil when
+// the subject is not a cleaned-up student (ACCOUNT_NOT_PROVISIONED follows).
+func (h GameAuth) restoreOnLogin(ctx context.Context, issuer, subject string) (*write.GameAccount, error) {
+	var id *uuid.UUID
+	if err := h.inPlatform(ctx, func(ctx context.Context) (err error) {
+		id, err = h.Accounts.CleanedUserBySubject(ctx, issuer, subject)
+		return err
+	}); err != nil || id == nil {
+		return nil, err
+	}
+	restored, err := h.Restore.RestoreOnLogin(ctx, *id)
+	if err != nil || !restored {
+		return nil, err
+	}
+	return h.account(ctx, func(ctx context.Context) (*write.GameAccount, error) {
+		return h.Accounts.AccountBySubject(ctx, issuer, subject)
+	})
 }

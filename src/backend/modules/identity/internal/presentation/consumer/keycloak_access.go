@@ -15,7 +15,8 @@ import (
 const KeycloakAccessName = "identity.keycloak_access"
 
 // KeycloakAccessSubjects are the events it handles.
-var KeycloakAccessSubjects = []string{"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.access_restored"}
+var KeycloakAccessSubjects = []string{"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.access_restored",
+	"ew.evt.identity.student.cleaned_up"}
 
 // KeycloakAccess dispatches the events to command.KeycloakAccess.
 type KeycloakAccess struct {
@@ -25,10 +26,15 @@ type KeycloakAccess struct {
 // Handle implements outbox.Handler.
 func (c KeycloakAccess) Handle(ctx context.Context, e outbox.Envelope) error {
 	var p struct {
-		UserID uuid.UUID `json:"user_id"`
-		Reason string    `json:"reason"`
+		UserID    uuid.UUID `json:"user_id"`
+		StudentID uuid.UUID `json:"student_id"`
+		Reason    string    `json:"reason"`
 	}
-	if err := json.Unmarshal(e.Payload, &p); err != nil || p.UserID == uuid.Nil {
+	err := json.Unmarshal(e.Payload, &p)
+	if p.UserID == uuid.Nil {
+		p.UserID = p.StudentID // student.cleaned_up carries student_id
+	}
+	if err != nil || p.UserID == uuid.Nil {
 		return outbox.Permanent(fmt.Errorf("%s: invalid payload", e.EventType))
 	}
 	switch e.EventType {
@@ -36,6 +42,8 @@ func (c KeycloakAccess) Handle(ctx context.Context, e outbox.Envelope) error {
 		return c.Access.Revoked(ctx, p.UserID, p.Reason)
 	case "user.access_restored":
 		return c.Access.Restored(ctx, p.UserID)
+	case "student.cleaned_up":
+		return c.Access.CleanedUp(ctx, p.UserID)
 	}
 	return outbox.Permanent(fmt.Errorf("unexpected event %s", e.EventType))
 }
