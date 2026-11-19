@@ -127,7 +127,7 @@ func enroll(ctx context.Context, tx *sql.Tx, f fixture, student, school, class s
 
 func TestOrgSchema(t *testing.T) {
 	ctx := context.Background()
-	cl := testkit.StartCluster(ctx, t, true)
+	cl := testkit.Isolated(ctx, t)
 	app := open(t, cl.ModuleDSN("identity", "app"))
 	platform := open(t, cl.ModuleDSN("identity", "platform"))
 	a := seedTenant(ctx, t, platform, "pgd-a")

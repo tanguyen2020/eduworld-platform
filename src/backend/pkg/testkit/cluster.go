@@ -53,6 +53,7 @@ type Cluster struct {
 	Host      string
 	Port      string
 	root      string
+	suffix    string // database name suffix of an Isolated copy
 }
 
 // StartCluster starts the cluster; when migrate is true it applies every module's Atlas migrations.
@@ -126,7 +127,7 @@ func (c *Cluster) DSN(role, database string) string {
 
 // ModuleDSN returns the DSN of <module>_<suffix> on eduworld_<module>.
 func (c *Cluster) ModuleDSN(module, suffix string) string {
-	return c.DSN(module+"_"+suffix, "eduworld_"+module)
+	return c.DSN(module+"_"+suffix, "eduworld_"+module+c.suffix)
 }
 
 // Migrate applies the module's Atlas migrations with the pinned Atlas image, as <module>_migrator.

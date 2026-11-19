@@ -38,7 +38,7 @@ type env struct {
 
 func setup(ctx context.Context, t *testing.T) *env {
 	t.Helper()
-	cl := testkit.StartCluster(ctx, t, true)
+	cl := testkit.Isolated(ctx, t)
 	e := &env{app: open(t, cl.ModuleDSN("identity", "app")), platform: open(t, cl.ModuleDSN("identity", "platform")),
 		relay: open(t, cl.ModuleDSN("identity", "relay"))}
 	w, err := outbox.NewWriter("identity", "core", nil)
