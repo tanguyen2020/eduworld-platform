@@ -185,6 +185,21 @@ func ClonedBy(v uuid.UUID) predicate.LessonVersion {
 	return predicate.LessonVersion(sql.FieldEQ(FieldClonedBy, v))
 }
 
+// TranslationStatus applies equality check predicate on the "translation_status" field. It's identical to TranslationStatusEQ.
+func TranslationStatus(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldTranslationStatus, v))
+}
+
+// AudioExemptReason applies equality check predicate on the "audio_exempt_reason" field. It's identical to AudioExemptReasonEQ.
+func AudioExemptReason(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptApprovedBy applies equality check predicate on the "audio_exempt_approved_by" field. It's identical to AudioExemptApprovedByEQ.
+func AudioExemptApprovedBy(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
+}
+
 // LessonID applies equality check predicate on the "lesson_id" field. It's identical to LessonIDEQ.
 func LessonID(v uuid.UUID) predicate.LessonVersion {
 	return predicate.LessonVersion(sql.FieldEQ(FieldLessonID, v))
@@ -1588,6 +1603,216 @@ func ClonedByIsNil() predicate.LessonVersion {
 // ClonedByNotNil applies the NotNil predicate on the "cloned_by" field.
 func ClonedByNotNil() predicate.LessonVersion {
 	return predicate.LessonVersion(sql.FieldNotNull(FieldClonedBy))
+}
+
+// TranslationStatusEQ applies the EQ predicate on the "translation_status" field.
+func TranslationStatusEQ(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldTranslationStatus, v))
+}
+
+// TranslationStatusNEQ applies the NEQ predicate on the "translation_status" field.
+func TranslationStatusNEQ(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNEQ(FieldTranslationStatus, v))
+}
+
+// TranslationStatusIn applies the In predicate on the "translation_status" field.
+func TranslationStatusIn(vs ...string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIn(FieldTranslationStatus, vs...))
+}
+
+// TranslationStatusNotIn applies the NotIn predicate on the "translation_status" field.
+func TranslationStatusNotIn(vs ...string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotIn(FieldTranslationStatus, vs...))
+}
+
+// TranslationStatusGT applies the GT predicate on the "translation_status" field.
+func TranslationStatusGT(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGT(FieldTranslationStatus, v))
+}
+
+// TranslationStatusGTE applies the GTE predicate on the "translation_status" field.
+func TranslationStatusGTE(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGTE(FieldTranslationStatus, v))
+}
+
+// TranslationStatusLT applies the LT predicate on the "translation_status" field.
+func TranslationStatusLT(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLT(FieldTranslationStatus, v))
+}
+
+// TranslationStatusLTE applies the LTE predicate on the "translation_status" field.
+func TranslationStatusLTE(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLTE(FieldTranslationStatus, v))
+}
+
+// TranslationStatusContains applies the Contains predicate on the "translation_status" field.
+func TranslationStatusContains(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldContains(FieldTranslationStatus, v))
+}
+
+// TranslationStatusHasPrefix applies the HasPrefix predicate on the "translation_status" field.
+func TranslationStatusHasPrefix(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldHasPrefix(FieldTranslationStatus, v))
+}
+
+// TranslationStatusHasSuffix applies the HasSuffix predicate on the "translation_status" field.
+func TranslationStatusHasSuffix(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldHasSuffix(FieldTranslationStatus, v))
+}
+
+// TranslationStatusIsNil applies the IsNil predicate on the "translation_status" field.
+func TranslationStatusIsNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIsNull(FieldTranslationStatus))
+}
+
+// TranslationStatusNotNil applies the NotNil predicate on the "translation_status" field.
+func TranslationStatusNotNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotNull(FieldTranslationStatus))
+}
+
+// TranslationStatusEqualFold applies the EqualFold predicate on the "translation_status" field.
+func TranslationStatusEqualFold(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEqualFold(FieldTranslationStatus, v))
+}
+
+// TranslationStatusContainsFold applies the ContainsFold predicate on the "translation_status" field.
+func TranslationStatusContainsFold(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldContainsFold(FieldTranslationStatus, v))
+}
+
+// TranslationMetaIsNil applies the IsNil predicate on the "translation_meta" field.
+func TranslationMetaIsNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIsNull(FieldTranslationMeta))
+}
+
+// TranslationMetaNotNil applies the NotNil predicate on the "translation_meta" field.
+func TranslationMetaNotNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotNull(FieldTranslationMeta))
+}
+
+// AudioExemptReasonEQ applies the EQ predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonEQ(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonNEQ applies the NEQ predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNEQ(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonIn applies the In predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonIn(vs ...string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIn(FieldAudioExemptReason, vs...))
+}
+
+// AudioExemptReasonNotIn applies the NotIn predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNotIn(vs ...string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotIn(FieldAudioExemptReason, vs...))
+}
+
+// AudioExemptReasonGT applies the GT predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonGT(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGT(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonGTE applies the GTE predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonGTE(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGTE(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonLT applies the LT predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonLT(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLT(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonLTE applies the LTE predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonLTE(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLTE(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonContains applies the Contains predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonContains(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldContains(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonHasPrefix applies the HasPrefix predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonHasPrefix(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldHasPrefix(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonHasSuffix applies the HasSuffix predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonHasSuffix(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldHasSuffix(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonIsNil applies the IsNil predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonIsNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIsNull(FieldAudioExemptReason))
+}
+
+// AudioExemptReasonNotNil applies the NotNil predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNotNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotNull(FieldAudioExemptReason))
+}
+
+// AudioExemptReasonEqualFold applies the EqualFold predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonEqualFold(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEqualFold(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonContainsFold applies the ContainsFold predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonContainsFold(v string) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldContainsFold(FieldAudioExemptReason, v))
+}
+
+// AudioExemptApprovedByEQ applies the EQ predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByEQ(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByNEQ applies the NEQ predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNEQ(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNEQ(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByIn applies the In predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByIn(vs ...uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIn(FieldAudioExemptApprovedBy, vs...))
+}
+
+// AudioExemptApprovedByNotIn applies the NotIn predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNotIn(vs ...uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotIn(FieldAudioExemptApprovedBy, vs...))
+}
+
+// AudioExemptApprovedByGT applies the GT predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByGT(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGT(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByGTE applies the GTE predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByGTE(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldGTE(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByLT applies the LT predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByLT(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLT(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByLTE applies the LTE predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByLTE(v uuid.UUID) predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldLTE(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByIsNil applies the IsNil predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByIsNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldIsNull(FieldAudioExemptApprovedBy))
+}
+
+// AudioExemptApprovedByNotNil applies the NotNil predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNotNil() predicate.LessonVersion {
+	return predicate.LessonVersion(sql.FieldNotNull(FieldAudioExemptApprovedBy))
 }
 
 // LessonIDEQ applies the EQ predicate on the "lesson_id" field.

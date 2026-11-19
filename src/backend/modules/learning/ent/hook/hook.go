@@ -285,6 +285,18 @@ func (f QuestionVersionObjectiveFunc) Mutate(ctx context.Context, m ent.Mutation
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionVersionObjectiveMutation", m)
 }
 
+// The ReviewTaskFunc type is an adapter to allow the use of ordinary
+// function as ReviewTask mutator.
+type ReviewTaskFunc func(context.Context, *ent.ReviewTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReviewTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ReviewTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReviewTaskMutation", m)
+}
+
 // The SubjectFunc type is an adapter to allow the use of ordinary
 // function as Subject mutator.
 type SubjectFunc func(context.Context, *ent.SubjectMutation) (ent.Value, error)
@@ -379,6 +391,18 @@ func (f TopicFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TopicMutation", m)
+}
+
+// The TranslationJobFunc type is an adapter to allow the use of ordinary
+// function as TranslationJob mutator.
+type TranslationJobFunc func(context.Context, *ent.TranslationJobMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TranslationJobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TranslationJobMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TranslationJobMutation", m)
 }
 
 // Condition is a hook condition function.

@@ -173,6 +173,10 @@ func readDoc(r *http.Request, t contentmodel.ContentType) (command.DocFields, er
 		set("change_note")
 		get("change_note", &f.ChangeNote)
 	}
+	if p.has("audio_exempt_reason") {
+		set("audio_exempt_reason")
+		get("audio_exempt_reason", &f.AudioExemptReason)
+	}
 	for _, k := range command.BodyKeys[t] {
 		if p.has(k) {
 			f.Body[k] = p[k]

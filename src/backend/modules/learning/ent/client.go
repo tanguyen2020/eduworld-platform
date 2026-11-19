@@ -38,6 +38,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -46,6 +47,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksectionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbookseries"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/topic"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/translationjob"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/internal"
 )
@@ -101,6 +103,8 @@ type Client struct {
 	QuestionVersion *QuestionVersionClient
 	// QuestionVersionObjective is the client for interacting with the QuestionVersionObjective builders.
 	QuestionVersionObjective *QuestionVersionObjectiveClient
+	// ReviewTask is the client for interacting with the ReviewTask builders.
+	ReviewTask *ReviewTaskClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -117,6 +121,8 @@ type Client struct {
 	TextbookSeries *TextbookSeriesClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
+	// TranslationJob is the client for interacting with the TranslationJob builders.
+	TranslationJob *TranslationJobClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -151,6 +157,7 @@ func (c *Client) init() {
 	c.QuestionSetVersion = NewQuestionSetVersionClient(c.config)
 	c.QuestionVersion = NewQuestionVersionClient(c.config)
 	c.QuestionVersionObjective = NewQuestionVersionObjectiveClient(c.config)
+	c.ReviewTask = NewReviewTaskClient(c.config)
 	c.Subject = NewSubjectClient(c.config)
 	c.SubjectGrade = NewSubjectGradeClient(c.config)
 	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
@@ -159,6 +166,7 @@ func (c *Client) init() {
 	c.TextbookSectionObjective = NewTextbookSectionObjectiveClient(c.config)
 	c.TextbookSeries = NewTextbookSeriesClient(c.config)
 	c.Topic = NewTopicClient(c.config)
+	c.TranslationJob = NewTranslationJobClient(c.config)
 }
 
 type (
@@ -277,6 +285,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		QuestionSetVersion:         NewQuestionSetVersionClient(cfg),
 		QuestionVersion:            NewQuestionVersionClient(cfg),
 		QuestionVersionObjective:   NewQuestionVersionObjectiveClient(cfg),
+		ReviewTask:                 NewReviewTaskClient(cfg),
 		Subject:                    NewSubjectClient(cfg),
 		SubjectGrade:               NewSubjectGradeClient(cfg),
 		TenantResourceAssignment:   NewTenantResourceAssignmentClient(cfg),
@@ -285,6 +294,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		TextbookSectionObjective:   NewTextbookSectionObjectiveClient(cfg),
 		TextbookSeries:             NewTextbookSeriesClient(cfg),
 		Topic:                      NewTopicClient(cfg),
+		TranslationJob:             NewTranslationJobClient(cfg),
 	}, nil
 }
 
@@ -327,6 +337,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		QuestionSetVersion:         NewQuestionSetVersionClient(cfg),
 		QuestionVersion:            NewQuestionVersionClient(cfg),
 		QuestionVersionObjective:   NewQuestionVersionObjectiveClient(cfg),
+		ReviewTask:                 NewReviewTaskClient(cfg),
 		Subject:                    NewSubjectClient(cfg),
 		SubjectGrade:               NewSubjectGradeClient(cfg),
 		TenantResourceAssignment:   NewTenantResourceAssignmentClient(cfg),
@@ -335,6 +346,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		TextbookSectionObjective:   NewTextbookSectionObjectiveClient(cfg),
 		TextbookSeries:             NewTextbookSeriesClient(cfg),
 		Topic:                      NewTopicClient(cfg),
+		TranslationJob:             NewTranslationJobClient(cfg),
 	}, nil
 }
 
@@ -369,9 +381,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ImportJob, c.LearningMaterial, c.LearningMaterialVersion,
 		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
 		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionSet, c.QuestionSetItem,
-		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
-		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective,
+		c.ReviewTask, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
+		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
+		c.Topic, c.TranslationJob,
 	} {
 		n.Use(hooks...)
 	}
@@ -386,9 +399,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ImportJob, c.LearningMaterial, c.LearningMaterialVersion,
 		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
 		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionSet, c.QuestionSetItem,
-		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
-		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+		c.QuestionSetVersion, c.QuestionVersion, c.QuestionVersionObjective,
+		c.ReviewTask, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
+		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
+		c.Topic, c.TranslationJob,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -443,6 +457,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.QuestionVersion.mutate(ctx, m)
 	case *QuestionVersionObjectiveMutation:
 		return c.QuestionVersionObjective.mutate(ctx, m)
+	case *ReviewTaskMutation:
+		return c.ReviewTask.mutate(ctx, m)
 	case *SubjectMutation:
 		return c.Subject.mutate(ctx, m)
 	case *SubjectGradeMutation:
@@ -459,6 +475,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.TextbookSeries.mutate(ctx, m)
 	case *TopicMutation:
 		return c.Topic.mutate(ctx, m)
+	case *TranslationJobMutation:
+		return c.TranslationJob.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -3569,6 +3587,141 @@ func (c *QuestionVersionObjectiveClient) mutate(ctx context.Context, m *Question
 	}
 }
 
+// ReviewTaskClient is a client for the ReviewTask schema.
+type ReviewTaskClient struct {
+	config
+}
+
+// NewReviewTaskClient returns a client for the ReviewTask from the given config.
+func NewReviewTaskClient(c config) *ReviewTaskClient {
+	return &ReviewTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `reviewtask.Hooks(f(g(h())))`.
+func (c *ReviewTaskClient) Use(hooks ...Hook) {
+	c.hooks.ReviewTask = append(c.hooks.ReviewTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `reviewtask.Intercept(f(g(h())))`.
+func (c *ReviewTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ReviewTask = append(c.inters.ReviewTask, interceptors...)
+}
+
+// Create returns a builder for creating a ReviewTask entity.
+func (c *ReviewTaskClient) Create() *ReviewTaskCreate {
+	mutation := newReviewTaskMutation(c.config, OpCreate)
+	return &ReviewTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ReviewTask entities.
+func (c *ReviewTaskClient) CreateBulk(builders ...*ReviewTaskCreate) *ReviewTaskCreateBulk {
+	return &ReviewTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ReviewTaskClient) MapCreateBulk(slice any, setFunc func(*ReviewTaskCreate, int)) *ReviewTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ReviewTaskCreateBulk{err: fmt.Errorf("calling to ReviewTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ReviewTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ReviewTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ReviewTask.
+func (c *ReviewTaskClient) Update() *ReviewTaskUpdate {
+	mutation := newReviewTaskMutation(c.config, OpUpdate)
+	return &ReviewTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReviewTaskClient) UpdateOne(_m *ReviewTask) *ReviewTaskUpdateOne {
+	mutation := newReviewTaskMutation(c.config, OpUpdateOne, withReviewTask(_m))
+	return &ReviewTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReviewTaskClient) UpdateOneID(id uuid.UUID) *ReviewTaskUpdateOne {
+	mutation := newReviewTaskMutation(c.config, OpUpdateOne, withReviewTaskID(id))
+	return &ReviewTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ReviewTask.
+func (c *ReviewTaskClient) Delete() *ReviewTaskDelete {
+	mutation := newReviewTaskMutation(c.config, OpDelete)
+	return &ReviewTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReviewTaskClient) DeleteOne(_m *ReviewTask) *ReviewTaskDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReviewTaskClient) DeleteOneID(id uuid.UUID) *ReviewTaskDeleteOne {
+	builder := c.Delete().Where(reviewtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReviewTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for ReviewTask.
+func (c *ReviewTaskClient) Query() *ReviewTaskQuery {
+	return &ReviewTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeReviewTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ReviewTask entity by its id.
+func (c *ReviewTaskClient) Get(ctx context.Context, id uuid.UUID) (*ReviewTask, error) {
+	return c.Query().Where(reviewtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReviewTaskClient) GetX(ctx context.Context, id uuid.UUID) *ReviewTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ReviewTaskClient) Hooks() []Hook {
+	hooks := c.hooks.ReviewTask
+	return append(hooks[:len(hooks):len(hooks)], reviewtask.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReviewTaskClient) Interceptors() []Interceptor {
+	inters := c.inters.ReviewTask
+	return append(inters[:len(inters):len(inters)], reviewtask.Interceptors[:]...)
+}
+
+func (c *ReviewTaskClient) mutate(ctx context.Context, m *ReviewTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReviewTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReviewTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReviewTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReviewTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ReviewTask mutation op: %q", m.Op())
+	}
+}
+
 // SubjectClient is a client for the Subject schema.
 type SubjectClient struct {
 	config
@@ -4649,6 +4802,141 @@ func (c *TopicClient) mutate(ctx context.Context, m *TopicMutation) (Value, erro
 	}
 }
 
+// TranslationJobClient is a client for the TranslationJob schema.
+type TranslationJobClient struct {
+	config
+}
+
+// NewTranslationJobClient returns a client for the TranslationJob from the given config.
+func NewTranslationJobClient(c config) *TranslationJobClient {
+	return &TranslationJobClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `translationjob.Hooks(f(g(h())))`.
+func (c *TranslationJobClient) Use(hooks ...Hook) {
+	c.hooks.TranslationJob = append(c.hooks.TranslationJob, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `translationjob.Intercept(f(g(h())))`.
+func (c *TranslationJobClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TranslationJob = append(c.inters.TranslationJob, interceptors...)
+}
+
+// Create returns a builder for creating a TranslationJob entity.
+func (c *TranslationJobClient) Create() *TranslationJobCreate {
+	mutation := newTranslationJobMutation(c.config, OpCreate)
+	return &TranslationJobCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TranslationJob entities.
+func (c *TranslationJobClient) CreateBulk(builders ...*TranslationJobCreate) *TranslationJobCreateBulk {
+	return &TranslationJobCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TranslationJobClient) MapCreateBulk(slice any, setFunc func(*TranslationJobCreate, int)) *TranslationJobCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TranslationJobCreateBulk{err: fmt.Errorf("calling to TranslationJobClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TranslationJobCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TranslationJobCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TranslationJob.
+func (c *TranslationJobClient) Update() *TranslationJobUpdate {
+	mutation := newTranslationJobMutation(c.config, OpUpdate)
+	return &TranslationJobUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TranslationJobClient) UpdateOne(_m *TranslationJob) *TranslationJobUpdateOne {
+	mutation := newTranslationJobMutation(c.config, OpUpdateOne, withTranslationJob(_m))
+	return &TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TranslationJobClient) UpdateOneID(id uuid.UUID) *TranslationJobUpdateOne {
+	mutation := newTranslationJobMutation(c.config, OpUpdateOne, withTranslationJobID(id))
+	return &TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TranslationJob.
+func (c *TranslationJobClient) Delete() *TranslationJobDelete {
+	mutation := newTranslationJobMutation(c.config, OpDelete)
+	return &TranslationJobDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TranslationJobClient) DeleteOne(_m *TranslationJob) *TranslationJobDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TranslationJobClient) DeleteOneID(id uuid.UUID) *TranslationJobDeleteOne {
+	builder := c.Delete().Where(translationjob.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TranslationJobDeleteOne{builder}
+}
+
+// Query returns a query builder for TranslationJob.
+func (c *TranslationJobClient) Query() *TranslationJobQuery {
+	return &TranslationJobQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTranslationJob},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TranslationJob entity by its id.
+func (c *TranslationJobClient) Get(ctx context.Context, id uuid.UUID) (*TranslationJob, error) {
+	return c.Query().Where(translationjob.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TranslationJobClient) GetX(ctx context.Context, id uuid.UUID) *TranslationJob {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TranslationJobClient) Hooks() []Hook {
+	hooks := c.hooks.TranslationJob
+	return append(hooks[:len(hooks):len(hooks)], translationjob.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TranslationJobClient) Interceptors() []Interceptor {
+	inters := c.inters.TranslationJob
+	return append(inters[:len(inters):len(inters)], translationjob.Interceptors[:]...)
+}
+
+func (c *TranslationJobClient) mutate(ctx context.Context, m *TranslationJobMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TranslationJobCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TranslationJobUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TranslationJobDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TranslationJob mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -4657,8 +4945,9 @@ type (
 		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
 		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionSet,
 		QuestionSetItem, QuestionSetVersion, QuestionVersion, QuestionVersionObjective,
-		Subject, SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
-		TextbookSectionObjective, TextbookSeries, Topic []ent.Hook
+		ReviewTask, Subject, SubjectGrade, TenantResourceAssignment, Textbook,
+		TextbookSection, TextbookSectionObjective, TextbookSeries, Topic,
+		TranslationJob []ent.Hook
 	}
 	inters struct {
 		AssessmentBlueprint, AssessmentBlueprintVersion, Competency, ContentRelease,
@@ -4666,8 +4955,9 @@ type (
 		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
 		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionSet,
 		QuestionSetItem, QuestionSetVersion, QuestionVersion, QuestionVersionObjective,
-		Subject, SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
-		TextbookSectionObjective, TextbookSeries, Topic []ent.Interceptor
+		ReviewTask, Subject, SubjectGrade, TenantResourceAssignment, Textbook,
+		TextbookSection, TextbookSectionObjective, TextbookSeries, Topic,
+		TranslationJob []ent.Interceptor
 	}
 )
 
@@ -4697,6 +4987,7 @@ var (
 		QuestionSetVersion:         tableSchemas[0],
 		QuestionVersion:            tableSchemas[0],
 		QuestionVersionObjective:   tableSchemas[0],
+		ReviewTask:                 tableSchemas[0],
 		Subject:                    tableSchemas[1],
 		SubjectGrade:               tableSchemas[1],
 		TenantResourceAssignment:   tableSchemas[2],
@@ -4705,6 +4996,7 @@ var (
 		TextbookSectionObjective:   tableSchemas[1],
 		TextbookSeries:             tableSchemas[1],
 		Topic:                      tableSchemas[1],
+		TranslationJob:             tableSchemas[0],
 	}
 	tableSchemas = [...]string{"content", "curriculum", "infra"}
 )

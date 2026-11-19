@@ -75,6 +75,9 @@ type QuestionVersion func(*sql.Selector)
 // QuestionVersionObjective is the predicate function for questionversionobjective builders.
 type QuestionVersionObjective func(*sql.Selector)
 
+// ReviewTask is the predicate function for reviewtask builders.
+type ReviewTask func(*sql.Selector)
+
 // Subject is the predicate function for subject builders.
 type Subject func(*sql.Selector)
 
@@ -98,3 +101,6 @@ type TextbookSeries func(*sql.Selector)
 
 // Topic is the predicate function for topic builders.
 type Topic func(*sql.Selector)
+
+// TranslationJob is the predicate function for translationjob builders.
+type TranslationJob func(*sql.Selector)

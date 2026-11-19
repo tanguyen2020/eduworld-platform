@@ -35,6 +35,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -43,6 +44,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksectionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbookseries"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/topic"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/translationjob"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -126,6 +128,7 @@ func checkColumn(t, c string) error {
 			questionsetversion.Table:         questionsetversion.ValidColumn,
 			questionversion.Table:            questionversion.ValidColumn,
 			questionversionobjective.Table:   questionversionobjective.ValidColumn,
+			reviewtask.Table:                 reviewtask.ValidColumn,
 			subject.Table:                    subject.ValidColumn,
 			subjectgrade.Table:               subjectgrade.ValidColumn,
 			tenantresourceassignment.Table:   tenantresourceassignment.ValidColumn,
@@ -134,6 +137,7 @@ func checkColumn(t, c string) error {
 			textbooksectionobjective.Table:   textbooksectionobjective.ValidColumn,
 			textbookseries.Table:             textbookseries.ValidColumn,
 			topic.Table:                      topic.ValidColumn,
+			translationjob.Table:             translationjob.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

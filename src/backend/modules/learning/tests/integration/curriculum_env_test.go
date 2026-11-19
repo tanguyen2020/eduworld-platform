@@ -27,6 +27,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/qbschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/storage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/translation"
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
@@ -79,6 +81,8 @@ type curEnv struct {
 	qry    query.Curriculum
 	qcmd   command.Questions
 	dcmd   command.Docs
+	wf     command.Workflow
+	tr     command.Translations
 	schema *qbschema.Validator
 	assets *memAssets
 	users  map[string]authz.PrincipalData
@@ -155,8 +159,14 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
 		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
+	wf := command.Workflow{UoW: e.uow, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{}, Docs: write.DocRepo{},
+		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}
 	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry, Docs: dcmd, DocQueries: dqry,
-		Widgets: query.QuestionWidgets{Widgets: question.Full().Widgets()}}
+		Widgets: query.QuestionWidgets{Widgets: question.Full().Widgets()}, Workflow: wf,
+		Reviews:         query.ReviewTasks{Session: e.read, Model: read.ReviewTaskModel{}, Cursors: codec},
+		TranslationJobs: query.TranslationJobs{Session: e.read, Model: read.TranslationJobModel{}}}
+	tr := command.Translations{UoW: e.uow, Jobs: write.TranslationJobRepo{}, Workflow: wf, Questions: qcmd, Docs: dcmd, Codec: translation.Codec{},
+		Assets: assets, Audit: write.Auditor{R: e.rec}}
 	var mk *mediaKit
 	if o.media {
 		mk = newMediaKit(ctx, t, e, codec, schema)
@@ -164,7 +174,14 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		dcmd.Media = write.MediaRepo{}
 		handlers.QuestionCommands, handlers.Docs = qcmd, dcmd
 		handlers.Media, handlers.MediaQueries, handlers.Preview = mk.cmd, mk.qry, mk.preview
+		if err := mk.s3.EnsureBucket(ctx, storage.BucketExports); err != nil {
+			t.Fatal(err)
+		}
+		tr.Files = storage.ExportBucket{S3: mk.s3}
+		handlers.TranslationJobs = query.TranslationJobs{Session: e.read, Model: read.TranslationJobModel{}, Files: tr.Files}
 	}
+	tr.Questions, tr.Docs = qcmd, dcmd
+	handlers.Translations = tr
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {
@@ -172,7 +189,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)

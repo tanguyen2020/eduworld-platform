@@ -72,6 +72,14 @@ type QuestionSetVersion struct {
 	ClonedAt *time.Time `json:"cloned_at,omitempty"`
 	// ClonedBy holds the value of the "cloned_by" field.
 	ClonedBy *uuid.UUID `json:"cloned_by,omitempty"`
+	// TranslationStatus holds the value of the "translation_status" field.
+	TranslationStatus *string `json:"translation_status,omitempty"`
+	// TranslationMeta holds the value of the "translation_meta" field.
+	TranslationMeta jsontext.Value `json:"translation_meta,omitempty"`
+	// AudioExemptReason holds the value of the "audio_exempt_reason" field.
+	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
+	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
+	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
 	// QuestionSetID holds the value of the "question_set_id" field.
 	QuestionSetID uuid.UUID `json:"question_set_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -100,13 +108,13 @@ func (*QuestionSetVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case questionsetversion.FieldTenantID, questionsetversion.FieldCreatedBy, questionsetversion.FieldUpdatedBy, questionsetversion.FieldDeletedBy, questionsetversion.FieldReviewerID, questionsetversion.FieldCurriculumVersionID, questionsetversion.FieldBasedOnVersionID, questionsetversion.FieldClonedFromID, questionsetversion.FieldClonedFromTenantID, questionsetversion.FieldClonedBy, questionsetversion.FieldSubjectID:
+		case questionsetversion.FieldTenantID, questionsetversion.FieldCreatedBy, questionsetversion.FieldUpdatedBy, questionsetversion.FieldDeletedBy, questionsetversion.FieldReviewerID, questionsetversion.FieldCurriculumVersionID, questionsetversion.FieldBasedOnVersionID, questionsetversion.FieldClonedFromID, questionsetversion.FieldClonedFromTenantID, questionsetversion.FieldClonedBy, questionsetversion.FieldAudioExemptApprovedBy, questionsetversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case questionsetversion.FieldTitle, questionsetversion.FieldSummary, questionsetversion.FieldGradeLevels, questionsetversion.FieldTopicIds, questionsetversion.FieldObjectiveIds, questionsetversion.FieldMediaRefs, questionsetversion.FieldWorkedExampleIds, questionsetversion.FieldBody:
+		case questionsetversion.FieldTranslationMeta, questionsetversion.FieldTitle, questionsetversion.FieldSummary, questionsetversion.FieldGradeLevels, questionsetversion.FieldTopicIds, questionsetversion.FieldObjectiveIds, questionsetversion.FieldMediaRefs, questionsetversion.FieldWorkedExampleIds, questionsetversion.FieldBody:
 			values[i] = new([]byte)
 		case questionsetversion.FieldVersion, questionsetversion.FieldVersionNo:
 			values[i] = new(sql.NullInt64)
-		case questionsetversion.FieldDeleteReason, questionsetversion.FieldOwnerScope, questionsetversion.FieldStatus, questionsetversion.FieldContentLanguage, questionsetversion.FieldChangeNote, questionsetversion.FieldSnapshotKey, questionsetversion.FieldSnapshotSha256:
+		case questionsetversion.FieldDeleteReason, questionsetversion.FieldOwnerScope, questionsetversion.FieldStatus, questionsetversion.FieldContentLanguage, questionsetversion.FieldChangeNote, questionsetversion.FieldSnapshotKey, questionsetversion.FieldSnapshotSha256, questionsetversion.FieldTranslationStatus, questionsetversion.FieldAudioExemptReason:
 			values[i] = new(sql.NullString)
 		case questionsetversion.FieldCreatedAt, questionsetversion.FieldUpdatedAt, questionsetversion.FieldDeletedAt, questionsetversion.FieldPublishedAt, questionsetversion.FieldPublishAt, questionsetversion.FieldClonedAt:
 			values[i] = new(sql.NullTime)
@@ -306,6 +314,35 @@ func (_m *QuestionSetVersion) assignValues(columns []string, values []any) error
 			} else if value.Valid {
 				_m.ClonedBy = new(uuid.UUID)
 				*_m.ClonedBy = *value.S.(*uuid.UUID)
+			}
+		case questionsetversion.FieldTranslationStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_status", values[i])
+			} else if value.Valid {
+				_m.TranslationStatus = new(string)
+				*_m.TranslationStatus = value.String
+			}
+		case questionsetversion.FieldTranslationMeta:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_meta", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.TranslationMeta); err != nil {
+					return fmt.Errorf("unmarshal field translation_meta: %w", err)
+				}
+			}
+		case questionsetversion.FieldAudioExemptReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_reason", values[i])
+			} else if value.Valid {
+				_m.AudioExemptReason = new(string)
+				*_m.AudioExemptReason = value.String
+			}
+		case questionsetversion.FieldAudioExemptApprovedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_approved_by", values[i])
+			} else if value.Valid {
+				_m.AudioExemptApprovedBy = new(uuid.UUID)
+				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
 			}
 		case questionsetversion.FieldQuestionSetID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -531,6 +568,24 @@ func (_m *QuestionSetVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.ClonedBy; v != nil {
 		builder.WriteString("cloned_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TranslationStatus; v != nil {
+		builder.WriteString("translation_status=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("translation_meta=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TranslationMeta))
+	builder.WriteString(", ")
+	if v := _m.AudioExemptReason; v != nil {
+		builder.WriteString("audio_exempt_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AudioExemptApprovedBy; v != nil {
+		builder.WriteString("audio_exempt_approved_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

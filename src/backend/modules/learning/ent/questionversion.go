@@ -72,6 +72,14 @@ type QuestionVersion struct {
 	ClonedAt *time.Time `json:"cloned_at,omitempty"`
 	// ClonedBy holds the value of the "cloned_by" field.
 	ClonedBy *uuid.UUID `json:"cloned_by,omitempty"`
+	// TranslationStatus holds the value of the "translation_status" field.
+	TranslationStatus *string `json:"translation_status,omitempty"`
+	// TranslationMeta holds the value of the "translation_meta" field.
+	TranslationMeta jsontext.Value `json:"translation_meta,omitempty"`
+	// AudioExemptReason holds the value of the "audio_exempt_reason" field.
+	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
+	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
+	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
 	// QuestionID holds the value of the "question_id" field.
 	QuestionID uuid.UUID `json:"question_id,omitempty"`
 	// Type holds the value of the "type" field.
@@ -124,9 +132,9 @@ func (*QuestionVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case questionversion.FieldTenantID, questionversion.FieldCreatedBy, questionversion.FieldUpdatedBy, questionversion.FieldDeletedBy, questionversion.FieldReviewerID, questionversion.FieldBasedOnVersionID, questionversion.FieldClonedFromID, questionversion.FieldClonedFromTenantID, questionversion.FieldClonedBy:
+		case questionversion.FieldTenantID, questionversion.FieldCreatedBy, questionversion.FieldUpdatedBy, questionversion.FieldDeletedBy, questionversion.FieldReviewerID, questionversion.FieldBasedOnVersionID, questionversion.FieldClonedFromID, questionversion.FieldClonedFromTenantID, questionversion.FieldClonedBy, questionversion.FieldAudioExemptApprovedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case questionversion.FieldStem, questionversion.FieldRenderPayload, questionversion.FieldAnswerKey, questionversion.FieldScoringRule, questionversion.FieldExplanation, questionversion.FieldOptionFeedback, questionversion.FieldHints, questionversion.FieldWorkedExampleRef, questionversion.FieldMathAssets, questionversion.FieldTags, questionversion.FieldGradeLevels, questionversion.FieldMediaRefs, questionversion.FieldContentHash:
+		case questionversion.FieldTranslationMeta, questionversion.FieldStem, questionversion.FieldRenderPayload, questionversion.FieldAnswerKey, questionversion.FieldScoringRule, questionversion.FieldExplanation, questionversion.FieldOptionFeedback, questionversion.FieldHints, questionversion.FieldWorkedExampleRef, questionversion.FieldMathAssets, questionversion.FieldTags, questionversion.FieldGradeLevels, questionversion.FieldMediaRefs, questionversion.FieldContentHash:
 			values[i] = new([]byte)
 		case questionversion.FieldExamOnly, questionversion.FieldEfficacyInstrument:
 			values[i] = new(sql.NullBool)
@@ -134,7 +142,7 @@ func (*QuestionVersion) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case questionversion.FieldVersion, questionversion.FieldVersionNo, questionversion.FieldMinResponseMs, questionversion.FieldDifficulty:
 			values[i] = new(sql.NullInt64)
-		case questionversion.FieldDeleteReason, questionversion.FieldOwnerScope, questionversion.FieldStatus, questionversion.FieldContentLanguage, questionversion.FieldChangeNote, questionversion.FieldSnapshotKey, questionversion.FieldSnapshotSha256, questionversion.FieldType:
+		case questionversion.FieldDeleteReason, questionversion.FieldOwnerScope, questionversion.FieldStatus, questionversion.FieldContentLanguage, questionversion.FieldChangeNote, questionversion.FieldSnapshotKey, questionversion.FieldSnapshotSha256, questionversion.FieldTranslationStatus, questionversion.FieldAudioExemptReason, questionversion.FieldType:
 			values[i] = new(sql.NullString)
 		case questionversion.FieldCreatedAt, questionversion.FieldUpdatedAt, questionversion.FieldDeletedAt, questionversion.FieldPublishedAt, questionversion.FieldPublishAt, questionversion.FieldClonedAt:
 			values[i] = new(sql.NullTime)
@@ -333,6 +341,35 @@ func (_m *QuestionVersion) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ClonedBy = new(uuid.UUID)
 				*_m.ClonedBy = *value.S.(*uuid.UUID)
+			}
+		case questionversion.FieldTranslationStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_status", values[i])
+			} else if value.Valid {
+				_m.TranslationStatus = new(string)
+				*_m.TranslationStatus = value.String
+			}
+		case questionversion.FieldTranslationMeta:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_meta", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.TranslationMeta); err != nil {
+					return fmt.Errorf("unmarshal field translation_meta: %w", err)
+				}
+			}
+		case questionversion.FieldAudioExemptReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_reason", values[i])
+			} else if value.Valid {
+				_m.AudioExemptReason = new(string)
+				*_m.AudioExemptReason = value.String
+			}
+		case questionversion.FieldAudioExemptApprovedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_approved_by", values[i])
+			} else if value.Valid {
+				_m.AudioExemptApprovedBy = new(uuid.UUID)
+				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
 			}
 		case questionversion.FieldQuestionID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -636,6 +673,24 @@ func (_m *QuestionVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.ClonedBy; v != nil {
 		builder.WriteString("cloned_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TranslationStatus; v != nil {
+		builder.WriteString("translation_status=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("translation_meta=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TranslationMeta))
+	builder.WriteString(", ")
+	if v := _m.AudioExemptReason; v != nil {
+		builder.WriteString("audio_exempt_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AudioExemptApprovedBy; v != nil {
+		builder.WriteString("audio_exempt_approved_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

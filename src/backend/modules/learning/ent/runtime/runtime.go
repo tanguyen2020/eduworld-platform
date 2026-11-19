@@ -29,6 +29,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/reviewtask"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
@@ -38,6 +39,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbooksectionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/textbookseries"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/topic"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/translationjob"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -98,6 +100,8 @@ func init() {
 	_ = assessmentblueprintversionMixinFields0
 	assessmentblueprintversionMixinFields1 := assessmentblueprintversionMixin[1].Fields()
 	_ = assessmentblueprintversionMixinFields1
+	assessmentblueprintversionMixinFields2 := assessmentblueprintversionMixin[2].Fields()
+	_ = assessmentblueprintversionMixinFields2
 	assessmentblueprintversionFields := schema.AssessmentBlueprintVersion{}.Fields()
 	_ = assessmentblueprintversionFields
 	// assessmentblueprintversionDescCreatedAt is the schema descriptor for created_at field.
@@ -152,6 +156,14 @@ func init() {
 	assessmentblueprintversionDescSnapshotSha256 := assessmentblueprintversionMixinFields1[10].Descriptor()
 	// assessmentblueprintversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	assessmentblueprintversion.SnapshotSha256Validator = assessmentblueprintversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescTranslationStatus is the schema descriptor for translation_status field.
+	assessmentblueprintversionDescTranslationStatus := assessmentblueprintversionMixinFields2[0].Descriptor()
+	// assessmentblueprintversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	assessmentblueprintversion.TranslationStatusValidator = assessmentblueprintversionDescTranslationStatus.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	assessmentblueprintversionDescAudioExemptReason := assessmentblueprintversionMixinFields2[2].Descriptor()
+	// assessmentblueprintversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	assessmentblueprintversion.AudioExemptReasonValidator = assessmentblueprintversionDescAudioExemptReason.Validators[0].(func(string) error)
 	// assessmentblueprintversionDescGradeLevels is the schema descriptor for grade_levels field.
 	assessmentblueprintversionDescGradeLevels := assessmentblueprintversionFields[4].Descriptor()
 	// assessmentblueprintversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
@@ -291,6 +303,14 @@ func init() {
 	contenttransitionDescNote := contenttransitionFields[6].Descriptor()
 	// contenttransition.NoteValidator is a validator for the "note" field. It is called by the builders before save.
 	contenttransition.NoteValidator = contenttransitionDescNote.Validators[0].(func(string) error)
+	// contenttransitionDescAction is the schema descriptor for action field.
+	contenttransitionDescAction := contenttransitionFields[8].Descriptor()
+	// contenttransition.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	contenttransition.ActionValidator = contenttransitionDescAction.Validators[0].(func(string) error)
+	// contenttransitionDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	contenttransitionDescIdempotencyKey := contenttransitionFields[9].Descriptor()
+	// contenttransition.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	contenttransition.IdempotencyKeyValidator = contenttransitionDescIdempotencyKey.Validators[0].(func(string) error)
 	// contenttransitionDescID is the schema descriptor for id field.
 	contenttransitionDescID := contenttransitionMixinFields0[0].Descriptor()
 	// contenttransition.DefaultID holds the default value on creation for the id field.
@@ -536,6 +556,8 @@ func init() {
 	_ = learningmaterialversionMixinFields0
 	learningmaterialversionMixinFields1 := learningmaterialversionMixin[1].Fields()
 	_ = learningmaterialversionMixinFields1
+	learningmaterialversionMixinFields2 := learningmaterialversionMixin[2].Fields()
+	_ = learningmaterialversionMixinFields2
 	learningmaterialversionFields := schema.LearningMaterialVersion{}.Fields()
 	_ = learningmaterialversionFields
 	// learningmaterialversionDescCreatedAt is the schema descriptor for created_at field.
@@ -590,6 +612,14 @@ func init() {
 	learningmaterialversionDescSnapshotSha256 := learningmaterialversionMixinFields1[10].Descriptor()
 	// learningmaterialversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	learningmaterialversion.SnapshotSha256Validator = learningmaterialversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// learningmaterialversionDescTranslationStatus is the schema descriptor for translation_status field.
+	learningmaterialversionDescTranslationStatus := learningmaterialversionMixinFields2[0].Descriptor()
+	// learningmaterialversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	learningmaterialversion.TranslationStatusValidator = learningmaterialversionDescTranslationStatus.Validators[0].(func(string) error)
+	// learningmaterialversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	learningmaterialversionDescAudioExemptReason := learningmaterialversionMixinFields2[2].Descriptor()
+	// learningmaterialversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	learningmaterialversion.AudioExemptReasonValidator = learningmaterialversionDescAudioExemptReason.Validators[0].(func(string) error)
 	// learningmaterialversionDescGradeLevels is the schema descriptor for grade_levels field.
 	learningmaterialversionDescGradeLevels := learningmaterialversionFields[4].Descriptor()
 	// learningmaterialversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
@@ -737,6 +767,8 @@ func init() {
 	_ = lessonversionMixinFields0
 	lessonversionMixinFields1 := lessonversionMixin[1].Fields()
 	_ = lessonversionMixinFields1
+	lessonversionMixinFields2 := lessonversionMixin[2].Fields()
+	_ = lessonversionMixinFields2
 	lessonversionFields := schema.LessonVersion{}.Fields()
 	_ = lessonversionFields
 	// lessonversionDescCreatedAt is the schema descriptor for created_at field.
@@ -791,6 +823,14 @@ func init() {
 	lessonversionDescSnapshotSha256 := lessonversionMixinFields1[10].Descriptor()
 	// lessonversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	lessonversion.SnapshotSha256Validator = lessonversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// lessonversionDescTranslationStatus is the schema descriptor for translation_status field.
+	lessonversionDescTranslationStatus := lessonversionMixinFields2[0].Descriptor()
+	// lessonversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	lessonversion.TranslationStatusValidator = lessonversionDescTranslationStatus.Validators[0].(func(string) error)
+	// lessonversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	lessonversionDescAudioExemptReason := lessonversionMixinFields2[2].Descriptor()
+	// lessonversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	lessonversion.AudioExemptReasonValidator = lessonversionDescAudioExemptReason.Validators[0].(func(string) error)
 	// lessonversionDescGradeLevels is the schema descriptor for grade_levels field.
 	lessonversionDescGradeLevels := lessonversionFields[4].Descriptor()
 	// lessonversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
@@ -1181,6 +1221,8 @@ func init() {
 	_ = questionsetversionMixinFields0
 	questionsetversionMixinFields1 := questionsetversionMixin[1].Fields()
 	_ = questionsetversionMixinFields1
+	questionsetversionMixinFields2 := questionsetversionMixin[2].Fields()
+	_ = questionsetversionMixinFields2
 	questionsetversionFields := schema.QuestionSetVersion{}.Fields()
 	_ = questionsetversionFields
 	// questionsetversionDescCreatedAt is the schema descriptor for created_at field.
@@ -1235,6 +1277,14 @@ func init() {
 	questionsetversionDescSnapshotSha256 := questionsetversionMixinFields1[10].Descriptor()
 	// questionsetversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	questionsetversion.SnapshotSha256Validator = questionsetversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// questionsetversionDescTranslationStatus is the schema descriptor for translation_status field.
+	questionsetversionDescTranslationStatus := questionsetversionMixinFields2[0].Descriptor()
+	// questionsetversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	questionsetversion.TranslationStatusValidator = questionsetversionDescTranslationStatus.Validators[0].(func(string) error)
+	// questionsetversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	questionsetversionDescAudioExemptReason := questionsetversionMixinFields2[2].Descriptor()
+	// questionsetversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	questionsetversion.AudioExemptReasonValidator = questionsetversionDescAudioExemptReason.Validators[0].(func(string) error)
 	// questionsetversionDescGradeLevels is the schema descriptor for grade_levels field.
 	questionsetversionDescGradeLevels := questionsetversionFields[4].Descriptor()
 	// questionsetversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
@@ -1268,6 +1318,8 @@ func init() {
 	_ = questionversionMixinFields0
 	questionversionMixinFields1 := questionversionMixin[1].Fields()
 	_ = questionversionMixinFields1
+	questionversionMixinFields2 := questionversionMixin[2].Fields()
+	_ = questionversionMixinFields2
 	questionversionFields := schema.QuestionVersion{}.Fields()
 	_ = questionversionFields
 	// questionversionDescCreatedAt is the schema descriptor for created_at field.
@@ -1322,6 +1374,14 @@ func init() {
 	questionversionDescSnapshotSha256 := questionversionMixinFields1[10].Descriptor()
 	// questionversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	questionversion.SnapshotSha256Validator = questionversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// questionversionDescTranslationStatus is the schema descriptor for translation_status field.
+	questionversionDescTranslationStatus := questionversionMixinFields2[0].Descriptor()
+	// questionversion.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	questionversion.TranslationStatusValidator = questionversionDescTranslationStatus.Validators[0].(func(string) error)
+	// questionversionDescAudioExemptReason is the schema descriptor for audio_exempt_reason field.
+	questionversionDescAudioExemptReason := questionversionMixinFields2[2].Descriptor()
+	// questionversion.AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	questionversion.AudioExemptReasonValidator = questionversionDescAudioExemptReason.Validators[0].(func(string) error)
 	// questionversionDescType is the schema descriptor for type field.
 	questionversionDescType := questionversionFields[1].Descriptor()
 	// questionversion.TypeValidator is a validator for the "type" field. It is called by the builders before save.
@@ -1387,6 +1447,63 @@ func init() {
 	questionversionobjectiveDescID := questionversionobjectiveMixinFields0[0].Descriptor()
 	// questionversionobjective.DefaultID holds the default value on creation for the id field.
 	questionversionobjective.DefaultID = questionversionobjectiveDescID.Default.(func() uuid.UUID)
+	reviewtaskMixin := schema.ReviewTask{}.Mixin()
+	reviewtaskMixinHooks0 := reviewtaskMixin[0].Hooks()
+	reviewtask.Hooks[0] = reviewtaskMixinHooks0[0]
+	reviewtaskMixinInters0 := reviewtaskMixin[0].Interceptors()
+	reviewtask.Interceptors[0] = reviewtaskMixinInters0[0]
+	reviewtaskMixinFields0 := reviewtaskMixin[0].Fields()
+	_ = reviewtaskMixinFields0
+	reviewtaskFields := schema.ReviewTask{}.Fields()
+	_ = reviewtaskFields
+	// reviewtaskDescCreatedAt is the schema descriptor for created_at field.
+	reviewtaskDescCreatedAt := reviewtaskMixinFields0[2].Descriptor()
+	// reviewtask.DefaultCreatedAt holds the default value on creation for the created_at field.
+	reviewtask.DefaultCreatedAt = reviewtaskDescCreatedAt.Default.(func() time.Time)
+	// reviewtaskDescUpdatedAt is the schema descriptor for updated_at field.
+	reviewtaskDescUpdatedAt := reviewtaskMixinFields0[4].Descriptor()
+	// reviewtask.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	reviewtask.DefaultUpdatedAt = reviewtaskDescUpdatedAt.Default.(func() time.Time)
+	// reviewtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	reviewtask.UpdateDefaultUpdatedAt = reviewtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// reviewtaskDescDeleteReason is the schema descriptor for delete_reason field.
+	reviewtaskDescDeleteReason := reviewtaskMixinFields0[8].Descriptor()
+	// reviewtask.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	reviewtask.DeleteReasonValidator = reviewtaskDescDeleteReason.Validators[0].(func(string) error)
+	// reviewtaskDescVersion is the schema descriptor for version field.
+	reviewtaskDescVersion := reviewtaskMixinFields0[9].Descriptor()
+	// reviewtask.DefaultVersion holds the default value on creation for the version field.
+	reviewtask.DefaultVersion = reviewtaskDescVersion.Default.(int64)
+	// reviewtaskDescReviewLane is the schema descriptor for review_lane field.
+	reviewtaskDescReviewLane := reviewtaskFields[0].Descriptor()
+	// reviewtask.ReviewLaneValidator is a validator for the "review_lane" field. It is called by the builders before save.
+	reviewtask.ReviewLaneValidator = reviewtaskDescReviewLane.Validators[0].(func(string) error)
+	// reviewtaskDescContentType is the schema descriptor for content_type field.
+	reviewtaskDescContentType := reviewtaskFields[1].Descriptor()
+	// reviewtask.ContentTypeValidator is a validator for the "content_type" field. It is called by the builders before save.
+	reviewtask.ContentTypeValidator = reviewtaskDescContentType.Validators[0].(func(string) error)
+	// reviewtaskDescVersionNo is the schema descriptor for version_no field.
+	reviewtaskDescVersionNo := reviewtaskFields[4].Descriptor()
+	// reviewtask.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	reviewtask.VersionNoValidator = reviewtaskDescVersionNo.Validators[0].(func(int) error)
+	// reviewtaskDescTitle is the schema descriptor for title field.
+	reviewtaskDescTitle := reviewtaskFields[5].Descriptor()
+	// reviewtask.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	reviewtask.TitleValidator = reviewtaskDescTitle.Validators[0].(func(string) error)
+	// reviewtaskDescStatus is the schema descriptor for status field.
+	reviewtaskDescStatus := reviewtaskFields[9].Descriptor()
+	// reviewtask.DefaultStatus holds the default value on creation for the status field.
+	reviewtask.DefaultStatus = reviewtaskDescStatus.Default.(string)
+	// reviewtask.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	reviewtask.StatusValidator = reviewtaskDescStatus.Validators[0].(func(string) error)
+	// reviewtaskDescSubmittedAt is the schema descriptor for submitted_at field.
+	reviewtaskDescSubmittedAt := reviewtaskFields[11].Descriptor()
+	// reviewtask.DefaultSubmittedAt holds the default value on creation for the submitted_at field.
+	reviewtask.DefaultSubmittedAt = reviewtaskDescSubmittedAt.Default.(func() time.Time)
+	// reviewtaskDescID is the schema descriptor for id field.
+	reviewtaskDescID := reviewtaskMixinFields0[0].Descriptor()
+	// reviewtask.DefaultID holds the default value on creation for the id field.
+	reviewtask.DefaultID = reviewtaskDescID.Default.(func() uuid.UUID)
 	subjectMixin := schema.Subject{}.Mixin()
 	subjectMixinHooks0 := subjectMixin[0].Hooks()
 	subject.Hooks[0] = subjectMixinHooks0[0]
@@ -1699,6 +1816,67 @@ func init() {
 	topicDescID := topicMixinFields0[0].Descriptor()
 	// topic.DefaultID holds the default value on creation for the id field.
 	topic.DefaultID = topicDescID.Default.(func() uuid.UUID)
+	translationjobMixin := schema.TranslationJob{}.Mixin()
+	translationjobMixinHooks0 := translationjobMixin[0].Hooks()
+	translationjob.Hooks[0] = translationjobMixinHooks0[0]
+	translationjobMixinInters0 := translationjobMixin[0].Interceptors()
+	translationjob.Interceptors[0] = translationjobMixinInters0[0]
+	translationjobMixinFields0 := translationjobMixin[0].Fields()
+	_ = translationjobMixinFields0
+	translationjobFields := schema.TranslationJob{}.Fields()
+	_ = translationjobFields
+	// translationjobDescCreatedAt is the schema descriptor for created_at field.
+	translationjobDescCreatedAt := translationjobMixinFields0[2].Descriptor()
+	// translationjob.DefaultCreatedAt holds the default value on creation for the created_at field.
+	translationjob.DefaultCreatedAt = translationjobDescCreatedAt.Default.(func() time.Time)
+	// translationjobDescUpdatedAt is the schema descriptor for updated_at field.
+	translationjobDescUpdatedAt := translationjobMixinFields0[4].Descriptor()
+	// translationjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	translationjob.DefaultUpdatedAt = translationjobDescUpdatedAt.Default.(func() time.Time)
+	// translationjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	translationjob.UpdateDefaultUpdatedAt = translationjobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// translationjobDescDeleteReason is the schema descriptor for delete_reason field.
+	translationjobDescDeleteReason := translationjobMixinFields0[8].Descriptor()
+	// translationjob.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	translationjob.DeleteReasonValidator = translationjobDescDeleteReason.Validators[0].(func(string) error)
+	// translationjobDescVersion is the schema descriptor for version field.
+	translationjobDescVersion := translationjobMixinFields0[9].Descriptor()
+	// translationjob.DefaultVersion holds the default value on creation for the version field.
+	translationjob.DefaultVersion = translationjobDescVersion.Default.(int64)
+	// translationjobDescOwnerScope is the schema descriptor for owner_scope field.
+	translationjobDescOwnerScope := translationjobFields[0].Descriptor()
+	// translationjob.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	translationjob.OwnerScopeValidator = translationjobDescOwnerScope.Validators[0].(func(string) error)
+	// translationjobDescKind is the schema descriptor for kind field.
+	translationjobDescKind := translationjobFields[1].Descriptor()
+	// translationjob.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	translationjob.KindValidator = translationjobDescKind.Validators[0].(func(string) error)
+	// translationjobDescStatus is the schema descriptor for status field.
+	translationjobDescStatus := translationjobFields[2].Descriptor()
+	// translationjob.DefaultStatus holds the default value on creation for the status field.
+	translationjob.DefaultStatus = translationjobDescStatus.Default.(string)
+	// translationjob.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	translationjob.StatusValidator = translationjobDescStatus.Validators[0].(func(string) error)
+	// translationjobDescFormat is the schema descriptor for format field.
+	translationjobDescFormat := translationjobFields[3].Descriptor()
+	// translationjob.FormatValidator is a validator for the "format" field. It is called by the builders before save.
+	translationjob.FormatValidator = translationjobDescFormat.Validators[0].(func(string) error)
+	// translationjobDescSourceLanguage is the schema descriptor for source_language field.
+	translationjobDescSourceLanguage := translationjobFields[4].Descriptor()
+	// translationjob.SourceLanguageValidator is a validator for the "source_language" field. It is called by the builders before save.
+	translationjob.SourceLanguageValidator = translationjobDescSourceLanguage.Validators[0].(func(string) error)
+	// translationjobDescTargetLanguage is the schema descriptor for target_language field.
+	translationjobDescTargetLanguage := translationjobFields[5].Descriptor()
+	// translationjob.TargetLanguageValidator is a validator for the "target_language" field. It is called by the builders before save.
+	translationjob.TargetLanguageValidator = translationjobDescTargetLanguage.Validators[0].(func(string) error)
+	// translationjobDescResultStorageKey is the schema descriptor for result_storage_key field.
+	translationjobDescResultStorageKey := translationjobFields[8].Descriptor()
+	// translationjob.ResultStorageKeyValidator is a validator for the "result_storage_key" field. It is called by the builders before save.
+	translationjob.ResultStorageKeyValidator = translationjobDescResultStorageKey.Validators[0].(func(string) error)
+	// translationjobDescID is the schema descriptor for id field.
+	translationjobDescID := translationjobMixinFields0[0].Descriptor()
+	// translationjob.DefaultID holds the default value on creation for the id field.
+	translationjob.DefaultID = translationjobDescID.Default.(func() uuid.UUID)
 }
 
 const (

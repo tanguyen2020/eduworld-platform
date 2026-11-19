@@ -40,3 +40,20 @@ make specs-lint
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo mã F025-AC-*, trace_id của bước 1 và 8, truy vấn đối soát `content_transitions` (SC-001, SC-004).
+
+## 5. Bằng chứng (2026-11-19, local, Windows + Docker Desktop, testcontainers PostgreSQL 17 + floci)
+
+| Tiêu chí | Test | Kết quả |
+|---|---|---|
+| F025-AC-01, 04, 05, 09, 11; SC-001, SC-004 | `TestWorkflowSubmitApprove` | pass |
+| F025-AC-02, 03, 06, 07, 08 | `TestWorkflowChecksRejectRevise`, `workflow.TestApply`, `readiness.TestGuardOrder` | pass |
+| F025-AC-09 | `TestWorkflowPreconditions` (428 thiếu If-Match/Idempotency-Key, 412 lệch, hai reviewer song song → một 412) | pass |
+| F025-AC-10 | `TestWorkflowTenantIsolation` (tenant khác 404, platform được gán 403, không role 403) | pass |
+| F025-AC-12, 13, 14; SC-003 | `TestReviewQueue` | pass |
+| F025-AC-15, 16; SC-002 | `TestWorkflowAudioG13`, `readiness.TestAudioRule` | pass |
+| F025-AC-17 | `contract.TestReadinessGuardProblems` | pass |
+| F025-AC-18, 19, 21 | `TestWorkflowLanguage`, `i18ntext.TestMissingSource`, `i18ntext.TestComputeStatus` | pass |
+| F025-AC-20 | `i18ntext.TestResolve` (header `Content-Language` nối ở F030) | pass |
+| F025-AC-22, 23, 24 | `TestTranslationExportImport`, `translation.TestCodecRoundTrip`, `i18ntext.TestSetTranslation` | pass |
+
+Đối soát SC-001 (trong `TestWorkflowSubmitApprove`): `SELECT count(*) FROM content.question_versions WHERE status = 'approved' AND (reviewer_id IS NULL OR reviewer_id = author_id)` = 0.

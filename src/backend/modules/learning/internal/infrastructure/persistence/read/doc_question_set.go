@@ -32,7 +32,8 @@ func questionSetVersionOf(r *ent.QuestionSetVersion) dto.DocVersion {
 		Title: r.Title, Summary: r.Summary, SubjectID: r.SubjectID, CurriculumVersionID: r.CurriculumVersionID, GradeLevels: r.GradeLevels,
 		TopicIDs: r.TopicIds, ObjectiveIDs: r.ObjectiveIds, MediaRefs: r.MediaRefs, WorkedExampleIDs: r.WorkedExampleIds, Body: r.Body,
 		ContentLanguage: r.ContentLanguage, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, PublishedAt: r.PublishedAt, ChangeNote: r.ChangeNote,
-		BasedOnID: r.BasedOnVersionID, Owner: ownerOf(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt}
+		BasedOnID: r.BasedOnVersionID, Owner: ownerOf(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt, TranslationStatus: r.TranslationStatus, TranslationMeta: r.TranslationMeta, AudioExemptReason: r.AudioExemptReason,
+		AudioExemptApprovedBy: r.AudioExemptApprovedBy}
 }
 
 func (questionSetModel) doc(ctx context.Context, id uuid.UUID) (dto.Doc, error) {

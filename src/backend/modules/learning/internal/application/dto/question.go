@@ -2,6 +2,7 @@ package dto
 
 import (
 	"encoding/json"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/i18ntext"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,9 +60,14 @@ type QuestionVersion struct {
 	ChangeNote          *string
 	BasedOnID           *uuid.UUID
 	ContentHash         []byte
-	Owner               contentmodel.Owner
-	RowVersion          int64
-	UpdatedAt           time.Time
+	// F025: translation_status/translation_meta (CONTENT_MODEL §8) and the g1_3 audio exemption (§8.1).
+	TranslationStatus     *string
+	TranslationMeta       json.RawMessage
+	AudioExemptReason     *string
+	AudioExemptApprovedBy *uuid.UUID
+	Owner                 contentmodel.Owner
+	RowVersion            int64
+	UpdatedAt             time.Time
 }
 
 // QuestionAuthoringView is schema QuestionAuthoring (ContentVersion + QuestionAuthoringInput): the CMS view with the
@@ -103,6 +109,10 @@ type QuestionAuthoringView struct {
 	ExamOnly            bool            `json:"exam_only"`
 	EfficacyInstrument  bool            `json:"efficacy_instrument"`
 	ChangeNote          *string         `json:"change_note,omitempty"`
+	TranslationStatus   *string         `json:"translation_status,omitempty"`
+	AudioExemptReason   *string         `json:"audio_exempt_reason,omitempty"`
+	AudioExemptApproved *uuid.UUID      `json:"audio_exempt_approved_by,omitempty"`
+	OutdatedFields      []string        `json:"outdated_fields,omitempty"`
 }
 
 func nonNilStrings(v []string) []string {
@@ -129,10 +139,25 @@ func QuestionJSON(q Question, v QuestionVersion, renderWithFeedback json.RawMess
 		Hints: nonNilRaw(v.Hints), WorkedExampleRef: nonNilRaw(v.WorkedExampleRef), MinResponseMS: v.MinResponseMS, MaxScore: v.MaxScore,
 		MathAssets: nonNilRaw(v.MathAssets), Tags: nonNilStrings(v.Tags), Difficulty: v.Difficulty, GradeLevels: v.GradeLevels,
 		SubjectID: v.SubjectID, TopicID: v.TopicID, CurriculumVersionID: v.CurriculumVersionID, ObjectiveIDs: nonNil(v.ObjectiveIDs),
-		MediaRefs: nonNil(v.MediaRefs), ExamOnly: v.ExamOnly, EfficacyInstrument: v.EfficacyInstrument, ChangeNote: v.ChangeNote}
+		MediaRefs: nonNil(v.MediaRefs), ExamOnly: v.ExamOnly, EfficacyInstrument: v.EfficacyInstrument, ChangeNote: v.ChangeNote,
+		TranslationStatus: v.TranslationStatus, AudioExemptReason: v.AudioExemptReason, AudioExemptApproved: v.AudioExemptApprovedBy,
+		OutdatedFields: QuestionOutdated(v, renderWithFeedback)}
 	if v.PublishedAt != nil {
 		t := v.PublishedAt.UTC()
 		out.PublishedAt = &t
 	}
 	return out
+}
+
+// QuestionOutdated returns the pointers of the stale translations of a question version (ContentVersion.outdated_fields).
+func QuestionOutdated(v QuestionVersion, render json.RawMessage) []string {
+	doc := map[string]json.RawMessage{"stem": v.Stem, "render_payload": render}
+	if len(v.Explanation) > 0 && string(v.Explanation) != "null" {
+		doc["explanation"] = v.Explanation
+	}
+	if len(v.Hints) > 0 && string(v.Hints) != "null" {
+		doc["hints"] = v.Hints
+	}
+	b, _ := json.Marshal(doc)
+	return i18ntext.OutdatedFields(b, v.ContentLanguage, i18ntext.ParseMeta(v.TranslationMeta))
 }

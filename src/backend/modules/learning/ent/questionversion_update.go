@@ -315,6 +315,84 @@ func (_u *QuestionVersionUpdate) ClearSnapshotSha256() *QuestionVersionUpdate {
 	return _u
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_u *QuestionVersionUpdate) SetTranslationStatus(v string) *QuestionVersionUpdate {
+	_u.mutation.SetTranslationStatus(v)
+	return _u
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_u *QuestionVersionUpdate) SetNillableTranslationStatus(v *string) *QuestionVersionUpdate {
+	if v != nil {
+		_u.SetTranslationStatus(*v)
+	}
+	return _u
+}
+
+// ClearTranslationStatus clears the value of the "translation_status" field.
+func (_u *QuestionVersionUpdate) ClearTranslationStatus() *QuestionVersionUpdate {
+	_u.mutation.ClearTranslationStatus()
+	return _u
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_u *QuestionVersionUpdate) SetTranslationMeta(v jsontext.Value) *QuestionVersionUpdate {
+	_u.mutation.SetTranslationMeta(v)
+	return _u
+}
+
+// AppendTranslationMeta appends value to the "translation_meta" field.
+func (_u *QuestionVersionUpdate) AppendTranslationMeta(v jsontext.Value) *QuestionVersionUpdate {
+	_u.mutation.AppendTranslationMeta(v)
+	return _u
+}
+
+// ClearTranslationMeta clears the value of the "translation_meta" field.
+func (_u *QuestionVersionUpdate) ClearTranslationMeta() *QuestionVersionUpdate {
+	_u.mutation.ClearTranslationMeta()
+	return _u
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_u *QuestionVersionUpdate) SetAudioExemptReason(v string) *QuestionVersionUpdate {
+	_u.mutation.SetAudioExemptReason(v)
+	return _u
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_u *QuestionVersionUpdate) SetNillableAudioExemptReason(v *string) *QuestionVersionUpdate {
+	if v != nil {
+		_u.SetAudioExemptReason(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptReason clears the value of the "audio_exempt_reason" field.
+func (_u *QuestionVersionUpdate) ClearAudioExemptReason() *QuestionVersionUpdate {
+	_u.mutation.ClearAudioExemptReason()
+	return _u
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_u *QuestionVersionUpdate) SetAudioExemptApprovedBy(v uuid.UUID) *QuestionVersionUpdate {
+	_u.mutation.SetAudioExemptApprovedBy(v)
+	return _u
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_u *QuestionVersionUpdate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *QuestionVersionUpdate {
+	if v != nil {
+		_u.SetAudioExemptApprovedBy(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptApprovedBy clears the value of the "audio_exempt_approved_by" field.
+func (_u *QuestionVersionUpdate) ClearAudioExemptApprovedBy() *QuestionVersionUpdate {
+	_u.mutation.ClearAudioExemptApprovedBy()
+	return _u
+}
+
 // SetType sets the "type" field.
 func (_u *QuestionVersionUpdate) SetType(v string) *QuestionVersionUpdate {
 	_u.mutation.SetType(v)
@@ -724,6 +802,16 @@ func (_u *QuestionVersionUpdate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.TranslationStatus(); ok {
+		if err := questionversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AudioExemptReason(); ok {
+		if err := questionversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := questionversion.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.type": %w`, err)}
@@ -845,6 +933,35 @@ func (_u *QuestionVersionUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if _u.mutation.ClonedByCleared() {
 		_spec.ClearField(questionversion.FieldClonedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.TranslationStatus(); ok {
+		_spec.SetField(questionversion.FieldTranslationStatus, field.TypeString, value)
+	}
+	if _u.mutation.TranslationStatusCleared() {
+		_spec.ClearField(questionversion.FieldTranslationStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.TranslationMeta(); ok {
+		_spec.SetField(questionversion.FieldTranslationMeta, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTranslationMeta(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, questionversion.FieldTranslationMeta, value)
+		})
+	}
+	if _u.mutation.TranslationMetaCleared() {
+		_spec.ClearField(questionversion.FieldTranslationMeta, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AudioExemptReason(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptReason, field.TypeString, value)
+	}
+	if _u.mutation.AudioExemptReasonCleared() {
+		_spec.ClearField(questionversion.FieldAudioExemptReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.AudioExemptApprovedByCleared() {
+		_spec.ClearField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(questionversion.FieldType, field.TypeString, value)
@@ -1304,6 +1421,84 @@ func (_u *QuestionVersionUpdateOne) ClearSnapshotSha256() *QuestionVersionUpdate
 	return _u
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_u *QuestionVersionUpdateOne) SetTranslationStatus(v string) *QuestionVersionUpdateOne {
+	_u.mutation.SetTranslationStatus(v)
+	return _u
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_u *QuestionVersionUpdateOne) SetNillableTranslationStatus(v *string) *QuestionVersionUpdateOne {
+	if v != nil {
+		_u.SetTranslationStatus(*v)
+	}
+	return _u
+}
+
+// ClearTranslationStatus clears the value of the "translation_status" field.
+func (_u *QuestionVersionUpdateOne) ClearTranslationStatus() *QuestionVersionUpdateOne {
+	_u.mutation.ClearTranslationStatus()
+	return _u
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_u *QuestionVersionUpdateOne) SetTranslationMeta(v jsontext.Value) *QuestionVersionUpdateOne {
+	_u.mutation.SetTranslationMeta(v)
+	return _u
+}
+
+// AppendTranslationMeta appends value to the "translation_meta" field.
+func (_u *QuestionVersionUpdateOne) AppendTranslationMeta(v jsontext.Value) *QuestionVersionUpdateOne {
+	_u.mutation.AppendTranslationMeta(v)
+	return _u
+}
+
+// ClearTranslationMeta clears the value of the "translation_meta" field.
+func (_u *QuestionVersionUpdateOne) ClearTranslationMeta() *QuestionVersionUpdateOne {
+	_u.mutation.ClearTranslationMeta()
+	return _u
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_u *QuestionVersionUpdateOne) SetAudioExemptReason(v string) *QuestionVersionUpdateOne {
+	_u.mutation.SetAudioExemptReason(v)
+	return _u
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_u *QuestionVersionUpdateOne) SetNillableAudioExemptReason(v *string) *QuestionVersionUpdateOne {
+	if v != nil {
+		_u.SetAudioExemptReason(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptReason clears the value of the "audio_exempt_reason" field.
+func (_u *QuestionVersionUpdateOne) ClearAudioExemptReason() *QuestionVersionUpdateOne {
+	_u.mutation.ClearAudioExemptReason()
+	return _u
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_u *QuestionVersionUpdateOne) SetAudioExemptApprovedBy(v uuid.UUID) *QuestionVersionUpdateOne {
+	_u.mutation.SetAudioExemptApprovedBy(v)
+	return _u
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_u *QuestionVersionUpdateOne) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *QuestionVersionUpdateOne {
+	if v != nil {
+		_u.SetAudioExemptApprovedBy(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptApprovedBy clears the value of the "audio_exempt_approved_by" field.
+func (_u *QuestionVersionUpdateOne) ClearAudioExemptApprovedBy() *QuestionVersionUpdateOne {
+	_u.mutation.ClearAudioExemptApprovedBy()
+	return _u
+}
+
 // SetType sets the "type" field.
 func (_u *QuestionVersionUpdateOne) SetType(v string) *QuestionVersionUpdateOne {
 	_u.mutation.SetType(v)
@@ -1726,6 +1921,16 @@ func (_u *QuestionVersionUpdateOne) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.TranslationStatus(); ok {
+		if err := questionversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AudioExemptReason(); ok {
+		if err := questionversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := questionversion.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.type": %w`, err)}
@@ -1864,6 +2069,35 @@ func (_u *QuestionVersionUpdateOne) sqlSave(ctx context.Context) (_node *Questio
 	}
 	if _u.mutation.ClonedByCleared() {
 		_spec.ClearField(questionversion.FieldClonedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.TranslationStatus(); ok {
+		_spec.SetField(questionversion.FieldTranslationStatus, field.TypeString, value)
+	}
+	if _u.mutation.TranslationStatusCleared() {
+		_spec.ClearField(questionversion.FieldTranslationStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.TranslationMeta(); ok {
+		_spec.SetField(questionversion.FieldTranslationMeta, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTranslationMeta(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, questionversion.FieldTranslationMeta, value)
+		})
+	}
+	if _u.mutation.TranslationMetaCleared() {
+		_spec.ClearField(questionversion.FieldTranslationMeta, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AudioExemptReason(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptReason, field.TypeString, value)
+	}
+	if _u.mutation.AudioExemptReasonCleared() {
+		_spec.ClearField(questionversion.FieldAudioExemptReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.AudioExemptApprovedByCleared() {
+		_spec.ClearField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(questionversion.FieldType, field.TypeString, value)

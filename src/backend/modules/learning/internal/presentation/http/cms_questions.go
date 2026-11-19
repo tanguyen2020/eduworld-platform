@@ -87,6 +87,7 @@ type questionBody struct {
 	ChangeNote          *string         `json:"change_note"`
 	ExamOnly            *bool           `json:"exam_only"`
 	EfficacyInstrument  *bool           `json:"efficacy_instrument"`
+	AudioExemptReason   *string         `json:"audio_exempt_reason"`
 }
 
 func readQuestion(r *http.Request) (command.QuestionFields, error) {
@@ -108,7 +109,7 @@ func readQuestion(r *http.Request) (command.QuestionFields, error) {
 		WorkedExampleRef: q.WorkedExampleRef, MathAssets: q.MathAssets, MinResponseMS: q.MinResponseMS, MaxScore: q.MaxScore, Tags: q.Tags,
 		Difficulty: q.Difficulty, GradeLevels: q.GradeLevels, SubjectID: q.SubjectID, TopicID: q.TopicID, CurriculumVersionID: q.CurriculumVersionID,
 		ObjectiveIDs: q.ObjectiveIDs, MediaRefs: q.MediaRefs, ContentLanguage: q.ContentLanguage, ChangeNote: q.ChangeNote, ExamOnly: q.ExamOnly,
-		EfficacyInstrument: q.EfficacyInstrument}, nil
+		EfficacyInstrument: q.EfficacyInstrument, AudioExemptReason: q.AudioExemptReason}, nil
 }
 
 func sessionTenantOf(r *http.Request) *uuid.UUID {

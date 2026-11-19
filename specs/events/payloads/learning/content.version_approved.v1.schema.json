@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/content.version_approved.v1.schema.json",
+  "title": "Payload content.version_approved v1 (module learning, owner F025, CONTENT_MODEL §6)",
+  "description": "Reviewer (khác tác giả) duyệt version in_review → approved. audio_exemption_acknowledged = true khi version có miễn trừ audio g1_3 (CONTENT_MODEL §8.1). Consumer: NTF (tác giả), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["content_type", "content_id", "content_version_id", "version", "review_lane", "task_id", "author_id", "reviewer_id", "tenant_id"],
+  "properties": {
+    "content_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType" },
+    "content_id": { "type": "string", "format": "uuid" },
+    "content_version_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "review_lane": { "type": "string", "enum": ["tenant", "platform_learning"] },
+    "task_id": { "type": "string", "format": "uuid" },
+    "author_id": { "type": "string", "format": "uuid" },
+    "reviewer_id": { "type": "string", "format": "uuid" },
+    "audio_exemption_acknowledged": { "type": "boolean" }
+  },
+  "examples": [
+    { "content_type": "question", "content_id": "0193a5f4-6c1e-7b2a-9d1f-000000000601", "content_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000000602", "version": 1, "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "review_lane": "tenant", "task_id": "0193a5f4-6c1e-7b2a-9d1f-000000000603", "author_id": "0193a5f4-6c1e-7b2a-9d1f-000000000604", "reviewer_id": "0193a5f4-6c1e-7b2a-9d1f-000000000605" }
+  ]
+}

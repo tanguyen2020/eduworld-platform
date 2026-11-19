@@ -109,6 +109,12 @@
       "default": false,
       "description": "Câu thuộc công cụ đo hiệu quả độc lập (F035, LEARNING_EFFICACY_PLAN §3.2): chỉ khi owner_scope = platform, exam_only = true và không tham số hóa; bị loại khỏi mọi lần chọn câu luyện tập/đề thường; chỉ đổi bằng version mới."
     },
+    "audio_exempt_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Miễn trừ stem.audio_ref bắt buộc cho nhóm g1_3 khi đọc to làm lộ đáp án (chính tả, nhận biết chữ, đánh vần); reviewer xác nhận khi approve (CONTENT_MODEL §8.1, F025)."
+    },
     "meta": {
       "$ref": "#/$defs/contentMeta"
     },

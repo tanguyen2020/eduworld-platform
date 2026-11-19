@@ -63,7 +63,7 @@ func (QuestionSetVersion) Annotations() []schema.Annotation {
 }
 func (QuestionSetVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{entx.HybridContent{ResourceType: "question_set", PK: entx.PK{Column: "question_set_version_id"}, ResourceIDColumn: "question_set_id"},
-		ContentVersionMixin{CurriculumOptional: true}}
+		ContentVersionMixin{CurriculumOptional: true}, WorkflowFields{}}
 }
 func (QuestionSetVersion) Fields() []ent.Field { return docVersionFields("question_set_id") }
 func (QuestionSetVersion) Indexes() []ent.Index {
@@ -115,7 +115,7 @@ func (LessonVersion) Annotations() []schema.Annotation {
 }
 func (LessonVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{entx.HybridContent{ResourceType: "lesson", PK: entx.PK{Column: "lesson_version_id"}, ResourceIDColumn: "lesson_id"},
-		ContentVersionMixin{CurriculumOptional: true}}
+		ContentVersionMixin{CurriculumOptional: true}, WorkflowFields{}}
 }
 func (LessonVersion) Fields() []ent.Field  { return docVersionFields("lesson_id") }
 func (LessonVersion) Indexes() []ent.Index { return docVersionIndexes("lesson_id", "lesson_versions") }
@@ -138,7 +138,7 @@ func (LearningMaterialVersion) Annotations() []schema.Annotation {
 }
 func (LearningMaterialVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{entx.HybridContent{ResourceType: "learning_material", PK: entx.PK{Column: "learning_material_version_id"},
-		ResourceIDColumn: "learning_material_id"}, ContentVersionMixin{CurriculumOptional: true}}
+		ResourceIDColumn: "learning_material_id"}, ContentVersionMixin{CurriculumOptional: true}, WorkflowFields{}}
 }
 func (LearningMaterialVersion) Fields() []ent.Field { return docVersionFields("learning_material_id") }
 func (LearningMaterialVersion) Indexes() []ent.Index {
@@ -163,7 +163,7 @@ func (AssessmentBlueprintVersion) Annotations() []schema.Annotation {
 }
 func (AssessmentBlueprintVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{entx.HybridContent{ResourceType: "assessment_blueprint", PK: entx.PK{Column: "assessment_blueprint_version_id"},
-		ResourceIDColumn: "assessment_blueprint_id"}, ContentVersionMixin{CurriculumOptional: true}}
+		ResourceIDColumn: "assessment_blueprint_id"}, ContentVersionMixin{CurriculumOptional: true}, WorkflowFields{}}
 }
 func (AssessmentBlueprintVersion) Fields() []ent.Field {
 	return docVersionFields("assessment_blueprint_id")

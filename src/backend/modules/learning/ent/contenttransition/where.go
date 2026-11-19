@@ -105,6 +105,21 @@ func Note(v string) predicate.ContentTransition {
 	return predicate.ContentTransition(sql.FieldEQ(FieldNote, v))
 }
 
+// ContentID applies equality check predicate on the "content_id" field. It's identical to ContentIDEQ.
+func ContentID(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldContentID, v))
+}
+
+// Action applies equality check predicate on the "action" field. It's identical to ActionEQ.
+func Action(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldAction, v))
+}
+
+// IdempotencyKey applies equality check predicate on the "idempotency_key" field. It's identical to IdempotencyKeyEQ.
+func IdempotencyKey(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldIdempotencyKey, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.ContentTransition {
 	return predicate.ContentTransition(sql.FieldEQ(FieldTenantID, v))
@@ -643,6 +658,206 @@ func NoteEqualFold(v string) predicate.ContentTransition {
 // NoteContainsFold applies the ContainsFold predicate on the "note" field.
 func NoteContainsFold(v string) predicate.ContentTransition {
 	return predicate.ContentTransition(sql.FieldContainsFold(FieldNote, v))
+}
+
+// ContentIDEQ applies the EQ predicate on the "content_id" field.
+func ContentIDEQ(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldContentID, v))
+}
+
+// ContentIDNEQ applies the NEQ predicate on the "content_id" field.
+func ContentIDNEQ(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNEQ(FieldContentID, v))
+}
+
+// ContentIDIn applies the In predicate on the "content_id" field.
+func ContentIDIn(vs ...uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIn(FieldContentID, vs...))
+}
+
+// ContentIDNotIn applies the NotIn predicate on the "content_id" field.
+func ContentIDNotIn(vs ...uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotIn(FieldContentID, vs...))
+}
+
+// ContentIDGT applies the GT predicate on the "content_id" field.
+func ContentIDGT(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGT(FieldContentID, v))
+}
+
+// ContentIDGTE applies the GTE predicate on the "content_id" field.
+func ContentIDGTE(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGTE(FieldContentID, v))
+}
+
+// ContentIDLT applies the LT predicate on the "content_id" field.
+func ContentIDLT(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLT(FieldContentID, v))
+}
+
+// ContentIDLTE applies the LTE predicate on the "content_id" field.
+func ContentIDLTE(v uuid.UUID) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLTE(FieldContentID, v))
+}
+
+// ContentIDIsNil applies the IsNil predicate on the "content_id" field.
+func ContentIDIsNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIsNull(FieldContentID))
+}
+
+// ContentIDNotNil applies the NotNil predicate on the "content_id" field.
+func ContentIDNotNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotNull(FieldContentID))
+}
+
+// ActionEQ applies the EQ predicate on the "action" field.
+func ActionEQ(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldAction, v))
+}
+
+// ActionNEQ applies the NEQ predicate on the "action" field.
+func ActionNEQ(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNEQ(FieldAction, v))
+}
+
+// ActionIn applies the In predicate on the "action" field.
+func ActionIn(vs ...string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIn(FieldAction, vs...))
+}
+
+// ActionNotIn applies the NotIn predicate on the "action" field.
+func ActionNotIn(vs ...string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotIn(FieldAction, vs...))
+}
+
+// ActionGT applies the GT predicate on the "action" field.
+func ActionGT(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGT(FieldAction, v))
+}
+
+// ActionGTE applies the GTE predicate on the "action" field.
+func ActionGTE(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGTE(FieldAction, v))
+}
+
+// ActionLT applies the LT predicate on the "action" field.
+func ActionLT(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLT(FieldAction, v))
+}
+
+// ActionLTE applies the LTE predicate on the "action" field.
+func ActionLTE(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLTE(FieldAction, v))
+}
+
+// ActionContains applies the Contains predicate on the "action" field.
+func ActionContains(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldContains(FieldAction, v))
+}
+
+// ActionHasPrefix applies the HasPrefix predicate on the "action" field.
+func ActionHasPrefix(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldHasPrefix(FieldAction, v))
+}
+
+// ActionHasSuffix applies the HasSuffix predicate on the "action" field.
+func ActionHasSuffix(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldHasSuffix(FieldAction, v))
+}
+
+// ActionIsNil applies the IsNil predicate on the "action" field.
+func ActionIsNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIsNull(FieldAction))
+}
+
+// ActionNotNil applies the NotNil predicate on the "action" field.
+func ActionNotNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotNull(FieldAction))
+}
+
+// ActionEqualFold applies the EqualFold predicate on the "action" field.
+func ActionEqualFold(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEqualFold(FieldAction, v))
+}
+
+// ActionContainsFold applies the ContainsFold predicate on the "action" field.
+func ActionContainsFold(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldContainsFold(FieldAction, v))
+}
+
+// IdempotencyKeyEQ applies the EQ predicate on the "idempotency_key" field.
+func IdempotencyKeyEQ(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEQ(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyNEQ applies the NEQ predicate on the "idempotency_key" field.
+func IdempotencyKeyNEQ(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNEQ(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyIn applies the In predicate on the "idempotency_key" field.
+func IdempotencyKeyIn(vs ...string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIn(FieldIdempotencyKey, vs...))
+}
+
+// IdempotencyKeyNotIn applies the NotIn predicate on the "idempotency_key" field.
+func IdempotencyKeyNotIn(vs ...string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotIn(FieldIdempotencyKey, vs...))
+}
+
+// IdempotencyKeyGT applies the GT predicate on the "idempotency_key" field.
+func IdempotencyKeyGT(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGT(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyGTE applies the GTE predicate on the "idempotency_key" field.
+func IdempotencyKeyGTE(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldGTE(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyLT applies the LT predicate on the "idempotency_key" field.
+func IdempotencyKeyLT(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLT(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyLTE applies the LTE predicate on the "idempotency_key" field.
+func IdempotencyKeyLTE(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldLTE(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyContains applies the Contains predicate on the "idempotency_key" field.
+func IdempotencyKeyContains(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldContains(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyHasPrefix applies the HasPrefix predicate on the "idempotency_key" field.
+func IdempotencyKeyHasPrefix(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldHasPrefix(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyHasSuffix applies the HasSuffix predicate on the "idempotency_key" field.
+func IdempotencyKeyHasSuffix(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldHasSuffix(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyIsNil applies the IsNil predicate on the "idempotency_key" field.
+func IdempotencyKeyIsNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIsNull(FieldIdempotencyKey))
+}
+
+// IdempotencyKeyNotNil applies the NotNil predicate on the "idempotency_key" field.
+func IdempotencyKeyNotNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotNull(FieldIdempotencyKey))
+}
+
+// IdempotencyKeyEqualFold applies the EqualFold predicate on the "idempotency_key" field.
+func IdempotencyKeyEqualFold(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldEqualFold(FieldIdempotencyKey, v))
+}
+
+// IdempotencyKeyContainsFold applies the ContainsFold predicate on the "idempotency_key" field.
+func IdempotencyKeyContainsFold(v string) predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldContainsFold(FieldIdempotencyKey, v))
 }
 
 // And groups predicates with the AND operator between them.

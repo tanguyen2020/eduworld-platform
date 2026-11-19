@@ -211,6 +211,8 @@ func (h Questions) createDraft(ctx context.Context, o contentmodel.Owner, author
 	if err := h.prepare(ctx, &v, authRender); err != nil {
 		return QuestionResult{}, err
 	}
+	next, _ := questionDoc(v)
+	v.TranslationStatus, v.TranslationMeta = translation(nil, next, v.ContentLanguage, nil, now(h.Clock))
 	if err := h.Store.InsertQuestion(ctx, q); err != nil {
 		return QuestionResult{}, err
 	}

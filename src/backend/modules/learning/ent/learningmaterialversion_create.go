@@ -370,6 +370,54 @@ func (_c *LearningMaterialVersionCreate) SetNillableClonedBy(v *uuid.UUID) *Lear
 	return _c
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_c *LearningMaterialVersionCreate) SetTranslationStatus(v string) *LearningMaterialVersionCreate {
+	_c.mutation.SetTranslationStatus(v)
+	return _c
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_c *LearningMaterialVersionCreate) SetNillableTranslationStatus(v *string) *LearningMaterialVersionCreate {
+	if v != nil {
+		_c.SetTranslationStatus(*v)
+	}
+	return _c
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_c *LearningMaterialVersionCreate) SetTranslationMeta(v jsontext.Value) *LearningMaterialVersionCreate {
+	_c.mutation.SetTranslationMeta(v)
+	return _c
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_c *LearningMaterialVersionCreate) SetAudioExemptReason(v string) *LearningMaterialVersionCreate {
+	_c.mutation.SetAudioExemptReason(v)
+	return _c
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_c *LearningMaterialVersionCreate) SetNillableAudioExemptReason(v *string) *LearningMaterialVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptReason(*v)
+	}
+	return _c
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_c *LearningMaterialVersionCreate) SetAudioExemptApprovedBy(v uuid.UUID) *LearningMaterialVersionCreate {
+	_c.mutation.SetAudioExemptApprovedBy(v)
+	return _c
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_c *LearningMaterialVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *LearningMaterialVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptApprovedBy(*v)
+	}
+	return _c
+}
+
 // SetLearningMaterialID sets the "learning_material_id" field.
 func (_c *LearningMaterialVersionCreate) SetLearningMaterialID(v uuid.UUID) *LearningMaterialVersionCreate {
 	_c.mutation.SetLearningMaterialID(v)
@@ -615,6 +663,16 @@ func (_c *LearningMaterialVersionCreate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "LearningMaterialVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.TranslationStatus(); ok {
+		if err := learningmaterialversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "LearningMaterialVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AudioExemptReason(); ok {
+		if err := learningmaterialversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "LearningMaterialVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.LearningMaterialID(); !ok {
 		return &ValidationError{Name: "learning_material_id", err: errors.New(`ent: missing required field "LearningMaterialVersion.learning_material_id"`)}
 	}
@@ -778,6 +836,22 @@ func (_c *LearningMaterialVersionCreate) createSpec() (*LearningMaterialVersion,
 	if value, ok := _c.mutation.ClonedBy(); ok {
 		_spec.SetField(learningmaterialversion.FieldClonedBy, field.TypeUUID, value)
 		_node.ClonedBy = &value
+	}
+	if value, ok := _c.mutation.TranslationStatus(); ok {
+		_spec.SetField(learningmaterialversion.FieldTranslationStatus, field.TypeString, value)
+		_node.TranslationStatus = &value
+	}
+	if value, ok := _c.mutation.TranslationMeta(); ok {
+		_spec.SetField(learningmaterialversion.FieldTranslationMeta, field.TypeJSON, value)
+		_node.TranslationMeta = value
+	}
+	if value, ok := _c.mutation.AudioExemptReason(); ok {
+		_spec.SetField(learningmaterialversion.FieldAudioExemptReason, field.TypeString, value)
+		_node.AudioExemptReason = &value
+	}
+	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(learningmaterialversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+		_node.AudioExemptApprovedBy = &value
 	}
 	if value, ok := _c.mutation.LearningMaterialID(); ok {
 		_spec.SetField(learningmaterialversion.FieldLearningMaterialID, field.TypeUUID, value)

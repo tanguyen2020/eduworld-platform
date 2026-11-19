@@ -43,7 +43,8 @@ func QuestionVersionOf(r *ent.QuestionVersion) dto.QuestionVersion {
 		ExamOnly: r.ExamOnly, EfficacyInstrument: r.EfficacyInstrument, Tags: r.Tags, Difficulty: int(r.Difficulty), GradeLevels: r.GradeLevels,
 		SubjectID: r.SubjectID, TopicID: r.TopicID, CurriculumVersionID: r.CurriculumVersionID, MediaRefs: r.MediaRefs,
 		ContentLanguage: r.ContentLanguage, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, PublishedAt: r.PublishedAt, ChangeNote: r.ChangeNote,
-		BasedOnID: r.BasedOnVersionID, ContentHash: r.ContentHash, Owner: owner(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt}
+		BasedOnID: r.BasedOnVersionID, ContentHash: r.ContentHash, Owner: owner(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt, TranslationStatus: r.TranslationStatus, TranslationMeta: r.TranslationMeta, AudioExemptReason: r.AudioExemptReason,
+		AudioExemptApprovedBy: r.AudioExemptApprovedBy}
 	if r.MinResponseMs != nil {
 		m := int(*r.MinResponseMs)
 		v.MinResponseMS = &m
@@ -152,7 +153,11 @@ func (s QuestionRepo) InsertQuestionVersion(ctx context.Context, v dto.QuestionV
 		SetTags(nonNilTags(v.Tags)).SetDifficulty(int16(v.Difficulty)).SetGradeLevels(v.GradeLevels). //nolint:gosec // 1–5
 		SetSubjectID(v.SubjectID).SetTopicID(v.TopicID).SetCurriculumVersionID(v.CurriculumVersionID).SetMediaRefs(idList(v.MediaRefs)).
 		SetContentLanguage(v.ContentLanguage).SetAuthorID(v.AuthorID).SetNillableChangeNote(v.ChangeNote).SetNillableBasedOnVersionID(v.BasedOnID).
-		SetContentHash(v.ContentHash).SetOwnerScope(string(v.Owner.Scope))
+		SetContentHash(v.ContentHash).SetOwnerScope(string(v.Owner.Scope)).SetNillableTranslationStatus(v.TranslationStatus).
+		SetNillableAudioExemptReason(v.AudioExemptReason)
+	if present(v.TranslationMeta) {
+		c.SetTranslationMeta(v.TranslationMeta)
+	}
 	if v.Owner.TenantID != nil {
 		c.SetTenantID(*v.Owner.TenantID)
 	}
@@ -269,6 +274,8 @@ func (s QuestionRepo) UpdateQuestionVersion(ctx context.Context, v dto.QuestionV
 	} else {
 		u.ClearChangeNote()
 	}
+	setWorkflowDraft(v.TranslationStatus, v.TranslationMeta, v.AudioExemptReason, u.SetTranslationStatus, u.ClearTranslationStatus,
+		u.SetTranslationMeta, u.ClearTranslationMeta, u.SetAudioExemptReason, u.ClearAudioExemptReason)
 	n, err := u.Save(ctx)
 	if err != nil {
 		return v, MapCurriculumErr(err)

@@ -27,6 +27,43 @@ var migrations = map[string][]string{
 	"20261126000001_f027_media.sql":         {"media_assets", "media_usages", "math_svgs"},
 	"20261127000001_f024_content_types.sql": {"question_sets", "question_set_versions", "question_set_items", "lessons", "lesson_versions",
 		"learning_materials", "learning_material_versions", "assessment_blueprints", "assessment_blueprint_versions"},
+	"20261128000001_f025_workflow.sql": {"review_tasks", "translation_jobs"},
+}
+
+// added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
+// (ALTER TABLE … ADD COLUMN in its entddl block, after its CREATE TABLEs); earlier blocks are checked without them.
+type addition struct {
+	table            string
+	columns, indexes []string
+}
+
+var workflowColumns = []string{"translation_status", "translation_meta", "audio_exempt_reason", "audio_exempt_approved_by"}
+
+var added = map[string][]addition{
+	"20261128000001_f025_workflow.sql": {
+		{"content_transitions", []string{"content_id", "action", "idempotency_key"}, []string{"content_transitions_idem_uq"}},
+		{"question_versions", workflowColumns, nil},
+		{"question_set_versions", workflowColumns, nil},
+		{"lesson_versions", workflowColumns, nil},
+		{"learning_material_versions", workflowColumns, nil},
+		{"assessment_blueprint_versions", workflowColumns, nil},
+	},
+}
+
+// withoutAdded drops from tables the columns/indexes added by migrations other than file.
+func withoutAdded(file string, tbs []*schema.Table) []*schema.Table {
+	out := make([]*schema.Table, 0, len(tbs))
+	for _, tb := range tbs {
+		for f, as := range added {
+			for _, a := range as {
+				if f != file && a.table == tb.Name {
+					tb = entx.Without(tb, a.columns, a.indexes)
+				}
+			}
+		}
+		out = append(out, tb)
+	}
+	return out
 }
 
 func schemas() map[string]string {
@@ -43,7 +80,7 @@ func schemas() map[string]string {
 		"question_sets": c.QuestionSet, "question_set_versions": c.QuestionSetVersion, "question_set_items": c.QuestionSetItem,
 		"lessons": c.Lesson, "lesson_versions": c.LessonVersion, "learning_materials": c.LearningMaterial,
 		"learning_material_versions": c.LearningMaterialVersion, "assessment_blueprints": c.AssessmentBlueprint,
-		"assessment_blueprint_versions": c.AssessmentBlueprintVersion,
+		"assessment_blueprint_versions": c.AssessmentBlueprintVersion, "review_tasks": c.ReviewTask, "translation_jobs": c.TranslationJob,
 	}
 }
 
@@ -81,9 +118,16 @@ func TestMigrationMatchesEnt(t *testing.T) {
 		}
 	}
 	for file, names := range migrations {
-		want, err := entx.DDL(tablesOf(t, names), func(table string) string { return sc[table] })
+		want, err := entx.DDL(withoutAdded(file, tablesOf(t, names)), func(table string) string { return sc[table] })
 		if err != nil {
 			t.Fatal(err)
+		}
+		for _, a := range added[file] {
+			alter, err := entx.AddedDDL(tablesOf(t, []string{a.table})[0], a.columns, a.indexes, func(table string) string { return sc[table] })
+			if err != nil {
+				t.Fatal(err)
+			}
+			want += alter
 		}
 		if *printDDL == file {
 			_, _ = os.Stdout.WriteString(want)

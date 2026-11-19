@@ -321,6 +321,84 @@ func (_u *AssessmentBlueprintVersionUpdate) ClearSnapshotSha256() *AssessmentBlu
 	return _u
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_u *AssessmentBlueprintVersionUpdate) SetTranslationStatus(v string) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.SetTranslationStatus(v)
+	return _u
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdate) SetNillableTranslationStatus(v *string) *AssessmentBlueprintVersionUpdate {
+	if v != nil {
+		_u.SetTranslationStatus(*v)
+	}
+	return _u
+}
+
+// ClearTranslationStatus clears the value of the "translation_status" field.
+func (_u *AssessmentBlueprintVersionUpdate) ClearTranslationStatus() *AssessmentBlueprintVersionUpdate {
+	_u.mutation.ClearTranslationStatus()
+	return _u
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdate) SetTranslationMeta(v jsontext.Value) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.SetTranslationMeta(v)
+	return _u
+}
+
+// AppendTranslationMeta appends value to the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdate) AppendTranslationMeta(v jsontext.Value) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.AppendTranslationMeta(v)
+	return _u
+}
+
+// ClearTranslationMeta clears the value of the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdate) ClearTranslationMeta() *AssessmentBlueprintVersionUpdate {
+	_u.mutation.ClearTranslationMeta()
+	return _u
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_u *AssessmentBlueprintVersionUpdate) SetAudioExemptReason(v string) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.SetAudioExemptReason(v)
+	return _u
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdate) SetNillableAudioExemptReason(v *string) *AssessmentBlueprintVersionUpdate {
+	if v != nil {
+		_u.SetAudioExemptReason(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptReason clears the value of the "audio_exempt_reason" field.
+func (_u *AssessmentBlueprintVersionUpdate) ClearAudioExemptReason() *AssessmentBlueprintVersionUpdate {
+	_u.mutation.ClearAudioExemptReason()
+	return _u
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_u *AssessmentBlueprintVersionUpdate) SetAudioExemptApprovedBy(v uuid.UUID) *AssessmentBlueprintVersionUpdate {
+	_u.mutation.SetAudioExemptApprovedBy(v)
+	return _u
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *AssessmentBlueprintVersionUpdate {
+	if v != nil {
+		_u.SetAudioExemptApprovedBy(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptApprovedBy clears the value of the "audio_exempt_approved_by" field.
+func (_u *AssessmentBlueprintVersionUpdate) ClearAudioExemptApprovedBy() *AssessmentBlueprintVersionUpdate {
+	_u.mutation.ClearAudioExemptApprovedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *AssessmentBlueprintVersionUpdate) SetTitle(v jsontext.Value) *AssessmentBlueprintVersionUpdate {
 	_u.mutation.SetTitle(v)
@@ -527,6 +605,16 @@ func (_u *AssessmentBlueprintVersionUpdate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.TranslationStatus(); ok {
+		if err := assessmentblueprintversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AudioExemptReason(); ok {
+		if err := assessmentblueprintversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -646,6 +734,35 @@ func (_u *AssessmentBlueprintVersionUpdate) sqlSave(ctx context.Context) (_node 
 	}
 	if _u.mutation.ClonedByCleared() {
 		_spec.ClearField(assessmentblueprintversion.FieldClonedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.TranslationStatus(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationStatus, field.TypeString, value)
+	}
+	if _u.mutation.TranslationStatusCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldTranslationStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.TranslationMeta(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationMeta, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTranslationMeta(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, assessmentblueprintversion.FieldTranslationMeta, value)
+		})
+	}
+	if _u.mutation.TranslationMetaCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldTranslationMeta, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AudioExemptReason(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptReason, field.TypeString, value)
+	}
+	if _u.mutation.AudioExemptReasonCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.AudioExemptApprovedByCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldTitle, field.TypeJSON, value)
@@ -1031,6 +1148,84 @@ func (_u *AssessmentBlueprintVersionUpdateOne) ClearSnapshotSha256() *Assessment
 	return _u
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetTranslationStatus(v string) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.SetTranslationStatus(v)
+	return _u
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetNillableTranslationStatus(v *string) *AssessmentBlueprintVersionUpdateOne {
+	if v != nil {
+		_u.SetTranslationStatus(*v)
+	}
+	return _u
+}
+
+// ClearTranslationStatus clears the value of the "translation_status" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) ClearTranslationStatus() *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.ClearTranslationStatus()
+	return _u
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetTranslationMeta(v jsontext.Value) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.SetTranslationMeta(v)
+	return _u
+}
+
+// AppendTranslationMeta appends value to the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) AppendTranslationMeta(v jsontext.Value) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.AppendTranslationMeta(v)
+	return _u
+}
+
+// ClearTranslationMeta clears the value of the "translation_meta" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) ClearTranslationMeta() *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.ClearTranslationMeta()
+	return _u
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetAudioExemptReason(v string) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.SetAudioExemptReason(v)
+	return _u
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetNillableAudioExemptReason(v *string) *AssessmentBlueprintVersionUpdateOne {
+	if v != nil {
+		_u.SetAudioExemptReason(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptReason clears the value of the "audio_exempt_reason" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) ClearAudioExemptReason() *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.ClearAudioExemptReason()
+	return _u
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetAudioExemptApprovedBy(v uuid.UUID) *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.SetAudioExemptApprovedBy(v)
+	return _u
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_u *AssessmentBlueprintVersionUpdateOne) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *AssessmentBlueprintVersionUpdateOne {
+	if v != nil {
+		_u.SetAudioExemptApprovedBy(*v)
+	}
+	return _u
+}
+
+// ClearAudioExemptApprovedBy clears the value of the "audio_exempt_approved_by" field.
+func (_u *AssessmentBlueprintVersionUpdateOne) ClearAudioExemptApprovedBy() *AssessmentBlueprintVersionUpdateOne {
+	_u.mutation.ClearAudioExemptApprovedBy()
+	return _u
+}
+
 // SetTitle sets the "title" field.
 func (_u *AssessmentBlueprintVersionUpdateOne) SetTitle(v jsontext.Value) *AssessmentBlueprintVersionUpdateOne {
 	_u.mutation.SetTitle(v)
@@ -1250,6 +1445,16 @@ func (_u *AssessmentBlueprintVersionUpdateOne) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.TranslationStatus(); ok {
+		if err := assessmentblueprintversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AudioExemptReason(); ok {
+		if err := assessmentblueprintversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1386,6 +1591,35 @@ func (_u *AssessmentBlueprintVersionUpdateOne) sqlSave(ctx context.Context) (_no
 	}
 	if _u.mutation.ClonedByCleared() {
 		_spec.ClearField(assessmentblueprintversion.FieldClonedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.TranslationStatus(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationStatus, field.TypeString, value)
+	}
+	if _u.mutation.TranslationStatusCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldTranslationStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.TranslationMeta(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationMeta, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTranslationMeta(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, assessmentblueprintversion.FieldTranslationMeta, value)
+		})
+	}
+	if _u.mutation.TranslationMetaCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldTranslationMeta, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AudioExemptReason(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptReason, field.TypeString, value)
+	}
+	if _u.mutation.AudioExemptReasonCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.AudioExemptApprovedByCleared() {
+		_spec.ClearField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldTitle, field.TypeJSON, value)

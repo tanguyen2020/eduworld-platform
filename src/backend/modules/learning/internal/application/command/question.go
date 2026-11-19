@@ -6,6 +6,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -84,6 +85,7 @@ type QuestionFields struct {
 	ChangeNote          *string
 	ExamOnly            *bool
 	EfficacyInstrument  *bool
+	AudioExemptReason   *string // F025: "" clears
 }
 
 func (f QuestionFields) has(k string) bool { return f.Present[k] }
@@ -153,6 +155,9 @@ func (f QuestionFields) apply(v *dto.QuestionVersion, authRender *json.RawMessag
 	}
 	if f.has("efficacy_instrument") && f.EfficacyInstrument != nil {
 		v.EfficacyInstrument = *f.EfficacyInstrument
+	}
+	if f.has("audio_exempt_reason") {
+		v.AudioExemptReason = nonEmpty(f.AudioExemptReason)
 	}
 }
 
@@ -350,6 +355,8 @@ func (h Questions) CreateQuestion(ctx context.Context, f QuestionFields) (out Qu
 		if err := h.prepare(ctx, &v, authRender); err != nil {
 			return err
 		}
+		next, _ := questionDoc(v)
+		v.TranslationStatus, v.TranslationMeta = translation(nil, next, v.ContentLanguage, nil, now(h.Clock))
 		if err := h.Store.InsertQuestion(ctx, q); err != nil {
 			return err
 		}
@@ -431,6 +438,9 @@ func (h Questions) UpdateQuestionDraft(ctx context.Context, in UpdateQuestionDra
 		if err := h.prepare(ctx, &v, authRender); err != nil {
 			return err
 		}
+		prev, _ := questionDoc(cur.Version)
+		next, _ := questionDoc(v)
+		v.TranslationStatus, v.TranslationMeta = translation(prev, next, v.ContentLanguage, cur.Version.TranslationMeta, now(h.Clock))
 		if _, err := h.Store.UpdateQuestionVersion(ctx, v, in.IfMatch); err != nil {
 			return err
 		}
@@ -501,6 +511,7 @@ func (h Questions) CreateQuestionVersion(ctx context.Context, in NewQuestionVers
 		v := *src
 		srcID := src.ID
 		v.ID, v.VersionNo, v.Status, v.AuthorID, v.ReviewerID, v.PublishedAt, v.BasedOnID = ids.New(), maxNo+1, contentmodel.StatusDraft, p.UserID, nil, nil, &srcID
+		v.AudioExemptApprovedBy = nil
 		v.ChangeNote = nil
 		if in.Note != "" {
 			note := in.Note
@@ -697,4 +708,13 @@ func (h Questions) checkFuzzy(ctx context.Context, v dto.QuestionVersion) error 
 		return problem.Invalid("/answer_key", SubFuzzyNotAllowed, "fuzzy matching is not allowed for "+s.Code)
 	}
 	return nil
+}
+
+// nonEmpty returns nil for a nil or blank string (a present "" clears an optional text).
+func nonEmpty(s *string) *string {
+	if s == nil || strings.TrimSpace(*s) == "" {
+		return nil
+	}
+	v := strings.TrimSpace(*s)
+	return &v
 }

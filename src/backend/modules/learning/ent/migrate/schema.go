@@ -64,6 +64,10 @@ var (
 		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "assessment_blueprint_id", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeJSON},
 		{Name: "summary", Type: field.TypeJSON, Nullable: true},
@@ -84,12 +88,12 @@ var (
 			{
 				Name:    "assessment_blueprint_versions_no_uq",
 				Unique:  true,
-				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[27], AssessmentBlueprintVersionsColumns[11]},
+				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[31], AssessmentBlueprintVersionsColumns[11]},
 			},
 			{
 				Name:    "assessment_blueprint_versions_open_uq",
 				Unique:  true,
-				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[27]},
+				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[31]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
 				},
@@ -97,7 +101,7 @@ var (
 			{
 				Name:    "assessment_blueprint_versions_subject_idx",
 				Unique:  false,
-				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[1], AssessmentBlueprintVersionsColumns[30]},
+				Columns: []*schema.Column{AssessmentBlueprintVersionsColumns[1], AssessmentBlueprintVersionsColumns[34]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -188,6 +192,9 @@ var (
 		{Name: "actor_id", Type: field.TypeUUID},
 		{Name: "at", Type: field.TypeTime},
 		{Name: "note", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "content_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "action", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "idempotency_key", Type: field.TypeString, Nullable: true, Size: 64},
 	}
 	// ContentTransitionsTable holds the schema information for the "content_transitions" table.
 	ContentTransitionsTable = &schema.Table{
@@ -199,6 +206,14 @@ var (
 				Name:    "content_transitions_version_idx",
 				Unique:  false,
 				Columns: []*schema.Column{ContentTransitionsColumns[5]},
+			},
+			{
+				Name:    "content_transitions_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ContentTransitionsColumns[5], ContentTransitionsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "idempotency_key IS NOT NULL",
+				},
 			},
 		},
 	}
@@ -381,6 +396,10 @@ var (
 		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "learning_material_id", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeJSON},
 		{Name: "summary", Type: field.TypeJSON, Nullable: true},
@@ -401,12 +420,12 @@ var (
 			{
 				Name:    "learning_material_versions_no_uq",
 				Unique:  true,
-				Columns: []*schema.Column{LearningMaterialVersionsColumns[27], LearningMaterialVersionsColumns[11]},
+				Columns: []*schema.Column{LearningMaterialVersionsColumns[31], LearningMaterialVersionsColumns[11]},
 			},
 			{
 				Name:    "learning_material_versions_open_uq",
 				Unique:  true,
-				Columns: []*schema.Column{LearningMaterialVersionsColumns[27]},
+				Columns: []*schema.Column{LearningMaterialVersionsColumns[31]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
 				},
@@ -414,7 +433,7 @@ var (
 			{
 				Name:    "learning_material_versions_subject_idx",
 				Unique:  false,
-				Columns: []*schema.Column{LearningMaterialVersionsColumns[1], LearningMaterialVersionsColumns[30]},
+				Columns: []*schema.Column{LearningMaterialVersionsColumns[1], LearningMaterialVersionsColumns[34]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -525,6 +544,10 @@ var (
 		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "lesson_id", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeJSON},
 		{Name: "summary", Type: field.TypeJSON, Nullable: true},
@@ -545,12 +568,12 @@ var (
 			{
 				Name:    "lesson_versions_no_uq",
 				Unique:  true,
-				Columns: []*schema.Column{LessonVersionsColumns[27], LessonVersionsColumns[11]},
+				Columns: []*schema.Column{LessonVersionsColumns[31], LessonVersionsColumns[11]},
 			},
 			{
 				Name:    "lesson_versions_open_uq",
 				Unique:  true,
-				Columns: []*schema.Column{LessonVersionsColumns[27]},
+				Columns: []*schema.Column{LessonVersionsColumns[31]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
 				},
@@ -558,7 +581,7 @@ var (
 			{
 				Name:    "lesson_versions_subject_idx",
 				Unique:  false,
-				Columns: []*schema.Column{LessonVersionsColumns[1], LessonVersionsColumns[30]},
+				Columns: []*schema.Column{LessonVersionsColumns[1], LessonVersionsColumns[34]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -840,6 +863,10 @@ var (
 		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "question_set_id", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeJSON},
 		{Name: "summary", Type: field.TypeJSON, Nullable: true},
@@ -860,12 +887,12 @@ var (
 			{
 				Name:    "question_set_versions_no_uq",
 				Unique:  true,
-				Columns: []*schema.Column{QuestionSetVersionsColumns[27], QuestionSetVersionsColumns[11]},
+				Columns: []*schema.Column{QuestionSetVersionsColumns[31], QuestionSetVersionsColumns[11]},
 			},
 			{
 				Name:    "question_set_versions_open_uq",
 				Unique:  true,
-				Columns: []*schema.Column{QuestionSetVersionsColumns[27]},
+				Columns: []*schema.Column{QuestionSetVersionsColumns[31]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
 				},
@@ -873,7 +900,7 @@ var (
 			{
 				Name:    "question_set_versions_subject_idx",
 				Unique:  false,
-				Columns: []*schema.Column{QuestionSetVersionsColumns[1], QuestionSetVersionsColumns[30]},
+				Columns: []*schema.Column{QuestionSetVersionsColumns[1], QuestionSetVersionsColumns[34]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -909,6 +936,10 @@ var (
 		{Name: "cloned_from_tenant_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "cloned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cloned_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "translation_status", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "translation_meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "audio_exempt_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "audio_exempt_approved_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "question_id", Type: field.TypeUUID},
 		{Name: "type", Type: field.TypeString, Size: 64},
 		{Name: "stem", Type: field.TypeJSON},
@@ -941,12 +972,12 @@ var (
 			{
 				Name:    "question_versions_no_uq",
 				Unique:  true,
-				Columns: []*schema.Column{QuestionVersionsColumns[27], QuestionVersionsColumns[11]},
+				Columns: []*schema.Column{QuestionVersionsColumns[31], QuestionVersionsColumns[11]},
 			},
 			{
 				Name:    "question_versions_open_uq",
 				Unique:  true,
-				Columns: []*schema.Column{QuestionVersionsColumns[27]},
+				Columns: []*schema.Column{QuestionVersionsColumns[31]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status IN ('draft','in_review') AND deleted_at IS NULL",
 				},
@@ -954,7 +985,7 @@ var (
 			{
 				Name:    "question_versions_delivery_idx",
 				Unique:  false,
-				Columns: []*schema.Column{QuestionVersionsColumns[1], QuestionVersionsColumns[45], QuestionVersionsColumns[46], QuestionVersionsColumns[43]},
+				Columns: []*schema.Column{QuestionVersionsColumns[1], QuestionVersionsColumns[49], QuestionVersionsColumns[50], QuestionVersionsColumns[47]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status = 'published' AND deleted_at IS NULL",
 				},
@@ -996,6 +1027,66 @@ var (
 				Name:    "question_version_objectives_lo_idx",
 				Unique:  false,
 				Columns: []*schema.Column{QuestionVersionObjectivesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ReviewTasksColumns holds the columns for the "review_tasks" table.
+	ReviewTasksColumns = []*schema.Column{
+		{Name: "task_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "review_lane", Type: field.TypeString, Size: 64},
+		{Name: "content_type", Type: field.TypeString, Size: 64},
+		{Name: "content_id", Type: field.TypeUUID},
+		{Name: "content_version_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "title", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "author_id", Type: field.TypeUUID},
+		{Name: "assignee_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
+		{Name: "comments", Type: field.TypeJSON, Nullable: true},
+		{Name: "submitted_at", Type: field.TypeTime},
+		{Name: "due_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// ReviewTasksTable holds the schema information for the "review_tasks" table.
+	ReviewTasksTable = &schema.Table{
+		Name:       "review_tasks",
+		Columns:    ReviewTasksColumns,
+		PrimaryKey: []*schema.Column{ReviewTasksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "review_tasks_open_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ReviewTasksColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'open' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "review_tasks_queue_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ReviewTasksColumns[1], ReviewTasksColumns[10], ReviewTasksColumns[19], ReviewTasksColumns[21]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "review_tasks_assignee_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ReviewTasksColumns[18], ReviewTasksColumns[19]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -1290,6 +1381,47 @@ var (
 			},
 		},
 	}
+	// TranslationJobsColumns holds the columns for the "translation_jobs" table.
+	TranslationJobsColumns = []*schema.Column{
+		{Name: "job_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "queued"},
+		{Name: "format", Type: field.TypeString, Size: 64},
+		{Name: "source_language", Type: field.TypeString, Size: 64},
+		{Name: "target_language", Type: field.TypeString, Size: 64},
+		{Name: "request", Type: field.TypeJSON},
+		{Name: "input_asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "result_storage_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "report", Type: field.TypeJSON, Nullable: true},
+		{Name: "requested_by", Type: field.TypeUUID},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+	}
+	// TranslationJobsTable holds the schema information for the "translation_jobs" table.
+	TranslationJobsTable = &schema.Table{
+		Name:       "translation_jobs",
+		Columns:    TranslationJobsColumns,
+		PrimaryKey: []*schema.Column{TranslationJobsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "translation_jobs_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TranslationJobsColumns[12], TranslationJobsColumns[2]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AssessmentBlueprintsTable,
@@ -1315,6 +1447,7 @@ var (
 		QuestionSetVersionsTable,
 		QuestionVersionsTable,
 		QuestionVersionObjectivesTable,
+		ReviewTasksTable,
 		SubjectsTable,
 		SubjectGradesTable,
 		TenantResourceAssignmentsTable,
@@ -1323,6 +1456,7 @@ var (
 		TextbookSectionObjectivesTable,
 		TextbookSeriesTable,
 		TopicsTable,
+		TranslationJobsTable,
 	}
 )
 
@@ -1396,6 +1530,9 @@ func init() {
 	QuestionVersionObjectivesTable.Annotation = &entsql.Annotation{
 		Table: "question_version_objectives",
 	}
+	ReviewTasksTable.Annotation = &entsql.Annotation{
+		Table: "review_tasks",
+	}
 	SubjectsTable.Annotation = &entsql.Annotation{
 		Table: "subjects",
 	}
@@ -1419,5 +1556,8 @@ func init() {
 	}
 	TopicsTable.Annotation = &entsql.Annotation{
 		Table: "topics",
+	}
+	TranslationJobsTable.Annotation = &entsql.Annotation{
+		Table: "translation_jobs",
 	}
 }

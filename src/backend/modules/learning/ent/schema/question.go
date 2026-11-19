@@ -47,6 +47,7 @@ func (QuestionVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		entx.HybridContent{ResourceType: questionResource, PK: entx.PK{Column: "question_version_id"}, ResourceIDColumn: "question_id"},
 		ContentVersionMixin{},
+		WorkflowFields{},
 	}
 }
 func (QuestionVersion) Fields() []ent.Field {

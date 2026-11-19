@@ -58,8 +58,13 @@ type DocVersion struct {
 	PublishedAt         *time.Time
 	ChangeNote          *string
 	BasedOnID           *uuid.UUID
-	Owner               contentmodel.Owner
-	RowVersion          int64
-	UpdatedAt           time.Time
-	Items               []SetItem // question sets only
+	// F025: translation_status/translation_meta (CONTENT_MODEL §8) and the g1_3 audio exemption (§8.1).
+	TranslationStatus     *string
+	TranslationMeta       json.RawMessage
+	AudioExemptReason     *string
+	AudioExemptApprovedBy *uuid.UUID
+	Owner                 contentmodel.Owner
+	RowVersion            int64
+	UpdatedAt             time.Time
+	Items                 []SetItem // question sets only
 }

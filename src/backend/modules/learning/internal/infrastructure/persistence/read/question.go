@@ -38,7 +38,8 @@ func questionVersionOf(r *ent.QuestionVersion) dto.QuestionVersion {
 		ExamOnly: r.ExamOnly, EfficacyInstrument: r.EfficacyInstrument, Tags: r.Tags, Difficulty: int(r.Difficulty), GradeLevels: r.GradeLevels,
 		SubjectID: r.SubjectID, TopicID: r.TopicID, CurriculumVersionID: r.CurriculumVersionID, MediaRefs: r.MediaRefs,
 		ContentLanguage: r.ContentLanguage, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, PublishedAt: r.PublishedAt, ChangeNote: r.ChangeNote,
-		BasedOnID: r.BasedOnVersionID, Owner: ownerOf(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt}
+		BasedOnID: r.BasedOnVersionID, Owner: ownerOf(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt, TranslationStatus: r.TranslationStatus, TranslationMeta: r.TranslationMeta, AudioExemptReason: r.AudioExemptReason,
+		AudioExemptApprovedBy: r.AudioExemptApprovedBy}
 	if r.MinResponseMs != nil {
 		m := int(*r.MinResponseMs)
 		v.MinResponseMS = &m

@@ -4249,12 +4249,19 @@ paths:
             schema:
               type: object
               required: [action]
+              additionalProperties: false
               properties:
                 action:
                   type: string
-                  enum: [submit_review, approve, reject, archive]
-                  description: Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
+                  enum: [submit_review, approve, reject, revise, archive]
+                  description: |
+                    CONTENT_MODEL §6 (F025): submit_review, revise (rejected/approved → draft) cần learning_content.write; approve, reject cần
+                    learning_content.review (activity: learning_content.activity.write/review); reviewer ≠ author (403 PERMISSION_DENIED);
+                    reject bắt buộc note. archive do F026. Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
                 note: { type: string, maxLength: 2000 }
+                audio_exemption_acknowledged:
+                  type: boolean
+                  description: Bắt buộc true khi approve version có audio_exempt_reason (CONTENT_MODEL §8.1, F025-AC-16); thiếu → 422 VALIDATION_FAILED
       responses:
         '200':
           description: Trạng thái mới
@@ -4264,9 +4271,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentVersion'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '422':
+          description: VALIDATION_FAILED (schema/metadata, JSON pointer trong errors[]), MEDIA_NOT_READY (asset_ids), AUDIO_REQUIRED (field thiếu), TRANSLATION_INCOMPLETE (JSON pointer), INVALID_STATE_TRANSITION
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ValidationProblem' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
 
   /cms/learning/content/{content_type}/{content_id}/versions:
     get:
@@ -4637,12 +4652,19 @@ paths:
       tags: [cms]
       operationId: listContentReviewTasks
       x-portal-action: action.content_studio.reviews.view
-      summary: Hàng đợi duyệt nội dung theo lane (school/organization/platform_learning) — learning_content.review; không phải chấm bài học sinh
+      summary: Hàng đợi duyệt nội dung theo lane (tenant/platform_learning) — learning_content.review; không phải chấm bài học sinh
+      description: |
+        F025 (ADMIN_PORTAL §4): reviewer tenant chỉ thấy task lane tenant của tenant phiên (lọc thêm trường khi UserRole scope school), tenant_ids bị bỏ qua;
+        reviewer platform chỉ thấy lane platform_learning; system_admin gửi tenant_ids để xem task lane tenant của các tenant đó (audit cross_tenant.accessed).
+        Mặc định chỉ task status open.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - name: lane
           in: query
-          schema: { type: string, enum: [school, organization, platform_learning] }
+          schema: { type: string, enum: [tenant, platform_learning] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, approved, rejected, cancelled], default: open }
         - name: content_type
           in: query
           schema: { $ref: '#/components/schemas/LearningContentType' }
@@ -18535,6 +18557,23 @@ components:
           maxItems: 500
           description: 'JSON pointer các trường có bản dịch lỗi thời so với bản gốc (huy hiệu "Lỗi thời" theo trường, CONTENT_MODEL §8; F053). Rỗng/vắng = không có'
           items: { type: string, maxLength: 256 }
+        audio_exempt_reason:
+          type: string
+          maxLength: 255
+          description: 'Miễn trừ audio đọc đề nhóm g1_3 (CONTENT_MODEL §8.1) — chỉ question, lesson, activity; reviewer xác nhận khi approve'
+        audio_exempt_approved_by: { $ref: '#/components/schemas/Uuid', readOnly: true }
+        warnings:
+          type: array
+          readOnly: true
+          maxItems: 100
+          description: 'Cảnh báo không chặn của submit_review (lựa chọn dạng chữ thiếu audio nhóm g1_3, CONTENT_MODEL §8.1; F025)'
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field: { type: string, maxLength: 256 }
+              code: { type: string, maxLength: 64 }
+              message: { type: string, maxLength: 500 }
     QuestionAuthoringInput:
       type: object
       description: |
@@ -20843,6 +20882,7 @@ components:
               svg: { type: string, maxLength: 262144, description: 'SVG ≤ 256 KB (math_svg_max), chỉ gửi lên' }
               svg_asset: { type: string, maxLength: 128, pattern: '^math/[0-9a-f]{64}\.svg$' }
               speech_text: { type: string, maxLength: 1000 }
+        audio_exempt_reason: { type: string, maxLength: 255, description: 'Miễn trừ audio bước worked_example cho nhóm g1_3 (CONTENT_MODEL §8.1, F025); chuỗi rỗng xóa' }
     LearningMaterialAuthoringInput:
       type: object
       description: Học liệu (F024) — như lesson, không có completion_rule/estimated_minutes, thêm material_kind
@@ -21112,11 +21152,18 @@ components:
         content_id: { $ref: '#/components/schemas/Uuid' }
         version: { type: integer, minimum: 1 }
         title: { type: string, maxLength: 255 }
-        lane: { type: string, enum: [school, organization, platform_learning] }
+        task_id: { $ref: '#/components/schemas/Uuid' }
+        content_version_id: { $ref: '#/components/schemas/Uuid' }
+        lane: { type: string, enum: [tenant, platform_learning] }
+        status: { type: string, enum: [open, approved, rejected, cancelled] }
         author_id: { $ref: '#/components/schemas/Uuid' }
         reviewer_id: { $ref: '#/components/schemas/Uuid' }
+        school_id: { $ref: '#/components/schemas/Uuid' }
         tenant_id: { $ref: '#/components/schemas/Uuid' }
         submitted_at: { $ref: '#/components/schemas/Timestamp' }
+        due_at: { $ref: '#/components/schemas/Timestamp' }
+        resolved_at: { $ref: '#/components/schemas/Timestamp' }
+        audio_exempt_reason: { type: string, maxLength: 255, description: 'Miễn trừ audio g1_3 cần reviewer xác nhận (F025-AC-16)' }
     # ---------- kiểm duyệt tập trung (MODERATION, ADR-0072 §4)
     ModerationCaseStatus:
       type: string

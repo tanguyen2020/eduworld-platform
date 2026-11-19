@@ -66,10 +66,18 @@ func (ContentTransition) Fields() []ent.Field {
 		field.UUID("actor_id", uuid.UUID{}).Immutable(),
 		field.Time("at").Default(nowUTC).Immutable(),
 		field.String("note").MaxLen(2000).Optional().Nillable().Immutable(),
+		// F025: the item, the workflow action and the Idempotency-Key of the request (NULL on rows written before F025).
+		field.UUID("content_id", uuid.UUID{}).Optional().Nillable().Immutable(),
+		field.String("action").MaxLen(64).Optional().Nillable().Immutable(),
+		field.String("idempotency_key").MaxLen(64).Optional().Nillable().Immutable(),
 	}
 }
 func (ContentTransition) Indexes() []ent.Index {
-	return []ent.Index{index.Fields("content_version_id").StorageKey("content_transitions_version_idx")}
+	return []ent.Index{
+		index.Fields("content_version_id").StorageKey("content_transitions_version_idx"),
+		index.Fields("content_version_id", "idempotency_key").Unique().StorageKey("content_transitions_idem_uq").
+			Annotations(entsql.IndexWhere("idempotency_key IS NOT NULL")),
+	}
 }
 
 // TenantResourceAssignment — infra.tenant_resource_assignments (DATABASE_DESIGN §3.0, ADR-0029): a platform

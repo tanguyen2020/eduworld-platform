@@ -58,6 +58,8 @@ type Tx struct {
 	QuestionVersion *QuestionVersionClient
 	// QuestionVersionObjective is the client for interacting with the QuestionVersionObjective builders.
 	QuestionVersionObjective *QuestionVersionObjectiveClient
+	// ReviewTask is the client for interacting with the ReviewTask builders.
+	ReviewTask *ReviewTaskClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -74,6 +76,8 @@ type Tx struct {
 	TextbookSeries *TextbookSeriesClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
+	// TranslationJob is the client for interacting with the TranslationJob builders.
+	TranslationJob *TranslationJobClient
 
 	// lazily loaded.
 	client     *Client
@@ -228,6 +232,7 @@ func (tx *Tx) init() {
 	tx.QuestionSetVersion = NewQuestionSetVersionClient(tx.config)
 	tx.QuestionVersion = NewQuestionVersionClient(tx.config)
 	tx.QuestionVersionObjective = NewQuestionVersionObjectiveClient(tx.config)
+	tx.ReviewTask = NewReviewTaskClient(tx.config)
 	tx.Subject = NewSubjectClient(tx.config)
 	tx.SubjectGrade = NewSubjectGradeClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
@@ -236,6 +241,7 @@ func (tx *Tx) init() {
 	tx.TextbookSectionObjective = NewTextbookSectionObjectiveClient(tx.config)
 	tx.TextbookSeries = NewTextbookSeriesClient(tx.config)
 	tx.Topic = NewTopicClient(tx.config)
+	tx.TranslationJob = NewTranslationJobClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -37,8 +37,14 @@ type ContentTransition struct {
 	// At holds the value of the "at" field.
 	At time.Time `json:"at,omitempty"`
 	// Note holds the value of the "note" field.
-	Note         *string `json:"note,omitempty"`
-	selectValues sql.SelectValues
+	Note *string `json:"note,omitempty"`
+	// ContentID holds the value of the "content_id" field.
+	ContentID *uuid.UUID `json:"content_id,omitempty"`
+	// Action holds the value of the "action" field.
+	Action *string `json:"action,omitempty"`
+	// IdempotencyKey holds the value of the "idempotency_key" field.
+	IdempotencyKey *string `json:"idempotency_key,omitempty"`
+	selectValues   sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -46,9 +52,9 @@ func (*ContentTransition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case contenttransition.FieldTenantID, contenttransition.FieldCreatedBy:
+		case contenttransition.FieldTenantID, contenttransition.FieldCreatedBy, contenttransition.FieldContentID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case contenttransition.FieldContentType, contenttransition.FieldFromStatus, contenttransition.FieldToStatus, contenttransition.FieldNote:
+		case contenttransition.FieldContentType, contenttransition.FieldFromStatus, contenttransition.FieldToStatus, contenttransition.FieldNote, contenttransition.FieldAction, contenttransition.FieldIdempotencyKey:
 			values[i] = new(sql.NullString)
 		case contenttransition.FieldCreatedAt, contenttransition.FieldAt:
 			values[i] = new(sql.NullTime)
@@ -139,6 +145,27 @@ func (_m *ContentTransition) assignValues(columns []string, values []any) error 
 				_m.Note = new(string)
 				*_m.Note = value.String
 			}
+		case contenttransition.FieldContentID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field content_id", values[i])
+			} else if value.Valid {
+				_m.ContentID = new(uuid.UUID)
+				*_m.ContentID = *value.S.(*uuid.UUID)
+			}
+		case contenttransition.FieldAction:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field action", values[i])
+			} else if value.Valid {
+				_m.Action = new(string)
+				*_m.Action = value.String
+			}
+		case contenttransition.FieldIdempotencyKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field idempotency_key", values[i])
+			} else if value.Valid {
+				_m.IdempotencyKey = new(string)
+				*_m.IdempotencyKey = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -210,6 +237,21 @@ func (_m *ContentTransition) String() string {
 	builder.WriteString(", ")
 	if v := _m.Note; v != nil {
 		builder.WriteString("note=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ContentID; v != nil {
+		builder.WriteString("content_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.Action; v != nil {
+		builder.WriteString("action=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.IdempotencyKey; v != nil {
+		builder.WriteString("idempotency_key=")
 		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')

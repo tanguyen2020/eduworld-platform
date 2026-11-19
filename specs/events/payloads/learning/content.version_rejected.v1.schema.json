@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/content.version_rejected.v1.schema.json",
+  "title": "Payload content.version_rejected v1 (module learning, owner F025, CONTENT_MODEL §6)",
+  "description": "Reviewer từ chối version in_review → rejected kèm lý do (note ≤ 2.000 ký tự, do nhân sự viết, không chứa dữ liệu học sinh). Consumer: NTF (tác giả), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["content_type", "content_id", "content_version_id", "version", "review_lane", "task_id", "author_id", "reviewer_id", "note", "tenant_id"],
+  "properties": {
+    "content_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/LearningContentType" },
+    "content_id": { "type": "string", "format": "uuid" },
+    "content_version_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "review_lane": { "type": "string", "enum": ["tenant", "platform_learning"] },
+    "task_id": { "type": "string", "format": "uuid" },
+    "author_id": { "type": "string", "format": "uuid" },
+    "reviewer_id": { "type": "string", "format": "uuid" },
+    "note": { "type": "string", "minLength": 1, "maxLength": 2000 }
+  },
+  "examples": [
+    { "content_type": "question", "content_id": "0193a5f4-6c1e-7b2a-9d1f-000000000601", "content_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000000602", "version": 1, "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "review_lane": "tenant", "task_id": "0193a5f4-6c1e-7b2a-9d1f-000000000603", "author_id": "0193a5f4-6c1e-7b2a-9d1f-000000000604", "reviewer_id": "0193a5f4-6c1e-7b2a-9d1f-000000000605", "note": "Thiếu hình minh họa cho đề." }
+  ]
+}

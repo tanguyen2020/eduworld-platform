@@ -38,6 +38,27 @@ func (w ImportWorker) RunOnce(ctx context.Context) (int, error) {
 	return w.Runner.RunPendingImports(ctx, batch)
 }
 
+// TranslationRunner runs queued translation jobs (command.Translations, F025 US5).
+type TranslationRunner interface {
+	RunPendingTranslations(ctx context.Context, limit int) (int, error)
+}
+
+// TranslationWorker is the translation-jobs job of the worker profile jobs (F025 T041): every tick it runs up to Batch
+// queued jobs.
+type TranslationWorker struct {
+	Runner TranslationRunner
+	Batch  int
+}
+
+// RunOnce runs one batch and returns how many jobs ran.
+func (w TranslationWorker) RunOnce(ctx context.Context) (int, error) {
+	batch := w.Batch
+	if batch <= 0 {
+		batch = 10
+	}
+	return w.Runner.RunPendingTranslations(ctx, batch)
+}
+
 // Seeder is what the seed needs of the curriculum use cases (command.Curriculum).
 type Seeder interface {
 	SeedSubjects(ctx context.Context, subjects []command.SubjectInput) (int, error)

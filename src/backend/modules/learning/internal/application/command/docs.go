@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/i18ntext"
 	"slices"
 	"strconv"
 	"time"
@@ -79,6 +80,7 @@ type DocFields struct {
 	ObjectiveIDs        []uuid.UUID
 	ContentLanguage     string
 	ChangeNote          *string
+	AudioExemptReason   *string // F025: "" clears
 	Body                map[string]json.RawMessage
 }
 
@@ -115,6 +117,9 @@ func (f DocFields) apply(v *dto.DocVersion) error {
 	}
 	if f.has("change_note") {
 		v.ChangeNote = f.ChangeNote
+	}
+	if f.has("audio_exempt_reason") {
+		v.AudioExemptReason = nonEmpty(f.AudioExemptReason)
 	}
 	if len(f.Body) == 0 {
 		return nil
@@ -197,6 +202,7 @@ func (h Docs) Create(ctx context.Context, t contentmodel.ContentType, f DocField
 		if err := h.prepare(ctx, &v); err != nil {
 			return err
 		}
+		v.TranslationStatus, v.TranslationMeta = translation(nil, docDoc(v), v.ContentLanguage, nil, now(h.Clock))
 		if err := h.Store.InsertDoc(ctx, d); err != nil {
 			return err
 		}
@@ -269,6 +275,7 @@ func (h Docs) UpdateDraft(ctx context.Context, in UpdateDocDraftInput) (out DocR
 		if err := h.prepare(ctx, &v); err != nil {
 			return err
 		}
+		v.TranslationStatus, v.TranslationMeta = translation(docDoc(cur.Version), docDoc(v), v.ContentLanguage, cur.Version.TranslationMeta, now(h.Clock))
 		if _, err := h.Store.UpdateDocVersion(ctx, v, in.IfMatch); err != nil {
 			return err
 		}
@@ -707,6 +714,18 @@ func DocJSON(r DocResult, sessionTenant *uuid.UUID) map[string]any {
 	}
 	if v.PublishedAt != nil {
 		out["published_at"] = *v.PublishedAt
+	}
+	if v.TranslationStatus != nil {
+		out["translation_status"] = *v.TranslationStatus
+	}
+	if of := i18ntext.OutdatedFields(docDoc(v), v.ContentLanguage, i18ntext.ParseMeta(v.TranslationMeta)); len(of) > 0 {
+		out["outdated_fields"] = of
+	}
+	if v.AudioExemptReason != nil {
+		out["audio_exempt_reason"] = *v.AudioExemptReason
+	}
+	if v.AudioExemptApprovedBy != nil {
+		out["audio_exempt_approved_by"] = *v.AudioExemptApprovedBy
 	}
 	if d.ClonedFromID != nil {
 		out["cloned_from_id"], out["cloned_from_tenant_id"] = *d.ClonedFromID, d.ClonedFromTenantID

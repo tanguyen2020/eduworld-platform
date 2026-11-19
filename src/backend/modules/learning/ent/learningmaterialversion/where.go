@@ -185,6 +185,21 @@ func ClonedBy(v uuid.UUID) predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldClonedBy, v))
 }
 
+// TranslationStatus applies equality check predicate on the "translation_status" field. It's identical to TranslationStatusEQ.
+func TranslationStatus(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldTranslationStatus, v))
+}
+
+// AudioExemptReason applies equality check predicate on the "audio_exempt_reason" field. It's identical to AudioExemptReasonEQ.
+func AudioExemptReason(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptApprovedBy applies equality check predicate on the "audio_exempt_approved_by" field. It's identical to AudioExemptApprovedByEQ.
+func AudioExemptApprovedBy(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
+}
+
 // LearningMaterialID applies equality check predicate on the "learning_material_id" field. It's identical to LearningMaterialIDEQ.
 func LearningMaterialID(v uuid.UUID) predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldLearningMaterialID, v))
@@ -1588,6 +1603,216 @@ func ClonedByIsNil() predicate.LearningMaterialVersion {
 // ClonedByNotNil applies the NotNil predicate on the "cloned_by" field.
 func ClonedByNotNil() predicate.LearningMaterialVersion {
 	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldClonedBy))
+}
+
+// TranslationStatusEQ applies the EQ predicate on the "translation_status" field.
+func TranslationStatusEQ(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldTranslationStatus, v))
+}
+
+// TranslationStatusNEQ applies the NEQ predicate on the "translation_status" field.
+func TranslationStatusNEQ(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNEQ(FieldTranslationStatus, v))
+}
+
+// TranslationStatusIn applies the In predicate on the "translation_status" field.
+func TranslationStatusIn(vs ...string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIn(FieldTranslationStatus, vs...))
+}
+
+// TranslationStatusNotIn applies the NotIn predicate on the "translation_status" field.
+func TranslationStatusNotIn(vs ...string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotIn(FieldTranslationStatus, vs...))
+}
+
+// TranslationStatusGT applies the GT predicate on the "translation_status" field.
+func TranslationStatusGT(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGT(FieldTranslationStatus, v))
+}
+
+// TranslationStatusGTE applies the GTE predicate on the "translation_status" field.
+func TranslationStatusGTE(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGTE(FieldTranslationStatus, v))
+}
+
+// TranslationStatusLT applies the LT predicate on the "translation_status" field.
+func TranslationStatusLT(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLT(FieldTranslationStatus, v))
+}
+
+// TranslationStatusLTE applies the LTE predicate on the "translation_status" field.
+func TranslationStatusLTE(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLTE(FieldTranslationStatus, v))
+}
+
+// TranslationStatusContains applies the Contains predicate on the "translation_status" field.
+func TranslationStatusContains(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldContains(FieldTranslationStatus, v))
+}
+
+// TranslationStatusHasPrefix applies the HasPrefix predicate on the "translation_status" field.
+func TranslationStatusHasPrefix(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldHasPrefix(FieldTranslationStatus, v))
+}
+
+// TranslationStatusHasSuffix applies the HasSuffix predicate on the "translation_status" field.
+func TranslationStatusHasSuffix(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldHasSuffix(FieldTranslationStatus, v))
+}
+
+// TranslationStatusIsNil applies the IsNil predicate on the "translation_status" field.
+func TranslationStatusIsNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIsNull(FieldTranslationStatus))
+}
+
+// TranslationStatusNotNil applies the NotNil predicate on the "translation_status" field.
+func TranslationStatusNotNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldTranslationStatus))
+}
+
+// TranslationStatusEqualFold applies the EqualFold predicate on the "translation_status" field.
+func TranslationStatusEqualFold(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEqualFold(FieldTranslationStatus, v))
+}
+
+// TranslationStatusContainsFold applies the ContainsFold predicate on the "translation_status" field.
+func TranslationStatusContainsFold(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldContainsFold(FieldTranslationStatus, v))
+}
+
+// TranslationMetaIsNil applies the IsNil predicate on the "translation_meta" field.
+func TranslationMetaIsNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIsNull(FieldTranslationMeta))
+}
+
+// TranslationMetaNotNil applies the NotNil predicate on the "translation_meta" field.
+func TranslationMetaNotNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldTranslationMeta))
+}
+
+// AudioExemptReasonEQ applies the EQ predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonEQ(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonNEQ applies the NEQ predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNEQ(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNEQ(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonIn applies the In predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonIn(vs ...string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIn(FieldAudioExemptReason, vs...))
+}
+
+// AudioExemptReasonNotIn applies the NotIn predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNotIn(vs ...string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotIn(FieldAudioExemptReason, vs...))
+}
+
+// AudioExemptReasonGT applies the GT predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonGT(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGT(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonGTE applies the GTE predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonGTE(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGTE(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonLT applies the LT predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonLT(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLT(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonLTE applies the LTE predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonLTE(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLTE(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonContains applies the Contains predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonContains(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldContains(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonHasPrefix applies the HasPrefix predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonHasPrefix(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldHasPrefix(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonHasSuffix applies the HasSuffix predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonHasSuffix(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldHasSuffix(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonIsNil applies the IsNil predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonIsNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIsNull(FieldAudioExemptReason))
+}
+
+// AudioExemptReasonNotNil applies the NotNil predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonNotNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldAudioExemptReason))
+}
+
+// AudioExemptReasonEqualFold applies the EqualFold predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonEqualFold(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEqualFold(FieldAudioExemptReason, v))
+}
+
+// AudioExemptReasonContainsFold applies the ContainsFold predicate on the "audio_exempt_reason" field.
+func AudioExemptReasonContainsFold(v string) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldContainsFold(FieldAudioExemptReason, v))
+}
+
+// AudioExemptApprovedByEQ applies the EQ predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByEQ(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldEQ(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByNEQ applies the NEQ predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNEQ(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNEQ(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByIn applies the In predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByIn(vs ...uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIn(FieldAudioExemptApprovedBy, vs...))
+}
+
+// AudioExemptApprovedByNotIn applies the NotIn predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNotIn(vs ...uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotIn(FieldAudioExemptApprovedBy, vs...))
+}
+
+// AudioExemptApprovedByGT applies the GT predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByGT(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGT(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByGTE applies the GTE predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByGTE(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldGTE(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByLT applies the LT predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByLT(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLT(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByLTE applies the LTE predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByLTE(v uuid.UUID) predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldLTE(FieldAudioExemptApprovedBy, v))
+}
+
+// AudioExemptApprovedByIsNil applies the IsNil predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByIsNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldIsNull(FieldAudioExemptApprovedBy))
+}
+
+// AudioExemptApprovedByNotNil applies the NotNil predicate on the "audio_exempt_approved_by" field.
+func AudioExemptApprovedByNotNil() predicate.LearningMaterialVersion {
+	return predicate.LearningMaterialVersion(sql.FieldNotNull(FieldAudioExemptApprovedBy))
 }
 
 // LearningMaterialIDEQ applies the EQ predicate on the "learning_material_id" field.

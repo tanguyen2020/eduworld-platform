@@ -76,14 +76,18 @@ type CurriculumQueries interface {
 type Handlers struct {
 	Commands         CurriculumCommands
 	Queries          CurriculumQueries
-	QuestionCommands QuestionCommands // F022
-	QuestionQueries  QuestionQueries  // F022
-	Media            MediaCommands    // F027
-	MediaQueries     MediaQueries     // F027
-	Preview          PreviewCommands  // F027
-	Docs             DocCommands      // F024
-	DocQueries       DocQueries       // F024
-	Widgets          WidgetQueries    // F023
+	QuestionCommands QuestionCommands    // F022
+	QuestionQueries  QuestionQueries     // F022
+	Media            MediaCommands       // F027
+	MediaQueries     MediaQueries        // F027
+	Preview          PreviewCommands     // F027
+	Docs             DocCommands         // F024
+	DocQueries       DocQueries          // F024
+	Widgets          WidgetQueries       // F023
+	Workflow         WorkflowCommands    // F025
+	Reviews          ReviewQueries       // F025
+	Translations     TranslationCommands // F025 US5
+	TranslationJobs  TranslationQueries  // F025 US5
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -163,6 +167,9 @@ func Register(s *httpx.Server, h Handlers) error {
 	for id, fn := range docOps {
 		d := routeOf(id)
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, d, w, r) }
+	}
+	for id, fn := range workflowRoutes {
+		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

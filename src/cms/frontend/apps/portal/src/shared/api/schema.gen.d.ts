@@ -3235,7 +3235,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Hàng đợi duyệt nội dung theo lane (school/organization/platform_learning) — learning_content.review; không phải chấm bài học sinh */
+        /**
+         * Hàng đợi duyệt nội dung theo lane (tenant/platform_learning) — learning_content.review; không phải chấm bài học sinh
+         * @description F025 (ADMIN_PORTAL §4): reviewer tenant chỉ thấy task lane tenant của tenant phiên (lọc thêm trường khi UserRole scope school), tenant_ids bị bỏ qua;
+         *     reviewer platform chỉ thấy lane platform_learning; system_admin gửi tenant_ids để xem task lane tenant của các tenant đó (audit cross_tenant.accessed).
+         *     Mặc định chỉ task status open.
+         */
         get: operations["listContentReviewTasks"];
         put?: never;
         post?: never;
@@ -8986,13 +8991,22 @@ export interface components {
             to_version?: number;
         };
         ContentReviewTask: {
+            /** @description Miễn trừ audio g1_3 cần reviewer xác nhận (F025-AC-16) */
+            audio_exempt_reason?: string;
             author_id?: components["schemas"]["Uuid"];
             content_id: components["schemas"]["Uuid"];
             content_type: components["schemas"]["LearningContentType"];
+            content_version_id?: components["schemas"]["Uuid"];
+            due_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
-            lane: "school" | "organization" | "platform_learning";
+            lane: "tenant" | "platform_learning";
+            resolved_at?: components["schemas"]["Timestamp"];
             reviewer_id?: components["schemas"]["Uuid"];
+            school_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            status?: "open" | "approved" | "rejected" | "cancelled";
             submitted_at: components["schemas"]["Timestamp"];
+            task_id?: components["schemas"]["Uuid"];
             tenant_id?: components["schemas"]["Uuid"];
             title?: string;
             version: number;
@@ -9015,6 +9029,9 @@ export interface components {
         ContentVersion: {
             /** @description true nếu là dữ liệu platform được gán cho tenant (chỉ đọc với tenant) */
             assigned?: boolean;
+            readonly audio_exempt_approved_by?: components["schemas"]["Uuid"];
+            /** @description Miễn trừ audio đọc đề nhóm g1_3 (CONTENT_MODEL §8.1) — chỉ question, lesson, activity; reviewer xác nhận khi approve */
+            audio_exempt_reason?: string;
             author_id?: components["schemas"]["Uuid"];
             cloned_from_id?: components["schemas"]["Uuid"];
             cloned_from_tenant_id?: components["schemas"]["Uuid"];
@@ -9035,6 +9052,12 @@ export interface components {
             readonly translation_status?: components["schemas"]["TranslationStatus"];
             updated_at?: components["schemas"]["Timestamp"];
             version: number;
+            /** @description Cảnh báo không chặn của submit_review (lựa chọn dạng chữ thiếu audio nhóm g1_3, CONTENT_MODEL §8.1; F025) */
+            readonly warnings?: {
+                code: string;
+                field: string;
+                message?: string;
+            }[];
         };
         ContentVersionDiff: {
             changes: {
@@ -10401,6 +10424,8 @@ export interface components {
         };
         LessonAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["LessonAuthoringInput"];
         LessonAuthoringInput: {
+            /** @description Miễn trừ audio bước worked_example cho nhóm g1_3 (CONTENT_MODEL §8.1, F025); chuỗi rỗng xóa */
+            audio_exempt_reason?: string;
             /** @description Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED) */
             blocks: {
                 activity_id?: components["schemas"]["Uuid"];
@@ -20123,10 +20148,14 @@ export interface operations {
             content: {
                 "application/json": {
                     /**
-                     * @description Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
+                     * @description CONTENT_MODEL §6 (F025): submit_review, revise (rejected/approved → draft) cần learning_content.write; approve, reject cần
+                     *     learning_content.review (activity: learning_content.activity.write/review); reviewer ≠ author (403 PERMISSION_DENIED);
+                     *     reject bắt buộc note. archive do F026. Publish/rollback/unpublish dùng endpoint riêng (:publish, :rollback, :unpublish — ADR-0043)
                      * @enum {string}
                      */
-                    action: "submit_review" | "approve" | "reject" | "archive";
+                    action: "submit_review" | "approve" | "reject" | "revise" | "archive";
+                    /** @description Bắt buộc true khi approve version có audio_exempt_reason (CONTENT_MODEL §8.1, F025-AC-16); thiếu → 422 VALIDATION_FAILED */
+                    audio_exemption_acknowledged?: boolean;
                     note?: string;
                 };
             };
@@ -20142,9 +20171,21 @@ export interface operations {
                     "application/json": components["schemas"]["ContentVersion"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
-            422: components["responses"]["ValidationFailed"];
+            /** @description VALIDATION_FAILED (schema/metadata, JSON pointer trong errors[]), MEDIA_NOT_READY (asset_ids), AUDIO_REQUIRED (field thiếu), TRANSLATION_INCOMPLETE (JSON pointer), INVALID_STATE_TRANSITION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listCmsCurricula: {
@@ -22190,8 +22231,9 @@ export interface operations {
                 content_type?: components["schemas"]["LearningContentType"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
-                lane?: "school" | "organization" | "platform_learning";
+                lane?: "tenant" | "platform_learning";
                 limit?: components["parameters"]["Limit"];
+                status?: "open" | "approved" | "rejected" | "cancelled";
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.

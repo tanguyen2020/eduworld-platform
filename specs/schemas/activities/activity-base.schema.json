@@ -516,6 +516,16 @@
         "instructions": {
           "$ref": "#/$defs/i18nLong"
         },
+        "instructions_audio_ref": {
+          "$ref": "#/$defs/uuid",
+          "description": "Audio đọc hướng dẫn bản content_language, bắt buộc với nhóm g1_3 (CONTENT_MODEL §8.1, F025-AC-15)."
+        },
+        "audio_exempt_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "Miễn trừ audio g1_3; reviewer xác nhận khi approve (CONTENT_MODEL §8.1, F025-AC-16)."
+        },
         "time_limit_seconds": {
           "type": "integer",
           "minimum": 10,

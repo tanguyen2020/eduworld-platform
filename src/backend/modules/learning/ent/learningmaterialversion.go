@@ -72,6 +72,14 @@ type LearningMaterialVersion struct {
 	ClonedAt *time.Time `json:"cloned_at,omitempty"`
 	// ClonedBy holds the value of the "cloned_by" field.
 	ClonedBy *uuid.UUID `json:"cloned_by,omitempty"`
+	// TranslationStatus holds the value of the "translation_status" field.
+	TranslationStatus *string `json:"translation_status,omitempty"`
+	// TranslationMeta holds the value of the "translation_meta" field.
+	TranslationMeta jsontext.Value `json:"translation_meta,omitempty"`
+	// AudioExemptReason holds the value of the "audio_exempt_reason" field.
+	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
+	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
+	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
 	// LearningMaterialID holds the value of the "learning_material_id" field.
 	LearningMaterialID uuid.UUID `json:"learning_material_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -100,13 +108,13 @@ func (*LearningMaterialVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case learningmaterialversion.FieldTenantID, learningmaterialversion.FieldCreatedBy, learningmaterialversion.FieldUpdatedBy, learningmaterialversion.FieldDeletedBy, learningmaterialversion.FieldReviewerID, learningmaterialversion.FieldCurriculumVersionID, learningmaterialversion.FieldBasedOnVersionID, learningmaterialversion.FieldClonedFromID, learningmaterialversion.FieldClonedFromTenantID, learningmaterialversion.FieldClonedBy, learningmaterialversion.FieldSubjectID:
+		case learningmaterialversion.FieldTenantID, learningmaterialversion.FieldCreatedBy, learningmaterialversion.FieldUpdatedBy, learningmaterialversion.FieldDeletedBy, learningmaterialversion.FieldReviewerID, learningmaterialversion.FieldCurriculumVersionID, learningmaterialversion.FieldBasedOnVersionID, learningmaterialversion.FieldClonedFromID, learningmaterialversion.FieldClonedFromTenantID, learningmaterialversion.FieldClonedBy, learningmaterialversion.FieldAudioExemptApprovedBy, learningmaterialversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case learningmaterialversion.FieldTitle, learningmaterialversion.FieldSummary, learningmaterialversion.FieldGradeLevels, learningmaterialversion.FieldTopicIds, learningmaterialversion.FieldObjectiveIds, learningmaterialversion.FieldMediaRefs, learningmaterialversion.FieldWorkedExampleIds, learningmaterialversion.FieldBody:
+		case learningmaterialversion.FieldTranslationMeta, learningmaterialversion.FieldTitle, learningmaterialversion.FieldSummary, learningmaterialversion.FieldGradeLevels, learningmaterialversion.FieldTopicIds, learningmaterialversion.FieldObjectiveIds, learningmaterialversion.FieldMediaRefs, learningmaterialversion.FieldWorkedExampleIds, learningmaterialversion.FieldBody:
 			values[i] = new([]byte)
 		case learningmaterialversion.FieldVersion, learningmaterialversion.FieldVersionNo:
 			values[i] = new(sql.NullInt64)
-		case learningmaterialversion.FieldDeleteReason, learningmaterialversion.FieldOwnerScope, learningmaterialversion.FieldStatus, learningmaterialversion.FieldContentLanguage, learningmaterialversion.FieldChangeNote, learningmaterialversion.FieldSnapshotKey, learningmaterialversion.FieldSnapshotSha256:
+		case learningmaterialversion.FieldDeleteReason, learningmaterialversion.FieldOwnerScope, learningmaterialversion.FieldStatus, learningmaterialversion.FieldContentLanguage, learningmaterialversion.FieldChangeNote, learningmaterialversion.FieldSnapshotKey, learningmaterialversion.FieldSnapshotSha256, learningmaterialversion.FieldTranslationStatus, learningmaterialversion.FieldAudioExemptReason:
 			values[i] = new(sql.NullString)
 		case learningmaterialversion.FieldCreatedAt, learningmaterialversion.FieldUpdatedAt, learningmaterialversion.FieldDeletedAt, learningmaterialversion.FieldPublishedAt, learningmaterialversion.FieldPublishAt, learningmaterialversion.FieldClonedAt:
 			values[i] = new(sql.NullTime)
@@ -306,6 +314,35 @@ func (_m *LearningMaterialVersion) assignValues(columns []string, values []any) 
 			} else if value.Valid {
 				_m.ClonedBy = new(uuid.UUID)
 				*_m.ClonedBy = *value.S.(*uuid.UUID)
+			}
+		case learningmaterialversion.FieldTranslationStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_status", values[i])
+			} else if value.Valid {
+				_m.TranslationStatus = new(string)
+				*_m.TranslationStatus = value.String
+			}
+		case learningmaterialversion.FieldTranslationMeta:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_meta", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.TranslationMeta); err != nil {
+					return fmt.Errorf("unmarshal field translation_meta: %w", err)
+				}
+			}
+		case learningmaterialversion.FieldAudioExemptReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_reason", values[i])
+			} else if value.Valid {
+				_m.AudioExemptReason = new(string)
+				*_m.AudioExemptReason = value.String
+			}
+		case learningmaterialversion.FieldAudioExemptApprovedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_approved_by", values[i])
+			} else if value.Valid {
+				_m.AudioExemptApprovedBy = new(uuid.UUID)
+				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
 			}
 		case learningmaterialversion.FieldLearningMaterialID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -531,6 +568,24 @@ func (_m *LearningMaterialVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.ClonedBy; v != nil {
 		builder.WriteString("cloned_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TranslationStatus; v != nil {
+		builder.WriteString("translation_status=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("translation_meta=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TranslationMeta))
+	builder.WriteString(", ")
+	if v := _m.AudioExemptReason; v != nil {
+		builder.WriteString("audio_exempt_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AudioExemptApprovedBy; v != nil {
+		builder.WriteString("audio_exempt_approved_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

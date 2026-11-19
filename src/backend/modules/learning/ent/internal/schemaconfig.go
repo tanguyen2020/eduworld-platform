@@ -30,6 +30,7 @@ type SchemaConfig struct {
 	QuestionSetVersion         string // QuestionSetVersion table.
 	QuestionVersion            string // QuestionVersion table.
 	QuestionVersionObjective   string // QuestionVersionObjective table.
+	ReviewTask                 string // ReviewTask table.
 	Subject                    string // Subject table.
 	SubjectGrade               string // SubjectGrade table.
 	TenantResourceAssignment   string // TenantResourceAssignment table.
@@ -38,6 +39,7 @@ type SchemaConfig struct {
 	TextbookSectionObjective   string // TextbookSectionObjective table.
 	TextbookSeries             string // TextbookSeries table.
 	Topic                      string // Topic table.
+	TranslationJob             string // TranslationJob table.
 }
 
 type schemaCtxKey struct{}

@@ -129,6 +129,48 @@ func (_c *ContentTransitionCreate) SetNillableNote(v *string) *ContentTransition
 	return _c
 }
 
+// SetContentID sets the "content_id" field.
+func (_c *ContentTransitionCreate) SetContentID(v uuid.UUID) *ContentTransitionCreate {
+	_c.mutation.SetContentID(v)
+	return _c
+}
+
+// SetNillableContentID sets the "content_id" field if the given value is not nil.
+func (_c *ContentTransitionCreate) SetNillableContentID(v *uuid.UUID) *ContentTransitionCreate {
+	if v != nil {
+		_c.SetContentID(*v)
+	}
+	return _c
+}
+
+// SetAction sets the "action" field.
+func (_c *ContentTransitionCreate) SetAction(v string) *ContentTransitionCreate {
+	_c.mutation.SetAction(v)
+	return _c
+}
+
+// SetNillableAction sets the "action" field if the given value is not nil.
+func (_c *ContentTransitionCreate) SetNillableAction(v *string) *ContentTransitionCreate {
+	if v != nil {
+		_c.SetAction(*v)
+	}
+	return _c
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (_c *ContentTransitionCreate) SetIdempotencyKey(v string) *ContentTransitionCreate {
+	_c.mutation.SetIdempotencyKey(v)
+	return _c
+}
+
+// SetNillableIdempotencyKey sets the "idempotency_key" field if the given value is not nil.
+func (_c *ContentTransitionCreate) SetNillableIdempotencyKey(v *string) *ContentTransitionCreate {
+	if v != nil {
+		_c.SetIdempotencyKey(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ContentTransitionCreate) SetID(v uuid.UUID) *ContentTransitionCreate {
 	_c.mutation.SetID(v)
@@ -244,6 +286,16 @@ func (_c *ContentTransitionCreate) check() error {
 			return &ValidationError{Name: "note", err: fmt.Errorf(`ent: validator failed for field "ContentTransition.note": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.Action(); ok {
+		if err := contenttransition.ActionValidator(v); err != nil {
+			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "ContentTransition.action": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.IdempotencyKey(); ok {
+		if err := contenttransition.IdempotencyKeyValidator(v); err != nil {
+			return &ValidationError{Name: "idempotency_key", err: fmt.Errorf(`ent: validator failed for field "ContentTransition.idempotency_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -319,6 +371,18 @@ func (_c *ContentTransitionCreate) createSpec() (*ContentTransition, *sqlgraph.C
 	if value, ok := _c.mutation.Note(); ok {
 		_spec.SetField(contenttransition.FieldNote, field.TypeString, value)
 		_node.Note = &value
+	}
+	if value, ok := _c.mutation.ContentID(); ok {
+		_spec.SetField(contenttransition.FieldContentID, field.TypeUUID, value)
+		_node.ContentID = &value
+	}
+	if value, ok := _c.mutation.Action(); ok {
+		_spec.SetField(contenttransition.FieldAction, field.TypeString, value)
+		_node.Action = &value
+	}
+	if value, ok := _c.mutation.IdempotencyKey(); ok {
+		_spec.SetField(contenttransition.FieldIdempotencyKey, field.TypeString, value)
+		_node.IdempotencyKey = &value
 	}
 	return _node, _spec
 }

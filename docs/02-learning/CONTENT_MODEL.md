@@ -185,9 +185,10 @@ stateDiagram-v2
 
 | Thao tác | Điều kiện | Event |
 |---|---|---|
-| `submit_review` | validate schema đầy đủ, mọi media `ready`; nội dung nhóm `g1_3` có đủ audio bắt buộc (§8.1) | `content.version_submitted` |
-| `approve` | reviewer có quyền ở scope; **reviewer ≠ author** | `content.version_approved` |
-| `reject` | bắt buộc `reason` | `content.version_rejected` |
+| `submit_review` | validate schema đầy đủ, mọi media `ready`; nội dung nhóm `g1_3` có đủ audio bắt buộc (§8.1); bản `content_language` đủ (§8) — bộ kiểm `PublishReadinessGuard` (F025) dùng lại khi `publish` | `content.version_submitted` |
+| `approve` | reviewer có quyền ở scope; **reviewer ≠ author** (`403 PERMISSION_DENIED` + audit `authz.denied`); miễn trừ audio cần `audio_exemption_acknowledged = true` | `content.version_approved` |
+| `reject` | bắt buộc `note` (1–2.000 ký tự) | `content.version_rejected` |
+| `revise` | version `rejected` hoặc `approved` chưa publish → `draft` | — (chỉ `content_transitions` + audit `content.revised`) |
 | `publish` (hẹn giờ) | như `publish`; `publish_at` ở tương lai | `content.publish_scheduled` |
 | `publish` | đã approved; mọi tham chiếu con đã published; audio bắt buộc cho `g1_3` đủ (§8.1); snapshot dựng xong | `content.published` |
 | `rollback` | version đích `published`, cùng item, ≠ con trỏ hiện tại; `reason` bắt buộc | `content.rolled_back` |

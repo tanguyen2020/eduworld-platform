@@ -370,6 +370,54 @@ func (_c *LessonVersionCreate) SetNillableClonedBy(v *uuid.UUID) *LessonVersionC
 	return _c
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_c *LessonVersionCreate) SetTranslationStatus(v string) *LessonVersionCreate {
+	_c.mutation.SetTranslationStatus(v)
+	return _c
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_c *LessonVersionCreate) SetNillableTranslationStatus(v *string) *LessonVersionCreate {
+	if v != nil {
+		_c.SetTranslationStatus(*v)
+	}
+	return _c
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_c *LessonVersionCreate) SetTranslationMeta(v jsontext.Value) *LessonVersionCreate {
+	_c.mutation.SetTranslationMeta(v)
+	return _c
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_c *LessonVersionCreate) SetAudioExemptReason(v string) *LessonVersionCreate {
+	_c.mutation.SetAudioExemptReason(v)
+	return _c
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_c *LessonVersionCreate) SetNillableAudioExemptReason(v *string) *LessonVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptReason(*v)
+	}
+	return _c
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_c *LessonVersionCreate) SetAudioExemptApprovedBy(v uuid.UUID) *LessonVersionCreate {
+	_c.mutation.SetAudioExemptApprovedBy(v)
+	return _c
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_c *LessonVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *LessonVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptApprovedBy(*v)
+	}
+	return _c
+}
+
 // SetLessonID sets the "lesson_id" field.
 func (_c *LessonVersionCreate) SetLessonID(v uuid.UUID) *LessonVersionCreate {
 	_c.mutation.SetLessonID(v)
@@ -615,6 +663,16 @@ func (_c *LessonVersionCreate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "LessonVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.TranslationStatus(); ok {
+		if err := lessonversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "LessonVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AudioExemptReason(); ok {
+		if err := lessonversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "LessonVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.LessonID(); !ok {
 		return &ValidationError{Name: "lesson_id", err: errors.New(`ent: missing required field "LessonVersion.lesson_id"`)}
 	}
@@ -778,6 +836,22 @@ func (_c *LessonVersionCreate) createSpec() (*LessonVersion, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.ClonedBy(); ok {
 		_spec.SetField(lessonversion.FieldClonedBy, field.TypeUUID, value)
 		_node.ClonedBy = &value
+	}
+	if value, ok := _c.mutation.TranslationStatus(); ok {
+		_spec.SetField(lessonversion.FieldTranslationStatus, field.TypeString, value)
+		_node.TranslationStatus = &value
+	}
+	if value, ok := _c.mutation.TranslationMeta(); ok {
+		_spec.SetField(lessonversion.FieldTranslationMeta, field.TypeJSON, value)
+		_node.TranslationMeta = value
+	}
+	if value, ok := _c.mutation.AudioExemptReason(); ok {
+		_spec.SetField(lessonversion.FieldAudioExemptReason, field.TypeString, value)
+		_node.AudioExemptReason = &value
+	}
+	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(lessonversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+		_node.AudioExemptApprovedBy = &value
 	}
 	if value, ok := _c.mutation.LessonID(); ok {
 		_spec.SetField(lessonversion.FieldLessonID, field.TypeUUID, value)

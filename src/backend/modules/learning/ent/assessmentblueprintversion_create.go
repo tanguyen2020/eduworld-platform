@@ -370,6 +370,54 @@ func (_c *AssessmentBlueprintVersionCreate) SetNillableClonedBy(v *uuid.UUID) *A
 	return _c
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_c *AssessmentBlueprintVersionCreate) SetTranslationStatus(v string) *AssessmentBlueprintVersionCreate {
+	_c.mutation.SetTranslationStatus(v)
+	return _c
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_c *AssessmentBlueprintVersionCreate) SetNillableTranslationStatus(v *string) *AssessmentBlueprintVersionCreate {
+	if v != nil {
+		_c.SetTranslationStatus(*v)
+	}
+	return _c
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_c *AssessmentBlueprintVersionCreate) SetTranslationMeta(v jsontext.Value) *AssessmentBlueprintVersionCreate {
+	_c.mutation.SetTranslationMeta(v)
+	return _c
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_c *AssessmentBlueprintVersionCreate) SetAudioExemptReason(v string) *AssessmentBlueprintVersionCreate {
+	_c.mutation.SetAudioExemptReason(v)
+	return _c
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_c *AssessmentBlueprintVersionCreate) SetNillableAudioExemptReason(v *string) *AssessmentBlueprintVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptReason(*v)
+	}
+	return _c
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_c *AssessmentBlueprintVersionCreate) SetAudioExemptApprovedBy(v uuid.UUID) *AssessmentBlueprintVersionCreate {
+	_c.mutation.SetAudioExemptApprovedBy(v)
+	return _c
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_c *AssessmentBlueprintVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *AssessmentBlueprintVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptApprovedBy(*v)
+	}
+	return _c
+}
+
 // SetAssessmentBlueprintID sets the "assessment_blueprint_id" field.
 func (_c *AssessmentBlueprintVersionCreate) SetAssessmentBlueprintID(v uuid.UUID) *AssessmentBlueprintVersionCreate {
 	_c.mutation.SetAssessmentBlueprintID(v)
@@ -615,6 +663,16 @@ func (_c *AssessmentBlueprintVersionCreate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.TranslationStatus(); ok {
+		if err := assessmentblueprintversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AudioExemptReason(); ok {
+		if err := assessmentblueprintversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "AssessmentBlueprintVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.AssessmentBlueprintID(); !ok {
 		return &ValidationError{Name: "assessment_blueprint_id", err: errors.New(`ent: missing required field "AssessmentBlueprintVersion.assessment_blueprint_id"`)}
 	}
@@ -778,6 +836,22 @@ func (_c *AssessmentBlueprintVersionCreate) createSpec() (*AssessmentBlueprintVe
 	if value, ok := _c.mutation.ClonedBy(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldClonedBy, field.TypeUUID, value)
 		_node.ClonedBy = &value
+	}
+	if value, ok := _c.mutation.TranslationStatus(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationStatus, field.TypeString, value)
+		_node.TranslationStatus = &value
+	}
+	if value, ok := _c.mutation.TranslationMeta(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldTranslationMeta, field.TypeJSON, value)
+		_node.TranslationMeta = value
+	}
+	if value, ok := _c.mutation.AudioExemptReason(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptReason, field.TypeString, value)
+		_node.AudioExemptReason = &value
+	}
+	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(assessmentblueprintversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+		_node.AudioExemptApprovedBy = &value
 	}
 	if value, ok := _c.mutation.AssessmentBlueprintID(); ok {
 		_spec.SetField(assessmentblueprintversion.FieldAssessmentBlueprintID, field.TypeUUID, value)

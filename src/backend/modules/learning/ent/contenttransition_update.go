@@ -81,6 +81,15 @@ func (_u *ContentTransitionUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.NoteCleared() {
 		_spec.ClearField(contenttransition.FieldNote, field.TypeString)
 	}
+	if _u.mutation.ContentIDCleared() {
+		_spec.ClearField(contenttransition.FieldContentID, field.TypeUUID)
+	}
+	if _u.mutation.ActionCleared() {
+		_spec.ClearField(contenttransition.FieldAction, field.TypeString)
+	}
+	if _u.mutation.IdempotencyKeyCleared() {
+		_spec.ClearField(contenttransition.FieldIdempotencyKey, field.TypeString)
+	}
 	_spec.Node.Schema = _u.schemaConfig.ContentTransition
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -185,6 +194,15 @@ func (_u *ContentTransitionUpdateOne) sqlSave(ctx context.Context) (_node *Conte
 	}
 	if _u.mutation.NoteCleared() {
 		_spec.ClearField(contenttransition.FieldNote, field.TypeString)
+	}
+	if _u.mutation.ContentIDCleared() {
+		_spec.ClearField(contenttransition.FieldContentID, field.TypeUUID)
+	}
+	if _u.mutation.ActionCleared() {
+		_spec.ClearField(contenttransition.FieldAction, field.TypeString)
+	}
+	if _u.mutation.IdempotencyKeyCleared() {
+		_spec.ClearField(contenttransition.FieldIdempotencyKey, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ContentTransition
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

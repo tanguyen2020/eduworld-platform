@@ -362,6 +362,54 @@ func (_c *QuestionVersionCreate) SetNillableClonedBy(v *uuid.UUID) *QuestionVers
 	return _c
 }
 
+// SetTranslationStatus sets the "translation_status" field.
+func (_c *QuestionVersionCreate) SetTranslationStatus(v string) *QuestionVersionCreate {
+	_c.mutation.SetTranslationStatus(v)
+	return _c
+}
+
+// SetNillableTranslationStatus sets the "translation_status" field if the given value is not nil.
+func (_c *QuestionVersionCreate) SetNillableTranslationStatus(v *string) *QuestionVersionCreate {
+	if v != nil {
+		_c.SetTranslationStatus(*v)
+	}
+	return _c
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (_c *QuestionVersionCreate) SetTranslationMeta(v jsontext.Value) *QuestionVersionCreate {
+	_c.mutation.SetTranslationMeta(v)
+	return _c
+}
+
+// SetAudioExemptReason sets the "audio_exempt_reason" field.
+func (_c *QuestionVersionCreate) SetAudioExemptReason(v string) *QuestionVersionCreate {
+	_c.mutation.SetAudioExemptReason(v)
+	return _c
+}
+
+// SetNillableAudioExemptReason sets the "audio_exempt_reason" field if the given value is not nil.
+func (_c *QuestionVersionCreate) SetNillableAudioExemptReason(v *string) *QuestionVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptReason(*v)
+	}
+	return _c
+}
+
+// SetAudioExemptApprovedBy sets the "audio_exempt_approved_by" field.
+func (_c *QuestionVersionCreate) SetAudioExemptApprovedBy(v uuid.UUID) *QuestionVersionCreate {
+	_c.mutation.SetAudioExemptApprovedBy(v)
+	return _c
+}
+
+// SetNillableAudioExemptApprovedBy sets the "audio_exempt_approved_by" field if the given value is not nil.
+func (_c *QuestionVersionCreate) SetNillableAudioExemptApprovedBy(v *uuid.UUID) *QuestionVersionCreate {
+	if v != nil {
+		_c.SetAudioExemptApprovedBy(*v)
+	}
+	return _c
+}
+
 // SetQuestionID sets the "question_id" field.
 func (_c *QuestionVersionCreate) SetQuestionID(v uuid.UUID) *QuestionVersionCreate {
 	_c.mutation.SetQuestionID(v)
@@ -706,6 +754,16 @@ func (_c *QuestionVersionCreate) check() error {
 			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.snapshot_sha256": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.TranslationStatus(); ok {
+		if err := questionversion.TranslationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "translation_status", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.translation_status": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AudioExemptReason(); ok {
+		if err := questionversion.AudioExemptReasonValidator(v); err != nil {
+			return &ValidationError{Name: "audio_exempt_reason", err: fmt.Errorf(`ent: validator failed for field "QuestionVersion.audio_exempt_reason": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.QuestionID(); !ok {
 		return &ValidationError{Name: "question_id", err: errors.New(`ent: missing required field "QuestionVersion.question_id"`)}
 	}
@@ -895,6 +953,22 @@ func (_c *QuestionVersionCreate) createSpec() (*QuestionVersion, *sqlgraph.Creat
 	if value, ok := _c.mutation.ClonedBy(); ok {
 		_spec.SetField(questionversion.FieldClonedBy, field.TypeUUID, value)
 		_node.ClonedBy = &value
+	}
+	if value, ok := _c.mutation.TranslationStatus(); ok {
+		_spec.SetField(questionversion.FieldTranslationStatus, field.TypeString, value)
+		_node.TranslationStatus = &value
+	}
+	if value, ok := _c.mutation.TranslationMeta(); ok {
+		_spec.SetField(questionversion.FieldTranslationMeta, field.TypeJSON, value)
+		_node.TranslationMeta = value
+	}
+	if value, ok := _c.mutation.AudioExemptReason(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptReason, field.TypeString, value)
+		_node.AudioExemptReason = &value
+	}
+	if value, ok := _c.mutation.AudioExemptApprovedBy(); ok {
+		_spec.SetField(questionversion.FieldAudioExemptApprovedBy, field.TypeUUID, value)
+		_node.AudioExemptApprovedBy = &value
 	}
 	if value, ok := _c.mutation.QuestionID(); ok {
 		_spec.SetField(questionversion.FieldQuestionID, field.TypeUUID, value)

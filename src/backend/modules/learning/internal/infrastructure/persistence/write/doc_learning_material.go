@@ -31,7 +31,8 @@ func learningMaterialVersionOf(r *ent.LearningMaterialVersion) dto.DocVersion {
 		Title: r.Title, Summary: r.Summary, SubjectID: r.SubjectID, CurriculumVersionID: r.CurriculumVersionID, GradeLevels: r.GradeLevels,
 		TopicIDs: r.TopicIds, ObjectiveIDs: r.ObjectiveIds, MediaRefs: r.MediaRefs, WorkedExampleIDs: r.WorkedExampleIds, Body: r.Body,
 		ContentLanguage: r.ContentLanguage, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, PublishedAt: r.PublishedAt, ChangeNote: r.ChangeNote,
-		BasedOnID: r.BasedOnVersionID, Owner: owner(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt}
+		BasedOnID: r.BasedOnVersionID, Owner: owner(r.OwnerScope, r.TenantID), RowVersion: r.Version, UpdatedAt: r.UpdatedAt, TranslationStatus: r.TranslationStatus, TranslationMeta: r.TranslationMeta, AudioExemptReason: r.AudioExemptReason,
+		AudioExemptApprovedBy: r.AudioExemptApprovedBy}
 }
 
 func (learningMaterialTable) insertDoc(ctx context.Context, d dto.Doc) error {
@@ -75,7 +76,11 @@ func (learningMaterialTable) insertVersion(ctx context.Context, v dto.DocVersion
 		SetTitle(v.Title).SetNillableSubjectID(v.SubjectID).SetNillableCurriculumVersionID(v.CurriculumVersionID).SetGradeLevels(ints(v.GradeLevels)).
 		SetTopicIds(idList(v.TopicIDs)).SetObjectiveIds(idList(v.ObjectiveIDs)).SetMediaRefs(idList(v.MediaRefs)).
 		SetWorkedExampleIds(strs(v.WorkedExampleIDs)).SetBody(jsonOr(v.Body, "{}")).SetContentLanguage(v.ContentLanguage).SetAuthorID(v.AuthorID).
-		SetNillableChangeNote(v.ChangeNote).SetNillableBasedOnVersionID(v.BasedOnID).SetOwnerScope(string(v.Owner.Scope))
+		SetNillableChangeNote(v.ChangeNote).SetNillableBasedOnVersionID(v.BasedOnID).SetOwnerScope(string(v.Owner.Scope)).
+		SetNillableTranslationStatus(v.TranslationStatus).SetNillableAudioExemptReason(v.AudioExemptReason)
+	if present(v.TranslationMeta) {
+		c.SetTranslationMeta(v.TranslationMeta)
+	}
 	if present(v.Summary) {
 		c.SetSummary(v.Summary)
 	}
@@ -133,6 +138,8 @@ func (learningMaterialTable) updateVersion(ctx context.Context, v dto.DocVersion
 	} else {
 		u.ClearChangeNote()
 	}
+	setWorkflowDraft(v.TranslationStatus, v.TranslationMeta, v.AudioExemptReason, u.SetTranslationStatus, u.ClearTranslationStatus,
+		u.SetTranslationMeta, u.ClearTranslationMeta, u.SetAudioExemptReason, u.ClearAudioExemptReason)
 	return u.Save(ctx)
 }
 

@@ -72,6 +72,14 @@ type AssessmentBlueprintVersion struct {
 	ClonedAt *time.Time `json:"cloned_at,omitempty"`
 	// ClonedBy holds the value of the "cloned_by" field.
 	ClonedBy *uuid.UUID `json:"cloned_by,omitempty"`
+	// TranslationStatus holds the value of the "translation_status" field.
+	TranslationStatus *string `json:"translation_status,omitempty"`
+	// TranslationMeta holds the value of the "translation_meta" field.
+	TranslationMeta jsontext.Value `json:"translation_meta,omitempty"`
+	// AudioExemptReason holds the value of the "audio_exempt_reason" field.
+	AudioExemptReason *string `json:"audio_exempt_reason,omitempty"`
+	// AudioExemptApprovedBy holds the value of the "audio_exempt_approved_by" field.
+	AudioExemptApprovedBy *uuid.UUID `json:"audio_exempt_approved_by,omitempty"`
 	// AssessmentBlueprintID holds the value of the "assessment_blueprint_id" field.
 	AssessmentBlueprintID uuid.UUID `json:"assessment_blueprint_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -100,13 +108,13 @@ func (*AssessmentBlueprintVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case assessmentblueprintversion.FieldTenantID, assessmentblueprintversion.FieldCreatedBy, assessmentblueprintversion.FieldUpdatedBy, assessmentblueprintversion.FieldDeletedBy, assessmentblueprintversion.FieldReviewerID, assessmentblueprintversion.FieldCurriculumVersionID, assessmentblueprintversion.FieldBasedOnVersionID, assessmentblueprintversion.FieldClonedFromID, assessmentblueprintversion.FieldClonedFromTenantID, assessmentblueprintversion.FieldClonedBy, assessmentblueprintversion.FieldSubjectID:
+		case assessmentblueprintversion.FieldTenantID, assessmentblueprintversion.FieldCreatedBy, assessmentblueprintversion.FieldUpdatedBy, assessmentblueprintversion.FieldDeletedBy, assessmentblueprintversion.FieldReviewerID, assessmentblueprintversion.FieldCurriculumVersionID, assessmentblueprintversion.FieldBasedOnVersionID, assessmentblueprintversion.FieldClonedFromID, assessmentblueprintversion.FieldClonedFromTenantID, assessmentblueprintversion.FieldClonedBy, assessmentblueprintversion.FieldAudioExemptApprovedBy, assessmentblueprintversion.FieldSubjectID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case assessmentblueprintversion.FieldTitle, assessmentblueprintversion.FieldSummary, assessmentblueprintversion.FieldGradeLevels, assessmentblueprintversion.FieldTopicIds, assessmentblueprintversion.FieldObjectiveIds, assessmentblueprintversion.FieldMediaRefs, assessmentblueprintversion.FieldWorkedExampleIds, assessmentblueprintversion.FieldBody:
+		case assessmentblueprintversion.FieldTranslationMeta, assessmentblueprintversion.FieldTitle, assessmentblueprintversion.FieldSummary, assessmentblueprintversion.FieldGradeLevels, assessmentblueprintversion.FieldTopicIds, assessmentblueprintversion.FieldObjectiveIds, assessmentblueprintversion.FieldMediaRefs, assessmentblueprintversion.FieldWorkedExampleIds, assessmentblueprintversion.FieldBody:
 			values[i] = new([]byte)
 		case assessmentblueprintversion.FieldVersion, assessmentblueprintversion.FieldVersionNo:
 			values[i] = new(sql.NullInt64)
-		case assessmentblueprintversion.FieldDeleteReason, assessmentblueprintversion.FieldOwnerScope, assessmentblueprintversion.FieldStatus, assessmentblueprintversion.FieldContentLanguage, assessmentblueprintversion.FieldChangeNote, assessmentblueprintversion.FieldSnapshotKey, assessmentblueprintversion.FieldSnapshotSha256:
+		case assessmentblueprintversion.FieldDeleteReason, assessmentblueprintversion.FieldOwnerScope, assessmentblueprintversion.FieldStatus, assessmentblueprintversion.FieldContentLanguage, assessmentblueprintversion.FieldChangeNote, assessmentblueprintversion.FieldSnapshotKey, assessmentblueprintversion.FieldSnapshotSha256, assessmentblueprintversion.FieldTranslationStatus, assessmentblueprintversion.FieldAudioExemptReason:
 			values[i] = new(sql.NullString)
 		case assessmentblueprintversion.FieldCreatedAt, assessmentblueprintversion.FieldUpdatedAt, assessmentblueprintversion.FieldDeletedAt, assessmentblueprintversion.FieldPublishedAt, assessmentblueprintversion.FieldPublishAt, assessmentblueprintversion.FieldClonedAt:
 			values[i] = new(sql.NullTime)
@@ -306,6 +314,35 @@ func (_m *AssessmentBlueprintVersion) assignValues(columns []string, values []an
 			} else if value.Valid {
 				_m.ClonedBy = new(uuid.UUID)
 				*_m.ClonedBy = *value.S.(*uuid.UUID)
+			}
+		case assessmentblueprintversion.FieldTranslationStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_status", values[i])
+			} else if value.Valid {
+				_m.TranslationStatus = new(string)
+				*_m.TranslationStatus = value.String
+			}
+		case assessmentblueprintversion.FieldTranslationMeta:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field translation_meta", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.TranslationMeta); err != nil {
+					return fmt.Errorf("unmarshal field translation_meta: %w", err)
+				}
+			}
+		case assessmentblueprintversion.FieldAudioExemptReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_reason", values[i])
+			} else if value.Valid {
+				_m.AudioExemptReason = new(string)
+				*_m.AudioExemptReason = value.String
+			}
+		case assessmentblueprintversion.FieldAudioExemptApprovedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field audio_exempt_approved_by", values[i])
+			} else if value.Valid {
+				_m.AudioExemptApprovedBy = new(uuid.UUID)
+				*_m.AudioExemptApprovedBy = *value.S.(*uuid.UUID)
 			}
 		case assessmentblueprintversion.FieldAssessmentBlueprintID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -531,6 +568,24 @@ func (_m *AssessmentBlueprintVersion) String() string {
 	builder.WriteString(", ")
 	if v := _m.ClonedBy; v != nil {
 		builder.WriteString("cloned_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TranslationStatus; v != nil {
+		builder.WriteString("translation_status=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("translation_meta=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TranslationMeta))
+	builder.WriteString(", ")
+	if v := _m.AudioExemptReason; v != nil {
+		builder.WriteString("audio_exempt_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AudioExemptApprovedBy; v != nil {
+		builder.WriteString("audio_exempt_approved_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

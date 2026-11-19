@@ -35,6 +35,12 @@ const (
 	FieldAt = "at"
 	// FieldNote holds the string denoting the note field in the database.
 	FieldNote = "note"
+	// FieldContentID holds the string denoting the content_id field in the database.
+	FieldContentID = "content_id"
+	// FieldAction holds the string denoting the action field in the database.
+	FieldAction = "action"
+	// FieldIdempotencyKey holds the string denoting the idempotency_key field in the database.
+	FieldIdempotencyKey = "idempotency_key"
 	// Table holds the table name of the contenttransition in the database.
 	Table = "content_transitions"
 )
@@ -52,6 +58,9 @@ var Columns = []string{
 	FieldActorID,
 	FieldAt,
 	FieldNote,
+	FieldContentID,
+	FieldAction,
+	FieldIdempotencyKey,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -84,6 +93,10 @@ var (
 	DefaultAt func() time.Time
 	// NoteValidator is a validator for the "note" field. It is called by the builders before save.
 	NoteValidator func(string) error
+	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	ActionValidator func(string) error
+	// IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	IdempotencyKeyValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -144,4 +157,19 @@ func ByAt(opts ...sql.OrderTermOption) OrderOption {
 // ByNote orders the results by the note field.
 func ByNote(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNote, opts...).ToFunc()
+}
+
+// ByContentID orders the results by the content_id field.
+func ByContentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldContentID, opts...).ToFunc()
+}
+
+// ByAction orders the results by the action field.
+func ByAction(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAction, opts...).ToFunc()
+}
+
+// ByIdempotencyKey orders the results by the idempotency_key field.
+func ByIdempotencyKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIdempotencyKey, opts...).ToFunc()
 }

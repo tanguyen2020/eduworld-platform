@@ -67,6 +67,14 @@ const (
 	FieldClonedAt = "cloned_at"
 	// FieldClonedBy holds the string denoting the cloned_by field in the database.
 	FieldClonedBy = "cloned_by"
+	// FieldTranslationStatus holds the string denoting the translation_status field in the database.
+	FieldTranslationStatus = "translation_status"
+	// FieldTranslationMeta holds the string denoting the translation_meta field in the database.
+	FieldTranslationMeta = "translation_meta"
+	// FieldAudioExemptReason holds the string denoting the audio_exempt_reason field in the database.
+	FieldAudioExemptReason = "audio_exempt_reason"
+	// FieldAudioExemptApprovedBy holds the string denoting the audio_exempt_approved_by field in the database.
+	FieldAudioExemptApprovedBy = "audio_exempt_approved_by"
 	// FieldQuestionID holds the string denoting the question_id field in the database.
 	FieldQuestionID = "question_id"
 	// FieldType holds the string denoting the type field in the database.
@@ -144,6 +152,10 @@ var Columns = []string{
 	FieldClonedFromTenantID,
 	FieldClonedAt,
 	FieldClonedBy,
+	FieldTranslationStatus,
+	FieldTranslationMeta,
+	FieldAudioExemptReason,
+	FieldAudioExemptApprovedBy,
 	FieldQuestionID,
 	FieldType,
 	FieldStem,
@@ -216,6 +228,10 @@ var (
 	SnapshotKeyValidator func(string) error
 	// SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
 	SnapshotSha256Validator func(string) error
+	// TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	TranslationStatusValidator func(string) error
+	// AudioExemptReasonValidator is a validator for the "audio_exempt_reason" field. It is called by the builders before save.
+	AudioExemptReasonValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultMaxScore holds the default value on creation for the "max_score" field.
@@ -368,6 +384,21 @@ func ByClonedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByClonedBy orders the results by the cloned_by field.
 func ByClonedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClonedBy, opts...).ToFunc()
+}
+
+// ByTranslationStatus orders the results by the translation_status field.
+func ByTranslationStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTranslationStatus, opts...).ToFunc()
+}
+
+// ByAudioExemptReason orders the results by the audio_exempt_reason field.
+func ByAudioExemptReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAudioExemptReason, opts...).ToFunc()
+}
+
+// ByAudioExemptApprovedBy orders the results by the audio_exempt_approved_by field.
+func ByAudioExemptApprovedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAudioExemptApprovedBy, opts...).ToFunc()
 }
 
 // ByQuestionID orders the results by the question_id field.
