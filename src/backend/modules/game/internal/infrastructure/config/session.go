@@ -47,8 +47,9 @@ func Location() *time.Location {
 //     EW_GAME_LATEST_CLIENT_VERSION (default: the minimum);
 //   - EW_GAME_SESSION_HEARTBEAT_TIMEOUT (game_session_heartbeat_timeout, 45s), EW_GAME_SESSION_TIMEOUT_SCAN (15s);
 //   - EW_GAME_MAINTENANCE (bool), EW_GAME_MAINTENANCE_MESSAGE, EW_GAME_MAINTENANCE_UNTIL (RFC 3339);
-//   - EW_PLATFORM_CURFEW (platform_curfew, 21:30-06:30 ICT; the same variable as module identity until F015 publishes
-//     the platform setting);
+//   - EW_PLATFORM_CURFEW (platform_curfew, 21:30-06:30 ICT): only the initial default until the consumer
+//     game.platform_settings has projected platform_settings.changed (key platform_curfew) of module identity into
+//     ref.platform_settings; from then on the setting of the System Admin applies without a restart (OQ F014-2);
 //   - EW_GAME_LOGIN_URL (login.login_url, optional), EW_GAME_REMEMBER_USERNAME_DEFAULT (game_remember_username,
 //     true), EW_SUPPORTED_LOCALES (supported_locales);
 //   - EW_GAME_IP_HASH_KEY(_FILE) (secret; rotated by redeploying a new key).

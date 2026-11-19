@@ -59,8 +59,9 @@ func (m *Module) Facade() Facade { return m.facade }
 func (m *Module) Wire(Imports) {}
 
 // Register wires the module into the running binary (OQ F014-7, F010-2): health checks everywhere; the F014 routes in
-// core-api; the outbox relay and the consumers game.projection_identity and game.session_end_on_revoke in worker
-// events; the jobs session-timeout and curfew-session-closer in worker jobs.
+// core-api; the outbox relay and the consumers game.projection_identity, game.session_end_on_revoke,
+// game.platform_settings (platform_curfew) and game.manifest_on_learning_content in worker events; the jobs
+// session-timeout and curfew-session-closer in worker jobs.
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
 	if err != nil {
@@ -111,6 +112,10 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	r.Consumer("game.session_end_on_revoke", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.SessionEndOnRevokeOptions(consumer.SessionEndOnRevoke{Sessions: sessions}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.platform_settings", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PlatformSettingsOptions(consumer.PlatformSettings{Settings: command.PlatformSettings{Refs: write.RefPlatformSettings{}}},
+			core.UoW, core.App, js)
 	})
 	r.Consumer("game.manifest_on_learning_content", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ManifestOnLearningContentOptions(consumer.ManifestOnLearningContent{Manifests: command.Manifests{UoW: core.UoW,

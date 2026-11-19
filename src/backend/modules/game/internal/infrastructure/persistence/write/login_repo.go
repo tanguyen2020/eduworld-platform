@@ -109,6 +109,28 @@ func (Directory) SchoolCurfew(ctx context.Context, tenant, school uuid.UUID) (*w
 	return &w, nil
 }
 
+// PlatformCurfew implements write.Directory (platform_curfew of platform_settings.changed, ref.platform_settings).
+func (Directory) PlatformCurfew(ctx context.Context) (*write.CurfewWindow, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var raw []byte
+	// tenancyguard:ok platform projection ref.platform_settings (platform data: no tenant_id, no deleted_at)
+	err = t.QueryRowContext(ctx, `SELECT value FROM ref.platform_settings WHERE key = $1`, write.KeyPlatformCurfew).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("ref platform settings: %w", err)
+	}
+	var w write.CurfewWindow
+	if err := json.Unmarshal(raw, &w); err != nil || w.Start == "" || w.End == "" {
+		return nil, nil //nolint:nilerr // a malformed projected value is ignored: the start-up default still applies
+	}
+	return &w, nil
+}
+
 // Publisher implements write.EventPublisher with the outbox writer.
 type Publisher struct{ W *outbox.Writer }
 

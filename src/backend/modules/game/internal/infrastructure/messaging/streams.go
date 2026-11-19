@@ -49,3 +49,10 @@ func LearningSubjects(events []string) []string {
 	}
 	return out
 }
+
+// PlatformSettingsName is the durable consumer that projects the platform settings of module identity that module
+// game applies (ref.platform_settings: platform_curfew, OQ F014-2).
+const PlatformSettingsName = "game.platform_settings"
+
+// PlatformSettingsEvents are the events it handles (owner F015).
+var PlatformSettingsEvents = []string{"platform_settings.changed"}

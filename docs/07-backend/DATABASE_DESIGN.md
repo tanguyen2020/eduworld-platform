@@ -564,6 +564,7 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 | `ref.friendships` | competition | chat · `friend.added`, `friend.removed` | `user_low_id`, `user_high_id` (chuẩn hóa thứ tự như `social.friendships`), `tenant_id`, `active boolean`, `source_version bigint`; PK `(user_low_id, user_high_id)` (ưu tiên bạn bè trong hub, mời party) — tạo ở F091, F100/F104 chỉ đọc |
 | `ref.blocks` | competition | chat · `user.blocked`, `user.unblocked` | `blocker_id`, `blocked_id`, `tenant_id`, `active boolean`, `source_version bigint`; PK `(blocker_id, blocked_id)` (chặn mời party, ghép trận, duel) — tạo ở F091, F100/F104 chỉ đọc |
 | `ref.login_activity` | learning | game · `student.game_logged_in/out` | `student_id`, `tenant_id`, `last_game_login_at`, `sessions_7d`, `minutes_7d` (read model dashboard) |
+| `ref.platform_settings` | game | identity · `platform_settings.changed` (`scope = platform`; hiện chỉ `key = platform_curfew`) | `key varchar(128)` (PK), `value jsonb` (≤ 16 KB; `platform_curfew` = `{start, end}` giờ ICT), `source_version bigint` (`occurred_at` µs), `updated_at`; dữ liệu platform, không `tenant_id`/RLS; chỉ consumer `game.platform_settings` (role `game_platform`) ghi, `game_app` chỉ đọc. Chưa có dòng → mặc định khởi động `EW_PLATFORM_CURFEW` (OQ F014-2) [Proposed] |
 
 Quy tắc projection:
 1. Mỗi dòng có `source_version bigint` (version của aggregate nguồn hoặc `occurred_at`); consumer chỉ áp bản mới hơn (chống event đến lệch thứ tự).

@@ -113,3 +113,19 @@ func (RefRepo) MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID
 	return exec(ctx, `UPDATE ref.students SET deleted_at = NULL
 		WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NOT NULL AND deleted_at <= $3`, student, tenant, at.UTC())
 }
+
+// RefPlatformSettings implements write.PlatformSettingWriter on ref.platform_settings (platform projection written by
+// the consumer game.platform_settings under SystemPlatformScope, role game_platform).
+type RefPlatformSettings struct{}
+
+var _ write.PlatformSettingWriter = RefPlatformSettings{}
+
+// UpsertPlatformSetting implements write.PlatformSettingWriter: only a newer source_version replaces the value.
+func (RefPlatformSettings) UpsertPlatformSetting(ctx context.Context, r write.RefPlatformSetting) (bool, error) {
+	// tenancyguard:ok platform projection ref.platform_settings (platform data: no tenant_id, no deleted_at; rule 1)
+	return exec(ctx, `INSERT INTO ref.platform_settings AS p (key, value, source_version, updated_at)
+		VALUES ($1, $2::jsonb, $3, now())
+		ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, source_version = $3, updated_at = now()
+		WHERE p.source_version < $3`,
+		r.Key, string(r.Value), r.SourceVersion)
+}

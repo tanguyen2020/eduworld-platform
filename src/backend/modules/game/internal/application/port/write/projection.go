@@ -61,3 +61,20 @@ type ProjectionWriter interface {
 	// MarkStudentDeleted sets (deleted) or clears deleted_at of a projected student, ordered by the event time.
 	MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 }
+
+// KeyPlatformCurfew is the platform setting platform_curfew (CONFIG_DEFAULTS, ADR-0078; owner module identity, F015).
+const KeyPlatformCurfew = "platform_curfew"
+
+// RefPlatformSetting is a row of ref.platform_settings: the latest value of a platform setting of module identity
+// (platform_settings.changed, scope platform). Value is a JSON object (platform_curfew: CurfewWindow).
+type RefPlatformSetting struct {
+	Key           string
+	Value         []byte
+	SourceVersion int64
+}
+
+// PlatformSettingWriter writes ref.platform_settings. Only the command PlatformSettings, called by the consumer
+// game.platform_settings, uses it (rule 4); a row is applied only when its source_version is newer.
+type PlatformSettingWriter interface {
+	UpsertPlatformSetting(ctx context.Context, r RefPlatformSetting) (bool, error)
+}

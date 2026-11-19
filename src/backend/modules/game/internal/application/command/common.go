@@ -36,8 +36,11 @@ type SessionConfig struct {
 	MinClientVersion string
 	HeartbeatTimeout time.Duration
 	Maintenance      Maintenance
-	PlatformCurfew   gamesession.Window
-	// CurfewLocation is the time zone of school curfew windows (Asia/Ho_Chi_Minh).
+	// PlatformCurfew is the start-up default of platform_curfew (EW_PLATFORM_CURFEW, CONFIG_DEFAULTS 21:30–06:30):
+	// it applies only until module game has projected platform_settings.changed (key platform_curfew) of module
+	// identity; from then on the projected value applies (OQ F014-2).
+	PlatformCurfew gamesession.Window
+	// CurfewLocation is the time zone of curfew windows (Asia/Ho_Chi_Minh).
 	CurfewLocation *time.Location
 }
 
@@ -62,20 +65,6 @@ func (h Sessions) now() time.Time {
 		return h.Now().UTC()
 	}
 	return time.Now().UTC()
-}
-
-// curfew returns the effective curfew of a student of school (platform ∪ school window, ADR-0078).
-func (h Sessions) curfew(ctx context.Context, tenant uuid.UUID, school uuid.UUID) (gamesession.Curfew, error) {
-	c := gamesession.Curfew{h.Config.PlatformCurfew}
-	w, err := h.Directory.SchoolCurfew(ctx, tenant, school)
-	if err != nil || w == nil {
-		return c, err
-	}
-	// A malformed projected window is ignored: the platform curfew still applies.
-	if sw, werr := gamesession.NewWindow(w.Start, w.End, h.Config.CurfewLocation); werr == nil {
-		c = append(c, sw)
-	}
-	return c, nil
 }
 
 // endSession ends s with reason at inside the transaction of ctx: session, login event, outbox events

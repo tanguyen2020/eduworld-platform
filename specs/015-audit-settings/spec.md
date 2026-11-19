@@ -38,6 +38,10 @@
 - Q: Nhật ký phân quyền cần xem chung `role.*` và `user_role.*` (OQ F059-3, T007 của F059)? → A: Thêm tham số `action_prefix` (mảng, maxItems 10, mỗi giá trị 2–64 ký tự, pattern `^[a-z][a-z0-9_]*(.[a-z][a-z0-9_]*)*$`) cho cả `listPlatformAuditLogs` và `listTenantAuditLogs`: giá trị khớp action bằng chính nó hoặc bắt đầu bằng `<giá trị>.` (không khớp chuỗi con — `role` không khớp `role_x.*`; SQL dùng `starts_with`, không `LIKE`); nhiều giá trị là OR, dùng cùng `action` là AND; giá trị sai → `422 VALIDATION_FAILED` (`action_prefix`). Phạm vi tenant/platform/CrossTenantScope không đổi. `listPlatformAuditLogs` thêm `security: keycloakAdminBearer`.
 - Q: `platform.audit.read` hay `platform.audit.read_all` (OQ F059-11)? → A: Giữ quyết định Session 2026-11-16: `platform.audit.read` (catalog permission trong code, ADMIN_PORTAL §2.2 đã gỡ `read_all`).
 
+### Session 2026-11-20 (giới nghiêm platform ở module game, OQ F014-2)
+
+- Q: Module game đọc `platform_curfew` từ `EW_PLATFORM_CURFEW` lúc khởi động nên lệch với module identity sau `putPlatformCurfewSettings` (smoke seed dev, [quickstart F010 §6.1](../010-tenant-org-structure/quickstart.md)) — module game lấy giá trị hiệu lực thế nào? → A: [Proposed] Qua event, không gọi đồng bộ (R13, R29): consumer `game.platform_settings` của module game chiếu `platform_settings.changed` (`key = platform_curfew`, `scope = platform`) vào `ref.platform_settings` của `eduworld_game`, dùng cho `createGameSession` và job `curfew-session-closer` ngay khi nhận (không restart). **Không đổi payload schema** (owner F015): `curfew_window` (F015 T032) đã mang giá trị sau thay đổi; `after` cùng giá trị là dự phòng. Thứ tự theo `occurred_at` của envelope (event cũ đến muộn không ghi đè). Chi tiết và giới hạn (stream giữ 7 ngày; env chỉ là mặc định trước event đầu tiên): [F014 Clarifications OQ F014-2](../014-game-session-thin/spec.md).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)

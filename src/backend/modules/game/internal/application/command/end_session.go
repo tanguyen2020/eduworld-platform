@@ -153,9 +153,14 @@ func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, 
 	after := uuid.Nil
 	for {
 		var refs []write.SessionRef
+		var platform gamesession.Window
 		if err := h.UoW.InTenantTx(ctx, ps, func(ctx context.Context) error {
 			var err error
-			refs, err = h.Sessions.ActivePage(ctx, after, batch)
+			if refs, err = h.Sessions.ActivePage(ctx, after, batch); err != nil {
+				return err
+			}
+			// platform_curfew in force for this page (projected platform setting, else the start-up default).
+			platform, err = h.platformCurfew(ctx)
 			return err
 		}); err != nil {
 			return n, err
@@ -168,7 +173,7 @@ func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, 
 				if s.SchoolID != nil {
 					school = *s.SchoolID
 				}
-				cf, err := h.curfew(ctx, s.TenantID, school)
+				cf, err := h.curfewWith(ctx, platform, s.TenantID, school)
 				if err != nil {
 					return "", false, err
 				}

@@ -109,16 +109,21 @@ type Student struct {
 // Playable reports a student who may enter the game (active, not cleaned up).
 func (s Student) Playable() bool { return s.Status == "active" && !s.Deleted }
 
-// CurfewWindow is the curfew window of a school ({start, end} "HH:MM", ref.schools.settings_subset).
+// CurfewWindow is a curfew window ({start, end} "HH:MM" ICT): of a school (ref.schools.settings_subset) or of the
+// platform (platform_curfew in ref.platform_settings).
 type CurfewWindow struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 }
 
-// Directory reads the identity projections inside the write transaction (ref.students, ref.schools).
+// Directory reads the identity projections inside the write transaction (ref.students, ref.schools,
+// ref.platform_settings).
 type Directory interface {
 	// Student returns the projected student of the transaction tenant, nil when not projected yet.
 	Student(ctx context.Context, tenant, student uuid.UUID) (*Student, error)
 	// SchoolCurfew returns the curfew window of a school, nil when it has none.
 	SchoolCurfew(ctx context.Context, tenant, school uuid.UUID) (*CurfewWindow, error)
+	// PlatformCurfew returns platform_curfew projected from platform_settings.changed, nil before the first event
+	// (the caller then keeps its start-up default EW_PLATFORM_CURFEW).
+	PlatformCurfew(ctx context.Context) (*CurfewWindow, error)
 }
