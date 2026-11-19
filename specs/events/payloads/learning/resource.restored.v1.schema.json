@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/resource.restored.v1.schema.json",
+  "title": "Payload <resource_type>.restored v1 (module learning, owner F020, ADR-0028)",
+  "description": "Một item nội dung học tập được khôi phục từ Thùng rác (facade `restoreTrashItem`, module identity điều phối). Event type là `<resource_type>.restored`; mọi loại dùng chung schema này. Envelope tenant_id = tenant sở hữu, null với nội dung platform. Consumer: AUD, vô hiệu cache nội dung.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resource_type", "resource_id", "tenant_id", "restored_by"],
+  "properties": {
+    "resource_type": { "type": "string", "enum": ["curriculum", "lesson", "question", "question_set", "assessment_blueprint", "media", "assignment", "course", "learning_path"] },
+    "resource_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "restored_by": { "type": ["string", "null"], "format": "uuid" },
+    "reason": { "type": "string", "maxLength": 1000 }
+  },
+  "examples": [
+    { "resource_type": "question", "resource_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "restored_by": "0193a5f4-6c1e-7b2a-9d1f-000000000202", "reason": "deleted by mistake" }
+  ]
+}

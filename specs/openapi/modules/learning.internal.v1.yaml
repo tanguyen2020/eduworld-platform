@@ -253,6 +253,114 @@ paths:
           $ref: common/internal-common.v1.yaml#/components/responses/NotFound
         '409':
           $ref: common/internal-common.v1.yaml#/components/responses/Conflict
+  /internal/v1/platform/tenant-assignments:
+    get:
+      tags:
+        - platform-ops
+      operationId: listResourceAssignments
+      summary: Liệt kê assignment active của một tài nguyên platform (gán cho tenant, ADR-0029)
+      description: |
+        Đọc `infra.tenant_resource_assignments` của module sở hữu tài nguyên cho một `(resource_type, resource_id)`.
+        Chỉ module identity gọi khi trả `/api/v1/admin/tenant-assignments`; Principal gốc phải là nhân sự platform có
+        `platform.tenant_data.assign`.
+      x-allowed-callers:
+        - identity
+      parameters:
+        - name: resource_type
+          in: query
+          required: true
+          schema:
+            $ref: common/internal-common.v1.yaml#/components/schemas/ResourceType
+        - name: resource_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: common/internal-common.v1.yaml#/components/parameters/Cursor
+        - $ref: common/internal-common.v1.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Một trang assignment active
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/TenantAssignmentList
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '422':
+          $ref: common/internal-common.v1.yaml#/components/responses/ValidationFailed
+  /internal/v1/platform/tenant-assignments:apply:
+    post:
+      tags:
+        - platform-ops
+      operationId: applyTenantAssignments
+      summary: Gán một tài nguyên platform cho các tenant (tạo assignment active còn thiếu, ADR-0029)
+      description: |
+        Bước của luồng gán do module identity điều phối. Tài nguyên phải là `owner_scope = platform`, chưa soft-delete;
+        mỗi tenant phải `active` trong `ref.tenants` của module nhận. Một phần tử lỗi → `422 VALIDATION_FAILED` liệt kê
+        từng phần tử, không ghi gì. Cặp (tài nguyên, tenant) đã có assignment active không tạo dòng mới. Idempotent theo
+        `Idempotency-Key`: gọi lại trả kết quả lần trước. Audit `tenant_data.assigned` (actor = Principal gốc) qua outbox.
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - idempotency_key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/TenantAssignmentApplyRequest
+      responses:
+        '200':
+          description: Assignment active của tài nguyên cho các tenant yêu cầu
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/TenantAssignmentList
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '409':
+          $ref: common/internal-common.v1.yaml#/components/responses/Conflict
+        '422':
+          $ref: common/internal-common.v1.yaml#/components/responses/ValidationFailed
+  /internal/v1/platform/tenant-assignments:revoke:
+    post:
+      tags:
+        - platform-ops
+      operationId: revokeTenantAssignments
+      summary: Gỡ gán một tài nguyên platform khỏi các tenant (soft-delete assignment, ADR-0028/0029)
+      description: |
+        Soft-delete assignment active của các tenant yêu cầu; tenant không còn thấy tài nguyên ở lần đọc kế tiếp, lượt
+        học/attempt đã ghim version giữ nguyên. Tenant không có assignment active được bỏ qua. Idempotent theo
+        `Idempotency-Key`. Audit `tenant_data.unassigned` (actor = Principal gốc) qua outbox.
+      x-allowed-callers:
+        - identity
+      x-context-required:
+        - idempotency_key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: common/internal-common.v1.yaml#/components/schemas/TenantAssignmentRevokeRequest
+      responses:
+        '200':
+          description: Assignment đã gỡ (status `revoked`)
+          content:
+            application/json:
+              schema:
+                $ref: common/internal-common.v1.yaml#/components/schemas/TenantAssignmentList
+        '401':
+          $ref: common/internal-common.v1.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: common/internal-common.v1.yaml#/components/responses/CallerNotAllowed
+        '422':
+          $ref: common/internal-common.v1.yaml#/components/responses/ValidationFailed
   /internal/v1/platform/students/{student_id}:cleanup:
     post:
       tags:

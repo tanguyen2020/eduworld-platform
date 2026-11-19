@@ -167,6 +167,24 @@ func (e CommonInternalCommonV1StudentRestoreRequestReason) Valid() bool {
 	}
 }
 
+// Defines values for CommonInternalCommonV1TenantAssignmentStatus.
+const (
+	Active  CommonInternalCommonV1TenantAssignmentStatus = "active"
+	Revoked CommonInternalCommonV1TenantAssignmentStatus = "revoked"
+)
+
+// Valid indicates whether the value is a known member of the CommonInternalCommonV1TenantAssignmentStatus enum.
+func (e CommonInternalCommonV1TenantAssignmentStatus) Valid() bool {
+	switch e {
+	case Active:
+		return true
+	case Revoked:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommonInternalCommonV1TenantCloneStepResultStatus.
 const (
 	Completed       CommonInternalCommonV1TenantCloneStepResultStatus = "completed"
@@ -306,6 +324,48 @@ type CommonInternalCommonV1StudentRestoreRequest struct {
 // CommonInternalCommonV1StudentRestoreRequestReason defines model for CommonInternalCommonV1StudentRestoreRequest.Reason.
 type CommonInternalCommonV1StudentRestoreRequestReason string
 
+// CommonInternalCommonV1TenantAssignment defines model for common_internal-common.v1_TenantAssignment.
+type CommonInternalCommonV1TenantAssignment struct {
+	AssignedAt   time.Time          `json:"assigned_at"`
+	AssignedBy   openapi_types.UUID `json:"assigned_by"`
+	AssignmentId openapi_types.UUID `json:"assignment_id"`
+	ResourceId   openapi_types.UUID `json:"resource_id"`
+
+	// ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
+	ResourceType CommonInternalCommonV1ResourceType           `json:"resource_type"`
+	RevokedAt    *time.Time                                   `json:"revoked_at,omitempty"`
+	Status       CommonInternalCommonV1TenantAssignmentStatus `json:"status"`
+	TenantId     openapi_types.UUID                           `json:"tenant_id"`
+}
+
+// CommonInternalCommonV1TenantAssignmentStatus defines model for CommonInternalCommonV1TenantAssignment.Status.
+type CommonInternalCommonV1TenantAssignmentStatus string
+
+// CommonInternalCommonV1TenantAssignmentApplyRequest defines model for common_internal-common.v1_TenantAssignmentApplyRequest.
+type CommonInternalCommonV1TenantAssignmentApplyRequest struct {
+	ResourceId openapi_types.UUID `json:"resource_id"`
+
+	// ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
+	ResourceType CommonInternalCommonV1ResourceType `json:"resource_type"`
+	TenantIds    []openapi_types.UUID               `json:"tenant_ids"`
+}
+
+// CommonInternalCommonV1TenantAssignmentList defines model for common_internal-common.v1_TenantAssignmentList.
+type CommonInternalCommonV1TenantAssignmentList struct {
+	Data []CommonInternalCommonV1TenantAssignment `json:"data"`
+	Page CommonInternalCommonV1PageInfo           `json:"page"`
+}
+
+// CommonInternalCommonV1TenantAssignmentRevokeRequest defines model for common_internal-common.v1_TenantAssignmentRevokeRequest.
+type CommonInternalCommonV1TenantAssignmentRevokeRequest struct {
+	Reason     string             `json:"reason"`
+	ResourceId openapi_types.UUID `json:"resource_id"`
+
+	// ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
+	ResourceType CommonInternalCommonV1ResourceType `json:"resource_type"`
+	TenantIds    []openapi_types.UUID               `json:"tenant_ids"`
+}
+
 // CommonInternalCommonV1TenantCloneStepRequest defines model for common_internal-common.v1_TenantCloneStepRequest.
 type CommonInternalCommonV1TenantCloneStepRequest struct {
 	// IdMap Ánh xạ ID nguồn → ID đích của các bước trước (để nối lại tham chiếu giữa module).
@@ -430,6 +490,14 @@ type CommonInternalCommonV1Unauthorized = CommonInternalCommonV1Problem
 // CommonInternalCommonV1ValidationFailed RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).
 type CommonInternalCommonV1ValidationFailed = CommonInternalCommonV1Problem
 
+// ListResourceAssignmentsParams defines parameters for ListResourceAssignments.
+type ListResourceAssignmentsParams struct {
+	ResourceType CommonInternalCommonV1ResourceType `form:"resource_type" json:"resource_type"`
+	ResourceId   openapi_types.UUID                 `form:"resource_id" json:"resource_id"`
+	Cursor       *CommonInternalCommonV1Cursor      `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit        *CommonInternalCommonV1Limit       `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // ListTrashParams defines parameters for ListTrash.
 type ListTrashParams struct {
 	// TenantIds Lọc tenant. Vắng mặt = mọi tenant (chỉ hợp lệ khi người gọi gốc là System Admin, kiểm tra bởi module identity).
@@ -444,6 +512,12 @@ type CleanupStudentDataJSONRequestBody = CommonInternalCommonV1StudentCleanupReq
 
 // RestoreStudentDataJSONRequestBody defines body for RestoreStudentData for application/json ContentType.
 type RestoreStudentDataJSONRequestBody = CommonInternalCommonV1StudentRestoreRequest
+
+// ApplyTenantAssignmentsJSONRequestBody defines body for ApplyTenantAssignments for application/json ContentType.
+type ApplyTenantAssignmentsJSONRequestBody = CommonInternalCommonV1TenantAssignmentApplyRequest
+
+// RevokeTenantAssignmentsJSONRequestBody defines body for RevokeTenantAssignments for application/json ContentType.
+type RevokeTenantAssignmentsJSONRequestBody = CommonInternalCommonV1TenantAssignmentRevokeRequest
 
 // ExecuteTenantCloneStepJSONRequestBody defines body for ExecuteTenantCloneStep for application/json ContentType.
 type ExecuteTenantCloneStepJSONRequestBody = CommonInternalCommonV1TenantCloneStepRequest
@@ -465,6 +539,15 @@ type ServerInterface interface {
 	// RestoreStudentData Khôi phục dữ liệu học sinh đã bị dọn khi học sinh đăng nhập lại (ADR-0032 mục 5)
 	// (POST /internal/v1/platform/students/{student_id}:restore)
 	RestoreStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
+	// ListResourceAssignments Liệt kê assignment active của một tài nguyên platform (gán cho tenant, ADR-0029)
+	// (GET /internal/v1/platform/tenant-assignments)
+	ListResourceAssignments(w http.ResponseWriter, r *http.Request, params ListResourceAssignmentsParams)
+	// ApplyTenantAssignments Gán một tài nguyên platform cho các tenant (tạo assignment active còn thiếu, ADR-0029)
+	// (POST /internal/v1/platform/tenant-assignments:apply)
+	ApplyTenantAssignments(w http.ResponseWriter, r *http.Request)
+	// RevokeTenantAssignments Gỡ gán một tài nguyên platform khỏi các tenant (soft-delete assignment, ADR-0028/0029)
+	// (POST /internal/v1/platform/tenant-assignments:revoke)
+	RevokeTenantAssignments(w http.ResponseWriter, r *http.Request)
 	// ExecuteTenantCloneStep Thực thi bước clone thuộc module này trong một job clone tenant (saga do module identity điều phối)
 	// (POST /internal/v1/platform/tenant-clones/{job_id}/steps)
 	ExecuteTenantCloneStep(w http.ResponseWriter, r *http.Request, jobId CommonInternalCommonV1JobIdPath)
@@ -534,6 +617,106 @@ func (siw *ServerInterfaceWrapper) RestoreStudentData(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RestoreStudentData(w, r, studentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListResourceAssignments operation middleware
+func (siw *ServerInterfaceWrapper) ListResourceAssignments(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListResourceAssignmentsParams
+
+	// ------------- Required query parameter "resource_type" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "resource_type", r.URL.Query(), &params.ResourceType, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "resource_type"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "resource_type", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "resource_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "resource_id", r.URL.Query(), &params.ResourceId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "resource_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "resource_id", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListResourceAssignments(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApplyTenantAssignments operation middleware
+func (siw *ServerInterfaceWrapper) ApplyTenantAssignments(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyTenantAssignments(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RevokeTenantAssignments operation middleware
+func (siw *ServerInterfaceWrapper) RevokeTenantAssignments(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RevokeTenantAssignments(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -850,6 +1033,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments:apply", wrapper.ApplyTenantAssignments)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments:revoke", wrapper.RevokeTenantAssignments)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/tenant-clones/{job_id}/steps", wrapper.ExecuteTenantCloneStep)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/trash", wrapper.ListTrash)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/trash/{resource_type}/{resource_id}:restore", wrapper.RestoreTrashItem)
@@ -1011,6 +1197,232 @@ func (response RestoreStudentData404ApplicationProblemPlusJSONResponse) VisitRes
 	}
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListResourceAssignmentsRequestObject struct {
+	Params ListResourceAssignmentsParams
+}
+
+type ListResourceAssignmentsResponseObject interface {
+	VisitListResourceAssignmentsResponse(w http.ResponseWriter) error
+}
+
+type ListResourceAssignments200JSONResponse CommonInternalCommonV1TenantAssignmentList
+
+func (response ListResourceAssignments200JSONResponse) VisitListResourceAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListResourceAssignments401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListResourceAssignments401ApplicationProblemPlusJSONResponse) VisitListResourceAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListResourceAssignments403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListResourceAssignments403ApplicationProblemPlusJSONResponse) VisitListResourceAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListResourceAssignments422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListResourceAssignments422ApplicationProblemPlusJSONResponse) VisitListResourceAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyTenantAssignmentsRequestObject struct {
+	Body *ApplyTenantAssignmentsJSONRequestBody
+}
+
+type ApplyTenantAssignmentsResponseObject interface {
+	VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error
+}
+
+type ApplyTenantAssignments200JSONResponse CommonInternalCommonV1TenantAssignmentList
+
+func (response ApplyTenantAssignments200JSONResponse) VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyTenantAssignments401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyTenantAssignments401ApplicationProblemPlusJSONResponse) VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyTenantAssignments403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyTenantAssignments403ApplicationProblemPlusJSONResponse) VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyTenantAssignments409ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyTenantAssignments409ApplicationProblemPlusJSONResponse) VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyTenantAssignments422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyTenantAssignments422ApplicationProblemPlusJSONResponse) VisitApplyTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeTenantAssignmentsRequestObject struct {
+	Body *RevokeTenantAssignmentsJSONRequestBody
+}
+
+type RevokeTenantAssignmentsResponseObject interface {
+	VisitRevokeTenantAssignmentsResponse(w http.ResponseWriter) error
+}
+
+type RevokeTenantAssignments200JSONResponse CommonInternalCommonV1TenantAssignmentList
+
+func (response RevokeTenantAssignments200JSONResponse) VisitRevokeTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeTenantAssignments401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeTenantAssignments401ApplicationProblemPlusJSONResponse) VisitRevokeTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeTenantAssignments403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeTenantAssignments403ApplicationProblemPlusJSONResponse) VisitRevokeTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeTenantAssignments422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeTenantAssignments422ApplicationProblemPlusJSONResponse) VisitRevokeTenantAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1458,6 +1870,15 @@ type StrictServerInterface interface {
 	// RestoreStudentData Khôi phục dữ liệu học sinh đã bị dọn khi học sinh đăng nhập lại (ADR-0032 mục 5)
 	// (POST /internal/v1/platform/students/{student_id}:restore)
 	RestoreStudentData(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
+	// ListResourceAssignments Liệt kê assignment active của một tài nguyên platform (gán cho tenant, ADR-0029)
+	// (GET /internal/v1/platform/tenant-assignments)
+	ListResourceAssignments(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
+	// ApplyTenantAssignments Gán một tài nguyên platform cho các tenant (tạo assignment active còn thiếu, ADR-0029)
+	// (POST /internal/v1/platform/tenant-assignments:apply)
+	ApplyTenantAssignments(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
+	// RevokeTenantAssignments Gỡ gán một tài nguyên platform khỏi các tenant (soft-delete assignment, ADR-0028/0029)
+	// (POST /internal/v1/platform/tenant-assignments:revoke)
+	RevokeTenantAssignments(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
 	// ExecuteTenantCloneStep Thực thi bước clone thuộc module này trong một job clone tenant (saga do module identity điều phối)
 	// (POST /internal/v1/platform/tenant-clones/{job_id}/steps)
 	ExecuteTenantCloneStep(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
@@ -1573,6 +1994,94 @@ func (sh *strictHandler) RestoreStudentData(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RestoreStudentDataResponseObject); ok {
 		if err := validResponse.VisitRestoreStudentDataResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListResourceAssignments operation middleware
+func (sh *strictHandler) ListResourceAssignments(w http.ResponseWriter, r *http.Request, params ListResourceAssignmentsParams) {
+	var request ListResourceAssignmentsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListResourceAssignments(ctx, request.(ListResourceAssignmentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListResourceAssignments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListResourceAssignmentsResponseObject); ok {
+		if err := validResponse.VisitListResourceAssignmentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ApplyTenantAssignments operation middleware
+func (sh *strictHandler) ApplyTenantAssignments(w http.ResponseWriter, r *http.Request) {
+	var request ApplyTenantAssignmentsRequestObject
+
+	var body ApplyTenantAssignmentsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyTenantAssignments(ctx, request.(ApplyTenantAssignmentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyTenantAssignments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ApplyTenantAssignmentsResponseObject); ok {
+		if err := validResponse.VisitApplyTenantAssignmentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RevokeTenantAssignments operation middleware
+func (sh *strictHandler) RevokeTenantAssignments(w http.ResponseWriter, r *http.Request) {
+	var request RevokeTenantAssignmentsRequestObject
+
+	var body RevokeTenantAssignmentsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RevokeTenantAssignments(ctx, request.(RevokeTenantAssignmentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RevokeTenantAssignments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RevokeTenantAssignmentsResponseObject); ok {
+		if err := validResponse.VisitRevokeTenantAssignmentsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -1744,13 +2253,16 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
-	CleanupStudentDataFunc     func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
-	RestoreStudentDataFunc     func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
-	ExecuteTenantCloneStepFunc func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
-	ListTrashFunc              func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
-	RestoreTrashItemFunc       func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
-	AnonymizeUserDataFunc      func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
-	MergeUserDataFunc          func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
+	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
+	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
+	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
+	ApplyTenantAssignmentsFunc  func(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignmentsFunc func(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
+	ExecuteTenantCloneStepFunc  func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
+	ListTrashFunc               func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
+	RestoreTrashItemFunc        func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
+	AnonymizeUserDataFunc       func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
+	MergeUserDataFunc           func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
@@ -1769,6 +2281,30 @@ func (f *Fake) RestoreStudentData(a0 context.Context, a1 RestoreStudentDataReque
 		return nil, ErrNotFaked
 	}
 	return f.RestoreStudentDataFunc(a0, a1)
+}
+
+// ListResourceAssignments calls ListResourceAssignmentsFunc.
+func (f *Fake) ListResourceAssignments(a0 context.Context, a1 ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error) {
+	if f.ListResourceAssignmentsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListResourceAssignmentsFunc(a0, a1)
+}
+
+// ApplyTenantAssignments calls ApplyTenantAssignmentsFunc.
+func (f *Fake) ApplyTenantAssignments(a0 context.Context, a1 ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error) {
+	if f.ApplyTenantAssignmentsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ApplyTenantAssignmentsFunc(a0, a1)
+}
+
+// RevokeTenantAssignments calls RevokeTenantAssignmentsFunc.
+func (f *Fake) RevokeTenantAssignments(a0 context.Context, a1 RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error) {
+	if f.RevokeTenantAssignmentsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.RevokeTenantAssignmentsFunc(a0, a1)
 }
 
 // ExecuteTenantCloneStep calls ExecuteTenantCloneStepFunc.

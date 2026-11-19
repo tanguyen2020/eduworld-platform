@@ -5,22 +5,27 @@ package api
 // AllowedCallers maps each facade operationId to the modules allowed to call it (x-allowed-callers,
 // ADR-0074); pkg/modcall answers 403 CALLER_NOT_ALLOWED to any other caller.
 var AllowedCallers = map[string][]string{
-	"anonymizeUserData":      {"identity"},
-	"cleanupStudentData":     {"identity"},
-	"executeTenantCloneStep": {"identity"},
-	"listTrash":              {"identity"},
-	"mergeUserData":          {"identity"},
-	"restoreStudentData":     {"identity"},
-	"restoreTrashItem":       {"identity"},
+	"anonymizeUserData":       {"identity"},
+	"applyTenantAssignments":  {"identity"},
+	"cleanupStudentData":      {"identity"},
+	"executeTenantCloneStep":  {"identity"},
+	"listResourceAssignments": {"identity"},
+	"listTrash":               {"identity"},
+	"mergeUserData":           {"identity"},
+	"restoreStudentData":      {"identity"},
+	"restoreTrashItem":        {"identity"},
+	"revokeTenantAssignments": {"identity"},
 }
 
 // ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);
 // pkg/modcall refuses a call whose context lacks them.
 var ContextRequired = map[string][]string{
-	"anonymizeUserData":      {"idempotency_key", "tenant_scope"},
-	"cleanupStudentData":     {"idempotency_key", "tenant_scope"},
-	"executeTenantCloneStep": {"idempotency_key"},
-	"mergeUserData":          {"idempotency_key", "tenant_scope"},
-	"restoreStudentData":     {"idempotency_key", "tenant_scope"},
-	"restoreTrashItem":       {"idempotency_key", "tenant_scope"},
+	"anonymizeUserData":       {"idempotency_key", "tenant_scope"},
+	"applyTenantAssignments":  {"idempotency_key"},
+	"cleanupStudentData":      {"idempotency_key", "tenant_scope"},
+	"executeTenantCloneStep":  {"idempotency_key"},
+	"mergeUserData":           {"idempotency_key", "tenant_scope"},
+	"restoreStudentData":      {"idempotency_key", "tenant_scope"},
+	"restoreTrashItem":        {"idempotency_key", "tenant_scope"},
+	"revokeTenantAssignments": {"idempotency_key"},
 }

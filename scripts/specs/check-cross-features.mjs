@@ -174,6 +174,8 @@ for (const mod of fs.existsSync(payloadDir) ? fs.readdirSync(payloadDir) : []) {
     const where = rel(path.join(dir, f));
     if (!m) { err(where, 'tên file phải là <event_type>.v<N>.schema.json'); continue; }
     const ev = catalog.get(m[1]);
+    // Schema chung của mẫu <entity>.deleted / <entity>.restored (vd. learning/resource.deleted, F020) không phải một event cụ thể.
+    if (!ev && GENERIC_RE.test(m[1])) { schemaFiles.set(`${mod}:${m[1]}`, where); continue; }
     if (!ev) err(where, `event ${m[1]} không có trong EVENT_DESIGN §4`);
     else if (mod === 'common' ? !ev.common : !ev.modules.has(mod)) err(where, `thư mục ${mod}/ khác module producer (${[...ev.modules].join(', ')}) của EVENT_DESIGN`);
     schemaFiles.set(`${mod}:${m[1]}`, where);

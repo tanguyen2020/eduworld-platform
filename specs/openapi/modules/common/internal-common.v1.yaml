@@ -105,6 +105,91 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /internal/v1/platform/tenant-assignments:
+    get:
+      tags: [platform-ops]
+      operationId: listResourceAssignments
+      summary: Liệt kê assignment active của một tài nguyên platform (gán cho tenant, ADR-0029)
+      description: |
+        Đọc `infra.tenant_resource_assignments` của module sở hữu tài nguyên cho một `(resource_type, resource_id)`.
+        Chỉ module identity gọi khi trả `/api/v1/admin/tenant-assignments`; Principal gốc phải là nhân sự platform có
+        `platform.tenant_data.assign`.
+      x-allowed-callers: [identity]
+      parameters:
+        - name: resource_type
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/ResourceType' }
+        - name: resource_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Một trang assignment active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantAssignmentList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/platform/tenant-assignments:apply:
+    post:
+      tags: [platform-ops]
+      operationId: applyTenantAssignments
+      summary: Gán một tài nguyên platform cho các tenant (tạo assignment active còn thiếu, ADR-0029)
+      description: |
+        Bước của luồng gán do module identity điều phối. Tài nguyên phải là `owner_scope = platform`, chưa soft-delete;
+        mỗi tenant phải `active` trong `ref.tenants` của module nhận. Một phần tử lỗi → `422 VALIDATION_FAILED` liệt kê
+        từng phần tử, không ghi gì. Cặp (tài nguyên, tenant) đã có assignment active không tạo dòng mới. Idempotent theo
+        `Idempotency-Key`: gọi lại trả kết quả lần trước. Audit `tenant_data.assigned` (actor = Principal gốc) qua outbox.
+      x-allowed-callers: [identity]
+      x-context-required: [idempotency_key]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantAssignmentApplyRequest' }
+      responses:
+        '200':
+          description: Assignment active của tài nguyên cho các tenant yêu cầu
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantAssignmentList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/platform/tenant-assignments:revoke:
+    post:
+      tags: [platform-ops]
+      operationId: revokeTenantAssignments
+      summary: Gỡ gán một tài nguyên platform khỏi các tenant (soft-delete assignment, ADR-0028/0029)
+      description: |
+        Soft-delete assignment active của các tenant yêu cầu; tenant không còn thấy tài nguyên ở lần đọc kế tiếp, lượt
+        học/attempt đã ghim version giữ nguyên. Tenant không có assignment active được bỏ qua. Idempotent theo
+        `Idempotency-Key`. Audit `tenant_data.unassigned` (actor = Principal gốc) qua outbox.
+      x-allowed-callers: [identity]
+      x-context-required: [idempotency_key]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantAssignmentRevokeRequest' }
+      responses:
+        '200':
+          description: Assignment đã gỡ (status `revoked`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantAssignmentList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
   /internal/v1/platform/students/{student_id}:cleanup:
     post:
       tags: [platform-ops]
@@ -412,6 +497,56 @@ components:
         resource_type: { $ref: '#/components/schemas/ResourceType' }
         resource_id: { type: string, format: uuid }
         restored_at: { type: string, format: date-time }
+
+    TenantAssignmentApplyRequest:
+      type: object
+      required: [resource_type, resource_id, tenant_ids]
+      properties:
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_id: { type: string, format: uuid }
+        tenant_ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items: { type: string, format: uuid }
+
+    TenantAssignmentRevokeRequest:
+      type: object
+      required: [resource_type, resource_id, tenant_ids, reason]
+      properties:
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_id: { type: string, format: uuid }
+        tenant_ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items: { type: string, format: uuid }
+        reason: { type: string, minLength: 3, maxLength: 1000 }
+
+    TenantAssignment:
+      type: object
+      required: [assignment_id, resource_type, resource_id, tenant_id, assigned_by, assigned_at, status]
+      properties:
+        assignment_id: { type: string, format: uuid }
+        resource_type: { $ref: '#/components/schemas/ResourceType' }
+        resource_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        assigned_by: { type: string, format: uuid }
+        assigned_at: { type: string, format: date-time }
+        status: { type: string, enum: [active, revoked] }
+        revoked_at: { type: [string, 'null'], format: date-time }
+
+    TenantAssignmentList:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          maxItems: 500
+          items: { $ref: '#/components/schemas/TenantAssignment' }
+        page: { $ref: '#/components/schemas/PageInfo' }
 
     StudentCleanupRequest:
       type: object

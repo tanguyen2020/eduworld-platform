@@ -19,9 +19,9 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 | `listTrash` | identity → learning (facade `learning`) | `specs/openapi/modules/learning.internal.v1.yaml` | `identity` | Có sẵn |
 | `restoreTrashItem` | identity → learning (facade `learning`) | như trên | `identity` | Có sẵn |
 | `executeTenantCloneStep` | identity → learning (facade `learning`) | như trên | `identity` | Có sẵn |
-| `applyTenantAssignments` | identity → learning (facade `learning`) | như trên (block platform-ops trong `common/internal-common.v1.yaml`) | `identity` | Cần thêm |
-| `revokeTenantAssignments` | identity → learning (facade `learning`) | như trên | `identity` | Cần thêm |
-| `listResourceAssignments` | identity → learning (facade `learning`, tham số `resource_type`, `resource_id`) | như trên | `identity` | Cần thêm |
+| `applyTenantAssignments` | identity → learning (facade `learning`) | như trên (block platform-ops trong `common/internal-common.v1.yaml`) | `identity` | Có sẵn (F020, 2026-11-19) |
+| `revokeTenantAssignments` | identity → learning (facade `learning`) | như trên | `identity` | Có sẵn (F020, 2026-11-19) |
+| `listResourceAssignments` | identity → learning (facade `learning`, tham số `resource_type`, `resource_id`) | như trên | `identity` | Có sẵn (F020, 2026-11-19) |
 
 ## 3. Realtime (AsyncAPI)
 
@@ -38,7 +38,7 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 | `class.synced` | Tiêu thụ | `specs/events/payloads/identity/class.synced.v1.schema.json` | Có sẵn |
 | `province.updated` | Tiêu thụ | `specs/events/payloads/identity/province.updated.v1.schema.json` | Có sẵn |
 | `student.synced`, `student.cleaned_up`, `student.restored`, `enrollment.changed` | Tiêu thụ | `specs/events/payloads/identity/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
-| `<resource_type>.deleted`, `<resource_type>.restored` | Phát | `specs/events/payloads/learning/resource.deleted.v1.schema.json`, `resource.restored.v1.schema.json` | Cần thêm |
+| `<resource_type>.deleted`, `<resource_type>.restored` | Phát | `specs/events/payloads/learning/resource.deleted.v1.schema.json`, `resource.restored.v1.schema.json` | Có sẵn (F020, 2026-11-19) |
 | `audit.recorded` | Phát | `specs/events/envelope.schema.json` | Có sẵn |
 
 ## 5. JSON Schema nội dung
@@ -53,3 +53,9 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 - Thêm vào block platform-ops của `specs/openapi/modules/common/internal-common.v1.yaml` (đồng bộ bằng `scripts/openapi/sync-platform-ops.mjs`) ba operation: `applyTenantAssignments` (body `TenantAssignmentApplyRequest {resource_type, resource_id, tenant_ids[] maxItems 500}` → `TenantAssignmentList`), `revokeTenantAssignments` (body cùng shape + `reason` ≤ 1000), `listResourceAssignments` (query `resource_type`, `resource_id`, cursor). `Idempotency-Key` (trừ thao tác đọc), Principal gốc (on-behalf) và trace truyền qua `context` (`src/backend/pkg/modcall`); `x-allowed-callers: [identity]`. Lỗi: 422 `VALIDATION_FAILED`.
 - Thêm payload schema `resource.deleted.v1` / `resource.restored.v1` (`resource_type`, `resource_id`, `tenant_id` nullable, `deleted_by`/`restored_by`, `reason` ≤ 1000) vào `specs/events/payloads/learning/`.
 - Yêu cầu F010/F011/F016 bổ sung payload schema event identity ở bảng §4. Operation facade phân trang rebuild projection `listProjectionSnapshot` do **F010** sở hữu (F010-AC-27, task F010 T043, `x-allowed-callers` gồm `learning`); F020 chỉ là bên gọi.
+
+### Trạng thái delta (2026-11-19, T004–T006)
+
+- T004 xong: ba operation `applyTenantAssignments`, `revokeTenantAssignments`, `listResourceAssignments` nằm trong block platform-ops của `common/internal-common.v1.yaml`, đồng bộ sang `learning`/`game`/`competition`/`chat` `*.internal.v1.yaml` bằng `sync-platform-ops.mjs`; facade sinh lại (`tools/facadegen`, `tools/allowedcallers`). Schema mới: `TenantAssignmentApplyRequest`, `TenantAssignmentRevokeRequest` (`reason` 3–1000), `TenantAssignment` (`status` `active`/`revoked`, `revoked_at`), `TenantAssignmentList`. Module `game`/`competition`/`chat` chỉ có kiểu sinh, chưa hiện thực.
+- T005 xong: `resource.deleted.v1`, `resource.restored.v1` (schema chung cho mẫu `<resource_type>.deleted/restored`; `check-cross-features.mjs` chấp nhận tên file theo mẫu chung này).
+- T006: payload event identity ở §4 đã có (F010/F011/F016, áp 2026-11-17). Khoảng trống ghi nhận cho owner identity [Proposed]: `class.synced` không mang `academic_year_id`/`is_virtual`/`source_version` (projection dùng `occurred_at` của envelope làm version, `academic_year_id` để NULL); `school.synced` không mang `school_level`/`is_virtual`. Rebuild projection qua `listProjectionSnapshot` (F010 T043) chưa nối ở F020 (thư mục `presentation/job` để trống theo plan).
