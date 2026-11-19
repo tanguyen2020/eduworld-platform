@@ -1,4 +1,4 @@
-h1:lQmzPOOF5MFUyHWAxrx0ut5uRgDwVPjGFg6Trxmw5F8=
+h1:HT4aGUZOEBTyImznCu5rBngmTbh06d8TSoNvGGPMKno=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -6,3 +6,4 @@ h1:lQmzPOOF5MFUyHWAxrx0ut5uRgDwVPjGFg6Trxmw5F8=
 20261124000001_f021_curriculum.sql h1:MUUYFNlxepSJzJY4Dl7ED2cW20O0UAhf+PbMfGzoxso=
 20261125000001_f022_question_bank.sql h1:BF5sAKUQxg78pe6BmDRsaS8wJGl8nGk/q2iQQKtjAn0=
 20261126000001_f027_media.sql h1:K0ywTGoLRbjPzH7uIrS1DkSI0GTkWwO9kkb6N7CYKzM=
+20261127000001_f024_content_types.sql h1:+M0wqS+NToDZApbYdhKOaOYc/bT0NVtRgg+IckVcNcI=

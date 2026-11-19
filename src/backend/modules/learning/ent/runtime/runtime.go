@@ -6,18 +6,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprint"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprintversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lesson"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lessonversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/schema"
@@ -35,6 +44,138 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	assessmentblueprintMixin := schema.AssessmentBlueprint{}.Mixin()
+	assessmentblueprintMixinHooks0 := assessmentblueprintMixin[0].Hooks()
+	assessmentblueprint.Hooks[0] = assessmentblueprintMixinHooks0[0]
+	assessmentblueprintMixinInters0 := assessmentblueprintMixin[0].Interceptors()
+	assessmentblueprint.Interceptors[0] = assessmentblueprintMixinInters0[0]
+	assessmentblueprintMixinFields0 := assessmentblueprintMixin[0].Fields()
+	_ = assessmentblueprintMixinFields0
+	assessmentblueprintMixinFields1 := assessmentblueprintMixin[1].Fields()
+	_ = assessmentblueprintMixinFields1
+	assessmentblueprintFields := schema.AssessmentBlueprint{}.Fields()
+	_ = assessmentblueprintFields
+	// assessmentblueprintDescCreatedAt is the schema descriptor for created_at field.
+	assessmentblueprintDescCreatedAt := assessmentblueprintMixinFields0[2].Descriptor()
+	// assessmentblueprint.DefaultCreatedAt holds the default value on creation for the created_at field.
+	assessmentblueprint.DefaultCreatedAt = assessmentblueprintDescCreatedAt.Default.(func() time.Time)
+	// assessmentblueprintDescUpdatedAt is the schema descriptor for updated_at field.
+	assessmentblueprintDescUpdatedAt := assessmentblueprintMixinFields0[4].Descriptor()
+	// assessmentblueprint.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	assessmentblueprint.DefaultUpdatedAt = assessmentblueprintDescUpdatedAt.Default.(func() time.Time)
+	// assessmentblueprint.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	assessmentblueprint.UpdateDefaultUpdatedAt = assessmentblueprintDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// assessmentblueprintDescDeleteReason is the schema descriptor for delete_reason field.
+	assessmentblueprintDescDeleteReason := assessmentblueprintMixinFields0[8].Descriptor()
+	// assessmentblueprint.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	assessmentblueprint.DeleteReasonValidator = assessmentblueprintDescDeleteReason.Validators[0].(func(string) error)
+	// assessmentblueprintDescVersion is the schema descriptor for version field.
+	assessmentblueprintDescVersion := assessmentblueprintMixinFields0[9].Descriptor()
+	// assessmentblueprint.DefaultVersion holds the default value on creation for the version field.
+	assessmentblueprint.DefaultVersion = assessmentblueprintDescVersion.Default.(int64)
+	// assessmentblueprintDescOwnerScope is the schema descriptor for owner_scope field.
+	assessmentblueprintDescOwnerScope := assessmentblueprintMixinFields0[10].Descriptor()
+	// assessmentblueprint.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	assessmentblueprint.DefaultOwnerScope = assessmentblueprintDescOwnerScope.Default.(string)
+	// assessmentblueprint.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	assessmentblueprint.OwnerScopeValidator = assessmentblueprintDescOwnerScope.Validators[0].(func(string) error)
+	// assessmentblueprintDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	assessmentblueprintDescLatestVersionNo := assessmentblueprintMixinFields1[1].Descriptor()
+	// assessmentblueprint.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	assessmentblueprint.DefaultLatestVersionNo = assessmentblueprintDescLatestVersionNo.Default.(int)
+	// assessmentblueprint.LatestVersionNoValidator is a validator for the "latest_version_no" field. It is called by the builders before save.
+	assessmentblueprint.LatestVersionNoValidator = assessmentblueprintDescLatestVersionNo.Validators[0].(func(int) error)
+	// assessmentblueprintDescID is the schema descriptor for id field.
+	assessmentblueprintDescID := assessmentblueprintMixinFields0[0].Descriptor()
+	// assessmentblueprint.DefaultID holds the default value on creation for the id field.
+	assessmentblueprint.DefaultID = assessmentblueprintDescID.Default.(func() uuid.UUID)
+	assessmentblueprintversionMixin := schema.AssessmentBlueprintVersion{}.Mixin()
+	assessmentblueprintversionMixinHooks0 := assessmentblueprintversionMixin[0].Hooks()
+	assessmentblueprintversion.Hooks[0] = assessmentblueprintversionMixinHooks0[0]
+	assessmentblueprintversionMixinInters0 := assessmentblueprintversionMixin[0].Interceptors()
+	assessmentblueprintversion.Interceptors[0] = assessmentblueprintversionMixinInters0[0]
+	assessmentblueprintversionMixinFields0 := assessmentblueprintversionMixin[0].Fields()
+	_ = assessmentblueprintversionMixinFields0
+	assessmentblueprintversionMixinFields1 := assessmentblueprintversionMixin[1].Fields()
+	_ = assessmentblueprintversionMixinFields1
+	assessmentblueprintversionFields := schema.AssessmentBlueprintVersion{}.Fields()
+	_ = assessmentblueprintversionFields
+	// assessmentblueprintversionDescCreatedAt is the schema descriptor for created_at field.
+	assessmentblueprintversionDescCreatedAt := assessmentblueprintversionMixinFields0[2].Descriptor()
+	// assessmentblueprintversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	assessmentblueprintversion.DefaultCreatedAt = assessmentblueprintversionDescCreatedAt.Default.(func() time.Time)
+	// assessmentblueprintversionDescUpdatedAt is the schema descriptor for updated_at field.
+	assessmentblueprintversionDescUpdatedAt := assessmentblueprintversionMixinFields0[4].Descriptor()
+	// assessmentblueprintversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	assessmentblueprintversion.DefaultUpdatedAt = assessmentblueprintversionDescUpdatedAt.Default.(func() time.Time)
+	// assessmentblueprintversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	assessmentblueprintversion.UpdateDefaultUpdatedAt = assessmentblueprintversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// assessmentblueprintversionDescDeleteReason is the schema descriptor for delete_reason field.
+	assessmentblueprintversionDescDeleteReason := assessmentblueprintversionMixinFields0[8].Descriptor()
+	// assessmentblueprintversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	assessmentblueprintversion.DeleteReasonValidator = assessmentblueprintversionDescDeleteReason.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescVersion is the schema descriptor for version field.
+	assessmentblueprintversionDescVersion := assessmentblueprintversionMixinFields0[9].Descriptor()
+	// assessmentblueprintversion.DefaultVersion holds the default value on creation for the version field.
+	assessmentblueprintversion.DefaultVersion = assessmentblueprintversionDescVersion.Default.(int64)
+	// assessmentblueprintversionDescOwnerScope is the schema descriptor for owner_scope field.
+	assessmentblueprintversionDescOwnerScope := assessmentblueprintversionMixinFields0[10].Descriptor()
+	// assessmentblueprintversion.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	assessmentblueprintversion.DefaultOwnerScope = assessmentblueprintversionDescOwnerScope.Default.(string)
+	// assessmentblueprintversion.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	assessmentblueprintversion.OwnerScopeValidator = assessmentblueprintversionDescOwnerScope.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescVersionNo is the schema descriptor for version_no field.
+	assessmentblueprintversionDescVersionNo := assessmentblueprintversionMixinFields1[0].Descriptor()
+	// assessmentblueprintversion.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	assessmentblueprintversion.VersionNoValidator = assessmentblueprintversionDescVersionNo.Validators[0].(func(int) error)
+	// assessmentblueprintversionDescStatus is the schema descriptor for status field.
+	assessmentblueprintversionDescStatus := assessmentblueprintversionMixinFields1[1].Descriptor()
+	// assessmentblueprintversion.DefaultStatus holds the default value on creation for the status field.
+	assessmentblueprintversion.DefaultStatus = assessmentblueprintversionDescStatus.Default.(string)
+	// assessmentblueprintversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	assessmentblueprintversion.StatusValidator = assessmentblueprintversionDescStatus.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescContentLanguage is the schema descriptor for content_language field.
+	assessmentblueprintversionDescContentLanguage := assessmentblueprintversionMixinFields1[5].Descriptor()
+	// assessmentblueprintversion.DefaultContentLanguage holds the default value on creation for the content_language field.
+	assessmentblueprintversion.DefaultContentLanguage = assessmentblueprintversionDescContentLanguage.Default.(string)
+	// assessmentblueprintversion.ContentLanguageValidator is a validator for the "content_language" field. It is called by the builders before save.
+	assessmentblueprintversion.ContentLanguageValidator = assessmentblueprintversionDescContentLanguage.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescChangeNote is the schema descriptor for change_note field.
+	assessmentblueprintversionDescChangeNote := assessmentblueprintversionMixinFields1[7].Descriptor()
+	// assessmentblueprintversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	assessmentblueprintversion.ChangeNoteValidator = assessmentblueprintversionDescChangeNote.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	assessmentblueprintversionDescSnapshotKey := assessmentblueprintversionMixinFields1[9].Descriptor()
+	// assessmentblueprintversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	assessmentblueprintversion.SnapshotKeyValidator = assessmentblueprintversionDescSnapshotKey.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	assessmentblueprintversionDescSnapshotSha256 := assessmentblueprintversionMixinFields1[10].Descriptor()
+	// assessmentblueprintversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	assessmentblueprintversion.SnapshotSha256Validator = assessmentblueprintversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// assessmentblueprintversionDescGradeLevels is the schema descriptor for grade_levels field.
+	assessmentblueprintversionDescGradeLevels := assessmentblueprintversionFields[4].Descriptor()
+	// assessmentblueprintversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
+	assessmentblueprintversion.DefaultGradeLevels = assessmentblueprintversionDescGradeLevels.Default.([]int)
+	// assessmentblueprintversionDescTopicIds is the schema descriptor for topic_ids field.
+	assessmentblueprintversionDescTopicIds := assessmentblueprintversionFields[5].Descriptor()
+	// assessmentblueprintversion.DefaultTopicIds holds the default value on creation for the topic_ids field.
+	assessmentblueprintversion.DefaultTopicIds = assessmentblueprintversionDescTopicIds.Default.([]uuid.UUID)
+	// assessmentblueprintversionDescObjectiveIds is the schema descriptor for objective_ids field.
+	assessmentblueprintversionDescObjectiveIds := assessmentblueprintversionFields[6].Descriptor()
+	// assessmentblueprintversion.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	assessmentblueprintversion.DefaultObjectiveIds = assessmentblueprintversionDescObjectiveIds.Default.([]uuid.UUID)
+	// assessmentblueprintversionDescMediaRefs is the schema descriptor for media_refs field.
+	assessmentblueprintversionDescMediaRefs := assessmentblueprintversionFields[7].Descriptor()
+	// assessmentblueprintversion.DefaultMediaRefs holds the default value on creation for the media_refs field.
+	assessmentblueprintversion.DefaultMediaRefs = assessmentblueprintversionDescMediaRefs.Default.([]uuid.UUID)
+	// assessmentblueprintversionDescWorkedExampleIds is the schema descriptor for worked_example_ids field.
+	assessmentblueprintversionDescWorkedExampleIds := assessmentblueprintversionFields[8].Descriptor()
+	// assessmentblueprintversion.DefaultWorkedExampleIds holds the default value on creation for the worked_example_ids field.
+	assessmentblueprintversion.DefaultWorkedExampleIds = assessmentblueprintversionDescWorkedExampleIds.Default.([]string)
+	// assessmentblueprintversionDescID is the schema descriptor for id field.
+	assessmentblueprintversionDescID := assessmentblueprintversionMixinFields0[0].Descriptor()
+	// assessmentblueprintversion.DefaultID holds the default value on creation for the id field.
+	assessmentblueprintversion.DefaultID = assessmentblueprintversionDescID.Default.(func() uuid.UUID)
 	competencyMixin := schema.Competency{}.Mixin()
 	competencyMixinHooks0 := competencyMixin[0].Hooks()
 	competency.Hooks[0] = competencyMixinHooks0[0]
@@ -341,6 +482,138 @@ func init() {
 	importjobDescID := importjobMixinFields0[0].Descriptor()
 	// importjob.DefaultID holds the default value on creation for the id field.
 	importjob.DefaultID = importjobDescID.Default.(func() uuid.UUID)
+	learningmaterialMixin := schema.LearningMaterial{}.Mixin()
+	learningmaterialMixinHooks0 := learningmaterialMixin[0].Hooks()
+	learningmaterial.Hooks[0] = learningmaterialMixinHooks0[0]
+	learningmaterialMixinInters0 := learningmaterialMixin[0].Interceptors()
+	learningmaterial.Interceptors[0] = learningmaterialMixinInters0[0]
+	learningmaterialMixinFields0 := learningmaterialMixin[0].Fields()
+	_ = learningmaterialMixinFields0
+	learningmaterialMixinFields1 := learningmaterialMixin[1].Fields()
+	_ = learningmaterialMixinFields1
+	learningmaterialFields := schema.LearningMaterial{}.Fields()
+	_ = learningmaterialFields
+	// learningmaterialDescCreatedAt is the schema descriptor for created_at field.
+	learningmaterialDescCreatedAt := learningmaterialMixinFields0[2].Descriptor()
+	// learningmaterial.DefaultCreatedAt holds the default value on creation for the created_at field.
+	learningmaterial.DefaultCreatedAt = learningmaterialDescCreatedAt.Default.(func() time.Time)
+	// learningmaterialDescUpdatedAt is the schema descriptor for updated_at field.
+	learningmaterialDescUpdatedAt := learningmaterialMixinFields0[4].Descriptor()
+	// learningmaterial.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	learningmaterial.DefaultUpdatedAt = learningmaterialDescUpdatedAt.Default.(func() time.Time)
+	// learningmaterial.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	learningmaterial.UpdateDefaultUpdatedAt = learningmaterialDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// learningmaterialDescDeleteReason is the schema descriptor for delete_reason field.
+	learningmaterialDescDeleteReason := learningmaterialMixinFields0[8].Descriptor()
+	// learningmaterial.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	learningmaterial.DeleteReasonValidator = learningmaterialDescDeleteReason.Validators[0].(func(string) error)
+	// learningmaterialDescVersion is the schema descriptor for version field.
+	learningmaterialDescVersion := learningmaterialMixinFields0[9].Descriptor()
+	// learningmaterial.DefaultVersion holds the default value on creation for the version field.
+	learningmaterial.DefaultVersion = learningmaterialDescVersion.Default.(int64)
+	// learningmaterialDescOwnerScope is the schema descriptor for owner_scope field.
+	learningmaterialDescOwnerScope := learningmaterialMixinFields0[10].Descriptor()
+	// learningmaterial.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	learningmaterial.DefaultOwnerScope = learningmaterialDescOwnerScope.Default.(string)
+	// learningmaterial.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	learningmaterial.OwnerScopeValidator = learningmaterialDescOwnerScope.Validators[0].(func(string) error)
+	// learningmaterialDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	learningmaterialDescLatestVersionNo := learningmaterialMixinFields1[1].Descriptor()
+	// learningmaterial.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	learningmaterial.DefaultLatestVersionNo = learningmaterialDescLatestVersionNo.Default.(int)
+	// learningmaterial.LatestVersionNoValidator is a validator for the "latest_version_no" field. It is called by the builders before save.
+	learningmaterial.LatestVersionNoValidator = learningmaterialDescLatestVersionNo.Validators[0].(func(int) error)
+	// learningmaterialDescID is the schema descriptor for id field.
+	learningmaterialDescID := learningmaterialMixinFields0[0].Descriptor()
+	// learningmaterial.DefaultID holds the default value on creation for the id field.
+	learningmaterial.DefaultID = learningmaterialDescID.Default.(func() uuid.UUID)
+	learningmaterialversionMixin := schema.LearningMaterialVersion{}.Mixin()
+	learningmaterialversionMixinHooks0 := learningmaterialversionMixin[0].Hooks()
+	learningmaterialversion.Hooks[0] = learningmaterialversionMixinHooks0[0]
+	learningmaterialversionMixinInters0 := learningmaterialversionMixin[0].Interceptors()
+	learningmaterialversion.Interceptors[0] = learningmaterialversionMixinInters0[0]
+	learningmaterialversionMixinFields0 := learningmaterialversionMixin[0].Fields()
+	_ = learningmaterialversionMixinFields0
+	learningmaterialversionMixinFields1 := learningmaterialversionMixin[1].Fields()
+	_ = learningmaterialversionMixinFields1
+	learningmaterialversionFields := schema.LearningMaterialVersion{}.Fields()
+	_ = learningmaterialversionFields
+	// learningmaterialversionDescCreatedAt is the schema descriptor for created_at field.
+	learningmaterialversionDescCreatedAt := learningmaterialversionMixinFields0[2].Descriptor()
+	// learningmaterialversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	learningmaterialversion.DefaultCreatedAt = learningmaterialversionDescCreatedAt.Default.(func() time.Time)
+	// learningmaterialversionDescUpdatedAt is the schema descriptor for updated_at field.
+	learningmaterialversionDescUpdatedAt := learningmaterialversionMixinFields0[4].Descriptor()
+	// learningmaterialversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	learningmaterialversion.DefaultUpdatedAt = learningmaterialversionDescUpdatedAt.Default.(func() time.Time)
+	// learningmaterialversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	learningmaterialversion.UpdateDefaultUpdatedAt = learningmaterialversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// learningmaterialversionDescDeleteReason is the schema descriptor for delete_reason field.
+	learningmaterialversionDescDeleteReason := learningmaterialversionMixinFields0[8].Descriptor()
+	// learningmaterialversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	learningmaterialversion.DeleteReasonValidator = learningmaterialversionDescDeleteReason.Validators[0].(func(string) error)
+	// learningmaterialversionDescVersion is the schema descriptor for version field.
+	learningmaterialversionDescVersion := learningmaterialversionMixinFields0[9].Descriptor()
+	// learningmaterialversion.DefaultVersion holds the default value on creation for the version field.
+	learningmaterialversion.DefaultVersion = learningmaterialversionDescVersion.Default.(int64)
+	// learningmaterialversionDescOwnerScope is the schema descriptor for owner_scope field.
+	learningmaterialversionDescOwnerScope := learningmaterialversionMixinFields0[10].Descriptor()
+	// learningmaterialversion.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	learningmaterialversion.DefaultOwnerScope = learningmaterialversionDescOwnerScope.Default.(string)
+	// learningmaterialversion.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	learningmaterialversion.OwnerScopeValidator = learningmaterialversionDescOwnerScope.Validators[0].(func(string) error)
+	// learningmaterialversionDescVersionNo is the schema descriptor for version_no field.
+	learningmaterialversionDescVersionNo := learningmaterialversionMixinFields1[0].Descriptor()
+	// learningmaterialversion.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	learningmaterialversion.VersionNoValidator = learningmaterialversionDescVersionNo.Validators[0].(func(int) error)
+	// learningmaterialversionDescStatus is the schema descriptor for status field.
+	learningmaterialversionDescStatus := learningmaterialversionMixinFields1[1].Descriptor()
+	// learningmaterialversion.DefaultStatus holds the default value on creation for the status field.
+	learningmaterialversion.DefaultStatus = learningmaterialversionDescStatus.Default.(string)
+	// learningmaterialversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	learningmaterialversion.StatusValidator = learningmaterialversionDescStatus.Validators[0].(func(string) error)
+	// learningmaterialversionDescContentLanguage is the schema descriptor for content_language field.
+	learningmaterialversionDescContentLanguage := learningmaterialversionMixinFields1[5].Descriptor()
+	// learningmaterialversion.DefaultContentLanguage holds the default value on creation for the content_language field.
+	learningmaterialversion.DefaultContentLanguage = learningmaterialversionDescContentLanguage.Default.(string)
+	// learningmaterialversion.ContentLanguageValidator is a validator for the "content_language" field. It is called by the builders before save.
+	learningmaterialversion.ContentLanguageValidator = learningmaterialversionDescContentLanguage.Validators[0].(func(string) error)
+	// learningmaterialversionDescChangeNote is the schema descriptor for change_note field.
+	learningmaterialversionDescChangeNote := learningmaterialversionMixinFields1[7].Descriptor()
+	// learningmaterialversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	learningmaterialversion.ChangeNoteValidator = learningmaterialversionDescChangeNote.Validators[0].(func(string) error)
+	// learningmaterialversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	learningmaterialversionDescSnapshotKey := learningmaterialversionMixinFields1[9].Descriptor()
+	// learningmaterialversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	learningmaterialversion.SnapshotKeyValidator = learningmaterialversionDescSnapshotKey.Validators[0].(func(string) error)
+	// learningmaterialversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	learningmaterialversionDescSnapshotSha256 := learningmaterialversionMixinFields1[10].Descriptor()
+	// learningmaterialversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	learningmaterialversion.SnapshotSha256Validator = learningmaterialversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// learningmaterialversionDescGradeLevels is the schema descriptor for grade_levels field.
+	learningmaterialversionDescGradeLevels := learningmaterialversionFields[4].Descriptor()
+	// learningmaterialversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
+	learningmaterialversion.DefaultGradeLevels = learningmaterialversionDescGradeLevels.Default.([]int)
+	// learningmaterialversionDescTopicIds is the schema descriptor for topic_ids field.
+	learningmaterialversionDescTopicIds := learningmaterialversionFields[5].Descriptor()
+	// learningmaterialversion.DefaultTopicIds holds the default value on creation for the topic_ids field.
+	learningmaterialversion.DefaultTopicIds = learningmaterialversionDescTopicIds.Default.([]uuid.UUID)
+	// learningmaterialversionDescObjectiveIds is the schema descriptor for objective_ids field.
+	learningmaterialversionDescObjectiveIds := learningmaterialversionFields[6].Descriptor()
+	// learningmaterialversion.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	learningmaterialversion.DefaultObjectiveIds = learningmaterialversionDescObjectiveIds.Default.([]uuid.UUID)
+	// learningmaterialversionDescMediaRefs is the schema descriptor for media_refs field.
+	learningmaterialversionDescMediaRefs := learningmaterialversionFields[7].Descriptor()
+	// learningmaterialversion.DefaultMediaRefs holds the default value on creation for the media_refs field.
+	learningmaterialversion.DefaultMediaRefs = learningmaterialversionDescMediaRefs.Default.([]uuid.UUID)
+	// learningmaterialversionDescWorkedExampleIds is the schema descriptor for worked_example_ids field.
+	learningmaterialversionDescWorkedExampleIds := learningmaterialversionFields[8].Descriptor()
+	// learningmaterialversion.DefaultWorkedExampleIds holds the default value on creation for the worked_example_ids field.
+	learningmaterialversion.DefaultWorkedExampleIds = learningmaterialversionDescWorkedExampleIds.Default.([]string)
+	// learningmaterialversionDescID is the schema descriptor for id field.
+	learningmaterialversionDescID := learningmaterialversionMixinFields0[0].Descriptor()
+	// learningmaterialversion.DefaultID holds the default value on creation for the id field.
+	learningmaterialversion.DefaultID = learningmaterialversionDescID.Default.(func() uuid.UUID)
 	learningobjectiveMixin := schema.LearningObjective{}.Mixin()
 	learningobjectiveMixinHooks0 := learningobjectiveMixin[0].Hooks()
 	learningobjective.Hooks[0] = learningobjectiveMixinHooks0[0]
@@ -410,6 +683,138 @@ func init() {
 	learningobjectiveDescID := learningobjectiveMixinFields0[0].Descriptor()
 	// learningobjective.DefaultID holds the default value on creation for the id field.
 	learningobjective.DefaultID = learningobjectiveDescID.Default.(func() uuid.UUID)
+	lessonMixin := schema.Lesson{}.Mixin()
+	lessonMixinHooks0 := lessonMixin[0].Hooks()
+	lesson.Hooks[0] = lessonMixinHooks0[0]
+	lessonMixinInters0 := lessonMixin[0].Interceptors()
+	lesson.Interceptors[0] = lessonMixinInters0[0]
+	lessonMixinFields0 := lessonMixin[0].Fields()
+	_ = lessonMixinFields0
+	lessonMixinFields1 := lessonMixin[1].Fields()
+	_ = lessonMixinFields1
+	lessonFields := schema.Lesson{}.Fields()
+	_ = lessonFields
+	// lessonDescCreatedAt is the schema descriptor for created_at field.
+	lessonDescCreatedAt := lessonMixinFields0[2].Descriptor()
+	// lesson.DefaultCreatedAt holds the default value on creation for the created_at field.
+	lesson.DefaultCreatedAt = lessonDescCreatedAt.Default.(func() time.Time)
+	// lessonDescUpdatedAt is the schema descriptor for updated_at field.
+	lessonDescUpdatedAt := lessonMixinFields0[4].Descriptor()
+	// lesson.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	lesson.DefaultUpdatedAt = lessonDescUpdatedAt.Default.(func() time.Time)
+	// lesson.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	lesson.UpdateDefaultUpdatedAt = lessonDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// lessonDescDeleteReason is the schema descriptor for delete_reason field.
+	lessonDescDeleteReason := lessonMixinFields0[8].Descriptor()
+	// lesson.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	lesson.DeleteReasonValidator = lessonDescDeleteReason.Validators[0].(func(string) error)
+	// lessonDescVersion is the schema descriptor for version field.
+	lessonDescVersion := lessonMixinFields0[9].Descriptor()
+	// lesson.DefaultVersion holds the default value on creation for the version field.
+	lesson.DefaultVersion = lessonDescVersion.Default.(int64)
+	// lessonDescOwnerScope is the schema descriptor for owner_scope field.
+	lessonDescOwnerScope := lessonMixinFields0[10].Descriptor()
+	// lesson.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	lesson.DefaultOwnerScope = lessonDescOwnerScope.Default.(string)
+	// lesson.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	lesson.OwnerScopeValidator = lessonDescOwnerScope.Validators[0].(func(string) error)
+	// lessonDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	lessonDescLatestVersionNo := lessonMixinFields1[1].Descriptor()
+	// lesson.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	lesson.DefaultLatestVersionNo = lessonDescLatestVersionNo.Default.(int)
+	// lesson.LatestVersionNoValidator is a validator for the "latest_version_no" field. It is called by the builders before save.
+	lesson.LatestVersionNoValidator = lessonDescLatestVersionNo.Validators[0].(func(int) error)
+	// lessonDescID is the schema descriptor for id field.
+	lessonDescID := lessonMixinFields0[0].Descriptor()
+	// lesson.DefaultID holds the default value on creation for the id field.
+	lesson.DefaultID = lessonDescID.Default.(func() uuid.UUID)
+	lessonversionMixin := schema.LessonVersion{}.Mixin()
+	lessonversionMixinHooks0 := lessonversionMixin[0].Hooks()
+	lessonversion.Hooks[0] = lessonversionMixinHooks0[0]
+	lessonversionMixinInters0 := lessonversionMixin[0].Interceptors()
+	lessonversion.Interceptors[0] = lessonversionMixinInters0[0]
+	lessonversionMixinFields0 := lessonversionMixin[0].Fields()
+	_ = lessonversionMixinFields0
+	lessonversionMixinFields1 := lessonversionMixin[1].Fields()
+	_ = lessonversionMixinFields1
+	lessonversionFields := schema.LessonVersion{}.Fields()
+	_ = lessonversionFields
+	// lessonversionDescCreatedAt is the schema descriptor for created_at field.
+	lessonversionDescCreatedAt := lessonversionMixinFields0[2].Descriptor()
+	// lessonversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	lessonversion.DefaultCreatedAt = lessonversionDescCreatedAt.Default.(func() time.Time)
+	// lessonversionDescUpdatedAt is the schema descriptor for updated_at field.
+	lessonversionDescUpdatedAt := lessonversionMixinFields0[4].Descriptor()
+	// lessonversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	lessonversion.DefaultUpdatedAt = lessonversionDescUpdatedAt.Default.(func() time.Time)
+	// lessonversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	lessonversion.UpdateDefaultUpdatedAt = lessonversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// lessonversionDescDeleteReason is the schema descriptor for delete_reason field.
+	lessonversionDescDeleteReason := lessonversionMixinFields0[8].Descriptor()
+	// lessonversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	lessonversion.DeleteReasonValidator = lessonversionDescDeleteReason.Validators[0].(func(string) error)
+	// lessonversionDescVersion is the schema descriptor for version field.
+	lessonversionDescVersion := lessonversionMixinFields0[9].Descriptor()
+	// lessonversion.DefaultVersion holds the default value on creation for the version field.
+	lessonversion.DefaultVersion = lessonversionDescVersion.Default.(int64)
+	// lessonversionDescOwnerScope is the schema descriptor for owner_scope field.
+	lessonversionDescOwnerScope := lessonversionMixinFields0[10].Descriptor()
+	// lessonversion.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	lessonversion.DefaultOwnerScope = lessonversionDescOwnerScope.Default.(string)
+	// lessonversion.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	lessonversion.OwnerScopeValidator = lessonversionDescOwnerScope.Validators[0].(func(string) error)
+	// lessonversionDescVersionNo is the schema descriptor for version_no field.
+	lessonversionDescVersionNo := lessonversionMixinFields1[0].Descriptor()
+	// lessonversion.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	lessonversion.VersionNoValidator = lessonversionDescVersionNo.Validators[0].(func(int) error)
+	// lessonversionDescStatus is the schema descriptor for status field.
+	lessonversionDescStatus := lessonversionMixinFields1[1].Descriptor()
+	// lessonversion.DefaultStatus holds the default value on creation for the status field.
+	lessonversion.DefaultStatus = lessonversionDescStatus.Default.(string)
+	// lessonversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	lessonversion.StatusValidator = lessonversionDescStatus.Validators[0].(func(string) error)
+	// lessonversionDescContentLanguage is the schema descriptor for content_language field.
+	lessonversionDescContentLanguage := lessonversionMixinFields1[5].Descriptor()
+	// lessonversion.DefaultContentLanguage holds the default value on creation for the content_language field.
+	lessonversion.DefaultContentLanguage = lessonversionDescContentLanguage.Default.(string)
+	// lessonversion.ContentLanguageValidator is a validator for the "content_language" field. It is called by the builders before save.
+	lessonversion.ContentLanguageValidator = lessonversionDescContentLanguage.Validators[0].(func(string) error)
+	// lessonversionDescChangeNote is the schema descriptor for change_note field.
+	lessonversionDescChangeNote := lessonversionMixinFields1[7].Descriptor()
+	// lessonversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	lessonversion.ChangeNoteValidator = lessonversionDescChangeNote.Validators[0].(func(string) error)
+	// lessonversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	lessonversionDescSnapshotKey := lessonversionMixinFields1[9].Descriptor()
+	// lessonversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	lessonversion.SnapshotKeyValidator = lessonversionDescSnapshotKey.Validators[0].(func(string) error)
+	// lessonversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	lessonversionDescSnapshotSha256 := lessonversionMixinFields1[10].Descriptor()
+	// lessonversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	lessonversion.SnapshotSha256Validator = lessonversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// lessonversionDescGradeLevels is the schema descriptor for grade_levels field.
+	lessonversionDescGradeLevels := lessonversionFields[4].Descriptor()
+	// lessonversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
+	lessonversion.DefaultGradeLevels = lessonversionDescGradeLevels.Default.([]int)
+	// lessonversionDescTopicIds is the schema descriptor for topic_ids field.
+	lessonversionDescTopicIds := lessonversionFields[5].Descriptor()
+	// lessonversion.DefaultTopicIds holds the default value on creation for the topic_ids field.
+	lessonversion.DefaultTopicIds = lessonversionDescTopicIds.Default.([]uuid.UUID)
+	// lessonversionDescObjectiveIds is the schema descriptor for objective_ids field.
+	lessonversionDescObjectiveIds := lessonversionFields[6].Descriptor()
+	// lessonversion.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	lessonversion.DefaultObjectiveIds = lessonversionDescObjectiveIds.Default.([]uuid.UUID)
+	// lessonversionDescMediaRefs is the schema descriptor for media_refs field.
+	lessonversionDescMediaRefs := lessonversionFields[7].Descriptor()
+	// lessonversion.DefaultMediaRefs holds the default value on creation for the media_refs field.
+	lessonversion.DefaultMediaRefs = lessonversionDescMediaRefs.Default.([]uuid.UUID)
+	// lessonversionDescWorkedExampleIds is the schema descriptor for worked_example_ids field.
+	lessonversionDescWorkedExampleIds := lessonversionFields[8].Descriptor()
+	// lessonversion.DefaultWorkedExampleIds holds the default value on creation for the worked_example_ids field.
+	lessonversion.DefaultWorkedExampleIds = lessonversionDescWorkedExampleIds.Default.([]string)
+	// lessonversionDescID is the schema descriptor for id field.
+	lessonversionDescID := lessonversionMixinFields0[0].Descriptor()
+	// lessonversion.DefaultID holds the default value on creation for the id field.
+	lessonversion.DefaultID = lessonversionDescID.Default.(func() uuid.UUID)
 	loversionmappingMixin := schema.LoVersionMapping{}.Mixin()
 	loversionmappingMixinHooks0 := loversionmappingMixin[0].Hooks()
 	loversionmapping.Hooks[0] = loversionmappingMixinHooks0[0]
@@ -685,6 +1090,175 @@ func init() {
 	questionDescID := questionMixinFields0[0].Descriptor()
 	// question.DefaultID holds the default value on creation for the id field.
 	question.DefaultID = questionDescID.Default.(func() uuid.UUID)
+	questionsetMixin := schema.QuestionSet{}.Mixin()
+	questionsetMixinHooks0 := questionsetMixin[0].Hooks()
+	questionset.Hooks[0] = questionsetMixinHooks0[0]
+	questionsetMixinInters0 := questionsetMixin[0].Interceptors()
+	questionset.Interceptors[0] = questionsetMixinInters0[0]
+	questionsetMixinFields0 := questionsetMixin[0].Fields()
+	_ = questionsetMixinFields0
+	questionsetMixinFields1 := questionsetMixin[1].Fields()
+	_ = questionsetMixinFields1
+	questionsetFields := schema.QuestionSet{}.Fields()
+	_ = questionsetFields
+	// questionsetDescCreatedAt is the schema descriptor for created_at field.
+	questionsetDescCreatedAt := questionsetMixinFields0[2].Descriptor()
+	// questionset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questionset.DefaultCreatedAt = questionsetDescCreatedAt.Default.(func() time.Time)
+	// questionsetDescUpdatedAt is the schema descriptor for updated_at field.
+	questionsetDescUpdatedAt := questionsetMixinFields0[4].Descriptor()
+	// questionset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questionset.DefaultUpdatedAt = questionsetDescUpdatedAt.Default.(func() time.Time)
+	// questionset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questionset.UpdateDefaultUpdatedAt = questionsetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questionsetDescDeleteReason is the schema descriptor for delete_reason field.
+	questionsetDescDeleteReason := questionsetMixinFields0[8].Descriptor()
+	// questionset.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questionset.DeleteReasonValidator = questionsetDescDeleteReason.Validators[0].(func(string) error)
+	// questionsetDescVersion is the schema descriptor for version field.
+	questionsetDescVersion := questionsetMixinFields0[9].Descriptor()
+	// questionset.DefaultVersion holds the default value on creation for the version field.
+	questionset.DefaultVersion = questionsetDescVersion.Default.(int64)
+	// questionsetDescOwnerScope is the schema descriptor for owner_scope field.
+	questionsetDescOwnerScope := questionsetMixinFields0[10].Descriptor()
+	// questionset.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	questionset.DefaultOwnerScope = questionsetDescOwnerScope.Default.(string)
+	// questionset.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	questionset.OwnerScopeValidator = questionsetDescOwnerScope.Validators[0].(func(string) error)
+	// questionsetDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	questionsetDescLatestVersionNo := questionsetMixinFields1[1].Descriptor()
+	// questionset.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	questionset.DefaultLatestVersionNo = questionsetDescLatestVersionNo.Default.(int)
+	// questionset.LatestVersionNoValidator is a validator for the "latest_version_no" field. It is called by the builders before save.
+	questionset.LatestVersionNoValidator = questionsetDescLatestVersionNo.Validators[0].(func(int) error)
+	// questionsetDescID is the schema descriptor for id field.
+	questionsetDescID := questionsetMixinFields0[0].Descriptor()
+	// questionset.DefaultID holds the default value on creation for the id field.
+	questionset.DefaultID = questionsetDescID.Default.(func() uuid.UUID)
+	questionsetitemMixin := schema.QuestionSetItem{}.Mixin()
+	questionsetitemMixinHooks0 := questionsetitemMixin[0].Hooks()
+	questionsetitem.Hooks[0] = questionsetitemMixinHooks0[0]
+	questionsetitemMixinInters0 := questionsetitemMixin[0].Interceptors()
+	questionsetitem.Interceptors[0] = questionsetitemMixinInters0[0]
+	questionsetitemMixinFields0 := questionsetitemMixin[0].Fields()
+	_ = questionsetitemMixinFields0
+	questionsetitemFields := schema.QuestionSetItem{}.Fields()
+	_ = questionsetitemFields
+	// questionsetitemDescCreatedAt is the schema descriptor for created_at field.
+	questionsetitemDescCreatedAt := questionsetitemMixinFields0[2].Descriptor()
+	// questionsetitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questionsetitem.DefaultCreatedAt = questionsetitemDescCreatedAt.Default.(func() time.Time)
+	// questionsetitemDescUpdatedAt is the schema descriptor for updated_at field.
+	questionsetitemDescUpdatedAt := questionsetitemMixinFields0[4].Descriptor()
+	// questionsetitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questionsetitem.DefaultUpdatedAt = questionsetitemDescUpdatedAt.Default.(func() time.Time)
+	// questionsetitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questionsetitem.UpdateDefaultUpdatedAt = questionsetitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questionsetitemDescDeleteReason is the schema descriptor for delete_reason field.
+	questionsetitemDescDeleteReason := questionsetitemMixinFields0[8].Descriptor()
+	// questionsetitem.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questionsetitem.DeleteReasonValidator = questionsetitemDescDeleteReason.Validators[0].(func(string) error)
+	// questionsetitemDescVersion is the schema descriptor for version field.
+	questionsetitemDescVersion := questionsetitemMixinFields0[9].Descriptor()
+	// questionsetitem.DefaultVersion holds the default value on creation for the version field.
+	questionsetitem.DefaultVersion = questionsetitemDescVersion.Default.(int64)
+	// questionsetitemDescOwnerScope is the schema descriptor for owner_scope field.
+	questionsetitemDescOwnerScope := questionsetitemMixinFields0[10].Descriptor()
+	// questionsetitem.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	questionsetitem.DefaultOwnerScope = questionsetitemDescOwnerScope.Default.(string)
+	// questionsetitem.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	questionsetitem.OwnerScopeValidator = questionsetitemDescOwnerScope.Validators[0].(func(string) error)
+	// questionsetitemDescID is the schema descriptor for id field.
+	questionsetitemDescID := questionsetitemMixinFields0[0].Descriptor()
+	// questionsetitem.DefaultID holds the default value on creation for the id field.
+	questionsetitem.DefaultID = questionsetitemDescID.Default.(func() uuid.UUID)
+	questionsetversionMixin := schema.QuestionSetVersion{}.Mixin()
+	questionsetversionMixinHooks0 := questionsetversionMixin[0].Hooks()
+	questionsetversion.Hooks[0] = questionsetversionMixinHooks0[0]
+	questionsetversionMixinInters0 := questionsetversionMixin[0].Interceptors()
+	questionsetversion.Interceptors[0] = questionsetversionMixinInters0[0]
+	questionsetversionMixinFields0 := questionsetversionMixin[0].Fields()
+	_ = questionsetversionMixinFields0
+	questionsetversionMixinFields1 := questionsetversionMixin[1].Fields()
+	_ = questionsetversionMixinFields1
+	questionsetversionFields := schema.QuestionSetVersion{}.Fields()
+	_ = questionsetversionFields
+	// questionsetversionDescCreatedAt is the schema descriptor for created_at field.
+	questionsetversionDescCreatedAt := questionsetversionMixinFields0[2].Descriptor()
+	// questionsetversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questionsetversion.DefaultCreatedAt = questionsetversionDescCreatedAt.Default.(func() time.Time)
+	// questionsetversionDescUpdatedAt is the schema descriptor for updated_at field.
+	questionsetversionDescUpdatedAt := questionsetversionMixinFields0[4].Descriptor()
+	// questionsetversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questionsetversion.DefaultUpdatedAt = questionsetversionDescUpdatedAt.Default.(func() time.Time)
+	// questionsetversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questionsetversion.UpdateDefaultUpdatedAt = questionsetversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questionsetversionDescDeleteReason is the schema descriptor for delete_reason field.
+	questionsetversionDescDeleteReason := questionsetversionMixinFields0[8].Descriptor()
+	// questionsetversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questionsetversion.DeleteReasonValidator = questionsetversionDescDeleteReason.Validators[0].(func(string) error)
+	// questionsetversionDescVersion is the schema descriptor for version field.
+	questionsetversionDescVersion := questionsetversionMixinFields0[9].Descriptor()
+	// questionsetversion.DefaultVersion holds the default value on creation for the version field.
+	questionsetversion.DefaultVersion = questionsetversionDescVersion.Default.(int64)
+	// questionsetversionDescOwnerScope is the schema descriptor for owner_scope field.
+	questionsetversionDescOwnerScope := questionsetversionMixinFields0[10].Descriptor()
+	// questionsetversion.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	questionsetversion.DefaultOwnerScope = questionsetversionDescOwnerScope.Default.(string)
+	// questionsetversion.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	questionsetversion.OwnerScopeValidator = questionsetversionDescOwnerScope.Validators[0].(func(string) error)
+	// questionsetversionDescVersionNo is the schema descriptor for version_no field.
+	questionsetversionDescVersionNo := questionsetversionMixinFields1[0].Descriptor()
+	// questionsetversion.VersionNoValidator is a validator for the "version_no" field. It is called by the builders before save.
+	questionsetversion.VersionNoValidator = questionsetversionDescVersionNo.Validators[0].(func(int) error)
+	// questionsetversionDescStatus is the schema descriptor for status field.
+	questionsetversionDescStatus := questionsetversionMixinFields1[1].Descriptor()
+	// questionsetversion.DefaultStatus holds the default value on creation for the status field.
+	questionsetversion.DefaultStatus = questionsetversionDescStatus.Default.(string)
+	// questionsetversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	questionsetversion.StatusValidator = questionsetversionDescStatus.Validators[0].(func(string) error)
+	// questionsetversionDescContentLanguage is the schema descriptor for content_language field.
+	questionsetversionDescContentLanguage := questionsetversionMixinFields1[5].Descriptor()
+	// questionsetversion.DefaultContentLanguage holds the default value on creation for the content_language field.
+	questionsetversion.DefaultContentLanguage = questionsetversionDescContentLanguage.Default.(string)
+	// questionsetversion.ContentLanguageValidator is a validator for the "content_language" field. It is called by the builders before save.
+	questionsetversion.ContentLanguageValidator = questionsetversionDescContentLanguage.Validators[0].(func(string) error)
+	// questionsetversionDescChangeNote is the schema descriptor for change_note field.
+	questionsetversionDescChangeNote := questionsetversionMixinFields1[7].Descriptor()
+	// questionsetversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	questionsetversion.ChangeNoteValidator = questionsetversionDescChangeNote.Validators[0].(func(string) error)
+	// questionsetversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	questionsetversionDescSnapshotKey := questionsetversionMixinFields1[9].Descriptor()
+	// questionsetversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	questionsetversion.SnapshotKeyValidator = questionsetversionDescSnapshotKey.Validators[0].(func(string) error)
+	// questionsetversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	questionsetversionDescSnapshotSha256 := questionsetversionMixinFields1[10].Descriptor()
+	// questionsetversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	questionsetversion.SnapshotSha256Validator = questionsetversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// questionsetversionDescGradeLevels is the schema descriptor for grade_levels field.
+	questionsetversionDescGradeLevels := questionsetversionFields[4].Descriptor()
+	// questionsetversion.DefaultGradeLevels holds the default value on creation for the grade_levels field.
+	questionsetversion.DefaultGradeLevels = questionsetversionDescGradeLevels.Default.([]int)
+	// questionsetversionDescTopicIds is the schema descriptor for topic_ids field.
+	questionsetversionDescTopicIds := questionsetversionFields[5].Descriptor()
+	// questionsetversion.DefaultTopicIds holds the default value on creation for the topic_ids field.
+	questionsetversion.DefaultTopicIds = questionsetversionDescTopicIds.Default.([]uuid.UUID)
+	// questionsetversionDescObjectiveIds is the schema descriptor for objective_ids field.
+	questionsetversionDescObjectiveIds := questionsetversionFields[6].Descriptor()
+	// questionsetversion.DefaultObjectiveIds holds the default value on creation for the objective_ids field.
+	questionsetversion.DefaultObjectiveIds = questionsetversionDescObjectiveIds.Default.([]uuid.UUID)
+	// questionsetversionDescMediaRefs is the schema descriptor for media_refs field.
+	questionsetversionDescMediaRefs := questionsetversionFields[7].Descriptor()
+	// questionsetversion.DefaultMediaRefs holds the default value on creation for the media_refs field.
+	questionsetversion.DefaultMediaRefs = questionsetversionDescMediaRefs.Default.([]uuid.UUID)
+	// questionsetversionDescWorkedExampleIds is the schema descriptor for worked_example_ids field.
+	questionsetversionDescWorkedExampleIds := questionsetversionFields[8].Descriptor()
+	// questionsetversion.DefaultWorkedExampleIds holds the default value on creation for the worked_example_ids field.
+	questionsetversion.DefaultWorkedExampleIds = questionsetversionDescWorkedExampleIds.Default.([]string)
+	// questionsetversionDescID is the schema descriptor for id field.
+	questionsetversionDescID := questionsetversionMixinFields0[0].Descriptor()
+	// questionsetversion.DefaultID holds the default value on creation for the id field.
+	questionsetversion.DefaultID = questionsetversionDescID.Default.(func() uuid.UUID)
 	questionversionMixin := schema.QuestionVersion{}.Mixin()
 	questionversionMixinHooks0 := questionversionMixin[0].Hooks()
 	questionversion.Hooks[0] = questionversionMixinHooks0[0]

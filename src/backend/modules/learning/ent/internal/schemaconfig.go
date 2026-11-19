@@ -7,28 +7,37 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	Competency               string // Competency table.
-	ContentRelease           string // ContentRelease table.
-	ContentTransition        string // ContentTransition table.
-	Curriculum               string // Curriculum table.
-	CurriculumVersion        string // CurriculumVersion table.
-	ImportJob                string // ImportJob table.
-	LearningObjective        string // LearningObjective table.
-	LoVersionMapping         string // LoVersionMapping table.
-	MathSvg                  string // MathSvg table.
-	MediaAsset               string // MediaAsset table.
-	MediaUsage               string // MediaUsage table.
-	Question                 string // Question table.
-	QuestionVersion          string // QuestionVersion table.
-	QuestionVersionObjective string // QuestionVersionObjective table.
-	Subject                  string // Subject table.
-	SubjectGrade             string // SubjectGrade table.
-	TenantResourceAssignment string // TenantResourceAssignment table.
-	Textbook                 string // Textbook table.
-	TextbookSection          string // TextbookSection table.
-	TextbookSectionObjective string // TextbookSectionObjective table.
-	TextbookSeries           string // TextbookSeries table.
-	Topic                    string // Topic table.
+	AssessmentBlueprint        string // AssessmentBlueprint table.
+	AssessmentBlueprintVersion string // AssessmentBlueprintVersion table.
+	Competency                 string // Competency table.
+	ContentRelease             string // ContentRelease table.
+	ContentTransition          string // ContentTransition table.
+	Curriculum                 string // Curriculum table.
+	CurriculumVersion          string // CurriculumVersion table.
+	ImportJob                  string // ImportJob table.
+	LearningMaterial           string // LearningMaterial table.
+	LearningMaterialVersion    string // LearningMaterialVersion table.
+	LearningObjective          string // LearningObjective table.
+	Lesson                     string // Lesson table.
+	LessonVersion              string // LessonVersion table.
+	LoVersionMapping           string // LoVersionMapping table.
+	MathSvg                    string // MathSvg table.
+	MediaAsset                 string // MediaAsset table.
+	MediaUsage                 string // MediaUsage table.
+	Question                   string // Question table.
+	QuestionSet                string // QuestionSet table.
+	QuestionSetItem            string // QuestionSetItem table.
+	QuestionSetVersion         string // QuestionSetVersion table.
+	QuestionVersion            string // QuestionVersion table.
+	QuestionVersionObjective   string // QuestionVersionObjective table.
+	Subject                    string // Subject table.
+	SubjectGrade               string // SubjectGrade table.
+	TenantResourceAssignment   string // TenantResourceAssignment table.
+	Textbook                   string // Textbook table.
+	TextbookSection            string // TextbookSection table.
+	TextbookSectionObjective   string // TextbookSectionObjective table.
+	TextbookSeries             string // TextbookSeries table.
+	Topic                      string // Topic table.
 }
 
 type schemaCtxKey struct{}

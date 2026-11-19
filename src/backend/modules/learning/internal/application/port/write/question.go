@@ -24,6 +24,8 @@ type QuestionStore interface {
 	InsertQuestionVersion(ctx context.Context, v dto.QuestionVersion) error
 	QuestionVersion(ctx context.Context, questionID uuid.UUID, versionNo int) (dto.QuestionVersion, error)
 	QuestionVersions(ctx context.Context, questionID uuid.UUID) ([]dto.QuestionVersion, error)
+	// QuestionVersionByID returns a version by its id (references of question sets and blueprints, F024).
+	QuestionVersionByID(ctx context.Context, id uuid.UUID) (dto.QuestionVersion, error)
 	// UpdateQuestionVersion saves the content of a draft and replaces its objectives.
 	UpdateQuestionVersion(ctx context.Context, v dto.QuestionVersion, ifRow int64) (dto.QuestionVersion, error)
 

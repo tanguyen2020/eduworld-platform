@@ -69,8 +69,25 @@
       "description": "Gợi ý theo cấp (tối đa 5), CHỈ phía server; client lấy từng cấp qua POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next. Số gợi ý đã dùng ghi vào learning event (hints_used)."
     },
     "worked_example_ref": {
-      "$ref": "#/$defs/uuid",
-      "description": "Tham chiếu khối worked_example trong lesson/learning material cùng LO (CONTENT_MODEL §9.2); client hiện nút \"Xem ví dụ mẫu\" sau khi trả lời sai [Proposed]."
+      "type": "object",
+      "description": "Tham chiếu khối worked_example (CONTENT_MODEL §9.2, QUESTION_BANK §2): content_item_id là id lesson hoặc learning material cùng phạm vi, block_id là id khối (we_…); khối phải có ít nhất một LO chung với câu hỏi (F024-AC-08). Client hiện nút \"Xem ví dụ mẫu\" sau khi trả lời sai [Proposed].",
+      "required": [
+        "content_item_id",
+        "block_id"
+      ],
+      "properties": {
+        "content_item_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "block_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^we_[a-z0-9_]{1,40}$"
+        }
+      },
+      "additionalProperties": false
     },
     "min_response_ms": {
       "type": "integer",

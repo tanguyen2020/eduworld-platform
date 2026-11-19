@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/assessment-blueprint.schema.json",
+  "title": "EduWorld Assessment Blueprint Version",
+  "description": "Ma trận đề cho Exam Engine (docs/02-learning/EXAM_ENGINE.md §3). Phiên bản published là bất biến (ADR-0015).",
+  "type": "object",
+  "required": ["assessment_blueprint_id", "version", "title", "exam_type", "subject_id", "grade_levels", "duration_sec", "sections", "total_points", "result_release", "attempt_policy", "meta"],
+  "properties": {
+    "assessment_blueprint_version_id": { "$ref": "#/$defs/uuid" },
+    "assessment_blueprint_id": { "$ref": "#/$defs/uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "$ref": "question.schema.json#/$defs/i18nText" },
+    "instructions": { "$ref": "question.schema.json#/$defs/richContent" },
+    "exam_type": { "enum": ["practice_test", "mock", "chapter", "semester", "subject", "custom"] },
+    "subject_id": { "$ref": "#/$defs/uuid" },
+    "grade_levels": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
+    "duration_sec": { "type": "integer", "minimum": 60, "maximum": 14400 },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/section" }
+    },
+    "total_points": { "type": "number", "exclusiveMinimum": 0 },
+    "efficacy_instrument": { "type": "boolean", "default": false, "description": "Đề đo hiệu quả (F035, LEARNING_EFFICACY_PLAN §3.2): chỉ nội dung platform, variants.strategy = fixed và mọi rule dùng fixed_question_version_ids trỏ câu efficacy_instrument; không dùng cho createExamSession của tenant, không gán cho tenant." },
+    "grading_scale": {
+      "type": "object",
+      "description": "Quy đổi và xếp loại hiển thị.",
+      "properties": {
+        "display_max": { "type": "number", "default": 10 },
+        "rounding": { "type": "number", "default": 0.25 },
+        "bands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "min_ratio"],
+            "properties": {
+              "label": { "type": "string", "maxLength": 128 },
+              "min_ratio": { "type": "number", "minimum": 0, "maximum": 1 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "variants": {
+      "type": "object",
+      "required": ["strategy"],
+      "properties": {
+        "strategy": { "enum": ["fixed", "independent_draw", "per_student"] },
+        "count": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 },
+        "balance": {
+          "type": "object",
+          "description": "Cân bằng độ khó giữa các biến thể khi independent_draw (EXAM_ENGINE §4.1, EDU_FIT_REVIEW PED-11) [Proposed].",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "max_mean_p_diff": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.05, "description": "Chênh lệch tối đa giữa tỉ lệ điểm kỳ vọng P_v của các biến thể (tính từ p_value hoặc difficulty)." }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "shuffle_options": { "type": "boolean", "default": true },
+    "navigation": { "enum": ["free", "sequential_no_return"], "default": "free" },
+    "result_release": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease", "description": "immediate; after_close (sau khi cửa sổ thi đóng); manual (school_admin/academic_manager công bố)." },
+        "feedback_timing": { "allOf": [{ "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming" }, { "not": { "const": "immediate" } }], "default": "after_close", "description": "Thời điểm hiện đúng/sai và giải thích từng câu; đề không dùng immediate (EXAM_ENGINE §3, ACTIVITY_ENGINE §8.1)." },
+        "show_correct_answers": { "type": "boolean", "default": true },
+        "show_explanations": { "type": "boolean", "default": true },
+        "show_objective_analysis": { "type": "boolean", "default": true }
+      },
+      "additionalProperties": false
+    },
+    "attempt_policy": {
+      "type": "object",
+      "required": ["max_attempts", "score_policy"],
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "score_policy": { "enum": ["best", "last", "first"] },
+        "cooldown_minutes": { "type": "integer", "minimum": 0, "default": 0 }
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "required": ["status", "author_id", "owner_scope", "curriculum_version_id"],
+      "properties": {
+        "curriculum_version_id": { "$ref": "#/$defs/uuid" },
+        "status": { "enum": ["draft", "in_review", "approved", "published", "archived", "rejected"] },
+        "author_id": { "$ref": "#/$defs/uuid" },
+        "reviewer_id": { "$ref": "#/$defs/uuid" },
+        "published_at": { "type": "string", "format": "date-time" },
+        "owner_scope": { "enum": ["platform", "tenant"], "description": "platform: tenant_id rỗng, tenant thấy khi được gán; tenant: thuộc riêng tenant_id (ADR-0005, ADR-0029)" },
+        "tenant_id": { "$ref": "#/$defs/uuid" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "section": {
+      "type": "object",
+      "required": ["id", "title", "rules"],
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^sec_[a-z0-9_]{1,20}$" },
+        "title": { "$ref": "question.schema.json#/$defs/i18nText" },
+        "shuffle_items": { "type": "boolean", "default": true },
+        "time_limit_sec": { "type": "integer", "minimum": 30, "description": "Giới hạn thời gian riêng của section (tùy chọn)." },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/rule" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "required": ["count", "points_each"],
+      "properties": {
+        "objective_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "topic_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "difficulty": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "max": { "type": "integer", "minimum": 1, "maximum": 5 }
+          },
+          "additionalProperties": false
+        },
+        "types": { "type": "array", "items": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType" } },
+        "fixed_question_version_ids": {
+          "type": "array",
+          "description": "Nếu có: dùng đúng các câu này thay vì rút ngẫu nhiên; độ dài phải bằng count.",
+          "items": { "$ref": "#/$defs/uuid" }
+        },
+        "count": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "points_each": { "type": "number", "exclusiveMinimum": 0 },
+        "prefer_exam_only": { "type": "boolean", "default": true }
+      },
+      "anyOf": [
+        { "required": ["objective_ids"], "properties": { "objective_ids": true } },
+        { "required": ["topic_ids"], "properties": { "topic_ids": true } },
+        { "required": ["fixed_question_version_ids"], "properties": { "fixed_question_version_ids": true } }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

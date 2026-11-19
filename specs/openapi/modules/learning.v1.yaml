@@ -2795,6 +2795,16 @@ paths:
             maxLength: 200
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: topic_id
+          in: query
+          description: Nội dung gắn chủ đề này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: objective_id
+          in: query
+          description: Nội dung gắn LO này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - name: status
           in: query
           schema:
@@ -2882,6 +2892,67 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteCmsQuestionSet
+      x-portal-action: action.content_studio.question_sets.edit
+      summary: Xóa question set = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/QuestionSetIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/question-sets/{question_set_id}/versions/{version}:pool-stats:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getQuestionSetPoolStats
+      x-portal-action: action.content_studio.question_sets.view
+      summary: Pool khả dụng theo từng luật của question set (version con trỏ hiện hành trong phạm vi tenant) — cờ insufficient/warning (F024)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/QuestionSetIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolStats'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /cms/learning/question-sets/{question_set_id}/versions:
     post:
       x-service: learning
@@ -2938,7 +3009,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/QuestionSetAuthoringInput'
+              $ref: '#/components/schemas/AuthoringPatch'
       responses:
         '200':
           description: OK
@@ -2980,6 +3051,16 @@ paths:
             maxLength: 200
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: topic_id
+          in: query
+          description: Nội dung gắn chủ đề này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: objective_id
+          in: query
+          description: Nội dung gắn LO này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - name: status
           in: query
           schema:
@@ -3067,6 +3148,67 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteCmsAssessmentBlueprint
+      x-portal-action: action.content_studio.assessments.edit
+      summary: Xóa assessment blueprint = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/BlueprintIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions/{version}:pool-stats:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getAssessmentBlueprintPoolStats
+      x-portal-action: action.content_studio.assessments.view
+      summary: Pool khả dụng theo từng luật của assessment blueprint (version con trỏ hiện hành trong phạm vi tenant) — cờ insufficient/warning (F024)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/BlueprintIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolStats'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions:
     post:
       x-service: learning
@@ -3123,7 +3265,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/AssessmentBlueprintAuthoringInput'
+              $ref: '#/components/schemas/AuthoringPatch'
       responses:
         '200':
           description: OK
@@ -3134,6 +3276,241 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssessmentBlueprintAuthoring'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/learning-materials:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listCmsLearningMaterials
+      x-portal-action: action.content_studio.lessons.view
+      summary: Danh sách learning material (học liệu, gồm ví dụ mẫu — F024) (learning_content.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: topic_id
+          in: query
+          description: Nội dung gắn chủ đề này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: objective_id
+          in: query
+          description: Nội dung gắn LO này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LearningMaterialAuthoring'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createCmsLearningMaterial
+      x-portal-action: action.content_studio.lessons.edit
+      summary: Tạo learning material — version 1 draft (learning_content.write)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningMaterialAuthoringInput'
+      responses:
+        '201':
+          description: Đã tạo (version 1 draft)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningMaterialAuthoring'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/learning-materials/{learning_material_id}:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: getCmsLearningMaterial
+      x-portal-action: action.content_studio.lessons.view
+      summary: Chi tiết learning material — version mới nhất + con trỏ release
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningMaterialIdPath'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningMaterialAuthoring'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteCmsLearningMaterial
+      x-portal-action: action.content_studio.lessons.edit
+      summary: Xóa learning material = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningMaterialIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /cms/learning/learning-materials/{learning_material_id}/versions:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createCmsLearningMaterialVersion
+      x-portal-action: action.content_studio.lessons.edit
+      summary: Tạo version draft mới từ một version (ADR-0015)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningMaterialIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewVersionRequest'
+      responses:
+        '201':
+          description: Version draft mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningMaterialAuthoring'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/learning-materials/{learning_material_id}/versions/{version}:
+    patch:
+      x-service: learning
+      tags:
+        - cms
+      operationId: updateCmsLearningMaterialDraft
+      x-portal-action: action.content_studio.lessons.edit
+      summary: Sửa version draft (If-Match; CONTENT_NOT_EDITABLE nếu không còn draft)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LearningMaterialIdPath'
+        - $ref: '#/components/parameters/Version'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/LearningMaterialAuthoringPatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningMaterialAuthoring'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -3165,6 +3542,16 @@ paths:
             maxLength: 200
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: topic_id
+          in: query
+          description: Nội dung gắn chủ đề này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: objective_id
+          in: query
+          description: Nội dung gắn LO này (F024)
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - name: status
           in: query
           schema:
@@ -3252,6 +3639,42 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      x-service: learning
+      tags:
+        - cms
+      operationId: deleteCmsLesson
+      x-portal-action: action.content_studio.lessons.edit
+      summary: Xóa bài học = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/LessonIdPath'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã soft-delete
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /cms/learning/lessons/{lesson_id}/versions:
     post:
       x-service: learning
@@ -3308,7 +3731,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/LessonAuthoringInput'
+              $ref: '#/components/schemas/AuthoringPatch'
       responses:
         '200':
           description: OK
@@ -6833,6 +7256,12 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    LearningMaterialIdPath:
+      name: learning_material_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     TranslationJobIdPath:
       name: job_id
       in: path
@@ -9000,10 +9429,12 @@ components:
           enum:
             - questions_xlsx
             - questions_csv
+            - questions_qti_lite
+            - content_json
             - lessons_docx
             - curriculum_yaml
             - curriculum_csv
-          description: curriculum_yaml/curriculum_csv cần curriculum.write (F021); file theo specs/schemas/curriculum-import.schema.json
+          description: curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx chưa hỗ trợ (422 VALIDATION_FAILED, errors[].code = IMPORT_KIND_NOT_SUPPORTED)
         dry_run:
           type: boolean
           default: false
@@ -9848,12 +10279,72 @@ components:
             $ref: '#/components/schemas/GradeLevel'
         default_feedback_timing:
           $ref: '#/components/schemas/FeedbackTiming'
+        description:
+          $ref: '#/components/schemas/LearningText'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Uuid'
         definition:
           type: object
-          description: items tĩnh hoặc selection rules (specs/schemas/question-set.schema.json)
+          description: kind, purpose, items tĩnh và/hoặc selection_rules, shuffle_items, shuffle_options, estimated_duration_sec (specs/schemas/question-set.schema.json, F024)
           additionalProperties: true
         content_language:
           $ref: '#/components/schemas/ContentLanguage'
+    PoolStats:
+      type: object
+      description: Kích thước pool theo luật (F024-AC-04, AC-11) — available = số câu có con trỏ release trong phạm vi tenant khớp luật
+      required:
+        - rules
+      properties:
+        rules:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required:
+              - rule_index
+              - required
+              - available
+              - insufficient
+              - warning
+            properties:
+              section_id:
+                type: string
+                maxLength: 64
+              rule_index:
+                type: integer
+                minimum: 0
+              count:
+                type: integer
+                minimum: 0
+              required:
+                type: integer
+                minimum: 0
+                description: 'Số câu cần: count (× variants.count với independent_draw)'
+              available:
+                type: integer
+                minimum: 0
+              insufficient:
+                type: boolean
+              warning:
+                type: boolean
+                description: 'Set: pool < 3 × count'
+    AuthoringPatch:
+      type: object
+      minProperties: 1
+      description: 'Merge-patch của bản nháp (F024): các trường như *AuthoringInput tương ứng, tất cả tùy chọn; null xóa trường tùy chọn; server kiểm lại cả version sau khi gộp'
+      additionalProperties: true
     AssessmentBlueprintAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'
@@ -9888,9 +10379,23 @@ components:
           $ref: '#/components/schemas/FeedbackTiming'
         result_release:
           $ref: '#/components/schemas/ResultRelease'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Uuid'
         definition:
           type: object
-          description: sections, total_points, attempt_policy, variants.balance (specs/schemas/assessment-blueprint.schema.json)
+          description: duration_sec, sections, total_points, attempt_policy, result_release, variants, grading_scale, shuffle_options, navigation, instructions (specs/schemas/assessment-blueprint.schema.json, F024)
           additionalProperties: true
         content_language:
           $ref: '#/components/schemas/ContentLanguage'
@@ -9898,6 +10403,203 @@ components:
           type: boolean
           default: false
           description: Đề đo hiệu quả (F035) — chỉ owner_scope = platform, variants.strategy = fixed, mọi rule dùng fixed_question_version_ids trỏ câu efficacy_instrument (ngược lại 422 VALIDATION_FAILED); không dùng được ở createExamSession, không gán cho tenant
+    LearningMaterialAuthoring:
+      allOf:
+        - $ref: '#/components/schemas/ContentVersion'
+        - $ref: '#/components/schemas/LearningMaterialAuthoringInput'
+    LearningMaterialAuthoringInput:
+      type: object
+      description: Học liệu (F024) — như lesson, không có completion_rule/estimated_minutes, thêm material_kind
+      required:
+        - title
+        - blocks
+        - material_kind
+      properties:
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        owner_scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+          default: tenant
+        title:
+          $ref: '#/components/schemas/LearningName'
+        summary:
+          $ref: '#/components/schemas/LearningText'
+        material_kind:
+          type: string
+          enum:
+            - rich_text
+            - pdf
+            - slides
+            - worked_example
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/Uuid'
+        blocks:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: 'Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED)'
+          items:
+            type: object
+            required:
+              - kind
+            properties:
+              kind:
+                type: string
+                enum:
+                  - rich_text
+                  - media
+                  - worked_example
+                  - activity
+              id:
+                type: string
+                maxLength: 64
+                description: Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$)
+              content:
+                type: object
+                description: richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text
+                additionalProperties: true
+              media_ref:
+                $ref: '#/components/schemas/Uuid'
+              caption:
+                $ref: '#/components/schemas/LearningName'
+              title:
+                $ref: '#/components/schemas/LearningName'
+              problem:
+                type: object
+                additionalProperties: true
+                description: richContent đề bài của ví dụ mẫu
+              steps:
+                type: array
+                maxItems: 8
+                items:
+                  type: object
+                  required:
+                    - content
+                  properties:
+                    content:
+                      type: object
+                      additionalProperties: true
+                    audio_ref:
+                      $ref: '#/components/schemas/Uuid'
+              objective_ids:
+                type: array
+                maxItems: 20
+                items:
+                  $ref: '#/components/schemas/Uuid'
+              self_explain_prompt:
+                type: object
+                additionalProperties: true
+              activity_id:
+                $ref: '#/components/schemas/Uuid'
+              required:
+                type: boolean
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
+    LearningMaterialAuthoringPatch:
+      description: Merge-patch của learning material (mọi trường tùy chọn)
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          $ref: '#/components/schemas/LearningName'
+        summary:
+          $ref: '#/components/schemas/LearningText'
+        material_kind:
+          type: string
+          enum:
+            - rich_text
+            - pdf
+            - slides
+            - worked_example
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
+        objective_ids:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/Uuid'
+        blocks:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: 'Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED)'
+          items:
+            type: object
+            required:
+              - kind
+            properties:
+              kind:
+                type: string
+                enum:
+                  - rich_text
+                  - media
+                  - worked_example
+                  - activity
+              id:
+                type: string
+                maxLength: 64
+                description: Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$)
+              content:
+                type: object
+                description: richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text
+                additionalProperties: true
+              media_ref:
+                $ref: '#/components/schemas/Uuid'
+              caption:
+                $ref: '#/components/schemas/LearningName'
+              title:
+                $ref: '#/components/schemas/LearningName'
+              problem:
+                type: object
+                additionalProperties: true
+                description: richContent đề bài của ví dụ mẫu
+              steps:
+                type: array
+                maxItems: 8
+                items:
+                  type: object
+                  required:
+                    - content
+                  properties:
+                    content:
+                      type: object
+                      additionalProperties: true
+                    audio_ref:
+                      $ref: '#/components/schemas/Uuid'
+              objective_ids:
+                type: array
+                maxItems: 20
+                items:
+                  $ref: '#/components/schemas/Uuid'
+              self_explain_prompt:
+                type: object
+                additionalProperties: true
+              activity_id:
+                $ref: '#/components/schemas/Uuid'
+              required:
+                type: boolean
+        content_language:
+          $ref: '#/components/schemas/ContentLanguage'
     LessonAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'
@@ -9939,10 +10641,15 @@ components:
             - all_required_activities
             - any_activity
             - view_only
+        curriculum_version_id:
+          $ref: '#/components/schemas/Uuid'
+        topic_id:
+          $ref: '#/components/schemas/Uuid'
         blocks:
           type: array
           minItems: 1
           maxItems: 100
+          description: 'Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED)'
           items:
             type: object
             required:
@@ -9955,12 +10662,45 @@ components:
                   - media
                   - worked_example
                   - activity
+              id:
+                type: string
+                maxLength: 64
+                description: Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$)
               content:
                 type: object
-                description: richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text/worked_example
+                description: richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text
                 additionalProperties: true
               media_ref:
                 $ref: '#/components/schemas/Uuid'
+              caption:
+                $ref: '#/components/schemas/LearningName'
+              title:
+                $ref: '#/components/schemas/LearningName'
+              problem:
+                type: object
+                additionalProperties: true
+                description: richContent đề bài của ví dụ mẫu
+              steps:
+                type: array
+                maxItems: 8
+                items:
+                  type: object
+                  required:
+                    - content
+                  properties:
+                    content:
+                      type: object
+                      additionalProperties: true
+                    audio_ref:
+                      $ref: '#/components/schemas/Uuid'
+              objective_ids:
+                type: array
+                maxItems: 20
+                items:
+                  $ref: '#/components/schemas/Uuid'
+              self_explain_prompt:
+                type: object
+                additionalProperties: true
               activity_id:
                 $ref: '#/components/schemas/Uuid'
               required:

@@ -2429,7 +2429,8 @@ export interface paths {
         get: operations["getCmsAssessmentBlueprint"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Xóa assessment blueprint = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23) */
+        delete: operations["deleteCmsAssessmentBlueprint"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2467,6 +2468,23 @@ export interface paths {
         head?: never;
         /** Sửa version draft (If-Match; CONTENT_NOT_EDITABLE nếu đã publish) */
         patch: operations["updateCmsAssessmentBlueprintDraft"];
+        trace?: never;
+    };
+    "/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions/{version}:pool-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pool khả dụng theo từng luật của assessment blueprint (version con trỏ hiện hành trong phạm vi tenant) — cờ insufficient/warning (F024) */
+        get: operations["getAssessmentBlueprintPoolStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/cms/learning/competencies": {
@@ -2803,6 +2821,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/learning-materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách learning material (học liệu, gồm ví dụ mẫu — F024) (learning_content.read) */
+        get: operations["listCmsLearningMaterials"];
+        put?: never;
+        /** Tạo learning material — version 1 draft (learning_content.write) */
+        post: operations["createCmsLearningMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/learning-materials/{learning_material_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết learning material — version mới nhất + con trỏ release */
+        get: operations["getCmsLearningMaterial"];
+        put?: never;
+        post?: never;
+        /** Xóa learning material = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23) */
+        delete: operations["deleteCmsLearningMaterial"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/learning-materials/{learning_material_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tạo version draft mới từ một version (ADR-0015) */
+        post: operations["createCmsLearningMaterialVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/learning-materials/{learning_material_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Sửa version draft (If-Match; CONTENT_NOT_EDITABLE nếu không còn draft) */
+        patch: operations["updateCmsLearningMaterialDraft"];
+        trace?: never;
+    };
     "/cms/learning/lessons": {
         parameters: {
             query?: never;
@@ -2832,7 +2920,8 @@ export interface paths {
         get: operations["getCmsLesson"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Xóa bài học = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23) */
+        delete: operations["deleteCmsLesson"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2971,7 +3060,8 @@ export interface paths {
         get: operations["getCmsQuestionSet"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Xóa question set = soft-delete vào Thùng rác (ADR-0028); không xóa được khi đang là con trỏ release (F024-AC-23) */
+        delete: operations["deleteCmsQuestionSet"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3009,6 +3099,23 @@ export interface paths {
         head?: never;
         /** Sửa version draft (If-Match; CONTENT_NOT_EDITABLE nếu đã publish) */
         patch: operations["updateCmsQuestionSetDraft"];
+        trace?: never;
+    };
+    "/cms/learning/question-sets/{question_set_id}/versions/{version}:pool-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pool khả dụng theo từng luật của question set (version con trỏ hiện hành trong phạm vi tenant) — cờ insufficient/warning (F024) */
+        get: operations["getQuestionSetPoolStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/cms/learning/questions": {
@@ -8057,7 +8164,8 @@ export interface components {
         /** @description Ma trận đề; `definition` validate theo specs/schemas/assessment-blueprint.schema.json */
         AssessmentBlueprintAuthoringInput: {
             content_language?: components["schemas"]["ContentLanguage"];
-            /** @description sections, total_points, attempt_policy, variants.balance (specs/schemas/assessment-blueprint.schema.json) */
+            curriculum_version_id?: components["schemas"]["Uuid"];
+            /** @description duration_sec, sections, total_points, attempt_policy, result_release, variants, grading_scale, shuffle_options, navigation, instructions (specs/schemas/assessment-blueprint.schema.json, F024) */
             definition: {
                 [key: string]: unknown;
             };
@@ -8069,6 +8177,7 @@ export interface components {
             exam_type?: components["schemas"]["ExamType"];
             feedback_timing?: components["schemas"]["FeedbackTiming"];
             grade_levels?: components["schemas"]["GradeLevel"][];
+            objective_ids?: components["schemas"]["Uuid"][];
             /**
              * @default tenant
              * @enum {string}
@@ -8078,6 +8187,7 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             tenant_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LearningName"];
+            topic_ids?: components["schemas"]["Uuid"][];
         };
         Assignment: components["schemas"]["AssignmentCreate"] & {
             assignment_id: components["schemas"]["Uuid"];
@@ -8313,6 +8423,10 @@ export interface components {
         AuditLogPage: {
             data: components["schemas"]["AuditLogEntry"][];
             page: components["schemas"]["PageInfo"];
+        };
+        /** @description Merge-patch của bản nháp (F024): các trường như *AuthoringInput tương ứng, tất cả tùy chọn; null xóa trường tùy chọn; server kiểm lại cả version sau khi gộp */
+        AuthoringPatch: {
+            [key: string]: unknown;
         };
         AvatarConfig: {
             accessory_item_ids?: components["schemas"]["Uuid"][];
@@ -8800,10 +8914,10 @@ export interface components {
             dry_run: boolean;
             grade_level?: components["schemas"]["GradeLevel"];
             /**
-             * @description curriculum_yaml/curriculum_csv cần curriculum.write (F021); file theo specs/schemas/curriculum-import.schema.json
+             * @description curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*\/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx chưa hỗ trợ (422 VALIDATION_FAILED, errors[].code = IMPORT_KIND_NOT_SUPPORTED)
              * @enum {string}
              */
-            kind: "questions_xlsx" | "questions_csv" | "lessons_docx" | "curriculum_yaml" | "curriculum_csv";
+            kind: "questions_xlsx" | "questions_csv" | "questions_qti_lite" | "content_json" | "lessons_docx" | "curriculum_yaml" | "curriculum_csv";
             subject_id?: components["schemas"]["Uuid"];
         };
         /**
@@ -10038,6 +10152,99 @@ export interface components {
             /** @enum {string} */
             unit?: "class" | "student";
         };
+        LearningMaterialAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["LearningMaterialAuthoringInput"];
+        /** @description Học liệu (F024) — như lesson, không có completion_rule/estimated_minutes, thêm material_kind */
+        LearningMaterialAuthoringInput: {
+            /** @description Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED) */
+            blocks: {
+                activity_id?: components["schemas"]["Uuid"];
+                caption?: components["schemas"]["LearningName"];
+                /** @description richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text */
+                content?: {
+                    [key: string]: unknown;
+                };
+                /** @description Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$) */
+                id?: string;
+                /** @enum {string} */
+                kind: "rich_text" | "media" | "worked_example" | "activity";
+                media_ref?: components["schemas"]["Uuid"];
+                objective_ids?: components["schemas"]["Uuid"][];
+                /** @description richContent đề bài của ví dụ mẫu */
+                problem?: {
+                    [key: string]: unknown;
+                };
+                required?: boolean;
+                self_explain_prompt?: {
+                    [key: string]: unknown;
+                };
+                steps?: {
+                    audio_ref?: components["schemas"]["Uuid"];
+                    content: {
+                        [key: string]: unknown;
+                    };
+                }[];
+                title?: components["schemas"]["LearningName"];
+            }[];
+            content_language?: components["schemas"]["ContentLanguage"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
+            grade_level?: components["schemas"]["GradeLevel"];
+            /** @enum {string} */
+            material_kind: "rich_text" | "pdf" | "slides" | "worked_example";
+            objective_ids?: components["schemas"]["Uuid"][];
+            /**
+             * @default tenant
+             * @enum {string}
+             */
+            owner_scope: "platform" | "tenant";
+            subject_id?: components["schemas"]["Uuid"];
+            summary?: components["schemas"]["LearningText"];
+            tenant_id?: components["schemas"]["Uuid"];
+            title: components["schemas"]["LearningName"];
+            topic_id?: components["schemas"]["Uuid"];
+        };
+        /** @description Merge-patch của learning material (mọi trường tùy chọn) */
+        LearningMaterialAuthoringPatch: {
+            /** @description Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED) */
+            blocks?: {
+                activity_id?: components["schemas"]["Uuid"];
+                caption?: components["schemas"]["LearningName"];
+                /** @description richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text */
+                content?: {
+                    [key: string]: unknown;
+                };
+                /** @description Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$) */
+                id?: string;
+                /** @enum {string} */
+                kind: "rich_text" | "media" | "worked_example" | "activity";
+                media_ref?: components["schemas"]["Uuid"];
+                objective_ids?: components["schemas"]["Uuid"][];
+                /** @description richContent đề bài của ví dụ mẫu */
+                problem?: {
+                    [key: string]: unknown;
+                };
+                required?: boolean;
+                self_explain_prompt?: {
+                    [key: string]: unknown;
+                };
+                steps?: {
+                    audio_ref?: components["schemas"]["Uuid"];
+                    content: {
+                        [key: string]: unknown;
+                    };
+                }[];
+                title?: components["schemas"]["LearningName"];
+            }[];
+            content_language?: components["schemas"]["ContentLanguage"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
+            grade_level?: components["schemas"]["GradeLevel"];
+            /** @enum {string} */
+            material_kind?: "rich_text" | "pdf" | "slides" | "worked_example";
+            objective_ids?: components["schemas"]["Uuid"][];
+            subject_id?: components["schemas"]["Uuid"];
+            summary?: components["schemas"]["LearningText"];
+            title?: components["schemas"]["LearningName"];
+            topic_id?: components["schemas"]["Uuid"];
+        };
         /** @description Văn bản nội dung học tập: ngôn ngữ gốc (content_language) bắt buộc, bản dịch tùy chọn (ADR-0056 mục 3) */
         LearningName: {
             en?: string;
@@ -10173,20 +10380,40 @@ export interface components {
         };
         LessonAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["LessonAuthoringInput"];
         LessonAuthoringInput: {
+            /** @description Khối nội dung (specs/schemas/lesson.schema.json#/$defs/block): rich_text, media, worked_example; activity khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED) */
             blocks: {
                 activity_id?: components["schemas"]["Uuid"];
-                /** @description richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text/worked_example */
+                caption?: components["schemas"]["LearningName"];
+                /** @description richContent (specs/schemas/question.schema.json#/$defs/richContent) với rich_text */
                 content?: {
                     [key: string]: unknown;
                 };
+                /** @description Bắt buộc với worked_example (^we_[a-z0-9_]{1,40}$) */
+                id?: string;
                 /** @enum {string} */
                 kind: "rich_text" | "media" | "worked_example" | "activity";
                 media_ref?: components["schemas"]["Uuid"];
+                objective_ids?: components["schemas"]["Uuid"][];
+                /** @description richContent đề bài của ví dụ mẫu */
+                problem?: {
+                    [key: string]: unknown;
+                };
                 required?: boolean;
+                self_explain_prompt?: {
+                    [key: string]: unknown;
+                };
+                steps?: {
+                    audio_ref?: components["schemas"]["Uuid"];
+                    content: {
+                        [key: string]: unknown;
+                    };
+                }[];
+                title?: components["schemas"]["LearningName"];
             }[];
             /** @enum {string} */
             completion_rule?: "all_required_activities" | "any_activity" | "view_only";
             content_language?: components["schemas"]["ContentLanguage"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
             estimated_minutes?: number;
             grade_level?: components["schemas"]["GradeLevel"];
             objective_ids?: components["schemas"]["Uuid"][];
@@ -10199,6 +10426,7 @@ export interface components {
             summary?: components["schemas"]["LearningText"];
             tenant_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LearningName"];
+            topic_id?: components["schemas"]["Uuid"];
         };
         LessonCompletion: {
             completed_at: components["schemas"]["Timestamp"];
@@ -10936,6 +11164,20 @@ export interface components {
             school_id: components["schemas"]["Uuid"];
             school_level?: components["schemas"]["SchoolLevel"];
         };
+        /** @description Kích thước pool theo luật (F024-AC-04, AC-11) — available = số câu có con trỏ release trong phạm vi tenant khớp luật */
+        PoolStats: {
+            rules: {
+                available: number;
+                count?: number;
+                insufficient: boolean;
+                /** @description Số câu cần: count (× variants.count với independent_draw) */
+                required: number;
+                rule_index: number;
+                section_id?: string;
+                /** @description Set: pool < 3 × count */
+                warning: boolean;
+            }[];
+        };
         PortalCatalogAction: {
             can_disable: boolean;
             default_enabled: boolean;
@@ -11304,12 +11546,15 @@ export interface components {
         /** @description Dạng soạn thảo question set; `definition` validate theo specs/schemas/question-set.schema.json (VALIDATION_FAILED) */
         QuestionSetAuthoringInput: {
             content_language?: components["schemas"]["ContentLanguage"];
+            curriculum_version_id?: components["schemas"]["Uuid"];
             default_feedback_timing?: components["schemas"]["FeedbackTiming"];
-            /** @description items tĩnh hoặc selection rules (specs/schemas/question-set.schema.json) */
+            /** @description kind, purpose, items tĩnh và/hoặc selection_rules, shuffle_items, shuffle_options, estimated_duration_sec (specs/schemas/question-set.schema.json, F024) */
             definition: {
                 [key: string]: unknown;
             };
+            description?: components["schemas"]["LearningText"];
             grade_levels?: components["schemas"]["GradeLevel"][];
+            objective_ids?: components["schemas"]["Uuid"][];
             /**
              * @default tenant
              * @enum {string}
@@ -11318,6 +11563,7 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             tenant_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LearningName"];
+            topic_ids?: components["schemas"]["Uuid"][];
         };
         /** @enum {string} */
         QuestionType: "single_choice" | "multiple_choice" | "true_false" | "fill_in_blank" | "short_answer" | "numeric" | "matching" | "ordering" | "drag_drop" | "image_based" | "interactive";
@@ -11523,7 +11769,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -13163,6 +13409,7 @@ export interface components {
         ItemPositionPath: number;
         LeaderboardId: components["schemas"]["Uuid"];
         LearningContentType: components["schemas"]["LearningContentType"];
+        LearningMaterialIdPath: components["schemas"]["Uuid"];
         LessonIdPath: components["schemas"]["Uuid"];
         Limit: number;
         MatchId: components["schemas"]["Uuid"];
@@ -19138,6 +19385,8 @@ export interface operations {
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Nội dung gắn LO này (F024) */
+                objective_id?: components["schemas"]["Uuid"];
                 q?: string;
                 status?: components["schemas"]["ContentStatus"];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
@@ -19146,6 +19395,8 @@ export interface operations {
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
                  */
                 tenant_ids?: components["parameters"]["TenantIds"];
+                /** @description Nội dung gắn chủ đề này (F024) */
+                topic_id?: components["schemas"]["Uuid"];
             };
             header?: {
                 /**
@@ -19250,6 +19501,46 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    deleteCmsAssessmentBlueprint: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                assessment_blueprint_id: components["parameters"]["BlueprintIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
     createCmsAssessmentBlueprintVersion: {
         parameters: {
             query?: never;
@@ -19315,7 +19606,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["AssessmentBlueprintAuthoringInput"];
+                "application/merge-patch+json": components["schemas"]["AuthoringPatch"];
             };
         };
         responses: {
@@ -19336,6 +19627,39 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getAssessmentBlueprintPoolStats: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                assessment_blueprint_id: components["parameters"]["BlueprintIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolStats"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listCmsCompetencies: {
@@ -20415,13 +20739,15 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
-    listCmsLessons: {
+    listCmsLearningMaterials: {
         parameters: {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Nội dung gắn LO này (F024) */
+                objective_id?: components["schemas"]["Uuid"];
                 q?: string;
                 status?: components["schemas"]["ContentStatus"];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
@@ -20430,6 +20756,261 @@ export interface operations {
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
                  */
                 tenant_ids?: components["parameters"]["TenantIds"];
+                /** @description Nội dung gắn chủ đề này (F024) */
+                topic_id?: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LearningMaterialAuthoring"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createCmsLearningMaterial: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LearningMaterialAuthoringInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo (version 1 draft) */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningMaterialAuthoring"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getCmsLearningMaterial: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                learning_material_id: components["parameters"]["LearningMaterialIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningMaterialAuthoring"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCmsLearningMaterial: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                learning_material_id: components["parameters"]["LearningMaterialIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    createCmsLearningMaterialVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                learning_material_id: components["parameters"]["LearningMaterialIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Version draft mới */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningMaterialAuthoring"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    updateCmsLearningMaterialDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                learning_material_id: components["parameters"]["LearningMaterialIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["LearningMaterialAuthoringPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningMaterialAuthoring"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    listCmsLessons: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                grade_level?: components["parameters"]["GradeLevelQuery"];
+                limit?: components["parameters"]["Limit"];
+                /** @description Nội dung gắn LO này (F024) */
+                objective_id?: components["schemas"]["Uuid"];
+                q?: string;
+                status?: components["schemas"]["ContentStatus"];
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+                /**
+                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+                 */
+                tenant_ids?: components["parameters"]["TenantIds"];
+                /** @description Nội dung gắn chủ đề này (F024) */
+                topic_id?: components["schemas"]["Uuid"];
             };
             header?: {
                 /**
@@ -20534,6 +21115,46 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    deleteCmsLesson: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                lesson_id: components["parameters"]["LessonIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
     createCmsLessonVersion: {
         parameters: {
             query?: never;
@@ -20599,7 +21220,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["LessonAuthoringInput"];
+                "application/merge-patch+json": components["schemas"]["AuthoringPatch"];
             };
         };
         responses: {
@@ -20878,6 +21499,8 @@ export interface operations {
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Nội dung gắn LO này (F024) */
+                objective_id?: components["schemas"]["Uuid"];
                 q?: string;
                 status?: components["schemas"]["ContentStatus"];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
@@ -20886,6 +21509,8 @@ export interface operations {
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
                  */
                 tenant_ids?: components["parameters"]["TenantIds"];
+                /** @description Nội dung gắn chủ đề này (F024) */
+                topic_id?: components["schemas"]["Uuid"];
             };
             header?: {
                 /**
@@ -20990,6 +21615,46 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    deleteCmsQuestionSet: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                question_set_id: components["parameters"]["QuestionSetIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã soft-delete */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
     createCmsQuestionSetVersion: {
         parameters: {
             query?: never;
@@ -21055,7 +21720,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["QuestionSetAuthoringInput"];
+                "application/merge-patch+json": components["schemas"]["AuthoringPatch"];
             };
         };
         responses: {
@@ -21076,6 +21741,39 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getQuestionSetPoolStats: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                question_set_id: components["parameters"]["QuestionSetIdPath"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolStats"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     searchQuestions: {

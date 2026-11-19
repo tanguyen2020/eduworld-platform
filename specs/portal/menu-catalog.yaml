@@ -615,6 +615,8 @@ workspaces:
             operation_ids:
               - listCmsLessons
               - getCmsLesson
+              - listCmsLearningMaterials
+              - getCmsLearningMaterial
               - "listContentVersions[content_type=lesson]"
               - "diffContentVersions[content_type=lesson]"
               - "listContentReleases[content_type=lesson]"
@@ -626,7 +628,7 @@ workspaces:
             label_key: portal.action.content_studio.lessons.edit
             title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
             required_permissions: [learning_content.write]
-            operation_ids: [createCmsLesson, createCmsLessonVersion, updateCmsLessonDraft]
+            operation_ids: [createCmsLesson, createCmsLessonVersion, updateCmsLessonDraft, deleteCmsLesson, createCmsLearningMaterial, createCmsLearningMaterialVersion, updateCmsLearningMaterialDraft, deleteCmsLearningMaterial]
             can_disable: true
           - key: action.content_studio.lessons.workflow
             label_key: portal.action.content_studio.lessons.workflow
@@ -773,6 +775,7 @@ workspaces:
             operation_ids:
               - listCmsQuestionSets
               - getCmsQuestionSet
+              - getQuestionSetPoolStats
               - "listContentVersions[content_type=question_set]"
               - "diffContentVersions[content_type=question_set]"
               - "listContentReleases[content_type=question_set]"
@@ -781,7 +784,7 @@ workspaces:
             label_key: portal.action.content_studio.question_sets.edit
             title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
             required_permissions: [learning_content.write]
-            operation_ids: [createCmsQuestionSet, createCmsQuestionSetVersion, updateCmsQuestionSetDraft]
+            operation_ids: [createCmsQuestionSet, createCmsQuestionSetVersion, updateCmsQuestionSetDraft, deleteCmsQuestionSet]
             can_disable: true
           - key: action.content_studio.question_sets.workflow
             label_key: portal.action.content_studio.question_sets.workflow
@@ -815,6 +818,7 @@ workspaces:
             required_permissions: [learning_content.read]
             operation_ids:
               - listCmsAssessmentBlueprints
+              - getAssessmentBlueprintPoolStats
               - getCmsAssessmentBlueprint
               - "listContentVersions[content_type=assessment_blueprint]"
               - "diffContentVersions[content_type=assessment_blueprint]"
@@ -824,7 +828,7 @@ workspaces:
             label_key: portal.action.content_studio.assessments.edit
             title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
             required_permissions: [learning_content.write]
-            operation_ids: [createCmsAssessmentBlueprint, createCmsAssessmentBlueprintVersion, updateCmsAssessmentBlueprintDraft]
+            operation_ids: [createCmsAssessmentBlueprint, createCmsAssessmentBlueprintVersion, updateCmsAssessmentBlueprintDraft, deleteCmsAssessmentBlueprint]
             can_disable: true
           - key: action.content_studio.assessments.workflow
             label_key: portal.action.content_studio.assessments.workflow

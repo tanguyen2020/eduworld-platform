@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/predicate"
 	entq "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
 	entqv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	entqo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
@@ -129,6 +130,25 @@ func (QuestionModel) Search(ctx context.Context, f read.QuestionFilter) ([]read.
 		if v, ok := latest[q.ID]; ok {
 			vs = append(vs, v)
 		}
+	}
+	if f.Q != "" && len(vs) > 0 {
+		// Full-text search without accents on the newest versions (F024-AC-17): search_tsv of the F024 migration.
+		vids := make([]uuid.UUID, len(vs))
+		for i, v := range vs {
+			vids[i] = v.ID
+		}
+		ps := docFilters[predicate.QuestionVersion](read.DocFilter{Q: f.Q})
+		hits, err := c.QuestionVersion.Query().Where(append(ps, entqv.IDIn(vids...))...).IDs(ctx)
+		if err != nil {
+			return nil, err
+		}
+		kept := vs[:0]
+		for _, v := range vs {
+			if slices.Contains(hits, v.ID) {
+				kept = append(kept, v)
+			}
+		}
+		vs = kept
 	}
 	if err := withObjectives(ctx, vs); err != nil {
 		return nil, err

@@ -341,6 +341,8 @@ Ví dụ mẫu có lời giải từng bước, dùng trước bài mới (NPC t
 - `steps[]` 1–8 bước, hiển thị lần lượt (học sinh bấm "Tiếp"); mỗi bước có thể kèm `audio_ref` (bắt buộc cho `g1_3` theo §8.1).
 - `self_explain_prompt` tùy chọn: câu hỏi tự giải thích không chấm điểm, chỉ để học sinh suy nghĩ.
 - Không chứa câu hỏi đang dùng trong đề; không phải evidence mastery. `id` duy nhất trong version của lesson/material, để câu hỏi tham chiếu `{content_item_id, block_id}`.
+- Trong danh sách khối của lesson/learning material (API và [lesson.schema.json](../../specs/schemas/lesson.schema.json)), khối có `"kind": "worked_example"`, `id` theo mẫu `^we_[a-z0-9_]{1,40}$`, `objective_ids` 1–20 thuộc curriculum version của nội dung; không có câu hỏi/activity lồng bên trong (F024).
+- `worked_example_ref` của câu hỏi là `{content_item_id, block_id}`: `content_item_id` là id lesson hoặc learning material cùng phạm vi; khối phải có trong version hiện hành (con trỏ release) hoặc bản nháp mới nhất và có ít nhất một LO chung với câu hỏi, nếu không `422 VALIDATION_FAILED` (F024).
 
 ## 10. Yêu cầu chức năng
 

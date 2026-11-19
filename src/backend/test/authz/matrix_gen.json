@@ -516,6 +516,29 @@
     ]
   },
   {
+    "operation_id": "createCmsLearningMaterial",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/learning-materials",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createCmsLearningMaterialVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/learning-materials/{learning_material_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createCmsLesson",
     "module": "learning",
     "method": "POST",
@@ -1212,6 +1235,54 @@
     ]
   },
   {
+    "operation_id": "deleteCmsAssessmentBlueprint",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteCmsLearningMaterial",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/learning-materials/{learning_material_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteCmsLesson",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/lessons/{lesson_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteCmsQuestionSet",
+    "module": "learning",
+    "method": "DELETE",
+    "path": "/cms/learning/question-sets/{question_set_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "deleteCurriculum",
     "module": "learning",
     "method": "DELETE",
@@ -1569,6 +1640,18 @@
     ]
   },
   {
+    "operation_id": "getAssessmentBlueprintPoolStats",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions/{version}:pool-stats",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getAssignment",
     "module": "learning",
     "method": "GET",
@@ -1662,6 +1745,18 @@
     "module": "learning",
     "method": "GET",
     "path": "/cms/learning/curricula/{curriculum_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getCmsLearningMaterial",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/learning-materials/{learning_material_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -2317,6 +2412,18 @@
     "module": "game",
     "method": "GET",
     "path": "/game/quests/{quest_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getQuestionSetPoolStats",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/question-sets/{question_set_id}/versions/{version}:pool-stats",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -3066,6 +3173,17 @@
     "module": "learning",
     "method": "GET",
     "path": "/cms/learning/curricula",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCmsLearningMaterials",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/learning-materials",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
@@ -5429,6 +5547,18 @@
     "module": "learning",
     "method": "PATCH",
     "path": "/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "updateCmsLearningMaterialDraft",
+    "module": "learning",
+    "method": "PATCH",
+    "path": "/cms/learning/learning-materials/{learning_material_id}/versions/{version}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

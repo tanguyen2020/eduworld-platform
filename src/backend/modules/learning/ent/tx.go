@@ -12,6 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AssessmentBlueprint is the client for interacting with the AssessmentBlueprint builders.
+	AssessmentBlueprint *AssessmentBlueprintClient
+	// AssessmentBlueprintVersion is the client for interacting with the AssessmentBlueprintVersion builders.
+	AssessmentBlueprintVersion *AssessmentBlueprintVersionClient
 	// Competency is the client for interacting with the Competency builders.
 	Competency *CompetencyClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
@@ -24,8 +28,16 @@ type Tx struct {
 	CurriculumVersion *CurriculumVersionClient
 	// ImportJob is the client for interacting with the ImportJob builders.
 	ImportJob *ImportJobClient
+	// LearningMaterial is the client for interacting with the LearningMaterial builders.
+	LearningMaterial *LearningMaterialClient
+	// LearningMaterialVersion is the client for interacting with the LearningMaterialVersion builders.
+	LearningMaterialVersion *LearningMaterialVersionClient
 	// LearningObjective is the client for interacting with the LearningObjective builders.
 	LearningObjective *LearningObjectiveClient
+	// Lesson is the client for interacting with the Lesson builders.
+	Lesson *LessonClient
+	// LessonVersion is the client for interacting with the LessonVersion builders.
+	LessonVersion *LessonVersionClient
 	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
 	LoVersionMapping *LoVersionMappingClient
 	// MathSvg is the client for interacting with the MathSvg builders.
@@ -36,6 +48,12 @@ type Tx struct {
 	MediaUsage *MediaUsageClient
 	// Question is the client for interacting with the Question builders.
 	Question *QuestionClient
+	// QuestionSet is the client for interacting with the QuestionSet builders.
+	QuestionSet *QuestionSetClient
+	// QuestionSetItem is the client for interacting with the QuestionSetItem builders.
+	QuestionSetItem *QuestionSetItemClient
+	// QuestionSetVersion is the client for interacting with the QuestionSetVersion builders.
+	QuestionSetVersion *QuestionSetVersionClient
 	// QuestionVersion is the client for interacting with the QuestionVersion builders.
 	QuestionVersion *QuestionVersionClient
 	// QuestionVersionObjective is the client for interacting with the QuestionVersionObjective builders.
@@ -187,18 +205,27 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AssessmentBlueprint = NewAssessmentBlueprintClient(tx.config)
+	tx.AssessmentBlueprintVersion = NewAssessmentBlueprintVersionClient(tx.config)
 	tx.Competency = NewCompetencyClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.ContentTransition = NewContentTransitionClient(tx.config)
 	tx.Curriculum = NewCurriculumClient(tx.config)
 	tx.CurriculumVersion = NewCurriculumVersionClient(tx.config)
 	tx.ImportJob = NewImportJobClient(tx.config)
+	tx.LearningMaterial = NewLearningMaterialClient(tx.config)
+	tx.LearningMaterialVersion = NewLearningMaterialVersionClient(tx.config)
 	tx.LearningObjective = NewLearningObjectiveClient(tx.config)
+	tx.Lesson = NewLessonClient(tx.config)
+	tx.LessonVersion = NewLessonVersionClient(tx.config)
 	tx.LoVersionMapping = NewLoVersionMappingClient(tx.config)
 	tx.MathSvg = NewMathSvgClient(tx.config)
 	tx.MediaAsset = NewMediaAssetClient(tx.config)
 	tx.MediaUsage = NewMediaUsageClient(tx.config)
 	tx.Question = NewQuestionClient(tx.config)
+	tx.QuestionSet = NewQuestionSetClient(tx.config)
+	tx.QuestionSetItem = NewQuestionSetItemClient(tx.config)
+	tx.QuestionSetVersion = NewQuestionSetVersionClient(tx.config)
 	tx.QuestionVersion = NewQuestionVersionClient(tx.config)
 	tx.QuestionVersionObjective = NewQuestionVersionObjectiveClient(tx.config)
 	tx.Subject = NewSubjectClient(tx.config)
@@ -218,7 +245,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Competency.QueryXXX(), the query will be executed
+// applies a query, for example: AssessmentBlueprint.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

@@ -23,3 +23,11 @@ type QuestionSchema interface {
 	ValidateAuthoring(d QuestionDoc) contentmodel.Violations
 	ValidateResponse(questionType string, response json.RawMessage) error
 }
+
+// ContentSchema validates the type-specific documents of the composed content types (F024) against the published
+// JSON Schemas: question set definitions, blueprint definitions, lesson/material blocks.
+type ContentSchema interface {
+	ValidateSetDefinition(def json.RawMessage) contentmodel.Violations
+	ValidateBlueprintDefinition(def json.RawMessage) contentmodel.Violations
+	ValidateBlocks(blocks json.RawMessage) contentmodel.Violations
+}

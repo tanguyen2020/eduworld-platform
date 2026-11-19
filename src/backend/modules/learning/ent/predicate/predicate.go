@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AssessmentBlueprint is the predicate function for assessmentblueprint builders.
+type AssessmentBlueprint func(*sql.Selector)
+
+// AssessmentBlueprintVersion is the predicate function for assessmentblueprintversion builders.
+type AssessmentBlueprintVersion func(*sql.Selector)
+
 // Competency is the predicate function for competency builders.
 type Competency func(*sql.Selector)
 
@@ -24,8 +30,20 @@ type CurriculumVersion func(*sql.Selector)
 // ImportJob is the predicate function for importjob builders.
 type ImportJob func(*sql.Selector)
 
+// LearningMaterial is the predicate function for learningmaterial builders.
+type LearningMaterial func(*sql.Selector)
+
+// LearningMaterialVersion is the predicate function for learningmaterialversion builders.
+type LearningMaterialVersion func(*sql.Selector)
+
 // LearningObjective is the predicate function for learningobjective builders.
 type LearningObjective func(*sql.Selector)
+
+// Lesson is the predicate function for lesson builders.
+type Lesson func(*sql.Selector)
+
+// LessonVersion is the predicate function for lessonversion builders.
+type LessonVersion func(*sql.Selector)
 
 // LoVersionMapping is the predicate function for loversionmapping builders.
 type LoVersionMapping func(*sql.Selector)
@@ -41,6 +59,15 @@ type MediaUsage func(*sql.Selector)
 
 // Question is the predicate function for question builders.
 type Question func(*sql.Selector)
+
+// QuestionSet is the predicate function for questionset builders.
+type QuestionSet func(*sql.Selector)
+
+// QuestionSetItem is the predicate function for questionsetitem builders.
+type QuestionSetItem func(*sql.Selector)
+
+// QuestionSetVersion is the predicate function for questionsetversion builders.
+type QuestionSetVersion func(*sql.Selector)
 
 // QuestionVersion is the predicate function for questionversion builders.
 type QuestionVersion func(*sql.Selector)

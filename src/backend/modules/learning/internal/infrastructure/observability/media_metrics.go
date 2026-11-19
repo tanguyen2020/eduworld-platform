@@ -52,3 +52,23 @@ func (MediaCounter) Rejected(reason string) { mediaRejected.WithLabelValues(reas
 
 // MathFailed counts a refused formula.
 func (MediaCounter) MathFailed(reason string) { mathFailed.WithLabelValues(reason).Inc() }
+
+// Content metrics of F024: insufficient pool rules (the CMS search and import durations are the use case spans and
+// eduworld_import_jobs_total).
+var poolInsufficient = prometheus.NewCounter(prometheus.CounterOpts{
+	Name: "eduworld_pool_stats_insufficient_total",
+	Help: "Selection rules whose pool is smaller than required when pool stats are read (F024).",
+})
+
+// RegisterContent adds the content metrics to r.
+func RegisterContent(r prometheus.Registerer) { _ = r.Register(poolInsufficient) }
+
+// ContentCounter adapts the content metrics to query.DocMetrics.
+type ContentCounter struct{}
+
+// PoolInsufficient counts n insufficient rules.
+func (ContentCounter) PoolInsufficient(n int) {
+	if n > 0 {
+		poolInsufficient.Add(float64(n))
+	}
+}

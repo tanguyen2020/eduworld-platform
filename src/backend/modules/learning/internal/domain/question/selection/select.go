@@ -215,3 +215,15 @@ func overlapsStr(a, b []string) bool {
 	}
 	return false
 }
+
+// Available counts the candidates that match a rule without relaxation (the pool size of a rule, F024-AC-04, AC-11).
+func Available(pool []Candidate, r Rule) int {
+	req := Request{Rule: r}
+	n := 0
+	for _, c := range pool {
+		if match(c, req, strict) {
+			n++
+		}
+	}
+	return n
+}

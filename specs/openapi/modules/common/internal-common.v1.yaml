@@ -412,7 +412,7 @@ components:
     ResourceType:
       type: string
       description: Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
-      enum: [curriculum, lesson, question, question_set, assessment_blueprint, media, assignment, course, learning_path, challenge, challenge_template, tournament_template, quest, minigame_config, item, class_template, school_settings, tenant_settings]
+      enum: [curriculum, lesson, learning_material, question, question_set, assessment_blueprint, media, assignment, course, learning_path, challenge, challenge_template, tournament_template, quest, minigame_config, item, class_template, school_settings, tenant_settings]
 
     TenantCloneStepRequest:
       type: object

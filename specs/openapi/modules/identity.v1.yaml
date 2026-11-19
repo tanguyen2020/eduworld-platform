@@ -7049,6 +7049,7 @@ components:
       enum:
         - curriculum
         - lesson
+        - learning_material
         - question
         - question_set
         - assessment_blueprint

@@ -21,10 +21,7 @@
           "items": { "type": "string", "enum": ["fill_in_blank", "short_answer", "numeric", "matching", "ordering", "drag_drop", "image_based", "interactive"] },
           "default": ["fill_in_blank", "short_answer", "numeric", "matching", "ordering", "drag_drop", "image_based", "interactive"]
         },
-        "worked_example_ref": {
-          "$ref": "activity-base.schema.json#/$defs/uuid",
-          "description": "Khối worked_example (lesson/learning material cùng LO) gợi ý xem sau khi trả lời sai (CONTENT_MODEL §9.2) [Proposed]."
-        }
+        "worked_example_ref": {"type":"object","description":"Tham chiếu khối worked_example (CONTENT_MODEL §9.2, QUESTION_BANK §2): content_item_id là id lesson hoặc learning material cùng phạm vi, block_id là id khối (we_…); khối phải có ít nhất một LO chung với câu hỏi (F024-AC-08). Client hiện nút \"Xem ví dụ mẫu\" sau khi trả lời sai [Proposed].","required":["content_item_id","block_id"],"properties":{"content_item_id":{"type":"string","format":"uuid"},"block_id":{"type":"string","minLength":1,"maxLength":64,"pattern":"^we_[a-z0-9_]{1,40}$"}},"additionalProperties":false}
       },
       "additionalProperties": false
     },

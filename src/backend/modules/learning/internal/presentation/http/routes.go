@@ -81,6 +81,8 @@ type Handlers struct {
 	Media            MediaCommands    // F027
 	MediaQueries     MediaQueries     // F027
 	Preview          PreviewCommands  // F027
+	Docs             DocCommands      // F024
+	DocQueries       DocQueries       // F024
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -156,6 +158,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	for id, fn := range mediaRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
+	}
+	for id, fn := range docOps {
+		d := routeOf(id)
+		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, d, w, r) }
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

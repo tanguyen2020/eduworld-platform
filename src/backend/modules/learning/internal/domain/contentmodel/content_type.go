@@ -46,6 +46,7 @@ type ResourceType string
 const (
 	ResourceCurriculum          ResourceType = "curriculum"
 	ResourceLesson              ResourceType = "lesson"
+	ResourceLearningMaterial    ResourceType = "learning_material"
 	ResourceQuestion            ResourceType = "question"
 	ResourceQuestionSet         ResourceType = "question_set"
 	ResourceAssessmentBlueprint ResourceType = "assessment_blueprint"
@@ -55,7 +56,7 @@ const (
 	ResourceLearningPath        ResourceType = "learning_path"
 )
 
-var resourceTypes = []ResourceType{ResourceCurriculum, ResourceLesson, ResourceQuestion, ResourceQuestionSet,
+var resourceTypes = []ResourceType{ResourceCurriculum, ResourceLesson, ResourceLearningMaterial, ResourceQuestion, ResourceQuestionSet,
 	ResourceAssessmentBlueprint, ResourceMedia, ResourceAssignment, ResourceCourse, ResourceLearningPath}
 
 // ParseResourceType accepts only the resource types owned by module learning (F020-AC-06).
@@ -67,10 +68,10 @@ func ParseResourceType(s string) (ResourceType, error) {
 }
 
 // ResourceOf maps a content type to its ResourceType; ok is false for content types that are not
-// trash/assignment/clone resources (learning_material, activity).
+// trash/assignment/clone resources (activity).
 func ResourceOf(t ContentType) (ResourceType, bool) {
 	switch t {
-	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningPath:
+	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningMaterial, TypeLearningPath:
 		return ResourceType(t), true
 	}
 	return "", false

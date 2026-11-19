@@ -25,6 +25,8 @@ var migrations = map[string][]string{
 		"textbook_section_objectives", "import_jobs"},
 	"20261125000001_f022_question_bank.sql": {"questions", "question_versions", "question_version_objectives"},
 	"20261126000001_f027_media.sql":         {"media_assets", "media_usages", "math_svgs"},
+	"20261127000001_f024_content_types.sql": {"question_sets", "question_set_versions", "question_set_items", "lessons", "lesson_versions",
+		"learning_materials", "learning_material_versions", "assessment_blueprints", "assessment_blueprint_versions"},
 }
 
 func schemas() map[string]string {
@@ -38,6 +40,10 @@ func schemas() map[string]string {
 		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob,
 		"questions": c.Question, "question_versions": c.QuestionVersion, "question_version_objectives": c.QuestionVersionObjective,
 		"media_assets": c.MediaAsset, "media_usages": c.MediaUsage, "math_svgs": c.MathSvg,
+		"question_sets": c.QuestionSet, "question_set_versions": c.QuestionSetVersion, "question_set_items": c.QuestionSetItem,
+		"lessons": c.Lesson, "lesson_versions": c.LessonVersion, "learning_materials": c.LearningMaterial,
+		"learning_material_versions": c.LearningMaterialVersion, "assessment_blueprints": c.AssessmentBlueprint,
+		"assessment_blueprint_versions": c.AssessmentBlueprintVersion,
 	}
 }
 

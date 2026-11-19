@@ -78,6 +78,7 @@ type curEnv struct {
 	cmd    command.Curriculum
 	qry    query.Curriculum
 	qcmd   command.Questions
+	dcmd   command.Docs
 	schema *qbschema.Validator
 	assets *memAssets
 	users  map[string]authz.PrincipalData
@@ -130,8 +131,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		t.Fatal(err)
 	}
 	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
-	reg, err := port.NewRegistry(command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
-		command.QuestionResource{Store: write.QuestionRepo{}})
+	reg, err := port.NewRegistry(append([]port.ResourceHandler{command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
+		command.QuestionResource{Store: write.QuestionRepo{}}}, command.DocResources(write.DocRepo{}, write.QuestionRepo{})...)...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,22 +146,32 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		t.Fatal(err)
 	}
 	qcmd := command.Questions{UoW: e.uow, Store: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{}, Schema: schema,
-		Registry: question.Base(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
+		Registry: question.Base(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Docs: write.DocRepo{}}
 	qqry := query.Questions{Session: e.read, Model: read.QuestionModel{}, Cursors: codec}
-	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry}
+	docSchema, err := qbschema.NewDocs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
+		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
+	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
+	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry, Docs: dcmd, DocQueries: dqry}
 	var mk *mediaKit
 	if o.media {
 		mk = newMediaKit(ctx, t, e, codec, schema)
 		qcmd.Math, qcmd.Media = &mk.math, write.MediaRepo{}
-		handlers.QuestionCommands = qcmd
+		dcmd.Media = write.MediaRepo{}
+		handlers.QuestionCommands, handlers.Docs = qcmd, dcmd
 		handlers.Media, handlers.MediaQueries, handlers.Preview = mk.cmd, mk.qry, mk.preview
 	}
+	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
+	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)

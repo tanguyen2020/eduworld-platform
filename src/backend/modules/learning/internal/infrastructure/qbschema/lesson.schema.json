@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/lesson.schema.json",
+  "title": "EduWorld Lesson / Learning Material blocks",
+  "description": "Khối nội dung của lesson và learning material (CONTENT_MODEL §9, §9.2; F024). Một version có 1–100 khối; khối activity chỉ hợp lệ khi validator F030 đã đăng ký (BLOCK_KIND_NOT_ENABLED). Khối worked_example không chứa câu hỏi hay activity lồng bên trong.",
+  "type": "object",
+  "required": [
+    "blocks"
+  ],
+  "properties": {
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "block": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/richTextBlock"
+        },
+        {
+          "$ref": "#/$defs/mediaBlock"
+        },
+        {
+          "$ref": "#/$defs/workedExample"
+        },
+        {
+          "$ref": "#/$defs/activityBlock"
+        }
+      ]
+    },
+    "richTextBlock": {
+      "type": "object",
+      "required": [
+        "kind",
+        "content"
+      ],
+      "properties": {
+        "kind": {
+          "const": "rich_text"
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "content": {
+          "$ref": "question.schema.json#/$defs/richContent"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mediaBlock": {
+      "type": "object",
+      "required": [
+        "kind",
+        "media_ref"
+      ],
+      "properties": {
+        "kind": {
+          "const": "media"
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "media_ref": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "caption": {
+          "$ref": "question.schema.json#/$defs/i18nText"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workedExample": {
+      "type": "object",
+      "description": "Ví dụ mẫu từng bước (FR-CNT-020): id duy nhất trong version, đề bài, 1–8 bước, LO không rỗng, câu hỏi tự giải thích tùy chọn.",
+      "required": [
+        "kind",
+        "id",
+        "problem",
+        "steps",
+        "objective_ids"
+      ],
+      "properties": {
+        "kind": {
+          "const": "worked_example"
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^we_[a-z0-9_]{1,40}$"
+        },
+        "title": {
+          "$ref": "question.schema.json#/$defs/i18nText"
+        },
+        "problem": {
+          "$ref": "question.schema.json#/$defs/richContent"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "$ref": "question.schema.json#/$defs/richContent"
+              },
+              "audio_ref": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "objective_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "self_explain_prompt": {
+          "$ref": "question.schema.json#/$defs/richContent"
+        }
+      },
+      "additionalProperties": false
+    },
+    "activityBlock": {
+      "type": "object",
+      "required": [
+        "kind",
+        "activity_id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "activity"
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "activity_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "examples": [
+    {
+      "blocks": [
+        {
+          "kind": "rich_text",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Bảng nhân 7"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "worked_example",
+          "id": "we_mul7",
+          "problem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "7 × 8 = ?"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "7 × 7 = 49"
+                  }
+                ]
+              }
+            },
+            {
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "49 + 7 = 56"
+                  }
+                ]
+              }
+            }
+          ],
+          "objective_ids": [
+            "0193a5f4-6c1e-7b2a-9d1f-000000000301"
+          ]
+        }
+      ]
+    }
+  ]
+}

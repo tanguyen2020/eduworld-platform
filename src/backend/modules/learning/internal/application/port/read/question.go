@@ -22,6 +22,7 @@ type QuestionFilter struct {
 	Type         string
 	Source       string // own, assigned, platform ("" = every visible)
 	Efficacy     *bool
+	Q            string // full-text, accent and case insensitive (F024-AC-17)
 }
 
 // QuestionHit is a question with its latest version.

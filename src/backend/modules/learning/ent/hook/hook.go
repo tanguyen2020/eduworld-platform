@@ -9,6 +9,30 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
 )
 
+// The AssessmentBlueprintFunc type is an adapter to allow the use of ordinary
+// function as AssessmentBlueprint mutator.
+type AssessmentBlueprintFunc func(context.Context, *ent.AssessmentBlueprintMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AssessmentBlueprintFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AssessmentBlueprintMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssessmentBlueprintMutation", m)
+}
+
+// The AssessmentBlueprintVersionFunc type is an adapter to allow the use of ordinary
+// function as AssessmentBlueprintVersion mutator.
+type AssessmentBlueprintVersionFunc func(context.Context, *ent.AssessmentBlueprintVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AssessmentBlueprintVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AssessmentBlueprintVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssessmentBlueprintVersionMutation", m)
+}
+
 // The CompetencyFunc type is an adapter to allow the use of ordinary
 // function as Competency mutator.
 type CompetencyFunc func(context.Context, *ent.CompetencyMutation) (ent.Value, error)
@@ -81,6 +105,30 @@ func (f ImportJobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ImportJobMutation", m)
 }
 
+// The LearningMaterialFunc type is an adapter to allow the use of ordinary
+// function as LearningMaterial mutator.
+type LearningMaterialFunc func(context.Context, *ent.LearningMaterialMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LearningMaterialFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LearningMaterialMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LearningMaterialMutation", m)
+}
+
+// The LearningMaterialVersionFunc type is an adapter to allow the use of ordinary
+// function as LearningMaterialVersion mutator.
+type LearningMaterialVersionFunc func(context.Context, *ent.LearningMaterialVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LearningMaterialVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LearningMaterialVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LearningMaterialVersionMutation", m)
+}
+
 // The LearningObjectiveFunc type is an adapter to allow the use of ordinary
 // function as LearningObjective mutator.
 type LearningObjectiveFunc func(context.Context, *ent.LearningObjectiveMutation) (ent.Value, error)
@@ -91,6 +139,30 @@ func (f LearningObjectiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LearningObjectiveMutation", m)
+}
+
+// The LessonFunc type is an adapter to allow the use of ordinary
+// function as Lesson mutator.
+type LessonFunc func(context.Context, *ent.LessonMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LessonFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LessonMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LessonMutation", m)
+}
+
+// The LessonVersionFunc type is an adapter to allow the use of ordinary
+// function as LessonVersion mutator.
+type LessonVersionFunc func(context.Context, *ent.LessonVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LessonVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LessonVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LessonVersionMutation", m)
 }
 
 // The LoVersionMappingFunc type is an adapter to allow the use of ordinary
@@ -151,6 +223,42 @@ func (f QuestionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionMutation", m)
+}
+
+// The QuestionSetFunc type is an adapter to allow the use of ordinary
+// function as QuestionSet mutator.
+type QuestionSetFunc func(context.Context, *ent.QuestionSetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionSetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionSetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionSetMutation", m)
+}
+
+// The QuestionSetItemFunc type is an adapter to allow the use of ordinary
+// function as QuestionSetItem mutator.
+type QuestionSetItemFunc func(context.Context, *ent.QuestionSetItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionSetItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionSetItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionSetItemMutation", m)
+}
+
+// The QuestionSetVersionFunc type is an adapter to allow the use of ordinary
+// function as QuestionSetVersion mutator.
+type QuestionSetVersionFunc func(context.Context, *ent.QuestionSetVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionSetVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionSetVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionSetVersionMutation", m)
 }
 
 // The QuestionVersionFunc type is an adapter to allow the use of ordinary

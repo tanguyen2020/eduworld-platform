@@ -19,7 +19,8 @@ func repo(t *testing.T) string {
 
 // The embedded copies equal specs/schemas (one source of truth, AGENTS R33).
 func TestEmbeddedSchemas(t *testing.T) {
-	for name, b := range map[string][]byte{"question.schema.json": QuestionSchemaJSON, "common/enums.schema.json": EnumsSchemaJSON} {
+	for name, b := range map[string][]byte{"question.schema.json": QuestionSchemaJSON, "common/enums.schema.json": EnumsSchemaJSON,
+		"question-set.schema.json": QuestionSetSchemaJSON, "assessment-blueprint.schema.json": BlueprintSchemaJSON, "lesson.schema.json": LessonSchemaJSON} {
 		src, err := os.ReadFile(filepath.Join(repo(t), "specs", "schemas", filepath.FromSlash(name)))
 		if err != nil {
 			t.Fatal(err)
@@ -83,5 +84,30 @@ func TestValidate(t *testing.T) {
 		v.ValidateResponse("single_choice", json.RawMessage(`{"option_id":"o_1","score":1}`)) == nil ||
 		v.ValidateResponse("numeric", json.RawMessage(`{"value":""}`)) == nil || v.ValidateResponse("x", nil) == nil {
 		t.Fatal("responses")
+	}
+}
+
+// F024: the wrapper schemas compile and reject structural errors with JSON pointers.
+func TestDocSchemas(t *testing.T) {
+	v, err := NewDocs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vs := v.ValidateSetDefinition(json.RawMessage(`{"kind":"static","purpose":"exercise","items":[{"question_version_id":"0193a5f4-6c1e-7b2a-9d1f-000000000101"}]}`)); len(vs) != 0 {
+		t.Fatalf("set: %v", vs)
+	}
+	if vs := v.ValidateSetDefinition(json.RawMessage(`{"kind":"other","purpose":"exercise","x":1}`)); len(vs) == 0 {
+		t.Fatal("bad set accepted")
+	}
+	if vs := v.ValidateBlocks(json.RawMessage(`[{"kind":"rich_text","content":{"blocks":[{"type":"paragraph","text":"x"}]}}]`)); len(vs) != 0 {
+		t.Fatalf("blocks: %v", vs)
+	}
+	if vs := v.ValidateBlocks(json.RawMessage(`[{"kind":"worked_example","id":"we_a","problem":{"blocks":[]},"steps":[],"objective_ids":[]}]`)); len(vs) == 0 {
+		t.Fatal("bad worked example accepted")
+	}
+	bp := `{"duration_sec":2400,"total_points":10,"attempt_policy":{"max_attempts":1,"score_policy":"best"},"result_release":{"mode":"manual"},
+		"sections":[{"id":"sec_a","title":"Phần 1","rules":[{"objective_ids":["0193a5f4-6c1e-7b2a-9d1f-000000000101"],"count":10,"points_each":1}]}]}`
+	if vs := v.ValidateBlueprintDefinition(json.RawMessage(bp)); len(vs) != 0 {
+		t.Fatalf("blueprint: %v", vs)
 	}
 }

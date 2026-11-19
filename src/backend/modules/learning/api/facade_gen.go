@@ -222,6 +222,7 @@ const (
 	CommonInternalCommonV1ResourceTypeCourse              CommonInternalCommonV1ResourceType = "course"
 	CommonInternalCommonV1ResourceTypeCurriculum          CommonInternalCommonV1ResourceType = "curriculum"
 	CommonInternalCommonV1ResourceTypeItem                CommonInternalCommonV1ResourceType = "item"
+	CommonInternalCommonV1ResourceTypeLearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
 	CommonInternalCommonV1ResourceTypeLearningPath        CommonInternalCommonV1ResourceType = "learning_path"
 	CommonInternalCommonV1ResourceTypeLesson              CommonInternalCommonV1ResourceType = "lesson"
 	CommonInternalCommonV1ResourceTypeMedia               CommonInternalCommonV1ResourceType = "media"
@@ -252,6 +253,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	case CommonInternalCommonV1ResourceTypeCurriculum:
 		return true
 	case CommonInternalCommonV1ResourceTypeItem:
+		return true
+	case CommonInternalCommonV1ResourceTypeLearningMaterial:
 		return true
 	case CommonInternalCommonV1ResourceTypeLearningPath:
 		return true

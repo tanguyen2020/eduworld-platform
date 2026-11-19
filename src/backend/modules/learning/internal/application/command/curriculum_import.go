@@ -56,18 +56,28 @@ type CreateImportInput struct {
 func (h Curriculum) CreateImport(ctx context.Context, in CreateImportInput) (out dto.ImportJob, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.CreateContentImport")
 	defer func() { done(err) }()
-	if in.Kind != port.KindCurriculumYAML && in.Kind != port.KindCurriculumCSV {
-		return out, problem.Invalid("kind", problem.SubInvalid, "only curriculum_yaml and curriculum_csv are supported yet")
+	content := slices.Contains(QuestionImportKinds, in.Kind)
+	switch {
+	case in.Kind == "lessons_docx":
+		return out, problem.Invalid("kind", SubImportKindNotSupported, "lessons_docx is not supported in this release")
+	case in.Kind != port.KindCurriculumYAML && in.Kind != port.KindCurriculumCSV && !content:
+		return out, problem.Invalid("kind", problem.SubInvalid, "unknown import kind")
+	case content && h.Content == nil:
+		return out, problem.Invalid("kind", SubImportKindNotSupported, "question imports are not enabled")
 	}
-	p, err := authorize(ctx, authz.PermCurriculumWrite)
+	perm := authz.PermCurriculumWrite
+	if content {
+		perm = authz.PermLearningContentImport
+	}
+	p, err := authorize(ctx, perm)
 	if err != nil {
 		return out, err
 	}
 	o := contentmodel.Owner{Scope: contentmodel.OwnerPlatform}
 	if p.TenantID != nil {
 		o = contentmodel.Owner{Scope: contentmodel.OwnerTenant, TenantID: ptrClone(p.TenantID)}
-	} else if err := platformOnly(ctx, p); err != nil {
-		return out, err
+	} else if !p.IsPlatform() {
+		return out, denied(ctx, "platform_import")
 	}
 	key := ids.New().String()
 	if pend, ok := idempotency.PendingFrom(ctx); ok {
@@ -156,6 +166,9 @@ func (h Curriculum) RunImportJob(ctx context.Context, jobID uuid.UUID, o content
 	}); err != nil || !claimed {
 		return err
 	}
+	if slices.Contains(QuestionImportKinds, job.Kind) {
+		return h.runContentImport(ctx, job)
+	}
 	file, rowErrs := h.readImport(ctx, job)
 	var res ImportResult
 	if len(rowErrs) == 0 {
@@ -197,6 +210,61 @@ func (h Curriculum) RunImportJob(ctx context.Context, jobID uuid.UUID, o content
 			Metadata: map[string]any{"kind": job.Kind, "dry_run": job.DryRun, "status": job.Status, "created": job.CreatedCount,
 				"rejected": job.RejectedCount}})
 	})
+}
+
+// runContentImport runs a question import job (F024-AC-13…16): valid rows become drafts, rejected rows are listed;
+// the job succeeds when at least one row was imported (or would be on dry run) and records its audit.
+func (h Curriculum) runContentImport(ctx context.Context, job dto.ImportJob) error {
+	data, rowErrs := h.readBytes(ctx, job)
+	created := 0
+	if len(rowErrs) == 0 && h.Content != nil {
+		var err error
+		created, rowErrs, err = h.Content.Run(ctx, job, data)
+		if err != nil {
+			return err
+		}
+	}
+	at := h.now()
+	job.FinishedAt, job.Errors, job.RejectedCount, job.CreatedCount = &at, rowErrs, len(rowErrs), created
+	job.Status = ImportSucceeded
+	if created == 0 {
+		job.Status = ImportFailed
+	}
+	if h.Metrics != nil {
+		h.Metrics.ImportFinished(job.Kind, job.Status, job.RejectedCount)
+	}
+	return h.UoW.Do(ctx, func(ctx context.Context) error {
+		if err := h.Imports.UpdateImportJob(ctx, job); err != nil {
+			return err
+		}
+		r := audit.ResultSuccess
+		if job.Status == ImportFailed {
+			r = audit.ResultFailure
+		}
+		return h.recordCurriculum(ctx, job.Owner, audit.Event{Action: ActionContentImported, TargetID: job.ID.String(), Result: r,
+			Metadata: map[string]any{"kind": job.Kind, "dry_run": job.DryRun, "status": job.Status, "created": job.CreatedCount,
+				"rejected": job.RejectedCount}})
+	})
+}
+
+// readBytes reads the file of a job (≤ csv_import_max).
+func (h Curriculum) readBytes(ctx context.Context, j dto.ImportJob) ([]byte, []dto.ImportRowError) {
+	if j.AssetID == nil || h.Assets == nil {
+		return nil, []dto.ImportRowError{{Row: 1, Field: "asset_id", Code: ImportErrAsset, Message: "the file is not available"}}
+	}
+	rc, size, err := h.Assets.Open(ctx, *j.AssetID)
+	if err != nil {
+		return nil, []dto.ImportRowError{{Row: 1, Field: "asset_id", Code: ImportErrAsset, Message: "the file is not available"}}
+	}
+	defer func() { _ = rc.Close() }()
+	if size > CsvImportMax {
+		return nil, []dto.ImportRowError{{Row: 1, Code: ImportErrFileTooLarge, Message: "the file is larger than csv_import_max (10 MB)"}}
+	}
+	b, err := io.ReadAll(io.LimitReader(rc, CsvImportMax+1))
+	if err != nil || len(b) > CsvImportMax {
+		return nil, []dto.ImportRowError{{Row: 1, Code: ImportErrFileTooLarge, Message: "the file is larger than csv_import_max (10 MB)"}}
+	}
+	return b, nil
 }
 
 func (h Curriculum) readImport(ctx context.Context, j dto.ImportJob) (dto.CurriculumFile, []dto.ImportRowError) {

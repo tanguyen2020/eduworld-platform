@@ -215,6 +215,16 @@ func (s QuestionRepo) objectivesInto(ctx context.Context, vs []dto.QuestionVersi
 	return s.objectives(ctx, vs)
 }
 
+// QuestionVersionByID implements write.QuestionStore.
+func (s QuestionRepo) QuestionVersionByID(ctx context.Context, id uuid.UUID) (dto.QuestionVersion, error) {
+	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(id)).Only(ctx)
+	if err != nil {
+		return dto.QuestionVersion{}, MapCurriculumErr(err)
+	}
+	vs := []dto.QuestionVersion{QuestionVersionOf(r)}
+	return vs[0], s.objectivesInto(ctx, vs)
+}
+
 // QuestionVersions implements write.QuestionStore (newest first).
 func (s QuestionRepo) QuestionVersions(ctx context.Context, questionID uuid.UUID) ([]dto.QuestionVersion, error) {
 	rows, err := client(ctx).QuestionVersion.Query().Where(entqv.QuestionID(questionID)).Order(ent.Desc(entqv.FieldVersionNo)).All(ctx)

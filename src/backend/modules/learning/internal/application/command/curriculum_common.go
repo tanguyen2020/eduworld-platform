@@ -52,6 +52,7 @@ type Curriculum struct {
 	Audit     write.Auditor
 	Assets    port.AssetReader
 	Codec     port.CurriculumCodec
+	Content   *ContentImport // question imports of F024 (nil: only curriculum kinds)
 	Metrics   CurriculumMetrics
 	Clock     func() time.Time
 }

@@ -178,9 +178,9 @@ func TestCurriculumImportSeedExport(t *testing.T) {
 	if malformedCSV.str("status") != "failed" || !strings.Contains(malformedCSV.raw, "INVALID_FORMAT") {
 		t.Fatalf("malformed csv %s", malformedCSV.raw)
 	}
-	// Other kinds belong to F024; tenant B never sees the jobs of tenant A.
+	// Question imports are accepted since F024 (their rows are checked by the worker); tenant B never sees the jobs of tenant A.
 	must(t, c.do(t, http.MethodPost, "/cms/learning/imports", qlcmA, idem(), map[string]any{"asset_id": asset.String(), "kind": "questions_csv"}),
-		http.StatusUnprocessableEntity, "question import")
+		http.StatusAccepted, "question import")
 	must(t, c.do(t, http.MethodGet, "/cms/learning/imports/"+r.str("import_id"), qlcmB, nil, nil), http.StatusNotFound, "B reads A's job")
 	if c.audits(ctx, t, "content.imported", nil) < 5 {
 		t.Fatal("imports not audited")

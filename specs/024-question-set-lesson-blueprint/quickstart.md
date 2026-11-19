@@ -42,3 +42,19 @@ make specs-lint
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test theo mã F024-AC-*, báo cáo job import (số tạo/từ chối), EXPLAIN truy vấn tìm kiếm, trace_id bước 11 và 14.
+
+## 5. Bằng chứng (2026-11-19, local, worktree `f027-learning`)
+
+Môi trường: Windows + Docker Desktop; PostgreSQL/NATS qua testcontainers (`TESTCONTAINERS_RYUK_DISABLED=true`, `GOMAXPROCS=4`, `-p 1`).
+
+| Lệnh | Kết quả |
+|---|---|
+| `go test ./modules/learning/...` (unit + contract) | ok — `TestRules`, `TestStats` (set, blueprint), `TestBlocks`, `TestValidate`, `TestWithDefaults`, `TestDocSchemas`, `TestQuestionParsers`, `TestQTILite`, `TestMigrationMatchesEnt` |
+| `go test -tags integration -run 'TestQuestionSet|TestLessons|TestAssessmentBlueprints|TestQuestionImport|TestContent'` | 7/7 PASS: `TestQuestionSetAuthoring`, `TestQuestionSetPoolStats`, `TestLessonsMaterialsWorkedExamples`, `TestAssessmentBlueprints`, `TestQuestionImport`, `TestContentAssignCloneTrash`, `TestContentSearch` |
+| Hồi quy F022/F027 (`TestQuestion`, `TestMedia`, `TestMath`, `TestPreview`) | PASS |
+| `routematrix check` · `archgen --check` · `tenancyguard` · `entlint` · `ewlint` · golangci-lint | 0 lỗi |
+| `check-maxlength` · `check-enums` · `validate-schemas` · `check-cross-features` · `check-portal-catalog` · `check-features` | 0 lỗi |
+
+Ánh xạ: AC-01/02/03/05 `TestQuestionSetAuthoring`; AC-04 `TestQuestionSetPoolStats`; AC-06/07/08/09 `TestLessonsMaterialsWorkedExamples` + `TestBlocks`; AC-10/11/12 `TestAssessmentBlueprints` + `TestValidate`/`TestWithDefaults`; AC-13/14/15/16 `TestQuestionImport` + `TestQuestionParsers`/`TestQTILite`; AC-17/18/19 `TestContentSearch`; AC-20 `authztest.Cover` + kiểm 403/404 trong các test trên; AC-21/22/23 `TestContentAssignCloneTrash`.
+
+Chưa làm: EXPLAIN/benchmark 100.000 version (T038, OQ F024-11), trace_id bước 11, 14 (binary chưa nối), clone qua saga F045 (gọi thẳng facade `executeTenantCloneStep`).

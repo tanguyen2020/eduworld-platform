@@ -12,18 +12,27 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprint"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprintversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/competency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lesson"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lessonversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mathsvg"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
@@ -94,28 +103,37 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			competency.Table:               competency.ValidColumn,
-			contentrelease.Table:           contentrelease.ValidColumn,
-			contenttransition.Table:        contenttransition.ValidColumn,
-			curriculum.Table:               curriculum.ValidColumn,
-			curriculumversion.Table:        curriculumversion.ValidColumn,
-			importjob.Table:                importjob.ValidColumn,
-			learningobjective.Table:        learningobjective.ValidColumn,
-			loversionmapping.Table:         loversionmapping.ValidColumn,
-			mathsvg.Table:                  mathsvg.ValidColumn,
-			mediaasset.Table:               mediaasset.ValidColumn,
-			mediausage.Table:               mediausage.ValidColumn,
-			question.Table:                 question.ValidColumn,
-			questionversion.Table:          questionversion.ValidColumn,
-			questionversionobjective.Table: questionversionobjective.ValidColumn,
-			subject.Table:                  subject.ValidColumn,
-			subjectgrade.Table:             subjectgrade.ValidColumn,
-			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
-			textbook.Table:                 textbook.ValidColumn,
-			textbooksection.Table:          textbooksection.ValidColumn,
-			textbooksectionobjective.Table: textbooksectionobjective.ValidColumn,
-			textbookseries.Table:           textbookseries.ValidColumn,
-			topic.Table:                    topic.ValidColumn,
+			assessmentblueprint.Table:        assessmentblueprint.ValidColumn,
+			assessmentblueprintversion.Table: assessmentblueprintversion.ValidColumn,
+			competency.Table:                 competency.ValidColumn,
+			contentrelease.Table:             contentrelease.ValidColumn,
+			contenttransition.Table:          contenttransition.ValidColumn,
+			curriculum.Table:                 curriculum.ValidColumn,
+			curriculumversion.Table:          curriculumversion.ValidColumn,
+			importjob.Table:                  importjob.ValidColumn,
+			learningmaterial.Table:           learningmaterial.ValidColumn,
+			learningmaterialversion.Table:    learningmaterialversion.ValidColumn,
+			learningobjective.Table:          learningobjective.ValidColumn,
+			lesson.Table:                     lesson.ValidColumn,
+			lessonversion.Table:              lessonversion.ValidColumn,
+			loversionmapping.Table:           loversionmapping.ValidColumn,
+			mathsvg.Table:                    mathsvg.ValidColumn,
+			mediaasset.Table:                 mediaasset.ValidColumn,
+			mediausage.Table:                 mediausage.ValidColumn,
+			question.Table:                   question.ValidColumn,
+			questionset.Table:                questionset.ValidColumn,
+			questionsetitem.Table:            questionsetitem.ValidColumn,
+			questionsetversion.Table:         questionsetversion.ValidColumn,
+			questionversion.Table:            questionversion.ValidColumn,
+			questionversionobjective.Table:   questionversionobjective.ValidColumn,
+			subject.Table:                    subject.ValidColumn,
+			subjectgrade.Table:               subjectgrade.ValidColumn,
+			tenantresourceassignment.Table:   tenantresourceassignment.ValidColumn,
+			textbook.Table:                   textbook.ValidColumn,
+			textbooksection.Table:            textbooksection.ValidColumn,
+			textbooksectionobjective.Table:   textbooksectionobjective.ValidColumn,
+			textbookseries.Table:             textbookseries.ValidColumn,
+			topic.Table:                      topic.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

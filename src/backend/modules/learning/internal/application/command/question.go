@@ -46,6 +46,8 @@ type Questions struct {
 	Math *MathAssets
 	// Media checks media references and records media_usages (F027-AC-11); nil skips it.
 	Media write.MediaStore
+	// Docs resolves worked_example_ref in lessons and learning materials (F024-AC-08); nil skips the check.
+	Docs write.DocStore
 }
 
 func (h Questions) trash() TrashDeps {
@@ -250,6 +252,9 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 		return err
 	}
 	if err := h.checkMedia(ctx, *v, authRender); err != nil {
+		return err
+	}
+	if err := h.checkWorkedExample(ctx, *v); err != nil {
 		return err
 	}
 	render, feedback, err := question.SplitFeedback(authRender)

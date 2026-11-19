@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/import/questions-row.schema.json",
+  "title": "EduWorld question import row (CSV/Excel)",
+  "description": "Một dòng CSV/Excel (kind questions_csv, questions_xlsx — F024) sau khi ánh xạ cột. Cột JSON (stem, render_payload, answer_key, scoring_rule, explanation, hints, math_assets) chứa JSON theo question.schema.json; cột danh sách (grade_levels, objective_codes, tags) phân tách bằng '|'. Mỗi dòng được kiểm bằng đúng validator của createQuestion; lỗi báo theo số dòng (dòng 1 là tiêu đề).",
+  "type": "object",
+  "required": [
+    "type",
+    "subject_code",
+    "grade_levels",
+    "curriculum_code",
+    "topic_code",
+    "objective_codes",
+    "difficulty",
+    "stem",
+    "render_payload",
+    "answer_key",
+    "scoring_rule"
+  ],
+  "properties": {
+    "type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
+    },
+    "subject_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "grade_levels": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[1-9](\\|[1-9]){0,8}$"
+    },
+    "curriculum_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "curriculum_version": {
+      "type": "string",
+      "maxLength": 16,
+      "pattern": "^[0-9]{1,6}$",
+      "description": "Số version curriculum; trống = version published hiện hành"
+    },
+    "topic_code": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "objective_codes": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "difficulty": {
+      "type": "string",
+      "maxLength": 1,
+      "pattern": "^[1-5]$"
+    },
+    "content_language": {
+      "enum": [
+        "vi",
+        "en"
+      ]
+    },
+    "stem": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "render_payload": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "answer_key": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "scoring_rule": {
+      "type": "string",
+      "maxLength": 4096
+    },
+    "max_score": {
+      "type": "string",
+      "maxLength": 16
+    },
+    "explanation": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "hints": {
+      "type": "string",
+      "maxLength": 32768
+    },
+    "math_assets": {
+      "type": "string",
+      "maxLength": 262144
+    },
+    "tags": {
+      "type": "string",
+      "maxLength": 1100
+    }
+  },
+  "additionalProperties": false
+}
