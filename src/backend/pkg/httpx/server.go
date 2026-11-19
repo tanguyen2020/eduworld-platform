@@ -16,6 +16,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/clock"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/featuregate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -100,6 +101,9 @@ type Deps struct {
 	Idempotency *idempotency.Store
 	// Middlewares run first for every request (request id, OTel, access log — package observability).
 	Middlewares []func(http.Handler) http.Handler
+	// FeatureGate blocks Admin Portal operations whose x-portal-action (or parent menu) is turned off
+	// (ADR-0090 §3, F012 US9). Optional: nil = off. It needs Spec, which carries x-portal-action.
+	FeatureGate *featuregate.Gate
 }
 
 // Server is the public HTTP server: chi router + per-operation middleware chain.
@@ -115,6 +119,9 @@ type Server struct {
 func NewServer(d Deps) (*Server, error) {
 	if d.Resolver == nil {
 		return nil, errors.New("httpx: server needs a principal resolver")
+	}
+	if d.FeatureGate != nil && d.Spec == nil {
+		return nil, errors.New("httpx: featuregate needs the OpenAPI spec (x-portal-action)")
 	}
 	if d.Clock == nil {
 		d.Clock = clock.System()
@@ -151,8 +158,10 @@ func NewServer(d Deps) (*Server, error) {
 	return s, nil
 }
 
-// Handle registers h for op behind auth → tenant → principal → guards. Patterns under /internal/ are
-// refused (F002-AC-05, ADR-0074: no internal HTTP between modules).
+// Handle registers h for op behind auth → tenant → principal → guards → featuregate → idempotency →
+// validation. Patterns under /internal/ are refused (F002-AC-05, ADR-0074: no internal HTTP between
+// modules). featuregate (ADR-0090 §3) runs only when Deps.FeatureGate is set and the spec operation has
+// x-portal-action; it answers before idempotency so a FEATURE_DISABLED reply is never stored for replay.
 func (s *Server) Handle(op Operation, h http.Handler) error {
 	if op.ID == "" || op.Method == "" || !strings.HasPrefix(op.Pattern, "/") {
 		return fmt.Errorf("httpx: operation needs id, method and a pattern starting with /")
@@ -164,18 +173,34 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 		return fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
 	}
 	chain := h
+	var gate func(http.Handler) http.Handler
 	if s.d.Spec != nil {
 		route, err := specRoute(s.d.Spec, op)
 		if err != nil {
 			return err
 		}
 		chain = validate(route, chain)
+		if s.d.FeatureGate != nil {
+			rule, gated, err := s.d.FeatureGate.Bind(route.Operation)
+			if err != nil {
+				return err
+			}
+			if gated && op.Public {
+				return fmt.Errorf("httpx: operation %s: a public operation cannot carry x-portal-action", op.ID)
+			}
+			if gated {
+				gate = s.d.FeatureGate.Middleware(rule, WriteError)
+			}
+		}
 	}
 	if op.Idempotency != IdempotencyNone {
 		if s.d.Idempotency == nil || op.Public {
 			return fmt.Errorf("httpx: operation %s is idempotent but the server has no idempotency store (or is public)", op.ID)
 		}
 		chain = Idempotency(s.d.Idempotency, op)(chain)
+	}
+	if gate != nil {
+		chain = gate(chain)
 	}
 	if !op.Public {
 		chain = s.guards(effectiveGuard(op), chain)
