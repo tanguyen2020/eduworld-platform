@@ -35,6 +35,7 @@ type env struct {
 	uow                  *entx.UnitOfWork
 	read                 *entx.ReadSession
 	deps                 command.TenantDeps
+	cl                   *testkit.Cluster // the isolated databases of the test (other role DSNs)
 }
 
 func setup(ctx context.Context, t *testing.T) *env {
@@ -44,7 +45,7 @@ func setup(ctx context.Context, t *testing.T) *env {
 		t.Fatal(err)
 	}
 	e := &env{app: open(t, cl.ModuleDSN("identity", "app")), platform: open(t, cl.ModuleDSN("identity", "platform")),
-		relay: open(t, cl.ModuleDSN("identity", "relay"))}
+		relay: open(t, cl.ModuleDSN("identity", "relay")), cl: cl}
 	w, err := outbox.NewWriter("identity", "core", nil)
 	if err != nil {
 		t.Fatal(err)
