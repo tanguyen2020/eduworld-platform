@@ -48,6 +48,8 @@ const Name = "learning"
 const (
 	ImportJobInterval      = 10 * time.Second
 	TranslationJobInterval = 10 * time.Second
+	// ScheduledPublishInterval: F026 T036 applies due scheduled publications every minute.
+	ScheduledPublishInterval = time.Minute
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -114,8 +116,12 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("learning.media_worker", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MediaWorkerOptions(consumer.MediaWorker{Process: w.media}, core.UoW, core.App, js)
 	})
+	r.Consumer("learning.release_pointer_cache", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ReleasePointerOptions(consumer.ReleasePointerCache{Cache: cache.SnapshotCache{C: w.valkey}}, core.UoW, core.App, js)
+	})
 	r.Job(Name, "import-jobs", ImportJobInterval, job.ImportWorker{Runner: w.curriculum}.RunOnce)
 	r.Job(Name, "translation-jobs", TranslationJobInterval, job.TranslationWorker{Runner: w.translations}.RunOnce)
+	r.Job(Name, "content-scheduled-publish", ScheduledPublishInterval, job.ScheduleWorker{Runner: w.releases}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -127,6 +133,7 @@ type wiring struct {
 	curriculum   command.Curriculum
 	translations command.Translations
 	media        command.Media
+	releases     command.Releases
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -167,6 +174,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterMedia(reg)
 	observability.RegisterContent(reg)
 	observability.RegisterWorkflow(reg)
+	observability.RegisterRelease(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -206,6 +214,10 @@ func build(r *module.Registry) (*wiring, error) {
 	tr := command.Translations{UoW: core.UoW, Jobs: write.TranslationJobRepo{}, Workflow: wf, Questions: qcmd, Docs: dcmd,
 		Codec: translation.Codec{}, Files: files, Assets: assets, Audit: auditor}
 	cur.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
+	snapshots := cache.SnapshotCache{C: vk}
+	rel := command.Releases{UoW: core.UoW, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: events,
+		Audit: auditor, Metrics: observability.ReleaseCounter{}, Cache: snapshots, CDN: s3, Signer: signer}
+	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}, Cache: snapshots}
 
 	h := learninghttp.Handlers{Commands: cur,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},
@@ -216,7 +228,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: dcmd, DocQueries: query.Docs{Session: core.ReadSession, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: cursors},
 		Widgets:  query.QuestionWidgets{Widgets: registry.Widgets()},
 		Workflow: wf, Reviews: query.ReviewTasks{Session: core.ReadSession, Model: read.ReviewTaskModel{}, Cursors: cursors},
-		Translations: tr, TranslationJobs: query.TranslationJobs{Session: core.ReadSession, Model: read.TranslationJobModel{}, Files: files}}
+		Translations: tr, TranslationJobs: query.TranslationJobs{Session: core.ReadSession, Model: read.TranslationJobModel{}, Files: files},
+		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors}}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}
@@ -228,5 +241,5 @@ func build(r *module.Registry) (*wiring, error) {
 		Clone: command.ExecuteCloneStep{CloneDeps: command.CloneDeps{UoW: core.UoW, Resources: resources, Tenants: read.TenantDirectory{},
 			Audit: auditor}},
 		Idempotency: core.Idempotency}
-	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media}, nil
+	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel}, nil
 }

@@ -217,7 +217,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 	jobs := map[string][]string{
 		"identity": {"partition-maintainer", "audit-retention", "student-inactive-cleanup", "saga-retry", "retention-anonymizer",
 			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler"},
-		"learning": {"import-jobs", "translation-jobs"},
+		"learning": {"import-jobs", "translation-jobs", "content-scheduled-publish"},
 		"game":     {"session-timeout", "curfew-session-closer"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {
