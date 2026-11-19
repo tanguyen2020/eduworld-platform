@@ -1,6 +1,6 @@
 # Feature Specification: F060 — Khung project Godot: autoload, theme sinh từ token, i18n vi/en, CI, Prism mock
 
-**Feature Branch**: `060-godot-project-foundation` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C0 · **Phụ thuộc**: F005
+**Feature Branch**: `060-godot-project-foundation` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/game/` · **Mốc**: M-C0 · **Phụ thuộc**: F005
 **Input**: Khung project Godot 4.x (GDScript static typing) theo GODOT_ARCHITECTURE: autoload nền, phân lớp Service ← Gameplay ← UI, Theme và mật độ theo grade band sinh từ `design/game-tokens/`, song ngữ vi-VN/en-US qua gettext, định dạng theo locale, pipeline CI headless, mock API có nhãn để làm client trước khi backend sẵn sàng, và kho bảo mật `SecureStorage` theo nền tảng để giữ phiên game (ADR-0086) — NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-MAINT-007.
 
 ## Clarifications
