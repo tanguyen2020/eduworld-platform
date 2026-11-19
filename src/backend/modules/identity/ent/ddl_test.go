@@ -23,7 +23,7 @@ var migrations = map[string][]string{
 		"province_successions", "schools", "students", "tenants", "users"},
 	"20261120000001_f011_sis.sql": {"reconciliation_issues", "sis_connection_schools", "sis_connections", "sis_identity_links",
 		"sis_imports", "sis_links", "student_login_keys", "sync_runs", "synced_students"},
-	"20261121000001_f012_authz.sql": {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
+	"20261121000001_f012_authz.sql":      {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
 	"20261122000001_f013_game_login.sql": {"game_auth_sessions"},
 }
 
