@@ -1,6 +1,6 @@
 # Feature Specification: F059 — Workspace D — người dùng/role platform, catalog permission, audit toàn hệ thống, login events liên tenant, feature flags, màn tích hợp
 
-**Feature Branch**: `059-portal-platform-users-audit` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F012, F015, F057
+**Feature Branch**: `059-portal-platform-users-audit` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F012, F015, F057
 **Input**: Phần còn lại của workspace D (chỉ System Admin, gateway nội bộ + MFA) ngoài F057: Role platform/role dùng chung, UserRole platform và UserRole tenant ở tenant đích, người dùng mọi tenant, Permission catalog (chỉ xem), audit toàn hệ thống và nhật ký phân quyền, lịch sử đăng nhập game liên tenant, feature flag, màn Tích hợp (Keycloak/SIS/APISIX chỉ xem). FR nguồn: FR-AUD-001, FR-AUTH-032, FR-AUTH-016, FR-CMS-001, FR-CMS-012, FR-GAME-013, FR-ORG-007, FR-AUTH-010, FR-SIS-007.
 
 ## Clarifications

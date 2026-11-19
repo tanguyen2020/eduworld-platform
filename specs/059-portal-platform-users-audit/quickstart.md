@@ -55,3 +55,29 @@ make web-test
 ## 4. Bằng chứng cần nộp
 
 - Kết quả Vitest/Playwright (số pass/fail), network log kịch bản 7, 24 (header, chunk), `trace_id` kịch bản 3, 7, 13, kết quả quét secret kịch bản 23, ảnh màn hình sáng/tối.
+
+### Bằng chứng 2026-11-20 (triển khai, mức integration)
+
+Chạy trong `src/cms/frontend` (tối đa 2 worker), commit `b75d83a`. Backend là MOCK theo contract (`src/test/mock-backend.ts` + `src/test/platform-backend.ts` + `src/test/platform-access-backend.ts`); Playwright với backend thật, axe/ảnh sáng-tối, network log và `trace_id` của gateway thật chờ môi trường compose (OQ F059-9). Phần contract chưa có (`listPlatformUsers`, `createPlatformUser`, `getIntegrationOverview`, lọc tiền tố action) theo OQ F059-1…3.
+
+| Lệnh | Kết quả |
+|---|---|
+| `pnpm lint` · `pnpm typecheck` · `pnpm gen:check` | xanh (trước và sau rebase lên `origin/main`) |
+| `npx vitest run --maxWorkers=2` (toàn bộ web, sau rebase) | 77 file, 562 test: 561 pass, 1 lỗi do click khi dropdown còn `pointer-events: none` dưới tải CPU (`Users.test.tsx`) → sửa helper chọn option, chạy lại `Users.test.tsx` 4/4 pass |
+| Test F059 (`__tests__/AccessControlRoles`, `UserRoles`, `Users`, `AuditLogs`, `LoginEventsFlags`, `IntegrationsGuard`, `shared/authz/groupPermissions.test.ts`, `limits.test.ts`) | 7 file mới, 41 test + 23 test mới trong `limits.test.ts` (22 giới hạn + CONFIG_DEFAULTS), pass |
+| `pnpm build` (+ `check-chunks`) | 5 chunk workspace, chunk `workspace-platform-admin` không do entry tải |
+| `node scripts/specs/check-features.mjs` | 93 feature, 0 lỗi, 0 cảnh báo |
+| `node scripts/specs/check-portal-catalog.mjs` | 0 lỗi |
+
+| Kịch bản | Test |
+|---|---|
+| 1 | `AccessControlRoles.test.tsx` › Permission catalog (nhóm `group_code`, `catalog_version`, role chứa, lọc phạm vi, không nút ghi) |
+| 2–5 | `AccessControlRoles.test.tsx` (không `X-Tenant-Id`, "Hệ thống"/"Dùng chung", role tenant chỉ xem; tạo + `Idempotency-Key`, picker theo `scope_kind`; `422 PERMISSION_NOT_ALLOWED_FOR_SCOPE` giữ form, thử lại giữ khóa; sửa `If-Match` + lý do, `412`/`403` theo code; `404` đóng editor; xóa `409` khi còn người dùng, `If-Match` + `reason`; nhân bản role hệ thống) |
+| 6–10, 26 | `UserRoles.test.tsx` (cột, lọc `user_id`/`tenant_ids[]`; nhân sự platform → role platform, không header, mất mạng → thử lại cùng `Idempotency-Key`, `409`; nhân sự tenant → tenant đích, role của tenant, scope `school` + id, `X-Tenant-Id`; `safety_moderator` bắt buộc ngày đào tạo, `422 ROLE_NOT_FOUND`; thu hồi có lý do + header tenant của UserRole) |
+| 11–14 | `Users.test.tsx` (tài khoản theo tenant với `X-Tenant-Id`, nhãn SIS, học sinh chỉ đọc; ngăn chi tiết UserRole mọi tenant, không mật khẩu/token/IP; khóa/mở khóa/vô hiệu hóa có lý do; tạo nhân sự trường `409 EMAIL_TAKEN` + gợi ý; nhân sự platform khóa — OQ F059-1) |
+| 15–17 | `AuditLogs.test.tsx` (24 giờ mặc định, lọc vào URL, `tenant_ids[]`, `changes` escape, `trace_id`; nhật ký phân quyền chỉ `role.*`/`user_role.*`; `422` giữ bộ lọc + giới hạn 93 ngày) |
+| 18–19 | `LoginEventsFlags.test.tsx` (7 ngày, nhãn `end_reason`, cursor "Tải thêm", không IP) |
+| 20–21 | `LoginEventsFlags.test.tsx` (mặc định platform + `If-Match` + lý do, mục bảo vệ không tắt được, ghi đè tenant `X-Tenant-Id`, `412` tải lại + "Đã có người sửa") |
+| 22–23 | `IntegrationsGuard.test.tsx` (tab SIS: connection, trường, lần sync; trường ngoài schema không vào DOM, không ô nhập; Keycloak/APISIX chờ OQ F059-2) |
+| 24–25, 28 | `IntegrationsGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan` ở cả 5 URL; menu ẩn khi thiếu `platform.audit.read`; `PERMISSION_DENIED` + `trace_id`; MFA step-up; menu tắt → "Tính năng đang tắt", mục bảo vệ còn; action tắt ẩn nút; `403 FEATURE_DISABLED` tải lại quyền) |
+| 27 | `limits.test.ts` (giới hạn = OpenAPI, `principal_cache_ttl`/`audit_query_max_range_days` = CONFIG_DEFAULTS) + `maxlength`/bộ đếm trong test màn |
