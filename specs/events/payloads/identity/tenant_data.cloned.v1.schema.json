@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/tenant_data.cloned.v1.schema.json",
+  "title": "Payload tenant_data.cloned v1 (module identity, owner F045)",
+  "description": "Job clone giữa tenant kết thúc (F045-AC-18): phát một lần với envelope tenant_id = target_tenant_id. Không chứa dữ liệu học sinh (R22). Consumer: AUD, NTF (System Admin).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job_id", "source_tenant_id", "target_tenant_id", "resource_type", "count", "status"],
+  "properties": {
+    "job_id": { "type": "string", "format": "uuid" },
+    "source_tenant_id": { "type": "string", "format": "uuid" },
+    "target_tenant_id": { "type": "string", "format": "uuid" },
+    "resource_type": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z_]{1,63}$" },
+    "count": { "type": "integer", "minimum": 0, "maximum": 100000, "description": "Số bản sao đã tạo (gồm phụ thuộc)" },
+    "status": { "type": "string", "enum": ["succeeded", "partially_failed", "failed"] }
+  },
+  "examples": [
+    { "job_id": "0193a5f4-6c1e-7b2a-9d1f-000000000301", "source_tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "target_tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "resource_type": "question_set", "count": 12, "status": "succeeded" }
+  ]
+}

@@ -105,6 +105,7 @@ const (
 	PermPlatformTrashRead                        Permission = "platform.trash.read"
 	PermPlatformTrashRestore                     Permission = "platform.trash.restore"
 	PermPlatformUserManage                       Permission = "platform.user.manage"
+	PermPlatformUserMerge                        Permission = "platform.user.merge" // F045 [Proposed]: approve a merge of two accounts
 	PermPlatformUserRoleWrite                    Permission = "platform.user_role.write"
 	PermReportExport                             Permission = "report.export"
 	PermSchoolPeopleRead                         Permission = "school.people.read"
@@ -230,6 +231,7 @@ var catalog = []Permission{
 	PermPlatformTrashRead,
 	PermPlatformTrashRestore,
 	PermPlatformUserManage,
+	PermPlatformUserMerge,
 	PermPlatformUserRoleWrite,
 	PermReportExport,
 	PermSchoolPeopleRead,

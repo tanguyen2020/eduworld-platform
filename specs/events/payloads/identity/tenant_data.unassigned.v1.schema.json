@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/tenant_data.unassigned.v1.schema.json",
+  "title": "Payload tenant_data.unassigned v1 (module identity, owner F045)",
+  "description": "Assignment của một tài nguyên platform cho một tenant bị gỡ (soft-delete ở module sở hữu, F045-AC-10). Một event cho mỗi tenant; envelope tenant_id = tenant_id của payload. Attempt và bài giao cũ vẫn xem lại được.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resource_type", "resource_id", "tenant_id", "owner_module"],
+  "properties": {
+    "resource_type": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z_]{1,63}$" },
+    "resource_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "assignment_id": { "type": "string", "format": "uuid" },
+    "owner_module": { "type": "string", "enum": ["learning", "game", "competition", "chat", "identity"] }
+  },
+  "examples": [
+    { "resource_type": "question_set", "resource_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "assignment_id": "0193a5f4-6c1e-7b2a-9d1f-000000000201", "owner_module": "learning" }
+  ]
+}

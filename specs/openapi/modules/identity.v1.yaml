@@ -1922,6 +1922,8 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /admin/trash/{resource_type}/{resource_id}:restore:
     post:
       x-service: identity
@@ -1930,6 +1932,7 @@ paths:
       operationId: restoreTrashItem
       x-portal-action: action.platform_admin.trash.restore
       summary: Khôi phục bản ghi đã soft-delete
+      description: X-Tenant-Id = tenant của bản ghi (vắng với dữ liệu platform); lý do bắt buộc (F045-AC-20, ADMIN_PORTAL §3.8).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -1938,6 +1941,12 @@ paths:
         - $ref: '#/components/parameters/ResourceTypePath'
         - $ref: '#/components/parameters/ResourceIdPath'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreRequest'
       responses:
         '204':
           description: Đã khôi phục
@@ -1950,6 +1959,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /admin/tenant-assignments:
     get:
       x-service: identity
@@ -1993,6 +2006,8 @@ paths:
                     $ref: '#/components/schemas/PageInfo'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
     post:
       x-service: identity
       tags:
@@ -2031,8 +2046,12 @@ paths:
                       $ref: '#/components/schemas/TenantAssignment'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
     delete:
       x-service: identity
       tags:
@@ -2064,6 +2083,7 @@ paths:
                 tenant_ids:
                   type: array
                   minItems: 1
+                  maxItems: 100
                   items:
                     $ref: '#/components/schemas/Uuid'
                 reason:
@@ -2077,6 +2097,12 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /admin/tenant-clones:
     post:
       x-service: identity
@@ -2136,6 +2162,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TenantCloneJob'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/users:merge:
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: mergeUsers
+      x-portal-action: action.platform_admin.access_control.edit_users
+      summary: Hợp nhất hai tài khoản của cùng một người (saga user_merge, IDENTITY_MAPPING §7) [Proposed]
+      description: Chỉ System Admin (platform.user.merge) duyệt đề nghị gộp của School Admin; X-Tenant-Id = tenant đích của hai tài khoản.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMergeCommand'
+      responses:
+        '202':
+          description: Đã tạo saga gộp
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMergeJob'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/user-merges/{merge_id}:
+    get:
+      x-service: identity
+      tags:
+        - admin
+      operationId: getUserMerge
+      x-portal-action: action.platform_admin.access_control.view_users
+      summary: Trạng thái một lần gộp tài khoản và lỗi từng bước [Proposed]
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: merge_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMergeJob'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -2726,6 +2821,8 @@ paths:
                     $ref: '#/components/schemas/PageInfo'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /tenant/trash/{resource_type}/{resource_id}:restore:
     post:
       x-service: identity
@@ -2739,6 +2836,12 @@ paths:
         - $ref: '#/components/parameters/ResourceTypePath'
         - $ref: '#/components/parameters/ResourceIdPath'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreRequest'
       responses:
         '204':
           description: Đã khôi phục
@@ -2751,6 +2854,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /tenant/settings:
     get:
       x-service: identity
@@ -6661,6 +6768,8 @@ components:
             - same_person
             - ignore
             - fixed_in_source
+            - merge_requested
+            - merged
             - null
         resolution_note:
           type:
@@ -6956,6 +7065,8 @@ components:
         - class_template
         - school_settings
         - tenant_settings
+        - user
+        - student
     TrashItem:
       type: object
       description: Chỉ trả trong API Thùng rác — schema duy nhất có deleted_at
@@ -6988,6 +7099,17 @@ components:
         restorable:
           type: boolean
           description: false nếu khôi phục sẽ vi phạm unique (đã có bản ghi mới cùng mã)
+    RestoreRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - reason
+      description: Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20)
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
     TenantAssignment:
       type: object
       required:
@@ -7022,6 +7144,7 @@ components:
         tenant_ids:
           type: array
           description: Bắt buộc trừ khi apply_to_all_tenants = true
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Uuid'
         apply_to_all_tenants:
@@ -7096,6 +7219,7 @@ components:
                 $ref: '#/components/schemas/Uuid'
         errors:
           type: array
+          description: 'Lỗi từng bước saga dạng `<service> step <n>: <message>` (F045-AC-17)'
           items:
             type: string
             maxLength: 255
@@ -7103,6 +7227,75 @@ components:
           $ref: '#/components/schemas/Timestamp'
         finished_at:
           $ref: '#/components/schemas/Timestamp'
+    UserMergeCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - from_user_id
+        - into_user_id
+        - reconciliation_issue_id
+        - reason
+      description: Gộp tài khoản nguồn vào tài khoản đích ở tenant X-Tenant-Id (IDENTITY_MAPPING §7, F045-AC-27) [Proposed]
+      properties:
+        from_user_id:
+          $ref: '#/components/schemas/Uuid'
+        into_user_id:
+          $ref: '#/components/schemas/Uuid'
+        reconciliation_issue_id:
+          $ref: '#/components/schemas/Uuid'
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+    UserMergeJob:
+      type: object
+      required:
+        - merge_id
+        - saga_id
+        - status
+        - from_user_id
+        - into_user_id
+        - steps
+      properties:
+        merge_id:
+          $ref: '#/components/schemas/Uuid'
+        saga_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - running
+            - succeeded
+            - failed
+        from_user_id:
+          $ref: '#/components/schemas/Uuid'
+        into_user_id:
+          $ref: '#/components/schemas/Uuid'
+        merged_at:
+          $ref: '#/components/schemas/Timestamp'
+        steps:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - service
+              - status
+            properties:
+              service:
+                type: string
+                maxLength: 64
+              status:
+                type: string
+                enum:
+                  - pending
+                  - done
+                  - nothing_to_do
+                  - blocked
+                  - failed
+              error:
+                type: string
+                maxLength: 1000
     PermissionScopeKind:
       type: string
       enum:

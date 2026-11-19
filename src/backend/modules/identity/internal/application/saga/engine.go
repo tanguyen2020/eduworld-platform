@@ -345,3 +345,48 @@ func (e Engine) ResumeDue(ctx context.Context, defs map[string]Definition, limit
 	}
 	return n, nil
 }
+
+// Enqueue creates the run (or returns the existing one of the same type and key) without executing it: the
+// job running ResumeDue executes it (operations answering 202, F045). Call it inside a UnitOfWork with a
+// platform scope so the run is created in the caller's transaction; created is false for a replay.
+func (e Engine) Enqueue(ctx context.Context, def Definition, tenant *uuid.UUID, subject any, idemKey string, by *uuid.UUID) (run write.SagaRun, created bool, err error) {
+	raw, err := json.Marshal(subject)
+	if err != nil {
+		return run, false, err
+	}
+	steps := make([]write.SagaStep, len(def.Steps))
+	for i, s := range def.Steps {
+		steps[i] = write.SagaStep{No: i, Service: s.Service, Action: s.Action, Status: "pending"}
+	}
+	now := e.now()
+	run = write.SagaRun{ID: uuid.Must(uuid.NewV7()), Type: def.Type, TenantID: tenant, Subject: raw, Status: StatusRunning,
+		RequestedBy: by, IdempotencyKey: idemKey, StartedAt: now, Steps: steps}
+	if run, created, err = e.Repo.Create(ctx, run); err != nil || !created {
+		return run, created, err
+	}
+	run.NextAttemptAt = &now
+	return run, true, e.Repo.SaveRun(ctx, &run)
+}
+
+// Reopen puts a blocked or failed run back to running with its unfinished steps pending, due now (a System
+// Admin re-runs it after fixing the cause, F045-AC-29); done steps are never run again. Call it inside a
+// UnitOfWork with a platform scope; a running or succeeded run is returned unchanged.
+func (e Engine) Reopen(ctx context.Context, id uuid.UUID) (*write.SagaRun, error) {
+	run, err := e.Repo.Lock(ctx, id)
+	if err != nil || run == nil || (run.Status != StatusBlocked && run.Status != StatusFailed) {
+		return run, err
+	}
+	for i := range run.Steps {
+		st := &run.Steps[i]
+		if st.Status == Done || st.Status == NothingToDo {
+			continue
+		}
+		st.Status = "pending"
+		if err := e.Repo.SaveStep(ctx, run.ID, *st); err != nil {
+			return nil, err
+		}
+	}
+	now := e.now()
+	run.Status, run.Attempts, run.FinishedAt, run.NextAttemptAt = StatusRunning, 0, nil, &now
+	return run, e.Repo.SaveRun(ctx, run)
+}

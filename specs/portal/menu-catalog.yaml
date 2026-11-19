@@ -2032,13 +2032,13 @@ workspaces:
             label_key: portal.action.platform_admin.access_control.view_users
             title: Xem người dùng mọi tenant
             required_permissions: [platform.user.manage]
-            operation_ids: []
+            operation_ids: [getUserMerge]
             can_disable: false
           - key: action.platform_admin.access_control.edit_users
             label_key: portal.action.platform_admin.access_control.edit_users
-            title: Tạo/sửa nhân sự platform, mở khóa; tạo học sinh tenant chung
+            title: Tạo/sửa nhân sự platform, mở khóa; tạo học sinh tenant chung; duyệt gộp tài khoản (platform.user.merge, F045)
             required_permissions: [platform.user.manage]
-            operation_ids: [createCommonTenantStudents]
+            operation_ids: [createCommonTenantStudents, mergeUsers]
             can_disable: false
           - key: action.platform_admin.access_control.view_roles
             label_key: portal.action.platform_admin.access_control.view_roles

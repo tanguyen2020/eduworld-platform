@@ -2554,6 +2554,17 @@
     ]
   },
   {
+    "operation_id": "getUserMerge",
+    "module": "identity",
+    "method": "GET",
+    "path": "/admin/user-merges/{merge_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getWallet",
     "module": "game",
     "method": "GET",
@@ -4172,6 +4183,17 @@
     "module": "identity",
     "method": "POST",
     "path": "/auth/logout",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "mergeUsers",
+    "module": "identity",
+    "method": "POST",
+    "path": "/admin/users:merge",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",

@@ -1563,8 +1563,28 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Khôi phục bản ghi đã soft-delete */
+        /**
+         * Khôi phục bản ghi đã soft-delete
+         * @description X-Tenant-Id = tenant của bản ghi (vắng với dữ liệu platform); lý do bắt buộc (F045-AC-20, ADMIN_PORTAL §3.8).
+         */
         post: operations["restoreTrashItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/user-merges/{merge_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trạng thái một lần gộp tài khoản và lỗi từng bước [Proposed] */
+        get: operations["getUserMerge"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1601,6 +1621,26 @@ export interface paths {
         post?: never;
         /** Thu hồi UserRole bất kỳ (soft-delete, bắt buộc reason) — platform.user_role.write */
         delete: operations["revokePlatformUserRole"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users:merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hợp nhất hai tài khoản của cùng một người (saga user_merge, IDENTITY_MAPPING §7) [Proposed]
+         * @description Chỉ System Admin (platform.user.merge) duyệt đề nghị gộp của School Admin; X-Tenant-Id = tenant đích của hai tài khoản.
+         */
+        post: operations["mergeUsers"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -11483,7 +11523,11 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings";
+        ResourceType: "curriculum" | "lesson" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
+        /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
+        RestoreRequest: {
+            reason: string;
+        };
         /**
          * @description Khi nào công bố kết quả/đáp án của bài giao, đề (manual = school_admin/academic_manager công bố)
          * @enum {string}
@@ -12137,7 +12181,7 @@ export interface components {
             issue_id: components["schemas"]["Uuid"];
             issue_type: components["schemas"]["SisReconciliationIssueType"];
             /** @enum {string|null} */
-            resolution?: "link" | "same_person" | "ignore" | "fixed_in_source" | null;
+            resolution?: "link" | "same_person" | "ignore" | "fixed_in_source" | "merge_requested" | "merged" | null;
             resolution_note?: string | null;
             resolved_at?: components["schemas"]["Timestamp"] | null;
             resolved_by?: components["schemas"]["Uuid"] | null;
@@ -12408,6 +12452,7 @@ export interface components {
         TenantCloneJob: {
             cloned_count?: number;
             created_at?: components["schemas"]["Timestamp"];
+            /** @description Lỗi từng bước saga dạng `<service> step <n>: <message>` (F045-AC-17) */
             errors?: string[];
             finished_at?: components["schemas"]["Timestamp"];
             /** @description Ánh xạ ID nguồn → ID bản sao (gồm phụ thuộc được clone) */
@@ -12748,6 +12793,28 @@ export interface components {
             user_type: "student" | "staff";
             username: string;
             version?: number;
+        };
+        /** @description Gộp tài khoản nguồn vào tài khoản đích ở tenant X-Tenant-Id (IDENTITY_MAPPING §7, F045-AC-27) [Proposed] */
+        UserMergeCommand: {
+            from_user_id: components["schemas"]["Uuid"];
+            into_user_id: components["schemas"]["Uuid"];
+            reason: string;
+            reconciliation_issue_id: components["schemas"]["Uuid"];
+        };
+        UserMergeJob: {
+            from_user_id: components["schemas"]["Uuid"];
+            into_user_id: components["schemas"]["Uuid"];
+            merge_id: components["schemas"]["Uuid"];
+            merged_at?: components["schemas"]["Timestamp"];
+            saga_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            status: "running" | "succeeded" | "failed";
+            steps: {
+                error?: string;
+                service: string;
+                /** @enum {string} */
+                status: "pending" | "done" | "nothing_to_do" | "blocked" | "failed";
+            }[];
         };
         UserPage: {
             items: components["schemas"]["User"][];
@@ -16848,6 +16915,7 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     assignToTenants: {
@@ -16889,7 +16957,9 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     unassignFromTenants: {
@@ -16932,6 +17002,9 @@ export interface operations {
                 content?: never;
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     createTenantClone: {
@@ -17273,6 +17346,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     restoreTrashItem: {
@@ -17298,7 +17372,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
         responses: {
             /** @description Đã khôi phục */
             204: {
@@ -17311,6 +17389,32 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getUserMerge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                merge_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMergeJob"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listAllUserRoles: {
@@ -17419,6 +17523,49 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    mergeUsers: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserMergeCommand"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo saga gộp */
+            202: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMergeJob"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     deactivateUser: {
@@ -32565,6 +32712,7 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     restoreTenantTrashItem: {
@@ -32590,7 +32738,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
         responses: {
             /** @description Đã khôi phục */
             204: {
@@ -32603,6 +32755,8 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     listTenantUserRoles: {
