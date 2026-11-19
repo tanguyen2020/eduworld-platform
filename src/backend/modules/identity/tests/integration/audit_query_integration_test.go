@@ -10,16 +10,26 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/settingscfg"
 	identityhttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/http"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 )
 
 // settingsHandlers are the F015 use cases of the HTTP harness realAuthHTTP.
 func settingsHandlers(e *env, codec *page.Codec) identityhttp.SettingsHandlers {
-	return identityhttp.SettingsHandlers{AuditLogs: query.AuditLogs{Model: read.AuditModel{Session: e.read}, Cursors: codec}}
+	defaults, err := settingscfg.DefaultsFrom(config.Load())
+	if err != nil {
+		panic(err)
+	}
+	return identityhttp.SettingsHandlers{AuditLogs: query.AuditLogs{Model: read.AuditModel{Session: e.read}, Cursors: codec},
+		Settings:    command.Settings{UoW: e.uow, Repo: write.SettingsRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, Defaults: defaults},
+		SettingsGet: query.Settings{Reader: read.SettingsModel{Session: e.read}, Defaults: defaults}}
 }
 
 // portalUser creates a staff user linked to the test IDP with one role.

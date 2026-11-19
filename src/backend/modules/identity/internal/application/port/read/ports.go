@@ -163,3 +163,19 @@ type AuditReadModel interface {
 	// AuditLogs returns up to f.Limit+1 entries, newest first.
 	AuditLogs(ctx context.Context, f AuditFilter) ([]dto.AuditLogEntry, error)
 }
+
+// StoredSettings is a settings JSON value with its version (0 = not configured).
+type StoredSettings struct {
+	Value     []byte
+	Version   int64
+	UpdatedAt *time.Time
+	TenantID  uuid.UUID // owner tenant of a school
+}
+
+// SettingsReader reads platform, tenant and school settings (F015 US3/US4) in a READ ONLY session; found is
+// false for an unknown or deleted tenant/school (and for a school outside the RLS tenant of the scope).
+type SettingsReader interface {
+	PlatformSetting(ctx context.Context, key string) (StoredSettings, error)
+	TenantSettings(ctx context.Context, tenantID uuid.UUID) (s StoredSettings, found bool, err error)
+	SchoolSettings(ctx context.Context, schoolID uuid.UUID) (s StoredSettings, found bool, err error)
+}
