@@ -4026,14 +4026,29 @@ paths:
       tags: [cms]
       operationId: searchQuestions
       x-portal-action: action.content_studio.question_bank.view
-      summary: Tìm kiếm question bank
+      summary: Tìm kiếm question bank (version mới nhất của mỗi câu) theo môn, khối, chủ đề, LO, độ khó, trạng thái, loại, nguồn (learning_content.read)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - name: q
           in: query
+          description: Tìm full-text — F024 (bỏ qua ở F022)
           schema: { type: string, maxLength: 200 }
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/GradeLevelQuery'
+        - name: topic_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: objective_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: difficulty
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 5
+            items: { type: integer, minimum: 1, maximum: 5 }
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/ContentStatus' }
@@ -4090,6 +4105,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QuestionAuthoring'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
   /cms/learning/questions/{question_id}:
@@ -4136,10 +4152,34 @@ paths:
                 reason: { type: string, maxLength: 500 }
       responses:
         '204': { description: Đã soft-delete }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /cms/learning/questions/{question_id}/versions/{version}:
+    get:
+      x-service: learning
+      tags: [cms]
+      operationId: getCmsQuestionVersion
+      x-portal-action: action.content_studio.question_bank.view
+      summary: Một version của câu hỏi kèm answer_key, phản hồi phương án, gợi ý (chỉ role CMS có learning_content.read trong scope)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/QuestionIdPath'
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionAuthoring' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-service: learning
       tags: [cms]
@@ -4169,8 +4209,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QuestionAuthoring'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
   /cms/learning/content/{content_type}/{content_id}/versions/{version}:transition:
     post:
@@ -4485,6 +4529,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
   /cms/learning/preview/sessions:
     post:
@@ -17845,31 +17890,77 @@ components:
         translation_status: { $ref: '#/components/schemas/TranslationStatus', readOnly: true }
     QuestionAuthoringInput:
       type: object
-      description: Dạng soạn thảo — chỉ dùng trong CMS, có answer_key
+      description: |
+        Dạng soạn thảo — chỉ dùng trong CMS, có answer_key (F022). stem, render_payload, answer_key, scoring_rule, explanation,
+        hints được kiểm theo specs/schemas/question.schema.json theo `type` rồi validator ngữ nghĩa của loại (lỗi trả JSON
+        pointer trong errors[].field); options[].feedback và options[].misconception_tag được tách khỏi render payload khi lưu
+        (chỉ server). Loại chưa bật (short_answer, image_based, interactive — F023) → 422 errors[].code = TYPE_NOT_ENABLED.
       properties:
         tenant_id:
           description: Tenant đích — bắt buộc khi người gọi là System Admin và owner_scope = tenant; người dùng tenant bỏ trống (khác tenant phiên → TENANT_MISMATCH)
           $ref: '#/components/schemas/Uuid'
         owner_scope: { type: string, enum: [platform, tenant], default: tenant }
         type: { $ref: '#/components/schemas/QuestionType' }
-        stem: { type: object, additionalProperties: true }
-        render_payload: { type: object, additionalProperties: true }
-        answer_key: { type: object, additionalProperties: true }
-        scoring_rule: { type: object, additionalProperties: true }
-        explanation: { type: object, additionalProperties: true }
+        stem: { type: object, additionalProperties: true, maxProperties: 4, description: 'richContent (question.schema.json#/$defs/richContent)' }
+        render_payload: { type: object, additionalProperties: true, maxProperties: 16 }
+        answer_key: { type: object, additionalProperties: true, maxProperties: 16 }
+        scoring_rule: { type: object, additionalProperties: true, maxProperties: 8 }
+        explanation: { type: object, additionalProperties: true, maxProperties: 4, description: 'richContent' }
+        hints:
+          type: array
+          maxItems: 5
+          description: Gợi ý theo cấp (richContent), chỉ server
+          items: { type: object, additionalProperties: true, maxProperties: 4 }
+        worked_example_ref:
+          type: object
+          additionalProperties: false
+          required: [content_item_id, block_id]
+          description: 'Khối worked_example trong lesson/learning material cùng LO (CONTENT_MODEL §9.2); kiểm tồn tại ở F024'
+          properties:
+            content_item_id: { $ref: '#/components/schemas/Uuid' }
+            block_id: { type: string, minLength: 1, maxLength: 64 }
+        min_response_ms: { type: integer, minimum: 0, maximum: 600000 }
+        max_score: { type: number, exclusiveMinimum: 0, maximum: 99999.99, default: 1 }
+        math_assets:
+          type: array
+          maxItems: 50
+          description: 'Công thức đã render (ADR-0055, question.schema.json#/$defs/mathDisplay)'
+          items:
+            type: object
+            additionalProperties: false
+            required: [latex, svg_asset, speech_text]
+            properties:
+              latex: { type: string, minLength: 1, maxLength: 2000 }
+              svg_asset: { type: string, maxLength: 128, pattern: '^math/[0-9a-f]{64}\.svg$' }
+              speech_text: { type: string, maxLength: 1000 }
+        tags:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items: { type: string, minLength: 1, maxLength: 50 }
         difficulty: { type: integer, minimum: 1, maximum: 5 }
-        grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        grade_levels:
+          type: array
+          minItems: 1
+          maxItems: 9
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/GradeLevel' }
         subject_id: { $ref: '#/components/schemas/Uuid' }
         topic_id: { $ref: '#/components/schemas/Uuid' }
+        curriculum_version_id: { $ref: '#/components/schemas/Uuid' }
         objective_ids:
           type: array
+          maxItems: 50
+          uniqueItems: true
           items: { $ref: '#/components/schemas/Uuid' }
         media_refs:
           type: array
+          maxItems: 50
           items: { $ref: '#/components/schemas/Uuid' }
         content_language:
           $ref: '#/components/schemas/ContentLanguage'
           description: Ngôn ngữ gốc của câu hỏi; stem/explanation dùng khóa vi/en (specs/schemas/question.schema.json)
+        change_note: { type: string, maxLength: 500 }
         exam_only: { type: boolean, default: false, description: Chỉ dùng trong đề kiểm tra (QUESTION_BANK) }
         efficacy_instrument:
           type: boolean

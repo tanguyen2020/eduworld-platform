@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"encoding/json/jsontext"
 	"errors"
 	"fmt"
 	"sync"
@@ -21,6 +22,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/predicate"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -48,6 +52,9 @@ const (
 	TypeImportJob                = "ImportJob"
 	TypeLearningObjective        = "LearningObjective"
 	TypeLoVersionMapping         = "LoVersionMapping"
+	TypeQuestion                 = "Question"
+	TypeQuestionVersion          = "QuestionVersion"
+	TypeQuestionVersionObjective = "QuestionVersionObjective"
 	TypeSubject                  = "Subject"
 	TypeSubjectGrade             = "SubjectGrade"
 	TypeTenantResourceAssignment = "TenantResourceAssignment"
@@ -11731,6 +11738,6257 @@ func (m *LoVersionMappingMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *LoVersionMappingMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown LoVersionMapping edge %s", name)
+}
+
+// QuestionMutation represents an operation that mutates the Question nodes in the graph.
+type QuestionMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	tenant_id             *uuid.UUID
+	created_at            *time.Time
+	created_by            *uuid.UUID
+	updated_at            *time.Time
+	updated_by            *uuid.UUID
+	deleted_at            *time.Time
+	deleted_by            *uuid.UUID
+	delete_reason         *string
+	version               *int64
+	addversion            *int64
+	owner_scope           *string
+	current_version_id    *uuid.UUID
+	latest_version_no     *int
+	addlatest_version_no  *int
+	cloned_from_id        *uuid.UUID
+	cloned_from_tenant_id *uuid.UUID
+	cloned_at             *time.Time
+	cloned_by             *uuid.UUID
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*Question, error)
+	predicates            []predicate.Question
+}
+
+var _ ent.Mutation = (*QuestionMutation)(nil)
+
+// questionOption allows management of the mutation configuration using functional options.
+type questionOption func(*QuestionMutation)
+
+// newQuestionMutation creates new mutation for the Question entity.
+func newQuestionMutation(c config, op Op, opts ...questionOption) *QuestionMutation {
+	m := &QuestionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeQuestion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withQuestionID sets the ID field of the mutation.
+func withQuestionID(id uuid.UUID) questionOption {
+	return func(m *QuestionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Question
+		)
+		m.oldValue = func(ctx context.Context) (*Question, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Question.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withQuestion sets the old Question of the mutation.
+func withQuestion(node *Question) questionOption {
+	return func(m *QuestionMutation) {
+		m.oldValue = func(context.Context) (*Question, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m QuestionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m QuestionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Question entities.
+func (m *QuestionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *QuestionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *QuestionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Question.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *QuestionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *QuestionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *QuestionMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[question.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *QuestionMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[question.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *QuestionMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, question.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *QuestionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *QuestionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *QuestionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *QuestionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *QuestionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *QuestionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[question.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *QuestionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[question.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *QuestionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, question.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *QuestionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *QuestionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *QuestionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *QuestionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *QuestionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *QuestionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[question.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *QuestionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[question.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *QuestionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, question.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *QuestionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *QuestionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *QuestionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[question.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *QuestionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[question.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *QuestionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, question.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *QuestionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *QuestionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *QuestionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[question.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *QuestionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[question.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *QuestionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, question.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *QuestionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *QuestionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *QuestionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[question.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *QuestionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[question.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *QuestionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, question.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *QuestionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *QuestionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *QuestionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *QuestionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *QuestionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *QuestionMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *QuestionMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *QuestionMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetCurrentVersionID sets the "current_version_id" field.
+func (m *QuestionMutation) SetCurrentVersionID(u uuid.UUID) {
+	m.current_version_id = &u
+}
+
+// CurrentVersionID returns the value of the "current_version_id" field in the mutation.
+func (m *QuestionMutation) CurrentVersionID() (r uuid.UUID, exists bool) {
+	v := m.current_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentVersionID returns the old "current_version_id" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldCurrentVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentVersionID: %w", err)
+	}
+	return oldValue.CurrentVersionID, nil
+}
+
+// ClearCurrentVersionID clears the value of the "current_version_id" field.
+func (m *QuestionMutation) ClearCurrentVersionID() {
+	m.current_version_id = nil
+	m.clearedFields[question.FieldCurrentVersionID] = struct{}{}
+}
+
+// CurrentVersionIDCleared returns if the "current_version_id" field was cleared in this mutation.
+func (m *QuestionMutation) CurrentVersionIDCleared() bool {
+	_, ok := m.clearedFields[question.FieldCurrentVersionID]
+	return ok
+}
+
+// ResetCurrentVersionID resets all changes to the "current_version_id" field.
+func (m *QuestionMutation) ResetCurrentVersionID() {
+	m.current_version_id = nil
+	delete(m.clearedFields, question.FieldCurrentVersionID)
+}
+
+// SetLatestVersionNo sets the "latest_version_no" field.
+func (m *QuestionMutation) SetLatestVersionNo(i int) {
+	m.latest_version_no = &i
+	m.addlatest_version_no = nil
+}
+
+// LatestVersionNo returns the value of the "latest_version_no" field in the mutation.
+func (m *QuestionMutation) LatestVersionNo() (r int, exists bool) {
+	v := m.latest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatestVersionNo returns the old "latest_version_no" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldLatestVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatestVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatestVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatestVersionNo: %w", err)
+	}
+	return oldValue.LatestVersionNo, nil
+}
+
+// AddLatestVersionNo adds i to the "latest_version_no" field.
+func (m *QuestionMutation) AddLatestVersionNo(i int) {
+	if m.addlatest_version_no != nil {
+		*m.addlatest_version_no += i
+	} else {
+		m.addlatest_version_no = &i
+	}
+}
+
+// AddedLatestVersionNo returns the value that was added to the "latest_version_no" field in this mutation.
+func (m *QuestionMutation) AddedLatestVersionNo() (r int, exists bool) {
+	v := m.addlatest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLatestVersionNo resets all changes to the "latest_version_no" field.
+func (m *QuestionMutation) ResetLatestVersionNo() {
+	m.latest_version_no = nil
+	m.addlatest_version_no = nil
+}
+
+// SetClonedFromID sets the "cloned_from_id" field.
+func (m *QuestionMutation) SetClonedFromID(u uuid.UUID) {
+	m.cloned_from_id = &u
+}
+
+// ClonedFromID returns the value of the "cloned_from_id" field in the mutation.
+func (m *QuestionMutation) ClonedFromID() (r uuid.UUID, exists bool) {
+	v := m.cloned_from_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedFromID returns the old "cloned_from_id" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldClonedFromID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedFromID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedFromID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedFromID: %w", err)
+	}
+	return oldValue.ClonedFromID, nil
+}
+
+// ClearClonedFromID clears the value of the "cloned_from_id" field.
+func (m *QuestionMutation) ClearClonedFromID() {
+	m.cloned_from_id = nil
+	m.clearedFields[question.FieldClonedFromID] = struct{}{}
+}
+
+// ClonedFromIDCleared returns if the "cloned_from_id" field was cleared in this mutation.
+func (m *QuestionMutation) ClonedFromIDCleared() bool {
+	_, ok := m.clearedFields[question.FieldClonedFromID]
+	return ok
+}
+
+// ResetClonedFromID resets all changes to the "cloned_from_id" field.
+func (m *QuestionMutation) ResetClonedFromID() {
+	m.cloned_from_id = nil
+	delete(m.clearedFields, question.FieldClonedFromID)
+}
+
+// SetClonedFromTenantID sets the "cloned_from_tenant_id" field.
+func (m *QuestionMutation) SetClonedFromTenantID(u uuid.UUID) {
+	m.cloned_from_tenant_id = &u
+}
+
+// ClonedFromTenantID returns the value of the "cloned_from_tenant_id" field in the mutation.
+func (m *QuestionMutation) ClonedFromTenantID() (r uuid.UUID, exists bool) {
+	v := m.cloned_from_tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedFromTenantID returns the old "cloned_from_tenant_id" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldClonedFromTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedFromTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedFromTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedFromTenantID: %w", err)
+	}
+	return oldValue.ClonedFromTenantID, nil
+}
+
+// ClearClonedFromTenantID clears the value of the "cloned_from_tenant_id" field.
+func (m *QuestionMutation) ClearClonedFromTenantID() {
+	m.cloned_from_tenant_id = nil
+	m.clearedFields[question.FieldClonedFromTenantID] = struct{}{}
+}
+
+// ClonedFromTenantIDCleared returns if the "cloned_from_tenant_id" field was cleared in this mutation.
+func (m *QuestionMutation) ClonedFromTenantIDCleared() bool {
+	_, ok := m.clearedFields[question.FieldClonedFromTenantID]
+	return ok
+}
+
+// ResetClonedFromTenantID resets all changes to the "cloned_from_tenant_id" field.
+func (m *QuestionMutation) ResetClonedFromTenantID() {
+	m.cloned_from_tenant_id = nil
+	delete(m.clearedFields, question.FieldClonedFromTenantID)
+}
+
+// SetClonedAt sets the "cloned_at" field.
+func (m *QuestionMutation) SetClonedAt(t time.Time) {
+	m.cloned_at = &t
+}
+
+// ClonedAt returns the value of the "cloned_at" field in the mutation.
+func (m *QuestionMutation) ClonedAt() (r time.Time, exists bool) {
+	v := m.cloned_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedAt returns the old "cloned_at" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldClonedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedAt: %w", err)
+	}
+	return oldValue.ClonedAt, nil
+}
+
+// ClearClonedAt clears the value of the "cloned_at" field.
+func (m *QuestionMutation) ClearClonedAt() {
+	m.cloned_at = nil
+	m.clearedFields[question.FieldClonedAt] = struct{}{}
+}
+
+// ClonedAtCleared returns if the "cloned_at" field was cleared in this mutation.
+func (m *QuestionMutation) ClonedAtCleared() bool {
+	_, ok := m.clearedFields[question.FieldClonedAt]
+	return ok
+}
+
+// ResetClonedAt resets all changes to the "cloned_at" field.
+func (m *QuestionMutation) ResetClonedAt() {
+	m.cloned_at = nil
+	delete(m.clearedFields, question.FieldClonedAt)
+}
+
+// SetClonedBy sets the "cloned_by" field.
+func (m *QuestionMutation) SetClonedBy(u uuid.UUID) {
+	m.cloned_by = &u
+}
+
+// ClonedBy returns the value of the "cloned_by" field in the mutation.
+func (m *QuestionMutation) ClonedBy() (r uuid.UUID, exists bool) {
+	v := m.cloned_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedBy returns the old "cloned_by" field's value of the Question entity.
+// If the Question object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionMutation) OldClonedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedBy: %w", err)
+	}
+	return oldValue.ClonedBy, nil
+}
+
+// ClearClonedBy clears the value of the "cloned_by" field.
+func (m *QuestionMutation) ClearClonedBy() {
+	m.cloned_by = nil
+	m.clearedFields[question.FieldClonedBy] = struct{}{}
+}
+
+// ClonedByCleared returns if the "cloned_by" field was cleared in this mutation.
+func (m *QuestionMutation) ClonedByCleared() bool {
+	_, ok := m.clearedFields[question.FieldClonedBy]
+	return ok
+}
+
+// ResetClonedBy resets all changes to the "cloned_by" field.
+func (m *QuestionMutation) ResetClonedBy() {
+	m.cloned_by = nil
+	delete(m.clearedFields, question.FieldClonedBy)
+}
+
+// Where appends a list predicates to the QuestionMutation builder.
+func (m *QuestionMutation) Where(ps ...predicate.Question) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the QuestionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *QuestionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Question, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *QuestionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *QuestionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Question).
+func (m *QuestionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *QuestionMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.tenant_id != nil {
+		fields = append(fields, question.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, question.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, question.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, question.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, question.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, question.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, question.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, question.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, question.FieldVersion)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, question.FieldOwnerScope)
+	}
+	if m.current_version_id != nil {
+		fields = append(fields, question.FieldCurrentVersionID)
+	}
+	if m.latest_version_no != nil {
+		fields = append(fields, question.FieldLatestVersionNo)
+	}
+	if m.cloned_from_id != nil {
+		fields = append(fields, question.FieldClonedFromID)
+	}
+	if m.cloned_from_tenant_id != nil {
+		fields = append(fields, question.FieldClonedFromTenantID)
+	}
+	if m.cloned_at != nil {
+		fields = append(fields, question.FieldClonedAt)
+	}
+	if m.cloned_by != nil {
+		fields = append(fields, question.FieldClonedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *QuestionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case question.FieldTenantID:
+		return m.TenantID()
+	case question.FieldCreatedAt:
+		return m.CreatedAt()
+	case question.FieldCreatedBy:
+		return m.CreatedBy()
+	case question.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case question.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case question.FieldDeletedAt:
+		return m.DeletedAt()
+	case question.FieldDeletedBy:
+		return m.DeletedBy()
+	case question.FieldDeleteReason:
+		return m.DeleteReason()
+	case question.FieldVersion:
+		return m.Version()
+	case question.FieldOwnerScope:
+		return m.OwnerScope()
+	case question.FieldCurrentVersionID:
+		return m.CurrentVersionID()
+	case question.FieldLatestVersionNo:
+		return m.LatestVersionNo()
+	case question.FieldClonedFromID:
+		return m.ClonedFromID()
+	case question.FieldClonedFromTenantID:
+		return m.ClonedFromTenantID()
+	case question.FieldClonedAt:
+		return m.ClonedAt()
+	case question.FieldClonedBy:
+		return m.ClonedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *QuestionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case question.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case question.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case question.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case question.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case question.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case question.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case question.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case question.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case question.FieldVersion:
+		return m.OldVersion(ctx)
+	case question.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case question.FieldCurrentVersionID:
+		return m.OldCurrentVersionID(ctx)
+	case question.FieldLatestVersionNo:
+		return m.OldLatestVersionNo(ctx)
+	case question.FieldClonedFromID:
+		return m.OldClonedFromID(ctx)
+	case question.FieldClonedFromTenantID:
+		return m.OldClonedFromTenantID(ctx)
+	case question.FieldClonedAt:
+		return m.OldClonedAt(ctx)
+	case question.FieldClonedBy:
+		return m.OldClonedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown Question field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case question.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case question.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case question.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case question.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case question.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case question.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case question.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case question.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case question.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case question.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case question.FieldCurrentVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentVersionID(v)
+		return nil
+	case question.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatestVersionNo(v)
+		return nil
+	case question.FieldClonedFromID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedFromID(v)
+		return nil
+	case question.FieldClonedFromTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedFromTenantID(v)
+		return nil
+	case question.FieldClonedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedAt(v)
+		return nil
+	case question.FieldClonedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Question field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *QuestionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, question.FieldVersion)
+	}
+	if m.addlatest_version_no != nil {
+		fields = append(fields, question.FieldLatestVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *QuestionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case question.FieldVersion:
+		return m.AddedVersion()
+	case question.FieldLatestVersionNo:
+		return m.AddedLatestVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case question.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case question.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatestVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Question numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *QuestionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(question.FieldTenantID) {
+		fields = append(fields, question.FieldTenantID)
+	}
+	if m.FieldCleared(question.FieldCreatedBy) {
+		fields = append(fields, question.FieldCreatedBy)
+	}
+	if m.FieldCleared(question.FieldUpdatedBy) {
+		fields = append(fields, question.FieldUpdatedBy)
+	}
+	if m.FieldCleared(question.FieldDeletedAt) {
+		fields = append(fields, question.FieldDeletedAt)
+	}
+	if m.FieldCleared(question.FieldDeletedBy) {
+		fields = append(fields, question.FieldDeletedBy)
+	}
+	if m.FieldCleared(question.FieldDeleteReason) {
+		fields = append(fields, question.FieldDeleteReason)
+	}
+	if m.FieldCleared(question.FieldCurrentVersionID) {
+		fields = append(fields, question.FieldCurrentVersionID)
+	}
+	if m.FieldCleared(question.FieldClonedFromID) {
+		fields = append(fields, question.FieldClonedFromID)
+	}
+	if m.FieldCleared(question.FieldClonedFromTenantID) {
+		fields = append(fields, question.FieldClonedFromTenantID)
+	}
+	if m.FieldCleared(question.FieldClonedAt) {
+		fields = append(fields, question.FieldClonedAt)
+	}
+	if m.FieldCleared(question.FieldClonedBy) {
+		fields = append(fields, question.FieldClonedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *QuestionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *QuestionMutation) ClearField(name string) error {
+	switch name {
+	case question.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case question.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case question.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case question.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case question.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case question.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case question.FieldCurrentVersionID:
+		m.ClearCurrentVersionID()
+		return nil
+	case question.FieldClonedFromID:
+		m.ClearClonedFromID()
+		return nil
+	case question.FieldClonedFromTenantID:
+		m.ClearClonedFromTenantID()
+		return nil
+	case question.FieldClonedAt:
+		m.ClearClonedAt()
+		return nil
+	case question.FieldClonedBy:
+		m.ClearClonedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown Question nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *QuestionMutation) ResetField(name string) error {
+	switch name {
+	case question.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case question.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case question.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case question.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case question.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case question.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case question.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case question.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case question.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case question.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case question.FieldCurrentVersionID:
+		m.ResetCurrentVersionID()
+		return nil
+	case question.FieldLatestVersionNo:
+		m.ResetLatestVersionNo()
+		return nil
+	case question.FieldClonedFromID:
+		m.ResetClonedFromID()
+		return nil
+	case question.FieldClonedFromTenantID:
+		m.ResetClonedFromTenantID()
+		return nil
+	case question.FieldClonedAt:
+		m.ResetClonedAt()
+		return nil
+	case question.FieldClonedBy:
+		m.ResetClonedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown Question field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *QuestionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *QuestionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *QuestionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *QuestionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *QuestionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *QuestionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *QuestionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Question unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *QuestionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Question edge %s", name)
+}
+
+// QuestionVersionMutation represents an operation that mutates the QuestionVersion nodes in the graph.
+type QuestionVersionMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	tenant_id                *uuid.UUID
+	created_at               *time.Time
+	created_by               *uuid.UUID
+	updated_at               *time.Time
+	updated_by               *uuid.UUID
+	deleted_at               *time.Time
+	deleted_by               *uuid.UUID
+	delete_reason            *string
+	version                  *int64
+	addversion               *int64
+	owner_scope              *string
+	version_no               *int
+	addversion_no            *int
+	status                   *string
+	author_id                *uuid.UUID
+	reviewer_id              *uuid.UUID
+	published_at             *time.Time
+	content_language         *string
+	curriculum_version_id    *uuid.UUID
+	change_note              *string
+	publish_at               *time.Time
+	snapshot_key             *string
+	snapshot_sha256          *string
+	based_on_version_id      *uuid.UUID
+	cloned_from_id           *uuid.UUID
+	cloned_from_tenant_id    *uuid.UUID
+	cloned_at                *time.Time
+	cloned_by                *uuid.UUID
+	question_id              *uuid.UUID
+	_type                    *string
+	stem                     *jsontext.Value
+	appendstem               jsontext.Value
+	render_payload           *jsontext.Value
+	appendrender_payload     jsontext.Value
+	answer_key               *jsontext.Value
+	appendanswer_key         jsontext.Value
+	scoring_rule             *jsontext.Value
+	appendscoring_rule       jsontext.Value
+	explanation              *jsontext.Value
+	appendexplanation        jsontext.Value
+	option_feedback          *jsontext.Value
+	appendoption_feedback    jsontext.Value
+	hints                    *jsontext.Value
+	appendhints              jsontext.Value
+	worked_example_ref       *jsontext.Value
+	appendworked_example_ref jsontext.Value
+	min_response_ms          *int32
+	addmin_response_ms       *int32
+	max_score                *float64
+	addmax_score             *float64
+	exam_only                *bool
+	efficacy_instrument      *bool
+	math_assets              *jsontext.Value
+	appendmath_assets        jsontext.Value
+	tags                     *[]string
+	appendtags               []string
+	difficulty               *int16
+	adddifficulty            *int16
+	grade_levels             *[]int
+	appendgrade_levels       []int
+	subject_id               *uuid.UUID
+	topic_id                 *uuid.UUID
+	media_refs               *[]uuid.UUID
+	appendmedia_refs         []uuid.UUID
+	content_hash             *[]byte
+	clearedFields            map[string]struct{}
+	done                     bool
+	oldValue                 func(context.Context) (*QuestionVersion, error)
+	predicates               []predicate.QuestionVersion
+}
+
+var _ ent.Mutation = (*QuestionVersionMutation)(nil)
+
+// questionversionOption allows management of the mutation configuration using functional options.
+type questionversionOption func(*QuestionVersionMutation)
+
+// newQuestionVersionMutation creates new mutation for the QuestionVersion entity.
+func newQuestionVersionMutation(c config, op Op, opts ...questionversionOption) *QuestionVersionMutation {
+	m := &QuestionVersionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeQuestionVersion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withQuestionVersionID sets the ID field of the mutation.
+func withQuestionVersionID(id uuid.UUID) questionversionOption {
+	return func(m *QuestionVersionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *QuestionVersion
+		)
+		m.oldValue = func(ctx context.Context) (*QuestionVersion, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().QuestionVersion.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withQuestionVersion sets the old QuestionVersion of the mutation.
+func withQuestionVersion(node *QuestionVersion) questionversionOption {
+	return func(m *QuestionVersionMutation) {
+		m.oldValue = func(context.Context) (*QuestionVersion, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m QuestionVersionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m QuestionVersionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of QuestionVersion entities.
+func (m *QuestionVersionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *QuestionVersionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *QuestionVersionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().QuestionVersion.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *QuestionVersionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *QuestionVersionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *QuestionVersionMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[questionversion.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *QuestionVersionMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *QuestionVersionMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, questionversion.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *QuestionVersionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *QuestionVersionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *QuestionVersionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *QuestionVersionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *QuestionVersionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *QuestionVersionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[questionversion.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *QuestionVersionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *QuestionVersionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, questionversion.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *QuestionVersionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *QuestionVersionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *QuestionVersionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *QuestionVersionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *QuestionVersionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *QuestionVersionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[questionversion.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *QuestionVersionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *QuestionVersionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, questionversion.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *QuestionVersionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *QuestionVersionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *QuestionVersionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[questionversion.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *QuestionVersionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *QuestionVersionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, questionversion.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *QuestionVersionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *QuestionVersionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *QuestionVersionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[questionversion.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *QuestionVersionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *QuestionVersionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, questionversion.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *QuestionVersionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *QuestionVersionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *QuestionVersionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[questionversion.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *QuestionVersionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *QuestionVersionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, questionversion.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *QuestionVersionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *QuestionVersionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *QuestionVersionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *QuestionVersionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *QuestionVersionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *QuestionVersionMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *QuestionVersionMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *QuestionVersionMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetVersionNo sets the "version_no" field.
+func (m *QuestionVersionMutation) SetVersionNo(i int) {
+	m.version_no = &i
+	m.addversion_no = nil
+}
+
+// VersionNo returns the value of the "version_no" field in the mutation.
+func (m *QuestionVersionMutation) VersionNo() (r int, exists bool) {
+	v := m.version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionNo returns the old "version_no" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionNo: %w", err)
+	}
+	return oldValue.VersionNo, nil
+}
+
+// AddVersionNo adds i to the "version_no" field.
+func (m *QuestionVersionMutation) AddVersionNo(i int) {
+	if m.addversion_no != nil {
+		*m.addversion_no += i
+	} else {
+		m.addversion_no = &i
+	}
+}
+
+// AddedVersionNo returns the value that was added to the "version_no" field in this mutation.
+func (m *QuestionVersionMutation) AddedVersionNo() (r int, exists bool) {
+	v := m.addversion_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionNo resets all changes to the "version_no" field.
+func (m *QuestionVersionMutation) ResetVersionNo() {
+	m.version_no = nil
+	m.addversion_no = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *QuestionVersionMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *QuestionVersionMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *QuestionVersionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAuthorID sets the "author_id" field.
+func (m *QuestionVersionMutation) SetAuthorID(u uuid.UUID) {
+	m.author_id = &u
+}
+
+// AuthorID returns the value of the "author_id" field in the mutation.
+func (m *QuestionVersionMutation) AuthorID() (r uuid.UUID, exists bool) {
+	v := m.author_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthorID returns the old "author_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldAuthorID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthorID: %w", err)
+	}
+	return oldValue.AuthorID, nil
+}
+
+// ResetAuthorID resets all changes to the "author_id" field.
+func (m *QuestionVersionMutation) ResetAuthorID() {
+	m.author_id = nil
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (m *QuestionVersionMutation) SetReviewerID(u uuid.UUID) {
+	m.reviewer_id = &u
+}
+
+// ReviewerID returns the value of the "reviewer_id" field in the mutation.
+func (m *QuestionVersionMutation) ReviewerID() (r uuid.UUID, exists bool) {
+	v := m.reviewer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewerID returns the old "reviewer_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldReviewerID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewerID: %w", err)
+	}
+	return oldValue.ReviewerID, nil
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (m *QuestionVersionMutation) ClearReviewerID() {
+	m.reviewer_id = nil
+	m.clearedFields[questionversion.FieldReviewerID] = struct{}{}
+}
+
+// ReviewerIDCleared returns if the "reviewer_id" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ReviewerIDCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldReviewerID]
+	return ok
+}
+
+// ResetReviewerID resets all changes to the "reviewer_id" field.
+func (m *QuestionVersionMutation) ResetReviewerID() {
+	m.reviewer_id = nil
+	delete(m.clearedFields, questionversion.FieldReviewerID)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *QuestionVersionMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *QuestionVersionMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *QuestionVersionMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[questionversion.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *QuestionVersionMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *QuestionVersionMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, questionversion.FieldPublishedAt)
+}
+
+// SetContentLanguage sets the "content_language" field.
+func (m *QuestionVersionMutation) SetContentLanguage(s string) {
+	m.content_language = &s
+}
+
+// ContentLanguage returns the value of the "content_language" field in the mutation.
+func (m *QuestionVersionMutation) ContentLanguage() (r string, exists bool) {
+	v := m.content_language
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContentLanguage returns the old "content_language" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldContentLanguage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContentLanguage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContentLanguage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContentLanguage: %w", err)
+	}
+	return oldValue.ContentLanguage, nil
+}
+
+// ResetContentLanguage resets all changes to the "content_language" field.
+func (m *QuestionVersionMutation) ResetContentLanguage() {
+	m.content_language = nil
+}
+
+// SetCurriculumVersionID sets the "curriculum_version_id" field.
+func (m *QuestionVersionMutation) SetCurriculumVersionID(u uuid.UUID) {
+	m.curriculum_version_id = &u
+}
+
+// CurriculumVersionID returns the value of the "curriculum_version_id" field in the mutation.
+func (m *QuestionVersionMutation) CurriculumVersionID() (r uuid.UUID, exists bool) {
+	v := m.curriculum_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurriculumVersionID returns the old "curriculum_version_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldCurriculumVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurriculumVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurriculumVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurriculumVersionID: %w", err)
+	}
+	return oldValue.CurriculumVersionID, nil
+}
+
+// ResetCurriculumVersionID resets all changes to the "curriculum_version_id" field.
+func (m *QuestionVersionMutation) ResetCurriculumVersionID() {
+	m.curriculum_version_id = nil
+}
+
+// SetChangeNote sets the "change_note" field.
+func (m *QuestionVersionMutation) SetChangeNote(s string) {
+	m.change_note = &s
+}
+
+// ChangeNote returns the value of the "change_note" field in the mutation.
+func (m *QuestionVersionMutation) ChangeNote() (r string, exists bool) {
+	v := m.change_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeNote returns the old "change_note" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldChangeNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeNote: %w", err)
+	}
+	return oldValue.ChangeNote, nil
+}
+
+// ClearChangeNote clears the value of the "change_note" field.
+func (m *QuestionVersionMutation) ClearChangeNote() {
+	m.change_note = nil
+	m.clearedFields[questionversion.FieldChangeNote] = struct{}{}
+}
+
+// ChangeNoteCleared returns if the "change_note" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ChangeNoteCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldChangeNote]
+	return ok
+}
+
+// ResetChangeNote resets all changes to the "change_note" field.
+func (m *QuestionVersionMutation) ResetChangeNote() {
+	m.change_note = nil
+	delete(m.clearedFields, questionversion.FieldChangeNote)
+}
+
+// SetPublishAt sets the "publish_at" field.
+func (m *QuestionVersionMutation) SetPublishAt(t time.Time) {
+	m.publish_at = &t
+}
+
+// PublishAt returns the value of the "publish_at" field in the mutation.
+func (m *QuestionVersionMutation) PublishAt() (r time.Time, exists bool) {
+	v := m.publish_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishAt returns the old "publish_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldPublishAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishAt: %w", err)
+	}
+	return oldValue.PublishAt, nil
+}
+
+// ClearPublishAt clears the value of the "publish_at" field.
+func (m *QuestionVersionMutation) ClearPublishAt() {
+	m.publish_at = nil
+	m.clearedFields[questionversion.FieldPublishAt] = struct{}{}
+}
+
+// PublishAtCleared returns if the "publish_at" field was cleared in this mutation.
+func (m *QuestionVersionMutation) PublishAtCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldPublishAt]
+	return ok
+}
+
+// ResetPublishAt resets all changes to the "publish_at" field.
+func (m *QuestionVersionMutation) ResetPublishAt() {
+	m.publish_at = nil
+	delete(m.clearedFields, questionversion.FieldPublishAt)
+}
+
+// SetSnapshotKey sets the "snapshot_key" field.
+func (m *QuestionVersionMutation) SetSnapshotKey(s string) {
+	m.snapshot_key = &s
+}
+
+// SnapshotKey returns the value of the "snapshot_key" field in the mutation.
+func (m *QuestionVersionMutation) SnapshotKey() (r string, exists bool) {
+	v := m.snapshot_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotKey returns the old "snapshot_key" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldSnapshotKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotKey: %w", err)
+	}
+	return oldValue.SnapshotKey, nil
+}
+
+// ClearSnapshotKey clears the value of the "snapshot_key" field.
+func (m *QuestionVersionMutation) ClearSnapshotKey() {
+	m.snapshot_key = nil
+	m.clearedFields[questionversion.FieldSnapshotKey] = struct{}{}
+}
+
+// SnapshotKeyCleared returns if the "snapshot_key" field was cleared in this mutation.
+func (m *QuestionVersionMutation) SnapshotKeyCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldSnapshotKey]
+	return ok
+}
+
+// ResetSnapshotKey resets all changes to the "snapshot_key" field.
+func (m *QuestionVersionMutation) ResetSnapshotKey() {
+	m.snapshot_key = nil
+	delete(m.clearedFields, questionversion.FieldSnapshotKey)
+}
+
+// SetSnapshotSha256 sets the "snapshot_sha256" field.
+func (m *QuestionVersionMutation) SetSnapshotSha256(s string) {
+	m.snapshot_sha256 = &s
+}
+
+// SnapshotSha256 returns the value of the "snapshot_sha256" field in the mutation.
+func (m *QuestionVersionMutation) SnapshotSha256() (r string, exists bool) {
+	v := m.snapshot_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotSha256 returns the old "snapshot_sha256" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldSnapshotSha256(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotSha256: %w", err)
+	}
+	return oldValue.SnapshotSha256, nil
+}
+
+// ClearSnapshotSha256 clears the value of the "snapshot_sha256" field.
+func (m *QuestionVersionMutation) ClearSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	m.clearedFields[questionversion.FieldSnapshotSha256] = struct{}{}
+}
+
+// SnapshotSha256Cleared returns if the "snapshot_sha256" field was cleared in this mutation.
+func (m *QuestionVersionMutation) SnapshotSha256Cleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldSnapshotSha256]
+	return ok
+}
+
+// ResetSnapshotSha256 resets all changes to the "snapshot_sha256" field.
+func (m *QuestionVersionMutation) ResetSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	delete(m.clearedFields, questionversion.FieldSnapshotSha256)
+}
+
+// SetBasedOnVersionID sets the "based_on_version_id" field.
+func (m *QuestionVersionMutation) SetBasedOnVersionID(u uuid.UUID) {
+	m.based_on_version_id = &u
+}
+
+// BasedOnVersionID returns the value of the "based_on_version_id" field in the mutation.
+func (m *QuestionVersionMutation) BasedOnVersionID() (r uuid.UUID, exists bool) {
+	v := m.based_on_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBasedOnVersionID returns the old "based_on_version_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldBasedOnVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBasedOnVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBasedOnVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBasedOnVersionID: %w", err)
+	}
+	return oldValue.BasedOnVersionID, nil
+}
+
+// ClearBasedOnVersionID clears the value of the "based_on_version_id" field.
+func (m *QuestionVersionMutation) ClearBasedOnVersionID() {
+	m.based_on_version_id = nil
+	m.clearedFields[questionversion.FieldBasedOnVersionID] = struct{}{}
+}
+
+// BasedOnVersionIDCleared returns if the "based_on_version_id" field was cleared in this mutation.
+func (m *QuestionVersionMutation) BasedOnVersionIDCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldBasedOnVersionID]
+	return ok
+}
+
+// ResetBasedOnVersionID resets all changes to the "based_on_version_id" field.
+func (m *QuestionVersionMutation) ResetBasedOnVersionID() {
+	m.based_on_version_id = nil
+	delete(m.clearedFields, questionversion.FieldBasedOnVersionID)
+}
+
+// SetClonedFromID sets the "cloned_from_id" field.
+func (m *QuestionVersionMutation) SetClonedFromID(u uuid.UUID) {
+	m.cloned_from_id = &u
+}
+
+// ClonedFromID returns the value of the "cloned_from_id" field in the mutation.
+func (m *QuestionVersionMutation) ClonedFromID() (r uuid.UUID, exists bool) {
+	v := m.cloned_from_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedFromID returns the old "cloned_from_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldClonedFromID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedFromID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedFromID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedFromID: %w", err)
+	}
+	return oldValue.ClonedFromID, nil
+}
+
+// ClearClonedFromID clears the value of the "cloned_from_id" field.
+func (m *QuestionVersionMutation) ClearClonedFromID() {
+	m.cloned_from_id = nil
+	m.clearedFields[questionversion.FieldClonedFromID] = struct{}{}
+}
+
+// ClonedFromIDCleared returns if the "cloned_from_id" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ClonedFromIDCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldClonedFromID]
+	return ok
+}
+
+// ResetClonedFromID resets all changes to the "cloned_from_id" field.
+func (m *QuestionVersionMutation) ResetClonedFromID() {
+	m.cloned_from_id = nil
+	delete(m.clearedFields, questionversion.FieldClonedFromID)
+}
+
+// SetClonedFromTenantID sets the "cloned_from_tenant_id" field.
+func (m *QuestionVersionMutation) SetClonedFromTenantID(u uuid.UUID) {
+	m.cloned_from_tenant_id = &u
+}
+
+// ClonedFromTenantID returns the value of the "cloned_from_tenant_id" field in the mutation.
+func (m *QuestionVersionMutation) ClonedFromTenantID() (r uuid.UUID, exists bool) {
+	v := m.cloned_from_tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedFromTenantID returns the old "cloned_from_tenant_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldClonedFromTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedFromTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedFromTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedFromTenantID: %w", err)
+	}
+	return oldValue.ClonedFromTenantID, nil
+}
+
+// ClearClonedFromTenantID clears the value of the "cloned_from_tenant_id" field.
+func (m *QuestionVersionMutation) ClearClonedFromTenantID() {
+	m.cloned_from_tenant_id = nil
+	m.clearedFields[questionversion.FieldClonedFromTenantID] = struct{}{}
+}
+
+// ClonedFromTenantIDCleared returns if the "cloned_from_tenant_id" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ClonedFromTenantIDCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldClonedFromTenantID]
+	return ok
+}
+
+// ResetClonedFromTenantID resets all changes to the "cloned_from_tenant_id" field.
+func (m *QuestionVersionMutation) ResetClonedFromTenantID() {
+	m.cloned_from_tenant_id = nil
+	delete(m.clearedFields, questionversion.FieldClonedFromTenantID)
+}
+
+// SetClonedAt sets the "cloned_at" field.
+func (m *QuestionVersionMutation) SetClonedAt(t time.Time) {
+	m.cloned_at = &t
+}
+
+// ClonedAt returns the value of the "cloned_at" field in the mutation.
+func (m *QuestionVersionMutation) ClonedAt() (r time.Time, exists bool) {
+	v := m.cloned_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedAt returns the old "cloned_at" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldClonedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedAt: %w", err)
+	}
+	return oldValue.ClonedAt, nil
+}
+
+// ClearClonedAt clears the value of the "cloned_at" field.
+func (m *QuestionVersionMutation) ClearClonedAt() {
+	m.cloned_at = nil
+	m.clearedFields[questionversion.FieldClonedAt] = struct{}{}
+}
+
+// ClonedAtCleared returns if the "cloned_at" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ClonedAtCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldClonedAt]
+	return ok
+}
+
+// ResetClonedAt resets all changes to the "cloned_at" field.
+func (m *QuestionVersionMutation) ResetClonedAt() {
+	m.cloned_at = nil
+	delete(m.clearedFields, questionversion.FieldClonedAt)
+}
+
+// SetClonedBy sets the "cloned_by" field.
+func (m *QuestionVersionMutation) SetClonedBy(u uuid.UUID) {
+	m.cloned_by = &u
+}
+
+// ClonedBy returns the value of the "cloned_by" field in the mutation.
+func (m *QuestionVersionMutation) ClonedBy() (r uuid.UUID, exists bool) {
+	v := m.cloned_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClonedBy returns the old "cloned_by" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldClonedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClonedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClonedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClonedBy: %w", err)
+	}
+	return oldValue.ClonedBy, nil
+}
+
+// ClearClonedBy clears the value of the "cloned_by" field.
+func (m *QuestionVersionMutation) ClearClonedBy() {
+	m.cloned_by = nil
+	m.clearedFields[questionversion.FieldClonedBy] = struct{}{}
+}
+
+// ClonedByCleared returns if the "cloned_by" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ClonedByCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldClonedBy]
+	return ok
+}
+
+// ResetClonedBy resets all changes to the "cloned_by" field.
+func (m *QuestionVersionMutation) ResetClonedBy() {
+	m.cloned_by = nil
+	delete(m.clearedFields, questionversion.FieldClonedBy)
+}
+
+// SetQuestionID sets the "question_id" field.
+func (m *QuestionVersionMutation) SetQuestionID(u uuid.UUID) {
+	m.question_id = &u
+}
+
+// QuestionID returns the value of the "question_id" field in the mutation.
+func (m *QuestionVersionMutation) QuestionID() (r uuid.UUID, exists bool) {
+	v := m.question_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionID returns the old "question_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldQuestionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionID: %w", err)
+	}
+	return oldValue.QuestionID, nil
+}
+
+// ResetQuestionID resets all changes to the "question_id" field.
+func (m *QuestionVersionMutation) ResetQuestionID() {
+	m.question_id = nil
+}
+
+// SetType sets the "type" field.
+func (m *QuestionVersionMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *QuestionVersionMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *QuestionVersionMutation) ResetType() {
+	m._type = nil
+}
+
+// SetStem sets the "stem" field.
+func (m *QuestionVersionMutation) SetStem(j jsontext.Value) {
+	m.stem = &j
+	m.appendstem = nil
+}
+
+// Stem returns the value of the "stem" field in the mutation.
+func (m *QuestionVersionMutation) Stem() (r jsontext.Value, exists bool) {
+	v := m.stem
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStem returns the old "stem" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldStem(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStem is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStem requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStem: %w", err)
+	}
+	return oldValue.Stem, nil
+}
+
+// AppendStem adds j to the "stem" field.
+func (m *QuestionVersionMutation) AppendStem(j jsontext.Value) {
+	m.appendstem = append(m.appendstem, j...)
+}
+
+// AppendedStem returns the list of values that were appended to the "stem" field in this mutation.
+func (m *QuestionVersionMutation) AppendedStem() (jsontext.Value, bool) {
+	if len(m.appendstem) == 0 {
+		return nil, false
+	}
+	return m.appendstem, true
+}
+
+// ResetStem resets all changes to the "stem" field.
+func (m *QuestionVersionMutation) ResetStem() {
+	m.stem = nil
+	m.appendstem = nil
+}
+
+// SetRenderPayload sets the "render_payload" field.
+func (m *QuestionVersionMutation) SetRenderPayload(j jsontext.Value) {
+	m.render_payload = &j
+	m.appendrender_payload = nil
+}
+
+// RenderPayload returns the value of the "render_payload" field in the mutation.
+func (m *QuestionVersionMutation) RenderPayload() (r jsontext.Value, exists bool) {
+	v := m.render_payload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRenderPayload returns the old "render_payload" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldRenderPayload(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRenderPayload is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRenderPayload requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRenderPayload: %w", err)
+	}
+	return oldValue.RenderPayload, nil
+}
+
+// AppendRenderPayload adds j to the "render_payload" field.
+func (m *QuestionVersionMutation) AppendRenderPayload(j jsontext.Value) {
+	m.appendrender_payload = append(m.appendrender_payload, j...)
+}
+
+// AppendedRenderPayload returns the list of values that were appended to the "render_payload" field in this mutation.
+func (m *QuestionVersionMutation) AppendedRenderPayload() (jsontext.Value, bool) {
+	if len(m.appendrender_payload) == 0 {
+		return nil, false
+	}
+	return m.appendrender_payload, true
+}
+
+// ResetRenderPayload resets all changes to the "render_payload" field.
+func (m *QuestionVersionMutation) ResetRenderPayload() {
+	m.render_payload = nil
+	m.appendrender_payload = nil
+}
+
+// SetAnswerKey sets the "answer_key" field.
+func (m *QuestionVersionMutation) SetAnswerKey(j jsontext.Value) {
+	m.answer_key = &j
+	m.appendanswer_key = nil
+}
+
+// AnswerKey returns the value of the "answer_key" field in the mutation.
+func (m *QuestionVersionMutation) AnswerKey() (r jsontext.Value, exists bool) {
+	v := m.answer_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAnswerKey returns the old "answer_key" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldAnswerKey(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAnswerKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAnswerKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAnswerKey: %w", err)
+	}
+	return oldValue.AnswerKey, nil
+}
+
+// AppendAnswerKey adds j to the "answer_key" field.
+func (m *QuestionVersionMutation) AppendAnswerKey(j jsontext.Value) {
+	m.appendanswer_key = append(m.appendanswer_key, j...)
+}
+
+// AppendedAnswerKey returns the list of values that were appended to the "answer_key" field in this mutation.
+func (m *QuestionVersionMutation) AppendedAnswerKey() (jsontext.Value, bool) {
+	if len(m.appendanswer_key) == 0 {
+		return nil, false
+	}
+	return m.appendanswer_key, true
+}
+
+// ResetAnswerKey resets all changes to the "answer_key" field.
+func (m *QuestionVersionMutation) ResetAnswerKey() {
+	m.answer_key = nil
+	m.appendanswer_key = nil
+}
+
+// SetScoringRule sets the "scoring_rule" field.
+func (m *QuestionVersionMutation) SetScoringRule(j jsontext.Value) {
+	m.scoring_rule = &j
+	m.appendscoring_rule = nil
+}
+
+// ScoringRule returns the value of the "scoring_rule" field in the mutation.
+func (m *QuestionVersionMutation) ScoringRule() (r jsontext.Value, exists bool) {
+	v := m.scoring_rule
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScoringRule returns the old "scoring_rule" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldScoringRule(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScoringRule is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScoringRule requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScoringRule: %w", err)
+	}
+	return oldValue.ScoringRule, nil
+}
+
+// AppendScoringRule adds j to the "scoring_rule" field.
+func (m *QuestionVersionMutation) AppendScoringRule(j jsontext.Value) {
+	m.appendscoring_rule = append(m.appendscoring_rule, j...)
+}
+
+// AppendedScoringRule returns the list of values that were appended to the "scoring_rule" field in this mutation.
+func (m *QuestionVersionMutation) AppendedScoringRule() (jsontext.Value, bool) {
+	if len(m.appendscoring_rule) == 0 {
+		return nil, false
+	}
+	return m.appendscoring_rule, true
+}
+
+// ResetScoringRule resets all changes to the "scoring_rule" field.
+func (m *QuestionVersionMutation) ResetScoringRule() {
+	m.scoring_rule = nil
+	m.appendscoring_rule = nil
+}
+
+// SetExplanation sets the "explanation" field.
+func (m *QuestionVersionMutation) SetExplanation(j jsontext.Value) {
+	m.explanation = &j
+	m.appendexplanation = nil
+}
+
+// Explanation returns the value of the "explanation" field in the mutation.
+func (m *QuestionVersionMutation) Explanation() (r jsontext.Value, exists bool) {
+	v := m.explanation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExplanation returns the old "explanation" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldExplanation(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExplanation is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExplanation requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExplanation: %w", err)
+	}
+	return oldValue.Explanation, nil
+}
+
+// AppendExplanation adds j to the "explanation" field.
+func (m *QuestionVersionMutation) AppendExplanation(j jsontext.Value) {
+	m.appendexplanation = append(m.appendexplanation, j...)
+}
+
+// AppendedExplanation returns the list of values that were appended to the "explanation" field in this mutation.
+func (m *QuestionVersionMutation) AppendedExplanation() (jsontext.Value, bool) {
+	if len(m.appendexplanation) == 0 {
+		return nil, false
+	}
+	return m.appendexplanation, true
+}
+
+// ClearExplanation clears the value of the "explanation" field.
+func (m *QuestionVersionMutation) ClearExplanation() {
+	m.explanation = nil
+	m.appendexplanation = nil
+	m.clearedFields[questionversion.FieldExplanation] = struct{}{}
+}
+
+// ExplanationCleared returns if the "explanation" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ExplanationCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldExplanation]
+	return ok
+}
+
+// ResetExplanation resets all changes to the "explanation" field.
+func (m *QuestionVersionMutation) ResetExplanation() {
+	m.explanation = nil
+	m.appendexplanation = nil
+	delete(m.clearedFields, questionversion.FieldExplanation)
+}
+
+// SetOptionFeedback sets the "option_feedback" field.
+func (m *QuestionVersionMutation) SetOptionFeedback(j jsontext.Value) {
+	m.option_feedback = &j
+	m.appendoption_feedback = nil
+}
+
+// OptionFeedback returns the value of the "option_feedback" field in the mutation.
+func (m *QuestionVersionMutation) OptionFeedback() (r jsontext.Value, exists bool) {
+	v := m.option_feedback
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOptionFeedback returns the old "option_feedback" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldOptionFeedback(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOptionFeedback is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOptionFeedback requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOptionFeedback: %w", err)
+	}
+	return oldValue.OptionFeedback, nil
+}
+
+// AppendOptionFeedback adds j to the "option_feedback" field.
+func (m *QuestionVersionMutation) AppendOptionFeedback(j jsontext.Value) {
+	m.appendoption_feedback = append(m.appendoption_feedback, j...)
+}
+
+// AppendedOptionFeedback returns the list of values that were appended to the "option_feedback" field in this mutation.
+func (m *QuestionVersionMutation) AppendedOptionFeedback() (jsontext.Value, bool) {
+	if len(m.appendoption_feedback) == 0 {
+		return nil, false
+	}
+	return m.appendoption_feedback, true
+}
+
+// ClearOptionFeedback clears the value of the "option_feedback" field.
+func (m *QuestionVersionMutation) ClearOptionFeedback() {
+	m.option_feedback = nil
+	m.appendoption_feedback = nil
+	m.clearedFields[questionversion.FieldOptionFeedback] = struct{}{}
+}
+
+// OptionFeedbackCleared returns if the "option_feedback" field was cleared in this mutation.
+func (m *QuestionVersionMutation) OptionFeedbackCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldOptionFeedback]
+	return ok
+}
+
+// ResetOptionFeedback resets all changes to the "option_feedback" field.
+func (m *QuestionVersionMutation) ResetOptionFeedback() {
+	m.option_feedback = nil
+	m.appendoption_feedback = nil
+	delete(m.clearedFields, questionversion.FieldOptionFeedback)
+}
+
+// SetHints sets the "hints" field.
+func (m *QuestionVersionMutation) SetHints(j jsontext.Value) {
+	m.hints = &j
+	m.appendhints = nil
+}
+
+// Hints returns the value of the "hints" field in the mutation.
+func (m *QuestionVersionMutation) Hints() (r jsontext.Value, exists bool) {
+	v := m.hints
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHints returns the old "hints" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldHints(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHints is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHints requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHints: %w", err)
+	}
+	return oldValue.Hints, nil
+}
+
+// AppendHints adds j to the "hints" field.
+func (m *QuestionVersionMutation) AppendHints(j jsontext.Value) {
+	m.appendhints = append(m.appendhints, j...)
+}
+
+// AppendedHints returns the list of values that were appended to the "hints" field in this mutation.
+func (m *QuestionVersionMutation) AppendedHints() (jsontext.Value, bool) {
+	if len(m.appendhints) == 0 {
+		return nil, false
+	}
+	return m.appendhints, true
+}
+
+// ClearHints clears the value of the "hints" field.
+func (m *QuestionVersionMutation) ClearHints() {
+	m.hints = nil
+	m.appendhints = nil
+	m.clearedFields[questionversion.FieldHints] = struct{}{}
+}
+
+// HintsCleared returns if the "hints" field was cleared in this mutation.
+func (m *QuestionVersionMutation) HintsCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldHints]
+	return ok
+}
+
+// ResetHints resets all changes to the "hints" field.
+func (m *QuestionVersionMutation) ResetHints() {
+	m.hints = nil
+	m.appendhints = nil
+	delete(m.clearedFields, questionversion.FieldHints)
+}
+
+// SetWorkedExampleRef sets the "worked_example_ref" field.
+func (m *QuestionVersionMutation) SetWorkedExampleRef(j jsontext.Value) {
+	m.worked_example_ref = &j
+	m.appendworked_example_ref = nil
+}
+
+// WorkedExampleRef returns the value of the "worked_example_ref" field in the mutation.
+func (m *QuestionVersionMutation) WorkedExampleRef() (r jsontext.Value, exists bool) {
+	v := m.worked_example_ref
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkedExampleRef returns the old "worked_example_ref" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldWorkedExampleRef(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkedExampleRef is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkedExampleRef requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkedExampleRef: %w", err)
+	}
+	return oldValue.WorkedExampleRef, nil
+}
+
+// AppendWorkedExampleRef adds j to the "worked_example_ref" field.
+func (m *QuestionVersionMutation) AppendWorkedExampleRef(j jsontext.Value) {
+	m.appendworked_example_ref = append(m.appendworked_example_ref, j...)
+}
+
+// AppendedWorkedExampleRef returns the list of values that were appended to the "worked_example_ref" field in this mutation.
+func (m *QuestionVersionMutation) AppendedWorkedExampleRef() (jsontext.Value, bool) {
+	if len(m.appendworked_example_ref) == 0 {
+		return nil, false
+	}
+	return m.appendworked_example_ref, true
+}
+
+// ClearWorkedExampleRef clears the value of the "worked_example_ref" field.
+func (m *QuestionVersionMutation) ClearWorkedExampleRef() {
+	m.worked_example_ref = nil
+	m.appendworked_example_ref = nil
+	m.clearedFields[questionversion.FieldWorkedExampleRef] = struct{}{}
+}
+
+// WorkedExampleRefCleared returns if the "worked_example_ref" field was cleared in this mutation.
+func (m *QuestionVersionMutation) WorkedExampleRefCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldWorkedExampleRef]
+	return ok
+}
+
+// ResetWorkedExampleRef resets all changes to the "worked_example_ref" field.
+func (m *QuestionVersionMutation) ResetWorkedExampleRef() {
+	m.worked_example_ref = nil
+	m.appendworked_example_ref = nil
+	delete(m.clearedFields, questionversion.FieldWorkedExampleRef)
+}
+
+// SetMinResponseMs sets the "min_response_ms" field.
+func (m *QuestionVersionMutation) SetMinResponseMs(i int32) {
+	m.min_response_ms = &i
+	m.addmin_response_ms = nil
+}
+
+// MinResponseMs returns the value of the "min_response_ms" field in the mutation.
+func (m *QuestionVersionMutation) MinResponseMs() (r int32, exists bool) {
+	v := m.min_response_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinResponseMs returns the old "min_response_ms" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldMinResponseMs(ctx context.Context) (v *int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinResponseMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinResponseMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinResponseMs: %w", err)
+	}
+	return oldValue.MinResponseMs, nil
+}
+
+// AddMinResponseMs adds i to the "min_response_ms" field.
+func (m *QuestionVersionMutation) AddMinResponseMs(i int32) {
+	if m.addmin_response_ms != nil {
+		*m.addmin_response_ms += i
+	} else {
+		m.addmin_response_ms = &i
+	}
+}
+
+// AddedMinResponseMs returns the value that was added to the "min_response_ms" field in this mutation.
+func (m *QuestionVersionMutation) AddedMinResponseMs() (r int32, exists bool) {
+	v := m.addmin_response_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMinResponseMs clears the value of the "min_response_ms" field.
+func (m *QuestionVersionMutation) ClearMinResponseMs() {
+	m.min_response_ms = nil
+	m.addmin_response_ms = nil
+	m.clearedFields[questionversion.FieldMinResponseMs] = struct{}{}
+}
+
+// MinResponseMsCleared returns if the "min_response_ms" field was cleared in this mutation.
+func (m *QuestionVersionMutation) MinResponseMsCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldMinResponseMs]
+	return ok
+}
+
+// ResetMinResponseMs resets all changes to the "min_response_ms" field.
+func (m *QuestionVersionMutation) ResetMinResponseMs() {
+	m.min_response_ms = nil
+	m.addmin_response_ms = nil
+	delete(m.clearedFields, questionversion.FieldMinResponseMs)
+}
+
+// SetMaxScore sets the "max_score" field.
+func (m *QuestionVersionMutation) SetMaxScore(f float64) {
+	m.max_score = &f
+	m.addmax_score = nil
+}
+
+// MaxScore returns the value of the "max_score" field in the mutation.
+func (m *QuestionVersionMutation) MaxScore() (r float64, exists bool) {
+	v := m.max_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxScore returns the old "max_score" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldMaxScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxScore: %w", err)
+	}
+	return oldValue.MaxScore, nil
+}
+
+// AddMaxScore adds f to the "max_score" field.
+func (m *QuestionVersionMutation) AddMaxScore(f float64) {
+	if m.addmax_score != nil {
+		*m.addmax_score += f
+	} else {
+		m.addmax_score = &f
+	}
+}
+
+// AddedMaxScore returns the value that was added to the "max_score" field in this mutation.
+func (m *QuestionVersionMutation) AddedMaxScore() (r float64, exists bool) {
+	v := m.addmax_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxScore resets all changes to the "max_score" field.
+func (m *QuestionVersionMutation) ResetMaxScore() {
+	m.max_score = nil
+	m.addmax_score = nil
+}
+
+// SetExamOnly sets the "exam_only" field.
+func (m *QuestionVersionMutation) SetExamOnly(b bool) {
+	m.exam_only = &b
+}
+
+// ExamOnly returns the value of the "exam_only" field in the mutation.
+func (m *QuestionVersionMutation) ExamOnly() (r bool, exists bool) {
+	v := m.exam_only
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExamOnly returns the old "exam_only" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldExamOnly(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExamOnly is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExamOnly requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExamOnly: %w", err)
+	}
+	return oldValue.ExamOnly, nil
+}
+
+// ResetExamOnly resets all changes to the "exam_only" field.
+func (m *QuestionVersionMutation) ResetExamOnly() {
+	m.exam_only = nil
+}
+
+// SetEfficacyInstrument sets the "efficacy_instrument" field.
+func (m *QuestionVersionMutation) SetEfficacyInstrument(b bool) {
+	m.efficacy_instrument = &b
+}
+
+// EfficacyInstrument returns the value of the "efficacy_instrument" field in the mutation.
+func (m *QuestionVersionMutation) EfficacyInstrument() (r bool, exists bool) {
+	v := m.efficacy_instrument
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEfficacyInstrument returns the old "efficacy_instrument" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldEfficacyInstrument(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEfficacyInstrument is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEfficacyInstrument requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEfficacyInstrument: %w", err)
+	}
+	return oldValue.EfficacyInstrument, nil
+}
+
+// ResetEfficacyInstrument resets all changes to the "efficacy_instrument" field.
+func (m *QuestionVersionMutation) ResetEfficacyInstrument() {
+	m.efficacy_instrument = nil
+}
+
+// SetMathAssets sets the "math_assets" field.
+func (m *QuestionVersionMutation) SetMathAssets(j jsontext.Value) {
+	m.math_assets = &j
+	m.appendmath_assets = nil
+}
+
+// MathAssets returns the value of the "math_assets" field in the mutation.
+func (m *QuestionVersionMutation) MathAssets() (r jsontext.Value, exists bool) {
+	v := m.math_assets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMathAssets returns the old "math_assets" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldMathAssets(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMathAssets is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMathAssets requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMathAssets: %w", err)
+	}
+	return oldValue.MathAssets, nil
+}
+
+// AppendMathAssets adds j to the "math_assets" field.
+func (m *QuestionVersionMutation) AppendMathAssets(j jsontext.Value) {
+	m.appendmath_assets = append(m.appendmath_assets, j...)
+}
+
+// AppendedMathAssets returns the list of values that were appended to the "math_assets" field in this mutation.
+func (m *QuestionVersionMutation) AppendedMathAssets() (jsontext.Value, bool) {
+	if len(m.appendmath_assets) == 0 {
+		return nil, false
+	}
+	return m.appendmath_assets, true
+}
+
+// ClearMathAssets clears the value of the "math_assets" field.
+func (m *QuestionVersionMutation) ClearMathAssets() {
+	m.math_assets = nil
+	m.appendmath_assets = nil
+	m.clearedFields[questionversion.FieldMathAssets] = struct{}{}
+}
+
+// MathAssetsCleared returns if the "math_assets" field was cleared in this mutation.
+func (m *QuestionVersionMutation) MathAssetsCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldMathAssets]
+	return ok
+}
+
+// ResetMathAssets resets all changes to the "math_assets" field.
+func (m *QuestionVersionMutation) ResetMathAssets() {
+	m.math_assets = nil
+	m.appendmath_assets = nil
+	delete(m.clearedFields, questionversion.FieldMathAssets)
+}
+
+// SetTags sets the "tags" field.
+func (m *QuestionVersionMutation) SetTags(s []string) {
+	m.tags = &s
+	m.appendtags = nil
+}
+
+// Tags returns the value of the "tags" field in the mutation.
+func (m *QuestionVersionMutation) Tags() (r []string, exists bool) {
+	v := m.tags
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTags returns the old "tags" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldTags(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTags is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTags requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTags: %w", err)
+	}
+	return oldValue.Tags, nil
+}
+
+// AppendTags adds s to the "tags" field.
+func (m *QuestionVersionMutation) AppendTags(s []string) {
+	m.appendtags = append(m.appendtags, s...)
+}
+
+// AppendedTags returns the list of values that were appended to the "tags" field in this mutation.
+func (m *QuestionVersionMutation) AppendedTags() ([]string, bool) {
+	if len(m.appendtags) == 0 {
+		return nil, false
+	}
+	return m.appendtags, true
+}
+
+// ResetTags resets all changes to the "tags" field.
+func (m *QuestionVersionMutation) ResetTags() {
+	m.tags = nil
+	m.appendtags = nil
+}
+
+// SetDifficulty sets the "difficulty" field.
+func (m *QuestionVersionMutation) SetDifficulty(i int16) {
+	m.difficulty = &i
+	m.adddifficulty = nil
+}
+
+// Difficulty returns the value of the "difficulty" field in the mutation.
+func (m *QuestionVersionMutation) Difficulty() (r int16, exists bool) {
+	v := m.difficulty
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDifficulty returns the old "difficulty" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldDifficulty(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDifficulty is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDifficulty requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDifficulty: %w", err)
+	}
+	return oldValue.Difficulty, nil
+}
+
+// AddDifficulty adds i to the "difficulty" field.
+func (m *QuestionVersionMutation) AddDifficulty(i int16) {
+	if m.adddifficulty != nil {
+		*m.adddifficulty += i
+	} else {
+		m.adddifficulty = &i
+	}
+}
+
+// AddedDifficulty returns the value that was added to the "difficulty" field in this mutation.
+func (m *QuestionVersionMutation) AddedDifficulty() (r int16, exists bool) {
+	v := m.adddifficulty
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDifficulty resets all changes to the "difficulty" field.
+func (m *QuestionVersionMutation) ResetDifficulty() {
+	m.difficulty = nil
+	m.adddifficulty = nil
+}
+
+// SetGradeLevels sets the "grade_levels" field.
+func (m *QuestionVersionMutation) SetGradeLevels(i []int) {
+	m.grade_levels = &i
+	m.appendgrade_levels = nil
+}
+
+// GradeLevels returns the value of the "grade_levels" field in the mutation.
+func (m *QuestionVersionMutation) GradeLevels() (r []int, exists bool) {
+	v := m.grade_levels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevels returns the old "grade_levels" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldGradeLevels(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevels: %w", err)
+	}
+	return oldValue.GradeLevels, nil
+}
+
+// AppendGradeLevels adds i to the "grade_levels" field.
+func (m *QuestionVersionMutation) AppendGradeLevels(i []int) {
+	m.appendgrade_levels = append(m.appendgrade_levels, i...)
+}
+
+// AppendedGradeLevels returns the list of values that were appended to the "grade_levels" field in this mutation.
+func (m *QuestionVersionMutation) AppendedGradeLevels() ([]int, bool) {
+	if len(m.appendgrade_levels) == 0 {
+		return nil, false
+	}
+	return m.appendgrade_levels, true
+}
+
+// ResetGradeLevels resets all changes to the "grade_levels" field.
+func (m *QuestionVersionMutation) ResetGradeLevels() {
+	m.grade_levels = nil
+	m.appendgrade_levels = nil
+}
+
+// SetSubjectID sets the "subject_id" field.
+func (m *QuestionVersionMutation) SetSubjectID(u uuid.UUID) {
+	m.subject_id = &u
+}
+
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *QuestionVersionMutation) SubjectID() (r uuid.UUID, exists bool) {
+	v := m.subject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubjectID returns the old "subject_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldSubjectID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
+	}
+	return oldValue.SubjectID, nil
+}
+
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *QuestionVersionMutation) ResetSubjectID() {
+	m.subject_id = nil
+}
+
+// SetTopicID sets the "topic_id" field.
+func (m *QuestionVersionMutation) SetTopicID(u uuid.UUID) {
+	m.topic_id = &u
+}
+
+// TopicID returns the value of the "topic_id" field in the mutation.
+func (m *QuestionVersionMutation) TopicID() (r uuid.UUID, exists bool) {
+	v := m.topic_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTopicID returns the old "topic_id" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldTopicID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTopicID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTopicID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTopicID: %w", err)
+	}
+	return oldValue.TopicID, nil
+}
+
+// ResetTopicID resets all changes to the "topic_id" field.
+func (m *QuestionVersionMutation) ResetTopicID() {
+	m.topic_id = nil
+}
+
+// SetMediaRefs sets the "media_refs" field.
+func (m *QuestionVersionMutation) SetMediaRefs(u []uuid.UUID) {
+	m.media_refs = &u
+	m.appendmedia_refs = nil
+}
+
+// MediaRefs returns the value of the "media_refs" field in the mutation.
+func (m *QuestionVersionMutation) MediaRefs() (r []uuid.UUID, exists bool) {
+	v := m.media_refs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMediaRefs returns the old "media_refs" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldMediaRefs(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMediaRefs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMediaRefs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMediaRefs: %w", err)
+	}
+	return oldValue.MediaRefs, nil
+}
+
+// AppendMediaRefs adds u to the "media_refs" field.
+func (m *QuestionVersionMutation) AppendMediaRefs(u []uuid.UUID) {
+	m.appendmedia_refs = append(m.appendmedia_refs, u...)
+}
+
+// AppendedMediaRefs returns the list of values that were appended to the "media_refs" field in this mutation.
+func (m *QuestionVersionMutation) AppendedMediaRefs() ([]uuid.UUID, bool) {
+	if len(m.appendmedia_refs) == 0 {
+		return nil, false
+	}
+	return m.appendmedia_refs, true
+}
+
+// ResetMediaRefs resets all changes to the "media_refs" field.
+func (m *QuestionVersionMutation) ResetMediaRefs() {
+	m.media_refs = nil
+	m.appendmedia_refs = nil
+}
+
+// SetContentHash sets the "content_hash" field.
+func (m *QuestionVersionMutation) SetContentHash(b []byte) {
+	m.content_hash = &b
+}
+
+// ContentHash returns the value of the "content_hash" field in the mutation.
+func (m *QuestionVersionMutation) ContentHash() (r []byte, exists bool) {
+	v := m.content_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContentHash returns the old "content_hash" field's value of the QuestionVersion entity.
+// If the QuestionVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionMutation) OldContentHash(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContentHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContentHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContentHash: %w", err)
+	}
+	return oldValue.ContentHash, nil
+}
+
+// ClearContentHash clears the value of the "content_hash" field.
+func (m *QuestionVersionMutation) ClearContentHash() {
+	m.content_hash = nil
+	m.clearedFields[questionversion.FieldContentHash] = struct{}{}
+}
+
+// ContentHashCleared returns if the "content_hash" field was cleared in this mutation.
+func (m *QuestionVersionMutation) ContentHashCleared() bool {
+	_, ok := m.clearedFields[questionversion.FieldContentHash]
+	return ok
+}
+
+// ResetContentHash resets all changes to the "content_hash" field.
+func (m *QuestionVersionMutation) ResetContentHash() {
+	m.content_hash = nil
+	delete(m.clearedFields, questionversion.FieldContentHash)
+}
+
+// Where appends a list predicates to the QuestionVersionMutation builder.
+func (m *QuestionVersionMutation) Where(ps ...predicate.QuestionVersion) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the QuestionVersionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *QuestionVersionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.QuestionVersion, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *QuestionVersionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *QuestionVersionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (QuestionVersion).
+func (m *QuestionVersionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *QuestionVersionMutation) Fields() []string {
+	fields := make([]string, 0, 48)
+	if m.tenant_id != nil {
+		fields = append(fields, questionversion.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, questionversion.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, questionversion.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, questionversion.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, questionversion.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, questionversion.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, questionversion.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, questionversion.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, questionversion.FieldVersion)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, questionversion.FieldOwnerScope)
+	}
+	if m.version_no != nil {
+		fields = append(fields, questionversion.FieldVersionNo)
+	}
+	if m.status != nil {
+		fields = append(fields, questionversion.FieldStatus)
+	}
+	if m.author_id != nil {
+		fields = append(fields, questionversion.FieldAuthorID)
+	}
+	if m.reviewer_id != nil {
+		fields = append(fields, questionversion.FieldReviewerID)
+	}
+	if m.published_at != nil {
+		fields = append(fields, questionversion.FieldPublishedAt)
+	}
+	if m.content_language != nil {
+		fields = append(fields, questionversion.FieldContentLanguage)
+	}
+	if m.curriculum_version_id != nil {
+		fields = append(fields, questionversion.FieldCurriculumVersionID)
+	}
+	if m.change_note != nil {
+		fields = append(fields, questionversion.FieldChangeNote)
+	}
+	if m.publish_at != nil {
+		fields = append(fields, questionversion.FieldPublishAt)
+	}
+	if m.snapshot_key != nil {
+		fields = append(fields, questionversion.FieldSnapshotKey)
+	}
+	if m.snapshot_sha256 != nil {
+		fields = append(fields, questionversion.FieldSnapshotSha256)
+	}
+	if m.based_on_version_id != nil {
+		fields = append(fields, questionversion.FieldBasedOnVersionID)
+	}
+	if m.cloned_from_id != nil {
+		fields = append(fields, questionversion.FieldClonedFromID)
+	}
+	if m.cloned_from_tenant_id != nil {
+		fields = append(fields, questionversion.FieldClonedFromTenantID)
+	}
+	if m.cloned_at != nil {
+		fields = append(fields, questionversion.FieldClonedAt)
+	}
+	if m.cloned_by != nil {
+		fields = append(fields, questionversion.FieldClonedBy)
+	}
+	if m.question_id != nil {
+		fields = append(fields, questionversion.FieldQuestionID)
+	}
+	if m._type != nil {
+		fields = append(fields, questionversion.FieldType)
+	}
+	if m.stem != nil {
+		fields = append(fields, questionversion.FieldStem)
+	}
+	if m.render_payload != nil {
+		fields = append(fields, questionversion.FieldRenderPayload)
+	}
+	if m.answer_key != nil {
+		fields = append(fields, questionversion.FieldAnswerKey)
+	}
+	if m.scoring_rule != nil {
+		fields = append(fields, questionversion.FieldScoringRule)
+	}
+	if m.explanation != nil {
+		fields = append(fields, questionversion.FieldExplanation)
+	}
+	if m.option_feedback != nil {
+		fields = append(fields, questionversion.FieldOptionFeedback)
+	}
+	if m.hints != nil {
+		fields = append(fields, questionversion.FieldHints)
+	}
+	if m.worked_example_ref != nil {
+		fields = append(fields, questionversion.FieldWorkedExampleRef)
+	}
+	if m.min_response_ms != nil {
+		fields = append(fields, questionversion.FieldMinResponseMs)
+	}
+	if m.max_score != nil {
+		fields = append(fields, questionversion.FieldMaxScore)
+	}
+	if m.exam_only != nil {
+		fields = append(fields, questionversion.FieldExamOnly)
+	}
+	if m.efficacy_instrument != nil {
+		fields = append(fields, questionversion.FieldEfficacyInstrument)
+	}
+	if m.math_assets != nil {
+		fields = append(fields, questionversion.FieldMathAssets)
+	}
+	if m.tags != nil {
+		fields = append(fields, questionversion.FieldTags)
+	}
+	if m.difficulty != nil {
+		fields = append(fields, questionversion.FieldDifficulty)
+	}
+	if m.grade_levels != nil {
+		fields = append(fields, questionversion.FieldGradeLevels)
+	}
+	if m.subject_id != nil {
+		fields = append(fields, questionversion.FieldSubjectID)
+	}
+	if m.topic_id != nil {
+		fields = append(fields, questionversion.FieldTopicID)
+	}
+	if m.media_refs != nil {
+		fields = append(fields, questionversion.FieldMediaRefs)
+	}
+	if m.content_hash != nil {
+		fields = append(fields, questionversion.FieldContentHash)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *QuestionVersionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case questionversion.FieldTenantID:
+		return m.TenantID()
+	case questionversion.FieldCreatedAt:
+		return m.CreatedAt()
+	case questionversion.FieldCreatedBy:
+		return m.CreatedBy()
+	case questionversion.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case questionversion.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case questionversion.FieldDeletedAt:
+		return m.DeletedAt()
+	case questionversion.FieldDeletedBy:
+		return m.DeletedBy()
+	case questionversion.FieldDeleteReason:
+		return m.DeleteReason()
+	case questionversion.FieldVersion:
+		return m.Version()
+	case questionversion.FieldOwnerScope:
+		return m.OwnerScope()
+	case questionversion.FieldVersionNo:
+		return m.VersionNo()
+	case questionversion.FieldStatus:
+		return m.Status()
+	case questionversion.FieldAuthorID:
+		return m.AuthorID()
+	case questionversion.FieldReviewerID:
+		return m.ReviewerID()
+	case questionversion.FieldPublishedAt:
+		return m.PublishedAt()
+	case questionversion.FieldContentLanguage:
+		return m.ContentLanguage()
+	case questionversion.FieldCurriculumVersionID:
+		return m.CurriculumVersionID()
+	case questionversion.FieldChangeNote:
+		return m.ChangeNote()
+	case questionversion.FieldPublishAt:
+		return m.PublishAt()
+	case questionversion.FieldSnapshotKey:
+		return m.SnapshotKey()
+	case questionversion.FieldSnapshotSha256:
+		return m.SnapshotSha256()
+	case questionversion.FieldBasedOnVersionID:
+		return m.BasedOnVersionID()
+	case questionversion.FieldClonedFromID:
+		return m.ClonedFromID()
+	case questionversion.FieldClonedFromTenantID:
+		return m.ClonedFromTenantID()
+	case questionversion.FieldClonedAt:
+		return m.ClonedAt()
+	case questionversion.FieldClonedBy:
+		return m.ClonedBy()
+	case questionversion.FieldQuestionID:
+		return m.QuestionID()
+	case questionversion.FieldType:
+		return m.GetType()
+	case questionversion.FieldStem:
+		return m.Stem()
+	case questionversion.FieldRenderPayload:
+		return m.RenderPayload()
+	case questionversion.FieldAnswerKey:
+		return m.AnswerKey()
+	case questionversion.FieldScoringRule:
+		return m.ScoringRule()
+	case questionversion.FieldExplanation:
+		return m.Explanation()
+	case questionversion.FieldOptionFeedback:
+		return m.OptionFeedback()
+	case questionversion.FieldHints:
+		return m.Hints()
+	case questionversion.FieldWorkedExampleRef:
+		return m.WorkedExampleRef()
+	case questionversion.FieldMinResponseMs:
+		return m.MinResponseMs()
+	case questionversion.FieldMaxScore:
+		return m.MaxScore()
+	case questionversion.FieldExamOnly:
+		return m.ExamOnly()
+	case questionversion.FieldEfficacyInstrument:
+		return m.EfficacyInstrument()
+	case questionversion.FieldMathAssets:
+		return m.MathAssets()
+	case questionversion.FieldTags:
+		return m.Tags()
+	case questionversion.FieldDifficulty:
+		return m.Difficulty()
+	case questionversion.FieldGradeLevels:
+		return m.GradeLevels()
+	case questionversion.FieldSubjectID:
+		return m.SubjectID()
+	case questionversion.FieldTopicID:
+		return m.TopicID()
+	case questionversion.FieldMediaRefs:
+		return m.MediaRefs()
+	case questionversion.FieldContentHash:
+		return m.ContentHash()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *QuestionVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case questionversion.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case questionversion.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case questionversion.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case questionversion.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case questionversion.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case questionversion.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case questionversion.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case questionversion.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case questionversion.FieldVersion:
+		return m.OldVersion(ctx)
+	case questionversion.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case questionversion.FieldVersionNo:
+		return m.OldVersionNo(ctx)
+	case questionversion.FieldStatus:
+		return m.OldStatus(ctx)
+	case questionversion.FieldAuthorID:
+		return m.OldAuthorID(ctx)
+	case questionversion.FieldReviewerID:
+		return m.OldReviewerID(ctx)
+	case questionversion.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case questionversion.FieldContentLanguage:
+		return m.OldContentLanguage(ctx)
+	case questionversion.FieldCurriculumVersionID:
+		return m.OldCurriculumVersionID(ctx)
+	case questionversion.FieldChangeNote:
+		return m.OldChangeNote(ctx)
+	case questionversion.FieldPublishAt:
+		return m.OldPublishAt(ctx)
+	case questionversion.FieldSnapshotKey:
+		return m.OldSnapshotKey(ctx)
+	case questionversion.FieldSnapshotSha256:
+		return m.OldSnapshotSha256(ctx)
+	case questionversion.FieldBasedOnVersionID:
+		return m.OldBasedOnVersionID(ctx)
+	case questionversion.FieldClonedFromID:
+		return m.OldClonedFromID(ctx)
+	case questionversion.FieldClonedFromTenantID:
+		return m.OldClonedFromTenantID(ctx)
+	case questionversion.FieldClonedAt:
+		return m.OldClonedAt(ctx)
+	case questionversion.FieldClonedBy:
+		return m.OldClonedBy(ctx)
+	case questionversion.FieldQuestionID:
+		return m.OldQuestionID(ctx)
+	case questionversion.FieldType:
+		return m.OldType(ctx)
+	case questionversion.FieldStem:
+		return m.OldStem(ctx)
+	case questionversion.FieldRenderPayload:
+		return m.OldRenderPayload(ctx)
+	case questionversion.FieldAnswerKey:
+		return m.OldAnswerKey(ctx)
+	case questionversion.FieldScoringRule:
+		return m.OldScoringRule(ctx)
+	case questionversion.FieldExplanation:
+		return m.OldExplanation(ctx)
+	case questionversion.FieldOptionFeedback:
+		return m.OldOptionFeedback(ctx)
+	case questionversion.FieldHints:
+		return m.OldHints(ctx)
+	case questionversion.FieldWorkedExampleRef:
+		return m.OldWorkedExampleRef(ctx)
+	case questionversion.FieldMinResponseMs:
+		return m.OldMinResponseMs(ctx)
+	case questionversion.FieldMaxScore:
+		return m.OldMaxScore(ctx)
+	case questionversion.FieldExamOnly:
+		return m.OldExamOnly(ctx)
+	case questionversion.FieldEfficacyInstrument:
+		return m.OldEfficacyInstrument(ctx)
+	case questionversion.FieldMathAssets:
+		return m.OldMathAssets(ctx)
+	case questionversion.FieldTags:
+		return m.OldTags(ctx)
+	case questionversion.FieldDifficulty:
+		return m.OldDifficulty(ctx)
+	case questionversion.FieldGradeLevels:
+		return m.OldGradeLevels(ctx)
+	case questionversion.FieldSubjectID:
+		return m.OldSubjectID(ctx)
+	case questionversion.FieldTopicID:
+		return m.OldTopicID(ctx)
+	case questionversion.FieldMediaRefs:
+		return m.OldMediaRefs(ctx)
+	case questionversion.FieldContentHash:
+		return m.OldContentHash(ctx)
+	}
+	return nil, fmt.Errorf("unknown QuestionVersion field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionVersionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case questionversion.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case questionversion.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case questionversion.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case questionversion.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case questionversion.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case questionversion.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case questionversion.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case questionversion.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case questionversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case questionversion.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case questionversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionNo(v)
+		return nil
+	case questionversion.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case questionversion.FieldAuthorID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthorID(v)
+		return nil
+	case questionversion.FieldReviewerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewerID(v)
+		return nil
+	case questionversion.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case questionversion.FieldContentLanguage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContentLanguage(v)
+		return nil
+	case questionversion.FieldCurriculumVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurriculumVersionID(v)
+		return nil
+	case questionversion.FieldChangeNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeNote(v)
+		return nil
+	case questionversion.FieldPublishAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishAt(v)
+		return nil
+	case questionversion.FieldSnapshotKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotKey(v)
+		return nil
+	case questionversion.FieldSnapshotSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotSha256(v)
+		return nil
+	case questionversion.FieldBasedOnVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBasedOnVersionID(v)
+		return nil
+	case questionversion.FieldClonedFromID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedFromID(v)
+		return nil
+	case questionversion.FieldClonedFromTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedFromTenantID(v)
+		return nil
+	case questionversion.FieldClonedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedAt(v)
+		return nil
+	case questionversion.FieldClonedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClonedBy(v)
+		return nil
+	case questionversion.FieldQuestionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionID(v)
+		return nil
+	case questionversion.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case questionversion.FieldStem:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStem(v)
+		return nil
+	case questionversion.FieldRenderPayload:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRenderPayload(v)
+		return nil
+	case questionversion.FieldAnswerKey:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAnswerKey(v)
+		return nil
+	case questionversion.FieldScoringRule:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScoringRule(v)
+		return nil
+	case questionversion.FieldExplanation:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExplanation(v)
+		return nil
+	case questionversion.FieldOptionFeedback:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOptionFeedback(v)
+		return nil
+	case questionversion.FieldHints:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHints(v)
+		return nil
+	case questionversion.FieldWorkedExampleRef:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkedExampleRef(v)
+		return nil
+	case questionversion.FieldMinResponseMs:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinResponseMs(v)
+		return nil
+	case questionversion.FieldMaxScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxScore(v)
+		return nil
+	case questionversion.FieldExamOnly:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExamOnly(v)
+		return nil
+	case questionversion.FieldEfficacyInstrument:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEfficacyInstrument(v)
+		return nil
+	case questionversion.FieldMathAssets:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMathAssets(v)
+		return nil
+	case questionversion.FieldTags:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTags(v)
+		return nil
+	case questionversion.FieldDifficulty:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDifficulty(v)
+		return nil
+	case questionversion.FieldGradeLevels:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevels(v)
+		return nil
+	case questionversion.FieldSubjectID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubjectID(v)
+		return nil
+	case questionversion.FieldTopicID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTopicID(v)
+		return nil
+	case questionversion.FieldMediaRefs:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMediaRefs(v)
+		return nil
+	case questionversion.FieldContentHash:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContentHash(v)
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersion field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *QuestionVersionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, questionversion.FieldVersion)
+	}
+	if m.addversion_no != nil {
+		fields = append(fields, questionversion.FieldVersionNo)
+	}
+	if m.addmin_response_ms != nil {
+		fields = append(fields, questionversion.FieldMinResponseMs)
+	}
+	if m.addmax_score != nil {
+		fields = append(fields, questionversion.FieldMaxScore)
+	}
+	if m.adddifficulty != nil {
+		fields = append(fields, questionversion.FieldDifficulty)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *QuestionVersionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case questionversion.FieldVersion:
+		return m.AddedVersion()
+	case questionversion.FieldVersionNo:
+		return m.AddedVersionNo()
+	case questionversion.FieldMinResponseMs:
+		return m.AddedMinResponseMs()
+	case questionversion.FieldMaxScore:
+		return m.AddedMaxScore()
+	case questionversion.FieldDifficulty:
+		return m.AddedDifficulty()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionVersionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case questionversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case questionversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersionNo(v)
+		return nil
+	case questionversion.FieldMinResponseMs:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMinResponseMs(v)
+		return nil
+	case questionversion.FieldMaxScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxScore(v)
+		return nil
+	case questionversion.FieldDifficulty:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDifficulty(v)
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersion numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *QuestionVersionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(questionversion.FieldTenantID) {
+		fields = append(fields, questionversion.FieldTenantID)
+	}
+	if m.FieldCleared(questionversion.FieldCreatedBy) {
+		fields = append(fields, questionversion.FieldCreatedBy)
+	}
+	if m.FieldCleared(questionversion.FieldUpdatedBy) {
+		fields = append(fields, questionversion.FieldUpdatedBy)
+	}
+	if m.FieldCleared(questionversion.FieldDeletedAt) {
+		fields = append(fields, questionversion.FieldDeletedAt)
+	}
+	if m.FieldCleared(questionversion.FieldDeletedBy) {
+		fields = append(fields, questionversion.FieldDeletedBy)
+	}
+	if m.FieldCleared(questionversion.FieldDeleteReason) {
+		fields = append(fields, questionversion.FieldDeleteReason)
+	}
+	if m.FieldCleared(questionversion.FieldReviewerID) {
+		fields = append(fields, questionversion.FieldReviewerID)
+	}
+	if m.FieldCleared(questionversion.FieldPublishedAt) {
+		fields = append(fields, questionversion.FieldPublishedAt)
+	}
+	if m.FieldCleared(questionversion.FieldChangeNote) {
+		fields = append(fields, questionversion.FieldChangeNote)
+	}
+	if m.FieldCleared(questionversion.FieldPublishAt) {
+		fields = append(fields, questionversion.FieldPublishAt)
+	}
+	if m.FieldCleared(questionversion.FieldSnapshotKey) {
+		fields = append(fields, questionversion.FieldSnapshotKey)
+	}
+	if m.FieldCleared(questionversion.FieldSnapshotSha256) {
+		fields = append(fields, questionversion.FieldSnapshotSha256)
+	}
+	if m.FieldCleared(questionversion.FieldBasedOnVersionID) {
+		fields = append(fields, questionversion.FieldBasedOnVersionID)
+	}
+	if m.FieldCleared(questionversion.FieldClonedFromID) {
+		fields = append(fields, questionversion.FieldClonedFromID)
+	}
+	if m.FieldCleared(questionversion.FieldClonedFromTenantID) {
+		fields = append(fields, questionversion.FieldClonedFromTenantID)
+	}
+	if m.FieldCleared(questionversion.FieldClonedAt) {
+		fields = append(fields, questionversion.FieldClonedAt)
+	}
+	if m.FieldCleared(questionversion.FieldClonedBy) {
+		fields = append(fields, questionversion.FieldClonedBy)
+	}
+	if m.FieldCleared(questionversion.FieldExplanation) {
+		fields = append(fields, questionversion.FieldExplanation)
+	}
+	if m.FieldCleared(questionversion.FieldOptionFeedback) {
+		fields = append(fields, questionversion.FieldOptionFeedback)
+	}
+	if m.FieldCleared(questionversion.FieldHints) {
+		fields = append(fields, questionversion.FieldHints)
+	}
+	if m.FieldCleared(questionversion.FieldWorkedExampleRef) {
+		fields = append(fields, questionversion.FieldWorkedExampleRef)
+	}
+	if m.FieldCleared(questionversion.FieldMinResponseMs) {
+		fields = append(fields, questionversion.FieldMinResponseMs)
+	}
+	if m.FieldCleared(questionversion.FieldMathAssets) {
+		fields = append(fields, questionversion.FieldMathAssets)
+	}
+	if m.FieldCleared(questionversion.FieldContentHash) {
+		fields = append(fields, questionversion.FieldContentHash)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *QuestionVersionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *QuestionVersionMutation) ClearField(name string) error {
+	switch name {
+	case questionversion.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case questionversion.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case questionversion.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case questionversion.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case questionversion.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case questionversion.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case questionversion.FieldReviewerID:
+		m.ClearReviewerID()
+		return nil
+	case questionversion.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	case questionversion.FieldChangeNote:
+		m.ClearChangeNote()
+		return nil
+	case questionversion.FieldPublishAt:
+		m.ClearPublishAt()
+		return nil
+	case questionversion.FieldSnapshotKey:
+		m.ClearSnapshotKey()
+		return nil
+	case questionversion.FieldSnapshotSha256:
+		m.ClearSnapshotSha256()
+		return nil
+	case questionversion.FieldBasedOnVersionID:
+		m.ClearBasedOnVersionID()
+		return nil
+	case questionversion.FieldClonedFromID:
+		m.ClearClonedFromID()
+		return nil
+	case questionversion.FieldClonedFromTenantID:
+		m.ClearClonedFromTenantID()
+		return nil
+	case questionversion.FieldClonedAt:
+		m.ClearClonedAt()
+		return nil
+	case questionversion.FieldClonedBy:
+		m.ClearClonedBy()
+		return nil
+	case questionversion.FieldExplanation:
+		m.ClearExplanation()
+		return nil
+	case questionversion.FieldOptionFeedback:
+		m.ClearOptionFeedback()
+		return nil
+	case questionversion.FieldHints:
+		m.ClearHints()
+		return nil
+	case questionversion.FieldWorkedExampleRef:
+		m.ClearWorkedExampleRef()
+		return nil
+	case questionversion.FieldMinResponseMs:
+		m.ClearMinResponseMs()
+		return nil
+	case questionversion.FieldMathAssets:
+		m.ClearMathAssets()
+		return nil
+	case questionversion.FieldContentHash:
+		m.ClearContentHash()
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersion nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *QuestionVersionMutation) ResetField(name string) error {
+	switch name {
+	case questionversion.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case questionversion.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case questionversion.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case questionversion.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case questionversion.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case questionversion.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case questionversion.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case questionversion.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case questionversion.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case questionversion.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case questionversion.FieldVersionNo:
+		m.ResetVersionNo()
+		return nil
+	case questionversion.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case questionversion.FieldAuthorID:
+		m.ResetAuthorID()
+		return nil
+	case questionversion.FieldReviewerID:
+		m.ResetReviewerID()
+		return nil
+	case questionversion.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case questionversion.FieldContentLanguage:
+		m.ResetContentLanguage()
+		return nil
+	case questionversion.FieldCurriculumVersionID:
+		m.ResetCurriculumVersionID()
+		return nil
+	case questionversion.FieldChangeNote:
+		m.ResetChangeNote()
+		return nil
+	case questionversion.FieldPublishAt:
+		m.ResetPublishAt()
+		return nil
+	case questionversion.FieldSnapshotKey:
+		m.ResetSnapshotKey()
+		return nil
+	case questionversion.FieldSnapshotSha256:
+		m.ResetSnapshotSha256()
+		return nil
+	case questionversion.FieldBasedOnVersionID:
+		m.ResetBasedOnVersionID()
+		return nil
+	case questionversion.FieldClonedFromID:
+		m.ResetClonedFromID()
+		return nil
+	case questionversion.FieldClonedFromTenantID:
+		m.ResetClonedFromTenantID()
+		return nil
+	case questionversion.FieldClonedAt:
+		m.ResetClonedAt()
+		return nil
+	case questionversion.FieldClonedBy:
+		m.ResetClonedBy()
+		return nil
+	case questionversion.FieldQuestionID:
+		m.ResetQuestionID()
+		return nil
+	case questionversion.FieldType:
+		m.ResetType()
+		return nil
+	case questionversion.FieldStem:
+		m.ResetStem()
+		return nil
+	case questionversion.FieldRenderPayload:
+		m.ResetRenderPayload()
+		return nil
+	case questionversion.FieldAnswerKey:
+		m.ResetAnswerKey()
+		return nil
+	case questionversion.FieldScoringRule:
+		m.ResetScoringRule()
+		return nil
+	case questionversion.FieldExplanation:
+		m.ResetExplanation()
+		return nil
+	case questionversion.FieldOptionFeedback:
+		m.ResetOptionFeedback()
+		return nil
+	case questionversion.FieldHints:
+		m.ResetHints()
+		return nil
+	case questionversion.FieldWorkedExampleRef:
+		m.ResetWorkedExampleRef()
+		return nil
+	case questionversion.FieldMinResponseMs:
+		m.ResetMinResponseMs()
+		return nil
+	case questionversion.FieldMaxScore:
+		m.ResetMaxScore()
+		return nil
+	case questionversion.FieldExamOnly:
+		m.ResetExamOnly()
+		return nil
+	case questionversion.FieldEfficacyInstrument:
+		m.ResetEfficacyInstrument()
+		return nil
+	case questionversion.FieldMathAssets:
+		m.ResetMathAssets()
+		return nil
+	case questionversion.FieldTags:
+		m.ResetTags()
+		return nil
+	case questionversion.FieldDifficulty:
+		m.ResetDifficulty()
+		return nil
+	case questionversion.FieldGradeLevels:
+		m.ResetGradeLevels()
+		return nil
+	case questionversion.FieldSubjectID:
+		m.ResetSubjectID()
+		return nil
+	case questionversion.FieldTopicID:
+		m.ResetTopicID()
+		return nil
+	case questionversion.FieldMediaRefs:
+		m.ResetMediaRefs()
+		return nil
+	case questionversion.FieldContentHash:
+		m.ResetContentHash()
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersion field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *QuestionVersionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *QuestionVersionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *QuestionVersionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *QuestionVersionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *QuestionVersionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *QuestionVersionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *QuestionVersionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown QuestionVersion unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *QuestionVersionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown QuestionVersion edge %s", name)
+}
+
+// QuestionVersionObjectiveMutation represents an operation that mutates the QuestionVersionObjective nodes in the graph.
+type QuestionVersionObjectiveMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	tenant_id           *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	owner_scope         *string
+	question_id         *uuid.UUID
+	question_version_id *uuid.UUID
+	objective_id        *uuid.UUID
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*QuestionVersionObjective, error)
+	predicates          []predicate.QuestionVersionObjective
+}
+
+var _ ent.Mutation = (*QuestionVersionObjectiveMutation)(nil)
+
+// questionversionobjectiveOption allows management of the mutation configuration using functional options.
+type questionversionobjectiveOption func(*QuestionVersionObjectiveMutation)
+
+// newQuestionVersionObjectiveMutation creates new mutation for the QuestionVersionObjective entity.
+func newQuestionVersionObjectiveMutation(c config, op Op, opts ...questionversionobjectiveOption) *QuestionVersionObjectiveMutation {
+	m := &QuestionVersionObjectiveMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeQuestionVersionObjective,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withQuestionVersionObjectiveID sets the ID field of the mutation.
+func withQuestionVersionObjectiveID(id uuid.UUID) questionversionobjectiveOption {
+	return func(m *QuestionVersionObjectiveMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *QuestionVersionObjective
+		)
+		m.oldValue = func(ctx context.Context) (*QuestionVersionObjective, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().QuestionVersionObjective.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withQuestionVersionObjective sets the old QuestionVersionObjective of the mutation.
+func withQuestionVersionObjective(node *QuestionVersionObjective) questionversionobjectiveOption {
+	return func(m *QuestionVersionObjectiveMutation) {
+		m.oldValue = func(context.Context) (*QuestionVersionObjective, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m QuestionVersionObjectiveMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m QuestionVersionObjectiveMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of QuestionVersionObjective entities.
+func (m *QuestionVersionObjectiveMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *QuestionVersionObjectiveMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *QuestionVersionObjectiveMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().QuestionVersionObjective.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *QuestionVersionObjectiveMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *QuestionVersionObjectiveMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[questionversionobjective.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *QuestionVersionObjectiveMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, questionversionobjective.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *QuestionVersionObjectiveMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *QuestionVersionObjectiveMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *QuestionVersionObjectiveMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *QuestionVersionObjectiveMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[questionversionobjective.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *QuestionVersionObjectiveMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, questionversionobjective.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *QuestionVersionObjectiveMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *QuestionVersionObjectiveMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *QuestionVersionObjectiveMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *QuestionVersionObjectiveMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[questionversionobjective.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *QuestionVersionObjectiveMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, questionversionobjective.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *QuestionVersionObjectiveMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *QuestionVersionObjectiveMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[questionversionobjective.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *QuestionVersionObjectiveMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, questionversionobjective.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *QuestionVersionObjectiveMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *QuestionVersionObjectiveMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[questionversionobjective.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *QuestionVersionObjectiveMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, questionversionobjective.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *QuestionVersionObjectiveMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *QuestionVersionObjectiveMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[questionversionobjective.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[questionversionobjective.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *QuestionVersionObjectiveMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, questionversionobjective.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *QuestionVersionObjectiveMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *QuestionVersionObjectiveMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *QuestionVersionObjectiveMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *QuestionVersionObjectiveMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *QuestionVersionObjectiveMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *QuestionVersionObjectiveMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetQuestionID sets the "question_id" field.
+func (m *QuestionVersionObjectiveMutation) SetQuestionID(u uuid.UUID) {
+	m.question_id = &u
+}
+
+// QuestionID returns the value of the "question_id" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) QuestionID() (r uuid.UUID, exists bool) {
+	v := m.question_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionID returns the old "question_id" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldQuestionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionID: %w", err)
+	}
+	return oldValue.QuestionID, nil
+}
+
+// ResetQuestionID resets all changes to the "question_id" field.
+func (m *QuestionVersionObjectiveMutation) ResetQuestionID() {
+	m.question_id = nil
+}
+
+// SetQuestionVersionID sets the "question_version_id" field.
+func (m *QuestionVersionObjectiveMutation) SetQuestionVersionID(u uuid.UUID) {
+	m.question_version_id = &u
+}
+
+// QuestionVersionID returns the value of the "question_version_id" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) QuestionVersionID() (r uuid.UUID, exists bool) {
+	v := m.question_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionVersionID returns the old "question_version_id" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldQuestionVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionVersionID: %w", err)
+	}
+	return oldValue.QuestionVersionID, nil
+}
+
+// ResetQuestionVersionID resets all changes to the "question_version_id" field.
+func (m *QuestionVersionObjectiveMutation) ResetQuestionVersionID() {
+	m.question_version_id = nil
+}
+
+// SetObjectiveID sets the "objective_id" field.
+func (m *QuestionVersionObjectiveMutation) SetObjectiveID(u uuid.UUID) {
+	m.objective_id = &u
+}
+
+// ObjectiveID returns the value of the "objective_id" field in the mutation.
+func (m *QuestionVersionObjectiveMutation) ObjectiveID() (r uuid.UUID, exists bool) {
+	v := m.objective_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectiveID returns the old "objective_id" field's value of the QuestionVersionObjective entity.
+// If the QuestionVersionObjective object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QuestionVersionObjectiveMutation) OldObjectiveID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectiveID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectiveID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectiveID: %w", err)
+	}
+	return oldValue.ObjectiveID, nil
+}
+
+// ResetObjectiveID resets all changes to the "objective_id" field.
+func (m *QuestionVersionObjectiveMutation) ResetObjectiveID() {
+	m.objective_id = nil
+}
+
+// Where appends a list predicates to the QuestionVersionObjectiveMutation builder.
+func (m *QuestionVersionObjectiveMutation) Where(ps ...predicate.QuestionVersionObjective) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the QuestionVersionObjectiveMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *QuestionVersionObjectiveMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.QuestionVersionObjective, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *QuestionVersionObjectiveMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *QuestionVersionObjectiveMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (QuestionVersionObjective).
+func (m *QuestionVersionObjectiveMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *QuestionVersionObjectiveMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.tenant_id != nil {
+		fields = append(fields, questionversionobjective.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, questionversionobjective.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, questionversionobjective.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, questionversionobjective.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, questionversionobjective.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, questionversionobjective.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, questionversionobjective.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, questionversionobjective.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, questionversionobjective.FieldVersion)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, questionversionobjective.FieldOwnerScope)
+	}
+	if m.question_id != nil {
+		fields = append(fields, questionversionobjective.FieldQuestionID)
+	}
+	if m.question_version_id != nil {
+		fields = append(fields, questionversionobjective.FieldQuestionVersionID)
+	}
+	if m.objective_id != nil {
+		fields = append(fields, questionversionobjective.FieldObjectiveID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *QuestionVersionObjectiveMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case questionversionobjective.FieldTenantID:
+		return m.TenantID()
+	case questionversionobjective.FieldCreatedAt:
+		return m.CreatedAt()
+	case questionversionobjective.FieldCreatedBy:
+		return m.CreatedBy()
+	case questionversionobjective.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case questionversionobjective.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case questionversionobjective.FieldDeletedAt:
+		return m.DeletedAt()
+	case questionversionobjective.FieldDeletedBy:
+		return m.DeletedBy()
+	case questionversionobjective.FieldDeleteReason:
+		return m.DeleteReason()
+	case questionversionobjective.FieldVersion:
+		return m.Version()
+	case questionversionobjective.FieldOwnerScope:
+		return m.OwnerScope()
+	case questionversionobjective.FieldQuestionID:
+		return m.QuestionID()
+	case questionversionobjective.FieldQuestionVersionID:
+		return m.QuestionVersionID()
+	case questionversionobjective.FieldObjectiveID:
+		return m.ObjectiveID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *QuestionVersionObjectiveMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case questionversionobjective.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case questionversionobjective.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case questionversionobjective.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case questionversionobjective.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case questionversionobjective.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case questionversionobjective.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case questionversionobjective.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case questionversionobjective.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case questionversionobjective.FieldVersion:
+		return m.OldVersion(ctx)
+	case questionversionobjective.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case questionversionobjective.FieldQuestionID:
+		return m.OldQuestionID(ctx)
+	case questionversionobjective.FieldQuestionVersionID:
+		return m.OldQuestionVersionID(ctx)
+	case questionversionobjective.FieldObjectiveID:
+		return m.OldObjectiveID(ctx)
+	}
+	return nil, fmt.Errorf("unknown QuestionVersionObjective field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionVersionObjectiveMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case questionversionobjective.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case questionversionobjective.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case questionversionobjective.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case questionversionobjective.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case questionversionobjective.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case questionversionobjective.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case questionversionobjective.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case questionversionobjective.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case questionversionobjective.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case questionversionobjective.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case questionversionobjective.FieldQuestionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionID(v)
+		return nil
+	case questionversionobjective.FieldQuestionVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionVersionID(v)
+		return nil
+	case questionversionobjective.FieldObjectiveID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectiveID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersionObjective field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *QuestionVersionObjectiveMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, questionversionobjective.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *QuestionVersionObjectiveMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case questionversionobjective.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *QuestionVersionObjectiveMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case questionversionobjective.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersionObjective numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *QuestionVersionObjectiveMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(questionversionobjective.FieldTenantID) {
+		fields = append(fields, questionversionobjective.FieldTenantID)
+	}
+	if m.FieldCleared(questionversionobjective.FieldCreatedBy) {
+		fields = append(fields, questionversionobjective.FieldCreatedBy)
+	}
+	if m.FieldCleared(questionversionobjective.FieldUpdatedBy) {
+		fields = append(fields, questionversionobjective.FieldUpdatedBy)
+	}
+	if m.FieldCleared(questionversionobjective.FieldDeletedAt) {
+		fields = append(fields, questionversionobjective.FieldDeletedAt)
+	}
+	if m.FieldCleared(questionversionobjective.FieldDeletedBy) {
+		fields = append(fields, questionversionobjective.FieldDeletedBy)
+	}
+	if m.FieldCleared(questionversionobjective.FieldDeleteReason) {
+		fields = append(fields, questionversionobjective.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *QuestionVersionObjectiveMutation) ClearField(name string) error {
+	switch name {
+	case questionversionobjective.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case questionversionobjective.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case questionversionobjective.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case questionversionobjective.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case questionversionobjective.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case questionversionobjective.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersionObjective nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *QuestionVersionObjectiveMutation) ResetField(name string) error {
+	switch name {
+	case questionversionobjective.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case questionversionobjective.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case questionversionobjective.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case questionversionobjective.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case questionversionobjective.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case questionversionobjective.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case questionversionobjective.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case questionversionobjective.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case questionversionobjective.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case questionversionobjective.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case questionversionobjective.FieldQuestionID:
+		m.ResetQuestionID()
+		return nil
+	case questionversionobjective.FieldQuestionVersionID:
+		m.ResetQuestionVersionID()
+		return nil
+	case questionversionobjective.FieldObjectiveID:
+		m.ResetObjectiveID()
+		return nil
+	}
+	return fmt.Errorf("unknown QuestionVersionObjective field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *QuestionVersionObjectiveMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *QuestionVersionObjectiveMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *QuestionVersionObjectiveMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *QuestionVersionObjectiveMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *QuestionVersionObjectiveMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *QuestionVersionObjectiveMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown QuestionVersionObjective unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *QuestionVersionObjectiveMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown QuestionVersionObjective edge %s", name)
 }
 
 // SubjectMutation represents an operation that mutates the Subject nodes in the graph.

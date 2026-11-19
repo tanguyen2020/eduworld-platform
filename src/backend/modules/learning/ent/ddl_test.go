@@ -23,6 +23,7 @@ var migrations = map[string][]string{
 	"20261124000001_f021_curriculum.sql": {"curricula", "curriculum_versions", "subjects", "subject_grades", "topics",
 		"learning_objectives", "competencies", "lo_version_mappings", "textbook_series", "textbooks", "textbook_sections",
 		"textbook_section_objectives", "import_jobs"},
+	"20261125000001_f022_question_bank.sql": {"questions", "question_versions", "question_version_objectives"},
 }
 
 func schemas() map[string]string {
@@ -34,6 +35,7 @@ func schemas() map[string]string {
 		"topics": c.Topic, "learning_objectives": c.LearningObjective, "competencies": c.Competency,
 		"lo_version_mappings": c.LoVersionMapping, "textbook_series": c.TextbookSeries, "textbooks": c.Textbook,
 		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob,
+		"questions": c.Question, "question_versions": c.QuestionVersion, "question_version_objectives": c.QuestionVersionObjective,
 	}
 }
 

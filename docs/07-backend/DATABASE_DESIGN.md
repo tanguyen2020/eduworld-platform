@@ -219,8 +219,8 @@ Bảng con của version (`subject_grades`, `topics`, `learning_objectives`, `co
 | Bảng | Cột chính | Ràng buộc / index |
 |---|---|---|
 | `questions` | `question_id`, `owner_scope`, `tenant_id`, `current_version_id` (release pointer, ADR-0043), `latest_version_no`, `created_by` | idx `(owner_scope, tenant_id)`; trigger kiểm tra con trỏ trỏ version `published` của chính item (§3.13) |
-| `question_versions` | `question_version_id`, `question_id`, `version`, `status`, `type`, `stem jsonb`, `render_payload jsonb`, `answer_key jsonb`, `scoring_rule jsonb`, `explanation jsonb`, `worked_example_ref jsonb` (`{content_item_id, block_id}` theo [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), ≤ 1 KB), `difficulty` 1–5, `grade_levels smallint[]` (phần tử 1–9, 1–9 phần tử), `subject_id`, `topic_id` (NOT NULL), `media_refs uuid[]`, `author_id`, `reviewer_id`, `published_at`, `content_hash` | UNIQUE `(question_id, version)`; idx `(subject_id, topic_id, difficulty) WHERE status='published'` + GIN `grade_levels`; trigger chặn UPDATE khi `status IN ('published','archived')` trừ chuyển sang `archived` |
-| `question_version_objectives` | `question_version_id`, `objective_id` | PK ghép; idx `objective_id` |
+| `question_versions` | `question_version_id`, `question_id`, `version_no`, `status`, `type`, `stem jsonb`, `render_payload jsonb` (không có `feedback`/`misconception_tag`), `answer_key jsonb`, `scoring_rule jsonb`, `explanation jsonb`, `option_feedback jsonb` (phần chỉ server tách khỏi `render_payload.options[]` khi lưu, F022), `hints jsonb` (mảng ≤ 5), `worked_example_ref jsonb` (`{content_item_id, block_id}` theo [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), ≤ 1 KB), `min_response_ms int` (0–600000), `max_score numeric(7,2)` (> 0, mặc định 1), `math_assets jsonb` (≤ 50), `exam_only`, `efficacy_instrument`, `tags jsonb` (≤ 20), `difficulty` 1–5, `grade_levels jsonb` (mảng 1–9 phần tử, giá trị 1–9), `subject_id`, `topic_id` (NOT NULL), `media_refs jsonb` (mảng uuid ≤ 50), `content_hash bytea` (SHA-256), cột mixin version (F020) | H (assignment theo `question_id`); UNIQUE `(question_id, version_no)`; UNIQUE `(question_id) WHERE status IN ('draft','in_review') AND deleted_at IS NULL` (một nháp mở); idx `(tenant_id, subject_id, topic_id, difficulty) WHERE status='published'` + GIN `grade_levels jsonb_path_ops`; FK tới `curriculum.subjects/topics/curriculum_versions`; trigger `question_versions_immutable`; DDL §3.3 |
+| `question_version_objectives` | `question_version_objective_id`, `tenant_id`, `owner_scope`, `question_id`, `question_version_id`, `objective_id` | H (assignment theo `question_id`); UNIQUE `(question_version_id, objective_id) WHERE deleted_at IS NULL`; idx `objective_id`; trigger chỉ cho ghi khi version là `draft` (F022) |
 | `question_sets`, `question_set_versions`, `question_set_items` | static items hoặc `selection_rules jsonb` | như trên |
 | `assessment_blueprints`, `assessment_blueprint_versions` | `sections jsonb`, `time_limit_seconds`, `scoring jsonb`, `shuffle_policy`, `result_visibility` | |
 | `lesson_versions`, `learning_materials` | | |
@@ -911,12 +911,17 @@ END $$;
 CREATE TRIGGER question_versions_immutable BEFORE UPDATE ON content.question_versions
   FOR EACH ROW EXECUTE FUNCTION content.forbid_published_update();
 
-CREATE VIEW content.question_delivery_v AS
-  SELECT question_version_id, question_id, tenant_id, owner_scope, version, type, render_payload, difficulty,
-         grade_levels, subject_id, topic_id, media_refs, worked_example_ref
+CREATE VIEW content.question_delivery_v WITH (security_barrier = true) AS
+  SELECT question_version_id, question_id, tenant_id, owner_scope, version_no AS version, type, stem, render_payload, math_assets,
+         max_score, difficulty, grade_levels, subject_id, topic_id, media_refs, content_language, exam_only, efficacy_instrument,
+         worked_example_ref, tags, curriculum_version_id
   FROM content.question_versions WHERE status = 'published' AND deleted_at IS NULL;
--- Lọc tenant (riêng tenant + platform được gán) theo MULTITENANCY §4.2.
+-- Không có answer_key, scoring_rule, explanation, option_feedback, hints, min_response_ms (ADR-0016).
+-- Lọc tenant (riêng tenant + platform được gán) theo MULTITENANCY §4.2: view chạy quyền owner + FORCE RLS của bảng gốc.
+GRANT SELECT ON content.question_delivery_v TO learning_app, learning_platform, learning_readonly;
 ```
+
+Bản triển khai F022 (migration `20261125000001_f022_question_bank.sql`): DDL ở trên là dạng rút gọn; bảng thật dùng mixin `entx.HybridContent` + `ContentVersionMixin` (cột `version` là optimistic concurrency, số version là `version_no`), các mảng `grade_levels`/`tags`/`media_refs` là `jsonb` (CHECK `jsonb_typeof = 'array'` + giới hạn phần tử) thay cho `smallint[]`/`uuid[]`, trigger dùng hàm chung `content.forbid_published_update()` của F020 (so toàn bộ dòng trừ cột bookkeeping) và `content.questions_release_target()` (§3.13). Cột nullable kiểu JSON lưu SQL `NULL` khi vắng (không lưu JSON `null`).
 
 ### 3.4. Attempts
 

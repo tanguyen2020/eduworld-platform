@@ -1682,6 +1682,18 @@
     ]
   },
   {
+    "operation_id": "getCmsQuestionVersion",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/questions/{question_id}/versions/{version}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getCollection",
     "module": "game",
     "method": "GET",

@@ -25,3 +25,22 @@ func ProjectionIdentitySubjects() []string {
 	}
 	return out
 }
+
+// QuestionPoolName is the durable consumer that drops the cached question pools of module learning when a question
+// is released or an assignment changes (F022-AC-28, QUESTION_BANK §6).
+const QuestionPoolName = "learning.qb_pool_invalidation"
+
+// QuestionPoolStream is the stream of the content events (EVT_LEARNING).
+var QuestionPoolStream = natsx.EventStream("learning")
+
+// QuestionPoolEvents are the release events of learning content (owner F026; item_type question is used).
+var QuestionPoolEvents = []string{"content.published", "content.rolled_back", "content.unpublished"}
+
+// QuestionPoolSubjects are the filter subjects of the consumer.
+func QuestionPoolSubjects() []string {
+	out := make([]string, len(QuestionPoolEvents))
+	for i, e := range QuestionPoolEvents {
+		out[i] = natsx.EventSubject("learning", e)
+	}
+	return out
+}

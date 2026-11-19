@@ -1,0 +1,48 @@
+{
+  "type": "true_false",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Xét các mệnh đề sau"
+      }
+    ]
+  },
+  "render_payload": {
+    "statements": [
+      {
+        "id": "s_1",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Số 0 là số chẵn"
+            }
+          ]
+        }
+      },
+      {
+        "id": "s_2",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Số 1 là số nguyên tố"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "answer_key": {
+    "statement_values": {
+      "s_1": true,
+      "s_2": false
+    }
+  },
+  "scoring_rule": {
+    "mode": "partial",
+    "partial_method": "proportional"
+  },
+  "max_score": 1
+}

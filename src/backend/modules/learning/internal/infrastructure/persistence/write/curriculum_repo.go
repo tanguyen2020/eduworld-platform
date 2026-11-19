@@ -47,13 +47,13 @@ func MapCurriculumErr(err error) error {
 	if errors.As(err, &pg) {
 		switch {
 		case pg.Code == "P0001" && pg.Message == "CONTENT_NOT_EDITABLE":
-			return problem.New(problem.ContentNotEditable, "the curriculum version is not a draft").Wrap(err)
+			return problem.New(problem.ContentNotEditable, "the version is not a draft").Wrap(err)
 		case pg.Code == "23505":
 			return problem.New(problem.Conflict, "a record with the same code already exists").Wrap(err)
 		case pg.Code == "23503":
 			return problem.Invalid("reference", problem.SubInvalid, "a referenced record does not exist").Wrap(err)
 		case pg.Code == "23514":
-			return problem.Invalid(pg.ConstraintName, problem.SubInvalid, "violates a rule of the curriculum").Wrap(err)
+			return problem.Invalid(pg.ConstraintName, problem.SubInvalid, "violates a rule of the stored content").Wrap(err)
 		}
 	}
 	if ent.IsConstraintError(err) {

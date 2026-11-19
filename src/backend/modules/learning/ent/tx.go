@@ -28,6 +28,12 @@ type Tx struct {
 	LearningObjective *LearningObjectiveClient
 	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
 	LoVersionMapping *LoVersionMappingClient
+	// Question is the client for interacting with the Question builders.
+	Question *QuestionClient
+	// QuestionVersion is the client for interacting with the QuestionVersion builders.
+	QuestionVersion *QuestionVersionClient
+	// QuestionVersionObjective is the client for interacting with the QuestionVersionObjective builders.
+	QuestionVersionObjective *QuestionVersionObjectiveClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -183,6 +189,9 @@ func (tx *Tx) init() {
 	tx.ImportJob = NewImportJobClient(tx.config)
 	tx.LearningObjective = NewLearningObjectiveClient(tx.config)
 	tx.LoVersionMapping = NewLoVersionMappingClient(tx.config)
+	tx.Question = NewQuestionClient(tx.config)
+	tx.QuestionVersion = NewQuestionVersionClient(tx.config)
+	tx.QuestionVersionObjective = NewQuestionVersionObjectiveClient(tx.config)
 	tx.Subject = NewSubjectClient(tx.config)
 	tx.SubjectGrade = NewSubjectGradeClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)

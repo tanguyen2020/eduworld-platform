@@ -12,6 +12,23 @@
 - Q: "Tránh câu đã làm gần đây" cần lịch sử attempt chưa có ở F022? → A: `Select` nhận danh sách `question_id` cần loại do bên gọi tính (F030 đọc `attempt_items`); F022 không đọc bảng attempt.
 - Q: Ba loại `short_answer`, `image_based`, `interactive`? → A: F023. Trước khi F023 xong, tạo câu loại này bị từ chối rõ ràng.
 
+### Session 2026-11-19 (triển khai)
+
+- OQ F022-1: `numeric.Parse` dùng `math/big.Rat` (thư viện chuẩn, số thập phân chính xác) thay `cockroachdb/apd` của plan T022 — `apd` chưa có trong `go.mod` và không cần ngoại lệ depguard mới. → [Proposed] giữ `big.Rat`; đổi sang `apd` chỉ khi cần phép toán thập phân có context (làm tròn) ở F023.
+- OQ F022-2: Bố cục package khác plan: các `TypeHandler` 8 loại, render và shuffle nằm chung package `internal/domain/question` (`types.go`, `registry.go`) thay cho `types/`, `render/`; fixture 8 ví dụ ở `internal/domain/question/testdata/qb_examples/`; test tích hợp là các file `tests/integration/question_*_test.go` trong package `integration` dùng chung môi trường (không tách thư mục `question/`). → [Proposed] giữ; không đổi hành vi.
+- OQ F022-3: `question_version_objectives` có khóa thay thế `question_version_objective_id` + cột `question_id`, `tenant_id`, `owner_scope` (bảng H: RLS cần `question_id` để kiểm assignment) thay cho PK ghép của DATABASE_DESIGN §2.5 (đã cập nhật). → [Proposed].
+- OQ F022-4: Render `ordering` (không bao giờ hiện đúng thứ tự) và `multiple_choice` có `show_correct_count` cần đáp án: `Delivery.Render` đọc `answer_key` phía server qua `DeliveryReader.Grading`, không bao giờ đưa vào DTO (contract test `TestRenderDTOHasNoAnswerData`). → [Proposed].
+- OQ F022-5: `grade_levels`, `tags`, `media_refs` lưu `jsonb` (ent JSON) thay `smallint[]`/`uuid[]`; CHECK `jsonb_typeof` + giới hạn phần tử, GIN `jsonb_path_ops`. → [Proposed] (DATABASE_DESIGN §2.5/§3.3 đã ghi).
+- OQ F022-6: `ETag` của `getCmsQuestion` là row version của **câu hỏi** (dùng cho `If-Match` của `deleteQuestion`); `ETag` của version lấy từ `getCmsQuestionVersion`/`createQuestion`/`updateQuestionDraft`/`createQuestionVersion`. → [Proposed].
+- OQ F022-7: View `content.question_delivery_v` chạy quyền owner + FORCE RLS của bảng gốc nên chỉ phục vụ phạm vi tenant (học sinh); `Delivery` từ chối khi không có đúng một session tenant. → [Proposed].
+- OQ F022-8: Consumer `learning.qb_pool_invalidation` và port `Delivery` chưa nối vào binary `core-api`/`worker` (cùng OQ F020-3); chưa có producer `content.published` cho câu hỏi tới F026 — test gọi `Handle` trực tiếp. → [Proposed] nối khi F026/F030 dùng.
+- OQ F022-9: `assets_per_version_max` (CONFIG_DEFAULTS, phạm vi platform, [Proposed] 50) dùng hằng `command.AssetsPerVersionMax = 50` vì module learning chưa đọc platform settings (sở hữu identity). → [Proposed] đọc từ settings khi có facade.
+- OQ F022-10: `worked_example_ref` là object `{content_item_id, block_id}` (DATABASE_DESIGN §2.5); chưa kiểm tồn tại block vì worked example thuộc F024. → [Proposed].
+- OQ F022-11: Tham số `q` (tìm toàn văn) của `searchQuestions` được nhận nhưng bỏ qua — tìm kiếm toàn văn thuộc F024. → [Proposed].
+- OQ F022-12: Cache answer key `ew:learning:key:*` (T024) chưa làm: `Delivery.Grade` đọc version published (bất biến) từ PostgreSQL mỗi lần; benchmark `BenchmarkGrade` chỉ đo phần domain. → [Proposed] thêm cache khi F030 đo p95 chấm.
+- OQ F022-13: Luồng publish (`status = published` + `current_version_id`) thuộc F025/F026; test tích hợp đặt trạng thái bằng SQL dưới role `learning_platform` (helper `publishQuestion`, gắn nhãn TEST). → [Proposed].
+- OQ F022-14: Pool cache Valkey `ew:learning:qb:pool:<tenant_id>:<hash(subject_id)>` (TTL 5 phút) giữ toàn bộ câu hiện hành của một môn; bộ lọc còn lại áp trong bộ nhớ bởi `selection.Select`. → [Proposed].
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn câu hỏi 8 loại có kiểm hợp lệ (Priority: P1)

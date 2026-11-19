@@ -89,3 +89,49 @@ func CurriculumPublishTotal() *prometheus.CounterVec { return curriculumPublish 
 
 // ImportJobsTotal is eduworld_import_jobs_total{kind,status} (tests).
 func ImportJobsTotal() *prometheus.CounterVec { return importJobs }
+
+// Question bank metrics (plan F022 "Quan sát").
+var (
+	qbGrade = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_qb_grade_total",
+		Help: "Server-side grades of questions by type and result (correct, incorrect, invalid_response).",
+	}, []string{"type", "result"})
+	qbPoolInsufficient = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "eduworld_qb_select_pool_insufficient_total",
+		Help: "Question selections refused with QUESTION_POOL_INSUFFICIENT.",
+	})
+	qbPoolCache = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_qb_pool_cache_requests_total",
+		Help: "Question pool cache lookups by outcome (hit, miss); the hit ratio is hit / total.",
+	}, []string{"outcome"})
+)
+
+// RegisterQuestionBank adds the question bank metrics to r; already registered collectors are ignored.
+func RegisterQuestionBank(r prometheus.Registerer) {
+	for _, c := range []prometheus.Collector{qbGrade, qbPoolInsufficient, qbPoolCache} {
+		_ = r.Register(c)
+	}
+}
+
+// QuestionCounter adapts the question bank metrics to query.DeliveryMetrics.
+type QuestionCounter struct{}
+
+// Graded counts a grade of questionType with result.
+func (QuestionCounter) Graded(questionType, result string) {
+	qbGrade.WithLabelValues(questionType, result).Inc()
+}
+
+// PoolInsufficient counts a refused selection.
+func (QuestionCounter) PoolInsufficient() { qbPoolInsufficient.Inc() }
+
+// PoolCache counts a pool cache lookup.
+func (QuestionCounter) PoolCache(hit bool) {
+	outcome := "miss"
+	if hit {
+		outcome = "hit"
+	}
+	qbPoolCache.WithLabelValues(outcome).Inc()
+}
+
+// QBGradeTotal is eduworld_qb_grade_total{type,result} (tests).
+func QBGradeTotal() *prometheus.CounterVec { return qbGrade }

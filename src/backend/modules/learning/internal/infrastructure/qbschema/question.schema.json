@@ -1,0 +1,1801 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/question.schema.json",
+  "title": "EduWorld Question Version",
+  "description": "Một phiên bản câu hỏi trong Question Bank (docs/02-learning/QUESTION_BANK.md). render_payload được gửi cho client; answer_key và scoring_rule CHỈ tồn tại phía server (ADR-0016). Phiên bản đã published là bất biến (ADR-0015).",
+  "type": "object",
+  "required": [
+    "question_id",
+    "version",
+    "type",
+    "stem",
+    "render_payload",
+    "answer_key",
+    "scoring_rule",
+    "max_score",
+    "meta"
+  ],
+  "properties": {
+    "question_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "question_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "type": {
+      "$ref": "#/$defs/questionType"
+    },
+    "stem": {
+      "$ref": "#/$defs/richContent"
+    },
+    "render_payload": {
+      "type": "object",
+      "description": "Phần gửi cho client (cấu trúc theo loại câu ở $defs). Không bao giờ chứa answer_key, scoring_rule, accepted_answers, correct_option_id, correct_option_ids, explanation, feedback, hints (ADR-0016); DTO render loại bỏ options[].feedback và options[].misconception_tag.",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "answer_key",
+            "scoring_rule",
+            "accepted_answers",
+            "correct_option_id",
+            "correct_option_ids",
+            "explanation",
+            "feedback",
+            "hints",
+            "min_response_ms"
+          ]
+        }
+      }
+    },
+    "answer_key": {
+      "type": "object"
+    },
+    "scoring_rule": {
+      "$ref": "#/$defs/scoringRule"
+    },
+    "explanation": {
+      "$ref": "#/$defs/richContent"
+    },
+    "hints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/richContent"
+      },
+      "maxItems": 5,
+      "description": "Gợi ý theo cấp (tối đa 5), CHỈ phía server; client lấy từng cấp qua POST /learning/activity-attempts/{attempt_id}/items/{position}/hints:next. Số gợi ý đã dùng ghi vào learning event (hints_used)."
+    },
+    "worked_example_ref": {
+      "$ref": "#/$defs/uuid",
+      "description": "Tham chiếu khối worked_example trong lesson/learning material cùng LO (CONTENT_MODEL §9.2); client hiện nút \"Xem ví dụ mẫu\" sau khi trả lời sai [Proposed]."
+    },
+    "min_response_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 600000,
+      "description": "CHỈ phía server. Ngưỡng thời gian tối thiểu để lần trả lời không bị gắn rapid_guess; vắng mặt = mặc định theo loại câu (ACTIVITY_ENGINE §11.1) [Proposed]."
+    },
+    "max_score": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "default": 1
+    },
+    "exam_only": {
+      "type": "boolean",
+      "default": false
+    },
+    "efficacy_instrument": {
+      "type": "boolean",
+      "default": false,
+      "description": "Câu thuộc công cụ đo hiệu quả độc lập (F035, LEARNING_EFFICACY_PLAN §3.2): chỉ khi owner_scope = platform, exam_only = true và không tham số hóa; bị loại khỏi mọi lần chọn câu luyện tập/đề thường; chỉ đổi bằng version mới."
+    },
+    "meta": {
+      "$ref": "#/$defs/contentMeta"
+    },
+    "math_assets": {
+      "type": "array",
+      "maxItems": 50,
+      "description": "Công thức dùng trong version này và SVG đã render sẵn bằng MathJax 4 trên portal (ADR-0055). Chỉ để hiển thị; học sinh không nhập công thức.",
+      "items": {
+        "$ref": "#/$defs/mathDisplay"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "$ref": "#/$defs/singleChoice"
+    },
+    {
+      "$ref": "#/$defs/multipleChoice"
+    },
+    {
+      "$ref": "#/$defs/trueFalse"
+    },
+    {
+      "$ref": "#/$defs/fillBlank"
+    },
+    {
+      "$ref": "#/$defs/shortAnswer"
+    },
+    {
+      "$ref": "#/$defs/numeric"
+    },
+    {
+      "$ref": "#/$defs/matching"
+    },
+    {
+      "$ref": "#/$defs/ordering"
+    },
+    {
+      "$ref": "#/$defs/dragDrop"
+    },
+    {
+      "$ref": "#/$defs/imageBased"
+    },
+    {
+      "$ref": "#/$defs/interactive"
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mathDisplay": {
+      "type": "object",
+      "description": "Công thức hiển thị (ADR-0055): LaTeX ≤ 2.000 ký tự, độ sâu lồng ≤ 20 (kiểm tra phía server), SVG đã sanitize ≤ 256 KB lưu tại svg_asset.",
+      "required": [
+        "latex",
+        "svg_asset",
+        "speech_text"
+      ],
+      "properties": {
+        "latex": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "svg_asset": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^math/[0-9a-f]{64}\\.svg$"
+        },
+        "speech_text": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "itemId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z]_[a-z0-9_]{1,24}$",
+      "description": "ID ngắn, ổn định trong version, không tiết lộ thứ tự (vd. o_7f3a, b_1, z_even)."
+    },
+    "questionType": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
+    },
+    "i18nText": {
+      "description": "Văn bản nội dung học tập. Chuỗi thuần = viết bằng content_language; object = có bản dịch (ADR-0056 mục 3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "vi": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "i18nShortFeedback": {
+      "description": "Văn bản ngắn (≤ 500 ký tự) theo content_language, có thể kèm bản dịch (ADR-0056).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "vi": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "richBlock": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "paragraph",
+            "heading",
+            "list",
+            "math",
+            "image",
+            "audio",
+            "video",
+            "table",
+            "callout"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/i18nText"
+        },
+        "latex": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "media_ref": {
+          "$ref": "#/$defs/uuid"
+        },
+        "alt": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "items": {
+          "type": "array"
+        },
+        "rows": {
+          "type": "array"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "math"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "latex"
+            ],
+            "properties": {
+              "latex": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "video"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "media_ref"
+            ],
+            "properties": {
+              "media_ref": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "alt"
+            ],
+            "properties": {
+              "alt": true
+            }
+          }
+        }
+      ]
+    },
+    "richContent": {
+      "type": "object",
+      "required": [
+        "blocks"
+      ],
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/richBlock"
+          }
+        },
+        "audio_ref": {
+          "$ref": "#/$defs/uuid",
+          "description": "Âm thanh đọc đề (lớp 1–2)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "required": [
+        "id",
+        "content"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/itemId"
+        },
+        "content": {
+          "$ref": "#/$defs/richContent"
+        },
+        "misconception_tag": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Chỉ lưu server; bị loại khỏi DTO gửi client."
+        },
+        "feedback": {
+          "$ref": "#/$defs/i18nShortFeedback",
+          "description": "Phản hồi riêng cho phương án này (EDU_FIT_REVIEW PED-04) [Proposed]. Thuộc phần đáp án: bị loại khỏi DTO render như misconception_tag; chỉ trả trong ActivityResponseResult.feedback sau khi chấm, theo FeedbackTiming (QUESTION_BANK §2, ACTIVITY_ENGINE §8.2)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "params": {
+      "type": "object",
+      "description": "Biến ngẫu nhiên cho câu tham số hóa (QUESTION_BANK §5).",
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 255
+          }
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "int",
+              "decimal",
+              "choice"
+            ]
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "step": {
+            "type": "number"
+          },
+          "values": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "textMatch": {
+      "type": "object",
+      "required": [
+        "accepted"
+      ],
+      "properties": {
+        "accepted": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          }
+        },
+        "match": {
+          "enum": [
+            "exact",
+            "normalized"
+          ],
+          "default": "normalized"
+        },
+        "allow_diacritics_missing": {
+          "type": "boolean",
+          "default": false
+        },
+        "case_sensitive": {
+          "type": "boolean",
+          "default": false
+        },
+        "fuzzy": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "max_edit_distance": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "min_length": {
+              "type": "integer",
+              "minimum": 3
+            }
+          }
+        }
+      }
+    },
+    "scoringRule": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "all_or_nothing",
+            "partial"
+          ]
+        },
+        "partial_method": {
+          "enum": [
+            "right_minus_wrong",
+            "proportional",
+            "position",
+            "adjacent_pairs"
+          ]
+        },
+        "min_score": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0
+        },
+        "require_action_log": {
+          "type": "boolean"
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "partial"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "partial_method"
+        ],
+        "properties": {
+          "partial_method": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "contentMeta": {
+      "type": "object",
+      "required": [
+        "grade_levels",
+        "subject_id",
+        "topic_id",
+        "objective_ids",
+        "difficulty",
+        "status",
+        "author_id",
+        "owner_scope",
+        "content_language",
+        "curriculum_version_id"
+      ],
+      "properties": {
+        "grade_levels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "topic_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "objective_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "curriculum_version_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "published",
+            "archived",
+            "rejected"
+          ]
+        },
+        "author_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "reviewer_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "published_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "owner_scope": {
+          "enum": [
+            "platform",
+            "tenant"
+          ],
+          "description": "platform: tenant_id rỗng, tenant thấy khi được gán; tenant: thuộc riêng tenant_id (ADR-0005, ADR-0029)"
+        },
+        "tenant_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "estimated_duration_sec": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "content_language": {
+          "type": "string",
+          "enum": [
+            "vi",
+            "en"
+          ],
+          "default": "vi",
+          "description": "Ngôn ngữ gốc (ADR-0056)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "owner_scope": {
+                "const": "tenant"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "tenant_id"
+            ],
+            "properties": {
+              "tenant_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "approved",
+                  "published"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reviewer_id"
+            ],
+            "properties": {
+              "reviewer_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "published"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "published_at"
+            ],
+            "properties": {
+              "published_at": true
+            }
+          }
+        }
+      ]
+    },
+    "singleChoice": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "single_choice"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "options"
+          ],
+          "properties": {
+            "options": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "shuffle_options": {
+              "type": "boolean",
+              "default": true
+            },
+            "params": {
+              "$ref": "#/$defs/params"
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "correct_option_id"
+          ],
+          "properties": {
+            "correct_option_id": {
+              "$ref": "#/$defs/itemId"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "multipleChoice": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "multiple_choice"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "options"
+          ],
+          "properties": {
+            "options": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 10,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "shuffle_options": {
+              "type": "boolean",
+              "default": true
+            },
+            "show_correct_count": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "correct_option_ids"
+          ],
+          "properties": {
+            "correct_option_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "trueFalse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "true_false"
+        },
+        "render_payload": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "object",
+              "properties": {
+                "true": {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                "false": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              }
+            },
+            "statements": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "content"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  "content": {
+                    "$ref": "#/$defs/richContent"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "oneOf": [
+            {
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "required": [
+                "statement_values"
+              ],
+              "properties": {
+                "statement_values": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
+    "fillBlank": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "fill_in_blank"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "blanks"
+          ],
+          "properties": {
+            "blanks": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "input"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  "input": {
+                    "enum": [
+                      "text",
+                      "numeric",
+                      "word_bank",
+                      "dropdown"
+                    ]
+                  },
+                  "max_length": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200
+                  },
+                  "choices": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 255
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "word_bank": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "blanks"
+          ],
+          "properties": {
+            "blanks": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "$ref": "#/$defs/textMatch"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "shortAnswer": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "short_answer"
+        },
+        "render_payload": {
+          "type": "object",
+          "properties": {
+            "max_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            },
+            "keyboard": {
+              "enum": [
+                "text",
+                "numeric"
+              ],
+              "default": "text"
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "$ref": "#/$defs/textMatch"
+        }
+      }
+    },
+    "numeric": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "numeric"
+        },
+        "render_payload": {
+          "type": "object",
+          "properties": {
+            "keyboard": {
+              "const": "numeric",
+              "description": "Học sinh chỉ nhập số; game không có bàn phím công thức (ADR-0055)"
+            },
+            "unit_label": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "allow_fraction_input": {
+              "type": "boolean",
+              "default": false
+            },
+            "decimal_separator": {
+              "enum": [
+                ",",
+                "."
+              ],
+              "default": ","
+            },
+            "params": {
+              "$ref": "#/$defs/params"
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "maxLength": 1000,
+                  "description": "Biểu thức trên params, vd. \"{{a}} * {{b}}\""
+                }
+              ]
+            },
+            "tolerance": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "exact",
+                    "absolute",
+                    "relative"
+                  ]
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "accept_equivalent_forms": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "matching": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "matching"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "left",
+            "right"
+          ],
+          "properties": {
+            "left": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "right": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 10,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "shuffle": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "pairs"
+          ],
+          "properties": {
+            "pairs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  {
+                    "$ref": "#/$defs/itemId"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "ordering": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "ordering"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "items"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 10,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "shuffle": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "order"
+          ],
+          "properties": {
+            "order": {
+              "type": "array",
+              "minItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "dragDrop": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "drag_drop"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "draggables",
+            "zones"
+          ],
+          "properties": {
+            "background_media_ref": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "draggables": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "zones": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  "label": {
+                    "$ref": "#/$defs/i18nText"
+                  },
+                  "capacity": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rect": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "reusable_draggables": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "placements"
+          ],
+          "properties": {
+            "placements": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "imageBased": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "image_based"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "interaction",
+            "image_media_ref",
+            "image_size"
+          ],
+          "properties": {
+            "interaction": {
+              "enum": [
+                "hotspot",
+                "label"
+              ]
+            },
+            "image_media_ref": {
+              "$ref": "#/$defs/uuid"
+            },
+            "image_size": {
+              "type": "object",
+              "required": [
+                "w",
+                "h"
+              ],
+              "properties": {
+                "w": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "h": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "max_selections": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/option"
+              }
+            },
+            "drop_points": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "properties": {
+            "regions": {
+              "type": "array",
+              "description": "Chỉ server. Tọa độ theo image_size gốc.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "shape"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/itemId"
+                  },
+                  "shape": {
+                    "enum": [
+                      "circle",
+                      "rect",
+                      "polygon"
+                    ]
+                  },
+                  "cx": {
+                    "type": "number"
+                  },
+                  "cy": {
+                    "type": "number"
+                  },
+                  "r": {
+                    "type": "number"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "w": {
+                    "type": "number"
+                  },
+                  "h": {
+                    "type": "number"
+                  },
+                  "points": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  }
+                }
+              }
+            },
+            "correct_region_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/itemId"
+              }
+            },
+            "placements": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "regions",
+                "correct_region_ids"
+              ],
+              "properties": {
+                "regions": true,
+                "correct_region_ids": true
+              }
+            },
+            {
+              "required": [
+                "placements"
+              ],
+              "properties": {
+                "placements": true
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "interactive": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "interactive"
+        },
+        "render_payload": {
+          "type": "object",
+          "required": [
+            "widget",
+            "widget_version",
+            "config"
+          ],
+          "properties": {
+            "widget": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[a-z][a-z0-9_]{2,48}$"
+            },
+            "widget_version": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[0-9]+\\.[0-9]+$"
+            },
+            "config": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "answer_key": {
+          "type": "object",
+          "required": [
+            "validator"
+          ],
+          "properties": {
+            "validator": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+              "description": "Tên validator Go đã đăng ký trong registry."
+            },
+            "params": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "response": {
+      "description": "Câu trả lời thô của học sinh theo loại câu (EDU_FIT_REVIEW SPC-01). Server biết loại từ question_version_id của item và validate đúng nhánh; sai cấu trúc → 422 INVALID_RESPONSE. OpenAPI QuestionResponse và AsyncAPI AnswerResponse giữ cấu trúc y hệt.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/singleChoiceResponse"
+        },
+        {
+          "$ref": "#/$defs/multipleChoiceResponse"
+        },
+        {
+          "$ref": "#/$defs/trueFalseResponse"
+        },
+        {
+          "$ref": "#/$defs/fillInBlankResponse"
+        },
+        {
+          "$ref": "#/$defs/shortAnswerResponse"
+        },
+        {
+          "$ref": "#/$defs/numericResponse"
+        },
+        {
+          "$ref": "#/$defs/matchingResponse"
+        },
+        {
+          "$ref": "#/$defs/orderingResponse"
+        },
+        {
+          "$ref": "#/$defs/dragDropResponse"
+        },
+        {
+          "$ref": "#/$defs/imageBasedResponse"
+        },
+        {
+          "$ref": "#/$defs/interactiveResponse"
+        }
+      ]
+    },
+    "singleChoiceResponse": {
+      "type": "object",
+      "description": "single_choice",
+      "required": [
+        "option_id"
+      ],
+      "properties": {
+        "option_id": {
+          "$ref": "#/$defs/itemId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "multipleChoiceResponse": {
+      "type": "object",
+      "description": "multiple_choice",
+      "required": [
+        "option_ids"
+      ],
+      "properties": {
+        "option_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "trueFalseResponse": {
+      "description": "true_false: một mệnh đề (value) hoặc nhiều mệnh đề (statement_values)",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "statement_values"
+          ],
+          "properties": {
+            "statement_values": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 8,
+              "propertyNames": {
+                "$ref": "#/$defs/itemId"
+              },
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "fillInBlankResponse": {
+      "type": "object",
+      "description": "fill_in_blank: blank id → chuỗi học sinh nhập/chọn",
+      "required": [
+        "blanks"
+      ],
+      "properties": {
+        "blanks": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 10,
+          "propertyNames": {
+            "$ref": "#/$defs/itemId"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "shortAnswerResponse": {
+      "type": "object",
+      "description": "short_answer (chấm tự động theo đáp án chấp nhận + chuẩn hóa)",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    "numericResponse": {
+      "type": "object",
+      "description": "numeric: chuỗi học sinh nhập; dấu thập phân theo decimal_separator, dạng a/b khi allow_fraction_input. Không có biểu thức toán (ADR-0055).",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    "matchingResponse": {
+      "type": "object",
+      "description": "matching: cặp [left id, right id]",
+      "required": [
+        "pairs"
+      ],
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/itemId"
+              },
+              {
+                "$ref": "#/$defs/itemId"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2,
+            "items": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "orderingResponse": {
+      "type": "object",
+      "description": "ordering: thứ tự item id",
+      "required": [
+        "order"
+      ],
+      "properties": {
+        "order": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "dragDropResponse": {
+      "type": "object",
+      "description": "drag_drop: draggable id → zone id",
+      "required": [
+        "placements"
+      ],
+      "properties": {
+        "placements": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {
+            "$ref": "#/$defs/itemId"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/itemId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "imageBasedResponse": {
+      "description": "image_based: hotspot (points theo tọa độ image_size gốc) hoặc label (label id → drop point id)",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "points"
+          ],
+          "properties": {
+            "points": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "label_placements"
+          ],
+          "properties": {
+            "label_placements": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 16,
+              "propertyNames": {
+                "$ref": "#/$defs/itemId"
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/itemId"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "interactiveResponse": {
+      "type": "object",
+      "description": "interactive: trạng thái widget + action log; validator Go chấm",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "type": "object",
+          "maxProperties": 50
+        },
+        "action_log": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "required": [
+              "t_ms",
+              "action"
+            ],
+            "properties": {
+              "t_ms": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "action": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "args": {
+                "type": "object",
+                "maxProperties": 20
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

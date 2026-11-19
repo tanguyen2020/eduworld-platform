@@ -30,6 +30,15 @@ type LearningObjective func(*sql.Selector)
 // LoVersionMapping is the predicate function for loversionmapping builders.
 type LoVersionMapping func(*sql.Selector)
 
+// Question is the predicate function for question builders.
+type Question func(*sql.Selector)
+
+// QuestionVersion is the predicate function for questionversion builders.
+type QuestionVersion func(*sql.Selector)
+
+// QuestionVersionObjective is the predicate function for questionversionobjective builders.
+type QuestionVersionObjective func(*sql.Selector)
+
 // Subject is the predicate function for subject builders.
 type Subject func(*sql.Selector)
 

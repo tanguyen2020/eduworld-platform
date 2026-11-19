@@ -20,6 +20,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -96,6 +99,9 @@ func checkColumn(t, c string) error {
 			importjob.Table:                importjob.ValidColumn,
 			learningobjective.Table:        learningobjective.ValidColumn,
 			loversionmapping.Table:         loversionmapping.ValidColumn,
+			question.Table:                 question.ValidColumn,
+			questionversion.Table:          questionversion.ValidColumn,
+			questionversionobjective.Table: questionversionobjective.ValidColumn,
 			subject.Table:                  subject.ValidColumn,
 			subjectgrade.Table:             subjectgrade.ValidColumn,
 			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,

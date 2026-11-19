@@ -1,0 +1,50 @@
+{
+  "type": "fill_in_blank",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Thủ đô của Việt Nam là {{blank:b_1}}. Sông dài nhất chảy qua thủ đô là sông {{blank:b_2}}."
+      }
+    ]
+  },
+  "render_payload": {
+    "blanks": [
+      {
+        "id": "b_1",
+        "input": "text",
+        "max_length": 30
+      },
+      {
+        "id": "b_2",
+        "input": "word_bank"
+      }
+    ],
+    "word_bank": [
+      "Hồng",
+      "Mekong",
+      "Đà"
+    ]
+  },
+  "answer_key": {
+    "blanks": {
+      "b_1": {
+        "accepted": [
+          "Hà Nội"
+        ],
+        "match": "normalized"
+      },
+      "b_2": {
+        "accepted": [
+          "Hồng"
+        ],
+        "match": "exact"
+      }
+    }
+  },
+  "scoring_rule": {
+    "mode": "partial",
+    "partial_method": "proportional"
+  },
+  "max_score": 1
+}

@@ -23,6 +23,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/loversionmapping"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversionobjective"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subject"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/subjectgrade"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/tenantresourceassignment"
@@ -56,6 +59,12 @@ type Client struct {
 	LearningObjective *LearningObjectiveClient
 	// LoVersionMapping is the client for interacting with the LoVersionMapping builders.
 	LoVersionMapping *LoVersionMappingClient
+	// Question is the client for interacting with the Question builders.
+	Question *QuestionClient
+	// QuestionVersion is the client for interacting with the QuestionVersion builders.
+	QuestionVersion *QuestionVersionClient
+	// QuestionVersionObjective is the client for interacting with the QuestionVersionObjective builders.
+	QuestionVersionObjective *QuestionVersionObjectiveClient
 	// Subject is the client for interacting with the Subject builders.
 	Subject *SubjectClient
 	// SubjectGrade is the client for interacting with the SubjectGrade builders.
@@ -91,6 +100,9 @@ func (c *Client) init() {
 	c.ImportJob = NewImportJobClient(c.config)
 	c.LearningObjective = NewLearningObjectiveClient(c.config)
 	c.LoVersionMapping = NewLoVersionMappingClient(c.config)
+	c.Question = NewQuestionClient(c.config)
+	c.QuestionVersion = NewQuestionVersionClient(c.config)
+	c.QuestionVersionObjective = NewQuestionVersionObjectiveClient(c.config)
 	c.Subject = NewSubjectClient(c.config)
 	c.SubjectGrade = NewSubjectGradeClient(c.config)
 	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
@@ -202,6 +214,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ImportJob:                NewImportJobClient(cfg),
 		LearningObjective:        NewLearningObjectiveClient(cfg),
 		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		Question:                 NewQuestionClient(cfg),
+		QuestionVersion:          NewQuestionVersionClient(cfg),
+		QuestionVersionObjective: NewQuestionVersionObjectiveClient(cfg),
 		Subject:                  NewSubjectClient(cfg),
 		SubjectGrade:             NewSubjectGradeClient(cfg),
 		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
@@ -237,6 +252,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ImportJob:                NewImportJobClient(cfg),
 		LearningObjective:        NewLearningObjectiveClient(cfg),
 		LoVersionMapping:         NewLoVersionMappingClient(cfg),
+		Question:                 NewQuestionClient(cfg),
+		QuestionVersion:          NewQuestionVersionClient(cfg),
+		QuestionVersionObjective: NewQuestionVersionObjectiveClient(cfg),
 		Subject:                  NewSubjectClient(cfg),
 		SubjectGrade:             NewSubjectGradeClient(cfg),
 		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
@@ -276,8 +294,9 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
 		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
-		c.Subject, c.SubjectGrade, c.TenantResourceAssignment, c.Textbook,
-		c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+		c.Question, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
+		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
 	} {
 		n.Use(hooks...)
 	}
@@ -289,8 +308,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Competency, c.ContentRelease, c.ContentTransition, c.Curriculum,
 		c.CurriculumVersion, c.ImportJob, c.LearningObjective, c.LoVersionMapping,
-		c.Subject, c.SubjectGrade, c.TenantResourceAssignment, c.Textbook,
-		c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
+		c.Question, c.QuestionVersion, c.QuestionVersionObjective, c.Subject,
+		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
+		c.TextbookSectionObjective, c.TextbookSeries, c.Topic,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -315,6 +335,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.LearningObjective.mutate(ctx, m)
 	case *LoVersionMappingMutation:
 		return c.LoVersionMapping.mutate(ctx, m)
+	case *QuestionMutation:
+		return c.Question.mutate(ctx, m)
+	case *QuestionVersionMutation:
+		return c.QuestionVersion.mutate(ctx, m)
+	case *QuestionVersionObjectiveMutation:
+		return c.QuestionVersionObjective.mutate(ctx, m)
 	case *SubjectMutation:
 		return c.Subject.mutate(ctx, m)
 	case *SubjectGradeMutation:
@@ -1416,6 +1442,411 @@ func (c *LoVersionMappingClient) mutate(ctx context.Context, m *LoVersionMapping
 	}
 }
 
+// QuestionClient is a client for the Question schema.
+type QuestionClient struct {
+	config
+}
+
+// NewQuestionClient returns a client for the Question from the given config.
+func NewQuestionClient(c config) *QuestionClient {
+	return &QuestionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `question.Hooks(f(g(h())))`.
+func (c *QuestionClient) Use(hooks ...Hook) {
+	c.hooks.Question = append(c.hooks.Question, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `question.Intercept(f(g(h())))`.
+func (c *QuestionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Question = append(c.inters.Question, interceptors...)
+}
+
+// Create returns a builder for creating a Question entity.
+func (c *QuestionClient) Create() *QuestionCreate {
+	mutation := newQuestionMutation(c.config, OpCreate)
+	return &QuestionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Question entities.
+func (c *QuestionClient) CreateBulk(builders ...*QuestionCreate) *QuestionCreateBulk {
+	return &QuestionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestionClient) MapCreateBulk(slice any, setFunc func(*QuestionCreate, int)) *QuestionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestionCreateBulk{err: fmt.Errorf("calling to QuestionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Question.
+func (c *QuestionClient) Update() *QuestionUpdate {
+	mutation := newQuestionMutation(c.config, OpUpdate)
+	return &QuestionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestionClient) UpdateOne(_m *Question) *QuestionUpdateOne {
+	mutation := newQuestionMutation(c.config, OpUpdateOne, withQuestion(_m))
+	return &QuestionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestionClient) UpdateOneID(id uuid.UUID) *QuestionUpdateOne {
+	mutation := newQuestionMutation(c.config, OpUpdateOne, withQuestionID(id))
+	return &QuestionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Question.
+func (c *QuestionClient) Delete() *QuestionDelete {
+	mutation := newQuestionMutation(c.config, OpDelete)
+	return &QuestionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestionClient) DeleteOne(_m *Question) *QuestionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestionClient) DeleteOneID(id uuid.UUID) *QuestionDeleteOne {
+	builder := c.Delete().Where(question.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestionDeleteOne{builder}
+}
+
+// Query returns a query builder for Question.
+func (c *QuestionClient) Query() *QuestionQuery {
+	return &QuestionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Question entity by its id.
+func (c *QuestionClient) Get(ctx context.Context, id uuid.UUID) (*Question, error) {
+	return c.Query().Where(question.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestionClient) GetX(ctx context.Context, id uuid.UUID) *Question {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestionClient) Hooks() []Hook {
+	hooks := c.hooks.Question
+	return append(hooks[:len(hooks):len(hooks)], question.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestionClient) Interceptors() []Interceptor {
+	inters := c.inters.Question
+	return append(inters[:len(inters):len(inters)], question.Interceptors[:]...)
+}
+
+func (c *QuestionClient) mutate(ctx context.Context, m *QuestionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Question mutation op: %q", m.Op())
+	}
+}
+
+// QuestionVersionClient is a client for the QuestionVersion schema.
+type QuestionVersionClient struct {
+	config
+}
+
+// NewQuestionVersionClient returns a client for the QuestionVersion from the given config.
+func NewQuestionVersionClient(c config) *QuestionVersionClient {
+	return &QuestionVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `questionversion.Hooks(f(g(h())))`.
+func (c *QuestionVersionClient) Use(hooks ...Hook) {
+	c.hooks.QuestionVersion = append(c.hooks.QuestionVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `questionversion.Intercept(f(g(h())))`.
+func (c *QuestionVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestionVersion = append(c.inters.QuestionVersion, interceptors...)
+}
+
+// Create returns a builder for creating a QuestionVersion entity.
+func (c *QuestionVersionClient) Create() *QuestionVersionCreate {
+	mutation := newQuestionVersionMutation(c.config, OpCreate)
+	return &QuestionVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestionVersion entities.
+func (c *QuestionVersionClient) CreateBulk(builders ...*QuestionVersionCreate) *QuestionVersionCreateBulk {
+	return &QuestionVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestionVersionClient) MapCreateBulk(slice any, setFunc func(*QuestionVersionCreate, int)) *QuestionVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestionVersionCreateBulk{err: fmt.Errorf("calling to QuestionVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestionVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestionVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestionVersion.
+func (c *QuestionVersionClient) Update() *QuestionVersionUpdate {
+	mutation := newQuestionVersionMutation(c.config, OpUpdate)
+	return &QuestionVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestionVersionClient) UpdateOne(_m *QuestionVersion) *QuestionVersionUpdateOne {
+	mutation := newQuestionVersionMutation(c.config, OpUpdateOne, withQuestionVersion(_m))
+	return &QuestionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestionVersionClient) UpdateOneID(id uuid.UUID) *QuestionVersionUpdateOne {
+	mutation := newQuestionVersionMutation(c.config, OpUpdateOne, withQuestionVersionID(id))
+	return &QuestionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestionVersion.
+func (c *QuestionVersionClient) Delete() *QuestionVersionDelete {
+	mutation := newQuestionVersionMutation(c.config, OpDelete)
+	return &QuestionVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestionVersionClient) DeleteOne(_m *QuestionVersion) *QuestionVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestionVersionClient) DeleteOneID(id uuid.UUID) *QuestionVersionDeleteOne {
+	builder := c.Delete().Where(questionversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestionVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestionVersion.
+func (c *QuestionVersionClient) Query() *QuestionVersionQuery {
+	return &QuestionVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestionVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestionVersion entity by its id.
+func (c *QuestionVersionClient) Get(ctx context.Context, id uuid.UUID) (*QuestionVersion, error) {
+	return c.Query().Where(questionversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestionVersionClient) GetX(ctx context.Context, id uuid.UUID) *QuestionVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestionVersionClient) Hooks() []Hook {
+	hooks := c.hooks.QuestionVersion
+	return append(hooks[:len(hooks):len(hooks)], questionversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestionVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestionVersion
+	return append(inters[:len(inters):len(inters)], questionversion.Interceptors[:]...)
+}
+
+func (c *QuestionVersionClient) mutate(ctx context.Context, m *QuestionVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestionVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestionVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestionVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestionVersion mutation op: %q", m.Op())
+	}
+}
+
+// QuestionVersionObjectiveClient is a client for the QuestionVersionObjective schema.
+type QuestionVersionObjectiveClient struct {
+	config
+}
+
+// NewQuestionVersionObjectiveClient returns a client for the QuestionVersionObjective from the given config.
+func NewQuestionVersionObjectiveClient(c config) *QuestionVersionObjectiveClient {
+	return &QuestionVersionObjectiveClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `questionversionobjective.Hooks(f(g(h())))`.
+func (c *QuestionVersionObjectiveClient) Use(hooks ...Hook) {
+	c.hooks.QuestionVersionObjective = append(c.hooks.QuestionVersionObjective, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `questionversionobjective.Intercept(f(g(h())))`.
+func (c *QuestionVersionObjectiveClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestionVersionObjective = append(c.inters.QuestionVersionObjective, interceptors...)
+}
+
+// Create returns a builder for creating a QuestionVersionObjective entity.
+func (c *QuestionVersionObjectiveClient) Create() *QuestionVersionObjectiveCreate {
+	mutation := newQuestionVersionObjectiveMutation(c.config, OpCreate)
+	return &QuestionVersionObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestionVersionObjective entities.
+func (c *QuestionVersionObjectiveClient) CreateBulk(builders ...*QuestionVersionObjectiveCreate) *QuestionVersionObjectiveCreateBulk {
+	return &QuestionVersionObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestionVersionObjectiveClient) MapCreateBulk(slice any, setFunc func(*QuestionVersionObjectiveCreate, int)) *QuestionVersionObjectiveCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestionVersionObjectiveCreateBulk{err: fmt.Errorf("calling to QuestionVersionObjectiveClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestionVersionObjectiveCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestionVersionObjectiveCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestionVersionObjective.
+func (c *QuestionVersionObjectiveClient) Update() *QuestionVersionObjectiveUpdate {
+	mutation := newQuestionVersionObjectiveMutation(c.config, OpUpdate)
+	return &QuestionVersionObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestionVersionObjectiveClient) UpdateOne(_m *QuestionVersionObjective) *QuestionVersionObjectiveUpdateOne {
+	mutation := newQuestionVersionObjectiveMutation(c.config, OpUpdateOne, withQuestionVersionObjective(_m))
+	return &QuestionVersionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestionVersionObjectiveClient) UpdateOneID(id uuid.UUID) *QuestionVersionObjectiveUpdateOne {
+	mutation := newQuestionVersionObjectiveMutation(c.config, OpUpdateOne, withQuestionVersionObjectiveID(id))
+	return &QuestionVersionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestionVersionObjective.
+func (c *QuestionVersionObjectiveClient) Delete() *QuestionVersionObjectiveDelete {
+	mutation := newQuestionVersionObjectiveMutation(c.config, OpDelete)
+	return &QuestionVersionObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestionVersionObjectiveClient) DeleteOne(_m *QuestionVersionObjective) *QuestionVersionObjectiveDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestionVersionObjectiveClient) DeleteOneID(id uuid.UUID) *QuestionVersionObjectiveDeleteOne {
+	builder := c.Delete().Where(questionversionobjective.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestionVersionObjectiveDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestionVersionObjective.
+func (c *QuestionVersionObjectiveClient) Query() *QuestionVersionObjectiveQuery {
+	return &QuestionVersionObjectiveQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestionVersionObjective},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestionVersionObjective entity by its id.
+func (c *QuestionVersionObjectiveClient) Get(ctx context.Context, id uuid.UUID) (*QuestionVersionObjective, error) {
+	return c.Query().Where(questionversionobjective.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestionVersionObjectiveClient) GetX(ctx context.Context, id uuid.UUID) *QuestionVersionObjective {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestionVersionObjectiveClient) Hooks() []Hook {
+	hooks := c.hooks.QuestionVersionObjective
+	return append(hooks[:len(hooks):len(hooks)], questionversionobjective.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestionVersionObjectiveClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestionVersionObjective
+	return append(inters[:len(inters):len(inters)], questionversionobjective.Interceptors[:]...)
+}
+
+func (c *QuestionVersionObjectiveClient) mutate(ctx context.Context, m *QuestionVersionObjectiveMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestionVersionObjectiveCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestionVersionObjectiveUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestionVersionObjectiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestionVersionObjectiveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestionVersionObjective mutation op: %q", m.Op())
+	}
+}
+
 // SubjectClient is a client for the Subject schema.
 type SubjectClient struct {
 	config
@@ -2500,15 +2931,17 @@ func (c *TopicClient) mutate(ctx context.Context, m *TopicMutation) (Value, erro
 type (
 	hooks struct {
 		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
-		ImportJob, LearningObjective, LoVersionMapping, Subject, SubjectGrade,
-		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
-		TextbookSeries, Topic []ent.Hook
+		ImportJob, LearningObjective, LoVersionMapping, Question, QuestionVersion,
+		QuestionVersionObjective, Subject, SubjectGrade, TenantResourceAssignment,
+		Textbook, TextbookSection, TextbookSectionObjective, TextbookSeries,
+		Topic []ent.Hook
 	}
 	inters struct {
 		Competency, ContentRelease, ContentTransition, Curriculum, CurriculumVersion,
-		ImportJob, LearningObjective, LoVersionMapping, Subject, SubjectGrade,
-		TenantResourceAssignment, Textbook, TextbookSection, TextbookSectionObjective,
-		TextbookSeries, Topic []ent.Interceptor
+		ImportJob, LearningObjective, LoVersionMapping, Question, QuestionVersion,
+		QuestionVersionObjective, Subject, SubjectGrade, TenantResourceAssignment,
+		Textbook, TextbookSection, TextbookSectionObjective, TextbookSeries,
+		Topic []ent.Interceptor
 	}
 )
 
@@ -2523,6 +2956,9 @@ var (
 		ImportJob:                tableSchemas[0],
 		LearningObjective:        tableSchemas[1],
 		LoVersionMapping:         tableSchemas[1],
+		Question:                 tableSchemas[0],
+		QuestionVersion:          tableSchemas[0],
+		QuestionVersionObjective: tableSchemas[0],
 		Subject:                  tableSchemas[1],
 		SubjectGrade:             tableSchemas[1],
 		TenantResourceAssignment: tableSchemas[2],

@@ -1,0 +1,90 @@
+{
+  "type": "single_choice",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "7 × 8 = ?"
+      }
+    ]
+  },
+  "render_payload": {
+    "options": [
+      {
+        "id": "o_a91c",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "54"
+            }
+          ]
+        },
+        "feedback": "54 là 6 × 9. Em thử đếm thêm 7 từ 7 × 7 = 49 nhé."
+      },
+      {
+        "id": "o_3b2e",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "56"
+            }
+          ]
+        },
+        "feedback": "Đúng rồi: 7 × 8 = 7 × 7 + 7 = 56."
+      },
+      {
+        "id": "o_c7d0",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "63"
+            }
+          ]
+        },
+        "feedback": "63 là 7 × 9, nhiều hơn một lần 7.",
+        "misconception_tag": "off_by_one_factor"
+      },
+      {
+        "id": "o_19fe",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "48"
+            }
+          ]
+        },
+        "feedback": "48 là 6 × 8. Em xem lại thừa số thứ nhất nhé."
+      }
+    ],
+    "shuffle_options": true
+  },
+  "answer_key": {
+    "correct_option_id": "o_3b2e"
+  },
+  "scoring_rule": {
+    "mode": "all_or_nothing"
+  },
+  "hints": [
+    {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Em đã thuộc 7 × 7 chưa?"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "7 × 8 = 7 × 7 + 7"
+        }
+      ]
+    }
+  ],
+  "max_score": 1
+}

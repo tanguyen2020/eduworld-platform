@@ -1,0 +1,315 @@
+input,expected,allow_diacritics_missing,match,lang,want
+HÀ NỘI,Hà Nội,false,normalized,vi,true
+"  Hà   Nội  ",Hà Nội,false,normalized,vi,true
+Hà Nội.,Hà Nội,false,normalized,vi,true
+"""Hà Nội!""",Hà Nội,false,normalized,vi,true
+Ha Noi,Hà Nội,false,normalized,vi,false
+ha noi,Hà Nội,true,normalized,vi,true
+Hà Nội,Hà Nội,false,normalized,vi,true
+HÀ NỘI,Hà Nội,false,exact,vi,false
+" Hà Nội ",Hà Nội,false,exact,vi,true
+SÔNG HỒNG,sông Hồng,false,normalized,vi,true
+"  sông   Hồng  ",sông Hồng,false,normalized,vi,true
+sông Hồng.,sông Hồng,false,normalized,vi,true
+"""sông Hồng!""",sông Hồng,false,normalized,vi,true
+song Hong,sông Hồng,false,normalized,vi,false
+song hong,sông Hồng,true,normalized,vi,true
+sông Hồng,sông Hồng,false,normalized,vi,true
+SÔNG HỒNG,sông Hồng,false,exact,vi,false
+" sông Hồng ",sông Hồng,false,exact,vi,true
+CON MÈO,con mèo,false,normalized,vi,true
+"  con   mèo  ",con mèo,false,normalized,vi,true
+con mèo.,con mèo,false,normalized,vi,true
+"""con mèo!""",con mèo,false,normalized,vi,true
+con meo,con mèo,false,normalized,vi,false
+con meo,con mèo,true,normalized,vi,true
+con mèo,con mèo,false,normalized,vi,true
+CON MÈO,con mèo,false,exact,vi,false
+" con mèo ",con mèo,false,exact,vi,true
+HÒA BÌNH,hòa bình,false,normalized,vi,true
+"  hòa   bình  ",hòa bình,false,normalized,vi,true
+hòa bình.,hòa bình,false,normalized,vi,true
+"""hòa bình!""",hòa bình,false,normalized,vi,true
+hoa binh,hòa bình,false,normalized,vi,false
+hoa binh,hòa bình,true,normalized,vi,true
+hòa bình,hòa bình,false,normalized,vi,true
+HÒA BÌNH,hòa bình,false,exact,vi,false
+" hòa bình ",hòa bình,false,exact,vi,true
+hoà bình,hòa bình,false,normalized,vi,true
+THỦY TINH,thủy tinh,false,normalized,vi,true
+"  thủy   tinh  ",thủy tinh,false,normalized,vi,true
+thủy tinh.,thủy tinh,false,normalized,vi,true
+"""thủy tinh!""",thủy tinh,false,normalized,vi,true
+thuy tinh,thủy tinh,false,normalized,vi,false
+thuy tinh,thủy tinh,true,normalized,vi,true
+thủy tinh,thủy tinh,false,normalized,vi,true
+THỦY TINH,thủy tinh,false,exact,vi,false
+" thủy tinh ",thủy tinh,false,exact,vi,true
+thuỷ tinh,thủy tinh,false,normalized,vi,true
+KHỎE MẠNH,khỏe mạnh,false,normalized,vi,true
+"  khỏe   mạnh  ",khỏe mạnh,false,normalized,vi,true
+khỏe mạnh.,khỏe mạnh,false,normalized,vi,true
+"""khỏe mạnh!""",khỏe mạnh,false,normalized,vi,true
+khoe manh,khỏe mạnh,false,normalized,vi,false
+khoe manh,khỏe mạnh,true,normalized,vi,true
+khỏe mạnh,khỏe mạnh,false,normalized,vi,true
+KHỎE MẠNH,khỏe mạnh,false,exact,vi,false
+" khỏe mạnh ",khỏe mạnh,false,exact,vi,true
+khoẻ mạnh,khỏe mạnh,false,normalized,vi,true
+QUẢ XOÀI,quả xoài,false,normalized,vi,true
+"  quả   xoài  ",quả xoài,false,normalized,vi,true
+quả xoài.,quả xoài,false,normalized,vi,true
+"""quả xoài!""",quả xoài,false,normalized,vi,true
+qua xoai,quả xoài,false,normalized,vi,false
+qua xoai,quả xoài,true,normalized,vi,true
+quả xoài,quả xoài,false,normalized,vi,true
+QUẢ XOÀI,quả xoài,false,exact,vi,false
+" quả xoài ",quả xoài,false,exact,vi,true
+VIỆT NAM,Việt Nam,false,normalized,vi,true
+"  Việt   Nam  ",Việt Nam,false,normalized,vi,true
+Việt Nam.,Việt Nam,false,normalized,vi,true
+"""Việt Nam!""",Việt Nam,false,normalized,vi,true
+Viet Nam,Việt Nam,false,normalized,vi,false
+viet nam,Việt Nam,true,normalized,vi,true
+Việt Nam,Việt Nam,false,normalized,vi,true
+VIỆT NAM,Việt Nam,false,exact,vi,false
+" Việt Nam ",Việt Nam,false,exact,vi,true
+ĐỒNG BẰNG,đồng bằng,false,normalized,vi,true
+"  đồng   bằng  ",đồng bằng,false,normalized,vi,true
+đồng bằng.,đồng bằng,false,normalized,vi,true
+"""đồng bằng!""",đồng bằng,false,normalized,vi,true
+dong bang,đồng bằng,false,normalized,vi,false
+dong bang,đồng bằng,true,normalized,vi,true
+đồng bằng,đồng bằng,false,normalized,vi,true
+ĐỒNG BẰNG,đồng bằng,false,exact,vi,false
+" đồng bằng ",đồng bằng,false,exact,vi,true
+NGÔI TRƯỜNG,ngôi trường,false,normalized,vi,true
+"  ngôi   trường  ",ngôi trường,false,normalized,vi,true
+ngôi trường.,ngôi trường,false,normalized,vi,true
+"""ngôi trường!""",ngôi trường,false,normalized,vi,true
+ngoi truong,ngôi trường,false,normalized,vi,false
+ngoi truong,ngôi trường,true,normalized,vi,true
+ngôi trường,ngôi trường,false,normalized,vi,true
+NGÔI TRƯỜNG,ngôi trường,false,exact,vi,false
+" ngôi trường ",ngôi trường,false,exact,vi,true
+BẢNG NHÂN,bảng nhân,false,normalized,vi,true
+"  bảng   nhân  ",bảng nhân,false,normalized,vi,true
+bảng nhân.,bảng nhân,false,normalized,vi,true
+"""bảng nhân!""",bảng nhân,false,normalized,vi,true
+bang nhan,bảng nhân,false,normalized,vi,false
+bang nhan,bảng nhân,true,normalized,vi,true
+bảng nhân,bảng nhân,false,normalized,vi,true
+BẢNG NHÂN,bảng nhân,false,exact,vi,false
+" bảng nhân ",bảng nhân,false,exact,vi,true
+PHÉP CỘNG,phép cộng,false,normalized,vi,true
+"  phép   cộng  ",phép cộng,false,normalized,vi,true
+phép cộng.,phép cộng,false,normalized,vi,true
+"""phép cộng!""",phép cộng,false,normalized,vi,true
+phep cong,phép cộng,false,normalized,vi,false
+phep cong,phép cộng,true,normalized,vi,true
+phép cộng,phép cộng,false,normalized,vi,true
+PHÉP CỘNG,phép cộng,false,exact,vi,false
+" phép cộng ",phép cộng,false,exact,vi,true
+HÌNH VUÔNG,hình vuông,false,normalized,vi,true
+"  hình   vuông  ",hình vuông,false,normalized,vi,true
+hình vuông.,hình vuông,false,normalized,vi,true
+"""hình vuông!""",hình vuông,false,normalized,vi,true
+hinh vuong,hình vuông,false,normalized,vi,false
+hinh vuong,hình vuông,true,normalized,vi,true
+hình vuông,hình vuông,false,normalized,vi,true
+HÌNH VUÔNG,hình vuông,false,exact,vi,false
+" hình vuông ",hình vuông,false,exact,vi,true
+TAM GIÁC,tam giác,false,normalized,vi,true
+"  tam   giác  ",tam giác,false,normalized,vi,true
+tam giác.,tam giác,false,normalized,vi,true
+"""tam giác!""",tam giác,false,normalized,vi,true
+tam giac,tam giác,false,normalized,vi,false
+tam giac,tam giác,true,normalized,vi,true
+tam giác,tam giác,false,normalized,vi,true
+TAM GIÁC,tam giác,false,exact,vi,false
+" tam giác ",tam giác,false,exact,vi,true
+CHU VI,chu vi,false,normalized,vi,true
+"  chu   vi  ",chu vi,false,normalized,vi,true
+chu vi.,chu vi,false,normalized,vi,true
+"""chu vi!""",chu vi,false,normalized,vi,true
+chu vi,chu vi,true,normalized,vi,true
+chu vi,chu vi,false,normalized,vi,true
+CHU VI,chu vi,false,exact,vi,false
+" chu vi ",chu vi,false,exact,vi,true
+DIỆN TÍCH,diện tích,false,normalized,vi,true
+"  diện   tích  ",diện tích,false,normalized,vi,true
+diện tích.,diện tích,false,normalized,vi,true
+"""diện tích!""",diện tích,false,normalized,vi,true
+dien tich,diện tích,false,normalized,vi,false
+dien tich,diện tích,true,normalized,vi,true
+diện tích,diện tích,false,normalized,vi,true
+DIỆN TÍCH,diện tích,false,exact,vi,false
+" diện tích ",diện tích,false,exact,vi,true
+SỐ CHẴN,số chẵn,false,normalized,vi,true
+"  số   chẵn  ",số chẵn,false,normalized,vi,true
+số chẵn.,số chẵn,false,normalized,vi,true
+"""số chẵn!""",số chẵn,false,normalized,vi,true
+so chan,số chẵn,false,normalized,vi,false
+so chan,số chẵn,true,normalized,vi,true
+số chẵn,số chẵn,false,normalized,vi,true
+SỐ CHẴN,số chẵn,false,exact,vi,false
+" số chẵn ",số chẵn,false,exact,vi,true
+SỐ LẺ,số lẻ,false,normalized,vi,true
+"  số   lẻ  ",số lẻ,false,normalized,vi,true
+số lẻ.,số lẻ,false,normalized,vi,true
+"""số lẻ!""",số lẻ,false,normalized,vi,true
+so le,số lẻ,false,normalized,vi,false
+so le,số lẻ,true,normalized,vi,true
+số lẻ,số lẻ,false,normalized,vi,true
+SỐ LẺ,số lẻ,false,exact,vi,false
+" số lẻ ",số lẻ,false,exact,vi,true
+PHÂN SỐ,phân số,false,normalized,vi,true
+"  phân   số  ",phân số,false,normalized,vi,true
+phân số.,phân số,false,normalized,vi,true
+"""phân số!""",phân số,false,normalized,vi,true
+phan so,phân số,false,normalized,vi,false
+phan so,phân số,true,normalized,vi,true
+phân số,phân số,false,normalized,vi,true
+PHÂN SỐ,phân số,false,exact,vi,false
+" phân số ",phân số,false,exact,vi,true
+MÙA THU,mùa thu,false,normalized,vi,true
+"  mùa   thu  ",mùa thu,false,normalized,vi,true
+mùa thu.,mùa thu,false,normalized,vi,true
+"""mùa thu!""",mùa thu,false,normalized,vi,true
+mua thu,mùa thu,false,normalized,vi,false
+mua thu,mùa thu,true,normalized,vi,true
+mùa thu,mùa thu,false,normalized,vi,true
+MÙA THU,mùa thu,false,exact,vi,false
+" mùa thu ",mùa thu,false,exact,vi,true
+CÁNH ĐỒNG,cánh đồng,false,normalized,vi,true
+"  cánh   đồng  ",cánh đồng,false,normalized,vi,true
+cánh đồng.,cánh đồng,false,normalized,vi,true
+"""cánh đồng!""",cánh đồng,false,normalized,vi,true
+canh dong,cánh đồng,false,normalized,vi,false
+canh dong,cánh đồng,true,normalized,vi,true
+cánh đồng,cánh đồng,false,normalized,vi,true
+CÁNH ĐỒNG,cánh đồng,false,exact,vi,false
+" cánh đồng ",cánh đồng,false,exact,vi,true
+HỌC SINH,học sinh,false,normalized,vi,true
+"  học   sinh  ",học sinh,false,normalized,vi,true
+học sinh.,học sinh,false,normalized,vi,true
+"""học sinh!""",học sinh,false,normalized,vi,true
+hoc sinh,học sinh,false,normalized,vi,false
+hoc sinh,học sinh,true,normalized,vi,true
+học sinh,học sinh,false,normalized,vi,true
+HỌC SINH,học sinh,false,exact,vi,false
+" học sinh ",học sinh,false,exact,vi,true
+THẦY GIÁO,thầy giáo,false,normalized,vi,true
+"  thầy   giáo  ",thầy giáo,false,normalized,vi,true
+thầy giáo.,thầy giáo,false,normalized,vi,true
+"""thầy giáo!""",thầy giáo,false,normalized,vi,true
+thay giao,thầy giáo,false,normalized,vi,false
+thay giao,thầy giáo,true,normalized,vi,true
+thầy giáo,thầy giáo,false,normalized,vi,true
+THẦY GIÁO,thầy giáo,false,exact,vi,false
+" thầy giáo ",thầy giáo,false,exact,vi,true
+BẠN BÈ,bạn bè,false,normalized,vi,true
+"  bạn   bè  ",bạn bè,false,normalized,vi,true
+bạn bè.,bạn bè,false,normalized,vi,true
+"""bạn bè!""",bạn bè,false,normalized,vi,true
+ban be,bạn bè,false,normalized,vi,false
+ban be,bạn bè,true,normalized,vi,true
+bạn bè,bạn bè,false,normalized,vi,true
+BẠN BÈ,bạn bè,false,exact,vi,false
+" bạn bè ",bạn bè,false,exact,vi,true
+QUÊ HƯƠNG,quê hương,false,normalized,vi,true
+"  quê   hương  ",quê hương,false,normalized,vi,true
+quê hương.,quê hương,false,normalized,vi,true
+"""quê hương!""",quê hương,false,normalized,vi,true
+que huong,quê hương,false,normalized,vi,false
+que huong,quê hương,true,normalized,vi,true
+quê hương,quê hương,false,normalized,vi,true
+QUÊ HƯƠNG,quê hương,false,exact,vi,false
+" quê hương ",quê hương,false,exact,vi,true
+ĐẤT NƯỚC,đất nước,false,normalized,vi,true
+"  đất   nước  ",đất nước,false,normalized,vi,true
+đất nước.,đất nước,false,normalized,vi,true
+"""đất nước!""",đất nước,false,normalized,vi,true
+dat nuoc,đất nước,false,normalized,vi,false
+dat nuoc,đất nước,true,normalized,vi,true
+đất nước,đất nước,false,normalized,vi,true
+ĐẤT NƯỚC,đất nước,false,exact,vi,false
+" đất nước ",đất nước,false,exact,vi,true
+MẶT TRỜI,mặt trời,false,normalized,vi,true
+"  mặt   trời  ",mặt trời,false,normalized,vi,true
+mặt trời.,mặt trời,false,normalized,vi,true
+"""mặt trời!""",mặt trời,false,normalized,vi,true
+mat troi,mặt trời,false,normalized,vi,false
+mat troi,mặt trời,true,normalized,vi,true
+mặt trời,mặt trời,false,normalized,vi,true
+MẶT TRỜI,mặt trời,false,exact,vi,false
+" mặt trời ",mặt trời,false,exact,vi,true
+CÂY LÚA,cây lúa,false,normalized,vi,true
+"  cây   lúa  ",cây lúa,false,normalized,vi,true
+cây lúa.,cây lúa,false,normalized,vi,true
+"""cây lúa!""",cây lúa,false,normalized,vi,true
+cay lua,cây lúa,false,normalized,vi,false
+cay lua,cây lúa,true,normalized,vi,true
+cây lúa,cây lúa,false,normalized,vi,true
+CÂY LÚA,cây lúa,false,exact,vi,false
+" cây lúa ",cây lúa,false,exact,vi,true
+TIẾNG VIỆT,tiếng Việt,false,normalized,vi,true
+"  tiếng   Việt  ",tiếng Việt,false,normalized,vi,true
+tiếng Việt.,tiếng Việt,false,normalized,vi,true
+"""tiếng Việt!""",tiếng Việt,false,normalized,vi,true
+tieng Viet,tiếng Việt,false,normalized,vi,false
+tieng viet,tiếng Việt,true,normalized,vi,true
+tiếng Việt,tiếng Việt,false,normalized,vi,true
+TIẾNG VIỆT,tiếng Việt,false,exact,vi,false
+" tiếng Việt ",tiếng Việt,false,exact,vi,true
+THÀNH PHỐ,thành phố,false,normalized,vi,true
+"  thành   phố  ",thành phố,false,normalized,vi,true
+thành phố.,thành phố,false,normalized,vi,true
+"""thành phố!""",thành phố,false,normalized,vi,true
+thanh pho,thành phố,false,normalized,vi,false
+thanh pho,thành phố,true,normalized,vi,true
+thành phố,thành phố,false,normalized,vi,true
+THÀNH PHỐ,thành phố,false,exact,vi,false
+" thành phố ",thành phố,false,exact,vi,true
+mèo,méo,false,normalized,vi,false
+hồng,hông,false,normalized,vi,false
+số chẵn,số lẻ,false,normalized,vi,false
+bàn,bán,false,normalized,vi,false
+ma,mà,false,normalized,vi,false
+lúa,lụa,false,normalized,vi,false
+đá,da,false,normalized,vi,false
+cá,cà,false,normalized,vi,false
+thu,thư,false,normalized,vi,false
+hoa,họa,false,normalized,vi,false
+CAT,cat,false,normalized,en,true
+cat.,cat,false,normalized,en,true
+" cat  ",cat,false,normalized,en,true
+DOG,dog,false,normalized,en,true
+dog.,dog,false,normalized,en,true
+" dog  ",dog,false,normalized,en,true
+DON'T,don't,false,normalized,en,true
+don’t.,don't,false,normalized,en,true
+" don't  ",don't,false,normalized,en,true
+NEW YORK,New York,false,normalized,en,true
+New York.,New York,false,normalized,en,true
+" New York  ",New York,false,normalized,en,true
+APPLE PIE,apple pie,false,normalized,en,true
+apple pie.,apple pie,false,normalized,en,true
+" apple pie  ",apple pie,false,normalized,en,true
+IT'S RAINING,it's raining,false,normalized,en,true
+it’s raining.,it's raining,false,normalized,en,true
+" it's raining  ",it's raining,false,normalized,en,true
+BLUE WHALE,blue whale,false,normalized,en,true
+blue whale.,blue whale,false,normalized,en,true
+" blue whale  ",blue whale,false,normalized,en,true
+THE SUN,the sun,false,normalized,en,true
+the sun.,the sun,false,normalized,en,true
+" the sun  ",the sun,false,normalized,en,true
+RED CAR,red car,false,normalized,en,true
+red car.,red car,false,normalized,en,true
+" red car  ",red car,false,normalized,en,true
+GREEN APPLE,green apple,false,normalized,en,true
+green apple.,green apple,false,normalized,en,true
+" green apple  ",green apple,false,normalized,en,true
+café,cafe,true,normalized,en,false
+Cat,cat,false,exact,en,false

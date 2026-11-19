@@ -1,0 +1,29 @@
+{
+  "type": "numeric",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Một đoạn dây dài 25 cm cắt làm 2 phần bằng nhau. Mỗi phần dài bao nhiêu xăng-ti-mét?"
+      }
+    ]
+  },
+  "render_payload": {
+    "keyboard": "numeric",
+    "unit_label": "cm",
+    "allow_fraction_input": false,
+    "decimal_separator": ","
+  },
+  "answer_key": {
+    "value": 12.5,
+    "tolerance": {
+      "type": "absolute",
+      "value": 0.01
+    },
+    "accept_equivalent_forms": true
+  },
+  "scoring_rule": {
+    "mode": "all_or_nothing"
+  },
+  "max_score": 1
+}

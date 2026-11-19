@@ -21,10 +21,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/qbschema"
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
@@ -75,6 +77,8 @@ type curEnv struct {
 	res    *httpxtest.Resolver
 	cmd    command.Curriculum
 	qry    query.Curriculum
+	qcmd   command.Questions
+	schema *qbschema.Validator
 	assets *memAssets
 	users  map[string]authz.PrincipalData
 	tokens map[string]string
@@ -111,7 +115,8 @@ func newCurEnv(ctx context.Context, t *testing.T) *curEnv {
 		t.Fatal(err)
 	}
 	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
-	reg, err := port.NewRegistry(command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}})
+	reg, err := port.NewRegistry(command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
+		command.QuestionResource{Store: write.QuestionRepo{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,12 +125,19 @@ func newCurEnv(ctx context.Context, t *testing.T) *curEnv {
 		Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Assets: assets, Codec: importer.Codec{},
 		Metrics: observability.CurriculumCounter{}}
 	qry := query.Curriculum{Session: e.read, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: codec}
-	if err := learninghttp.Register(srv, learninghttp.Handlers{Commands: cmd, Queries: qry}); err != nil {
+	schema, err := qbschema.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	qcmd := command.Questions{UoW: e.uow, Store: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{}, Schema: schema,
+		Registry: question.Base(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
+	qqry := query.Questions{Session: e.read, Model: read.QuestionModel{}, Cursors: codec}
+	if err := learninghttp.Register(srv, learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry}); err != nil {
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)

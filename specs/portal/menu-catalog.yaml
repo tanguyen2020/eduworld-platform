@@ -717,6 +717,7 @@ workspaces:
             operation_ids:
               - searchQuestions
               - getCmsQuestion
+              - getCmsQuestionVersion
               - "listContentVersions[content_type=question]"
               - "diffContentVersions[content_type=question]"
               - "listContentReleases[content_type=question]"

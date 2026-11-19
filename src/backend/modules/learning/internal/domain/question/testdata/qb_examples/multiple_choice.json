@@ -1,0 +1,73 @@
+{
+  "type": "multiple_choice",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Chọn các số chia hết cho 6"
+      }
+    ]
+  },
+  "render_payload": {
+    "options": [
+      {
+        "id": "o_1",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "12"
+            }
+          ]
+        }
+      },
+      {
+        "id": "o_2",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "15"
+            }
+          ]
+        }
+      },
+      {
+        "id": "o_3",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "18"
+            }
+          ]
+        }
+      },
+      {
+        "id": "o_4",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "20"
+            }
+          ]
+        }
+      }
+    ],
+    "shuffle_options": true,
+    "show_correct_count": false
+  },
+  "answer_key": {
+    "correct_option_ids": [
+      "o_1",
+      "o_3"
+    ]
+  },
+  "scoring_rule": {
+    "mode": "partial",
+    "partial_method": "right_minus_wrong",
+    "min_score": 0
+  },
+  "max_score": 1
+}

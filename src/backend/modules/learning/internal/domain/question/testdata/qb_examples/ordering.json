@@ -1,0 +1,73 @@
+{
+  "type": "ordering",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Sắp xếp các giai đoạn phát triển của cây"
+      }
+    ]
+  },
+  "render_payload": {
+    "items": [
+      {
+        "id": "i_1",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Gieo hạt"
+            }
+          ]
+        }
+      },
+      {
+        "id": "i_2",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Nảy mầm"
+            }
+          ]
+        }
+      },
+      {
+        "id": "i_3",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Ra hoa"
+            }
+          ]
+        }
+      },
+      {
+        "id": "i_4",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Kết trái"
+            }
+          ]
+        }
+      }
+    ],
+    "shuffle": true
+  },
+  "answer_key": {
+    "order": [
+      "i_1",
+      "i_2",
+      "i_3",
+      "i_4"
+    ]
+  },
+  "scoring_rule": {
+    "mode": "partial",
+    "partial_method": "adjacent_pairs"
+  },
+  "max_score": 1
+}

@@ -105,6 +105,42 @@ func (f LoVersionMappingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoVersionMappingMutation", m)
 }
 
+// The QuestionFunc type is an adapter to allow the use of ordinary
+// function as Question mutator.
+type QuestionFunc func(context.Context, *ent.QuestionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionMutation", m)
+}
+
+// The QuestionVersionFunc type is an adapter to allow the use of ordinary
+// function as QuestionVersion mutator.
+type QuestionVersionFunc func(context.Context, *ent.QuestionVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionVersionMutation", m)
+}
+
+// The QuestionVersionObjectiveFunc type is an adapter to allow the use of ordinary
+// function as QuestionVersionObjective mutator.
+type QuestionVersionObjectiveFunc func(context.Context, *ent.QuestionVersionObjectiveMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionVersionObjectiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionVersionObjectiveMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionVersionObjectiveMutation", m)
+}
+
 // The SubjectFunc type is an adapter to allow the use of ordinary
 // function as Subject mutator.
 type SubjectFunc func(context.Context, *ent.SubjectMutation) (ent.Value, error)

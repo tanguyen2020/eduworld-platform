@@ -1,0 +1,90 @@
+{
+  "type": "matching",
+  "stem": {
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Nối từ tiếng Anh với nghĩa tiếng Việt"
+      }
+    ]
+  },
+  "render_payload": {
+    "left": [
+      {
+        "id": "l_1",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "cat"
+            }
+          ]
+        }
+      },
+      {
+        "id": "l_2",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "dog"
+            }
+          ]
+        }
+      }
+    ],
+    "right": [
+      {
+        "id": "r_1",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "con chó"
+            }
+          ]
+        }
+      },
+      {
+        "id": "r_2",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "con mèo"
+            }
+          ]
+        }
+      },
+      {
+        "id": "r_3",
+        "content": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "con gà"
+            }
+          ]
+        }
+      }
+    ],
+    "shuffle": true
+  },
+  "answer_key": {
+    "pairs": [
+      [
+        "l_1",
+        "r_2"
+      ],
+      [
+        "l_2",
+        "r_1"
+      ]
+    ]
+  },
+  "scoring_rule": {
+    "mode": "partial",
+    "partial_method": "proportional"
+  },
+  "max_score": 1
+}
