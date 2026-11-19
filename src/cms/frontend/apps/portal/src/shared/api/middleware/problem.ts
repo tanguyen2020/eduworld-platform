@@ -74,7 +74,9 @@ export function toApiError(
   const p: ProblemBody = body && typeof body === 'object' ? (body as ProblemBody) : {};
   const code = str(p.code) ?? `HTTP_${status}`;
   const fieldErrors: Record<string, FieldError> = {};
-  if (code === 'VALIDATION_FAILED' && Array.isArray(p.errors)) {
+  // errors[] of VALIDATION_FAILED and of the content checks (MATH_RENDER_FAILED, AUDIO_REQUIRED, TRANSLATION_INCOMPLETE,
+  // MEDIA_NOT_READY — field = JSON pointer, F053) are kept per field
+  if (Array.isArray(p.errors)) {
     for (const e of p.errors as Array<Record<string, unknown>>) {
       const field = str(e?.field);
       const c = str(e?.code);

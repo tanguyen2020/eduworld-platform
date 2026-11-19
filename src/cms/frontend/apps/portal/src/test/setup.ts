@@ -1,7 +1,7 @@
 // Vitest setup (portal). Test doubles below are labelled MOCK (AGENTS R17): jsdom lacks matchMedia.
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 afterEach(() => cleanup());
 
@@ -22,3 +22,9 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// MOCK (test only, AGENTS R17): MathLive's <math-field> needs a real browser (layout, fonts); jsdom gets a stand-in
+// module so MathInput mounts its element and the LaTeX source/preview paths are tested. The real component is
+// exercised in Storybook / Playwright.
+vi.mock('mathlive', () => ({ MathfieldElement: { fontsDirectory: null, soundsDirectory: null } }));
+vi.mock('mathlive/fonts.css', () => ({}));

@@ -40,6 +40,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // one named chunk per workspace (F050-AC-02)
+        // MathJax 4 (+ its fonts loaded by range) in its own chunk shared by the Content Studio workspace and the font
+        // ranges, so the workspace stays its own dynamic entry and nothing of it reaches the entry chunk (F053)
+        manualChunks: (id) => {
+          const p = id.split('\\').join('/');
+          return /\/(@mathjax|mhchemparser|speech-rule-engine)\//.test(p) && !p.includes('/svg/dynamic/') ? 'vendor-mathjax' : undefined;
+        },
         chunkFileNames: (chunk) => {
           const ws = WORKSPACES.find((w) => chunk.facadeModuleId?.includes(`/workspaces/${w}/`));
           return ws ? `assets/workspace-${ws}-[hash].js` : 'assets/[name]-[hash].js';

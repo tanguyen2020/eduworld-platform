@@ -8,3 +8,6 @@ export { openapiRules } from './forms/openapiRules';
 export type { OpenapiStringSchema, OpenapiRuleOptions, Translate } from './forms/openapiRules';
 export { CharCounter, openapiInputProps } from './forms/CharCounter';
 export { OPS_UI_NS, opsUiResources } from './i18n';
+
+// Content editing components (F053: editor shell, formulas, bilingual fields, question editor) are exported from
+// `@eduworld/ops-ui/content` so that MathJax / MathLive stay in the Content Studio chunk, out of the portal entry.

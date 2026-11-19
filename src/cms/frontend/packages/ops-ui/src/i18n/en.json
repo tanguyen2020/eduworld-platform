@@ -49,5 +49,274 @@
     "rarity": "Rarity",
     "content_status": "Content status",
     "brand": "Brand"
+  },
+  "editor": {
+    "statusBar": "Status and actions",
+    "version": "Version {{version}}",
+    "publishedVersion": "Published v{{version}}",
+    "readOnly": "Read only",
+    "save": {
+      "saving": "Saving…",
+      "savedAt": "Saved at {{time}}",
+      "error": "Save failed, try again",
+      "conflict": "Someone else just edited",
+      "retry": "Retry"
+    },
+    "action": {
+      "save": "Save",
+      "submit_review": "Submit for review",
+      "approve": "Approve",
+      "reject": "Reject",
+      "publish": "Publish now",
+      "new_draft": "New draft from v{{version}}"
+    },
+    "blockers": {
+      "title": "Cannot submit or publish yet, still missing:"
+    },
+    "conflict": {
+      "title": "Someone else edited this draft",
+      "description": "Autosave stopped. Your changes stay on screen and do not overwrite the other version. Copy what you need, then load the new version.",
+      "reload": "Load new version",
+      "copyMine": "Copy my changes"
+    }
+  },
+  "math": {
+    "renderFailed": "Formula cannot be displayed",
+    "inline": "Inline",
+    "block": "Own line",
+    "visualUnavailable": "The visual editor could not load; type the LaTeX code.",
+    "source": "LaTeX code of {{label}}",
+    "preview": "Formula preview",
+    "insert": "∑ Formula",
+    "insertTitle": "Insert formula",
+    "insertOk": "Insert",
+    "cancel": "Cancel",
+    "formula": "Formula",
+    "keyboard": {
+      "math": "Math",
+      "mathTooltip": "Fractions, roots, powers, indices, matrices",
+      "physics": "Physics",
+      "physicsTooltip": "Vectors, Greek letters, units",
+      "chemistry": "Chemistry",
+      "chemistryTooltip": "Chemical formulas, reaction equations"
+    },
+    "error": {
+      "MATH_EMPTY": "The formula is empty.",
+      "MATH_TOO_LONG": "The formula is longer than {{max}} characters.",
+      "MATH_TOO_DEEP": "The formula is nested more than {{detail}} levels.",
+      "MATH_FORBIDDEN_COMMAND": "The command {{detail}} is not allowed in formulas.",
+      "MATH_SYNTAX": "The formula has a syntax error.",
+      "MATH_SVG_TOO_LARGE": "The formula is too large to display."
+    }
+  },
+  "bilingual": {
+    "inputLabel": "{{label}} ({{lang}})",
+    "lang": {
+      "vi": "Vietnamese",
+      "en": "English"
+    },
+    "original": "Original",
+    "originalRequired": "The original-language text is required.",
+    "tab": {
+      "vi": "VI",
+      "en": "EN"
+    },
+    "status": {
+      "complete": "Complete",
+      "partial": "Translation missing",
+      "missing_original": "Original missing",
+      "outdated": "Outdated"
+    }
+  },
+  "richContent": {
+    "block": {
+      "paragraph": "Paragraph",
+      "heading": "Heading",
+      "list": "List",
+      "math": "Formula",
+      "image": "Image",
+      "audio": "Audio",
+      "video": "Video",
+      "table": "Table",
+      "callout": "Callout"
+    },
+    "headingLevel": "Heading level",
+    "listItem": "Item {{n}}",
+    "remove": "Remove",
+    "addItem": "Add item",
+    "noMedia": "No file chosen",
+    "alt": "Image description (alt)",
+    "altRequired": "An image needs a description.",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "up": "Up",
+    "down": "Down",
+    "addBlock": "Add content block",
+    "cell": "Cell row {{row}} column {{col}}",
+    "addRow": "Add row",
+    "addColumn": "Add column"
+  },
+  "workedExample": {
+    "title": "Worked example",
+    "problem": "Problem",
+    "step": "Step {{n}}",
+    "removeStep": "Remove step",
+    "stepContent": "Step content",
+    "audioRequired": "Step audio (required for grades 1–3)",
+    "audioOptional": "Step audio (optional)",
+    "addStep": "Add step (up to {{max}})",
+    "selfExplain": "Self-explanation prompt (optional)",
+    "issues": "Worked example issues",
+    "issue": {
+      "STEPS_MIN": "At least {{min}} step is needed.",
+      "STEPS_MAX": "At most {{max}} steps.",
+      "STEP_AUDIO_REQUIRED": "Step {{n}} has no audio.",
+      "ID_DUPLICATE": "The block id is used by another block of the version.",
+      "ID_INVALID": "The block id is not valid.",
+      "PROBLEM_REQUIRED": "Enter the problem."
+    }
+  },
+  "question": {
+    "type": "Question type",
+    "typeAdvanced": "{{type}} (advanced)",
+    "types": {
+      "single_choice": "Single choice",
+      "multiple_choice": "Multiple choice",
+      "true_false": "True/False",
+      "fill_in_blank": "Fill in the blank",
+      "short_answer": "Short answer",
+      "numeric": "Numeric answer",
+      "matching": "Matching",
+      "ordering": "Ordering",
+      "drag_drop": "Drag and drop",
+      "image_based": "Image based",
+      "interactive": "Interactive / simulation"
+    },
+    "changeTypeTitle": "Change the question type?",
+    "changeTypeMessage": "The current answer does not fit the new type and will be removed.",
+    "changeTypeOk": "Change type",
+    "expressionWarning": "The question has formulas but students must type the answer. Students cannot type expressions in the game (ADR-0055): use a choice, a number or a number/word blank.",
+    "stem": "Question",
+    "stemAudio": "Spoken question",
+    "stemAudioRequired": "Questions for grades 1–3 need a spoken question (or an exemption reason).",
+    "answerSection": "Answer",
+    "scoring": "Scoring",
+    "scoringMethods": {
+      "all_or_nothing": "All or nothing",
+      "right_minus_wrong": "Right minus wrong",
+      "proportional": "Proportional",
+      "position": "Items in the right position",
+      "adjacent_pairs": "Adjacent pairs in order"
+    },
+    "explanationSection": "Explanation and hints",
+    "explanation": "Explanation",
+    "hints": "Hints (up to {{max}} levels)",
+    "hintLevel": "Hint level {{n}}",
+    "removeHint": "Remove hint",
+    "addHint": "Add hint",
+    "misconceptionTag": "Misconception tag",
+    "optionFeedback": "Feedback when a student picks this option",
+    "option": "Option {{n}}",
+    "addOption": "Add option (up to {{max}})",
+    "shuffleOptions": "Shuffle options",
+    "showCorrectCount": "Tell how many answers are correct",
+    "correctAnswer": "Correct answer",
+    "true": "True",
+    "false": "False",
+    "tfMulti": "Several statements",
+    "tfSingle": "One statement",
+    "statement": "Statement {{n}}",
+    "accepted": "Accepted answers (Enter to add)",
+    "match": "Matching",
+    "matchNormalized": "Normalized",
+    "matchExact": "Exact",
+    "caseSensitive": "Case sensitive",
+    "allowDiacriticsMissing": "Accept missing diacritics",
+    "blankHelp": "Each blank is marked in the question as {{marker}}. Click \"Insert into question\" to add the marker to the first paragraph.",
+    "blank": "Blank {{n}}",
+    "insertBlank": "Insert into question",
+    "blankInput": "Input",
+    "blankInputs": {
+      "text": "Text",
+      "numeric": "Number",
+      "word_bank": "Word bank",
+      "dropdown": "Dropdown"
+    },
+    "maxLength": "Maximum length",
+    "choices": "Choices",
+    "addBlank": "Add blank",
+    "wordBank": "Word bank",
+    "keyboard": "Keyboard",
+    "keyboards": {
+      "text": "Text",
+      "numeric": "Numbers"
+    },
+    "numericValue": "Answer",
+    "tolerance": "Tolerance",
+    "tolerances": {
+      "exact": "Exact",
+      "absolute": "Absolute",
+      "relative": "Relative"
+    },
+    "toleranceValue": "Tolerance value",
+    "unitLabel": "Unit",
+    "allowFraction": "Allow fractions",
+    "acceptEquivalent": "Accept equivalent forms",
+    "decimalSeparator": "Decimal separator",
+    "leftColumn": "Left column",
+    "rightColumn": "Right column (may include distractors)",
+    "pairWith": "Pair with",
+    "rightItem": "Right item {{n}} ({{id}})",
+    "orderingHelp": "Put the items in the correct order; the game shuffles them.",
+    "orderItem": "Item {{n}}",
+    "zones": "Drop zones",
+    "zone": "Zone {{n}} ({{id}})",
+    "zoneShort": "Zone {{n}} ({{id}})",
+    "capacity": "Capacity",
+    "addZone": "Add zone",
+    "draggables": "Draggable cards",
+    "draggable": "Card {{n}}",
+    "placeIn": "Drop into zone",
+    "distractor": "Distractor (no zone)",
+    "reusableDraggables": "Cards can be reused",
+    "imageWidth": "Image width (px)",
+    "imageHeight": "Image height (px)",
+    "interaction": "Interaction",
+    "interactions": {
+      "hotspot": "Pick an area of the image",
+      "label": "Label the image"
+    },
+    "regionsHelp": "Correct areas use the coordinates of the original image and stay on the server.",
+    "shape": "Shape",
+    "shapes": {
+      "circle": "Circle",
+      "rect": "Rectangle"
+    },
+    "addRegion": "Add area",
+    "addDropPoint": "Add drop point",
+    "label": "Label {{n}}",
+    "widget": "Widget",
+    "widgetVersion": "Widget version",
+    "validator": "Validator",
+    "widgetConfig": "Widget configuration (JSON)",
+    "validatorParams": "Validator parameters (JSON)",
+    "jsonHelp": "Enter JSON; applied when leaving the box.",
+    "coords": {
+      "cx": "Center x",
+      "cy": "Center y",
+      "r": "Radius",
+      "x": "X",
+      "y": "Y",
+      "w": "Width",
+      "h": "Height"
+    }
+  },
+  "preview": {
+    "title": "As students see it",
+    "image": "[Image: {{alt}}]",
+    "audio": "[Audio]",
+    "blanks": "{{n}} blanks for the student",
+    "trueFalse": "The student picks True or False",
+    "numeric": "The student enters a number {{unit}}"
   }
 }

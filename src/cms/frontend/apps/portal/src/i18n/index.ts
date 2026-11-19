@@ -8,6 +8,8 @@ import vi from './vi.json';
 import en from './en.json';
 import catalogVi from './catalog.vi.json';
 import catalogEn from './catalog.en.json';
+import contentStudioVi from './content-studio.vi.json';
+import contentStudioEn from './content-studio.en.json';
 
 export const LOCALES = ['vi-VN', 'en-US'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -15,8 +17,8 @@ export const DEFAULT_LOCALE: Locale = 'vi-VN';
 export const PORTAL_NS = 'portal';
 
 export const resources = {
-  'vi-VN': { [PORTAL_NS]: { ...vi, portal: catalogVi }, [OPS_UI_NS]: opsUiResources.vi },
-  'en-US': { [PORTAL_NS]: { ...en, portal: catalogEn }, [OPS_UI_NS]: opsUiResources.en },
+  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, error: { ...vi.error, ...contentStudioVi.error }, portal: catalogVi }, [OPS_UI_NS]: opsUiResources.vi },
+  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, error: { ...en.error, ...contentStudioEn.error }, portal: catalogEn }, [OPS_UI_NS]: opsUiResources.en },
 } as const;
 
 export function isLocale(v: unknown): v is Locale {

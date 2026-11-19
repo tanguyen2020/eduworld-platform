@@ -8,14 +8,16 @@
     "build": "tsc -p tsconfig.json && vite build && node scripts/check-chunks.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
-    "gen:api": "node scripts/gen-op-meta.mjs && node scripts/gen-menu-catalog.mjs",
+    "gen:api": "node scripts/gen-op-meta.mjs && node scripts/gen-menu-catalog.mjs && node scripts/gen-schemas.mjs",
     "gen:catalog": "node scripts/gen-menu-catalog.mjs",
-    "gen:check": "node scripts/gen-op-meta.mjs --check && node scripts/gen-menu-catalog.mjs --check"
+    "gen:check": "node scripts/gen-op-meta.mjs --check && node scripts/gen-menu-catalog.mjs --check && node scripts/gen-schemas.mjs --check",
+    "gen:schemas": "node scripts/gen-schemas.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "5.6.1",
     "@eduworld/ops-ui": "workspace:*",
     "@tanstack/react-query": "5.104.5",
+    "ajv": "8.20.0",
     "antd": "5.29.3",
     "dayjs": "1.11.23",
     "i18next": "25.10.10",

@@ -9022,6 +9022,8 @@ export interface components {
             content_language?: components["schemas"]["ContentLanguage"];
             content_type: components["schemas"]["LearningContentType"];
             content_version_id?: components["schemas"]["Uuid"];
+            /** @description JSON pointer các trường có bản dịch lỗi thời so với bản gốc (huy hiệu "Lỗi thời" theo trường, CONTENT_MODEL §8; F053). Rỗng/vắng = không có */
+            readonly outdated_fields?: string[];
             /** @enum {string} */
             owner_scope?: "platform" | "tenant";
             published_at?: components["schemas"]["Timestamp"];
@@ -10276,6 +10278,8 @@ export interface components {
             description: string;
             objective_id: components["schemas"]["Uuid"];
             prerequisite_ids?: components["schemas"]["Uuid"][];
+            /** @description Phiên bản dòng — giá trị ETag W/"<row_version>" để gửi If-Match khi sửa từ danh sách (F053-AC-28; backend F021 bổ sung) */
+            readonly row_version?: number;
             sort_order?: number;
             /** @description Khóa ổn định qua các version (CURRICULUM_MODEL §4) */
             readonly stable_key?: string;
@@ -10433,6 +10437,14 @@ export interface components {
             curriculum_version_id?: components["schemas"]["Uuid"];
             estimated_minutes?: number;
             grade_level?: components["schemas"]["GradeLevel"];
+            /** @description Công thức của các khối rich_text/worked_example đã render trên portal (ADR-0055) — cùng shape QuestionAuthoringInput.math_assets (F053, F054) */
+            math_assets?: {
+                latex: string;
+                speech_text: string;
+                /** @description SVG ≤ 256 KB (math_svg_max), chỉ gửi lên */
+                svg?: string;
+                svg_asset?: string;
+            }[];
             objective_ids?: components["schemas"]["Uuid"][];
             /**
              * @default tenant
@@ -11472,6 +11484,8 @@ export interface components {
             answer_key?: {
                 [key: string]: unknown;
             };
+            /** @description Lý do miễn lồng tiếng đề cho khối 1–3 (CONTENT_MODEL §8.1); có lý do thì submit_review không đòi stem.audio_ref, reviewer phải xác nhận khi approve (F025) */
+            audio_exempt_reason?: string;
             change_note?: string;
             /** @description Ngôn ngữ gốc của câu hỏi; stem/explanation dùng khóa vi/en (specs/schemas/question.schema.json) */
             content_language?: components["schemas"]["ContentLanguage"];
@@ -12926,6 +12940,8 @@ export interface components {
             grade_level?: components["schemas"]["GradeLevel"];
             name: string;
             parent_topic_id?: components["schemas"]["Uuid"];
+            /** @description Phiên bản dòng — giá trị ETag W/"<row_version>" để gửi If-Match khi sửa/kéo-thả từ danh sách (F053-AC-27; backend F021 bổ sung) */
+            readonly row_version?: number;
             sort_order?: number;
             subject_id?: components["schemas"]["Uuid"];
             topic_id: components["schemas"]["Uuid"];

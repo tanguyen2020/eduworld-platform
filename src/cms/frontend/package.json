@@ -19,7 +19,8 @@
     "storybook": "pnpm --filter @eduworld/ops-ui storybook",
     "storybook:build": "pnpm --filter @eduworld/ops-ui storybook:build",
     "test-storybook": "pnpm --filter @eduworld/ops-ui test-storybook",
-    "test:visual": "playwright test -c tests/visual/playwright.config.ts --workers=1"
+    "test:visual": "playwright test -c tests/visual/playwright.config.ts --workers=1",
+    "gen:schemas": "pnpm --filter @eduworld/portal gen:schemas"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

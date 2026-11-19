@@ -17807,6 +17807,7 @@ components:
         subject_id: { $ref: '#/components/schemas/Uuid' }
         grade_level: { $ref: '#/components/schemas/GradeLevel' }
         sort_order: { type: integer, minimum: 1 }
+        row_version: { type: integer, minimum: 1, readOnly: true, description: 'Phiên bản dòng — giá trị ETag W/"<row_version>" để gửi If-Match khi sửa/kéo-thả từ danh sách (F053-AC-27; backend F021 bổ sung)' }
     LearningObjective:
       type: object
       required: [objective_id, code, description]
@@ -17828,6 +17829,7 @@ components:
           type: array
           maxItems: 20
           items: { $ref: '#/components/schemas/Uuid' }
+        row_version: { type: integer, minimum: 1, readOnly: true, description: 'Phiên bản dòng — giá trị ETag W/"<row_version>" để gửi If-Match khi sửa từ danh sách (F053-AC-28; backend F021 bổ sung)' }
     MasteryLevel:
       type: string
       enum: [not_started, beginning, developing, proficient, mastered]
@@ -18527,6 +18529,12 @@ components:
         updated_at: { $ref: '#/components/schemas/Timestamp' }
         content_language: { $ref: '#/components/schemas/ContentLanguage' }
         translation_status: { $ref: '#/components/schemas/TranslationStatus', readOnly: true }
+        outdated_fields:
+          type: array
+          readOnly: true
+          maxItems: 500
+          description: 'JSON pointer các trường có bản dịch lỗi thời so với bản gốc (huy hiệu "Lỗi thời" theo trường, CONTENT_MODEL §8; F053). Rỗng/vắng = không có'
+          items: { type: string, maxLength: 256 }
     QuestionAuthoringInput:
       type: object
       description: |
@@ -18558,6 +18566,10 @@ components:
           properties:
             content_item_id: { $ref: '#/components/schemas/Uuid' }
             block_id: { type: string, minLength: 1, maxLength: 64 }
+        audio_exempt_reason:
+          type: string
+          maxLength: 255
+          description: 'Lý do miễn lồng tiếng đề cho khối 1–3 (CONTENT_MODEL §8.1); có lý do thì submit_review không đòi stem.audio_ref, reviewer phải xác nhận khi approve (F025)'
         min_response_ms: { type: integer, minimum: 0, maximum: 600000 }
         max_score: { type: number, exclusiveMinimum: 0, maximum: 99999.99, default: 1 }
         math_assets:
@@ -20818,6 +20830,19 @@ components:
               activity_id: { $ref: '#/components/schemas/Uuid' }
               required: { type: boolean }
         content_language: { $ref: '#/components/schemas/ContentLanguage' }
+        math_assets:
+          type: array
+          maxItems: 50
+          description: 'Công thức của các khối rich_text/worked_example đã render trên portal (ADR-0055) — cùng shape QuestionAuthoringInput.math_assets (F053, F054)'
+          items:
+            type: object
+            additionalProperties: false
+            required: [latex, speech_text]
+            properties:
+              latex: { type: string, minLength: 1, maxLength: 2000 }
+              svg: { type: string, maxLength: 262144, description: 'SVG ≤ 256 KB (math_svg_max), chỉ gửi lên' }
+              svg_asset: { type: string, maxLength: 128, pattern: '^math/[0-9a-f]{64}\.svg$' }
+              speech_text: { type: string, maxLength: 1000 }
     LearningMaterialAuthoringInput:
       type: object
       description: Học liệu (F024) — như lesson, không có completion_rule/estimated_minutes, thêm material_kind

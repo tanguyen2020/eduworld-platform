@@ -49,5 +49,274 @@
     "rarity": "Độ hiếm",
     "content_status": "Trạng thái nội dung",
     "brand": "Thương hiệu"
+  },
+  "editor": {
+    "statusBar": "Trạng thái và thao tác",
+    "version": "Phiên bản {{version}}",
+    "publishedVersion": "Đã xuất bản v{{version}}",
+    "readOnly": "Chỉ đọc",
+    "save": {
+      "saving": "Đang lưu…",
+      "savedAt": "Đã lưu lúc {{time}}",
+      "error": "Lỗi lưu, thử lại",
+      "conflict": "Có người khác vừa sửa",
+      "retry": "Thử lại"
+    },
+    "action": {
+      "save": "Lưu",
+      "submit_review": "Gửi duyệt",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "publish": "Xuất bản ngay",
+      "new_draft": "Tạo bản nháp từ v{{version}}"
+    },
+    "blockers": {
+      "title": "Chưa thể gửi duyệt hoặc xuất bản, còn thiếu:"
+    },
+    "conflict": {
+      "title": "Người khác đã sửa bản nháp này",
+      "description": "Tự động lưu đã dừng. Thay đổi của bạn vẫn ở trên màn hình và không ghi đè bản của người khác. Hãy sao chép phần cần giữ rồi tải bản mới.",
+      "reload": "Tải bản mới",
+      "copyMine": "Sao chép thay đổi của tôi"
+    }
+  },
+  "math": {
+    "renderFailed": "Công thức không hiển thị được",
+    "inline": "Trong dòng",
+    "block": "Riêng một dòng",
+    "visualUnavailable": "Không tải được trình nhập trực quan; hãy nhập mã LaTeX.",
+    "source": "Mã LaTeX của {{label}}",
+    "preview": "Xem trước công thức",
+    "insert": "∑ Công thức",
+    "insertTitle": "Chèn công thức",
+    "insertOk": "Chèn",
+    "cancel": "Hủy",
+    "formula": "Công thức",
+    "keyboard": {
+      "math": "Toán",
+      "mathTooltip": "Phân số, căn, lũy thừa, chỉ số, ma trận",
+      "physics": "Lý",
+      "physicsTooltip": "Vectơ, chữ Hy Lạp, đơn vị",
+      "chemistry": "Hóa",
+      "chemistryTooltip": "Công thức hóa học, phương trình phản ứng"
+    },
+    "error": {
+      "MATH_EMPTY": "Công thức đang trống.",
+      "MATH_TOO_LONG": "Công thức dài quá {{max}} ký tự.",
+      "MATH_TOO_DEEP": "Công thức lồng nhau quá {{detail}} mức.",
+      "MATH_FORBIDDEN_COMMAND": "Lệnh {{detail}} không được phép trong công thức.",
+      "MATH_SYNTAX": "Công thức sai cú pháp.",
+      "MATH_SVG_TOO_LARGE": "Công thức quá lớn để hiển thị."
+    }
+  },
+  "bilingual": {
+    "inputLabel": "{{label}} ({{lang}})",
+    "lang": {
+      "vi": "Tiếng Việt",
+      "en": "Tiếng Anh"
+    },
+    "original": "Gốc",
+    "originalRequired": "Bắt buộc nhập bản theo ngôn ngữ gốc.",
+    "tab": {
+      "vi": "VI",
+      "en": "EN"
+    },
+    "status": {
+      "complete": "Đủ",
+      "partial": "Thiếu bản dịch",
+      "missing_original": "Thiếu bản gốc",
+      "outdated": "Lỗi thời"
+    }
+  },
+  "richContent": {
+    "block": {
+      "paragraph": "Đoạn văn",
+      "heading": "Tiêu đề",
+      "list": "Danh sách",
+      "math": "Công thức",
+      "image": "Hình ảnh",
+      "audio": "Âm thanh",
+      "video": "Video",
+      "table": "Bảng",
+      "callout": "Ghi chú nổi bật"
+    },
+    "headingLevel": "Cấp tiêu đề",
+    "listItem": "Mục {{n}}",
+    "remove": "Xóa",
+    "addItem": "Thêm mục",
+    "noMedia": "Chưa chọn tệp",
+    "alt": "Mô tả ảnh (alt)",
+    "altRequired": "Ảnh phải có mô tả.",
+    "moveUp": "Chuyển lên trên",
+    "moveDown": "Chuyển xuống dưới",
+    "up": "Lên",
+    "down": "Xuống",
+    "addBlock": "Thêm khối nội dung",
+    "cell": "Ô hàng {{row}} cột {{col}}",
+    "addRow": "Thêm hàng",
+    "addColumn": "Thêm cột"
+  },
+  "workedExample": {
+    "title": "Ví dụ mẫu",
+    "problem": "Đề bài",
+    "step": "Bước {{n}}",
+    "removeStep": "Xóa bước",
+    "stepContent": "Nội dung bước",
+    "audioRequired": "Âm thanh đọc bước (bắt buộc với lớp 1–3)",
+    "audioOptional": "Âm thanh đọc bước (tùy chọn)",
+    "addStep": "Thêm bước (tối đa {{max}})",
+    "selfExplain": "Câu hỏi tự giải thích (tùy chọn)",
+    "issues": "Lỗi của ví dụ mẫu",
+    "issue": {
+      "STEPS_MIN": "Cần ít nhất {{min}} bước.",
+      "STEPS_MAX": "Tối đa {{max}} bước.",
+      "STEP_AUDIO_REQUIRED": "Bước {{n}} thiếu âm thanh đọc.",
+      "ID_DUPLICATE": "Mã khối trùng với khối khác trong phiên bản.",
+      "ID_INVALID": "Mã khối không hợp lệ.",
+      "PROBLEM_REQUIRED": "Cần nhập đề bài."
+    }
+  },
+  "question": {
+    "type": "Dạng câu hỏi",
+    "typeAdvanced": "{{type}} (nâng cao)",
+    "types": {
+      "single_choice": "Một lựa chọn đúng",
+      "multiple_choice": "Nhiều lựa chọn đúng",
+      "true_false": "Đúng/Sai",
+      "fill_in_blank": "Điền vào chỗ trống",
+      "short_answer": "Trả lời ngắn",
+      "numeric": "Đáp số",
+      "matching": "Nối cặp",
+      "ordering": "Sắp xếp thứ tự",
+      "drag_drop": "Kéo thả vào vùng",
+      "image_based": "Câu hỏi dựa trên hình",
+      "interactive": "Tương tác / mô phỏng"
+    },
+    "changeTypeTitle": "Đổi dạng câu hỏi?",
+    "changeTypeMessage": "Phần đáp án hiện tại không dùng được cho dạng mới và sẽ bị xóa.",
+    "changeTypeOk": "Đổi dạng",
+    "expressionWarning": "Câu hỏi có công thức nhưng học sinh phải gõ đáp án. Trong game học sinh không gõ được biểu thức (ADR-0055): hãy dùng dạng chọn đáp án, nhập số hoặc điền số/từ.",
+    "stem": "Đề bài",
+    "stemAudio": "Âm thanh đọc đề",
+    "stemAudioRequired": "Câu hỏi cho lớp 1–3 phải có âm thanh đọc đề (hoặc lý do miễn).",
+    "answerSection": "Đáp án",
+    "scoring": "Cách chấm",
+    "scoringMethods": {
+      "all_or_nothing": "Đúng toàn bộ mới có điểm",
+      "right_minus_wrong": "Đúng trừ sai",
+      "proportional": "Theo tỉ lệ đúng",
+      "position": "Theo số mục đúng vị trí",
+      "adjacent_pairs": "Theo cặp kề đúng thứ tự"
+    },
+    "explanationSection": "Giải thích và gợi ý",
+    "explanation": "Giải thích",
+    "hints": "Gợi ý (tối đa {{max}} cấp)",
+    "hintLevel": "Gợi ý cấp {{n}}",
+    "removeHint": "Xóa gợi ý",
+    "addHint": "Thêm gợi ý",
+    "misconceptionTag": "Mã quan niệm sai (misconception_tag)",
+    "optionFeedback": "Phản hồi khi học sinh chọn phương án này",
+    "option": "Phương án {{n}}",
+    "addOption": "Thêm phương án (tối đa {{max}})",
+    "shuffleOptions": "Trộn thứ tự phương án",
+    "showCorrectCount": "Cho biết số đáp án đúng",
+    "correctAnswer": "Đáp án đúng",
+    "true": "Đúng",
+    "false": "Sai",
+    "tfMulti": "Nhiều mệnh đề",
+    "tfSingle": "Một mệnh đề",
+    "statement": "Mệnh đề {{n}}",
+    "accepted": "Đáp án chấp nhận (Enter để thêm)",
+    "match": "Cách so khớp",
+    "matchNormalized": "Chuẩn hóa",
+    "matchExact": "Chính xác",
+    "caseSensitive": "Phân biệt chữ hoa, chữ thường",
+    "allowDiacriticsMissing": "Chấp nhận thiếu dấu",
+    "blankHelp": "Mỗi chỗ trống được đánh dấu trong đề bằng {{marker}}. Bấm \"Chèn vào đề\" để thêm dấu vào đoạn văn đầu tiên.",
+    "blank": "Chỗ trống {{n}}",
+    "insertBlank": "Chèn vào đề",
+    "blankInput": "Kiểu nhập",
+    "blankInputs": {
+      "text": "Gõ chữ",
+      "numeric": "Gõ số",
+      "word_bank": "Ngân hàng từ",
+      "dropdown": "Danh sách chọn"
+    },
+    "maxLength": "Độ dài tối đa",
+    "choices": "Các lựa chọn",
+    "addBlank": "Thêm chỗ trống",
+    "wordBank": "Ngân hàng từ",
+    "keyboard": "Bàn phím",
+    "keyboards": {
+      "text": "Chữ",
+      "numeric": "Số"
+    },
+    "numericValue": "Đáp số",
+    "tolerance": "Dung sai",
+    "tolerances": {
+      "exact": "Chính xác",
+      "absolute": "Tuyệt đối",
+      "relative": "Tương đối"
+    },
+    "toleranceValue": "Giá trị dung sai",
+    "unitLabel": "Đơn vị",
+    "allowFraction": "Cho nhập phân số",
+    "acceptEquivalent": "Chấp nhận dạng tương đương",
+    "decimalSeparator": "Dấu thập phân",
+    "leftColumn": "Cột trái",
+    "rightColumn": "Cột phải (có thể có mục mồi)",
+    "pairWith": "Ghép với",
+    "rightItem": "Mục phải {{n}} ({{id}})",
+    "orderingHelp": "Xếp các mục theo thứ tự đúng; game sẽ trộn khi hiển thị.",
+    "orderItem": "Mục {{n}}",
+    "zones": "Vùng thả",
+    "zone": "Vùng {{n}} ({{id}})",
+    "zoneShort": "Vùng {{n}} ({{id}})",
+    "capacity": "Sức chứa",
+    "addZone": "Thêm vùng",
+    "draggables": "Thẻ kéo",
+    "draggable": "Thẻ {{n}}",
+    "placeIn": "Thả vào vùng",
+    "distractor": "Thẻ mồi (không thuộc vùng nào)",
+    "reusableDraggables": "Dùng lại thẻ nhiều lần",
+    "imageWidth": "Chiều rộng ảnh (px)",
+    "imageHeight": "Chiều cao ảnh (px)",
+    "interaction": "Kiểu tương tác",
+    "interactions": {
+      "hotspot": "Chọn vùng trên ảnh",
+      "label": "Gắn nhãn lên ảnh"
+    },
+    "regionsHelp": "Vùng đúng tính theo tọa độ của ảnh gốc và chỉ lưu phía server.",
+    "shape": "Hình dạng",
+    "shapes": {
+      "circle": "Hình tròn",
+      "rect": "Hình chữ nhật"
+    },
+    "addRegion": "Thêm vùng",
+    "addDropPoint": "Thêm điểm thả",
+    "label": "Nhãn {{n}}",
+    "widget": "Widget",
+    "widgetVersion": "Phiên bản widget",
+    "validator": "Validator",
+    "widgetConfig": "Cấu hình widget (JSON)",
+    "validatorParams": "Tham số validator (JSON)",
+    "jsonHelp": "Nhập JSON; giá trị được áp dụng khi rời ô.",
+    "coords": {
+      "cx": "Tâm x",
+      "cy": "Tâm y",
+      "r": "Bán kính",
+      "x": "Tọa độ x",
+      "y": "Tọa độ y",
+      "w": "Chiều rộng",
+      "h": "Chiều cao"
+    }
+  },
+  "preview": {
+    "title": "Như học sinh thấy",
+    "image": "[Ảnh: {{alt}}]",
+    "audio": "[Âm thanh]",
+    "blanks": "{{n}} chỗ trống để học sinh điền",
+    "trueFalse": "Học sinh chọn Đúng hoặc Sai",
+    "numeric": "Học sinh nhập một số {{unit}}"
   }
 }
