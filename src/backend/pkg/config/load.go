@@ -18,7 +18,8 @@ import (
 
 // Config is a read-only view of the environment taken at Load time.
 type Config struct {
-	k *koanf.Koanf
+	k   *koanf.Koanf
+	get func(string) string // FromGetenv: every key is read through this function
 }
 
 // Load snapshots EW_* and OTEL_* environment variables.
@@ -30,12 +31,28 @@ func Load() *Config {
 	return &Config{k: k}
 }
 
+// FromGetenv reads every key through getenv (os.Getenv in a binary, a map lookup in its tests), so the
+// composition root and its tests read the configuration from the same source as bootstrap.Options.Getenv.
+func FromGetenv(getenv func(string) string) *Config {
+	if getenv == nil {
+		return Load()
+	}
+	return &Config{get: getenv}
+}
+
+func (c *Config) raw(key string) string {
+	if c.get != nil {
+		return c.get(key)
+	}
+	return c.k.String(key)
+}
+
 // lookup returns the value of key, else the content of the file named by key_FILE.
 func (c *Config) lookup(key string) (string, bool, error) {
-	if v := strings.TrimSpace(c.k.String(key)); v != "" {
+	if v := strings.TrimSpace(c.raw(key)); v != "" {
 		return v, true, nil
 	}
-	if f := strings.TrimSpace(c.k.String(key + "_FILE")); f != "" {
+	if f := strings.TrimSpace(c.raw(key + "_FILE")); f != "" {
 		b, err := os.ReadFile(f)
 		if err != nil {
 			return "", false, fmt.Errorf("%s_FILE: cannot read secret file", key)

@@ -12,11 +12,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/cmd/internal/wiring"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/bootstrap"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
@@ -86,26 +83,16 @@ func modulesFor(profile string) []string {
 	if profile == "chat" {
 		return []string{chat.Name}
 	}
-	return []string{identity.Name, learning.Name, game.Name, competition.Name, chat.Name}
+	return wiring.Modules
 }
 
+// registerFor composes the modules of the profile (OQ F010-2): events runs the outbox relays and consumers, jobs
+// the scheduled jobs, all both (local). Chat consumers and the gameplay purge come with the chat features.
 func registerFor(profile string, r *module.Registry) error {
 	if profile == "chat" {
 		_, err := chat.Register(r)
 		return err
 	}
-	if _, err := identity.Register(r); err != nil {
-		return err
-	}
-	if _, err := learning.Register(r); err != nil {
-		return err
-	}
-	if _, err := game.Register(r); err != nil {
-		return err
-	}
-	if _, err := competition.Register(r); err != nil {
-		return err
-	}
-	_, err := chat.Register(r)
+	_, err := wiring.Compose(r)
 	return err
 }

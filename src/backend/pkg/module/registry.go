@@ -8,6 +8,7 @@ package module
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -28,6 +29,8 @@ type Registry struct {
 
 	mu    sync.Mutex
 	pools map[string]*pgxpool.Pool
+
+	res resources // resources.go: SQL pools by role, NATS, Valkey, background workers, public handler
 }
 
 // NewRegistry creates the registry. getenv is os.Getenv in production and a map lookup in tests.
@@ -35,7 +38,8 @@ func NewRegistry(binary, profile string, h *health.Registry, getenv func(string)
 	if getenv == nil {
 		getenv = os.Getenv
 	}
-	return &Registry{binary: binary, profile: profile, health: h, getenv: getenv, pools: map[string]*pgxpool.Pool{}}
+	return &Registry{binary: binary, profile: profile, health: h, getenv: getenv, pools: map[string]*pgxpool.Pool{},
+		res: resources{sqls: map[string]*sql.DB{}, cores: map[string]*Core{}}}
 }
 
 // Binary is the running binary name (core-api, realtime, worker).
@@ -96,6 +100,7 @@ func (r *Registry) dsn(module string) (string, error) {
 func (r *Registry) Close() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.closeResources()
 	for name, p := range r.pools {
 		p.Close()
 		delete(r.pools, name)

@@ -1,5 +1,5 @@
 # realtime image (F001 T039/T047): WebSocket binary, no database. Same hardening as core-api.
-FROM golang:1.26-alpine AS build
+FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY src/backend/go.mod src/backend/go.sum ./
 RUN go mod download

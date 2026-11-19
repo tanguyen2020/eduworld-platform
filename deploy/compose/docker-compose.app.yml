@@ -5,10 +5,61 @@ name: eduworld
 
 x-db-env: &db-env
   EW_DB_IDENTITY_DSN: postgres://identity_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+  EW_DB_IDENTITY_PLATFORM_DSN: postgres://identity_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+  EW_DB_IDENTITY_RELAY_DSN: postgres://identity_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
   EW_DB_LEARNING_DSN: postgres://learning_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
+  EW_DB_LEARNING_PLATFORM_DSN: postgres://learning_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
+  EW_DB_LEARNING_RELAY_DSN: postgres://learning_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
   EW_DB_GAME_DSN: postgres://game_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
+  EW_DB_GAME_PLATFORM_DSN: postgres://game_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
+  EW_DB_GAME_RELAY_DSN: postgres://game_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
   EW_DB_COMPETITION_DSN: postgres://competition_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_competition?sslmode=disable
+  EW_DB_COMPETITION_PLATFORM_DSN: postgres://competition_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_competition?sslmode=disable
+  EW_DB_COMPETITION_RELAY_DSN: postgres://competition_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_competition?sslmode=disable
   EW_DB_CHAT_DSN: postgres://chat_app:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
+  EW_DB_CHAT_PLATFORM_DSN: postgres://chat_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
+  EW_DB_CHAT_RELAY_DSN: postgres://chat_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
+  EW_DB_IDENTITY_PARTITION_ADMIN_DSN: postgres://identity_partition_admin:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+
+# Module configuration of core-api and worker (LOCAL_DEVELOPMENT §4; OQ F010-2). Local values only: secrets use the
+# same change-me-local defaults as deploy/keycloak (KC_*_SECRET) and can be overridden from the shell.
+x-module-env: &module-env
+  EW_PAGE_CURSOR_KEY: ${EW_PAGE_CURSOR_KEY:-change-me-local-cursor-key-0123456789abcdef}
+  EW_OPENAPI_SPEC: /app/specs/openapi/eduworld-api.v1.yaml
+  EW_PORTAL_MENU_CATALOG: /app/specs/portal/menu-catalog.yaml
+  # Tokens are issued through the backend login (ADR-0068, ADR-0091): core-api calls Keycloak at keycloak:8180,
+  # so the issuer of every token verified by the containers is http://keycloak:8180/realms/eduworld.
+  EW_OIDC_ISSUERS: http://keycloak:8180/realms/eduworld
+  EW_OIDC_AUDIENCE: eduworld-api
+  EW_OIDC_ALLOWED_AZP: eduworld-game-backend,eduworld-portal
+  EW_OIDC_PLATFORM_REQUIRED_AMR: otp
+  EW_KC_ADMIN_BASE_URL: http://keycloak:8180/admin/realms/eduworld
+  EW_KC_ADMIN_CLIENT_ID: svc-identity
+  EW_KC_ADMIN_CLIENT_SECRET: ${KC_SVC_IDENTITY_SECRET:-change-me-local}
+  EW_KC_PORTAL_CLIENT_ID: eduworld-portal
+  EW_KC_PORTAL_CLIENT_SECRET: ${KC_PORTAL_CLIENT_SECRET:-change-me-local}
+  EW_KC_GAME_CLIENT_ID: eduworld-game-backend
+  EW_KC_GAME_CLIENT_SECRET: ${KC_GAME_BACKEND_SECRET:-change-me-local}
+  # base64 of 32 bytes (AES-256-GCM of login tickets): `make up-app` generates one per start when unset.
+  EW_GAME_LOGIN_TICKET_KEY: ${EW_GAME_LOGIN_TICKET_KEY:-}
+  EW_LOGIN_IP_HASH_KEY: ${EW_LOGIN_IP_HASH_KEY:-change-me-local-login-ip-hash-key-0123}
+  EW_GAME_IP_HASH_KEY: ${EW_GAME_IP_HASH_KEY:-change-me-local-game-ip-hash-key-01234}
+  EW_GAME_MIN_CLIENT_VERSION: ${EW_GAME_MIN_CLIENT_VERSION:-0.1.0}
+  EW_GAME_LOGIN_URL: http://localhost:9080/api/v1/auth/game/login
+  EW_PORTAL_BASE_URL: http://localhost:5173
+  EW_SMTP_HOST: mailpit
+  EW_SMTP_PORT: "1025"
+  EW_SMTP_FROM: no-reply@eduworld.local
+  EW_S3_ENDPOINT: http://floci:4566
+  EW_S3_REGION: us-east-1
+  EW_S3_ACCESS_KEY: ${EW_S3_ACCESS_KEY:-test}
+  EW_S3_SECRET_KEY: ${EW_S3_SECRET_KEY:-test}
+  EW_CDN_BASE_URL: http://localhost:8090
+  EW_CDN_SIGNING_KEY: ${EW_CDN_SIGNING_KEY:-change-me-local}
+  EW_MEDIA_SCAN: ${EW_MEDIA_SCAN:-disabled}
+  EW_CLAMAV_ADDR: clamav:3310
+  EW_SIS_SECRETS_DIR: /run/eduworld/sis-secrets
+  EW_SIS_ALLOW_HTTP_BASE_URL: "true"
 
 x-common-env: &common-env
   EW_ENV: local
@@ -42,10 +93,12 @@ services:
         BUILD_TIME: ${EW_BUILD_TIME:-unknown}
     image: eduworld/core-api:local
     environment:
-      <<: [*common-env, *db-env]
+      <<: [*common-env, *db-env, *module-env]
       EW_HTTP_ADDR: ":8100"
       OTEL_SERVICE_NAME: core-api
     ports: ["8100:8100", "9100:9090"]
+    volumes: &sis-secrets
+      - ${EW_SIS_SECRETS_HOST_DIR:-./sis-secrets.example}:/run/eduworld/sis-secrets:ro
     depends_on: *app-deps
     healthcheck:
       <<: *hc
@@ -79,9 +132,10 @@ services:
     image: eduworld/worker:local
     command: ["--profile=all"]
     environment:
-      <<: [*common-env, *db-env]
+      <<: [*common-env, *db-env, *module-env]
       OTEL_SERVICE_NAME: worker
     ports: ["9200:9090"]
+    volumes: *sis-secrets
     depends_on: *app-deps
     healthcheck:
       <<: *hc

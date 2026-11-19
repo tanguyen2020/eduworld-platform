@@ -2,7 +2,7 @@
 # Runs as a one-off job per database: `migrate --module=<module>` or `migrate --all`.
 FROM arigaio/atlas:0.38.0 AS atlas
 
-FROM golang:1.26-alpine AS build
+FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY src/backend/go.mod src/backend/go.sum ./
 RUN go mod download

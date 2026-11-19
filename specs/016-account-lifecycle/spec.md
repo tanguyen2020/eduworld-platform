@@ -28,6 +28,7 @@
 - OQ F016-5: `Idempotency-Key` của mỗi bước saga là UUIDv7 tất định (thời điểm bắt đầu saga + hash bước); TTL idempotency của facade giới hạn lần thử lại muộn [Proposed].
 - OQ F016-6: `resetStudentPassword` thu hồi phiên game trong transaction riêng sau khi ghi event [Proposed].
 - OQ F016-7: Binary chưa nối route/consumer/job của F016 (OQ F010-2). F016-AC-24 đã kiểm từng chặng (payload đọc từ outbox đúng schema và đưa vào consumer thật; consumer F013/F014 có test fixture); kiểm end-to-end core-api + worker làm khi nối binary.
+  - 2026-11-20 [Proposed]: binary đã nối theo OQ F010-2 (specs/010-tenant-org-structure/spec.md, phiên "nối binary"): `module.go` của module khai báo route/relay/consumer/job, `cmd/internal/wiring.Compose` ghép module.
 - OQ F016-8: "Còn hợp lệ trong SIS" khi khôi phục lúc đăng nhập = link SIS active của user trỏ tới bản ghi `sis.synced_students` `record_status = active`; user không có link SIS (tenant chung, tài khoản tạo tay) coi là hợp lệ [Proposed].
 - OQ F016-9: Tenant Admin khôi phục từ Thùng rác không kiểm SIS (người dùng quyết định) [Proposed].
 - OQ F016-10: Realm đặt `editUsernameAllowed: false` nên khi ẩn danh hóa, user Keycloak bị tắt và xóa email/họ tên/thuộc tính nhưng giữ username; username trong `identity.users` đổi thành `anon.<user_id>`. Cần quyết định có bật sửa username hay đặt quy ước username không chứa tên thật.

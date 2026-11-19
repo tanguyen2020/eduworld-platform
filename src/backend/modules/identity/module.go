@@ -6,10 +6,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"os"
 
+	"github.com/go-chi/chi/v5"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/featuretoggle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/seed"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalcatalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/sisinternal"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/migrations"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
@@ -19,12 +24,48 @@ import (
 // Name is the module name used for its database (eduworld_identity), env prefix and checks.
 const Name = "identity"
 
-// Module is the registered module. Facade() and Wire(Imports) are added when the module exposes or
-// consumes facade operations (specs/openapi/modules/*.internal.v1.yaml).
-type Module struct{}
+// Module is the registered module.
+type Module struct {
+	r          *module.Registry
+	facade     Facade
+	toggles    featuretoggle.Source
+	hasToggles bool
+	webhook    sisinternal.Webhook
+	wired      bool
+}
 
-// Register wires the module into the running binary. F001: health checks only; routes, consumers,
-// jobs and facades are added by the features that own them.
+// Facade returns the in-process facade of module identity (nil before Wire or in a binary without its use cases).
+func (m *Module) Facade() Facade { return m.facade }
+
+// Wire connects the facades of the modules identity calls and builds the use cases, routes, consumers and jobs
+// of module identity (OQ F010-2: core-api routes, worker events consumers, worker jobs). The other modules
+// are registered first because the sagas and platform operations call them in process (BACKEND_DESIGN §3.3).
+func (m *Module) Wire(in Imports) error {
+	if m.wired {
+		return fmt.Errorf("identity: Wire called twice")
+	}
+	m.wired = true
+	if !m.r.ServesHTTP() && !m.r.RunsEvents() && !m.r.RunsJobs() {
+		return nil
+	}
+	return build(m.r, m, in)
+}
+
+// SisWebhook is the machine-to-machine SIS webhook handler (sisinternal.Path, F017 US5): the composition root
+// mounts it at the root of the core-api listener, outside /api/v1; the internal gateway alone routes to it.
+func (m *Module) SisWebhook() http.Handler {
+	if m.webhook.Receive == nil {
+		return nil
+	}
+	router := chi.NewRouter()
+	sisinternal.Register(router, m.webhook)
+	return router
+}
+
+// SisWebhookPath is the route pattern of the SIS webhook.
+const SisWebhookPath = sisinternal.Path
+
+// Register opens the module database and its health checks; Wire builds the rest.
 func Register(r *module.Registry) (*Module, error) {
 	db, err := r.Database(Name)
 	if err != nil {
@@ -32,7 +73,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
-	return &Module{}, nil
+	return &Module{r: r}, nil
 }
 
 // SyncAuthzCatalog writes the permission catalog and the system roles of pkg/authz into eduworld_identity

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"sort"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -103,6 +104,10 @@ type Deps struct {
 	Spec *openapi3.T
 	// Idempotency is the store of the module database for idempotent operations (F003 US3).
 	Idempotency *idempotency.Store
+	// IdempotencyStores, when set, holds the store of each module database by Operation.Module (a binary serving
+	// several modules: the record must live in the database of the module whose transaction writes it).
+	// Operations of a module missing from the map use Idempotency.
+	IdempotencyStores map[string]*idempotency.Store
 	// Middlewares run first for every request (request id, OTel, access log — package observability).
 	Middlewares []func(http.Handler) http.Handler
 	// FeatureGate blocks Admin Portal operations whose x-portal-action (or parent menu) is turned off
@@ -117,6 +122,7 @@ type Server struct {
 	router   chi.Router
 	api      chi.Router
 	log      *slog.Logger
+	ops      map[string]Operation // mounted operations by ID (each at most once)
 }
 
 // NewServer builds the server; it registers no route of its own (health endpoints live on the admin port).
@@ -146,7 +152,7 @@ func NewServer(d Deps) (*Server, error) {
 			}
 		}
 	}
-	s := &Server{d: d, verifier: v, log: d.Logger}
+	s := &Server{d: d, verifier: v, log: d.Logger, ops: map[string]Operation{}}
 	r := chi.NewRouter()
 	for _, m := range d.Middlewares {
 		r.Use(m)
@@ -172,6 +178,9 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 	}
 	if strings.HasPrefix(op.Pattern, "/internal/") || strings.Contains(op.Pattern, "/internal/v1/") {
 		return fmt.Errorf("httpx: operation %s: /internal/ routes are never served", op.ID)
+	}
+	if _, dup := s.ops[op.ID]; dup {
+		return fmt.Errorf("httpx: operation %s is already mounted", op.ID)
 	}
 	if op.Public && effectiveGuard(op) != GuardNone {
 		return fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
@@ -204,10 +213,14 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 		chain = op.PreValidate(chain)
 	}
 	if op.Idempotency != IdempotencyNone {
-		if s.d.Idempotency == nil || op.Public {
+		store := s.d.Idempotency
+		if st, ok := s.d.IdempotencyStores[op.Module]; ok {
+			store = st
+		}
+		if store == nil || op.Public {
 			return fmt.Errorf("httpx: operation %s is idempotent but the server has no idempotency store (or is public)", op.ID)
 		}
-		chain = Idempotency(s.d.Idempotency, op)(chain)
+		chain = Idempotency(store, op)(chain)
 	}
 	if gate != nil {
 		chain = gate(chain)
@@ -221,7 +234,18 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 		chain = s.authenticate(chain)
 	}
 	s.api.Method(op.Method, op.Pattern, withOperation(op, chain))
+	s.ops[op.ID] = op
 	return nil
+}
+
+// Operations returns the mounted operations sorted by ID (composition-root wiring tests).
+func (s *Server) Operations() []Operation {
+	out := make([]Operation, 0, len(s.ops))
+	for _, o := range s.ops {
+		out = append(out, o)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out
 }
 
 // ServeHTTP implements http.Handler.

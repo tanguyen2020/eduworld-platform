@@ -77,7 +77,8 @@ up-obs: ## Start observability (otel-collector, Prometheus, Grafana, Loki, Tempo
 .PHONY: up-app run-core-api run-realtime run-worker dev build
 EXCEPT ?=
 up-app: ## Run core-api, realtime, worker in containers (EXCEPT=<binary> to skip one)
-	$(DC) --profile app up -d --build --wait $(filter-out $(EXCEPT),$(BINARIES))
+	EW_GAME_LOGIN_TICKET_KEY=$${EW_GAME_LOGIN_TICKET_KEY:-$$(head -c 32 /dev/urandom | base64)} \
+	  $(DC) --profile app up -d --build --wait $(filter-out $(EXCEPT),$(BINARIES))
 
 run-core-api: ## Run core-api natively (admin :9100, http :8100)
 	$(NATIVE_ENV) $(GO) run -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=core-api" ./cmd/core-api

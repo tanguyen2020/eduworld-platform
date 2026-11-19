@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/cmd/internal/wiring/wiringtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
@@ -28,13 +29,14 @@ func TestWorkerProfileChecks(t *testing.T) {
 	}
 	for profile, want := range cases {
 		t.Run(profile, func(t *testing.T) {
-			env := map[string]string{"EW_ADMIN_ADDR": "127.0.0.1:0", "EW_VALKEY_ADDR": vkAddr, "EW_NATS_URLS": natsURL}
-			for _, m := range testkit.Modules {
-				env["EW_DB_"+strings.ToUpper(m)+"_DSN"] = cluster.ModuleDSN(m, "app")
-			}
+			// The complete configuration of the profile (OQ F010-2: events runs the relays and consumers of every module).
+			env := wiringtest.Env(wiringtest.Options{RepoRoot: testkit.RepoRoot(t), DSN: cluster.ModuleDSN, Issuer: "http://127.0.0.1:1/realms/eduworld",
+				ValkeyAddr: vkAddr, NATSURL: natsURL, SecretsDir: t.TempDir()})
 			if profile == "chat" { // other module databases are not even configured
-				for _, m := range []string{"identity", "learning", "game", "competition"} {
-					delete(env, "EW_DB_"+strings.ToUpper(m)+"_DSN")
+				for k := range env {
+					if strings.HasPrefix(k, "EW_DB_") && !strings.HasPrefix(k, "EW_DB_CHAT_") {
+						delete(env, k)
+					}
 				}
 			}
 			cctx, cancel := context.WithCancel(ctx)

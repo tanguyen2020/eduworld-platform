@@ -96,10 +96,15 @@ func Run(ctx context.Context, o Options) error {
 		workers.Go(w.Name, w.Run)
 	}
 
+	reg.SetNATS(nc)
 	if o.Register != nil {
 		if err := o.Register(reg); err != nil {
 			return fmt.Errorf("register modules: %w", err)
 		}
+	}
+	// Module workers (outbox relays, consumers, jobs) start once every module is registered and wired.
+	for _, w := range reg.Workers() {
+		workers.Go(w.Name, w.Run)
 	}
 
 	var lc net.ListenConfig
@@ -118,6 +123,9 @@ func Run(ctx context.Context, o Options) error {
 			return fmt.Errorf("public listener: %w", err)
 		}
 		h := o.Public
+		if p := reg.Public(); p != nil {
+			h = p
+		}
 		if h == nil {
 			h = http.NotFoundHandler()
 		}

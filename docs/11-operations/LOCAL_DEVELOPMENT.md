@@ -177,6 +177,30 @@ Biến riêng các module khác (rút gọn):
 | competition | `EW_MM_TICK=500ms` (matchmaker trong profile `jobs`), `EW_BATTLE_ROOM_CHECKPOINT=5s`, `EW_RT_HUB_TICK_HZ=10`, `EW_RT_HUB_INSTANCE_CAPACITY=40` (room host của module competition chạy trong `core-api`) |
 | realtime | `EW_CORS_ALLOWED_ORIGINS=http://localhost:5173` |
 
+
+Biến của composition root `core-api`/`worker` (nối binary, OQ F010-2 — giá trị local trong `deploy/compose/docker-compose.app.yml`, anchor `x-module-env`; thiếu biến bắt buộc thì binary dừng và báo **tên** biến):
+
+| Biến | Binary | Dùng cho |
+|---|---|---|
+| `EW_DB_<MODULE>_PLATFORM_DSN`, `EW_DB_<MODULE>_RELAY_DSN` (bắt buộc), `EW_DB_<MODULE>_READ_DSN` (tùy chọn) | `core-api`, `worker` | Pool theo role của `pkg/module.Registry.SQL` (bảng trên); relay chỉ mở ở profile `events`/`all` |
+| `EW_DB_IDENTITY_PARTITION_ADMIN_DSN` | `worker` (`jobs`/`all`) | Job `partition-maintainer` của module identity (`audit.audit_logs`, `identity.login_events`) |
+| `EW_OPENAPI_SPEC` | `core-api` | Đường dẫn `specs/openapi/eduworld-api.v1.yaml` để validate request (image: `/app/specs/openapi/…`) |
+| `EW_PORTAL_MENU_CATALOG` | `core-api`, `worker` | Danh mục menu portal (workspace của `/me/permissions`, featuregate) — cũng dùng cho `cmd/migrate` |
+| `EW_PAGE_CURSOR_KEY` / `_FILE` | `core-api`, `worker` | Khóa HMAC cursor phân trang (≥ 32 byte, `pkg/page`), giống nhau ở mọi replica |
+| `EW_PRINCIPAL_CACHE_TTL` (60s), `EW_PRINCIPAL_CACHE_L1_TTL` (15s), `EW_PRINCIPAL_CACHE_L1_SIZE` (10000) | `core-api` | Cache Principal (`principal_cache`, CONFIG_DEFAULTS) |
+| `EW_FEATURE_TOGGLE_CACHE_TTL` (60s) | `core-api` | Cache featuregate (`feature_toggle_cache_ttl`) |
+| `EW_OIDC_JWKS_REFRESH` (10m), `EW_OIDC_JWKS_MIN_UNKNOWN_KID_INTERVAL` (1m) | `core-api` | Làm mới JWKS theo nền và khi gặp `kid` lạ [Proposed] |
+| `EW_NATS_STREAM_REPLICAS` (1) | `worker` | Số replica của `EVT_*`/`DLQ_*`/`IDENTITY_SIS_JOBS` khi worker tạo stream (prod: 3) |
+| `EW_VALKEY_USERNAME`, `EW_VALKEY_PASSWORD` / `_FILE` | `core-api`, `worker` | Một client Valkey cho mỗi binary tới khi có ACL user theo module [Proposed] |
+| `EW_S3_TIMEOUT` | `core-api`, `worker` | Timeout mỗi request object storage (mặc định adapter) |
+| `EW_SIS_IMPORT_BUCKET` (`ew-sis-imports`) | `core-api`, `worker` | Bucket file CSV SIS (F011) |
+| `EW_SIS_SECRETS_DIR` | `core-api`, `worker` | Thư mục secret SIS `<dir>/<secret_ref>` (OQ F017-3; compose mount `deploy/compose/sis-secrets.example`, đổi bằng `EW_SIS_SECRETS_HOST_DIR`) |
+| `EW_SIS_ALLOW_HTTP_BASE_URL`, `EW_SIS_EGRESS_PROXY_URL`, `EW_SIS_ID_HASH_KEY` | `core-api`, `worker` | Client `contract_v1` (http chỉ cho `sis-mock`), proxy egress, khóa băm định danh khi khớp chuyển trường |
+| `EW_CLAMAV_ADDR` | `worker` | clamd quét file CSV SIS (compose profile `media`); learning dùng `EW_MEDIA_SCAN` |
+| `EW_MEDIA_WORK_DIR` | `worker` | Thư mục tạm của media worker (mặc định thư mục tạm của hệ điều hành) |
+
+Issuer trong container là `http://keycloak:8180/realms/eduworld`: token chỉ được cấp qua backend (`/auth/game/login`, `/auth/portal/login`), nên mọi token mà `core-api` kiểm đều mang issuer đó; chạy `core-api` native thì đặt `EW_OIDC_ISSUERS=http://localhost:8180/realms/eduworld` và `EW_KC_ADMIN_BASE_URL=http://localhost:8180/admin/realms/eduworld`. `make up-app` sinh `EW_GAME_LOGIN_TICKET_KEY` ngẫu nhiên mỗi lần khởi động nếu shell chưa đặt.
+
 Giá trị nghiệp vụ (cleanup_days, retention_days…) nằm trong bảng settings của module sở hữu, không nằm trong env; giá trị mặc định tra ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md).
 
 Godot đọc cấu hình môi trường từ `res://config/env/<env>.json` (sinh lúc build theo `--env`; không chứa secret, không có khóa OIDC — ADR-0068); phần còn lại lấy từ `GET /game/client-config`. Ví dụ `res://config/env/local.json`:

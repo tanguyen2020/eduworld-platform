@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/cmd/internal/wiring/wiringtest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
@@ -22,16 +24,12 @@ type readiness struct {
 	} `json:"checks"`
 }
 
-func envFor(c *testkit.Cluster, valkey, nats string) func(string) string {
-	env := map[string]string{
-		"EW_ADMIN_ADDR":  "127.0.0.1:0",
-		"EW_HTTP_ADDR":   "127.0.0.1:0",
-		"EW_VALKEY_ADDR": valkey,
-		"EW_NATS_URLS":   nats,
-	}
-	for _, m := range testkit.Modules {
-		env["EW_DB_"+strings.ToUpper(m)+"_DSN"] = c.ModuleDSN(m, "app")
-	}
+// envFor is the complete configuration of core-api on the test cluster, with a fake OIDC issuer (httpxtest.IDP)
+// so the readiness check jwks passes (OQ F010-2: core-api serves every module and needs its whole configuration).
+func envFor(t *testing.T, c *testkit.Cluster, valkey, nats string) func(string) string {
+	t.Helper()
+	env := wiringtest.Env(wiringtest.Options{RepoRoot: testkit.RepoRoot(t), DSN: c.ModuleDSN, Issuer: httpxtest.NewIDP(t).Issuer(),
+		ValkeyAddr: valkey, NATSURL: nats, SecretsDir: t.TempDir()})
 	return func(k string) string { return env[k] }
 }
 
@@ -83,7 +81,7 @@ func TestCoreAPIReadinessFollowsDependencies(t *testing.T) {
 	vk, vkAddr := testkit.StartValkey(ctx, t)
 	_, natsURL := testkit.StartNATS(ctx, t)
 
-	admin, stop := startCoreAPI(t, envFor(cluster, vkAddr, natsURL))
+	admin, stop := startCoreAPI(t, envFor(t, cluster, vkAddr, natsURL))
 	defer stop()
 
 	code, body := waitReady(t, admin, 30*time.Second)
@@ -133,7 +131,7 @@ func TestCoreAPIDoesNotAutoMigrate(t *testing.T) {
 	_, vkAddr := testkit.StartValkey(ctx, t)
 	_, natsURL := testkit.StartNATS(ctx, t)
 
-	admin, stop := startCoreAPI(t, envFor(cluster, vkAddr, natsURL))
+	admin, stop := startCoreAPI(t, envFor(t, cluster, vkAddr, natsURL))
 	defer stop()
 
 	time.Sleep(time.Second)
