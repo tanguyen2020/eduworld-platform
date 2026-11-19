@@ -49,7 +49,15 @@ type fakeKeycloak struct {
 	actions map[string][]string // username → Keycloak required actions (setup pending when not empty)
 	emails  int                 // execute-actions-email CONFIGURE_TOTP
 	kicked  int                 // Admin logout of every session of a user
+	// F013: the game client eduworld-game-backend shares the fake; sidClient is the azp of each session,
+	// deleted counts Admin DELETE /sessions/{sid}.
+	sidClient map[string]string
+	deleted   int
+	down      bool // every token call answers 503 (F013-AC-21)
 }
+
+// fakeClients are the confidential clients of the fake realm and their secrets.
+var fakeClients = map[string]string{"eduworld-portal": "portal-secret", "eduworld-game-backend": "game-secret"}
 
 type fakeKCUser struct {
 	password, otp string
@@ -67,10 +75,17 @@ func (k *fakeKeycloak) issue(w http.ResponseWriter, sid string) {
 	rt := jwtOf(map[string]any{"sid": sid, "jti": fmt.Sprint(k.seq), "typ": "Refresh"})
 	k.refresh[rt] = sid
 	at := jwtOf(map[string]any{"iss": kcIssuer, "sub": "kc-" + user, "sid": sid, "amr": k.sidAMR[sid], "iat": time.Now().Unix(),
-		"azp": "eduworld-portal", "typ": "Bearer"})
+		"azp": k.azp(sid), "typ": "Bearer"})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"access_token": at, "refresh_token": rt, "expires_in": 300, "refresh_expires_in": 1800,
 		"token_type": "Bearer", "session_state": sid})
+}
+
+func (k *fakeKeycloak) azp(sid string) string {
+	if c := k.sidClient[sid]; c != "" {
+		return c
+	}
+	return "eduworld-portal"
 }
 
 func oauthErr(w http.ResponseWriter, status int, code, desc string) {
@@ -93,7 +108,12 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		k.adminAPI(w, r, raw)
 		return
 	}
-	if f.Get("client_id") != "eduworld-portal" || f.Get("client_secret") != "portal-secret" {
+	if k.down {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	client := f.Get("client_id")
+	if sec, ok := fakeClients[client]; !ok || f.Get("client_secret") != sec {
 		oauthErr(w, 401, "invalid_client", "Invalid client or Invalid client credentials")
 		return
 	}
@@ -119,7 +139,7 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			oauthErr(w, 401, "invalid_grant", "Invalid user credentials")
 			return
 		}
-		if u.student {
+		if u.student == (client == "eduworld-portal") { // portal denies students, the game denies staff
 			w.Header().Set("Content-Type", "text/html;charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = io.WriteString(w, "<html>portalStudentDenied</html>")
@@ -135,6 +155,9 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		sid := fmt.Sprintf("sid-%d", k.seq+1)
 		k.sidUser[sid] = f.Get("username")
+		if k.sidClient != nil {
+			k.sidClient[sid] = client
+		}
 		k.sidAMR[sid] = []string{"pwd"}
 		if f.Get("otp") != "" {
 			k.sidAMR[sid] = []string{"pwd", "otp"}
@@ -162,6 +185,16 @@ func (k *fakeKeycloak) adminAPI(w http.ResponseWriter, r *http.Request, body []b
 		return
 	}
 	p := strings.TrimPrefix(r.URL.Path, "/admin/realms/eduworld")
+	if sid, ok := strings.CutPrefix(p, "/sessions/"); ok && r.Method == http.MethodDelete {
+		k.deleted++
+		for rt, s := range k.refresh {
+			if s == sid {
+				delete(k.refresh, rt)
+			}
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	rep := func(u string) map[string]any {
 		return map[string]any{"id": "kc-" + u, "username": u, "email": u + "@test.vn", "enabled": true, "requiredActions": k.actions[u]}
 	}

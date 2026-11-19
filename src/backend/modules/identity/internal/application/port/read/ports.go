@@ -132,3 +132,10 @@ type SisAdminReadModel interface {
 	Run(ctx context.Context, id uuid.UUID) (dto.SyncRun, error)
 	RunErrorPage(ctx context.Context, runID uuid.UUID, after *page.Cursor, limit int) ([]dto.SisRecordError, error)
 }
+
+// BootstrapReader builds the PlayerBootstrap of a student in the tenant of the scope (F013 T012): user,
+// student, school (bilingual name, province), active class, tenant. Runs under the TenantScope of the
+// chosen tenant; nothing from other modules (ADR-0074).
+type BootstrapReader interface {
+	Bootstrap(ctx context.Context, userID uuid.UUID) (dto.PlayerBootstrap, error)
+}

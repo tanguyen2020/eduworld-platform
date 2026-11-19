@@ -1,0 +1,57 @@
+package keycloak
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
+)
+
+// GameConfigFrom reads the token client of the confidential client eduworld-game-backend (F013 T001, T006,
+// ADR-0068): realm endpoints from EW_KC_ADMIN_BASE_URL, client id EW_KC_GAME_CLIENT_ID, secret
+// EW_KC_GAME_CLIENT_SECRET(_FILE) (Docker secret), timeout EW_KC_TOKEN_TIMEOUT (keycloak_token_call_timeout,
+// default 3 s). The client is the same token client as the portal (password grant without OTP, rotation,
+// logout; circuit breaker; no retry of grants). Missing variables are reported by name only (AGENTS R3).
+func GameConfigFrom(c *config.Config) (PortalConfig, error) {
+	if err := c.Require("EW_KC_ADMIN_BASE_URL", "EW_KC_GAME_CLIENT_ID", "EW_KC_GAME_CLIENT_SECRET"); err != nil {
+		return PortalConfig{}, err
+	}
+	realm, err := realmURL(strings.TrimRight(c.String("EW_KC_ADMIN_BASE_URL"), "/"))
+	if err != nil {
+		return PortalConfig{}, err
+	}
+	ratio := 0.5
+	if v := c.String("EW_EXT_CLIENT_CB_FAILURE_RATIO"); v != "" {
+		if _, err := fmt.Sscanf(v, "%g", &ratio); err != nil || ratio <= 0 || ratio > 1 {
+			return PortalConfig{}, errors.New("keycloak: EW_EXT_CLIENT_CB_FAILURE_RATIO must be in (0,1]")
+		}
+	}
+	return PortalConfig{
+		TokenURL: realm + "/protocol/openid-connect/token", LogoutURL: realm + "/protocol/openid-connect/logout",
+		ClientID: c.String("EW_KC_GAME_CLIENT_ID"), ClientSecret: c.String("EW_KC_GAME_CLIENT_SECRET"),
+		Timeout: c.Duration("EW_KC_TOKEN_TIMEOUT", 3*time.Second), MaxRetries: c.Int("EW_EXT_CLIENT_RETRY_MAX", 2),
+		FailureRatio: ratio,
+	}, nil
+}
+
+var _ port.KeycloakSessionAdmin = (*Admin)(nil)
+
+// DeleteSession implements port.KeycloakSessionAdmin: DELETE /sessions/{sid} ends one user session (all
+// its client sessions, including the refresh tokens of eduworld-game-backend). An unknown or already ended
+// session (404) is success; the call is idempotent and retried.
+func (a *Admin) DeleteSession(ctx context.Context, sid string) error {
+	if sid == "" {
+		return nil
+	}
+	_, err := a.call(ctx, "delete_session", http.MethodDelete, "/sessions/"+url.PathEscape(sid), nil, nil, true)
+	if errors.Is(err, port.ErrKCNotFound) {
+		return nil
+	}
+	return err
+}

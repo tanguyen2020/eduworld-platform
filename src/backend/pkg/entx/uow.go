@@ -120,7 +120,7 @@ func (noTx) QueryContext(context.Context, string, ...any) (*sql.Rows, error) {
 }
 
 // pool picks the role for the scope (BACKEND_DESIGN §5.1): TenantScope → <module>_app with
-// app.tenant_id; CrossTenantScope, PlatformScope and Bypass → <module>_platform (BYPASSRLS, the
+// app.tenant_id; CrossTenantScope, PlatformScope and Bypass (except auth_login) → <module>_platform (BYPASSRLS, the
 // interceptor keeps explicit tenant conditions). No scope → <module>_app without a tenant (global
 // tables only; RLS returns nothing for tenant tables).
 func pool(ctx context.Context, d DBs, read bool) (*sql.DB, string, tenancy.Scope) {
@@ -128,7 +128,12 @@ func pool(ctx context.Context, d DBs, read bool) (*sql.DB, string, tenancy.Scope
 	if read && d.Read != nil {
 		app = d.Read
 	}
-	if _, bypassed := tenancy.Bypassed(ctx); bypassed {
+	if reason, bypassed := tenancy.Bypassed(ctx); bypassed {
+		if reason == tenancy.ReasonAuthLogin {
+			// The login path reads memberships through the SECURITY DEFINER function only: <module>_app
+			// without a tenant, never BYPASSRLS (ADR-0089 §3, F013-AC-30).
+			return app, "", nil
+		}
 		return d.Platform, "", nil
 	}
 	s, ok := tenancy.ScopeFrom(ctx)
