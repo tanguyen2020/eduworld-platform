@@ -20,7 +20,7 @@ type PrincipalCache interface {
 // InvalidationSubjects are the identity events that change a Principal (API_DESIGN §12.2, F003-AC-23).
 var InvalidationSubjects = []string{
 	"ew.evt.identity.user_role.changed", "ew.evt.identity.role.updated", "ew.evt.identity.tenant_membership.changed",
-	"ew.evt.identity.user.access_revoked", "ew.evt.identity.enrollment.changed", "ew.evt.identity.tenant.updated",
+	"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.status_changed", "ew.evt.identity.enrollment.changed", "ew.evt.identity.tenant.updated",
 }
 
 // PrincipalInvalidator clears the Principal cache of this process on identity events. It uses an
@@ -60,9 +60,9 @@ func (p *PrincipalInvalidator) Apply(ctx context.Context, data []byte) error {
 			return errors.New("natsx: tenant.updated without tenant_id")
 		}
 		return p.Cache.InvalidateTenant(ctx, *tenant)
-	case "user.access_revoked":
+	case "user.access_revoked", "user.status_changed": // F012-AC-14: status is part of the Principal
 		if e.Payload.UserID == nil {
-			return errors.New("natsx: user.access_revoked without user_id")
+			return errors.New("natsx: " + e.EventType + " without user_id")
 		}
 		return p.Cache.Invalidate(ctx, *e.Payload.UserID, nil)
 	case "user_role.changed", "tenant_membership.changed":
