@@ -5947,6 +5947,11 @@ components:
         reason:
           type: string
           maxLength: 1000
+        training_completed_at:
+          description: Bắt buộc khi gán role `safety_moderator` (F012-AC-24, ADR-0072)
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
     SisProviderKind:
       type: string
       enum:

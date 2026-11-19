@@ -2,6 +2,7 @@ package read
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -82,4 +83,38 @@ type MeReadModel interface {
 	MyTenants(ctx context.Context, userID uuid.UUID) (rows []MyTenantRow, hasPlatformRole bool, err error)
 	// DisplayName returns the display name of a live user ("" when unknown).
 	DisplayName(ctx context.Context, userID uuid.UUID) (string, error)
+}
+
+// UserRoleFilter filters user roles (newest first, user_role_id < After).
+type UserRoleFilter struct {
+	TenantIDs []uuid.UUID // required: the tenants of the scope (nil with Platform)
+	Platform  bool        // platform user roles (tenant_id NULL) instead
+	SchoolIDs []uuid.UUID // nil = every school
+	UserID    *uuid.UUID
+	RoleID    *uuid.UUID
+	ScopeType string
+	ScopeID   *uuid.UUID
+	AfterID   *uuid.UUID
+	Limit     int
+}
+
+// UserRoleView is the UserRole schema.
+type UserRoleView struct {
+	UserRoleID uuid.UUID  `json:"user_role_id"`
+	UserID     uuid.UUID  `json:"user_id"`
+	RoleID     uuid.UUID  `json:"role_id"`
+	RoleCode   string     `json:"role_code"`
+	TenantID   *uuid.UUID `json:"tenant_id"`
+	ScopeType  string     `json:"scope_type"`
+	ScopeID    *uuid.UUID `json:"scope_id"`
+	ValidFrom  time.Time  `json:"valid_from"`
+	ValidTo    *time.Time `json:"valid_to"`
+	Source     string     `json:"source"`
+	GrantedBy  *uuid.UUID `json:"granted_by"`
+	CreatedAt  time.Time  `json:"created_at"`
+}
+
+// UserRoleReader lists live user roles.
+type UserRoleReader interface {
+	UserRoles(ctx context.Context, f UserRoleFilter) ([]UserRoleView, error)
 }

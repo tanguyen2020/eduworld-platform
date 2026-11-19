@@ -14,8 +14,10 @@ import (
 	"github.com/google/uuid"
 
 	identityapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/api"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalcatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/facade"
 	identityhttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/presentation/http"
@@ -23,6 +25,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
@@ -65,28 +68,9 @@ func (r facadeResolver) Resolve(ctx context.Context, req authz.ResolveRequest) (
 func TestPortalSession(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t)
-	idp := httpxtest.NewIDP(t)
+	h, idp := realAuthHTTP(ctx, t, e)
 	model := read.PrincipalModel{Session: e.read}
-	res := facadeResolver{f: facade.Principals{Resolve: query.ResolvePrincipal{Model: model}}}
-	spec, err := httpx.LoadSpec(ctx, filepath.Join(testkit.RepoRoot(t), "specs", "openapi", "eduworld-api.v1.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	srv, err := httpx.NewServer(httpx.Deps{Auth: idp.AuthConfig(), Keys: idp.JWKS(t), Resolver: res, Spec: spec,
-		Idempotency: idempotency.NewStore(e.app, 0, nil)})
-	if err != nil {
-		t.Fatal(err)
-	}
-	ws, err := portalcatalog.Load(filepath.Join(testkit.RepoRoot(t), "specs", "portal", "menu-catalog.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := identityhttp.Register(srv, identityhttp.Handlers{Me: query.Me{Model: model, Workspaces: ws}}); err != nil {
-		t.Fatal(err)
-	}
-	hs := httptest.NewServer(srv)
-	t.Cleanup(hs.Close)
-	h := &httpEnv{env: e, srv: hs, idp: idp}
+	_ = model
 
 	a := seedTenant(ctx, t, e.platform, "pgd-sess-a")
 	b := seedTenant(ctx, t, e.platform, "pgd-sess-b")
@@ -174,4 +158,36 @@ func anyStrings(v any) []string {
 		out = append(out, x.(string))
 	}
 	return out
+}
+
+// realAuthHTTP serves the identity routes behind httpx with JWTs of a fake IDP and the real Principal
+// resolution (facade + PrincipalModel), so permissions come from the user roles in the database.
+func realAuthHTTP(ctx context.Context, t *testing.T, e *env) (*httpEnv, *httpxtest.IDP) {
+	t.Helper()
+	idp := httpxtest.NewIDP(t)
+	model := read.PrincipalModel{Session: e.read}
+	res := facadeResolver{f: facade.Principals{Resolve: query.ResolvePrincipal{Model: model}}}
+	spec, err := httpx.LoadSpec(ctx, filepath.Join(testkit.RepoRoot(t), "specs", "openapi", "eduworld-api.v1.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, err := httpx.NewServer(httpx.Deps{Auth: idp.AuthConfig(), Keys: idp.JWKS(t), Resolver: res, Spec: spec,
+		Idempotency: idempotency.NewStore(e.app, 0, nil)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ws, err := portalcatalog.Load(filepath.Join(testkit.RepoRoot(t), "specs", "portal", "menu-catalog.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
+	h := identityhttp.Handlers{Me: query.Me{Model: model, Workspaces: ws},
+		UserRoles:    command.UserRoles{UoW: e.uow, Repo: write.UserRoleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
+		UserRoleList: query.UserRoles{Model: model, Cursors: codec}}
+	if err := identityhttp.Register(srv, h); err != nil {
+		t.Fatal(err)
+	}
+	hs := httptest.NewServer(srv)
+	t.Cleanup(hs.Close)
+	return &httpEnv{env: e, srv: hs, idp: idp}, idp
 }

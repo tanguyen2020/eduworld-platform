@@ -37,6 +37,8 @@ type Handlers struct {
 	SisAdmin             query.SisAdmin                 // F011
 	SisConnections       SisConnectionsHandler          // F011 (command.SisConnections)
 	Me                   query.Me                       // F012
+	UserRoles            command.UserRoles              // F012
+	UserRoleList         query.UserRoles                // F012
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -83,10 +85,18 @@ var Operations = map[string]httpx.Operation{
 	"listSisSyncRuns":               op("listSisSyncRuns", http.MethodGet, "/sis/connections/{connection_id}/sync-runs", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"getSisSyncRun":                 op("getSisSyncRun", http.MethodGet, "/sis/runs/{run_id}", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	// F012
-	"listMyTenants":        op("listMyTenants", http.MethodGet, "/me/tenants", httpx.TenantNone, httpx.IdempotencyNone, 200),
-	"getMyPermissions":     withGuard(op("getMyPermissions", http.MethodGet, "/me/permissions", httpx.TenantOptional, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
-	"getMe":                withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
-	"listSisSyncRunErrors": op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"listMyTenants":          op("listMyTenants", http.MethodGet, "/me/tenants", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"getMyPermissions":       withGuard(op("getMyPermissions", http.MethodGet, "/me/permissions", httpx.TenantOptional, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"listTenantUserRoles":    withGuard(op("listTenantUserRoles", http.MethodGet, "/tenant/user-roles", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"grantTenantUserRole":    withGuard(op("grantTenantUserRole", http.MethodPost, "/tenant/user-roles", httpx.TenantRequired, httpx.IdempotencyRequired, 201), httpx.GuardPortalStaff),
+	"revokeTenantUserRole":   withGuard(op("revokeTenantUserRole", http.MethodDelete, "/tenant/user-roles/{user_role_id}", httpx.TenantRequired, httpx.IdempotencyNone, 204), httpx.GuardPortalStaff),
+	"listSchoolUserRoles":    withGuard(op("listSchoolUserRoles", http.MethodGet, "/schools/{school_id}/user-roles", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"grantSchoolUserRole":    withGuard(op("grantSchoolUserRole", http.MethodPost, "/schools/{school_id}/user-roles", httpx.TenantRequired, httpx.IdempotencyRequired, 201), httpx.GuardPortalStaff),
+	"listAllUserRoles":       op("listAllUserRoles", http.MethodGet, "/admin/user-roles", httpx.TenantNone, httpx.IdempotencyNone, 200),
+	"grantPlatformUserRole":  op("grantPlatformUserRole", http.MethodPost, "/admin/user-roles", httpx.TenantOptional, httpx.IdempotencyRequired, 201),
+	"revokePlatformUserRole": op("revokePlatformUserRole", http.MethodDelete, "/admin/user-roles/{user_role_id}", httpx.TenantOptional, httpx.IdempotencyNone, 204),
+	"getMe":                  withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"listSisSyncRunErrors":   op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 
 func withGuard(o httpx.Operation, g httpx.Guard) httpx.Operation {
@@ -129,6 +139,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn(h)
 	}
 	for id, fn := range meOperations {
+		routes[id] = fn(h)
+	}
+	for id, fn := range userRoleOperations {
 		routes[id] = fn(h)
 	}
 	for id, fn := range routes {

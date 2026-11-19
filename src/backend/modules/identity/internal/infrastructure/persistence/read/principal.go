@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -325,4 +326,85 @@ func (m PrincipalModel) DisplayName(ctx context.Context, userID uuid.UUID) (out 
 		return err
 	})
 	return out, err
+}
+
+var _ read.UserRoleReader = PrincipalModel{}
+
+// UserRoles lists live user roles of the filter (explicit tenant or tenant_id IS NULL condition).
+func (m PrincipalModel) UserRoles(ctx context.Context, f read.UserRoleFilter) (out []read.UserRoleView, err error) {
+	if !f.Platform && len(f.TenantIDs) == 0 {
+		return nil, errors.New("read: user roles need tenants or the platform")
+	}
+	err = m.read(ctx, func(tx *sql.Tx) error {
+		conds, args := []string{"ur.deleted_at IS NULL"}, []any{}
+		arg := func(v any) string {
+			args = append(args, v)
+			return "$" + strconv.Itoa(len(args))
+		}
+		if f.Platform {
+			conds = append(conds, "ur.tenant_id IS NULL")
+		} else {
+			conds = append(conds, "ur.tenant_id = ANY("+arg(uuidArray(f.TenantIDs))+"::uuid[])")
+		}
+		if f.SchoolIDs != nil {
+			conds = append(conds, "ur.school_id = ANY("+arg(uuidArray(f.SchoolIDs))+"::uuid[])")
+		}
+		if f.UserID != nil {
+			conds = append(conds, "ur.user_id = "+arg(*f.UserID))
+		}
+		if f.RoleID != nil {
+			conds = append(conds, "ur.role_id = "+arg(*f.RoleID))
+		}
+		if f.ScopeType != "" {
+			conds = append(conds, "ur.scope_type = "+arg(f.ScopeType))
+		}
+		if f.ScopeID != nil {
+			conds = append(conds, "ur.scope_id = "+arg(*f.ScopeID))
+		}
+		if f.AfterID != nil {
+			conds = append(conds, "ur.user_role_id < "+arg(*f.AfterID))
+		}
+		// tenancyguard:ok explicit tenant (or tenant_id IS NULL) and deleted_at conditions built above
+		rows, err := tx.QueryContext(ctx, `SELECT ur.user_role_id, ur.user_id, ur.role_id, r.code, ur.tenant_id, ur.scope_type, ur.scope_id,
+				ur.valid_from, ur.valid_to, ur.source, ur.granted_by, ur.created_at
+			FROM identity.user_roles ur JOIN identity.roles r ON r.role_id = ur.role_id
+			WHERE `+strings.Join(conds, " AND ")+` ORDER BY ur.user_role_id DESC LIMIT `+arg(f.Limit+1), args...)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var v read.UserRoleView
+			var tid, scope, by uuid.NullUUID
+			var validTo sql.NullTime
+			if err := rows.Scan(&v.UserRoleID, &v.UserID, &v.RoleID, &v.RoleCode, &tid, &v.ScopeType, &scope, &v.ValidFrom, &validTo, &v.Source,
+				&by, &v.CreatedAt); err != nil {
+				return err
+			}
+			v.TenantID, v.ScopeID, v.GrantedBy = nullID(tid), nullID(scope), nullID(by)
+			if validTo.Valid {
+				t := validTo.Time
+				v.ValidTo = &t
+			}
+			out = append(out, v)
+		}
+		return rows.Err()
+	})
+	return out, err
+}
+
+func uuidArray(ids []uuid.UUID) string {
+	s := make([]string, 0, len(ids))
+	for _, id := range ids {
+		s = append(s, id.String())
+	}
+	return "{" + strings.Join(s, ",") + "}"
+}
+
+func nullID(n uuid.NullUUID) *uuid.UUID {
+	if !n.Valid {
+		return nil
+	}
+	id := n.UUID
+	return &id
 }

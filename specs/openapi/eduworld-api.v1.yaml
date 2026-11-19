@@ -20430,6 +20430,11 @@ components:
             - $ref: '#/components/schemas/Timestamp'
             - type: 'null'
         reason: { type: string, maxLength: 1000 }
+        training_completed_at:
+          description: Bắt buộc khi gán role `safety_moderator` (F012-AC-24, ADR-0072)
+          oneOf:
+            - $ref: "#/components/schemas/Timestamp"
+            - type: "null"
     UserRole:
       type: object
       required: [user_role_id, user_id, role_id, role_code, scope_type, source, valid_from]
