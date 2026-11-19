@@ -113,6 +113,13 @@ func (h Sessions) TimeoutStaleSessions(ctx context.Context, batch int) (n int, e
 	if err := h.UoW.InTenantTx(ctx, ps, func(ctx context.Context) error {
 		var err error
 		refs, err = h.Sessions.Stale(ctx, h.now().Add(-h.Config.HeartbeatTimeout), batch)
+		if err != nil || h.Metrics == nil {
+			return err
+		}
+		active, err := h.Sessions.ActiveByPlatform(ctx)
+		if err == nil {
+			h.Metrics.Active(active) // before this run ends the stale ones: refreshed again at the next tick
+		}
 		return err
 	}); err != nil {
 		return 0, err

@@ -69,6 +69,8 @@ type SessionRepository interface {
 	ActiveOfStudent(ctx context.Context, student uuid.UUID, tenant *uuid.UUID) ([]*gamesession.Session, error)
 	// Stale lists active sessions whose last heartbeat is before before (platform scope, job session-timeout).
 	Stale(ctx context.Context, before time.Time, limit int) ([]SessionRef, error)
+	// ActiveByPlatform counts the active sessions per client platform (platform scope, gauge eduworld_game_sessions_active).
+	ActiveByPlatform(ctx context.Context) (map[string]int, error)
 	// ActivePage lists active sessions after the session id after (platform scope, job curfew-session-closer).
 	ActivePage(ctx context.Context, after uuid.UUID, limit int) ([]SessionRef, error)
 }

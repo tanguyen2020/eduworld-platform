@@ -173,6 +173,14 @@ func (h Sessions) Start(ctx context.Context, in StartInput) (res StartResult, er
 			oldID := old.ID
 			res.ReplacedSessionID = &oldID
 		}
+		h.afterCommit(ctx, func(context.Context) {
+			if h.Metrics != nil {
+				h.Metrics.Login(tenant.String(), in.Platform)
+				if replaced {
+					h.Metrics.Takeover(in.Platform)
+				}
+			}
+		})
 		if err := idempotency.SetResult(ctx, res.Body()); err != nil {
 			return err
 		}
@@ -240,6 +248,9 @@ func (h Sessions) started(ctx context.Context, s *gamesession.Session, login wri
 // deny records the refusal of a non-student or inactive student (F014-AC-02, R23) and returns 403
 // GAME_ACCESS_STUDENT_ONLY. No session and no login event is written.
 func (h Sessions) deny(ctx context.Context, p authz.Principal, why string) error {
+	if h.Metrics != nil {
+		h.Metrics.Denied("not_student")
+	}
 	_ = h.Audit.Record(ctx, audit.Event{Action: AuditAccessDenied, TargetType: "user", TargetID: p.UserID.String(),
 		Result: audit.ResultDenied, Reason: string(problem.GameAccessStudentOnly), Metadata: map[string]any{"why": why,
 			"user_type": string(p.UserType)}})

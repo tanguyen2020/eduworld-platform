@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 )
 
 // F014-AC-16 (TC-AUTH-017, ADR-0083): the job session-timeout ends with timeout every active session without a
@@ -37,6 +41,9 @@ func TestSessionTimeoutJob(t *testing.T) {
 	n, err := e.sessions.TimeoutStaleSessions(ctx, 100)
 	if err != nil || n != 2 {
 		t.Fatalf("timeout run: %d %v", n, err)
+	}
+	if g := testutil.ToFloat64(observability.ActiveSessions().WithLabelValues("windows")); g != 3 {
+		t.Fatalf("eduworld_game_sessions_active{windows} = %v before the stale ones end", g)
 	}
 	for _, name := range []string{"quiet", "other"} {
 		if c := count(ctx, t, e.platform, `SELECT count(*) FROM game.game_sessions s JOIN game.login_events l USING (game_session_id)

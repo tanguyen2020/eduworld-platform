@@ -230,3 +230,28 @@ func (SessionRepo) ActivePage(ctx context.Context, after uuid.UUID, limit int) (
 		WHERE ended_at IS NULL AND deleted_at IS NULL AND game_session_id > $1
 		ORDER BY game_session_id LIMIT $2`, after, limit)
 }
+
+// ActiveByPlatform implements write.SessionRepository.
+func (SessionRepo) ActiveByPlatform(ctx context.Context) (map[string]int, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok job session-timeout under SystemPlatformScope (game_platform): counts per platform only; deleted_at filtered
+	rows, err := t.QueryContext(ctx, `SELECT client_platform, count(*) FROM game.game_sessions
+		WHERE ended_at IS NULL AND deleted_at IS NULL GROUP BY client_platform`)
+	if err != nil {
+		return nil, fmt.Errorf("game sessions: active by platform: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := map[string]int{}
+	for rows.Next() {
+		var p string
+		var n int
+		if err := rows.Scan(&p, &n); err != nil {
+			return nil, err
+		}
+		out[p] = n
+	}
+	return out, rows.Err()
+}

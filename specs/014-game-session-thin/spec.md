@@ -20,6 +20,26 @@
 
 - Q: Chặn tạo game session và kết thúc phiên đang chạy khi tới giờ giới nghiêm (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
+### Session 2026-11-19 (triển khai)
+
+Quyết định khi triển khai (theo mặc định `[Proposed]` của spec/tài liệu sở hữu) và câu hỏi mở còn lại:
+
+- Projection `ref.tenants`, `ref.schools`, `ref.students` của module game viết tay trong migration (không ent schema), cùng quyết định của F020 cho module learning (DATABASE_DESIGN §2.17 cột tối thiểu, không mixin); T006 chỉ còn ent schema `GameSession` (`entx.Base`) và `LoginEvent` (`entx.TenantAppendOnly`, bảng partition viết tay). `game.content_manifests` viết tay (khóa ghép `(tenant_id, manifest_version)`, do F026/F078 ghi).
+- T002 (adapter facade `identity`): không cần adapter riêng trong module game — Principal được `pkg/httpx` phân giải qua `cmd/internal/wiring.PrincipalResolver` (facade `resolvePrincipal`, `pkg/modcall`) với cache `pkg/authz` (R30); use case chỉ đọc Principal trong context.
+- `ref.schools.settings_subset.curfew_window` (từ `school.synced`/`school.updated`) mở rộng `platform_curfew`; `platform_curfew` đọc từ `EW_PLATFORM_CURFEW` (cùng biến module identity dùng ở F013).
+- `tenant_admin` không có `lms.student_activity.read` trong catalog F012 → `listTenantStudentLoginEvents` trả `403 PERMISSION_DENIED`; grant giới hạn trường mà học sinh ở trường khác → `404` (F014-AC-12).
+- `game.login_events` hiện chỉ có partition DEFAULT (giống `identity.login_events` F013); partition tháng do job partition bảng nghiệp vụ của feature sau.
+- Khóa HMAC `ip_hash`: `EW_GAME_IP_HASH_KEY(_FILE)` (≥ 32 ký tự, xoay vòng bằng triển khai khóa mới).
+- OQ F014-1: `login_events.sis_connection_id` — Principal (facade `resolvePrincipal`) chưa có `sis_connection_id` nên cột để `NULL`; cần bổ sung vào Principal hoặc projection (owner F011/F012).
+- OQ F014-2: `platform_curfew` của module game lấy từ cấu hình `EW_PLATFORM_CURFEW` cho tới khi F015 phát `platform_settings.changed` (`key = platform_curfew`) và DATABASE_DESIGN định nghĩa bảng projection cài đặt platform ở các module nhận.
+- OQ F014-3: dùng lại `Idempotency-Key` của một lời gọi bị `409 ACTIVE_SESSION_ON_OTHER_DEVICE` cho lời gọi `takeover: true` — API_DESIGN §6 (owner) không lưu response lỗi nên lời gọi lại được xử lý như mới (không phải `409 IDEMPOTENCY_KEY_REUSED` như Clarification 2026-11-16). F014-AC-07 được kiểm với key của lời gọi thành công (`409 IDEMPOTENCY_KEY_REUSED`). Cần thống nhất giữa spec và API_DESIGN.
+- OQ F014-4: `safety_moderator` (role platform, không tenant) gọi route người chơi kèm `X-Tenant-Id` nhận `403 TENANT_MISMATCH` (middleware tenant của `pkg/httpx` chạy trước guard `game_player`) thay vì `403 GAME_ACCESS_STUDENT_ONLY`; vẫn là 403, không ghi gì.
+- OQ F014-5: học sinh thuộc nhiều tenant có session active ở tenant khác: RLS không cho thấy session đó, unique index trả `409 ACTIVE_SESSION_ON_OTHER_DEVICE` không có `other_device` và `takeover` không kết thúc được session ở tenant khác (chờ timeout 45 s hoặc thiết kế tra cứu liên tenant).
+- OQ F014-6: metric projection — MONITORING đặt `eduworld_projection_lag_seconds{module, projection}` nhưng module learning (F020) đã đăng ký `eduworld_projection_lag_seconds{table}`; module game dùng `eduworld_game_projection_lag_seconds{table}` và `eduworld_game_consumer_rejected_total` để không trùng registry; cần một metric chung trong `pkg/`.
+- OQ F014-7 (cùng OQ F010-2): binary `core-api`/`worker` chưa nối route, consumer, job của module nào (identity F010–F013 cũng vậy); module game cung cấp `config.SessionFrom`, `http.Register`, `consumer.*Options`, `job.*` để composition root nối sau. E2E hai client trên stack chạy thật (T036) vì vậy được kiểm ở mức integration qua chuỗi `pkg/httpx` thật (`TestTakeover`).
+- OQ F014-8: `game.content_manifests` theo DDL DATABASE_DESIGN §3.13 (`etag varchar(64)`, `entries` ≤ 4 MiB) — data-model ghi `varchar(128)`/64 KiB; đã theo tài liệu sở hữu.
+- OQ F014-9: message trên Valkey `ew:rt:user:<id>` là `{type, payload}` (payload theo AsyncAPI `session.session.replaced`/`session.session.ended`); gateway F090 bọc `ServerEnvelope` (`v`, `seq`, `ts`) [Proposed].
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo game session, một thiết bị mỗi tài khoản (Priority: P1)

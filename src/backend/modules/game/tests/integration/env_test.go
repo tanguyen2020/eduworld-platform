@@ -22,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
@@ -171,7 +172,7 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 		CurfewLocation: ict, Maintenance: command.Maintenance{Active: o.maintenance, Message: "Bảo trì định kỳ"}}
 	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
 		Directory: write.Directory{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Realtime: e.pushes,
-		Config: e.cfg, Now: e.clock.Now}
+		Metrics: observability.SessionMetrics{}, Config: e.cfg, Now: e.clock.Now}
 	e.server(ctx, t)
 	return e
 }

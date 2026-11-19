@@ -9,7 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
@@ -42,11 +45,15 @@ func TestTakeover(t *testing.T) {
 		t.Fatalf("409 leaks the device id: %s", rb.raw)
 	}
 
+	takeovers := testutil.ToFloat64(observability.SessionStarts().WithLabelValues("takeover"))
 	rt := e.takeover(t, an, b)
 	if rt.status != http.StatusCreated || rt.body["replaced_session_id"] != oldID {
 		t.Fatalf("takeover: %d %s", rt.status, rt.raw)
 	}
 	newID := rt.body["game_session_id"].(string)
+	if testutil.ToFloat64(observability.SessionStarts().WithLabelValues("takeover")) != takeovers+1 {
+		t.Fatal("eduworld_game_session_start_total{takeover} not counted")
+	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM game.game_sessions WHERE game_session_id = $1
 		AND end_reason = 'replaced_by_other_device' AND replaced_by_session_id = $2 AND ended_at IS NOT NULL`, oldID, newID); n != 1 {
 		t.Fatal("old session not replaced")
