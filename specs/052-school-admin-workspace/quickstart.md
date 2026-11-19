@@ -70,3 +70,5 @@ Chạy tự động trong worktree `f052-school-admin` (Windows, 2 worker Vitest
 | `node scripts/docs/check-links.mjs` | 0 link hỏng |
 
 Kịch bản §2 ↔ test: 1–3 `schools.test.tsx`; 4–7 `classes.test.tsx`, `students.test.tsx`; 8–9 `sis.test.tsx`, `sisFlow.test.ts`; 10–15 `access.test.tsx`; 16–18d `settings.test.tsx`; 19, 24 `audit.test.tsx`; 20 `schools.test.tsx`; 21 `sis.test.tsx`/`access.test.tsx`/`settings.test.tsx` (người chỉ đọc); 22 `fieldSchemas.test.ts`, `access.test.tsx`; 23 `classes.test.tsx`, `sis.test.tsx`. Chưa chạy: Playwright `@F052`, axe toàn trang (SC-005), visual baseline của `school-lms.stories.tsx` (`make web-visual` cần duyệt ảnh).
+
+- 2026-11-20: Câu hỏi mở F052-1 đã giải quyết — backend `listTenantClassStudents`, `listSchoolReconciliationIssues`, `resolveSchoolReconciliationIssue` ở commit `5c7bd53` (module identity, `TestSchoolScopedRoutes` qua HTTP thật: tenant A/B, School Admin A1/A2, replay). Ba màn tương ứng chạy được với backend thật sau khi nối binary. Chạy lại toàn bộ test school-lms: 10 file, 87/87 pass.

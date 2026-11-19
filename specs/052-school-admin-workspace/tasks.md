@@ -151,7 +151,7 @@ Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết t�
 
 ## Definition of Done
 
-- [x] Mọi tiêu chí F052-AC-* có test pass (ghi mã test/TC) — mức integration toàn portal với MOCK backend; E2E backend thật còn mở (OQ F051-9, Câu hỏi mở F052-1)
+- [x] Mọi tiêu chí F052-AC-* có test pass (ghi mã test/TC) — mức integration toàn portal với MOCK backend; E2E backend thật còn mở (OQ F051-9); Câu hỏi mở F052-1 đã giải quyết ở 5c7bd53 (backend 3 operation, TestSchoolScopedRoutes)
 - [x] `make web-lint`, `make web-test` xanh (lệnh pnpm tương đương, quickstart §5); Playwright `@F052` chờ OQ F051-9
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — MOCK chỉ trong `src/test/` và test
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — SIS_INTEGRATION §9–§10, API_DESIGN, CHANGELOG; CONFIG_DEFAULTS không đổi
