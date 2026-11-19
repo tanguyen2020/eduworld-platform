@@ -34,7 +34,7 @@ func TestQuestionDelivery(t *testing.T) {
 	c := newCurEnv(ctx, t)
 	qc := c.qbSetup(ctx, t)
 	vk := valkeyClient(ctx, t)
-	d := query.Delivery{Session: c.read, Reader: read.Delivery{}, Cache: cache.Pool{C: vk}, Registry: question.Base(), Schema: c.schema,
+	d := query.Delivery{Session: c.read, Reader: read.Delivery{}, Cache: cache.Pool{C: vk}, Registry: question.Full(), Schema: c.schema,
 		Metrics: observability.QuestionCounter{}}
 	student := authztest.Ctx(ctx, authztest.Student(c.tenantA))
 	studentB := authztest.Ctx(ctx, authztest.Student(c.tenantB))

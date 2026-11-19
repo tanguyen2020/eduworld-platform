@@ -110,6 +110,7 @@ type Authoring struct {
 	MathAssets    []MathAsset
 	MinResponseMS *int
 	Language      string
+	MediaRefs     []uuid.UUID // the media_refs of the version (image_based checks its image, F023-AC-05)
 }
 
 // Part is the result of one part of a response (option, statement, blank, pair, item, draggable).
@@ -120,9 +121,11 @@ type Part struct {
 
 // GradeResult is the server-side grade of one response (F022-AC-14).
 type GradeResult struct {
-	Score             float64  `json:"score"`
-	MaxScore          float64  `json:"max_score"`
-	IsCorrect         bool     `json:"is_correct"`
+	Score     float64 `json:"score"`
+	MaxScore  float64 `json:"max_score"`
+	IsCorrect bool    `json:"is_correct"`
+	// IntegrityMismatch: the replayed action log does not give the state sent (interactive, F023-AC-11).
+	IntegrityMismatch bool     `json:"integrity_mismatch,omitempty"`
 	Parts             []Part   `json:"parts,omitempty"`
 	SelectedOptionIDs []string `json:"selected_option_ids,omitempty"`
 }
@@ -133,6 +136,8 @@ type Presentation struct {
 	QuestionVersionID uuid.UUID           `json:"question_version_id"`
 	Seed              uint64              `json:"seed"`
 	Orders            map[string][]string `json:"orders,omitempty"`
+	// Params are the values of a parameterized question drawn for this presentation (F023-AC-16).
+	Params map[string]string `json:"params,omitempty"`
 }
 
 // Rendered is the render DTO of a question for a student (F022-AC-22): no answer, no feedback, no hints.

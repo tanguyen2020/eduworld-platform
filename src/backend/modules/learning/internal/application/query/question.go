@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/params"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/selection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -149,6 +150,9 @@ type Delivery struct {
 // eduworld_qb_select_pool_insufficient_total, eduworld_qb_pool_cache_hit_ratio); nil = not counted.
 type DeliveryMetrics interface {
 	Graded(questionType, result string)
+	// IntegrityMismatch counts a forged interactive response (F023); ParamSamplingFailed a failed sampling.
+	IntegrityMismatch(widget string)
+	ParamSamplingFailed()
 	PoolInsufficient()
 	PoolCache(hit bool)
 }
@@ -238,6 +242,9 @@ func (d Delivery) Render(ctx context.Context, versionIDs []uuid.UUID, seed uint6
 				c.AnswerKey = g.AnswerKey
 			}
 			r, p, err := d.Registry.Render(c, seed)
+			if errors.Is(err, params.ErrInfeasible) && d.Metrics != nil {
+				d.Metrics.ParamSamplingFailed()
+			}
 			if err != nil {
 				return err
 			}
@@ -250,7 +257,7 @@ func (d Delivery) Render(ctx context.Context, versionIDs []uuid.UUID, seed uint6
 
 // Grade scores a response of a published version on the server (F022-AC-14…21): the response is checked against
 // $defs.<type>Response (422 INVALID_RESPONSE, never 500); score and correctness never come from the client.
-func (d Delivery) Grade(ctx context.Context, versionID uuid.UUID, _ question.Presentation, response json.RawMessage) (out question.GradeResult, err error) {
+func (d Delivery) Grade(ctx context.Context, versionID uuid.UUID, pres question.Presentation, response json.RawMessage) (out question.GradeResult, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.qb.grade")
 	defer func() { done(err) }()
 	var c question.Content
@@ -270,9 +277,12 @@ func (d Delivery) Grade(ctx context.Context, versionID uuid.UUID, _ question.Pre
 	if d.Schema != nil && d.Schema.ValidateResponse(string(c.Type), response) != nil {
 		return out, invalid()
 	}
-	out, err = d.Registry.Grade(c, response)
+	out, err = d.Registry.GradeIn(c, pres, response)
 	if errors.Is(err, question.ErrInvalidResponse) {
 		return out, invalid()
+	}
+	if err == nil && d.Metrics != nil && out.IntegrityMismatch {
+		d.Metrics.IntegrityMismatch(question.WidgetOf(c.Render))
 	}
 	if err == nil && d.Metrics != nil {
 		result := "incorrect"

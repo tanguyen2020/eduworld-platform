@@ -333,7 +333,7 @@ Quy tắc:
 4. Bỏ dấu câu ở đầu/cuối (`.,!?;:"'`).
 5. Chuẩn hóa vị trí dấu thanh kiểu cũ/mới (`hoà` ≡ `hòa`, `thuỷ` ≡ `thủy`) bằng bảng ánh xạ.
 6. Nếu `allow_diacritics_missing=true`: so sánh thêm sau khi bỏ dấu (`ha noi` ≡ `Hà Nội`) — **mặc định false** cho môn Tiếng Việt (chính tả là mục tiêu học), true cho môn khác [Proposed].
-7. Fuzzy (tùy chọn): Levenshtein ≤ `max_edit_distance` khi chuỗi ≥ `min_length`; không áp dụng cho môn Tiếng Việt/Tiếng Anh chính tả.
+7. Fuzzy (tùy chọn): Levenshtein ≤ `max_edit_distance` (1–2) khi chuỗi đã chuẩn hóa ≥ `min_length` (≥ 3); không áp dụng cho môn Tiếng Việt/Tiếng Anh chính tả — lưu câu thuộc môn `vietnamese`/`english` có `fuzzy.enabled = true` bị từ chối `422 VALIDATION_FAILED`, `errors[].code = FUZZY_NOT_ALLOWED_FOR_SUBJECT` (F023).
 8. Số trong chuỗi: `"5"` ≡ `"năm"` chỉ khi khai báo trong `accepted`.
 
 `match = exact`: chỉ bước 1–2. Các bước chuẩn hóa được unit test bằng bộ test-case tiếng Việt (≥ 200 cặp) [Proposed].
@@ -353,6 +353,8 @@ Quy tắc:
 ```
 
 Stem `"{{a}} × {{b}} = ?"`, `answer_key.value = "{{a}} * {{b}}"`. Server render stem đã thay giá trị trước khi gửi client. Biểu thức chỉ dùng evaluator an toàn (cộng/trừ/nhân/chia/mũ/so sánh), không eval tổng quát.
+
+Evaluator (F023): số, biến đã khai báo, `+ − × ÷ ^` (cả `* / :`), so sánh `== != < <= > >=` (`=` ≡ `==`), `&& || !` (`and or not`), ngoặc; mọi định danh khác và lời gọi hàm bị từ chối khi lưu; số học chính xác (phân số), biểu thức ≤ 255 ký tự, độ sâu ≤ 32, số mũ nguyên |e| ≤ 10. Chỉ `single_choice` và `numeric` có `params`; tối đa 10 biến (`int`, `decimal` cần `step`, `choice` giá trị số ≤ 20), 10 ràng buộc. Giá trị đã sinh lưu ở `presentation.params` (chuỗi thập phân) và hiển thị theo `content_language` (`vi`: dấu phẩy thập phân).
 
 Sinh giá trị bằng rejection sampling: rút ngẫu nhiên theo `seed` tới khi bộ giá trị thỏa mọi `constraints` (phép chia cho 0 coi là không thỏa), tối đa `param_sampling_max_tries` = 1.000 lần [Proposed] (phạm vi `code`). Khi lưu câu hỏi, server chạy cùng giới hạn để kiểm khả thi; không tìm được bộ giá trị nào → `422 VALIDATION_FAILED`.
 

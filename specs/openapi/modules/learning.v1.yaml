@@ -2778,6 +2778,27 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+  /cms/learning/question-widgets:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listQuestionWidgets
+      x-portal-action: action.content_studio.question_bank.view
+      summary: Widget câu hỏi interactive đã đăng ký (mã, phiên bản, schema config, validator Go) — F023 (learning_content.read)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionWidgetList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /cms/learning/question-sets:
     get:
       x-service: learning
@@ -10249,6 +10270,38 @@ components:
           uniqueItems: true
           items:
             $ref: '#/components/schemas/Uuid'
+    QuestionWidgetList:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required:
+              - widget
+              - widget_version
+              - config_schema
+              - validators
+            properties:
+              widget:
+                type: string
+                maxLength: 64
+              widget_version:
+                type: string
+                maxLength: 64
+              config_schema:
+                type: object
+                additionalProperties: true
+                description: specs/schemas/question-widgets/<widget>.v<major>.schema.json (config, params)
+              validators:
+                type: array
+                maxItems: 64
+                items:
+                  type: string
+                  maxLength: 64
     QuestionSetAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'

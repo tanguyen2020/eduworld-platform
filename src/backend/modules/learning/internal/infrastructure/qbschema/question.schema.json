@@ -408,7 +408,8 @@
           "items": {
             "type": "string",
             "maxLength": 255
-          }
+          },
+          "maxItems": 10
         }
       },
       "additionalProperties": {
@@ -434,9 +435,18 @@
             "type": "number"
           },
           "values": {
-            "type": "array"
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "number"
+            }
           }
         }
+      },
+      "maxProperties": 11,
+      "propertyNames": {
+        "pattern": "^([a-z][a-z0-9_]{0,15}|constraints)$",
+        "maxLength": 16
       }
     },
     "textMatch": {
@@ -452,7 +462,8 @@
             "type": "string",
             "maxLength": 255,
             "minLength": 1
-          }
+          },
+          "maxItems": 50
         },
         "match": {
           "enum": [
@@ -1017,7 +1028,7 @@
                 },
                 {
                   "type": "string",
-                  "maxLength": 1000,
+                  "maxLength": 255,
                   "description": "Biểu thức trên params, vd. \"{{a}} * {{b}}\""
                 }
               ]
@@ -1308,13 +1319,15 @@
             "max_selections": {
               "type": "integer",
               "minimum": 1,
-              "default": 1
+              "default": 1,
+              "maximum": 10
             },
             "labels": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/option"
-              }
+              },
+              "maxItems": 16
             },
             "drop_points": {
               "type": "array",
@@ -1336,7 +1349,8 @@
                     "type": "number"
                   }
                 }
-              }
+              },
+              "maxItems": 16
             }
           },
           "additionalProperties": false
@@ -1399,22 +1413,27 @@
                       ],
                       "minItems": 2,
                       "maxItems": 2
-                    }
+                    },
+                    "minItems": 3,
+                    "maxItems": 64
                   }
                 }
-              }
+              },
+              "maxItems": 20
             },
             "correct_region_ids": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/itemId"
-              }
+              },
+              "maxItems": 20
             },
             "placements": {
               "type": "object",
               "additionalProperties": {
                 "$ref": "#/$defs/itemId"
-              }
+              },
+              "maxProperties": 16
             }
           },
           "anyOf": [

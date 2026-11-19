@@ -83,6 +83,7 @@ type Handlers struct {
 	Preview          PreviewCommands  // F027
 	Docs             DocCommands      // F024
 	DocQueries       DocQueries       // F024
+	Widgets          WidgetQueries    // F023
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {

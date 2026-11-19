@@ -116,6 +116,33 @@ func RegisterQuestionBank(r prometheus.Registerer) {
 // QuestionCounter adapts the question bank metrics to query.DeliveryMetrics.
 type QuestionCounter struct{}
 
+// Advanced question metrics (plan F023 "Quan sát").
+var (
+	qbIntegrityMismatch = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_qb_interactive_integrity_mismatch_total",
+		Help: "Interactive responses whose replayed action log does not give the state sent, by widget (F023-AC-11).",
+	}, []string{"widget"})
+	qbParamSamplingFailures = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "eduworld_qb_param_sampling_failures_total",
+		Help: "Parameterized questions for which no value set satisfied the constraints within param_sampling_max_tries.",
+	})
+)
+
+// RegisterAdvanced adds the F023 metrics to r.
+func RegisterAdvanced(r prometheus.Registerer) {
+	for _, c := range []prometheus.Collector{qbIntegrityMismatch, qbParamSamplingFailures} {
+		_ = r.Register(c)
+	}
+}
+
+// IntegrityMismatch counts a forged interactive response.
+func (QuestionCounter) IntegrityMismatch(widget string) {
+	qbIntegrityMismatch.WithLabelValues(widget).Inc()
+}
+
+// ParamSamplingFailed counts a sampling failure.
+func (QuestionCounter) ParamSamplingFailed() { qbParamSamplingFailures.Inc() }
+
 // Graded counts a grade of questionType with result.
 func (QuestionCounter) Graded(questionType, result string) {
 	qbGrade.WithLabelValues(questionType, result).Inc()

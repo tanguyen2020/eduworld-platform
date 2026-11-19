@@ -528,6 +528,9 @@ func (numericType) Validate(a Authoring, _ *IDSet) []Violation {
 	if unmarshal(a.AnswerKey, &k) != nil {
 		return []Violation{{Field: "/answer_key", Reason: "is not a numeric answer key"}}
 	}
+	if _, isExpr := answerExpression(a.AnswerKey); isExpr {
+		return nil // an expression over params, checked by validateParams
+	}
 	if _, _, err := k.parse(); err != nil {
 		return []Violation{{Field: "/answer_key/value", Reason: "must be a decimal number and the tolerance at least 0"}}
 	}

@@ -4,14 +4,14 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Tạo package `geometry`, `widget`, `expr`, `params` trong domain question — file: `src/backend/modules/learning/internal/domain/question/expr/doc.go`
-- [ ] T002 [P] Fixture câu `short_answer`, `image_based` (hotspot, label), `interactive` (`balance_scale`), tham số hóa (`single_choice`, `numeric`) — file: `src/backend/modules/learning/tests/integration/question/advanced/fixtures/`
+- [x] T001 Tạo package `geometry`, `widget`, `expr`, `params` trong domain question — file: `src/backend/modules/learning/internal/domain/question/expr/doc.go` — ✅ 2026-11-19: `internal/domain/question/{expr,params,widget}`, `advanced.go` (OQ F023-1)
+- [x] T002 [P] Fixture câu `short_answer`, `image_based` (hotspot, label), `interactive` (`balance_scale`), tham số hóa (`single_choice`, `numeric`) — file: `src/backend/modules/learning/tests/integration/question/advanced/fixtures/` — ✅ 2026-11-19: fixture trong test (`advancedBodies`, `advanced_test.go`)
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Sửa `question.schema.json` (giới hạn mảng/biểu thức, `params`) và thêm `question-widgets/balance_scale.v1.schema.json`, cập nhật `specs/README.md` — file: `specs/schemas/question.schema.json`, `specs/schemas/question-widgets/balance_scale.v1.schema.json` — kiểm: `make specs-lint`
-- [ ] T004 Thêm operation `listQuestionWidgets` + schema `QuestionWidgetList`, tách spec — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `node scripts/openapi/split-public.mjs`, `make specs-lint`, `make gen MOD=learning`
-- [ ] T005 Không có thay đổi ent/migration (xác nhận bằng `make migrate-diff MOD=learning name=f023_noop` không sinh file) — file: `src/backend/modules/learning/migrations/`
+- [x] T003 Sửa `question.schema.json` (giới hạn mảng/biểu thức, `params`) và thêm `question-widgets/balance_scale.v1.schema.json`, cập nhật `specs/README.md` — file: `specs/schemas/question.schema.json`, `specs/schemas/question-widgets/balance_scale.v1.schema.json` — kiểm: `make specs-lint` — ✅ 2026-11-19: giới hạn mảng/biểu thức/`params` trong `question.schema.json` (+ bản nhúng qbschema), `question-widgets/balance_scale.v1.schema.json`, `specs/README.md`; `validate-schemas`, `check-maxlength` 0 lỗi
+- [x] T004 Thêm operation `listQuestionWidgets` + schema `QuestionWidgetList`, tách spec — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `node scripts/openapi/split-public.mjs`, `make specs-lint`, `make gen MOD=learning` — ✅ 2026-11-19: `listQuestionWidgets` + `QuestionWidgetList`, catalog `question_bank.view`; `split-public`, `check-portal-catalog` 0 lỗi, portal `gen:api`
+- [x] T005 Không có thay đổi ent/migration (xác nhận bằng `make migrate-diff MOD=learning name=f023_noop` không sinh file) — file: `src/backend/modules/learning/migrations/` — ✅ 2026-11-19: không có thay đổi ent/migration (golden `TestMigrationMatchesEnt` không đổi)
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -23,74 +23,74 @@
 
 ### Tests cho User Story 1
 
-- [ ] T006 [P] [US1] Unit validator F023-AC-01 (`accepted`, fuzzy biên), F023-AC-03 chặn fuzzy môn `vietnamese`/`english` — file: `src/backend/modules/learning/internal/domain/question/types/short_answer_validator_test.go` — phải FAIL trước khi code
-- [ ] T007 [P] [US1] Bảng chấm F023-AC-02 (normalized/exact, dấu, fuzzy theo `min_length`), F023-AC-04 tiếng Anh — file: `src/backend/modules/learning/internal/domain/question/types/short_answer_scorer_test.go`
+- [x] T006 [P] [US1] Unit validator F023-AC-01 (`accepted`, fuzzy biên), F023-AC-03 chặn fuzzy môn `vietnamese`/`english` — file: `src/backend/modules/learning/internal/domain/question/types/short_answer_validator_test.go` — phải FAIL trước khi code — ✅ 2026-11-19: `TestShortAnswer` (validator) + `TestQuestionAdvancedTypes` (FUZZY_NOT_ALLOWED_FOR_SUBJECT) ok
+- [x] T007 [P] [US1] Bảng chấm F023-AC-02 (normalized/exact, dấu, fuzzy theo `min_length`), F023-AC-04 tiếng Anh — file: `src/backend/modules/learning/internal/domain/question/types/short_answer_scorer_test.go` — ✅ 2026-11-19: `TestShortAnswer` (bảng chấm vi/en, dấu, fuzzy, exact) ok
 
 ### Implementation cho User Story 1
 
-- [ ] T008 [P] [US1] Levenshtein có giới hạn — file: `src/backend/modules/learning/internal/domain/question/normalize/levenshtein.go`
-- [ ] T009 [US1] `ShortAnswerHandler` (validator, scorer, renderer) + đăng ký registry (bỏ `TYPE_NOT_ENABLED` cho loại này) — file: `src/backend/modules/learning/internal/domain/question/types/short_answer.go`
+- [x] T008 [P] [US1] Levenshtein có giới hạn — file: `src/backend/modules/learning/internal/domain/question/normalize/levenshtein.go` — ✅ 2026-11-19: dùng `normalize.levenshtein` của F022 (OQ F023-1)
+- [x] T009 [US1] `ShortAnswerHandler` (validator, scorer, renderer) + đăng ký registry (bỏ `TYPE_NOT_ENABLED` cho loại này) — file: `src/backend/modules/learning/internal/domain/question/types/short_answer.go` — ✅ 2026-11-19: `shortAnswer` trong `advanced.go`, đăng ký ở `question.Full()`
 
 ## Phase 4: User Story 5 — Phân quyền và giới hạn cho loại mới (Priority: P1)
 
 ### Tests cho User Story 5
 
-- [ ] T010 [P] [US5] API F023-AC-19 chạy lại bộ authz/isolation F022 với 3 loại mới + `listQuestionWidgets` (tenant A/B, thiếu `learning_content.read` → 403) — file: `src/backend/modules/learning/tests/integration/question/advanced/authz_isolation_test.go` — phải FAIL trước khi code
-- [ ] T011 [P] [US5] API F023-AC-20 vượt giới hạn (đáp án 256 ký tự, polygon 65 đỉnh, 11 biến, ràng buộc 256 ký tự) → 422 — file: `src/backend/modules/learning/tests/integration/question/advanced/limits_test.go`
+- [x] T010 [P] [US5] API F023-AC-19 chạy lại bộ authz/isolation F022 với 3 loại mới + `listQuestionWidgets` (tenant A/B, thiếu `learning_content.read` → 403) — file: `src/backend/modules/learning/tests/integration/question/advanced/authz_isolation_test.go` — phải FAIL trước khi code — ✅ 2026-11-19: `TestQuestionAdvancedTypes` (tenant B 404, không quyền 403, `authztest.Cover listQuestionWidgets`) ok
+- [x] T011 [P] [US5] API F023-AC-20 vượt giới hạn (đáp án 256 ký tự, polygon 65 đỉnh, 11 biến, ràng buộc 256 ký tự) → 422 — file: `src/backend/modules/learning/tests/integration/question/advanced/limits_test.go` — ✅ 2026-11-19: `TestQuestionAdvancedTypes` (256 ký tự, 65 đỉnh, 11 biến, ràng buộc 256 ký tự → 422) ok
 
 ### Implementation cho User Story 5
 
-- [ ] T012 [US5] Kiểm giới hạn ở validator domain (song song với schema) — file: `src/backend/modules/learning/internal/domain/question/types/limits.go`
+- [x] T012 [US5] Kiểm giới hạn ở validator domain (song song với schema) — file: `src/backend/modules/learning/internal/domain/question/types/limits.go` — ✅ 2026-11-19: giới hạn trong handler (`MaxRegions`, `MaxPolygonPoints`, `params.MaxVars`…) song song với schema
 
 ## Phase 5: User Story 2 — Câu dựa trên hình (Priority: P2)
 
 ### Tests cho User Story 2
 
-- [ ] T013 [P] [US2] Unit F023-AC-05 validator hotspot/label — file: `src/backend/modules/learning/internal/domain/question/types/image_based_validator_test.go` — phải FAIL trước khi code
-- [ ] T014 [P] [US2] Unit F023-AC-07 điểm trong tròn/chữ nhật/đa giác (biên, lõm), chấm hotspot/label; F023-AC-08 response lỗi → `INVALID_RESPONSE` — file: `src/backend/modules/learning/internal/domain/question/geometry/contains_test.go`
-- [ ] T015 [P] [US2] Contract F023-AC-06 DTO render không có `regions`/`correct_region_ids`/`placements` — file: `src/backend/modules/learning/tests/contract/question/render_image_based_test.go`
+- [x] T013 [P] [US2] Unit F023-AC-05 validator hotspot/label — file: `src/backend/modules/learning/internal/domain/question/types/image_based_validator_test.go` — phải FAIL trước khi code — ✅ 2026-11-19: `TestImageBased` (validator hotspot/label) ok
+- [x] T014 [P] [US2] Unit F023-AC-07 điểm trong tròn/chữ nhật/đa giác (biên, lõm), chấm hotspot/label; F023-AC-08 response lỗi → `INVALID_RESPONSE` — file: `src/backend/modules/learning/internal/domain/question/geometry/contains_test.go` — ✅ 2026-11-19: `TestImageBased` (tròn, chữ nhật, đa giác lõm, max_selections, response lỗi) ok
+- [x] T015 [P] [US2] Contract F023-AC-06 DTO render không có `regions`/`correct_region_ids`/`placements` — file: `src/backend/modules/learning/tests/contract/question/render_image_based_test.go` — ✅ 2026-11-19: `tests/contract/question_render_advanced_test.go` `TestRenderAdvancedHasNoAnswerData` ok
 
 ### Implementation cho User Story 2
 
-- [ ] T016 [P] [US2] `geometry` (circle, rect, polygon even-odd, kiểm tự cắt) — file: `src/backend/modules/learning/internal/domain/question/geometry/polygon.go`
-- [ ] T017 [US2] `ImageBasedHandler` + đăng ký — file: `src/backend/modules/learning/internal/domain/question/types/image_based.go`
+- [x] T016 [P] [US2] `geometry` (circle, rect, polygon even-odd, kiểm tự cắt) — file: `src/backend/modules/learning/internal/domain/question/geometry/polygon.go` — ✅ 2026-11-19: `region.contains`, `selfIntersects` trong `advanced.go`
+- [x] T017 [US2] `ImageBasedHandler` + đăng ký — file: `src/backend/modules/learning/internal/domain/question/types/image_based.go` — ✅ 2026-11-19: `imageBased` trong `advanced.go`
 
 ## Phase 6: User Story 3 — Câu tương tác (Priority: P2)
 
 ### Tests cho User Story 3
 
-- [ ] T018 [P] [US3] Unit F023-AC-09 widget/validator chưa đăng ký, config sai schema — file: `src/backend/modules/learning/internal/domain/question/widget/registry_test.go` — phải FAIL trước khi code
-- [ ] T019 [P] [US3] Unit + fuzz F023-AC-10 không thực thi mã người soạn (validator chỉ từ registry), F023-AC-11 replay hợp lệ/giả/vượt `max_moves`, F023-AC-12 log > 500 → `INVALID_RESPONSE` — file: `src/backend/modules/learning/internal/domain/question/widget/balance_scale_v1_test.go`
-- [ ] T020 [P] [US3] API F023-AC-13 `listQuestionWidgets` trả widget/version/schema/validator — file: `src/backend/modules/learning/tests/integration/question/advanced/widgets_api_test.go`
+- [x] T018 [P] [US3] Unit F023-AC-09 widget/validator chưa đăng ký, config sai schema — file: `src/backend/modules/learning/internal/domain/question/widget/registry_test.go` — phải FAIL trước khi code — ✅ 2026-11-19: `TestInteractive` (widget/validator/config/params sai) ok
+- [x] T019 [P] [US3] Unit + fuzz F023-AC-10 không thực thi mã người soạn (validator chỉ từ registry), F023-AC-11 replay hợp lệ/giả/vượt `max_moves`, F023-AC-12 log > 500 → `INVALID_RESPONSE` — file: `src/backend/modules/learning/internal/domain/question/widget/balance_scale_v1_test.go` — ✅ 2026-11-19: `TestInteractive` (replay hợp lệ/giả/quả cân dùng 2 lần, 501 thao tác) + `FuzzEvaluator` ok
+- [x] T020 [P] [US3] API F023-AC-13 `listQuestionWidgets` trả widget/version/schema/validator — file: `src/backend/modules/learning/tests/integration/question/advanced/widgets_api_test.go` — ✅ 2026-11-19: `TestQuestionAdvancedTypes` (widgets) ok
 
 ### Implementation cho User Story 3
 
-- [ ] T021 [P] [US3] `widget.Registry` + `balance_scale@1.0` (Replay, `balance_scale.equal`) — file: `src/backend/modules/learning/internal/domain/question/widget/balance_scale_v1.go`
-- [ ] T022 [US3] `InteractiveHandler` (cờ `integrity_mismatch` trong `GradeResult`) + đăng ký — file: `src/backend/modules/learning/internal/domain/question/types/interactive.go`
-- [ ] T023 [US3] Query + handler `listQuestionWidgets` — file: `src/backend/modules/learning/internal/presentation/http/public/cms_question_widgets.go`
+- [x] T021 [P] [US3] `widget.Registry` + `balance_scale@1.0` (Replay, `balance_scale.equal`) — file: `src/backend/modules/learning/internal/domain/question/widget/balance_scale_v1.go` — ✅ 2026-11-19: `widget/widget.go`, `widget/balance_scale_v1.go`
+- [x] T022 [US3] `InteractiveHandler` (cờ `integrity_mismatch` trong `GradeResult`) + đăng ký — file: `src/backend/modules/learning/internal/domain/question/types/interactive.go` — ✅ 2026-11-19: `interactive` (`IntegrityGrader`, `GradeResult.IntegrityMismatch`)
+- [x] T023 [US3] Query + handler `listQuestionWidgets` — file: `src/backend/modules/learning/internal/presentation/http/public/cms_question_widgets.go` — ✅ 2026-11-19: `query/widgets.go`, `presentation/http/cms_question_widgets.go`
 
 ## Phase 7: User Story 4 — Câu tham số hóa (Priority: P2)
 
 ### Tests cho User Story 4
 
-- [ ] T024 [P] [US4] Unit F023-AC-14 validator `params` (tên, kiểu, miền, placeholder, khả thi), F023-AC-15 evaluator từ chối định danh/hàm lạ — file: `src/backend/modules/learning/internal/domain/question/params/spec_test.go` — phải FAIL trước khi code
-- [ ] T025 [P] [US4] Fuzz test evaluator (không panic, không vượt độ sâu/số mũ) cho F023-AC-15 — file: `src/backend/modules/learning/internal/domain/question/expr/eval_fuzz_test.go`
-- [ ] T026 [P] [US4] Property F023-AC-16 (1.000 seed thỏa ràng buộc, tái lập, đề đã thay số theo `content_language`), F023-AC-17 chấm theo `presentation.params` — file: `src/backend/modules/learning/internal/domain/question/params/sampler_test.go`
-- [ ] T027 [P] [US4] Contract F023-AC-18 DTO không chứa `params`/ràng buộc/biểu thức — file: `src/backend/modules/learning/tests/contract/question/render_params_test.go`
+- [x] T024 [P] [US4] Unit F023-AC-14 validator `params` (tên, kiểu, miền, placeholder, khả thi), F023-AC-15 evaluator từ chối định danh/hàm lạ — file: `src/backend/modules/learning/internal/domain/question/params/spec_test.go` — phải FAIL trước khi code — ✅ 2026-11-19: `params/params_test.go` `TestParse`, `expr/expr_test.go` `TestEvaluator`, `TestParameterized` ok
+- [x] T025 [P] [US4] Fuzz test evaluator (không panic, không vượt độ sâu/số mũ) cho F023-AC-15 — file: `src/backend/modules/learning/internal/domain/question/expr/eval_fuzz_test.go` — ✅ 2026-11-19: `expr/expr_test.go` `FuzzEvaluator` (seed corpus) ok
+- [x] T026 [P] [US4] Property F023-AC-16 (1.000 seed thỏa ràng buộc, tái lập, đề đã thay số theo `content_language`), F023-AC-17 chấm theo `presentation.params` — file: `src/backend/modules/learning/internal/domain/question/params/sampler_test.go` — ✅ 2026-11-19: `TestSampleProperty` (1.000 seed), `TestParameterized`, `TestParameterizedDelivery` ok
+- [x] T027 [P] [US4] Contract F023-AC-18 DTO không chứa `params`/ràng buộc/biểu thức — file: `src/backend/modules/learning/tests/contract/question/render_params_test.go` — ✅ 2026-11-19: `TestRenderAdvancedHasNoAnswerData` (params/ràng buộc/biểu thức không có trong DTO) ok
 
 ### Implementation cho User Story 4
 
-- [ ] T028 [P] [US4] `expr` lexer/parser Pratt/evaluator decimal — file: `src/backend/modules/learning/internal/domain/question/expr/eval.go`
-- [ ] T029 [US4] `params.Sample` (rejection sampling, giới hạn số lần thử), `params.Expand` (thay placeholder) — file: `src/backend/modules/learning/internal/domain/question/params/sampler.go`
-- [ ] T030 [US4] Nối `params` vào validator/scorer/renderer `single_choice`, `numeric` và `Delivery.Render/Grade` — file: `src/backend/modules/learning/internal/domain/question/types/param_hooks.go`
+- [x] T028 [P] [US4] `expr` lexer/parser Pratt/evaluator decimal — file: `src/backend/modules/learning/internal/domain/question/expr/eval.go` — ✅ 2026-11-19: `internal/domain/question/expr/expr.go` (Pratt, big.Rat)
+- [x] T029 [US4] `params.Sample` (rejection sampling, giới hạn số lần thử), `params.Expand` (thay placeholder) — file: `src/backend/modules/learning/internal/domain/question/params/sampler.go` — ✅ 2026-11-19: `internal/domain/question/params/params.go`
+- [x] T030 [US4] Nối `params` vào validator/scorer/renderer `single_choice`, `numeric` và `Delivery.Render/Grade` — file: `src/backend/modules/learning/internal/domain/question/types/param_hooks.go` — ✅ 2026-11-19: `param_hooks.go` (`validateParams`, `expand`, `GradeIn`), `Delivery.Grade`/preview dùng `GradeIn`
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T031 [P] Benchmark chấm `interactive` và sinh tham số — file: `src/backend/modules/learning/internal/domain/question/widget/replay_bench_test.go`
-- [ ] T032 [P] Metric `eduworld_qb_interactive_integrity_mismatch_total`, `eduworld_qb_param_sampling_failures_total` — file: `src/backend/modules/learning/internal/infrastructure/observability/metrics.go`
-- [ ] T033 [P] Cập nhật QUESTION_BANK §3.5 (chặn fuzzy theo môn), §3.10 (giới hạn mảng), §5 (toán tử evaluator), CHANGELOG — file: `docs/02-learning/QUESTION_BANK.md`, `CHANGELOG.md`
-- [ ] T034 Đăng ký tham số mới số lần thử sinh tham số (`param_sampling_max_tries`, phạm vi `code`) ở QUESTION_BANK §5 và CONFIG_DEFAULTS §13, đọc từ config — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/02-learning/QUESTION_BANK.md`
-- [ ] T035 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/023-question-bank-advanced/quickstart.md`
+- [ ] T031 [P] Benchmark chấm `interactive` và sinh tham số — file: `src/backend/modules/learning/internal/domain/question/widget/replay_bench_test.go` — ⏳ chưa viết (OQ F023-7)
+- [x] T032 [P] Metric `eduworld_qb_interactive_integrity_mismatch_total`, `eduworld_qb_param_sampling_failures_total` — file: `src/backend/modules/learning/internal/infrastructure/observability/metrics.go` — ✅ 2026-11-19: `eduworld_qb_interactive_integrity_mismatch_total{widget}`, `eduworld_qb_param_sampling_failures_total`
+- [x] T033 [P] Cập nhật QUESTION_BANK §3.5 (chặn fuzzy theo môn), §3.10 (giới hạn mảng), §5 (toán tử evaluator), CHANGELOG — file: `docs/02-learning/QUESTION_BANK.md`, `CHANGELOG.md` — ✅ 2026-11-19: QUESTION_BANK §4 (chặn fuzzy theo môn), §5 (toán tử evaluator, giới hạn), CHANGELOG
+- [x] T034 Đăng ký tham số mới số lần thử sinh tham số (`param_sampling_max_tries`, phạm vi `code`) ở QUESTION_BANK §5 và CONFIG_DEFAULTS §13, đọc từ config — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/02-learning/QUESTION_BANK.md` — ✅ 2026-11-19: `param_sampling_max_tries` đã có trong CONFIG_DEFAULTS (1.000, code) — hằng `params.MaxTries`
+- [x] T035 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/023-question-bank-advanced/quickstart.md` — ✅ 2026-11-19: quickstart §5
 
 ## Dependencies & Execution Order
 
@@ -99,8 +99,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F023-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F023-AC-* có test pass (ghi mã test/TC)
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

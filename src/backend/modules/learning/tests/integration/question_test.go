@@ -94,12 +94,11 @@ func TestQuestionAuthoring(t *testing.T) {
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM content.questions WHERE tenant_id = $1`, c.tenantA); n != 8 {
 		t.Fatalf("%d questions", n)
 	}
-	// AC-02: types of F023.
+	// AC-02: the types of F023 are enabled since F023 (question.Full); a registry without them still answers
+	// TYPE_NOT_ENABLED (domain tests of question.Base).
 	r := c.createQ(t, qlcmA, qc.body(map[string]any{"type": "short_answer", "stem": map[string]any{"blocks": []any{map[string]any{"type": "paragraph", "text": "x"}}},
 		"render_payload": map[string]any{"max_length": 10}, "answer_key": map[string]any{"accepted": []string{"x"}}, "scoring_rule": map[string]any{"mode": "all_or_nothing"}}, nil))
-	if must(t, r, http.StatusUnprocessableEntity, "short_answer"); !slices.Contains(r.errorCodes(), "/type:TYPE_NOT_ENABLED") {
-		t.Fatalf("short_answer %v", r.errorCodes())
-	}
+	must(t, r, http.StatusCreated, "short_answer")
 	// AC-03: semantic errors with JSON pointers.
 	sc := qbFixture(t, "single_choice")
 	sc["answer_key"] = map[string]any{"correct_option_id": "o_9999"}

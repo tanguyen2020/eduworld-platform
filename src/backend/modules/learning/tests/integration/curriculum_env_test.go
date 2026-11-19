@@ -146,7 +146,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		t.Fatal(err)
 	}
 	qcmd := command.Questions{UoW: e.uow, Store: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{}, Schema: schema,
-		Registry: question.Base(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Docs: write.DocRepo{}}
+		Registry: question.Full(), Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Docs: write.DocRepo{}}
 	qqry := query.Questions{Session: e.read, Model: read.QuestionModel{}, Cursors: codec}
 	docSchema, err := qbschema.NewDocs()
 	if err != nil {
@@ -155,7 +155,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
 		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
-	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry, Docs: dcmd, DocQueries: dqry}
+	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry, Docs: dcmd, DocQueries: dqry,
+		Widgets: query.QuestionWidgets{Widgets: question.Full().Widgets()}}
 	var mk *mediaKit
 	if o.media {
 		mk = newMediaKit(ctx, t, e, codec, schema)

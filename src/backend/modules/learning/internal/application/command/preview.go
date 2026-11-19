@@ -223,7 +223,7 @@ func (h Preview) SubmitResponse(ctx context.Context, in PreviewResponseInput) (o
 	if h.Schema != nil && h.Schema.ValidateResponse(v.Type, in.Response) != nil {
 		return out, problem.New(problem.InvalidResponse, "the response does not match the question type")
 	}
-	g, err := h.Registry.Grade(c, in.Response)
+	g, err := h.Registry.GradeIn(c, question.Presentation{QuestionVersionID: v.ID, Seed: it.Seed}, in.Response)
 	if errors.Is(err, question.ErrInvalidResponse) {
 		return out, problem.New(problem.InvalidResponse, "the response does not match the question type")
 	}

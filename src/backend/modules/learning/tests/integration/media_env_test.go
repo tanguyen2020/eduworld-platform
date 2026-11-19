@@ -81,7 +81,7 @@ func newMediaKit(ctx context.Context, t *testing.T, e *env, codec *page.Codec, s
 		Audit: write.Auditor{R: e.rec}, WorkDir: t.TempDir(), Metrics: observability.MediaCounter{}}
 	k.math = command.MathAssets{Store: write.MathRepo{}, Storage: s3, Metrics: observability.MediaCounter{}}
 	k.qry = query.MediaLibrary{Session: e.read, Model: read.MediaModel{}, Signer: k.signer, Cursors: codec}
-	k.preview = command.Preview{UoW: e.uow, Session: e.read, Questions: read.QuestionModel{}, Registry: question.Base(), Schema: schema, Store: k.store}
+	k.preview = command.Preview{UoW: e.uow, Session: e.read, Questions: read.QuestionModel{}, Registry: question.Full(), Schema: schema, Store: k.store}
 	return k
 }
 

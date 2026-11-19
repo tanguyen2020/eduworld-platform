@@ -3765,6 +3765,17 @@
     ]
   },
   {
+    "operation_id": "listQuestionWidgets",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/question-widgets",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listQuests",
     "module": "game",
     "method": "GET",

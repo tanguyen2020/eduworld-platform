@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -210,7 +211,7 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 		}
 	}
 	a := question.Authoring{Type: typ, Stem: v.Stem, RenderPayload: authRender, AnswerKey: v.AnswerKey, Scoring: rule, MaxScore: v.MaxScore,
-		Explanation: v.Explanation, Hints: hints, MathAssets: assets, MinResponseMS: v.MinResponseMS, Language: v.ContentLanguage}
+		Explanation: v.Explanation, Hints: hints, MathAssets: assets, MinResponseMS: v.MinResponseMS, Language: v.ContentLanguage, MediaRefs: v.MediaRefs}
 	var all contentmodel.Violations
 	if err := h.Registry.Validate(a, question.Limits{AssetsPerVersion: AssetsPerVersionMax}); err != nil {
 		var vs contentmodel.Violations
@@ -249,6 +250,9 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 		return problemOfViolations(all)
 	}
 	if err := h.checkReferences(ctx, *v); err != nil {
+		return err
+	}
+	if err := h.checkFuzzy(ctx, *v); err != nil {
 		return err
 	}
 	if err := h.checkMedia(ctx, *v, authRender); err != nil {
@@ -670,6 +674,27 @@ func sameOwner(f QuestionFields, o contentmodel.Owner) error {
 	}
 	if f.has("tenant_id") && f.TenantID != nil && (o.TenantID == nil || *o.TenantID != *f.TenantID) {
 		return problem.Invalid("/tenant_id", problem.SubInvalid, "cannot change on a version")
+	}
+	return nil
+}
+
+// SubFuzzyNotAllowed is errors[].code of a fuzzy match on a spelling subject (F023-AC-03).
+const SubFuzzyNotAllowed = "FUZZY_NOT_ALLOWED_FOR_SUBJECT"
+
+// fuzzyBlockedSubjects are the subject codes whose spelling is the learning goal (QUESTION_BANK §4 step 7) [Proposed].
+var fuzzyBlockedSubjects = []string{"vietnamese", "english"}
+
+// checkFuzzy refuses fuzzy matching on questions of Vietnamese or English (F023-AC-03).
+func (h Questions) checkFuzzy(ctx context.Context, v dto.QuestionVersion) error {
+	if !question.FuzzyAnywhere(v.AnswerKey) {
+		return nil
+	}
+	s, err := h.Catalog.Subject(ctx, v.SubjectID)
+	if err != nil {
+		return nil //nolint:nilerr // the subject is checked by checkReferences
+	}
+	if slices.Contains(fuzzyBlockedSubjects, s.Code) {
+		return problem.Invalid("/answer_key", SubFuzzyNotAllowed, "fuzzy matching is not allowed for "+s.Code)
 	}
 	return nil
 }

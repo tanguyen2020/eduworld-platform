@@ -11,6 +11,16 @@
 - Q: Loại nào được tham số hóa? → A: `single_choice` và `numeric` — hai loại `question.schema.json` cho phép `params`.
 - Q: Widget `interactive` đầu tiên? → A: `balance_scale` phiên bản `1.0`, validator `balance_scale.equal` theo ví dụ [QUESTION_BANK §3.11](../../docs/02-learning/QUESTION_BANK.md#311-interactive--câu-hỏi-tương-tác--mô-phỏng) [Proposed]; widget mới là release kỹ thuật (validator Go + scene Godot ở F063).
 
+### Session 2026-11-19 (triển khai)
+
+- OQ F023-1: Bố cục package khác plan: handler 3 loại mới ở `internal/domain/question/advanced.go` (không có thư mục `types/`, như OQ F022-2), hình học (tròn, chữ nhật, đa giác even-odd, kiểm tự cắt) nằm trong handler `image_based`; `expr`, `params`, `widget` là package riêng; Levenshtein và chuẩn hóa tiếng Anh dùng lại `normalize` của F022 (đã có). → [Proposed].
+- OQ F023-2: Registry đủ 11 loại là `question.Full()`; `question.Base()` (8 loại) vẫn trả `TYPE_NOT_ENABLED` cho 3 loại mới (F022-AC-02 kiểm ở domain). Binary chưa nối (OQ F020-3) nên môi trường test dùng `Full()`. → [Proposed].
+- OQ F023-3: Chặn fuzzy theo môn áp cho mọi đáp án chữ có `fuzzy.enabled = true` trong `answer_key` (`short_answer` và các chỗ trống `fill_in_blank`), theo mã môn `vietnamese`, `english` của danh mục. → [Proposed].
+- OQ F023-4: `choice` của `params` chỉ nhận giá trị số (biến chữ không dùng được trong biểu thức) [Proposed]; số thập phân hiển thị tối đa 6 chữ số sau dấu phẩy; `presentation.params` lưu chuỗi thập phân dấu chấm. `Registry.GradeIn(content, presentation, response)` chấm theo giá trị của presentation (sinh lại từ `seed` nếu `params` trống); `Delivery.Grade` và preview (F027) dùng nó. → [Proposed].
+- OQ F023-5: `interactive` — action log theo `interactiveResponse` (`{t_ms, action, args}`; `balance_scale`: `place`/`remove` với `args.w`), `state` là `{right_weights}`; mỗi quả cân có sẵn dùng tối đa một lần; `balance_scale.equal` so tổng đĩa phải với `params.target` (mặc định tổng đĩa trái). Lệch phát lại → điểm 0 + `GradeResult.integrity_mismatch` + metric `eduworld_qb_interactive_integrity_mismatch_total{widget}`; lưu tín hiệu gian lận thuộc F030/F031. → [Proposed].
+- OQ F023-6: `image_based` thêm `render_payload.max_selections.maximum = 10` (khớp tối đa 10 điểm của response) và `answer_key.placements.maxProperties = 16`; chạm nhiều lần cùng một vùng tính một lần; với `partial/proportional` hotspot cho điểm theo phần vùng trúng khi không vượt `max_selections`. Ảnh phải nằm trong `media_refs` của version (kiểm có thật/`ready` thuộc F027/F025). → [Proposed].
+- OQ F023-7: Test tích hợp đặt phẳng `tests/integration/question_advanced_test.go`; benchmark T031 chưa viết (đo khi F030 cần). → [Proposed].
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu trả lời ngắn chấm tự động (Priority: P1)

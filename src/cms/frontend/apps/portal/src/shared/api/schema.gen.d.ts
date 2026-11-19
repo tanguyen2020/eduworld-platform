@@ -3118,6 +3118,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/question-widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Widget câu hỏi interactive đã đăng ký (mã, phiên bản, schema config, validator Go) — F023 (learning_content.read) */
+        get: operations["listQuestionWidgets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/learning/questions": {
         parameters: {
             query?: never;
@@ -11567,6 +11584,17 @@ export interface components {
         };
         /** @enum {string} */
         QuestionType: "single_choice" | "multiple_choice" | "true_false" | "fill_in_blank" | "short_answer" | "numeric" | "matching" | "ordering" | "drag_drop" | "image_based" | "interactive";
+        QuestionWidgetList: {
+            data: {
+                /** @description specs/schemas/question-widgets/<widget>.v<major>.schema.json (config, params) */
+                config_schema: {
+                    [key: string]: unknown;
+                };
+                validators: string[];
+                widget: string;
+                widget_version: string;
+            }[];
+        };
         QuestProgress: {
             completed_at?: components["schemas"]["Timestamp"];
             party_id?: components["schemas"]["Uuid"];
@@ -21774,6 +21802,35 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listQuestionWidgets: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionWidgetList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     searchQuestions: {

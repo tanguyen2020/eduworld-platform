@@ -129,6 +129,7 @@ func (r *Registry) Validate(a Authoring, lim Limits) error {
 	for _, v := range ids.v {
 		b.v = append(b.v, v)
 	}
+	b.v = append(b.v, validateParams(a)...)
 	if len(a.Hints) > MaxHints {
 		b.add("/hints", "has more than 5 levels")
 	}
@@ -201,7 +202,7 @@ func (r *Registry) Grade(c Content, response json.RawMessage) (GradeResult, erro
 	if err != nil {
 		return GradeResult{}, err
 	}
-	frac, parts, selected, err := safeGrade(h, c, response)
+	frac, parts, selected, mismatch, err := safeGrade(h, c, response)
 	if err != nil {
 		return GradeResult{}, err
 	}
@@ -213,17 +214,22 @@ func (r *Registry) Grade(c Content, response json.RawMessage) (GradeResult, erro
 	if m := c.Scoring.MinScore; m != nil && score < *m {
 		score = *m
 	}
-	return GradeResult{Score: score, MaxScore: c.MaxScore, IsCorrect: frac >= 1, Parts: parts, SelectedOptionIDs: selected}, nil
+	return GradeResult{Score: score, MaxScore: c.MaxScore, IsCorrect: frac >= 1, Parts: parts, SelectedOptionIDs: selected,
+		IntegrityMismatch: mismatch}, nil
 }
 
 // safeGrade turns any panic of a scorer on malformed stored data into an invalid response (never a 500, AC-19).
-func safeGrade(h Handler, c Content, resp json.RawMessage) (frac float64, parts []Part, selected []string, err error) {
+func safeGrade(h Handler, c Content, resp json.RawMessage) (frac float64, parts []Part, selected []string, mismatch bool, err error) {
 	defer func() {
 		if p := recover(); p != nil {
-			frac, parts, selected, err = 0, nil, nil, ErrInvalidResponse
+			frac, parts, selected, mismatch, err = 0, nil, nil, false, ErrInvalidResponse
 		}
 	}()
-	return h.Grade(c, resp)
+	if ig, ok := h.(IntegrityGrader); ok {
+		return ig.GradeIntegrity(c, resp)
+	}
+	frac, parts, selected, err = h.Grade(c, resp)
+	return frac, parts, selected, false, err
 }
 
 func round4(x float64) float64 { return math.Round(x*10000) / 10000 }
@@ -235,10 +241,14 @@ func (r *Registry) Render(c Content, seed uint64) (Rendered, Presentation, error
 	if err != nil {
 		return Rendered{}, Presentation{}, err
 	}
+	c, values, err := expand(c, seed, nil)
+	if err != nil {
+		return Rendered{}, Presentation{}, err
+	}
 	hs := fnv.New64a()
 	_, _ = hs.Write(c.VersionID[:])
 	rng := rand.New(rand.NewPCG(seed, hs.Sum64())) //nolint:gosec // reproducible presentation order, not a secret
-	p := Presentation{QuestionVersionID: c.VersionID, Seed: seed, Orders: map[string][]string{}}
+	p := Presentation{QuestionVersionID: c.VersionID, Seed: seed, Orders: map[string][]string{}, Params: values}
 	shuffle := func(name string, ids []string) []string {
 		out := slices.Clone(ids)
 		rng.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })

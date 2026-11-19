@@ -724,6 +724,7 @@ workspaces:
             required_permissions: [learning_content.read]
             operation_ids:
               - searchQuestions
+              - listQuestionWidgets
               - getCmsQuestion
               - getCmsQuestionVersion
               - "listContentVersions[content_type=question]"

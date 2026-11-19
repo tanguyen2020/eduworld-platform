@@ -38,3 +38,17 @@ make test-contract
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test theo mã F023-AC-*, log fuzz (số input, 0 crash), báo cáo contract test DTO.
+
+## 5. Bằng chứng (2026-11-19, local, worktree `f027-learning`)
+
+| Lệnh | Kết quả |
+|---|---|
+| `go test ./modules/learning/...` | ok — `TestShortAnswer`, `TestImageBased`, `TestInteractive`, `TestParameterized`, `TestEvaluator`, `FuzzEvaluator` (corpus), `TestParse`, `TestSampleProperty` (1.000 seed), `TestExpand`, `TestRenderAdvancedHasNoAnswerData`, hồi quy F022 (`TestRenderDTOHasNoAnswerData`…) |
+| `go test -tags integration -run 'TestQuestionAdvancedTypes|TestParameterizedDelivery'` | 2/2 PASS |
+| Hồi quy toàn bộ `go test -tags integration ./modules/learning/tests/integration/` | ok (1465 s) |
+| `routematrix check` · `archgen --check` · `tenancyguard` · `entlint` · `ewlint` · golangci-lint | 0 lỗi |
+| `check-maxlength` · `check-enums` · `validate-schemas` · `check-portal-catalog` · `check-features` · `check-cross-features` | 0 lỗi |
+
+Ánh xạ: AC-01/02/04 `TestShortAnswer`; AC-03 `TestQuestionAdvancedTypes`; AC-05/07/08 `TestImageBased`; AC-06/18 `TestRenderAdvancedHasNoAnswerData`; AC-09/10/11/12 `TestInteractive` + `FuzzEvaluator`; AC-13/19/20 `TestQuestionAdvancedTypes`; AC-14/15 `TestParse`, `TestEvaluator`, `TestParameterized`; AC-16/17 `TestSampleProperty`, `TestParameterized`, `TestParameterizedDelivery`.
+
+Chưa làm: benchmark T031 (OQ F023-7); scene Godot của widget (F063).
