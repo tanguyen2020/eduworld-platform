@@ -116,12 +116,12 @@ type PortalSession struct {
 	MFA      bool      `json:"mfa"`
 }
 
-// PortalSessionStore keeps PortalSession by sid (ew:identity:portal_session:<hash(sid)>).
+// PortalSessionStore keeps PortalSession by portalauth.SessionKey(sid) (ew:identity:portal_session:<key>).
 type PortalSessionStore interface {
-	Save(ctx context.Context, sid string, s PortalSession, ttl time.Duration) error
+	Save(ctx context.Context, key string, s PortalSession, ttl time.Duration) error
 	// Get returns found=false when absent (expired or lost: treated as unknown auth_time).
-	Get(ctx context.Context, sid string) (s PortalSession, found bool, err error)
-	Delete(ctx context.Context, sid string) error
+	Get(ctx context.Context, key string) (s PortalSession, found bool, err error)
+	Delete(ctx context.Context, key string) error
 }
 
 // RateLimiter is a fixed-window counter (Valkey). retryAfter is set when !allowed.

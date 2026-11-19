@@ -3,9 +3,7 @@ package keycloak
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/portalauth"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 )
 
@@ -175,20 +174,15 @@ func (p *PortalTokens) Logout(ctx context.Context, refreshToken string) error {
 	}
 }
 
-// SessionKey implements port.PortalIdP.
+// SessionKey implements port.PortalIdP (portalauth.SessionKey of the sid of the refresh token).
 func (p *PortalTokens) SessionKey(refreshToken string) string {
 	var c struct {
 		SID string `json:"sid"`
 	}
 	if decodeClaims(refreshToken, &c) == nil && c.SID != "" {
-		return hashHex("sid:" + c.SID)
+		return portalauth.SessionKey(c.SID)
 	}
-	return hashHex("rt:" + refreshToken)
-}
-
-func hashHex(s string) string {
-	sum := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(sum[:16])
+	return portalauth.Key("rt", refreshToken)
 }
 
 func (p *PortalTokens) clientForm(grant string) []byte {

@@ -58,6 +58,10 @@ type Operation struct {
 	// Idempotency and SuccessStatus come from the IdempotencyKey parameter and the 2xx response of the spec.
 	Idempotency   IdempotencyMode
 	SuccessStatus int
+	// PreValidate (public operations only) runs before contract validation, for checks the contract says
+	// answer first: the CSRF double-submit of /auth/portal/token:refresh and /logout must be 403
+	// CSRF_TOKEN_INVALID, not 422, and a missing refresh cookie 401 (ADR-0091 §4, F012-AC-30).
+	PreValidate func(http.Handler) http.Handler
 }
 
 var (
@@ -192,6 +196,12 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 				gate = s.d.FeatureGate.Middleware(rule, WriteError)
 			}
 		}
+	}
+	if op.PreValidate != nil {
+		if !op.Public {
+			return fmt.Errorf("httpx: operation %s: PreValidate is for public operations only", op.ID)
+		}
+		chain = op.PreValidate(chain)
 	}
 	if op.Idempotency != IdempotencyNone {
 		if s.d.Idempotency == nil || op.Public {
