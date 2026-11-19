@@ -163,6 +163,20 @@ func TestPlatformOpsAuthorizePrincipal(t *testing.T) {
 			_, err := query.ListResourceAssignments{}.Handle(ctx, query.ListResourceAssignmentsInput{ResourceType: "question", ResourceID: uuid.New()})
 			return err
 		},
+		"executeTenantCloneStep": func(ctx context.Context) error {
+			_, err := command.ExecuteCloneStep{}.Handle(ctx, command.CloneStepInput{JobID: uuid.New(), SourceTenant: authztest.TenantA,
+				TargetTenant: authztest.TenantB, ResourceType: "question", ResourceIDs: []uuid.UUID{uuid.New()}})
+			return err
+		},
+		// Trash: tenant_admin holds tenant.trash.* [Proposed] and is allowed within its tenant (integration test).
+		"listTrash": func(ctx context.Context) error {
+			_, err := query.ListTrash{}.Handle(ctx, query.ListTrashInput{})
+			return err
+		},
+		"restoreTrashItem": func(ctx context.Context) error {
+			_, err := command.RestoreResource{}.Handle(ctx, command.RestoreInput{ResourceType: "question", ID: uuid.New(), Reason: "valid reason"})
+			return err
+		},
 	}
 	denied := map[string]authz.Principal{
 		"tenant admin A":  authztest.Staff(authztest.TenantA, "tenant_admin"),
@@ -171,9 +185,13 @@ func TestPlatformOpsAuthorizePrincipal(t *testing.T) {
 		"content admin":   authztest.Platform("content_admin"),
 		"no role (staff)": authztest.NoRole(authztest.TenantA),
 	}
+	trashOp := map[string]bool{"listTrash": true, "restoreTrashItem": true}
 	for op, call := range ops {
 		authztest.Cover(t, op, authztest.RoleDenied, authztest.CrossTenant)
 		for who, p := range denied {
+			if trashOp[op] && who == "tenant admin A" {
+				continue
+			}
 			if got := codeOf(call(authztest.Ctx(ctx, p))); got != problem.PermissionDenied {
 				t.Errorf("%s by %s: %q, want PERMISSION_DENIED", op, who, got)
 			}

@@ -86,3 +86,6 @@ func now(clock func() time.Time) time.Time {
 	}
 	return time.Now().UTC()
 }
+
+// module labels data access and bypass metrics (eduworld_tenant_filter_bypass_total{module}).
+const module = "learning"

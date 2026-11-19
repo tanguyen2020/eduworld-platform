@@ -159,7 +159,8 @@ func (h Handler) Restore(ctx context.Context, id uuid.UUID) (trash.Entry, error)
 	if err := trash.CheckRestore(e); err != nil {
 		return e, err
 	}
-	if err := c.FixtureContent.UpdateOneID(id).ClearDeletedAt().ClearDeletedBy().ClearDeleteReason().Exec(ctx); err != nil {
+	// Update().Where(ID) and not UpdateOneID: entx.Driver binds the transaction of ctx, and ent's UpdateOne would open its own.
+	if err := c.FixtureContent.Update().Where(fixturecontent.ID(id)).ClearDeletedAt().ClearDeletedBy().ClearDeleteReason().Exec(ctx); err != nil {
 		if fent.IsConstraintError(err) {
 			return e, trash.ErrConflict
 		}

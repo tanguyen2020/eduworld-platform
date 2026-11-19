@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
@@ -22,6 +25,9 @@ type Facade struct {
 	Apply       command.ApplyTenantAssignmentsHandler
 	Revoke      command.RevokeTenantAssignmentsHandler
 	Assignments query.ListResourceAssignmentsHandler
+	Trash       query.ListTrashHandler
+	Restore     command.RestoreResourceHandler
+	Clone       command.ExecuteCloneStepHandler
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }
@@ -80,4 +86,16 @@ func replayOr[T any](ctx context.Context, store *idempotency.Store, k idempotenc
 		}
 	}
 	return v, err
+}
+
+// stepKey is the idempotency key of a clone step: (job_id, resource_type) whatever the caller's
+// Idempotency-Key, dated by the job id when it is a UUIDv7 (F020-AC-27).
+func stepKey(job uuid.UUID, resourceType string) idempotency.Key {
+	day := time.Unix(0, 0).UTC()
+	if job.Version() == 7 {
+		sec, nsec := job.Time().UnixTime()
+		t := time.Unix(sec, nsec).UTC()
+		day = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+	}
+	return idempotency.Key{UserID: job, Method: facadeMethod, Route: "learning.executeTenantCloneStep:" + resourceType, Key: job, IssuedOn: day}
 }

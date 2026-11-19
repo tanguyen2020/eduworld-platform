@@ -114,7 +114,7 @@ func (h ListResourceAssignments) Handle(ctx context.Context, in ListResourceAssi
 	if after != nil {
 		afterID = after.ID
 	}
-	bctx, err := tenancy.Bypass(ctx, tenancy.ReasonSystemAdminCrossTenant, tenancy.WithMode(tenancy.ModeRead))
+	bctx, err := tenancy.Bypass(tenancy.WithModule(ctx, module), tenancy.ReasonSystemAdminCrossTenant, tenancy.WithMode(tenancy.ModeRead))
 	if err != nil {
 		return out, err
 	}
@@ -194,3 +194,6 @@ func (h CheckReference) Handle(ctx context.Context, rt contentmodel.ResourceType
 	}
 	return problem.New(problem.NotFound, "")
 }
+
+// module labels data access and bypass metrics (eduworld_tenant_filter_bypass_total{module}).
+const module = "learning"

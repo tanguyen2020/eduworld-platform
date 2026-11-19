@@ -45,6 +45,10 @@ func (e *env) facadeOf(t *testing.T, cache pwrite.CacheInvalidator) facade.Facad
 	return facade.Facade{
 		Apply: command.ApplyTenantAssignments{AssignmentDeps: deps}, Revoke: command.RevokeTenantAssignments{AssignmentDeps: deps},
 		Assignments: query.ListResourceAssignments{Session: e.read, Assignments: read.AssignmentReadModel{}, Cursors: codec},
+		Trash:       query.ListTrash{Session: e.read, Resources: reg, Cursors: codec},
+		Restore:     command.RestoreResource{TrashDeps: e.trashDeps(reg)},
+		Clone: command.ExecuteCloneStep{CloneDeps: command.CloneDeps{UoW: e.uow, Resources: reg, Tenants: read.TenantDirectory{},
+			Audit: write.Auditor{R: e.rec}}},
 		Idempotency: idempotency.NewStore(e.app, 0, nil),
 	}
 }
@@ -143,3 +147,17 @@ func listData(res any) []learningapi.CommonInternalCommonV1TenantAssignment {
 }
 
 func asProblem(err error, target **problem.Error) bool { return errors.As(err, target) }
+
+func (e *env) trashDeps(reg *port.Registry) command.TrashDeps {
+	return command.TrashDeps{UoW: e.uow, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}}
+}
+
+// softDelete runs the SoftDeleteResource use case with the scope of ctx.
+func (e *env) softDelete(ctx context.Context, t *testing.T, id uuid.UUID, reason string) error {
+	t.Helper()
+	reg, err := port.NewRegistry(fixtures.Handler{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return command.SoftDeleteResource{TrashDeps: e.trashDeps(reg)}.Handle(ctx, command.SoftDeleteInput{ResourceType: "question", ID: id, Reason: reason})
+}
