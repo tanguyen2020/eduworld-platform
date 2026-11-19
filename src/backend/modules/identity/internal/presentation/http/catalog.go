@@ -12,7 +12,7 @@ import (
 )
 
 func countryView(c catalog.Country) dto.Country {
-	return dto.Country{CountryCode: c.Code, Name: c.Name, DefaultLocale: c.DefaultLocale, Status: c.Status}
+	return dto.Country{CountryCode: c.Code, Name: c.Name, DefaultLocale: c.DefaultLocale, Status: c.Status, Version: c.Version}
 }
 
 func dateStr(t *time.Time) *string {
@@ -26,7 +26,7 @@ func dateStr(t *time.Time) *string {
 func provinceView(p catalog.ProvinceRecord) dto.Province {
 	return dto.Province{ProvinceID: p.ID, Code: p.Code, CountryCode: p.CountryCode, OfficialCode: p.OfficialCode, Name: p.Name,
 		ShortName: p.ShortName, ProvinceType: p.ProvinceType, EffectiveFrom: dateStr(p.EffectiveFrom), EffectiveTo: dateStr(p.EffectiveTo),
-		Status: p.Status}
+		Status: p.Status, Version: p.Version}
 }
 
 func (h Handlers) createCountry(w http.ResponseWriter, r *http.Request) {

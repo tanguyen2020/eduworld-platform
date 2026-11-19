@@ -777,8 +777,23 @@ paths:
       operationId: listCatalogSchools
       x-portal-shell: true
       summary: Danh mục trường (người dùng tenant thấy trường trong tenant; System Admin lọc theo tenant_ids)
+      description: |
+        Người dùng tenant: luôn khóa vào tenant của phiên (`X-Tenant-Id` bắt buộc, `tenant_ids` bị bỏ qua).
+        System Admin: không gửi `X-Tenant-Id` thì **bắt buộc** `tenant_ids` (`platform.cross_tenant.read` + MFA, CrossTenantScope,
+        audit `cross_tenant.accessed`); không có `tenant_ids` → `403 PERMISSION_DENIED` (không liệt kê trường của mọi tenant).
+        Gửi `X-Tenant-Id` = tenant đích thì đọc đúng tenant đó (OQ F057-4).
       parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: status
+          in: query
+          required: false
+          description: Trạng thái trường (vắng mặt = mọi trạng thái)
+          schema:
+            type: string
+            enum:
+              - pending_review
+              - active
+              - disabled
         - name: province
           in: query
           required: false
@@ -3938,6 +3953,57 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /admin/student-cleanup/runs/{run_id}:cancel:
+    post:
+      x-service: identity
+      tags:
+        - admin
+      operationId: cancelStudentCleanupRun
+      x-portal-action: action.platform_admin.system_settings.approve_cleanup
+      summary: Hủy lần dọn đang chờ xác nhận (vượt ngưỡng)
+      description: |
+        Quyền `platform.student_cleanup.approve` (System Admin, gateway nội bộ + MFA). Chỉ lần dọn `awaiting_approval` → `cancelled`
+        (khác → `409 CONFLICT`); không học sinh nào bị dọn, audit `student_cleanup.cancelled` kèm lý do. Lần chạy job sau tạo lần dọn mới
+        theo cấu hình hiện hành (F016, OQ F057-2).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        '204':
+          description: Đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /admin/settings/chat-retention:
     get:
       x-service: identity
@@ -5784,6 +5850,10 @@ components:
             - disabled
         school_count:
           type: integer
+        version:
+          type: integer
+          minimum: 1
+          description: Version hiện tại của bản ghi = giá trị `If-Match` của updateTenant (OQ F057-3)
     Country:
       type: object
       required:
@@ -5805,6 +5875,10 @@ components:
           enum:
             - active
             - inactive
+        version:
+          type: integer
+          minimum: 1
+          description: Version hiện tại = giá trị `If-Match` của updateCountry (OQ F057-3)
     Province:
       type: object
       required:
@@ -5862,6 +5936,10 @@ components:
             - 'null'
           maxLength: 64
           description: 'Với đơn vị inactive: mã đơn vị kế thừa hiện hành'
+        version:
+          type: integer
+          minimum: 1
+          description: Version hiện tại = giá trị `If-Match` của updateProvince (OQ F057-3)
     SchoolPage:
       type: object
       required:
@@ -8291,7 +8369,9 @@ components:
             - completed
             - awaiting_approval
             - approved
+            - cancelled
             - failed
+          description: '`cancelled` = System Admin đã hủy lần dọn chờ xác nhận (cancelStudentCleanupRun)'
         candidates:
           type: integer
         cleaned:

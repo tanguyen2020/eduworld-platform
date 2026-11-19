@@ -1388,6 +1388,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/student-cleanup/runs/{run_id}:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hủy lần dọn đang chờ xác nhận (vượt ngưỡng)
+         * @description Quyền `platform.student_cleanup.approve` (System Admin, gateway nội bộ + MFA). Chỉ lần dọn `awaiting_approval` → `cancelled`
+         *     (khác → `409 CONFLICT`); không học sinh nào bị dọn, audit `student_cleanup.cancelled` kèm lý do. Lần chạy job sau tạo lần dọn mới
+         *     theo cấu hình hiện hành (F016, OQ F057-2).
+         */
+        post: operations["cancelStudentCleanupRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/tenant-assignments": {
         parameters: {
             query?: never;
@@ -2108,7 +2130,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh mục trường (người dùng tenant thấy trường trong tenant; System Admin lọc theo tenant_ids) */
+        /**
+         * Danh mục trường (người dùng tenant thấy trường trong tenant; System Admin lọc theo tenant_ids)
+         * @description Người dùng tenant: luôn khóa vào tenant của phiên (`X-Tenant-Id` bắt buộc, `tenant_ids` bị bỏ qua).
+         *     System Admin: không gửi `X-Tenant-Id` thì **bắt buộc** `tenant_ids` (`platform.cross_tenant.read` + MFA, CrossTenantScope,
+         *     audit `cross_tenant.accessed`); không có `tenant_ids` → `403 PERMISSION_DENIED` (không liệt kê trường của mọi tenant).
+         *     Gửi `X-Tenant-Id` = tenant đích thì đọc đúng tenant đó (OQ F057-4).
+         */
         get: operations["listCatalogSchools"];
         put?: never;
         post?: never;
@@ -9101,6 +9129,8 @@ export interface components {
             name: components["schemas"]["LocalizedName"];
             /** @enum {string} */
             status: "active" | "inactive";
+            /** @description Version hiện tại = giá trị `If-Match` của updateCountry (OQ F057-3) */
+            version?: number;
         };
         CountryInput: {
             /** @description Chỉ khi tạo */
@@ -11442,6 +11472,8 @@ export interface components {
             status: "active" | "inactive";
             /** @description Với đơn vị inactive: mã đơn vị kế thừa hiện hành */
             successor_code?: string | null;
+            /** @description Version hiện tại = giá trị `If-Match` của updateProvince (OQ F057-3) */
+            version?: number;
         };
         ProvinceInput: {
             /** @description Chỉ khi tạo */
@@ -12573,8 +12605,11 @@ export interface components {
             /** @description Đang có session/bài kiểm tra/giải đấu/moderation case mở */
             skipped_active?: number;
             started_at: components["schemas"]["Timestamp"];
-            /** @enum {string} */
-            status: "dry_run" | "running" | "completed" | "awaiting_approval" | "approved" | "failed";
+            /**
+             * @description `cancelled` = System Admin đã hủy lần dọn chờ xác nhận (cancelStudentCleanupRun)
+             * @enum {string}
+             */
+            status: "dry_run" | "running" | "completed" | "awaiting_approval" | "approved" | "cancelled" | "failed";
             tenant_id: components["schemas"]["Uuid"];
         };
         StudentCleanupRunPage: {
@@ -12866,6 +12901,8 @@ export interface components {
             status: "active" | "disabled";
             tenant_id: components["schemas"]["Uuid"];
             tenant_type: components["schemas"]["TenantType"];
+            /** @description Version hiện tại của bản ghi = giá trị `If-Match` của updateTenant (OQ F057-3) */
+            version?: number;
         };
         /**
          * @description school = trường độc lập; unit = đơn vị nhiều trường; common = tenant chung (ADR-0005)
@@ -17203,6 +17240,50 @@ export interface operations {
             409: components["responses"]["Conflict"];
         };
     };
+    cancelStudentCleanupRun: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                run_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã hủy */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     listTenantAssignments: {
         parameters: {
             query: {
@@ -18654,6 +18735,8 @@ export interface operations {
                 /** @description Tìm theo tên/mã trường (prefix, không phân biệt dấu) */
                 q?: string;
                 school_level?: components["schemas"]["SchoolLevel"];
+                /** @description Trạng thái trường (vắng mặt = mọi trạng thái) */
+                status?: "pending_review" | "active" | "disabled";
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
@@ -18664,11 +18747,11 @@ export interface operations {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
                 /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
                  */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
             };
             path?: never;
             cookie?: never;

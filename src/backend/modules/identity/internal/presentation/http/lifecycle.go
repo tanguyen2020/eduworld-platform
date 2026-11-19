@@ -38,6 +38,7 @@ var LifecycleOperations = map[string]httpx.Operation{
 	"deleteStudentCleanupExclusions": portalOp2("deleteStudentCleanupExclusions", http.MethodDelete, "/tenant/student-cleanup/exclusions", httpx.TenantRequired, httpx.IdempotencyNone, 204),
 	"listStudentCleanupRuns":         portalOp2("listStudentCleanupRuns", http.MethodGet, "/admin/student-cleanup/runs", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"approveStudentCleanupRun":       lifecycleOp("approveStudentCleanupRun", http.MethodPost, "/admin/student-cleanup/runs/{run_id}:approve", httpx.TenantOptional, 202),
+	"cancelStudentCleanupRun":        lifecycleOp("cancelStudentCleanupRun", http.MethodPost, "/admin/student-cleanup/runs/{run_id}:cancel", httpx.TenantOptional, 204),
 	"createDataRequest":              lifecycleOp("createDataRequest", http.MethodPost, "/admin/data-requests", httpx.TenantRequired, 202),
 	"listDataRequests":               portalOp2("listDataRequests", http.MethodGet, "/admin/data-requests", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"getDataRequest":                 portalOp2("getDataRequest", http.MethodGet, "/admin/data-requests/{data_request_id}", httpx.TenantNone, httpx.IdempotencyNone, 200),
@@ -60,6 +61,7 @@ func RegisterLifecycle(s *httpx.Server, h LifecycleHandlers) error {
 		"deleteStudentCleanupExclusions": h.exclusions(true),
 		"listStudentCleanupRuns":         h.listStudentCleanupRuns,
 		"approveStudentCleanupRun":       h.approveStudentCleanupRun,
+		"cancelStudentCleanupRun":        h.cancelStudentCleanupRun,
 		"createDataRequest":              h.createDataRequest,
 		"listDataRequests":               h.listDataRequests,
 		"getDataRequest":                 h.getDataRequest,
@@ -241,4 +243,24 @@ func (h LifecycleHandlers) getDataRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+func (h LifecycleHandlers) cancelStudentCleanupRun(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "run_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		Reason string `json:"reason"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	if _, err := h.Cleanup.Cancel(r.Context(), id, b.Reason); err != nil {
+		fail(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

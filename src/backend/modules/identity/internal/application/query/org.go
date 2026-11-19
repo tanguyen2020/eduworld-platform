@@ -109,10 +109,16 @@ func (q Org) ListProvinces(ctx context.Context, country, status string) (out []d
 type CatalogSchoolsInput struct {
 	ListInput
 	ProvinceCode, Level, Q string
+	Status                 string // school status (schools_status_chk); empty = every status
 }
 
-// ListCatalogSchools is listCatalogSchools: portal staff see the schools of the scope set by the request
-// (session tenant; System Admin: tenant_ids → CrossTenantScope, audited) — F010-AC-10.
+// schoolStatuses are the values of schools_status_chk (f010 migration).
+var schoolStatuses = map[string]bool{"": true, "active": true, "pending_review": true, "disabled": true}
+
+// ListCatalogSchools is listCatalogSchools: portal staff see the schools of the scope set by the request —
+// tenant users their session tenant (tenant_ids ignored); a platform principal without X-Tenant-Id only through
+// the CrossTenantScope httpx builds from tenant_ids (platform.cross_tenant.read + MFA, audited
+// cross_tenant.accessed). A plain PlatformScope never lists the schools of every tenant (F010-AC-10, OQ F057-4).
 func (q Org) ListCatalogSchools(ctx context.Context, in CatalogSchoolsInput) (out Page[dto.School], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListCatalogSchools")
 	defer func() { done(err) }()
@@ -123,21 +129,32 @@ func (q Org) ListCatalogSchools(ctx context.Context, in CatalogSchoolsInput) (ou
 	if p.UserType != authz.UserTypeStaff {
 		return out, problem.New(problem.PermissionDenied, "")
 	}
-	if p.TenantID != nil { // tenant users: their tenant only; tenant_ids is ignored (scope from the principal)
+	if p.TenantID != nil { // tenant users (and a System Admin with X-Tenant-Id): that tenant only
 		sc, err := authz.ScopeFor(p)
 		if err != nil {
 			return out, problem.New(problem.PermissionDenied, "").Wrap(err)
 		}
 		ctx = tenancy.WithScope(ctx, sc)
-	} else if _, ok := tenancy.ScopeFrom(ctx); !ok {
-		return out, problem.New(problem.PermissionDenied, "")
+	} else { // no session tenant: platform staff only, through tenant_ids (a tenant user without X-Tenant-Id → 403)
+		if err := authz.Require(ctx, p, authz.PermPlatformCrossTenantRead, authz.Resource{}); err != nil {
+			return out, err
+		}
+		sc, _ := tenancy.ScopeFrom(ctx)
+		if _, cross := sc.(tenancy.CrossTenantScope); !cross {
+			authz.RecordDenied(ctx, string(problem.PermissionDenied), map[string]any{"operation": "listCatalogSchools", "why": "tenant_ids_required"})
+			return out, problem.New(problem.PermissionDenied, "tenant_ids is required without X-Tenant-Id")
+		}
+	}
+	if !schoolStatuses[in.Status] {
+		return out, problem.Invalid("status", problem.SubInvalid, "must be pending_review, active or disabled")
 	}
 	after, err := q.cursor(in.Cursor)
 	if err != nil {
 		return out, err
 	}
 	limit := page.Limit(in.Limit)
-	rows, err := q.Model.Schools(ctx, read.SchoolFilter{ProvinceCode: in.ProvinceCode, Level: in.Level, Q: in.Q, After: after, Limit: limit})
+	rows, err := q.Model.Schools(ctx, read.SchoolFilter{ProvinceCode: in.ProvinceCode, Level: in.Level, Q: in.Q, Status: in.Status,
+		After: after, Limit: limit})
 	if err != nil {
 		return out, err
 	}

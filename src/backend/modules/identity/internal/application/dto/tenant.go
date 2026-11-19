@@ -27,7 +27,8 @@ type UpdateTenant struct {
 	Reason  string    `json:"reason"`
 }
 
-// Tenant is TenantDetail (TenantSummary + alias and timestamps). Version is returned as the ETag.
+// Tenant is TenantDetail (TenantSummary + alias and timestamps). Version is the If-Match value of updateTenant
+// (OQ F057-3): returned in the body and as the ETag.
 type Tenant struct {
 	TenantID    uuid.UUID `json:"tenant_id"`
 	Code        string    `json:"code"`
@@ -38,5 +39,5 @@ type Tenant struct {
 	Alias       string    `json:"keycloak_org_alias"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	Version     int64     `json:"-"`
+	Version     int64     `json:"version,omitempty"` // also the ETag of create/update (If-Match of updateTenant)
 }

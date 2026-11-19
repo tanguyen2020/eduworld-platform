@@ -30,12 +30,14 @@ describe('tenant, auth and language headers', () => {
   it('metadata is generated for the reference operations', () => {
     expect(findOperationById('getMyPermissions')?.tenantHeader).toBe('optional');
     expect(findOperationById('listMyTenants')?.tenantHeader).toBe('none');
-    expect(findOperationById('listCatalogSchools')?.tenantHeader).toBe('required');
+    expect(findOperationById('getMyStudentProfile')?.tenantHeader).toBe('required');
+    // System Admin reads it across tenants with tenant_ids (OQ F057-4)
+    expect(findOperationById('listCatalogSchools')?.tenantHeader).toBe('optional');
   });
 
   it('required operation: Authorization, X-Tenant-Id and Accept-Language', async () => {
     const { api } = testClient();
-    const { response } = await api.client.GET('/catalog/schools', {});
+    const { response } = await api.client.GET('/students/me', {});
     expect(response.status).toBe(200);
     const h = seen[0]!.headers;
     expect(h.get('Authorization')).toBe(`Bearer ${SECRET_TOKEN}`);

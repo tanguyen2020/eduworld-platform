@@ -2231,9 +2231,9 @@ workspaces:
             can_disable: true
           - key: action.platform_admin.system_settings.approve_cleanup
             label_key: portal.action.platform_admin.system_settings.approve_cleanup
-            title: Xác nhận lần dọn vượt ngưỡng
+            title: Xác nhận/hủy lần dọn vượt ngưỡng
             required_permissions: [platform.student_cleanup.approve]
-            operation_ids: [approveStudentCleanupRun]
+            operation_ids: [approveStudentCleanupRun, cancelStudentCleanupRun]
             can_disable: true
       - key: menu.platform_admin.feature_toggles
         label_key: portal.menu.platform_admin.feature_toggles

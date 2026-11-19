@@ -31,6 +31,11 @@
 - **Câu hỏi mở (OQ F010-2):** chưa có feature nào sở hữu phần nối binary (core-api mount `httpx.Server` với resolver Principal — cần `resolvePrincipal` của F012; worker chạy relay outbox, consumer `identity.keycloak_membership`, job `org-membership-reconcile`). F010 cung cấp `presentation/http.Register`, consumer và use case job; [Proposed: F012 nối core-api, F011 nối worker identity].
 - Q: Audit lần đọc hồ sơ học sinh (`getStudentProfile`)? → A: Chưa làm: read context không ghi outbox (ADR-0087) [TBD — cần cơ chế audit đọc chung].
 
+### Session 2026-11-20 (bổ sung sau F057 — [Proposed], chờ Technical Architect duyệt)
+
+- Q: Portal (F057) không biết version để gửi `If-Match` khi sửa tenant/quốc gia/tỉnh chưa ghi trong phiên (OQ F057-3)? → A: [Proposed] Thêm field tùy chọn `version` (integer ≥ 1, chính là giá trị `If-Match` mong đợi) vào `TenantSummary` (nên cả `TenantDetail`), `Country`, `Province`; `listTenants`, `listCountries`, `listProvinces` và kết quả create/update trả field này (thêm field, không breaking). Không thêm GET từng bản ghi.
+- Q: `listCatalogSchools` cho System Admin đọc liên tenant và lọc trạng thái (OQ F057-4)? → A: [Proposed] `X-Tenant-Id` đổi sang `TenantIdHeaderOptional` (route `TenantOptional`). Người dùng tenant vẫn khóa vào tenant của phiên (`tenant_ids` bị bỏ qua; không có tenant phiên và không có quyền platform → `403`). Principal platform không gửi `X-Tenant-Id` phải có `platform.cross_tenant.read` + MFA và gửi `tenant_ids` (CrossTenantScope, audit `cross_tenant.accessed`); chỉ có PlatformScope → `403 PERMISSION_DENIED` (không có truy vấn "mọi trường của mọi tenant", R8). Thêm tham số tùy chọn `status` ∈ {`pending_review`, `active`, `disabled`} (đúng `schools_status_chk`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin tạo và quản lý tenant (Priority: P1)

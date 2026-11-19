@@ -2,6 +2,9 @@ package platformadmin_test
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -36,6 +39,41 @@ func TestRouting(t *testing.T) {
 	}
 	if platformadmin.DeleteReasonOf("student") != "inactive_cleanup" || platformadmin.DeleteReasonOf("user") != "merged" {
 		t.Fatal("delete reason")
+	}
+}
+
+// learning_material (F024) is learning content like lesson: owned by learning, assignable, clonable and
+// restorable from the trash (OQ F057 follow-up).
+func TestRoutingLearningMaterial(t *testing.T) {
+	if m, err := platformadmin.Owner("learning_material"); err != nil || m != platformadmin.ModuleLearning {
+		t.Fatalf("owner = %q %v", m, err)
+	}
+	for _, rt := range []string{"learning_material", "lesson"} {
+		if !platformadmin.Assignable(rt) || !platformadmin.Clonable(rt) || !platformadmin.RestorableThroughTrash(rt) {
+			t.Fatalf("%s: assignable/clonable/restorable", rt)
+		}
+	}
+	steps, err := platformadmin.PlanClone(uuid.New(), uuid.New(), "learning_material", []uuid.UUID{uuid.New()})
+	if err != nil || len(steps) != 1 || steps[0].Module != platformadmin.ModuleLearning {
+		t.Fatalf("plan: %+v %v", steps, err)
+	}
+}
+
+// Every value of the ResourceType enum of the merged public spec (source of truth) has an owner, so filtering or
+// restoring the trash by any type is routed.
+func TestRoutingCoversResourceTypeEnum(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "..", "..", "..", "specs", "openapi", "eduworld-api.v1.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := regexp.MustCompile(`(?m)^    ResourceType:\r?\n(?:      .*\r?\n)*?      enum: \[([^\]]+)\]`).FindSubmatch(raw)
+	if m == nil {
+		t.Fatal("ResourceType enum not found in the merged spec")
+	}
+	for _, rt := range strings.Split(string(m[1]), ",") {
+		if _, err := platformadmin.Owner(strings.TrimSpace(rt)); err != nil {
+			t.Errorf("ResourceType %q has no owner module: %v", strings.TrimSpace(rt), err)
+		}
 	}
 }
 

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 
@@ -350,6 +352,49 @@ func (h StudentCleanup) Approve(ctx context.Context, runID uuid.UUID) (out write
 		out = *run
 		return h.Audit.Record(ctx, audit.Event{Action: "student_cleanup.approved", TargetType: "student_cleanup_run", TargetID: runID.String(),
 			Result: audit.ResultSuccess, Metadata: map[string]any{"tenant_id": run.TenantID.String(), "candidates": run.Candidates}})
+	})
+	return out, err
+}
+
+// Cancel implements cancelStudentCleanupRun (platform.student_cleanup.approve, OQ F057-2): a run awaiting
+// approval moves to cancelled with the reason in the audit; no student is cleaned up. A later job tick starts a
+// fresh run from the settings in force.
+func (h StudentCleanup) Cancel(ctx context.Context, runID uuid.UUID, reason string) (out write.CleanupRun, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.CancelStudentCleanupRun")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return out, err
+	}
+	if !p.IsSystemAdmin && p.TenantID != nil {
+		return out, problem.New(problem.PermissionDenied, "")
+	}
+	if err := authz.Require(ctx, p, authz.PermPlatformStudentCleanupApprove, authz.Resource{}); err != nil {
+		return out, err
+	}
+	if n := utf8.RuneCountInString(strings.TrimSpace(reason)); n < 3 || n > 500 {
+		return out, problem.Invalid("reason", problem.SubInvalid, "must be 3 to 500 characters")
+	}
+	err = h.platform(ctx, func(ctx context.Context) error {
+		run, err := h.Repo.Run(ctx, runID)
+		if err != nil {
+			return err
+		}
+		if run == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		if run.Status != "awaiting_approval" {
+			return problem.New(problem.Conflict, "the run is not awaiting approval")
+		}
+		finished := h.now()
+		run.Status, run.FinishedAt = "cancelled", &finished
+		if err := h.Repo.SaveRun(ctx, run); err != nil {
+			return err
+		}
+		out = *run
+		return h.Audit.Record(ctx, audit.Event{Action: "student_cleanup.cancelled", TargetType: "student_cleanup_run", TargetID: runID.String(),
+			Result: audit.ResultSuccess, Reason: strings.TrimSpace(reason),
+			Metadata: map[string]any{"tenant_id": run.TenantID.String(), "candidates": run.Candidates}})
 	})
 	return out, err
 }

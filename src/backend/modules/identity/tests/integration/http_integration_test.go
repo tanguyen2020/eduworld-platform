@@ -224,6 +224,54 @@ func TestIdentityHTTP(t *testing.T) {
 		t.Fatalf("provinces: %d", r.status)
 	}
 
+	// OQ F057-3: list items carry the version If-Match expects (tenant updated once above → 2).
+	for _, path := range []string{"/catalog/countries", "/catalog/provinces?country=VN&status=active"} {
+		r := h.do(t, "GET", path, saTok, nil, nil)
+		if r.status != 200 {
+			t.Fatalf("%s: %d %s", path, r.status, r.raw)
+		}
+		for _, it := range r.body["items"].([]any) {
+			if v, _ := it.(map[string]any)["version"].(float64); v < 1 {
+				t.Fatalf("%s: item without version: %v", path, it)
+			}
+		}
+	}
+	tenants := h.do(t, "GET", "/admin/tenants?q=th-http", saTok, nil, nil)
+	if tenants.status != 200 || len(tenants.body["data"].([]any)) != 1 || tenants.body["data"].([]any)[0].(map[string]any)["version"] != float64(2) {
+		t.Fatalf("tenant version: %d %s", tenants.status, tenants.raw)
+	}
+	if r := h.do(t, "PATCH", "/admin/tenants/"+tid, saTok, map[string]string{"Idempotency-Key": ids.New().String(), "If-Match": "2"},
+		map[string]any{"status": "active", "reason": "version from the list"}); r.status != 200 || r.header.Get("ETag") != `W/"3"` {
+		t.Fatalf("update with the listed version: %d %s", r.status, r.raw)
+	}
+
+	// OQ F057-4: listCatalogSchools — tenant users see their tenant (status filter); a System Admin without
+	// X-Tenant-Id needs tenant_ids (CrossTenantScope), never a listing of every tenant.
+	inTenant := func(id uuid.UUID) map[string]string { return map[string]string{"X-Tenant-Id": id.String()} }
+	schoolsOf := func(r httpResp) int { return len(r.body["items"].([]any)) }
+	if r := h.do(t, "GET", "/catalog/schools", taTok, inTenant(ta), nil); r.status != 200 || schoolsOf(r) != 1 {
+		t.Fatalf("tenant A schools: %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools?status=pending_review", taTok, inTenant(ta), nil); r.status != 200 || schoolsOf(r) != 0 {
+		t.Fatalf("tenant A pending schools: %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools?status=closed", taTok, inTenant(ta), nil); r.status != 422 {
+		t.Fatalf("unknown status: %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools?tenant_ids="+ta.String(), tbTok, inTenant(tb), nil); r.status != 200 || schoolsOf(r) != 0 {
+		t.Fatalf("tenant B (tenant_ids ignored): %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools", saTok, nil, nil); r.status != 403 {
+		t.Fatalf("System Admin without tenant_ids: %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools?tenant_ids="+ta.String()+","+tb.String(), saNoMFA, nil, nil); r.status != 403 {
+		t.Fatalf("System Admin without MFA: %d %s", r.status, r.raw)
+	}
+	if r := h.do(t, "GET", "/catalog/schools?status=active&tenant_ids="+ta.String()+","+tb.String(), saTok, nil, nil); r.status != 200 ||
+		schoolsOf(r) != 1 || r.body["items"].([]any)[0].(map[string]any)["tenant_id"] != ta.String() {
+		t.Fatalf("System Admin cross-tenant: %d %s", r.status, r.raw)
+	}
+
 	// AC-29: common students — no-store, password once, replay redacted.
 	if _, err := h.platform.ExecContext(ctx, `UPDATE platform.tenants SET keycloak_org_id = $1 WHERE tenant_id = $2 AND deleted_at IS NULL`, uuid.New(), tenant.CommonTenantID); err != nil {
 		t.Fatal(err)

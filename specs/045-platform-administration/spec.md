@@ -27,6 +27,10 @@
 - Q: Gỡ gán mặc định (`apply_to_new_tenants`)? → A: Không có API gỡ trong Release 1.0 (contract không có) — **OQ F045-9**.
 - Q: Vị trí và phạm vi test? → A: Integration ở `src/backend/modules/identity/tests/integration/platform_admin_*_integration_test.go` (dùng chung `TestMain`/helper của package), test hợp đồng facade phía bên gọi ở `tests/contract/owner_gateway_test.go` với fake facade learning (phía bên nhận đã kiểm ở F020). `RESOURCE_NOT_ASSIGNED` và chỉ đọc do module learning cưỡng chế (F020-AC-16, AC-18); test module identity không import được `modules/learning/internal` nên dùng TEST DOUBLE có cùng luật [Proposed].
 
+### Session 2026-11-20 (bổ sung sau F057 — [Proposed], chờ Technical Architect duyệt)
+
+- Q: `learning_material` (F024 thêm vào enum `ResourceType`) chưa có trong bảng định tuyến `resource_type → module` nên lọc/khôi phục Thùng rác theo loại này lỗi? → A: [Proposed] Thêm `learning_material → learning` vào `internal/domain/platformadmin/routing.go`, cùng cờ với `lesson`: gán được, nằm trong allowlist clone, khôi phục được qua Thùng rác (facade learning chịu trách nhiệm từng loại). Unit test kiểm mọi giá trị enum `ResourceType` của spec gộp đều có module sở hữu.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin đọc dữ liệu liên tenant có kiểm soát (Priority: P1)

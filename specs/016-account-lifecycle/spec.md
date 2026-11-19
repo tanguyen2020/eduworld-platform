@@ -35,6 +35,10 @@
 - OQ F016-12: Job `retention-anonymizer` tính `student_data_retention` (365 ngày, CONFIG_DEFAULTS) từ lần đổi sang `deactivated` gần nhất trong lịch sử trạng thái, không có lịch sử thì dùng `users.updated_at`; mỗi lần chạy tối đa 100 học sinh [Proposed].
 - OQ F016-13: Khi khôi phục lúc đăng nhập, identity được khôi phục trước; nếu facade một module tạm lỗi, đăng nhập vẫn thành công, saga thử lại bước đó và module tự khôi phục khi nhận `student.restored` (ACCOUNT_PROVISIONING §6b.1).
 
+### Session 2026-11-20 (bổ sung sau F057 — [Proposed], chờ Technical Architect duyệt)
+
+- Q: Hủy lần dọn đang `awaiting_approval` (OQ F057-2, Clarification 2026-11-16 của F057)? → A: [Proposed] Thêm `cancelStudentCleanupRun` (`POST /admin/student-cleanup/runs/{run_id}:cancel`, `platform.student_cleanup.approve`, `Idempotency-Key`, body `{reason}` 3..500 ký tự, `204`; run không ở `awaiting_approval` → `409 CONFLICT`, không có → `404`). Run chuyển `cancelled` (`finished_at` = lúc hủy), audit `student_cleanup.cancelled` kèm lý do; không học sinh nào bị dọn; lần chạy job sau tạo lần dọn mới theo cấu hình hiện hành. `StudentCleanupRun.status` thêm `cancelled`; CHECK của `platform.student_cleanup_runs` mở rộng bằng migration `20261127000001_f016_cleanup_run_cancel.sql` (expand). Portal dùng chung action `action.platform_admin.system_settings.approve_cleanup` (ADR-0090) với `approveStudentCleanupRun`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khóa, mở khóa, vô hiệu hóa và thu hồi truy cập (Priority: P1)

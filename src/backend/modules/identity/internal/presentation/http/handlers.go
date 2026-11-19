@@ -37,7 +37,7 @@ func (h Handlers) listProvinces(w http.ResponseWriter, r *http.Request) {
 func (h Handlers) listCatalogSchools(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	out, err := h.Org.ListCatalogSchools(r.Context(), query.CatalogSchoolsInput{ListInput: list(r), ProvinceCode: q.Get("province"),
-		Level: q.Get("school_level"), Q: q.Get("q")})
+		Level: q.Get("school_level"), Q: q.Get("q"), Status: q.Get("status")})
 	if err != nil {
 		fail(w, r, err)
 		return

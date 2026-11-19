@@ -34,10 +34,10 @@ var ErrUnknownResourceType = errors.New("platformadmin: unknown resource_type")
 // owners is the routing table resource_type → owning module (DATABASE_DESIGN §2.17, the ResourceType enum of
 // specs/openapi/eduworld-api.v1.yaml); one place in the code (constitution VII).
 var owners = map[string]string{
-	"curriculum": ModuleLearning, "lesson": ModuleLearning, "question": ModuleLearning, "question_set": ModuleLearning,
-	"assessment_blueprint": ModuleLearning, "media": ModuleLearning, "assignment": ModuleLearning, "course": ModuleLearning,
-	"learning_path": ModuleLearning,
-	"challenge":     ModuleGame, "challenge_template": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
+	"curriculum": ModuleLearning, "lesson": ModuleLearning, "learning_material": ModuleLearning, "question": ModuleLearning,
+	"question_set": ModuleLearning, "assessment_blueprint": ModuleLearning, "media": ModuleLearning, "assignment": ModuleLearning,
+	"course": ModuleLearning, "learning_path": ModuleLearning,
+	"challenge": ModuleGame, "challenge_template": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
 	"tournament_template": ModuleCompetition,
 	"class_template":      ModuleIdentity, "school_settings": ModuleIdentity, "tenant_settings": ModuleIdentity,
 	ResourceUser: ModuleIdentity, ResourceStudent: ModuleIdentity,
@@ -45,7 +45,7 @@ var owners = map[string]string{
 
 // cloneAllowlist are the types a clone job may copy (data-model §3): configuration and content only, never
 // student data (AGENTS R22).
-var cloneAllowlist = []string{"curriculum", "lesson", "question", "question_set", "assessment_blueprint", "media",
+var cloneAllowlist = []string{"curriculum", "lesson", "learning_material", "question", "question_set", "assessment_blueprint", "media",
 	"learning_path", "assignment", "challenge_template", "class_template", "school_settings", "tenant_settings"}
 
 // Owner returns the module owning rt.

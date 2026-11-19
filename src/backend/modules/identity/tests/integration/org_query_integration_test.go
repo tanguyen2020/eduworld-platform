@@ -82,6 +82,46 @@ func TestOrgQueries(t *testing.T) {
 		AND envelope->'payload'->>'action' = 'cross_tenant.accessed'`); n == 0 {
 		t.Fatal("cross-tenant reads must be audited (F010-AC-10)")
 	}
+	// OQ F057-4: status filter, tenant isolation and the platform scope rules of listCatalogSchools.
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.schools SET status = 'disabled' WHERE school_id = $1`, schoolA2); err != nil {
+		t.Fatal(err)
+	}
+	if dis, err := q.ListCatalogSchools(adminA, query.CatalogSchoolsInput{Status: "disabled"}); err != nil || len(dis.Items) != 1 || dis.Items[0].SchoolID != schoolA2 {
+		t.Fatalf("disabled schools of A = %+v %v", dis, err)
+	}
+	if act, err := q.ListCatalogSchools(adminA, query.CatalogSchoolsInput{Status: "active"}); err != nil || len(act.Items) != 1 || act.Items[0].SchoolID != schoolA1 {
+		t.Fatalf("active schools of A = %+v %v", act, err)
+	}
+	adminB := authztest.Ctx(ctx, authztest.Staff(tb, "tenant_admin"))
+	if bs, err := q.ListCatalogSchools(adminB, query.CatalogSchoolsInput{}); err != nil || len(bs.Items) != 2 || bs.Items[0].TenantID != tb || bs.Items[1].TenantID != tb {
+		t.Fatalf("schools of B = %+v %v", bs, err)
+	}
+	if act, err := q.ListCatalogSchools(tenancy.WithScope(authz.WithPrincipal(ctx, sa), cross), query.CatalogSchoolsInput{Status: "active"}); err != nil || len(act.Items) != 3 {
+		t.Fatalf("System Admin active schools of A and B = %d %v", len(act.Items), err)
+	}
+	if _, err := q.ListCatalogSchools(adminA, query.CatalogSchoolsInput{Status: "closed"}); code(err) != problem.ValidationFailed {
+		t.Fatalf("unknown status: %v", err)
+	}
+	// Without tenant_ids the System Admin has a PlatformScope only → 403 (no listing of every tenant).
+	authztest.ExpectDenied(t, func() error {
+		_, err := q.ListCatalogSchools(authztest.Ctx(ctx, sa), query.CatalogSchoolsInput{})
+		return err
+	}())
+	// A platform role without platform.cross_tenant.read is refused even with a cross-tenant scope.
+	ca := authztest.Platform("content_admin")
+	authztest.ExpectDenied(t, func() error {
+		_, err := q.ListCatalogSchools(tenancy.WithScope(authz.WithPrincipal(ctx, ca), cross), query.CatalogSchoolsInput{})
+		return err
+	}())
+	// A staff account without a session tenant and without a platform role (tenant user without X-Tenant-Id) → 403.
+	noTenant := authz.NewPrincipal(authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Channel: authz.ChannelPortal})
+	authztest.ExpectDenied(t, func() error {
+		_, err := q.ListCatalogSchools(tenancy.WithScope(authz.WithPrincipal(ctx, noTenant), cross), query.CatalogSchoolsInput{})
+		return err
+	}())
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.schools SET status = 'active' WHERE school_id = $1`, schoolA2); err != nil {
+		t.Fatal(err)
+	}
 
 	// AC-18: a school-limited grant cannot list the classes of another school of the same tenant.
 	schoolAdmin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin", authztest.AtSchool(schoolA1)))

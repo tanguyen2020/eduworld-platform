@@ -42,7 +42,8 @@ func (m OrgModel) Countries(ctx context.Context) (out []dto.Country, err error) 
 	err = m.Session.Read(ctx, func(ctx context.Context) error {
 		rows, err := cl(ctx).Country.Query().Order(ent.Asc(entcountry.FieldID)).All(ctx)
 		for _, r := range rows {
-			out = append(out, dto.Country{CountryCode: r.ID, Name: r.NameI18n, DefaultLocale: r.DefaultLocale, Status: r.Status})
+			out = append(out, dto.Country{CountryCode: r.ID, Name: r.NameI18n, DefaultLocale: r.DefaultLocale, Status: r.Status,
+				Version: r.Version})
 		}
 		return err
 	})
@@ -83,7 +84,7 @@ func (m OrgModel) Provinces(ctx context.Context, country, status string) (out []
 		for _, r := range rows {
 			p := dto.Province{ProvinceID: r.ID, Code: r.Code, CountryCode: r.CountryCode, OfficialCode: r.OfficialCode, Name: r.NameI18n,
 				ShortName: r.ShortNameI18n, ProvinceType: r.ProvinceType, EffectiveFrom: date(r.EffectiveFrom), EffectiveTo: date(r.EffectiveTo),
-				Status: r.Status}
+				Status: r.Status, Version: r.Version}
 			if s, ok := next[r.ID]; ok {
 				p.SuccessorCode = &s
 			}

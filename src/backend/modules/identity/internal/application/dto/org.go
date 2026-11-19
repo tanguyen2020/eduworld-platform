@@ -12,6 +12,7 @@ type Country struct {
 	Name          map[string]string `json:"name"`
 	DefaultLocale string            `json:"default_locale"`
 	Status        string            `json:"status"`
+	Version       int64             `json:"version,omitempty"` // If-Match of updateCountry (OQ F057-3)
 }
 
 // Province is the Province schema.
@@ -27,6 +28,7 @@ type Province struct {
 	EffectiveTo   *string           `json:"effective_to"`
 	Status        string            `json:"status"`
 	SuccessorCode *string           `json:"successor_code"`
+	Version       int64             `json:"version,omitempty"` // If-Match of updateProvince (OQ F057-3)
 }
 
 // Class is the Class schema.

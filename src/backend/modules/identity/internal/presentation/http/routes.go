@@ -54,7 +54,7 @@ func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.Idempote
 var Operations = map[string]httpx.Operation{
 	"listCountries":              op("listCountries", http.MethodGet, "/catalog/countries", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	"listProvinces":              op("listProvinces", http.MethodGet, "/catalog/provinces", httpx.TenantOptional, httpx.IdempotencyNone, 200),
-	"listCatalogSchools":         op("listCatalogSchools", http.MethodGet, "/catalog/schools", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listCatalogSchools":         op("listCatalogSchools", http.MethodGet, "/catalog/schools", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	"getMyStudentProfile":        withGuard(op("getMyStudentProfile", http.MethodGet, "/students/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardGamePlayer),
 	"getStudentProfile":          withGuard(op("getStudentProfile", http.MethodGet, "/students/{student_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"listClasses":                op("listClasses", http.MethodGet, "/schools/{school_id}/classes", httpx.TenantRequired, httpx.IdempotencyNone, 200),

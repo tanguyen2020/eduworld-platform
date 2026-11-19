@@ -118,6 +118,49 @@ func TestStudentCleanup(t *testing.T) {
 	if count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.cleanup_scheduled' AND envelope::text LIKE '%' || $1 || '%'`, s6.String()) != 1 {
 		t.Fatal("cleanup_scheduled")
 	}
+	// OQ F057-2: cancelStudentCleanupRun — only platform.student_cleanup.approve (tenant admin → 403), reason 3..500,
+	// awaiting_approval → cancelled, audited, nothing removed; a cancelled run cannot be approved or cancelled again
+	// and the next job tick starts a fresh run.
+	idem := func() map[string]string {
+		return map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}
+	}
+	cancelPath := "/admin/student-cleanup/runs/" + run.ID.String() + ":cancel"
+	if r := h.do(t, "POST", cancelPath, tok("ad.donvi.cl", false), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 403 {
+		t.Fatalf("tenant admin cancel: %d", r.status)
+	}
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "ab"}); r.status != 422 {
+		t.Fatalf("short reason: %d %v", r.status, r.body)
+	}
+	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+uuid.Must(uuid.NewV7()).String()+":cancel", tok("sa.cl", true), idem(),
+		map[string]any{"reason": "Không dọn đợt này"}); r.status != 404 {
+		t.Fatalf("unknown run: %d", r.status)
+	}
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 204 {
+		t.Fatalf("cancel: %d %v", r.status, r.body)
+	}
+	if count(ctx, t, e.platform, `SELECT count(*) FROM platform.student_cleanup_runs WHERE run_id = $1 AND status = 'cancelled'
+		AND finished_at IS NOT NULL`, run.ID) != 1 {
+		t.Fatal("run not cancelled")
+	}
+	if count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
+		AND envelope->'payload'->>'action' = 'student_cleanup.cancelled' AND envelope::text LIKE '%' || $1 || '%'`, run.ID.String()) != 1 {
+		t.Fatal("cancel not audited")
+	}
+	if count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE delete_reason = 'inactive_cleanup'`) != 0 {
+		t.Fatal("removed by a cancelled run")
+	}
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 409 {
+		t.Fatalf("cancel twice: %d", r.status)
+	}
+	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+run.ID.String()+":approve", tok("sa.cl", true), idem(), nil); r.status != 409 {
+		t.Fatalf("approve a cancelled run: %d", r.status)
+	}
+	cancelled := run.ID
+	run, err = cleanup.RunTenant(ctx, ta)
+	if err != nil || run == nil || run.Status != "awaiting_approval" || run.ID == cancelled {
+		t.Fatalf("fresh run after cancel: %+v %v", run, err)
+	}
+
 	// Only platform.student_cleanup.approve approves (tenant admin → 403).
 	path := "/admin/student-cleanup/runs/" + run.ID.String() + ":approve"
 	if r := h.do(t, "POST", path, tok("ad.donvi.cl", false), map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, nil); r.status != 403 {
@@ -150,9 +193,17 @@ func TestStudentCleanup(t *testing.T) {
 	if game.restored[s4] != 1 || game.cleaned[s4] != 1 {
 		t.Fatalf("compensation of s4: cleaned=%d restored=%d", game.cleaned[s4], game.restored[s4])
 	}
-	// Runs list for the System Admin.
-	if r := h.do(t, "GET", "/admin/student-cleanup/runs", tok("sa.cl", true), nil, nil); r.status != 200 || len(r.body["data"].([]any)) != 1 {
+	// Runs list for the System Admin: the applied run and the cancelled one.
+	r = h.do(t, "GET", "/admin/student-cleanup/runs", tok("sa.cl", true), nil, nil)
+	if r.status != 200 || len(r.body["data"].([]any)) != 2 {
 		t.Fatalf("runs: %d %v", r.status, r.body)
+	}
+	statuses := map[string]bool{}
+	for _, x := range r.body["data"].([]any) {
+		statuses[x.(map[string]any)["status"].(string)] = true
+	}
+	if !statuses["completed"] || !statuses["cancelled"] {
+		t.Fatalf("run statuses = %v", statuses)
 	}
 	// No physical delete anywhere (R21): the rows are still there.
 	if count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id IN ($1, $2)`, s1, s2) != 2 {

@@ -413,7 +413,7 @@ Tính năng đăng nhập nhanh (mã lớp + PIN, thẻ QR, mật khẩu hình �
 |---|---|---|---|---|---|
 | GET | `/catalog/countries` | Quốc gia `active` (song ngữ theo `Accept-Language`, `ETag`) — `listCountries` | Mọi người dùng đã đăng nhập | T | P1 |
 | GET | `/catalog/provinces?country=VN&status=active` | Tỉnh/thành theo quốc gia (34 đơn vị hiện hành của Việt Nam; `status=inactive|all` chỉ System Admin) — `listProvinces` | Mọi người dùng đã đăng nhập | T | P1 |
-| GET | `/catalog/schools?province=&school_level=&q=&tenant_ids=` | Danh mục trường (cursor): người dùng tenant thấy trường trong tenant; System Admin lọc `tenant_ids` — `listCatalogSchools` | Mọi role portal | T | P1 |
+| GET | `/catalog/schools?province=&school_level=&q=&status=&tenant_ids=` | Danh mục trường (cursor): người dùng tenant thấy trường trong tenant; System Admin không gửi `X-Tenant-Id` thì bắt buộc `tenant_ids` (CrossTenantScope) — `listCatalogSchools` | Mọi role portal | T | P1 |
 
 Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.school` / `.class` (song ngữ) — không cần endpoint `/me/profile/school` riêng.
 
@@ -925,6 +925,7 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | GET | `/admin/student-cleanup/runs?tenant_ids=` | Lịch sử các lần chạy worker dọn (số dọn, bị loại trừ, bị chặn do vượt ngưỡng) | SYS | T | P2 |
 | GET/PUT | `/admin/settings/chat-retention` | Thời hạn lưu chat gameplay `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3 → `422 RETENTION_BELOW_MINIMUM`), `ephemeral_retention_hours` (24), `allow_tenant_override` — bắt buộc `reason`, audit (ADR-0033) | SYS · `platform.settings.write` | T | P4 |
 | POST | `/admin/student-cleanup/runs/{run_id}:approve` | Xác nhận thủ công lần dọn vượt ngưỡng > 10% học sinh tenant [Proposed] | SYS | B | P2 |
+| POST | `/admin/student-cleanup/runs/{run_id}:cancel` | Hủy lần dọn `awaiting_approval` (lý do 3..500 ký tự) → `cancelled`, không dọn học sinh nào — `cancelStudentCleanupRun` [Proposed] | SYS | B | P2 |
 | GET | `/admin/feature-flags?flag_kind=&tenant_id=` | Feature flag và cờ bật/tắt menu/action của portal: mặc định platform, ghi đè của `tenant_id`, giá trị hiệu lực (ADR-0090) — `listFeatureFlags` | SYS · `platform.feature_flag.write` | T | P1 |
 | PUT | `/admin/feature-flags/{flag_key}` | `{scope: platform\|tenant, state: enabled\|disabled\|inherit, reason}` + `If-Match`; `scope = tenant` cần `X-Tenant-Id` = tenant đích; khóa `menu.*`/`action.*` phải có trong `platform.portal_menu_catalog` (`404`); mục `can_disable = false` → `422 FEATURE_NOT_DISABLEABLE`; audit + `platform_settings.changed` — `putFeatureFlag` | SYS · `platform.feature_flag.write` | T | P1 |
 | GET | `/admin/portal-menu-catalog?tenant_id=` | Cây workspace → menu → action (bản sao đọc-chỉ của `specs/portal/menu-catalog.yaml`, `catalog_version`) kèm `can_disable`, mặc định, ghi đè, hiệu lực — màn "Bật/tắt menu & action" — `listPortalMenuCatalog` | SYS · `platform.feature_flag.write` | T | P1 |
