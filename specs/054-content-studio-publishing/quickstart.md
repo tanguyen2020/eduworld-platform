@@ -56,3 +56,33 @@ cd src/cms/frontend && pnpm --filter portal test:e2e -- --grep @F054
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail), báo cáo axe; ảnh timeline release sau rollback; `trace_id` kịch bản 5 và 26; truy vấn chứng minh preview không tạo attempt (kịch bản 10).
+
+## 5. Bằng chứng (2026-11-20, worktree `f054-content-publishing`, CPU giới hạn 2 worker)
+
+Backend thật cho Playwright `@F054` chưa chạy ở máy dev (OQ F051-9): mọi kịch bản §2 được kiểm ở mức integration toàn portal (router + session + Ant Design) với MOCK backend hợp đồng `src/test/mock-publishing.ts` (nhãn MOCK, AGENTS R17).
+
+| Lệnh | Kết quả |
+|---|---|
+| `pnpm lint` (ESLint `--max-warnings=0` + stylelint) | xanh |
+| `pnpm typecheck` (ops-ui + portal) | xanh |
+| `pnpm gen:check` | xanh (spec không đổi: 2 file khớp, catalog khớp, 2 schema) |
+| `npx vitest run --maxWorkers=2` (toàn bộ web workspace) | 86 file, 616 test: 613 pass, 3 timeout dưới tải (F053 AC-08, F054 AC-14, F057 AC-22). Sửa: `QuestionEditorPage.test.tsx` đặt `asyncUtilTimeout` 30 s (chunk Content Studio lớn hơn), `review.test.tsx` chờ nút "Thử lại" hết loading. Chạy lại: `QuestionEditorPage.test.tsx` 9/9, `review.test.tsx` 6/6, `workspaceGuard.test.tsx` 9/9 pass |
+| `pnpm build` (tsc + vite + `check-chunks`) | xanh — 5 chunk workspace, entry không nạp workspace nào (sau rebase lên `origin/main`) |
+| `node scripts/specs/check-features.mjs` | 93 feature, 329/329 FR Release được phủ, 0 lỗi |
+| `node scripts/specs/check-portal-catalog.mjs` | 0 lỗi (354 operation có `x-portal-action`) |
+
+Test F054 (9 file, đặt cạnh mã theo tiền lệ F051–F053):
+
+| File | Test | Kịch bản §2 |
+|---|---|---|
+| `release/releaseOptions.test.ts` | 6 | 4, 5, 8 (luật chọn version, ICT ↔ UTC, nhóm diff) |
+| `release/release.test.tsx` | 9 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 28, 30, 31 |
+| `preview/preview.test.tsx` | 1 | 10 (không request attempt/learning event; `mock.attempts = 0`) |
+| `review/review.test.tsx` | 6 | 12, 13, 14, 15, 29 |
+| `media/media.test.tsx` | 3 | 16, 17, 18 |
+| `builders/models.test.ts` | 12 | 19–21, 23 (mô hình thuần) |
+| `builders/builders.test.tsx` | 7 | 19, 20, 21, 22, 26, 29 |
+| `list/list.test.tsx` | 6 | 23, 24, 25, 27, 29 |
+| `import/parseImport.test.ts` | 4 | 26 (CSV/XLSX, lỗi công thức theo dòng trước khi gửi, giữ số dòng) |
+
+Còn mở: Playwright `@F054` + axe + baseline visual story `portal/ContentStudio/Release` (OQ F051-9); `trace_id` kịch bản 5, 26 và truy vấn DB kịch bản 10 cần backend thật; Câu hỏi mở F054-1/2/3 (spec Clarifications).
