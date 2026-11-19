@@ -8,10 +8,13 @@ import type { ActionKey } from '../../../generated/menu-catalog';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { actionStatus } from '../../../permissions/menuRegistry';
 import { usePermissions } from '../../../permissions/usePermissions';
+import { useTenantSource } from '../../../shared/auth/TenantContext';
 
 export interface ContentAccess {
   ready: boolean;
   crossTenant: boolean;
+  /** Platform scope (no session tenant): platform staff, System Admin — platform lane / platform source offered. */
+  platform: boolean;
   question: { write: boolean; review: boolean; publish: boolean; translate: boolean; upload: boolean; preview: boolean };
   curriculum: { read: boolean; write: boolean; publish: boolean };
   /** Action enabled (permission held and not turned off). */
@@ -20,11 +23,13 @@ export interface ContentAccess {
 
 export function useContentAccess(): ContentAccess {
   const { view, crossTenant } = usePermissions();
+  const tenant = useTenantSource();
   const perms = view?.permissions ?? [];
   const has = (p: string) => perms.includes(p);
   return {
     ready: !!view,
     crossTenant,
+    platform: crossTenant || !tenant.getTenantId(),
     question: {
       write: has('learning_content.write'),
       review: has('learning_content.review'),

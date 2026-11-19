@@ -25,8 +25,50 @@ export const EDITOR_MIN_WIDTH_QUERY = '(min-width: 1024px)';
 /** Grades whose stem must be spoken (CONTENT_MODEL §8.1, `g1_3`, [Proposed] PED-07 / OQ-23). */
 export const SPOKEN_STEM_GRADES: readonly number[] = [1, 2, 3];
 
+/**
+ * CONFIG_DEFAULTS `scheduled_publish_min_lead` = 5 min (CONTENT_MODEL, platform setting not readable by content
+ * staff): earliest `publish_at` offered by the scheduler (F054-AC-04); the server checks again.
+ */
+export const SCHEDULED_PUBLISH_MIN_LEAD_MIN = 5;
+
+/** CONFIG_DEFAULTS `publish_to_visible_max` ≤ 30 s (ADR-0043): "Đang chuẩn bị cache → Đã xuất bản" notice. */
+export const PUBLISH_TO_VISIBLE_MAX_S = 30;
+
+/** CONFIG_DEFAULTS `content_review_sla_days` = 3 (ADMIN_PORTAL §4): older open tasks show "Quá hạn" (F054-AC-12). */
+export const CONTENT_REVIEW_SLA_DAYS = 3;
+
+/** CONFIG_DEFAULTS `content_review_bulk_max` = 50 (ADMIN_PORTAL §4, scope code): bulk approve cap (F054-AC-14). */
+export const CONTENT_REVIEW_BULK_MAX = 50;
+
+/**
+ * CONFIG_DEFAULTS `media_max_bytes_by_kind` (CONTENT_MODEL §7) and the accepted inputs of each kind: a pre-check
+ * before presignMediaUpload (F054-AC-17); the media pipeline decides (magic bytes, ClamAV). Documents (import files)
+ * have no registered cap: 20 MB [Proposed].
+ */
+export const MEDIA_RULES = {
+  image: { maxBytes: 10 * 1024 * 1024, ext: ['png', 'jpg', 'jpeg', 'webp', 'svg'] },
+  audio: { maxBytes: 20 * 1024 * 1024, ext: ['mp3', 'wav', 'ogg'] },
+  video: { maxBytes: 300 * 1024 * 1024, ext: ['mp4', 'webm'] },
+  model3d: { maxBytes: 50 * 1024 * 1024, ext: ['glb', 'pck'] },
+  document: { maxBytes: 20 * 1024 * 1024, ext: ['csv', 'xlsx', 'json', 'yaml', 'yml', 'xml', 'zip'] },
+} as const;
+
+/** Rows of one question import (importer `MaxImportRows`, F024). */
+export const IMPORT_MAX_ROWS = 5000;
+
 /** OpenAPI limits used by the forms (ADR-0041). */
 export const LIMITS = {
+  /** RollbackRequest.reason, ReasonRequest.reason, delete* reason. */
+  releaseReason: 500,
+  /** RestoreRequest.reason (minLength 3). */
+  restoreReason: 1000,
+  restoreReasonMin: 3,
+  /** `q` of the lists and the media search. */
+  search: 200,
+  /** LearningName (vi / en). */
+  name: 255,
+  /** Field path of a review note (F054-AC-13). */
+  fieldPath: 256,
   changeNote: 500,
   transitionNote: 2000,
   audioExemptReason: 255,

@@ -375,5 +375,35 @@
     "untilRequired": "Select the date.",
     "tooMany": "Select at most {{max}} students at a time.",
     "excluded": "Recorded for {{count}} students."
+  },
+  "trash": {
+    "help": "Soft-deleted records of the unit. Restoring needs a reason; there is no permanent delete.",
+    "empty": "The Trash is empty.",
+    "restore": "Restore",
+    "restored": "Restored.",
+    "restoreTitle": "Restore “{{title}}”",
+    "notRestorable": "A newer record has the same code — cannot be restored.",
+    "col": {
+      "title": "Name",
+      "type": "Type",
+      "deletedAt": "Deleted at",
+      "deletedBy": "Deleted by",
+      "reason": "Delete reason"
+    },
+    "types": {
+      "question": "Question",
+      "question_set": "Question set",
+      "lesson": "Lesson",
+      "learning_material": "Learning material",
+      "assessment_blueprint": "Assessment blueprint",
+      "curriculum": "Curriculum",
+      "media": "Media",
+      "assignment": "Assignment",
+      "course": "Course",
+      "learning_path": "Learning path",
+      "challenge": "Challenge",
+      "class_template": "Class template",
+      "student": "Student"
+    }
   }
 }

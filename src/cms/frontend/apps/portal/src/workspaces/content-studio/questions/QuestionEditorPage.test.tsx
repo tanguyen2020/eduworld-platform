@@ -9,11 +9,14 @@
 //   AC-12 System Admin must choose Platform or a tenant (TC-CMS-TEN-03); AC-15 < 1024 px → read only
 //   AC-13 reviewer without write: no Lưu / Gửi duyệt; 403 PERMISSION_DENIED message; AC-33 action turned off → disabled
 //   AC-25 export translations: job polled, download link
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearUnsavedChangesForTest } from '../../../session/unsavedChangesGuard';
 import { MockPortalBackend, problem, renderPortal, setViewportWidth, stopPortals, TENANTS } from '../../../test/portal-harness';
 import { MockContentBackend, U } from '../../../test/mock-content';
+
+// the first test loads the whole Content Studio chunk (F053 + F054 screens) on a throttled CPU: 30 s for async queries
+configure({ asyncUtilTimeout: 30_000 });
 
 afterEach(() => {
   stopPortals();

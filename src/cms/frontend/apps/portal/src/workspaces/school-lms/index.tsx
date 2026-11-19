@@ -1,7 +1,8 @@
 // Workspace school_lms (C. School & Learning Management) — lazy chunk (F050-AC-02, F051-AC-10). Menus, paths and permissions come from the
 // generated catalog (ADR-0090); this file only attaches a screen to each menu key. Later features replace
 // `placeholderScreen` with their screen; a menu added to the catalog without a screen fails to compile (F051-AC-34).
-// F052 (school administration): schools, classes, sis_sync, student_activity, access_control, settings, audit_logs.
+// F052 (school administration): schools, classes, sis_sync, student_activity, access_control, settings, audit_logs;
+// F054: trash (Thùng rác of the tenant).
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
 import { ClassesScreen } from './classes/ClassesScreen';
@@ -9,6 +10,7 @@ import { SchoolsScreen } from './schools/SchoolsScreen';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { SisScreen } from './sis/SisScreen';
 import { StudentActivityScreen } from './students/StudentActivityScreen';
+import { TenantTrashPage } from './trash/TenantTrashPage';
 import { AccessControlScreen } from './users/AccessControlScreen';
 
 export const screens = {
@@ -33,7 +35,7 @@ export const screens = {
   'menu.school_lms.access_control': AccessControlScreen,
   'menu.school_lms.installers': placeholderScreen,
   'menu.school_lms.settings': SettingsScreen,
-  'menu.school_lms.trash': placeholderScreen,
+  'menu.school_lms.trash': TenantTrashPage, // F054 US5
   'menu.school_lms.audit_logs': AuditScreen,
 } satisfies MenuScreens<'school_lms'>;
 

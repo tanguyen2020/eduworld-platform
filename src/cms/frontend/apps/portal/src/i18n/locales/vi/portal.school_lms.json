@@ -375,5 +375,35 @@
     "untilRequired": "Chọn ngày gia hạn.",
     "tooMany": "Mỗi lần chỉ chọn tối đa {{max}} học sinh.",
     "excluded": "Đã ghi nhận cho {{count}} học sinh."
+  },
+  "trash": {
+    "help": "Bản ghi đã xóa mềm của đơn vị. Khôi phục cần lý do; không có xóa vĩnh viễn.",
+    "empty": "Thùng rác trống.",
+    "restore": "Khôi phục",
+    "restored": "Đã khôi phục.",
+    "restoreTitle": "Khôi phục “{{title}}”",
+    "notRestorable": "Đã có bản ghi mới cùng mã — không khôi phục được.",
+    "col": {
+      "title": "Tên",
+      "type": "Loại",
+      "deletedAt": "Xóa lúc",
+      "deletedBy": "Người xóa",
+      "reason": "Lý do xóa"
+    },
+    "types": {
+      "question": "Câu hỏi",
+      "question_set": "Bộ câu hỏi",
+      "lesson": "Bài học",
+      "learning_material": "Học liệu",
+      "assessment_blueprint": "Ma trận đề",
+      "curriculum": "Chương trình học",
+      "media": "Media",
+      "assignment": "Bài giao",
+      "course": "Khóa học",
+      "learning_path": "Lộ trình học",
+      "challenge": "Thử thách",
+      "class_template": "Mẫu lớp",
+      "student": "Học sinh"
+    }
   }
 }
