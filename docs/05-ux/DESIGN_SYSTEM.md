@@ -1,6 +1,6 @@
 # Design System — Game (Godot 3D) và Admin/Ops (CMS/LMS)
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-19 (F005: pipeline token chạy được, `tokens@0.1.0`)
 > Liên quan: [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-school-learning-dashboard)
 
 ## 1. Tổng quan
@@ -59,9 +59,10 @@ flowchart LR
 ```
 
 - Lệnh: `make design-tokens` (chạy trong CI ở mọi MR chạm `design/**`). File sinh ra **không sửa tay**; CI chạy lại và báo lỗi nếu khác (`make design-tokens-check`).
-- Godot: Style Dictionary xuất JSON trung gian; script `src/game/tools/build_theme.gd` (chạy Godot headless) dựng `Theme`/`ShaderMaterial`/`Environment` `.tres` từ JSON đó [Proposed].
+- Godot: Style Dictionary v4 phân giải alias, format riêng trong `design/sd/formats/` **ghi trực tiếp** `Theme` (`eduworld_theme.tres` mật độ `g6_7`, `eduworld_theme_<band>.tres` mỗi grade band, `eduworld_theme_high_contrast.tres`), `Environment` theo zone và `Gradient` VFX dạng text resource (`format=3`, dòng đầu là chú thích `;` GENERATED), cùng `UiTokens` và `Art3dTokens` (`src/game/resources/art/generated/art3d_tokens.gd`); font Be Vietnam Pro/Baloo 2 + OFL được chép vào `src/game/resources/ui/theme/fonts/`. Không cần Godot headless để sinh hay kiểm (F005, thay phương án `build_theme.gd`); JSON trung gian `design/build/godot/tokens.json` cho công cụ F060. Preset `ShaderMaterial` toon sinh khi có shader toon chung (F071) [Proposed].
+- Kiểm khi build (`design/checks/`): cấu trúc W3C, alias thiếu/vòng lặp, literal ở tầng semantic/component/mode/density/art, màu nghiệp vụ chỉ ở shared + đủ 3 biến thể, tên token game và admin không trùng, tương phản WCAG 2.1 AA mọi cặp `contrastWith` (báo cáo `design/build/reports/contrast.json`), kích thước tối thiểu đọc từ §5.2 và §4.5 của tài liệu này, font OFL + bộ glyph tiếng Việt, semver so với nhánh gốc của PR.
 - Web: xuất object `ThemeConfig` cho `ConfigProvider` của Ant Design và CSS variables `--ew-*` cho component tự viết trong `ops-ui`.
-- Phiên bản token: `design/CHANGELOG.md` + semver (`tokens@1.4.0`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
+- Phiên bản token: `design/CHANGELOG.md` + semver (phiên bản đầu `tokens@0.1.0`, mục `## tokens@x.y.z`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
 
 ## 4. Admin/Ops design system (CMS/LMS/Admin)
 
@@ -69,13 +70,13 @@ flowchart LR
 
 | Token Ant Design | Giá trị đề xuất | Ghi chú |
 |---|---|---|
-| `colorPrimary` | `{brand.primary}` (xanh dương EduWorld, ví dụ `#2F6BFF`) | Lấy từ shared-tokens |
+| `colorPrimary` | `{color.brand.primary}` (xanh dương EduWorld: sáng `#2A62F0`, tối `#3567EB`; game giữ `#2F6BFF`) | Lấy từ shared-tokens; `#2F6BFF` chỉ đạt 4,49:1 với chữ trắng nên bản sáng được làm đậm hơn (F005) |
 | `colorSuccess` / `colorWarning` / `colorError` / `colorInfo` | `#1F9D55` / `#D97706` / `#DC2626` / `#2563EB` | Chuẩn trạng thái, đạt AA trên nền sáng và tối |
 | `fontFamily` | `"Be Vietnam Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Hỗ trợ đầy đủ tiếng Việt; tự host trong `design/fonts/` |
 | `fontSize` | 14 (compact 13) | Mật độ vận hành |
 | `borderRadius` | 6 | Gọn, chuyên nghiệp |
 | `controlHeight` | 32 (compact 28) | |
-| Algorithm | `defaultAlgorithm` / `darkAlgorithm` + `compactAlgorithm` | Người dùng chọn sáng/tối, compact là mặc định cho bảng |
+| Algorithm | `defaultAlgorithm` / `darkAlgorithm`; compact bằng seed token (`fontSize` 13, `fontSizeSM` 13, `controlHeight` 28 — `compactOverrides`), **không** dùng `compactAlgorithm` vì nó hạ cỡ chữ cơ sở xuống 12 px, dưới mức tối thiểu §4.5 | Người dùng chọn sáng/tối, compact là mặc định cho bảng |
 | Locale | `vi_VN` (Ant Design) + `dayjs/locale/vi` | Định dạng ngày `DD/MM/YYYY`, số `1.234,5` |
 
 Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qua token và `components` token của `ConfigProvider`.

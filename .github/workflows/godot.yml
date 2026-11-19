@@ -1,0 +1,43 @@
+# Godot lane (DEPLOYMENT §10.2, ADR-0088). Started by its own path filter and by design.yml (workflow_call).
+# Skeleton created by F005: the generated Theme / UiTokens / 3D resources are fresh and carry nothing of the
+# Admin UI. F060 adds gdlint, GdUnit4 headless (theme loads), benchmark TC-PERF-018 and the 4 exports.
+name: godot
+
+on:
+  pull_request:
+    paths:
+      - "src/game/**"
+      - "specs/**"
+      - "design/game-tokens/**"
+      - "design/shared-tokens/**"
+      - ".github/workflows/godot.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/game/**"
+      - "specs/**"
+      - "design/game-tokens/**"
+      - "design/shared-tokens/**"
+      - ".github/workflows/godot.yml"
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  theme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: design
+      - name: generated Godot theme files are fresh and separated from the Admin UI
+        run: node design/checks/run-all.mjs --only godot

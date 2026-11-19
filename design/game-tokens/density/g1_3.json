@@ -1,0 +1,21 @@
+{
+  "density": {
+    "g1_3": {
+      "$description": "Density overrides for grade band g1_3 (DESIGN_SYSTEM §5.2). Selected by AppState.player.grade_band.",
+      "font": {
+        "$type": "dimension",
+        "base": { "$value": "{size.font.24}", "$description": "Base font size (g1_3)." },
+        "heading": { "$value": "{size.font.32}", "$description": "Heading font size (g1_3)." },
+        "small": { "$value": "{size.font.24}", "$description": "Smallest allowed font size (g1_3)." }
+      },
+      "button": {
+        "$type": "dimension",
+        "min_height": { "$value": "{size.control.64}", "$description": "Minimum button height (g1_3)." }
+      },
+      "spacing": {
+        "$type": "dimension",
+        "base": { "$value": "{size.space.16}", "$description": "Base spacing (g1_3)." }
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "ops": {
+    "color": {
+      "$type": "color",
+      "text": {
+        "primary": {
+          "$value": "{ops.mode.text.primary}",
+          "$description": "Primary text of the active mode.",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.bg.container", "level": "normal" },
+            { "token": "ops.color.bg.layout", "level": "normal" },
+            { "token": "banner.info.bg", "level": "normal" },
+            { "token": "banner.warning.bg", "level": "normal" },
+            { "token": "banner.error.bg", "level": "normal" }
+          ] } }
+        },
+        "secondary": {
+          "$value": "{ops.mode.text.secondary}",
+          "$description": "Secondary text (descriptions, table meta).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.bg.container", "level": "normal" },
+            { "token": "ops.color.bg.layout", "level": "normal" }
+          ] } }
+        },
+        "on-primary": {
+          "$value": "{ops.palette.white}",
+          "$description": "Text on primary buttons and solid primary surfaces.",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "antd.colorPrimary", "level": "normal" }
+          ] } }
+        }
+      },
+      "bg": {
+        "container": { "$value": "{ops.mode.bg.container}", "$description": "Card, table, modal background." },
+        "layout": { "$value": "{ops.mode.bg.layout}", "$description": "Page layout background." }
+      },
+      "border": { "$value": "{ops.mode.border}", "$description": "Default border." }
+    }
+  },
+  "status": {
+    "$type": "color",
+    "$description": "Status colors (badges, icons, progress). Graphic objects: 3:1 against the container (WCAG 1.4.11); text uses ops.color.text.*.",
+    "success": {
+      "$value": "{antd.colorSuccess}",
+      "$description": "Success indicator.",
+      "$extensions": { "eduworld": { "contrastWith": [{ "token": "ops.color.bg.container", "level": "graphic" }] } }
+    },
+    "warning": {
+      "$value": "{antd.colorWarning}",
+      "$description": "Warning indicator.",
+      "$extensions": { "eduworld": { "contrastWith": [{ "token": "ops.color.bg.container", "level": "graphic" }] } }
+    },
+    "error": {
+      "$value": "{antd.colorError}",
+      "$description": "Error indicator; invalid formula frame (DESIGN_SYSTEM §4.6).",
+      "$extensions": { "eduworld": { "contrastWith": [{ "token": "ops.color.bg.container", "level": "graphic" }] } }
+    },
+    "info": {
+      "$value": "{antd.colorInfo}",
+      "$description": "Info indicator.",
+      "$extensions": { "eduworld": { "contrastWith": [{ "token": "ops.color.bg.container", "level": "graphic" }] } }
+    }
+  },
+  "banner": {
+    "$type": "color",
+    "$description": "System warning banner (moderation off, maintenance, SIS incident — DESIGN_SYSTEM §4.2).",
+    "info": { "bg": { "$value": "{ops.mode.banner.info}", "$description": "Info banner background." } },
+    "warning": { "bg": { "$value": "{ops.mode.banner.warning}", "$description": "Warning banner background." } },
+    "error": { "bg": { "$value": "{ops.mode.banner.error}", "$description": "Error banner background." } }
+  },
+  "chart": {
+    "categorical": {
+      "$type": "color",
+      "$description": "Categorical chart palette, max 8 series (DESIGN_SYSTEM §4.4).",
+      "1": { "$value": "{ops.palette.chart.1}", "$description": "Series 1." },
+      "2": { "$value": "{ops.palette.chart.2}", "$description": "Series 2." },
+      "3": { "$value": "{ops.palette.chart.3}", "$description": "Series 3." },
+      "4": { "$value": "{ops.palette.chart.4}", "$description": "Series 4." },
+      "5": { "$value": "{ops.palette.chart.5}", "$description": "Series 5." },
+      "6": { "$value": "{ops.palette.chart.6}", "$description": "Series 6." },
+      "7": { "$value": "{ops.palette.chart.7}", "$description": "Series 7." },
+      "8": { "$value": "{ops.palette.chart.8}", "$description": "Series 8." }
+    }
+  },
+  "math": {
+    "font-scale": {
+      "$type": "number",
+      "$value": "{ops.number.scale.100}",
+      "$description": "Inline formula size relative to paragraph text (DESIGN_SYSTEM §4.6, ADR-0055)."
+    },
+    "font-scale-block": {
+      "$type": "number",
+      "$value": "{ops.number.scale.115}",
+      "$description": "Block formula size relative to paragraph text (DESIGN_SYSTEM §4.6)."
+    }
+  }
+}

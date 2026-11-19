@@ -1,0 +1,127 @@
+{
+  "palette": {
+    "$type": "color",
+    "$description": "Game primitive palette (stylized, bright). Literals live only here and in shared-tokens.",
+    "white": { "$value": "#FFFFFF", "$description": "White." },
+    "black": { "$value": "#000000", "$description": "Black (high contrast mode)." },
+    "ink": {
+      "900": { "$value": "#1E2A44", "$description": "Darkest ink: primary text, HUD background." },
+      "700": { "$value": "#4A5878", "$description": "Secondary text." },
+      "600": { "$value": "#5C6886", "$description": "Muted text." }
+    },
+    "cream": {
+      "50": { "$value": "#FFF8E7", "$description": "Panel background." },
+      "100": { "$value": "#FFEFC2", "$description": "Quest card background." }
+    },
+    "sky": {
+      "50": { "$value": "#F2F5FB", "$description": "Alternative panel background." },
+      "100": { "$value": "#E8F0FF", "$description": "Hint / caption background." },
+      "200": { "$value": "#CFE0FF", "$description": "Progress track." }
+    },
+    "blue": {
+      "600": { "$value": "#2457D6", "$description": "Primary button background." },
+      "700": { "$value": "#1C47B5", "$description": "Primary button pressed." },
+      "800": { "$value": "#0B3FB8", "$description": "High contrast primary." }
+    },
+    "green": {
+      "700": { "$value": "#1B7F45", "$description": "Correct feedback background." }
+    },
+    "red": {
+      "700": { "$value": "#C62828", "$description": "Incorrect feedback background." }
+    },
+    "amber": {
+      "400": { "$value": "#FFD43B", "$description": "XP badge, reward accent." },
+      "200": { "$value": "#FFE08A", "$description": "Soft warning accent." }
+    },
+    "violet": {
+      "700": { "$value": "#6D28D9", "$description": "Hint button background." }
+    },
+    "yellow": {
+      "hc": { "$value": "#FFFF00", "$description": "High contrast focus / accent." }
+    },
+    "zone": {
+      "$description": "3D zone secondary tones (sky, fog, accents).",
+      "sky-day": { "$value": "#8FD3FF", "$description": "Day sky top." },
+      "sky-horizon": { "$value": "#E6F6FF", "$description": "Day sky horizon." },
+      "ground-horizon": { "$value": "#B9D98A", "$description": "Ground horizon." },
+      "fog-warm": { "$value": "#FFE7C7", "$description": "Warm fog." },
+      "fog-cool": { "$value": "#DCEBFF", "$description": "Cool fog." },
+      "fog-violet": { "$value": "#ECE3FF", "$description": "Violet fog." },
+      "fog-green": { "$value": "#E2F7E7", "$description": "Green fog." },
+      "sun": { "$value": "#FFF4D6", "$description": "Sun light color." },
+      "shadow-tint": { "$value": "#3B3F6B", "$description": "Toon shadow tint." },
+      "outline": { "$value": "#1E2A44", "$description": "Toon outline." },
+      "sparkle": { "$value": "#FFFFFF", "$description": "VFX sparkle white." },
+      "gold": { "$value": "#FFC83D", "$description": "VFX reward gold." },
+      "mint": { "$value": "#5CE1A1", "$description": "VFX correct mint." },
+      "magenta": { "$value": "#FF5CC8", "$description": "VFX level-up magenta." }
+    }
+  },
+  "size": {
+    "$type": "dimension",
+    "font": {
+      "16": { "$value": "16px", "$description": "Font 16." },
+      "18": { "$value": "18px", "$description": "Font 18." },
+      "20": { "$value": "20px", "$description": "Font 20." },
+      "22": { "$value": "22px", "$description": "Font 22." },
+      "24": { "$value": "24px", "$description": "Font 24." },
+      "28": { "$value": "28px", "$description": "Font 28." },
+      "32": { "$value": "32px", "$description": "Font 32." },
+      "36": { "$value": "36px", "$description": "Font 36." }
+    },
+    "space": {
+      "4": { "$value": "4px", "$description": "Spacing 4." },
+      "8": { "$value": "8px", "$description": "Spacing 8." },
+      "12": { "$value": "12px", "$description": "Spacing 12." },
+      "16": { "$value": "16px", "$description": "Spacing 16." },
+      "20": { "$value": "20px", "$description": "Spacing 20." },
+      "24": { "$value": "24px", "$description": "Spacing 24." },
+      "32": { "$value": "32px", "$description": "Spacing 32." }
+    },
+    "radius": {
+      "8": { "$value": "8px", "$description": "Radius 8." },
+      "12": { "$value": "12px", "$description": "Radius 12." },
+      "16": { "$value": "16px", "$description": "Radius 16." },
+      "24": { "$value": "24px", "$description": "Radius 24." }
+    },
+    "control": {
+      "44": { "$value": "44px", "$description": "Control height 44." },
+      "48": { "$value": "48px", "$description": "Control height 48." },
+      "56": { "$value": "56px", "$description": "Control height 56." },
+      "64": { "$value": "64px", "$description": "Control height 64." }
+    },
+    "border": {
+      "2": { "$value": "2px", "$description": "Border 2." },
+      "3": { "$value": "3px", "$description": "Border 3." },
+      "4": { "$value": "4px", "$description": "Border 4 (focus, high contrast)." }
+    }
+  },
+  "font": {
+    "$type": "fontFamily",
+    "family": {
+      "heading": { "$value": ["Baloo 2", "Be Vietnam Pro", "sans-serif"], "$description": "Rounded friendly heading font (DESIGN_SYSTEM §5.5)." },
+      "body": { "$value": ["Be Vietnam Pro", "sans-serif"], "$description": "Readable body font (DESIGN_SYSTEM §5.5)." }
+    }
+  },
+  "duration": {
+    "$type": "duration",
+    "fast": { "$value": "120ms", "$description": "Fast tween (press feedback)." },
+    "base": { "$value": "200ms", "$description": "Default tween." },
+    "slow": { "$value": "320ms", "$description": "Panel open/close." }
+  },
+  "number": {
+    "$type": "number",
+    "ratio": {
+      "085": { "$value": 0.85, "$description": "0.85×." },
+      "100": { "$value": 1, "$description": "1.0×." },
+      "135": { "$value": 1.35, "$description": "1.35× (text_expansion_allowance, CONFIG_DEFAULTS)." }
+    },
+    "toon": {
+      "steps": { "$value": 3, "$description": "Toon shading light steps." },
+      "rim": { "$value": 0.35, "$description": "Toon rim light strength." }
+    },
+    "outline": {
+      "width": { "$value": 0.02, "$description": "Outline width in world units (inverted hull)." }
+    }
+  }
+}

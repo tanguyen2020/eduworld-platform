@@ -1,0 +1,81 @@
+{
+  "color": {
+    "$type": "color",
+    "surface": {
+      "panel": { "$value": "{palette.cream.50}", "$description": "Default panel background (quest panel, question board)." },
+      "panel_alt": { "$value": "{palette.sky.50}", "$description": "Alternative panel background (lists, settings)." },
+      "card": { "$value": "{palette.cream.100}", "$description": "Card background (quest card)." },
+      "hud": { "$value": "{palette.ink.900}", "$description": "HUD strip background." }
+    },
+    "text": {
+      "primary": {
+        "$value": "{palette.ink.900}",
+        "$description": "Primary text on panels.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "color.surface.panel_alt", "level": "normal" },
+          { "token": "color.surface.card", "level": "normal" }
+        ] } }
+      },
+      "secondary": {
+        "$value": "{palette.ink.700}",
+        "$description": "Secondary text on panels.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "color.surface.panel_alt", "level": "normal" }
+        ] } }
+      },
+      "muted": {
+        "$value": "{palette.ink.600}",
+        "$description": "Muted text (secondary language name, hints).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "color.surface.panel_alt", "level": "normal" }
+        ] } }
+      },
+      "on_accent": {
+        "$value": "{palette.white}",
+        "$description": "Text on accent / feedback backgrounds.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.accent.primary", "level": "normal" },
+          { "token": "color.feedback.correct", "level": "normal" },
+          { "token": "color.feedback.incorrect", "level": "normal" },
+          { "token": "color.surface.hud", "level": "normal" }
+        ] } }
+      }
+    },
+    "accent": {
+      "primary": { "$value": "{palette.blue.600}", "$description": "Primary accent (primary buttons, selection)." },
+      "primary_pressed": { "$value": "{palette.blue.700}", "$description": "Primary accent pressed." },
+      "reward": { "$value": "{palette.amber.400}", "$description": "Reward accent (XP, coins)." }
+    },
+    "feedback": {
+      "correct": { "$value": "{palette.green.700}", "$description": "Correct answer feedback strip." },
+      "incorrect": { "$value": "{palette.red.700}", "$description": "Incorrect answer feedback strip (gentle, no punishment)." },
+      "hint": { "$value": "{palette.violet.700}", "$description": "Hint feedback / hint button." }
+    },
+    "focus": { "$value": "{palette.blue.600}", "$description": "Keyboard/gamepad focus ring." }
+  },
+  "text": {
+    "expansion_allowance": {
+      "$type": "number",
+      "$value": "{number.ratio.135}",
+      "$description": "Every component must fit strings this much longer than the shortest translation (text_expansion_allowance, DESIGN_SYSTEM §5.5, ADR-0056)."
+    },
+    "secondary_language": {
+      "scale": { "$type": "number", "$value": "{number.ratio.085}", "$description": "Secondary-language name size relative to the main name (rendered italic, DESIGN_SYSTEM §5.5)." },
+      "color": {
+        "$type": "color",
+        "$value": "{color.text.muted}",
+        "$description": "Secondary-language name color.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "color.surface.panel", "level": "normal" }] } }
+      }
+    }
+  },
+  "motion": {
+    "$type": "duration",
+    "press": { "$value": "{duration.fast}", "$description": "Button press feedback." },
+    "default": { "$value": "{duration.base}", "$description": "Default UI tween." },
+    "panel": { "$value": "{duration.slow}", "$description": "Panel open/close." }
+  }
+}

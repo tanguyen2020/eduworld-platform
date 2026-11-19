@@ -1,0 +1,21 @@
+{
+  "density": {
+    "g6_7": {
+      "$description": "Density overrides for grade band g6_7 (DESIGN_SYSTEM §5.2). Selected by AppState.player.grade_band.",
+      "font": {
+        "$type": "dimension",
+        "base": { "$value": "{size.font.18}", "$description": "Base font size (g6_7)." },
+        "heading": { "$value": "{size.font.24}", "$description": "Heading font size (g6_7)." },
+        "small": { "$value": "{size.font.16}", "$description": "Smallest allowed font size (g6_7)." }
+      },
+      "button": {
+        "$type": "dimension",
+        "min_height": { "$value": "{size.control.48}", "$description": "Minimum button height (g6_7)." }
+      },
+      "spacing": {
+        "$type": "dimension",
+        "base": { "$value": "{size.space.12}", "$description": "Base spacing (g6_7)." }
+      }
+    }
+  }
+}

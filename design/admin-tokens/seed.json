@@ -1,0 +1,92 @@
+{
+  "ops": {
+    "palette": {
+      "$type": "color",
+      "$description": "Admin/Ops primitive palette (neutral, status, chart). Literals live only here.",
+      "white": { "$value": "#FFFFFF", "$description": "White." },
+      "black": { "$value": "#000000", "$description": "Black." },
+      "neutral": {
+        "50": { "$value": "#FAFAFA", "$description": "Subtle surface (light)." },
+        "100": { "$value": "#F5F5F5", "$description": "Layout background (light)." },
+        "200": { "$value": "#E8E8E8", "$description": "Primary text (dark)." },
+        "300": { "$value": "#D9D9D9", "$description": "Border (light)." },
+        "500": { "$value": "#A6A6A6", "$description": "Secondary text (dark)." },
+        "600": { "$value": "#595959", "$description": "Secondary text (light)." },
+        "700": { "$value": "#424242", "$description": "Border (dark)." },
+        "850": { "$value": "#1F1F1F", "$description": "Primary text (light)." },
+        "900": { "$value": "#141414", "$description": "Container background (dark)." }
+      },
+      "status": {
+        "success": { "$value": "#1F9D55", "$description": "Success (DESIGN_SYSTEM §4.1)." },
+        "warning": { "$value": "#D97706", "$description": "Warning (DESIGN_SYSTEM §4.1)." },
+        "error": { "$value": "#DC2626", "$description": "Error (DESIGN_SYSTEM §4.1)." },
+        "info": { "$value": "#2563EB", "$description": "Info (DESIGN_SYSTEM §4.1)." }
+      },
+      "banner": {
+        "info-light": { "$value": "#E6F4FF", "$description": "Info banner background (light)." },
+        "warning-light": { "$value": "#FFFBE6", "$description": "Warning banner background (light)." },
+        "error-light": { "$value": "#FFF2F0", "$description": "Error banner background (light)." },
+        "info-dark": { "$value": "#111A2C", "$description": "Info banner background (dark)." },
+        "warning-dark": { "$value": "#2B2111", "$description": "Warning banner background (dark)." },
+        "error-dark": { "$value": "#2C1618", "$description": "Error banner background (dark)." }
+      },
+      "chart": {
+        "$description": "Categorical chart palette (DESIGN_SYSTEM §4.4, max 8, colour-blind friendly — Okabe-Ito order).",
+        "1": { "$value": "#0072B2", "$description": "Chart series 1." },
+        "2": { "$value": "#E69F00", "$description": "Chart series 2." },
+        "3": { "$value": "#009E73", "$description": "Chart series 3." },
+        "4": { "$value": "#CC79A7", "$description": "Chart series 4." },
+        "5": { "$value": "#56B4E9", "$description": "Chart series 5." },
+        "6": { "$value": "#D55E00", "$description": "Chart series 6." },
+        "7": { "$value": "#F0E442", "$description": "Chart series 7." },
+        "8": { "$value": "#7F7F7F", "$description": "Chart series 8." }
+      }
+    },
+    "size": {
+      "$type": "dimension",
+      "font": {
+        "13": { "$value": "13px", "$description": "Compact body font (minimum, DESIGN_SYSTEM §4.5)." },
+        "14": { "$value": "14px", "$description": "Default body font." },
+        "16": { "$value": "16px", "$description": "Large body font." }
+      },
+      "radius": {
+        "6": { "$value": "6px", "$description": "Default border radius." }
+      },
+      "control": {
+        "28": { "$value": "28px", "$description": "Compact control height." },
+        "32": { "$value": "32px", "$description": "Default control height." }
+      }
+    },
+    "number": {
+      "$type": "number",
+      "scale": {
+        "100": { "$value": 1, "$description": "Scale 1.0×." },
+        "115": { "$value": 1.15, "$description": "Scale 1.15×." }
+      }
+    },
+    "font": {
+      "family": {
+        "base": {
+          "$type": "fontFamily",
+          "$value": ["Be Vietnam Pro", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+          "$description": "Admin font stack (DESIGN_SYSTEM §4.1), Vietnamese coverage, self-hosted Be Vietnam Pro."
+        }
+      }
+    }
+  },
+  "antd": {
+    "$description": "Ant Design 5 seed tokens passed to ConfigProvider (DESIGN_SYSTEM §4.1). Names follow Ant Design.",
+    "colorPrimary": { "$type": "color", "$value": "{color.brand.primary}", "$description": "Primary = brand primary (shared)." },
+    "colorSuccess": { "$type": "color", "$value": "{ops.palette.status.success}", "$description": "Success." },
+    "colorWarning": { "$type": "color", "$value": "{ops.palette.status.warning}", "$description": "Warning." },
+    "colorError": { "$type": "color", "$value": "{ops.palette.status.error}", "$description": "Error." },
+    "colorInfo": { "$type": "color", "$value": "{ops.palette.status.info}", "$description": "Info." },
+    "colorTextBase": { "$type": "color", "$value": "{ops.mode.text.base}", "$description": "Base text color of the active mode." },
+    "colorBgBase": { "$type": "color", "$value": "{ops.mode.bg.base}", "$description": "Base background color of the active mode." },
+    "fontFamily": { "$type": "fontFamily", "$value": "{ops.font.family.base}", "$description": "Font stack." },
+    "fontSize": { "$type": "dimension", "$value": "{ops.size.font.14}", "$description": "Base font size (compact overrides)." },
+    "fontSizeSM": { "$type": "dimension", "$value": "{ops.size.font.13}", "$description": "Small font size; never below the 13px minimum (DESIGN_SYSTEM §4.5)." },
+    "borderRadius": { "$type": "dimension", "$value": "{ops.size.radius.6}", "$description": "Border radius." },
+    "controlHeight": { "$type": "dimension", "$value": "{ops.size.control.32}", "$description": "Control height (compact overrides)." }
+  }
+}

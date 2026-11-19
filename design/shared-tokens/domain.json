@@ -1,0 +1,89 @@
+{
+  "color": {
+    "$type": "color",
+    "subject": {
+      "$description": "Subject / world zone colors (DESIGN_SYSTEM §6, WORLD_DESIGN). Game: zone palette, gates, islands. Admin: subject tag, chart series.",
+      "math": {
+        "$value": "#2563EB",
+        "$description": "Toán — blue.",
+        "$extensions": { "eduworld": { "variants": { "light": "#2563EB", "dark": "#60A5FA", "game": "#3D7BFF" } } }
+      },
+      "vietnamese": {
+        "$value": "#C2410C",
+        "$description": "Tiếng Việt — orange.",
+        "$extensions": { "eduworld": { "variants": { "light": "#C2410C", "dark": "#FB923C", "game": "#FF8A1F" } } }
+      },
+      "english": {
+        "$value": "#7C3AED",
+        "$description": "Tiếng Anh — purple.",
+        "$extensions": { "eduworld": { "variants": { "light": "#7C3AED", "dark": "#A78BFA", "game": "#9B5CFF" } } }
+      },
+      "science": {
+        "$value": "#15803D",
+        "$description": "Khoa học — green.",
+        "$extensions": { "eduworld": { "variants": { "light": "#15803D", "dark": "#4ADE80", "game": "#33C26B" } } }
+      }
+    },
+    "rarity": {
+      "$description": "Item rarity (DESIGN_SYSTEM §6). Game: item frame and glow. Admin: rarity tag in Game Studio.",
+      "common": {
+        "$value": "#6B7280",
+        "$description": "common — grey.",
+        "$extensions": { "eduworld": { "variants": { "light": "#6B7280", "dark": "#9CA3AF", "game": "#B8C0CC" } } }
+      },
+      "uncommon": {
+        "$value": "#16A34A",
+        "$description": "uncommon — green.",
+        "$extensions": { "eduworld": { "variants": { "light": "#16A34A", "dark": "#4ADE80", "game": "#3FD46B" } } }
+      },
+      "rare": {
+        "$value": "#2563EB",
+        "$description": "rare — blue.",
+        "$extensions": { "eduworld": { "variants": { "light": "#2563EB", "dark": "#60A5FA", "game": "#3D8BFF" } } }
+      },
+      "epic": {
+        "$value": "#9333EA",
+        "$description": "epic — purple.",
+        "$extensions": { "eduworld": { "variants": { "light": "#9333EA", "dark": "#C084FC", "game": "#B45CFF" } } }
+      },
+      "legendary": {
+        "$value": "#D97706",
+        "$description": "legendary — gold-orange.",
+        "$extensions": { "eduworld": { "variants": { "light": "#D97706", "dark": "#FBBF24", "game": "#FFB020" } } }
+      }
+    },
+    "content_status": {
+      "$description": "Content status (DESIGN_SYSTEM §6, ADR-0043). Admin: status tag, timeline. Game: preview only.",
+      "draft": {
+        "$value": "#6B7280",
+        "$description": "draft — grey.",
+        "$extensions": { "eduworld": { "variants": { "light": "#6B7280", "dark": "#9CA3AF", "game": "#9CA3AF" } } }
+      },
+      "in_review": {
+        "$value": "#A16207",
+        "$description": "in_review — yellow.",
+        "$extensions": { "eduworld": { "variants": { "light": "#A16207", "dark": "#FACC15", "game": "#FFD43B" } } }
+      },
+      "approved": {
+        "$value": "#0369A1",
+        "$description": "approved — light blue.",
+        "$extensions": { "eduworld": { "variants": { "light": "#0369A1", "dark": "#7DD3FC", "game": "#5BC0FF" } } }
+      },
+      "published": {
+        "$value": "#15803D",
+        "$description": "published — green.",
+        "$extensions": { "eduworld": { "variants": { "light": "#15803D", "dark": "#4ADE80", "game": "#33C26B" } } }
+      },
+      "archived": {
+        "$value": "#374151",
+        "$description": "archived — dark grey.",
+        "$extensions": { "eduworld": { "variants": { "light": "#374151", "dark": "#D1D5DB", "game": "#6B7280" } } }
+      },
+      "rejected": {
+        "$value": "#DC2626",
+        "$description": "rejected — red.",
+        "$extensions": { "eduworld": { "variants": { "light": "#DC2626", "dark": "#F87171", "game": "#FF5A5A" } } }
+      }
+    }
+  }
+}

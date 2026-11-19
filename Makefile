@@ -193,6 +193,18 @@ apisix-check: ## Gateway config checks: rendered files fresh, routes vs spec, no
 apisix-smoke: ## Gateway behaviour against the running stack (public :9080, internal :9180)
 	APISIX_SMOKE=1 node --test deploy/apisix/tests/smoke.test.mjs
 
+# ---------- design tokens (F005, ADR-0047) ----------
+PNPM ?= pnpm
+.PHONY: design-tokens design-tokens-check
+design-tokens: ## Generate Godot Theme/UiTokens/3D resources, Ant Design theme + CSS variables from design/ (checks first)
+	cd design && $(PNPM) install --frozen-lockfile
+	cd design && $(PNPM) build
+
+design-tokens-check: ## Fail if generated theme files drift from design/; aliases, business colors, contrast, sizes, fonts, semver vs $(BASE_REF)
+	cd design && $(PNPM) install --frozen-lockfile
+	cd design && $(PNPM) test
+	cd design && DESIGN_BASE_REF=$(BASE_REF) $(PNPM) check
+
 # ---------- specs / docs ----------
 .PHONY: specs-lint specs-breaking docs-check
 specs-lint: ## Contract checks (Spectral/AsyncAPI added with the spec toolchain)
@@ -222,6 +234,7 @@ ci-local: ## CI checks that need no GitHub: workflows, path filters, admin ports
 	node scripts/ci/check-workflows.mjs
 	node --test scripts/ci/check-workflows.test.mjs
 	bash scripts/ci/test-path-filters.sh
+	bash scripts/ci/test-design-rules.sh
 	bash scripts/ci/check-admin-ports.sh
 	bash scripts/ci/test-arch-fixtures.sh
 	bash scripts/ci/test-gitleaks.sh

@@ -1,0 +1,24 @@
+{
+  "ops": {
+    "mode": {
+      "$type": "color",
+      "$description": "Dark mode values referenced by admin semantic tokens. Same paths as modes/light.json.",
+      "text": {
+        "base": { "$value": "{ops.palette.white}", "$description": "Ant Design colorTextBase (dark)." },
+        "primary": { "$value": "{ops.palette.neutral.200}", "$description": "Primary text (dark)." },
+        "secondary": { "$value": "{ops.palette.neutral.500}", "$description": "Secondary text (dark)." }
+      },
+      "bg": {
+        "base": { "$value": "{ops.palette.neutral.900}", "$description": "Ant Design colorBgBase (dark)." },
+        "container": { "$value": "{ops.palette.neutral.900}", "$description": "Container background (dark)." },
+        "layout": { "$value": "{ops.palette.black}", "$description": "Layout background (dark)." }
+      },
+      "border": { "$value": "{ops.palette.neutral.700}", "$description": "Border (dark)." },
+      "banner": {
+        "info": { "$value": "{ops.palette.banner.info-dark}", "$description": "Info banner (dark)." },
+        "warning": { "$value": "{ops.palette.banner.warning-dark}", "$description": "Warning banner (dark)." },
+        "error": { "$value": "{ops.palette.banner.error-dark}", "$description": "Error banner (dark)." }
+      }
+    }
+  }
+}

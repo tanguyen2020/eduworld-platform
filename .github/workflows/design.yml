@@ -1,0 +1,51 @@
+# Design tokens lane (F005 T030, F005-AC-15, DEPLOYMENT §10.2, ADR-0047, ADR-0088): pipeline checks
+# (generated files fresh, aliases, business colors, separation, WCAG contrast, minimum sizes, fonts, semver)
+# with the contrast report as artifact, then the Godot and web lanes as reusable workflows.
+name: design
+
+on:
+  pull_request:
+    paths:
+      - "design/**"
+      - ".github/workflows/design.yml"
+  push:
+    branches: [main]
+    paths:
+      - "design/**"
+      - ".github/workflows/design.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: corepack enable
+      - name: design-tokens-check (base = PR base branch)
+        run: make design-tokens-check BASE_REF=origin/${{ github.base_ref || 'main' }}
+      - name: contrast report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: design-contrast-report
+          path: design/build/reports/
+          if-no-files-found: ignore
+
+  godot:
+    needs: tokens
+    uses: ./.github/workflows/godot.yml
+
+  web:
+    needs: tokens
+    uses: ./.github/workflows/web.yml

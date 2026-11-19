@@ -1,0 +1,85 @@
+{
+  "component": {
+    "button": {
+      "primary": {
+        "bg": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Primary button background." },
+        "bg_pressed": { "$type": "color", "$value": "{color.accent.primary_pressed}", "$description": "Primary button pressed." },
+        "text": {
+          "$type": "color",
+          "$value": "{color.text.on_accent}",
+          "$description": "Primary button label.",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "component.button.primary.bg", "level": "normal" },
+            { "token": "component.button.primary.bg_pressed", "level": "normal" }
+          ] } }
+        },
+        "radius": { "$type": "dimension", "$value": "{size.radius.16}", "$description": "Primary button corner radius." }
+      },
+      "secondary": {
+        "bg": { "$type": "color", "$value": "{color.surface.panel_alt}", "$description": "Secondary button background." },
+        "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Secondary button border." },
+        "text": {
+          "$type": "color",
+          "$value": "{color.text.primary}",
+          "$description": "Secondary button label.",
+          "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.button.secondary.bg", "level": "normal" }] } }
+        }
+      },
+      "border_width": { "$type": "dimension", "$value": "{size.border.3}", "$description": "Button border width." }
+    },
+    "panel": {
+      "bg": { "$type": "color", "$value": "{color.surface.panel}", "$description": "Panel background." },
+      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Panel border." },
+      "radius": { "$type": "dimension", "$value": "{size.radius.24}", "$description": "Panel corner radius." },
+      "padding": { "$type": "dimension", "$value": "{size.space.24}", "$description": "Panel inner padding." }
+    },
+    "quest_card": {
+      "bg": { "$type": "color", "$value": "{color.surface.card}", "$description": "Quest card background." },
+      "radius": { "$type": "dimension", "$value": "{size.radius.16}", "$description": "Quest card radius." }
+    },
+    "hint_button": {
+      "bg": { "$type": "color", "$value": "{color.feedback.hint}", "$description": "HintButton background." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "HintButton label and level counter.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.hint_button.bg", "level": "normal" }] } }
+      }
+    },
+    "voice_caption": {
+      "bg": { "$type": "color", "$value": "{palette.sky.100}", "$description": "VoiceCaption subtitle box background (g1_3, PED-07)." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "VoiceCaption subtitle text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.voice_caption.bg", "level": "normal" }] } }
+      }
+    },
+    "badge_xp": {
+      "bg": { "$type": "color", "$value": "{color.accent.reward}", "$description": "XP / level badge background." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "XP / level badge text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.badge_xp.bg", "level": "normal" }] } }
+      }
+    },
+    "progress": {
+      "fill": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Progress bar fill." },
+      "track": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Progress bar track." }
+    },
+    "hud": {
+      "bg": { "$type": "color", "$value": "{color.surface.hud}", "$description": "HUD background." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "HUD text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.hud.bg", "level": "normal" }] } }
+      }
+    },
+    "focus_ring": {
+      "color": { "$type": "color", "$value": "{color.focus}", "$description": "Focus ring color." },
+      "width": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Focus ring width." }
+    }
+  }
+}

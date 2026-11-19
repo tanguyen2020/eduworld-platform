@@ -1,0 +1,101 @@
+{
+  "zone": {
+    "$type": "color",
+    "$description": "Material palette per world zone (DESIGN_SYSTEM §5.3). Primary = shared subject color (game variant).",
+    "math": {
+      "primary": { "$value": "{color.subject.math}", "$description": "Math kingdom primary." },
+      "accent": { "$value": "{palette.amber.400}", "$description": "Math kingdom accent." }
+    },
+    "vietnamese": {
+      "primary": { "$value": "{color.subject.vietnamese}", "$description": "Vietnamese zone primary." },
+      "accent": { "$value": "{palette.zone.gold}", "$description": "Vietnamese zone accent." }
+    },
+    "english": {
+      "primary": { "$value": "{color.subject.english}", "$description": "English zone primary." },
+      "accent": { "$value": "{palette.zone.mint}", "$description": "English zone accent." }
+    },
+    "science": {
+      "primary": { "$value": "{color.subject.science}", "$description": "Science zone primary." },
+      "accent": { "$value": "{palette.zone.sky-day}", "$description": "Science zone accent." }
+    }
+  },
+  "toon": {
+    "steps": { "$type": "number", "$value": "{number.toon.steps}", "$description": "Toon shader light steps (shared toon shader uniform)." },
+    "shadow_tint": { "$type": "color", "$value": "{palette.zone.shadow-tint}", "$description": "Toon shadow tint uniform." },
+    "rim_strength": { "$type": "number", "$value": "{number.toon.rim}", "$description": "Toon rim light strength uniform." }
+  },
+  "outline": {
+    "width": { "$type": "number", "$value": "{number.outline.width}", "$description": "Outline width uniform (world units)." },
+    "color": { "$type": "color", "$value": "{palette.zone.outline}", "$description": "Outline color uniform." }
+  },
+  "light": {
+    "sun_color": { "$type": "color", "$value": "{palette.zone.sun}", "$description": "Directional sun light color." }
+  },
+  "env": {
+    "$type": "color",
+    "$description": "Environment per zone (sky, fog). Generates src/game/resources/art/generated/env_<zone>.tres.",
+    "hub": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Hub sky top." },
+      "sky_horizon": { "$value": "{palette.zone.sky-horizon}", "$description": "Hub sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Hub ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-cool}", "$description": "Hub fog." }
+    },
+    "math": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Math sky top." },
+      "sky_horizon": { "$value": "{palette.zone.sky-horizon}", "$description": "Math sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Math ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-cool}", "$description": "Math fog." }
+    },
+    "vietnamese": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Vietnamese sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-warm}", "$description": "Vietnamese sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Vietnamese ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-warm}", "$description": "Vietnamese fog." }
+    },
+    "english": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "English sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-violet}", "$description": "English sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "English ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-violet}", "$description": "English fog." }
+    },
+    "science": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Science sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-green}", "$description": "Science sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Science ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-green}", "$description": "Science fog." }
+    }
+  },
+  "vfx": {
+    "$type": "gradient",
+    "$description": "VFX gradients. Generates src/game/resources/art/generated/vfx_<kind>_gradient.tres.",
+    "correct": {
+      "gradient": {
+        "$value": [
+          { "color": "{palette.zone.mint}", "position": 0 },
+          { "color": "{palette.zone.sparkle}", "position": 1 }
+        ],
+        "$description": "Correct answer burst."
+      }
+    },
+    "reward": {
+      "gradient": {
+        "$value": [
+          { "color": "{palette.zone.gold}", "position": 0 },
+          { "color": "{palette.amber.200}", "position": 0.6 },
+          { "color": "{palette.zone.sparkle}", "position": 1 }
+        ],
+        "$description": "Reward / coin burst."
+      }
+    },
+    "level_up": {
+      "gradient": {
+        "$value": [
+          { "color": "{palette.zone.magenta}", "position": 0 },
+          { "color": "{palette.zone.gold}", "position": 0.5 },
+          { "color": "{palette.zone.sparkle}", "position": 1 }
+        ],
+        "$description": "Level-up celebration."
+      }
+    }
+  }
+}

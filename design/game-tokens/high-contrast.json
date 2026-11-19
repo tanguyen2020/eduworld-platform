@@ -1,0 +1,22 @@
+{
+  "color": {
+    "$type": "color",
+    "$description": "High contrast mode overrides (DESIGN_SYSTEM §5.2: player setting). Applied on top of semantic.json; checked by the contrast report.",
+    "surface": {
+      "panel": { "$value": "{palette.white}", "$description": "Panel background (high contrast)." },
+      "panel_alt": { "$value": "{palette.white}", "$description": "Alternative panel background (high contrast)." },
+      "card": { "$value": "{palette.white}", "$description": "Card background (high contrast)." },
+      "hud": { "$value": "{palette.black}", "$description": "HUD background (high contrast)." }
+    },
+    "text": {
+      "primary": { "$value": "{palette.black}", "$description": "Primary text (high contrast)." },
+      "secondary": { "$value": "{palette.black}", "$description": "Secondary text (high contrast)." },
+      "muted": { "$value": "{palette.ink.900}", "$description": "Muted text (high contrast)." }
+    },
+    "accent": {
+      "primary": { "$value": "{palette.blue.800}", "$description": "Primary accent (high contrast)." },
+      "primary_pressed": { "$value": "{palette.black}", "$description": "Primary accent pressed (high contrast)." }
+    },
+    "focus": { "$value": "{palette.black}", "$description": "Focus ring (high contrast)." }
+  }
+}

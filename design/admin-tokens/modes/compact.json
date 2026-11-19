@@ -1,0 +1,7 @@
+{
+  "antd": {
+    "$description": "Compact density overrides applied on top of the light (or dark) mode. Ant Design compactAlgorithm is not used: it derives a 12px base font, below the 13px minimum (DESIGN_SYSTEM §4.5).",
+    "fontSize": { "$type": "dimension", "$value": "{ops.size.font.13}", "$description": "Compact base font size (DESIGN_SYSTEM §4.1)." },
+    "controlHeight": { "$type": "dimension", "$value": "{ops.size.control.28}", "$description": "Compact control height (DESIGN_SYSTEM §4.1)." }
+  }
+}

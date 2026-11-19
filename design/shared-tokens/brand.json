@@ -1,0 +1,18 @@
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "$description": "EduWorld brand colors shared by the game and the Admin Portal (DESIGN_SYSTEM §6). Owners: Game Director + UX Lead.",
+      "primary": {
+        "$value": "#2A62F0",
+        "$description": "Brand primary (EduWorld blue). Admin colorPrimary; game splash/loading. Light variant darkened from the #2F6BFF proposal so white text reaches 4.5:1 [Proposed].",
+        "$extensions": { "eduworld": { "variants": { "light": "#2A62F0", "dark": "#3567EB", "game": "#2F6BFF" } } }
+      },
+      "secondary": {
+        "$value": "#0F766E",
+        "$description": "Brand secondary (teal), accents and illustrations.",
+        "$extensions": { "eduworld": { "variants": { "light": "#0F766E", "dark": "#2DD4BF", "game": "#19C3B1" } } }
+      }
+    }
+  }
+}

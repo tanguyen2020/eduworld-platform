@@ -1,0 +1,43 @@
+# Web lane (DEPLOYMENT §10.2, ADR-0088). Started by its own path filter and by design.yml (workflow_call).
+# Skeleton created by F005: the generated Ant Design theme and CSS variables are fresh and carry no game token.
+# F050 adds lint, gen:check, tests, portal build, Storybook, axe and visual regression.
+name: web
+
+on:
+  pull_request:
+    paths:
+      - "src/cms/frontend/**"
+      - "specs/openapi/**"
+      - "design/admin-tokens/**"
+      - "design/shared-tokens/**"
+      - ".github/workflows/web.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/cms/frontend/**"
+      - "specs/openapi/**"
+      - "design/admin-tokens/**"
+      - "design/shared-tokens/**"
+      - ".github/workflows/web.yml"
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  theme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: design
+      - name: generated web theme files are fresh and carry no game token
+        run: node design/checks/run-all.mjs --only web
