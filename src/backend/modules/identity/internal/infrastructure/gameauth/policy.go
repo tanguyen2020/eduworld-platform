@@ -1,0 +1,98 @@
+package gameauth
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/gamelogin"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
+)
+
+// SettingsPolicy implements port.CurfewSource and port.AccessHoursSource from the settings of F015: the
+// effective curfew is platform_curfew united with the curfew_window of the school (ADR-0078, F015-AC-22; the
+// common tenant's virtual school has none); the access hours are those of the school, else of the tenant.
+type SettingsPolicy struct {
+	Reader   read.SettingsReader
+	Defaults settings.Defaults
+}
+
+var (
+	_ port.CurfewSource      = SettingsPolicy{}
+	_ port.AccessHoursSource = SettingsPolicy{}
+)
+
+func (p SettingsPolicy) location() *time.Location {
+	if loc, err := time.LoadLocation(p.Defaults.TimeZone); err == nil {
+		return loc
+	}
+	return time.FixedZone("ICT", 7*3600)
+}
+
+func (p SettingsPolicy) school(ctx context.Context, tenant uuid.UUID, school *uuid.UUID, platform settings.Curfew) (*dto.SchoolSettings, error) {
+	if school == nil {
+		return nil, nil
+	}
+	sc, err := authz.EventScope(tenant)
+	if err != nil {
+		return nil, err
+	}
+	s, found, err := p.Reader.SchoolSettings(tenancy.WithScope(ctx, sc), *school)
+	if err != nil || !found {
+		return nil, err
+	}
+	out, err := dto.SchoolSettingsOf(*school, s.Value, s.Version, s.UpdatedAt, platform)
+	return &out, err
+}
+
+func (p SettingsPolicy) platformCurfew(ctx context.Context) (settings.Curfew, error) {
+	s, err := p.Reader.PlatformSetting(ctx, settings.KeyPlatformCurfew)
+	if err != nil {
+		return settings.Curfew{}, err
+	}
+	c, err := dto.PlatformCurfewOf(p.Defaults, s.Value, s.Version, s.UpdatedAt)
+	return settings.Curfew{Start: c.Start, End: c.End}, err
+}
+
+// EffectiveCurfew implements port.CurfewSource.
+func (p SettingsPolicy) EffectiveCurfew(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (gamelogin.Curfew, error) {
+	pc, err := p.platformCurfew(ctx)
+	if err != nil {
+		return gamelogin.Curfew{}, err
+	}
+	eff := pc
+	s, err := p.school(ctx, tenant, school, pc)
+	if err != nil {
+		return gamelogin.Curfew{}, err
+	}
+	if s != nil {
+		eff = s.EffectiveCurfew
+	}
+	return gamelogin.ParseCurfew(eff.Start+"-"+eff.End, p.location())
+}
+
+// AllowedHours implements port.AccessHoursSource.
+func (p SettingsPolicy) AllowedHours(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (*settings.AllowedHours, *time.Location, error) {
+	s, err := p.school(ctx, tenant, school, settings.Curfew{})
+	if err != nil {
+		return nil, nil, err
+	}
+	if s != nil && s.AllowedHours != nil {
+		return s.AllowedHours, p.location(), nil
+	}
+	ts, found, err := p.Reader.TenantSettings(ctx, tenant)
+	if err != nil || !found {
+		return nil, nil, err
+	}
+	t, err := dto.TenantSettingsOf(ts.Value, ts.Version, settings.StudentCleanup{})
+	if err != nil {
+		return nil, nil, err
+	}
+	return t.AllowedHours, p.location(), nil
+}

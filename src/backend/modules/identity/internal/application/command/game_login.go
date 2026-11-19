@@ -113,6 +113,7 @@ type GameAuth struct {
 	Tickets     port.LoginTicketStore
 	Limiter     port.RateLimiter
 	Curfew      port.CurfewSource
+	Hours       port.AccessHoursSource // F015: school/tenant access hours (nil = none)
 	Sync        LoginSyncFunc
 	Metrics     port.GameAuthMetrics
 	Cfg         GameAuthConfig
@@ -518,6 +519,9 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 	if !b.IsCommonTenant && !b.Enrolled {
 		return deny(port.GameLoginNoActiveEnrollment, problem.New(problem.NoActiveEnrollment, ""))
 	}
+	if err := h.applyHours(ctx, &b); err != nil {
+		return deny(port.GameLoginOutsideHours, err)
+	}
 	if err := h.applyCurfew(ctx, cfg, &b); err != nil {
 		return deny(port.GameLoginCurfewActive, err)
 	}
@@ -549,6 +553,25 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 	}
 	h.loginMetric(port.GameLoginSuccess, c.start)
 	return dto.GameLoginResult{Tokens: tokenSet(c.tok), Bootstrap: &b}, nil
+}
+
+// applyHours refuses outside the access hours of the school (else the tenant) with 403
+// ACCESS_OUTSIDE_ALLOWED_HOURS (IDENTITY_MAPPING §4.1 step 8, F015-AC-18) and shows the window in the bootstrap.
+func (h GameAuth) applyHours(ctx context.Context, b *dto.PlayerBootstrap) error {
+	if h.Hours == nil {
+		return nil
+	}
+	hours, loc, err := h.Hours.AllowedHours(ctx, b.TenantID, b.SchoolID)
+	if err != nil {
+		return unavailable(err)
+	}
+	if hours == nil || len(hours.Windows) == 0 {
+		return nil
+	}
+	if !hours.Contains(h.now(), loc) {
+		return problem.New(problem.AccessOutsideAllowedHours, "")
+	}
+	return nil
 }
 
 // applyCurfew sets policies.play_time.curfew and refuses with 403 CURFEW_ACTIVE + reopen_at inside it.

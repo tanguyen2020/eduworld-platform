@@ -119,8 +119,8 @@ func (SettingsRepo) School(ctx context.Context, schoolID uuid.UUID) (write.Store
 	var at time.Time
 	var tenant uuid.UUID
 	// tenancyguard:ok org.schools under the TenantScope (RLS) or the platform scope of a job; deleted_at filtered
-	err = tx.QueryRowContext(ctx, `SELECT settings, version, updated_at, tenant_id FROM org.schools WHERE school_id = $1 AND deleted_at IS NULL`, schoolID).
-		Scan(&s.Value, &s.Version, &at, &tenant)
+	err = tx.QueryRowContext(ctx, `SELECT settings, version, updated_at, tenant_id, status FROM org.schools WHERE school_id = $1 AND deleted_at IS NULL`, schoolID).
+		Scan(&s.Value, &s.Version, &at, &tenant, &s.Status)
 	if errors.Is(err, sql.ErrNoRows) {
 		return s, uuid.Nil, false, nil
 	}

@@ -36,6 +36,8 @@ var SettingsOperations = map[string]httpx.Operation{
 	"putPlatformCurfewSettings": portalOp2("putPlatformCurfewSettings", http.MethodPut, "/admin/settings/curfew", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"getTenantSettings":         portalOp2("getTenantSettings", http.MethodGet, "/tenant/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
 	"updateTenantSettings":      portalOp2("updateTenantSettings", http.MethodPatch, "/tenant/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"getSchoolSettings":         portalOp2("getSchoolSettings", http.MethodGet, "/schools/{school_id}/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"updateSchoolSettings":      portalOp2("updateSchoolSettings", http.MethodPatch, "/schools/{school_id}/settings", httpx.TenantRequired, httpx.IdempotencyNone, 200),
 }
 
 // RegisterSettings mounts the F015 operations.
@@ -51,6 +53,8 @@ func RegisterSettings(s *httpx.Server, h SettingsHandlers) error {
 		"putPlatformCurfewSettings": h.putPlatformCurfewSettings,
 		"getTenantSettings":         h.getTenantSettings,
 		"updateTenantSettings":      h.updateTenantSettings,
+		"getSchoolSettings":         h.getSchoolSettings,
+		"updateSchoolSettings":      h.updateSchoolSettings,
 	}
 	for id, fn := range routes {
 		o, ok := SettingsOperations[id]
@@ -264,6 +268,49 @@ func (h SettingsHandlers) updateTenantSettings(w http.ResponseWriter, r *http.Re
 		return
 	}
 	out, err := h.Settings.UpdateTenantSettings(r.Context(), patch, v)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeVersioned(w, out.Version, out)
+}
+
+func (h SettingsHandlers) getSchoolSettings(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.SettingsGet.SchoolSettings(r.Context(), id)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeVersioned(w, out.Version, out)
+}
+
+func (h SettingsHandlers) updateSchoolSettings(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	v, err := ifMatch(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var patch map[string]json.RawMessage
+	if err := decode(r, &patch); err != nil {
+		fail(w, r, err)
+		return
+	}
+	var reason string
+	if raw, ok := patch["reason"]; ok {
+		_ = json.Unmarshal(raw, &reason)
+		delete(patch, "reason")
+	}
+	out, err := h.Settings.UpdateSchoolSettings(r.Context(), id, patch, reason, v)
 	if err != nil {
 		fail(w, r, err)
 		return

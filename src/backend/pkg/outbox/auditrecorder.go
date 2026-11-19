@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
@@ -32,6 +34,7 @@ type AuditPayload struct {
 	Result     string            `json:"result"`
 	Reason     *string           `json:"reason"`
 	Metadata   map[string]string `json:"metadata"`
+	SchoolID   *string           `json:"school_id,omitempty"`
 }
 
 // AuditRecorder implements audit.Recorder by writing audit.recorded into the outbox (F003-AC-22). Inside
@@ -61,6 +64,10 @@ func Payload(ctx context.Context, e audit.Event) AuditPayload {
 	}
 	if p.TargetID == "" {
 		p.TargetID = "-"
+	}
+	if _, err := uuid.Parse(e.SchoolID); err == nil {
+		s := e.SchoolID
+		p.SchoolID = &s
 	}
 	if e.Reason != "" {
 		r := bound(observability.RedactString(e.Reason), 1000)

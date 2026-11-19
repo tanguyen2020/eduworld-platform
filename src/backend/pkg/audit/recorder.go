@@ -36,6 +36,9 @@ type Event struct {
 	Result     Result
 	Reason     string
 	Metadata   map[string]any
+	// SchoolID is the school the action concerns (UUID string; empty = none): audit.audit_logs.school_id, the
+	// filter of School Admins (F015).
+	SchoolID string
 }
 
 // Recorder records audit events. Implementations must be safe for concurrent use.

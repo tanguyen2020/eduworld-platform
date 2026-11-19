@@ -3,6 +3,8 @@ package query
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
@@ -105,4 +107,30 @@ func (q Settings) TenantSettings(ctx context.Context) (out dto.TenantSettings, e
 		return out, err
 	}
 	return dto.TenantSettingsOf(s.Value, s.Version, cleanup.StudentCleanup)
+}
+
+// SchoolSettings is getSchoolSettings (school.settings.read on that school; another tenant → 404).
+func (q Settings) SchoolSettings(ctx context.Context, schoolID uuid.UUID) (out dto.SchoolSettings, err error) {
+	ctx, done := observability.UseCase(ctx, "identity.query.GetSchoolSettings")
+	defer func() { done(err) }()
+	ctx, p, err := tenantRead(ctx, authz.PermSchoolSettingsRead, &schoolID)
+	if err != nil {
+		return out, err
+	}
+	s, found, err := q.Reader.SchoolSettings(ctx, schoolID)
+	if err != nil {
+		return out, err
+	}
+	if !found || s.TenantID != *p.TenantID {
+		return out, problem.New(problem.NotFound, "")
+	}
+	pc, err := q.Reader.PlatformSetting(ctx, settings.KeyPlatformCurfew)
+	if err != nil {
+		return out, err
+	}
+	c, err := dto.PlatformCurfewOf(q.Defaults, pc.Value, pc.Version, pc.UpdatedAt)
+	if err != nil {
+		return out, err
+	}
+	return dto.SchoolSettingsOf(schoolID, s.Value, s.Version, s.UpdatedAt, settings.Curfew{Start: c.Start, End: c.End})
 }

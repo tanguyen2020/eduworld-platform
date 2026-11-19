@@ -137,6 +137,9 @@ func (h GameAuth) refreshLocked(ctx context.Context, cfg GameAuthConfig, in dto.
 			s.Revoke(gamelogin.RevokeAccessRevoked, now)
 			return refreshOutcome{err: problem.New(problem.NoActiveEnrollment, ""), result: refreshDenied, revoke: s}
 		}
+		if err := h.applyHours(ctx, &boot); err != nil {
+			return refreshOutcome{err: err, result: refreshDenied} // outside the hours: the session stays
+		}
 		if err := h.applyCurfew(ctx, cfg, &boot); err != nil {
 			return refreshOutcome{err: err, result: refreshDenied} // curfew never revokes the session (F013-AC-32)
 		}

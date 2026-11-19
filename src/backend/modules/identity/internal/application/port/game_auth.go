@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/gamelogin"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
 )
 
 // Game login through the backend (F013, ADR-0068, ADR-0086). The token client of the confidential client
@@ -65,6 +66,7 @@ const (
 	GameLoginQueueBusy            = "queue_busy"
 	GameLoginVersionUnsupported   = "client_version_unsupported"
 	GameLoginCurfewActive         = "curfew_active"
+	GameLoginOutsideHours         = "access_outside_allowed_hours"
 	GameLoginUnavailable          = "unavailable"
 	GameLoginTicketInvalidOutcome = "login_ticket_invalid" // metric only (not a journal result)
 )
@@ -76,4 +78,10 @@ type GameAuthMetrics interface {
 	Revoked(reason string)
 	QueueRejected()
 	RateLimited(key string)
+}
+
+// AccessHoursSource returns the access hours of a student (the school hours, else the tenant hours; nil =
+// no restriction) and the time zone they are expressed in (F015-AC-18).
+type AccessHoursSource interface {
+	AllowedHours(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID) (*settings.AllowedHours, *time.Location, error)
 }
