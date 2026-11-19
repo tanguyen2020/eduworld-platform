@@ -17,6 +17,58 @@ var sisOperations = map[string]func(Handlers) http.HandlerFunc{
 	"createSisImport":               func(h Handlers) http.HandlerFunc { return h.createSisImport },
 	"getSisImport":                  func(h Handlers) http.HandlerFunc { return h.getSisImport },
 	"createPlatformSisImport":       func(h Handlers) http.HandlerFunc { return h.createPlatformSisImport },
+	// F052-1: the school-scoped public view of the issues (public gateway, School Admin / Tenant Admin)
+	"listSchoolReconciliationIssues":   func(h Handlers) http.HandlerFunc { return h.listSchoolSisIssues },
+	"resolveSchoolReconciliationIssue": func(h Handlers) http.HandlerFunc { return h.resolveSchoolSisIssue },
+}
+
+func (h Handlers) listSchoolSisIssues(w http.ResponseWriter, r *http.Request) {
+	school, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	imp, err := optUUID(r, "import_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	q := r.URL.Query()
+	out, err := h.Sis.ListSchoolSisIssues(r.Context(), query.SchoolSisIssuesInput{ListInput: list(r), SchoolID: school, ImportID: imp,
+		Type: q.Get("issue_type"), Status: q.Get("status")})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h Handlers) resolveSchoolSisIssue(w http.ResponseWriter, r *http.Request) {
+	school, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	id, err := pathUUID(r, "issue_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var body struct {
+		Resolution string `json:"resolution"`
+		Reason     string `json:"reason"`
+	}
+	if err := decode(r, &body); err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.ResolveSisIssue.Handle(r.Context(), command.ResolveSisIssueInput{IssueID: id, Resolution: body.Resolution, Note: body.Reason,
+		SchoolID: &school})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (h Handlers) listSisIssues(w http.ResponseWriter, r *http.Request) {

@@ -41,6 +41,20 @@ type Class struct {
 	StudentCount   *int       `json:"student_count,omitempty"`
 }
 
+// ClassStudent is the ClassStudent schema (listTenantClassStudents, F052-1): the read-only roster row of a
+// class. Nothing beyond these fields leaves the module — no birth date, guardian contact, IP or device id
+// (ADR-0031, R16).
+type ClassStudent struct {
+	StudentID          uuid.UUID  `json:"student_id"`
+	DisplayName        string     `json:"display_name"`
+	StudentCode        *string    `json:"student_code"`
+	Username           string     `json:"username"`
+	Status             string     `json:"status"`
+	Source             string     `json:"source"`
+	LastLoginAt        *time.Time `json:"last_login_at"`
+	DaysSinceLastLogin *int       `json:"days_since_last_login"`
+}
+
 // UnassignedStudent is the UnassignedStudent schema (F010: students without an active enrollment).
 type UnassignedStudent struct {
 	StudentID       uuid.UUID  `json:"student_id"`

@@ -80,6 +80,17 @@ type OrgReadModel interface {
 	Classes(ctx context.Context, f ClassFilter) ([]dto.Class, error)
 	UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, after *page.Cursor, limit int) ([]dto.UnassignedStudent, error)
 	StudentSummary(ctx context.Context, studentID uuid.UUID) (dto.StudentSummary, error)
+	// ClassStudents returns the students with an active enrollment in a class of the school, ordered by
+	// (display_name, student_id); a class outside the school or the scope is problem NotFound.
+	ClassStudents(ctx context.Context, f ClassStudentFilter) ([]dto.ClassStudent, error)
+}
+
+// ClassStudentFilter selects the roster of one class (listTenantClassStudents).
+type ClassStudentFilter struct {
+	SchoolID, ClassID uuid.UUID
+	Q                 string // display name, username or student code (case-insensitive substring)
+	After             *page.Cursor
+	Limit             int
 }
 
 // SnapshotEntityTypes are the entities of listProjectionSnapshot.
@@ -106,6 +117,7 @@ type SisIssueFilter struct {
 	SchoolIDs    []uuid.UUID // nil = every school of the scope
 	SchoolID     *uuid.UUID
 	ConnectionID *uuid.UUID
+	ImportID     *uuid.UUID // issues raised by the run of one CSV import of SchoolID (import outside it → NotFound)
 	Type, Status string
 	After        *page.Cursor
 	Limit        int
@@ -114,6 +126,8 @@ type SisIssueFilter struct {
 // SisIssueReadModel reads sis.reconciliation_issues.
 type SisIssueReadModel interface {
 	Issues(ctx context.Context, f SisIssueFilter) ([]dto.SisIssue, error)
+	// SchoolVisible reports whether a live school exists in the scope (school-scoped routes answer 404 otherwise).
+	SchoolVisible(ctx context.Context, schoolID uuid.UUID) (bool, error)
 }
 
 // SisImportReadModel reads sis.sis_imports and the record errors of their run.

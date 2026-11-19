@@ -13,16 +13,20 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// ResolveSisIssueInput is resolveSisReconciliationIssue.
+// ResolveSisIssueInput is resolveSisReconciliationIssue, or resolveSchoolReconciliationIssue when SchoolID is set.
 type ResolveSisIssueInput struct {
 	IssueID    uuid.UUID
-	Resolution string // link | same_person | ignore | fixed_in_source
-	Note       string
+	Resolution string // link | same_person | ignore | fixed_in_source (school route: fixed_in_source | ignore)
+	Note       string // resolution_note; the reason (3–500, required) of the school route
+	// SchoolID is the school of the public school-scoped route (F052-1): tenant.sis.import on that school only
+	// (no platform fallback), the issue must belong to it (otherwise 404) and the portal cannot link accounts.
+	SchoolID *uuid.UUID
 }
 
 // ResolveSisIssueHandler resolves a reconciliation issue.
@@ -42,7 +46,34 @@ type ResolveSisIssue struct {
 	Clock  func() time.Time
 }
 
-var resolutions = map[string]bool{"link": true, "same_person": true, "ignore": true, "fixed_in_source": true}
+var (
+	resolutions       = map[string]bool{"link": true, "same_person": true, "ignore": true, "fixed_in_source": true}
+	schoolResolutions = map[string]bool{"ignore": true, "fixed_in_source": true}
+)
+
+// AuditSisIssueResolved is the audit action of both resolve routes (contract resolveSchoolReconciliationIssue).
+const AuditSisIssueResolved = "sis.reconciliation_issue.resolved"
+
+// validate checks the body of either route and returns the trimmed note.
+func (in ResolveSisIssueInput) validate() (string, error) {
+	note := strings.TrimSpace(in.Note)
+	if in.SchoolID != nil {
+		if !schoolResolutions[in.Resolution] {
+			return "", problem.Invalid("resolution", problem.SubInvalid, "must be fixed_in_source or ignore")
+		}
+		if n := utf8.RuneCountInString(note); n < 3 || n > 500 {
+			return "", problem.Invalid("reason", problem.SubInvalid, "must be 3 to 500 characters")
+		}
+		return note, nil
+	}
+	if !resolutions[in.Resolution] {
+		return "", problem.Invalid("resolution", problem.SubInvalid, "must be link, same_person, ignore or fixed_in_source")
+	}
+	if utf8.RuneCountInString(note) > 1000 {
+		return "", problem.Invalid("resolution_note", problem.SubMaxLength, "at most 1000 characters")
+	}
+	return note, nil
+}
 
 // Handle resolves the issue.
 func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (out dto.SisIssue, err error) {
@@ -52,18 +83,23 @@ func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (o
 	if err != nil {
 		return out, err
 	}
-	if !resolutions[in.Resolution] {
-		return out, problem.Invalid("resolution", problem.SubInvalid, "must be link, same_person, ignore or fixed_in_source")
-	}
-	note := strings.TrimSpace(in.Note)
-	if utf8.RuneCountInString(note) > 1000 {
-		return out, problem.Invalid("resolution_note", problem.SubMaxLength, "at most 1000 characters")
+	note, err := in.validate()
+	if err != nil {
+		return out, err
 	}
 	if p.TenantID == nil {
 		return out, problem.New(problem.PermissionDenied, "X-Tenant-Id is required")
 	}
 	perm := authz.PermTenantSisImport
-	if !p.Has(perm) {
+	switch {
+	case in.SchoolID != nil: // school route: tenant.sis.import covering the school of the path, else 403 / 404
+		if !p.Has(perm) {
+			return out, authz.Require(ctx, p, perm, authz.Resource{TenantID: p.TenantID})
+		}
+		if err := authz.Require(ctx, p, perm, authz.Resource{TenantID: p.TenantID, SchoolID: in.SchoolID}); err != nil {
+			return out, problem.New(problem.NotFound, "") // a school outside the grant scope is not revealed
+		}
+	case !p.Has(perm):
 		perm = authz.PermPlatformSisConnectionManage
 		if err := authz.Require(ctx, p, perm, authz.Resource{}); err != nil {
 			return out, err
@@ -89,6 +125,9 @@ func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (o
 				return problem.New(problem.NotFound, "") // outside the school scope (F011-AC-17)
 			}
 		}
+		if in.SchoolID != nil && (row.SchoolID == nil || *row.SchoolID != *in.SchoolID) {
+			return problem.New(problem.NotFound, "") // an issue of another school (or without school) on the school route
+		}
 		if row.Status != "open" {
 			return problem.New(problem.Conflict, "the issue is no longer open")
 		}
@@ -108,17 +147,27 @@ func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (o
 		if err := h.Issues.SaveResolution(ctx, row); err != nil {
 			return err
 		}
-		return h.Audit.Record(ctx, audit.Event{Action: "sis.reconciliation_issue_resolved", TargetType: "reconciliation_issue",
-			TargetID: row.ID.String(), Result: audit.ResultSuccess, Metadata: map[string]any{"issue_type": row.Type, "resolution": in.Resolution}})
+		ev := audit.Event{Action: AuditSisIssueResolved, TargetType: "reconciliation_issue", TargetID: row.ID.String(),
+			Result: audit.ResultSuccess, Metadata: map[string]any{"issue_type": row.Type, "resolution": in.Resolution}}
+		if row.SchoolID != nil {
+			ev.SchoolID = row.SchoolID.String() // the School Admin filter of the audit log (F015)
+		}
+		if in.SchoolID != nil {
+			ev.Metadata["route"] = "school"
+		}
+		if err := h.Audit.Record(ctx, ev); err != nil {
+			return err
+		}
+		out = dto.SisIssue{IssueID: row.ID, TenantID: row.TenantID, SchoolID: row.SchoolID, ConnectionID: row.ConnectionID, IssueType: row.Type,
+			EntityRefs: dto.SisIssueRefs(row.Refs), SuggestedAction: row.Suggested, Status: row.Status, Resolution: row.Resolution,
+			ResolutionNote: row.Note, ResolvedBy: row.ResolvedBy, ResolvedAt: row.ResolvedAt, CreatedAt: row.CreatedAt}
+		if !p.IsSystemAdmin || in.SchoolID != nil { // the public school route never returns the conflicting account
+			out.HideConflictingUser()
+		}
+		return idempotency.SetResult(ctx, out) // same Idempotency-Key → the stored response (R10)
 	})
 	if err != nil {
-		return out, err
-	}
-	out = dto.SisIssue{IssueID: row.ID, TenantID: row.TenantID, SchoolID: row.SchoolID, ConnectionID: row.ConnectionID, IssueType: row.Type,
-		EntityRefs: dto.SisIssueRefs(row.Refs), SuggestedAction: row.Suggested, Status: row.Status, Resolution: row.Resolution,
-		ResolutionNote: row.Note, ResolvedBy: row.ResolvedBy, ResolvedAt: row.ResolvedAt, CreatedAt: row.CreatedAt}
-	if !p.IsSystemAdmin {
-		out.HideConflictingUser()
+		return dto.SisIssue{}, err
 	}
 	return out, nil
 }

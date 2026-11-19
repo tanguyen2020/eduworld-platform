@@ -137,7 +137,7 @@ func TestSisIssues(t *testing.T) {
 		t.Fatal("the linked student is not updated by the next import")
 	}
 	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
-		AND envelope->'payload'->>'action' = 'sis.reconciliation_issue_resolved'`); n != 2 {
+		AND envelope->'payload'->>'action' = 'sis.reconciliation_issue.resolved'`); n != 2 {
 		t.Fatalf("resolution audits = %d", n)
 	}
 }

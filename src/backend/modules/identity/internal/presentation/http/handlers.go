@@ -135,6 +135,26 @@ func (h Handlers) listUnassignedStudents(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, out)
 }
 
+func (h Handlers) listTenantClassStudents(w http.ResponseWriter, r *http.Request) {
+	school, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	class, err := pathUUID(r, "class_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.Org.ListTenantClassStudents(r.Context(), query.ClassStudentsInput{ListInput: list(r), SchoolID: school, ClassID: class,
+		Q: r.URL.Query().Get("q")})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
 // ---------- tenants (System Admin) ----------
 
 func (h Handlers) listTenants(w http.ResponseWriter, r *http.Request) {

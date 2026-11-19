@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -19,6 +20,7 @@ import (
 type Org struct {
 	Model   read.OrgReadModel
 	Cursors *page.Codec
+	Clock   func() time.Time // days_since_last_login of listTenantClassStudents; nil = time.Now
 }
 
 // Page is a keyset page of items (SchoolPage, ClassPage, UnassignedStudentPage).
