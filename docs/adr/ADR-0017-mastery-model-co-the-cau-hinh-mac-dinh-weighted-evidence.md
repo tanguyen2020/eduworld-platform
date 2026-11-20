@@ -1,6 +1,6 @@
 # ADR-0017 — Mastery model có thể cấu hình, mặc định Weighted Evidence
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-08 · **Tài liệu:** [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-08 · **Tài liệu:** [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -26,3 +26,4 @@
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Thêm trọng số `minigame`, `retry_wrong` | LEARNING_ANALYTICS |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

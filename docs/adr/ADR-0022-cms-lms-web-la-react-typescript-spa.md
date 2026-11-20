@@ -1,6 +1,6 @@
 # ADR-0022 — Admin Portal (CMS/LMS) là React + TypeScript SPA
 
-> **Trạng thái:** Accepted (React) · chi tiết stack Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -31,3 +31,4 @@ Vue, Angular (stakeholder chọn React). Next.js/SSR: ứng dụng nội bộ sa
 | 2026-11-15 | Accepted: React | Stakeholder |
 | 2026-11-15 | UI Admin/Ops bằng Ant Design 5 + Pro | ADR-0047 |
 | 2026-11-15 | Một portal, client `eduworld-portal` (thay `eduworld-cms`/`eduworld-admin`, 2 bundle) | ADR-0027 |
+| 2026-11-20 | Owner chốt chi tiết stack (Accepted toàn bộ) | Owner |

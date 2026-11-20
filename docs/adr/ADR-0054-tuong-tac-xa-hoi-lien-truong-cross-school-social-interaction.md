@@ -1,12 +1,12 @@
 # ADR-0054 — Tương tác xã hội liên trường (Cross-school Social Interaction)
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-09 · **Tài liệu:** [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md), [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-09 · **Tài liệu:** [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md), [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
 Các quy tắc liên trường rải rác ở ADR-0020, ADR-0026, MATCHMAKING, PARTY_SYSTEM; cần một nguồn duy nhất (Master Prompt "Re-architecture" §13–14).
 
-## Quyết định (đề xuất)
+## Quyết định
 
 | Hoạt động | Cùng trường | Khác trường, cùng tenant đơn vị | Khác tenant |
 |---|---|---|---|
@@ -29,3 +29,4 @@ Các quy tắc liên trường rải rác ở ADR-0020, ADR-0026, MATCHMAKING, P
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR, hợp nhất quy tắc rải rác | Audit theo Master Prompt mới |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

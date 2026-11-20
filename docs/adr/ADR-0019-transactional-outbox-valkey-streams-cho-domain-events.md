@@ -1,6 +1,6 @@
 # ADR-0019 — Transactional Outbox + Valkey Streams cho domain events
 
-> **Trạng thái:** Proposed · transport superseded by [ADR-0042](ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · transport superseded by [ADR-0042](ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay.** Không còn hiệu lực: publish lên **Valkey Streams** (thay bằng NATS JetStream, ADR-0042). **Còn hiệu lực:** transactional outbox ghi cùng transaction nghiệp vụ, consumer at-least-once + idempotent bằng `processed_events`, learning events lưu bền vững trong PostgreSQL.
@@ -26,3 +26,4 @@ Phản ứng chéo domain (cộng XP, cập nhật quest, mastery) cần đáng 
 |---|---|---|
 | 2026-11-15 | Tạo ADR (Valkey Streams) | Phase 0 |
 | 2026-11-15 | Transport đổi sang NATS JetStream | ADR-0042 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

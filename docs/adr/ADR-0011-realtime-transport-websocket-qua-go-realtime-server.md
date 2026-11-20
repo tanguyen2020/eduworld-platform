@@ -1,6 +1,6 @@
 # ADR-0011 — Realtime transport: WebSocket qua Go realtime server
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-05, OQ-06 · **Tài liệu:** [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md), [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-05, OQ-06 · **Tài liệu:** [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md), [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -27,3 +27,4 @@ Godot dedicated headless server + ENet/WebRTC: chỉ cân nhắc khi có chế �
 |---|---|---|
 | 2026-11-15 | Tạo ADR (server `cmd/realtime`) | Phase 0 |
 | 2026-11-15 | Server realtime là `realtime-gateway` mỏng, logic ở service | ADR-0036 |
+| 2026-11-20 | Owner chốt (Accepted); `realtime-gateway` đọc là module/binary `realtime` theo bảng tên của ADR-0074 | Owner |

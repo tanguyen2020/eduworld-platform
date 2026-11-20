@@ -1,6 +1,6 @@
 # ADR-0057 — Chạy được trên máy tầm trung: hạng thiết bị và ngân sách hiệu năng
 
-> **Trạng thái:** Accepted (yêu cầu) · thông số Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -47,3 +47,4 @@ Stakeholder yêu cầu: game **đặc biệt phải chạy được trên máy t
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR; thay phần ngân sách hiệu năng của ADR-0013 | Stakeholder |
+| 2026-11-20 | Owner chốt thông số (Accepted toàn bộ) | Owner |

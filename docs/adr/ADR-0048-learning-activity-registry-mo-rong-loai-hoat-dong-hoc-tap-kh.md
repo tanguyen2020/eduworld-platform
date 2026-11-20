@@ -1,6 +1,6 @@
 # ADR-0048 — Learning Activity Registry: mở rộng loại hoạt động học tập không sửa lõi
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -30,3 +30,4 @@ EduWorld cần nhiều định dạng học tập: quiz, bài tập tương tác
 | 2026-11-15 | Tạo ADR | Audit theo Master Prompt mới |
 | 2026-11-15 | Interface thêm `Respond()` | ACTIVITY_ENGINE |
 | 2026-11-15 | Điều chỉnh theo ADR-0072 (bỏ vai trò giáo viên, bỏ hoạt động chấm tay khỏi Release) | Technical Architect |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

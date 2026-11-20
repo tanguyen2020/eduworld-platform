@@ -1,6 +1,6 @@
 # ADR-0004 — Valkey chỉ cho trạng thái tạm thời, cache và phối hợp realtime
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -23,3 +23,4 @@ Valkey chạy AOF `everysec` nhưng thiết kế chịu được mất dữ li�
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Bỏ vai trò Streams cho event nội bộ; prefix/ACL theo service | ADR-0042, ADR-0036 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

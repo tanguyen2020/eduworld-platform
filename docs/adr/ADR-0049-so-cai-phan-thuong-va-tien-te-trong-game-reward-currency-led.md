@@ -1,6 +1,6 @@
 # ADR-0049 — Sổ cái phần thưởng và tiền tệ trong game (Reward & Currency Ledger)
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-14 · **Tài liệu:** [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-14 · **Tài liệu:** [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -29,3 +29,4 @@ Kinh tế game phải kiểm toán được; cấp thưởng và thay đổi ti�
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Audit theo Master Prompt mới |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

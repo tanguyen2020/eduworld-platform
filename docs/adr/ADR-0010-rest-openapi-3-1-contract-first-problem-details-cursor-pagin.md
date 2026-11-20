@@ -1,6 +1,6 @@
 # ADR-0010 — REST + OpenAPI 3.1 contract-first, Problem Details, cursor pagination, Idempotency-Key
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [specs](../../specs/README.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [specs](../../specs/README.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -25,3 +25,4 @@ Nhiều client (Godot, Admin Portal) và nhiều service cần một contract �
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Spec gộp là nguồn sự thật, spec theo service sinh tự động; maxLength bắt buộc | ADR-0036, ADR-0041 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

@@ -1,6 +1,6 @@
 # ADR-0009 — Apache APISIX làm API gateway, backend vẫn tự authorize
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -28,3 +28,4 @@ Cần một cổng API thống nhất cho TLS, routing, rate limit, quan sát; n
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Quy ước route nội bộ (`/api/v1/admin|sis`, `/internal/*`) | Vòng đồng bộ tài liệu |
 | 2026-11-15 | Thêm `/game-admin/*` nội bộ + MFA; routing theo service | ADR-0027, ADR-0036 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

@@ -1,6 +1,6 @@
 # ADR-0016 — Server-authoritative scoring; answer key không bao giờ rời server
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [QUESTION_BANK](../02-learning/QUESTION_BANK.md), [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [QUESTION_BANK](../02-learning/QUESTION_BANK.md), [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -22,3 +22,4 @@ Client (Godot) không đáng tin; điểm, phần thưởng và kết quả chí
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

@@ -1,6 +1,6 @@
 # ADR-0015 — Content versioning bất biến sau Publish
 
-> **Trạng thái:** Proposed · cách rollback superseded by [ADR-0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · cách rollback superseded by [ADR-0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay.** Không còn hiệu lực: "rollback = publish lại một version cũ thành version mới" → nay rollback **trỏ release pointer về version cũ**, không tạo version mới (ADR-0043). **Còn hiệu lực:** version đã publish bất biến; mọi attempt/learning event tham chiếu version.
@@ -27,3 +27,4 @@ Nội dung được sửa liên tục nhưng lịch sử học tập phải truy
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Cách rollback thay bởi release pointer | ADR-0043 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

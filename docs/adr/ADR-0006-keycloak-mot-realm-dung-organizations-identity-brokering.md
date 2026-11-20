@@ -1,6 +1,6 @@
 # ADR-0006 — Keycloak: một Realm dùng Organizations + Identity Brokering
 
-> **Trạng thái:** Proposed · một phần superseded by [ADR-0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) và [ADR-0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-02 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) và [ADR-0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-02 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay.** Không còn hiệu lực: "mỗi Organization (Sở/Phòng) là một Keycloak Organization, không tạo cho từng School" → nay **mỗi Tenant là một Keycloak Organization** (ADR-0026); client `eduworld-cms`/`eduworld-admin` → một client `eduworld-portal` (ADR-0027). **Còn hiệu lực:** một realm, IdP brokering, phạm vi quyền không nằm trong token, định danh `(issuer, subject)`.
@@ -30,3 +30,4 @@ OQ-02 (một hay nhiều realm) chưa được trả lời; cần mặc định 
 | 2026-11-15 | Ánh xạ Organization đổi sang mỗi Tenant | ADR-0026 |
 | 2026-11-15 | Client portal hợp nhất `eduworld-portal`; thêm `svc-*` | ADR-0027, ADR-0040 |
 | 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

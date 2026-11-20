@@ -1,6 +1,6 @@
 # ADR-0018 — Glicko-2 cho Game Rating, tách biệt Learning Mastery
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -22,3 +22,4 @@ Không được dùng điểm thi đấu để đánh giá năng lực học t�
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

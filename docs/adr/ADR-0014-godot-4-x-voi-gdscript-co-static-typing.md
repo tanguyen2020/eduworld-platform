@@ -1,6 +1,6 @@
 # ADR-0014 — Godot 4.x với GDScript có static typing
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -21,3 +21,4 @@ Cần một ngôn ngữ chạy được trên mọi export target (Windows, Andr
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

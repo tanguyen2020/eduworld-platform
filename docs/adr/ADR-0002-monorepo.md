@@ -1,6 +1,9 @@
 # ADR-0002 — Monorepo
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md), [CONTRIBUTING](../../CONTRIBUTING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · cấu trúc thư mục superseded by [ADR-0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) và [ADR-0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md), [CONTRIBUTING](../../CONTRIBUTING.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Cấu trúc thư mục đã được thay** bởi [ADR-0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) (modular monolith, bỏ `services/` và `go.work`) và [ADR-0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) (mã nguồn trong `src/backend`, `src/cms/frontend`, `src/game`). **Còn hiệu lực:** một repository chứa mã, contract, design token, deploy và tài liệu; `specs/` là nguồn sự thật để sinh code.
 
 ## Bối cảnh
 
@@ -21,3 +24,4 @@ Contract (specs), backend, game client và portal thay đổi cùng nhau; cần 
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Cập nhật cấu trúc thư mục `backend/` → `services/` + `pkg/` | ADR-0036 |
+| 2026-11-20 | Owner chốt (Accepted); danh sách thư mục (`services/`, `go.work`, `godot/`, `web/`) ghi nhận đã thay bởi ADR-0074 và ADR-0092, không đổi ý nghĩa quyết định monorepo | Owner |

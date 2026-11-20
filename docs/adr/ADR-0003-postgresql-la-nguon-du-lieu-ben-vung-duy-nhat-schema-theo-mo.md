@@ -1,6 +1,6 @@
 # ADR-0003 — PostgreSQL là nguồn dữ liệu bền vững duy nhất, schema theo module
 
-> **Trạng thái:** Proposed · một phần superseded by [ADR-0037](ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) và [ADR-0039](ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-10 · **Tài liệu:** [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0037](ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) và [ADR-0039](ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-10 · **Tài liệu:** [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay.** Không còn hiệu lực: "một database, mỗi module một schema" (thay bởi ADR-0037: mỗi service một database) và "migration bằng goose" (thay bởi ADR-0039: Atlas). **Còn hiệu lực:** PostgreSQL là system of record; ID là UUIDv7; bảng tăng trưởng lớn được partition theo thời gian; không đọc/ghi dữ liệu của domain khác trực tiếp.
@@ -28,3 +28,4 @@ Cần một nguồn dữ liệu bền vững duy nhất cho dữ liệu học t�
 | 2026-11-15 | Tạo ADR | Phase 0 |
 | 2026-11-15 | Phần "một DB, schema theo module" thay bởi ADR-0037 | Stakeholder chọn DB riêng mỗi service |
 | 2026-11-15 | Migration goose thay bởi Atlas | ADR-0039 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

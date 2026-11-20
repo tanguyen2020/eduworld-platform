@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> Trạng thái: Review · Phiên bản: 1.0 · Owner: Solution Architect · Cập nhật: 2026-11-15
+> Trạng thái: Review · Phiên bản: 1.1 · Owner: Solution Architect · Cập nhật: 2026-11-20 (owner chốt toàn bộ ADR còn `Proposed`: chuyển `Accepted`, trừ ADR-0053 và ADR-0077 hoãn theo ADR-0082; ADR-0007 Superseded)
 > Liên quan: [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md) · [DOCUMENTATION_AUDIT](../12-project/DOCUMENTATION_AUDIT.md)
 
 ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng của EduWorld: bối cảnh, phương án, quyết định, hệ quả và lịch sử thay đổi. Mỗi ADR là một file `ADR-NNNN-<slug>.md`. Người mới nên đọc mục **Quyết định hiện hành theo chủ đề** trước, không cần đọc ADR đã bị thay.
@@ -9,6 +9,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 
 - Trạng thái: `Proposed` → `Accepted` → `Superseded by ADR-xxxx` (toàn phần) hoặc "một phần superseded" (có khối cảnh báo ghi rõ phần còn/không còn hiệu lực).
 - `Proposed` là mặc định làm việc; phải được review và chuyển `Accepted` trước khi phase phụ thuộc vào nó kết thúc.
+- Ngày 2026-11-20 owner dự án chốt mọi ADR còn `Proposed`: chuyển `Accepted` (ghi dòng "Owner chốt (Accepted)" ở Lịch sử thay đổi của từng ADR), trừ ADR-0053 và ADR-0077 (giữ `Proposed · hoãn`, ADR-0082) và ADR-0007 (cả phần game và portal đã bị thay bởi ADR-0068, ADR-0091 → Superseded). ADR mới viết sau ngày đó vẫn bắt đầu ở `Proposed`.
 - ADR `Accepted` không đổi ý nghĩa quyết định; thay đổi = ADR mới. Điều chỉnh tham chiếu (tên thư mục, tên service) cập nhật trực tiếp và ghi vào **Lịch sử thay đổi** của ADR.
 - ADR mới theo [TEMPLATE.md](TEMPLATE.md); thêm dòng vào bảng chỉ mục và nhóm chủ đề dưới đây.
 - Câu hỏi chưa có quyết định nằm ở [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md).
@@ -18,28 +19,28 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | ADR | Tiêu đề | Trạng thái | OQ |
 |---|---|---|---|
 | [0001](ADR-0001-go-modular-monolith-voi-3-tien-trinh-trien-khai.md) | Go Modular Monolith với 3 tiến trình triển khai | Superseded by ADR-0036 | — |
-| [0002](ADR-0002-monorepo.md) | Monorepo | Proposed | — |
-| [0003](ADR-0003-postgresql-la-nguon-du-lieu-ben-vung-duy-nhat-schema-theo-mo.md) | PostgreSQL là nguồn dữ liệu bền vững duy nhất, schema theo module | Proposed · một phần superseded by ADR-0037 và ADR-0039 | OQ-10 |
-| [0004](ADR-0004-valkey-chi-cho-trang-thai-tam-thoi-cache-va-phoi-hop-realtim.md) | Valkey chỉ cho trạng thái tạm thời, cache và phối hợp realtime | Proposed | — |
+| [0002](ADR-0002-monorepo.md) | Monorepo | Accepted · cấu trúc thư mục superseded by ADR-0074 và ADR-0092 | — |
+| [0003](ADR-0003-postgresql-la-nguon-du-lieu-ben-vung-duy-nhat-schema-theo-mo.md) | PostgreSQL là nguồn dữ liệu bền vững duy nhất, schema theo module | Accepted · một phần superseded by ADR-0037 và ADR-0039 | OQ-10 |
+| [0004](ADR-0004-valkey-chi-cho-trang-thai-tam-thoi-cache-va-phoi-hop-realtim.md) | Valkey chỉ cho trạng thái tạm thời, cache và phối hợp realtime | Accepted | — |
 | [0005](ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) | Mô hình multi-tenancy: shared database + `tenant_id` + RLS | Accepted | — |
-| [0006](ADR-0006-keycloak-mot-realm-dung-organizations-identity-brokering.md) | Keycloak: một Realm dùng Organizations + Identity Brokering | Proposed · một phần superseded by ADR-0026 và ADR-0027 | OQ-02 |
-| [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | Godot đăng nhập bằng OIDC Authorization Code + PKCE qua system browser | Proposed | OQ-04 |
-| [0008](ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) | Access token của Keycloak là credential API; realtime dùng ticket ngắn hạn | Proposed | — |
-| [0009](ADR-0009-apache-apisix-lam-api-gateway-backend-van-tu-authorize.md) | Apache APISIX làm API gateway, backend vẫn tự authorize | Proposed | — |
-| [0010](ADR-0010-rest-openapi-3-1-contract-first-problem-details-cursor-pagin.md) | REST + OpenAPI 3.1 contract-first, Problem Details, cursor pagination, Idempotency-Key | Proposed | — |
-| [0011](ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) | Realtime transport: WebSocket qua Go realtime server | Proposed | OQ-05, OQ-06 |
-| [0012](ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) | Thế giới game Hybrid: hub instance + private instance + match room | Proposed | OQ-05 |
-| [0013](ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) | Nền tảng client: Release 1.0 gồm Windows, Android, iOS, Web | Proposed | OQ-04 |
-| [0014](ADR-0014-godot-4-x-voi-gdscript-co-static-typing.md) | Godot 4.x với GDScript có static typing | Proposed | OQ-04 |
-| [0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) | Content versioning bất biến sau Publish | Proposed · cách rollback superseded by ADR-0043 | — |
-| [0016](ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) | Server-authoritative scoring; answer key không bao giờ rời server | Proposed | — |
-| [0017](ADR-0017-mastery-model-co-the-cau-hinh-mac-dinh-weighted-evidence.md) | Mastery model có thể cấu hình, mặc định Weighted Evidence | Proposed | OQ-08 |
-| [0018](ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) | Glicko-2 cho Game Rating, tách biệt Learning Mastery | Proposed | — |
-| [0019](ADR-0019-transactional-outbox-valkey-streams-cho-domain-events.md) | Transactional Outbox + Valkey Streams cho domain events | Proposed · transport superseded by ADR-0042 | — |
+| [0006](ADR-0006-keycloak-mot-realm-dung-organizations-identity-brokering.md) | Keycloak: một Realm dùng Organizations + Identity Brokering | Accepted · một phần superseded by ADR-0026 và ADR-0027 | OQ-02 |
+| [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | Godot đăng nhập bằng OIDC Authorization Code + PKCE qua system browser | Superseded by ADR-0068 (game) và ADR-0091 (portal) | OQ-04 |
+| [0008](ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) | Access token của Keycloak là credential API; realtime dùng ticket ngắn hạn | Accepted | — |
+| [0009](ADR-0009-apache-apisix-lam-api-gateway-backend-van-tu-authorize.md) | Apache APISIX làm API gateway, backend vẫn tự authorize | Accepted | — |
+| [0010](ADR-0010-rest-openapi-3-1-contract-first-problem-details-cursor-pagin.md) | REST + OpenAPI 3.1 contract-first, Problem Details, cursor pagination, Idempotency-Key | Accepted | — |
+| [0011](ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) | Realtime transport: WebSocket qua Go realtime server | Accepted | OQ-05, OQ-06 |
+| [0012](ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) | Thế giới game Hybrid: hub instance + private instance + match room | Accepted | OQ-05 |
+| [0013](ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) | Nền tảng client: Release 1.0 gồm Windows, Android, iOS, Web | Accepted · phần ngân sách hiệu năng superseded by ADR-0057 | OQ-04 |
+| [0014](ADR-0014-godot-4-x-voi-gdscript-co-static-typing.md) | Godot 4.x với GDScript có static typing | Accepted | OQ-04 |
+| [0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) | Content versioning bất biến sau Publish | Accepted · cách rollback superseded by ADR-0043 | — |
+| [0016](ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) | Server-authoritative scoring; answer key không bao giờ rời server | Accepted | — |
+| [0017](ADR-0017-mastery-model-co-the-cau-hinh-mac-dinh-weighted-evidence.md) | Mastery model có thể cấu hình, mặc định Weighted Evidence | Accepted | OQ-08 |
+| [0018](ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) | Glicko-2 cho Game Rating, tách biệt Learning Mastery | Accepted | — |
+| [0019](ADR-0019-transactional-outbox-valkey-streams-cho-domain-events.md) | Transactional Outbox + Valkey Streams cho domain events | Accepted · transport superseded by ADR-0042 | — |
 | [0020](ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) | Chat thống nhất cho mọi lớp, mọi tin nhắn phải qua kiểm tra hợp lệ | Accepted · một phần superseded by ADR-0072 | — |
 | [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu | Accepted · một phần superseded by ADR-0072 | OQ-01 |
-| [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Admin Portal (CMS/LMS) là React + TypeScript SPA | Accepted (React) · chi tiết stack Proposed | — |
-| [0023](ADR-0023-observability-bang-opentelemetry-prometheus-grafana-loki-tem.md) | Observability bằng OpenTelemetry + Prometheus + Grafana + Loki + Tempo | Proposed | — |
+| [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Admin Portal (CMS/LMS) là React + TypeScript SPA | Accepted | — |
+| [0023](ADR-0023-observability-bang-opentelemetry-prometheus-grafana-loki-tem.md) | Observability bằng OpenTelemetry + Prometheus + Grafana + Loki + Tempo | Accepted | — |
 | [0024](ADR-0024-chay-tren-docker-compose-cho-local-docker-swarm-cho-staging.md) | Chạy trên Docker: Compose cho local, Docker Swarm cho staging/production, chưa dùng Kubernetes | Accepted | OQ-10 |
 | [0025](ADR-0025-thu-vien-nen-tang-cho-go-backend.md) | Thư viện nền tảng cho Go backend | Accepted · một phần superseded by ADR-0039 và ADR-0040 | — |
 | [0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) | Đăng nhập theo tenant: xác định tenant, kiểm tra chéo, mặc định tenant chung | Accepted · supersedes phần ánh xạ Organization của ADR-0006 | — |
@@ -64,17 +65,17 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0045](ADR-0045-dang-nhap-nhanh-o-quy-mo-10-000-ccu.md) | Đăng nhập nhanh ở quy mô 10.000 CCU | Accepted · một phần superseded by ADR-0072 | OQ-03 |
 | [0046](ADR-0046-nhan-biet-sis-nguon-cua-hoc-sinh-khi-dang-nhap.md) | Nhận biết SIS nguồn của học sinh khi đăng nhập | Accepted | OQ-01 |
 | [0047](ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) | Hai hệ thống giao diện: Game (Godot 3D) và Admin/Ops (Admin Portal) | Accepted | — |
-| [0048](ADR-0048-learning-activity-registry-mo-rong-loai-hoat-dong-hoc-tap-kh.md) | Learning Activity Registry: mở rộng loại hoạt động học tập không sửa lõi | Proposed | — |
-| [0049](ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) | Sổ cái phần thưởng và tiền tệ trong game (Reward & Currency Ledger) | Proposed | OQ-14 |
-| [0050](ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) | Party (tạm thời) và Guild/Club (bền vững) là hai khái niệm tách biệt | Proposed · một phần superseded by ADR-0084 | — |
+| [0048](ADR-0048-learning-activity-registry-mo-rong-loai-hoat-dong-hoc-tap-kh.md) | Learning Activity Registry: mở rộng loại hoạt động học tập không sửa lõi | Accepted | — |
+| [0049](ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) | Sổ cái phần thưởng và tiền tệ trong game (Reward & Currency Ledger) | Accepted | OQ-14 |
+| [0050](ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) | Party (tạm thời) và Guild/Club (bền vững) là hai khái niệm tách biệt | Accepted · một phần superseded by ADR-0084 | — |
 | [0051](ADR-0051-pham-vi-voice-chat.md) | Phạm vi voice chat | Accepted (qua 0070) | OQ-19 |
-| [0052](ADR-0052-thuc-thi-mo-phong-simulation-execution.md) | Thực thi mô phỏng (Simulation Execution) | Proposed | — |
+| [0052](ADR-0052-thuc-thi-mo-phong-simulation-execution.md) | Thực thi mô phỏng (Simulation Execution) | Accepted | — |
 | [0053](ADR-0053-cham-diem-co-ho-tro-ai-ai-assisted-grading.md) | Chấm điểm có hỗ trợ AI (AI-assisted Grading) | Proposed · chưa thuộc Release 1.0 · hoãn (ADR-0082) | OQ-12 |
-| [0054](ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) | Tương tác xã hội liên trường (Cross-school Social Interaction) | Proposed | OQ-09 |
+| [0054](ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) | Tương tác xã hội liên trường (Cross-school Social Interaction) | Accepted | OQ-09 |
 | [0055](ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) | Công thức Toán, Vật lý, Hóa học: MathJax 4 (hiển thị) + MathLive (nhập trên Admin Portal) | Accepted | — |
 | [0056](ADR-0056-game-song-ngu-viet-anh.md) | Game song ngữ Việt – Anh | Accepted | OQ-15 |
-| [0057](ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) | Chạy được trên máy tầm trung: hạng thiết bị và ngân sách hiệu năng | Accepted (yêu cầu) · thông số Proposed | OQ-04 |
-| [0058](ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) | Game Analytics: tổng hợp trong PostgreSQL qua sự kiện NATS | Proposed | — |
+| [0057](ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) | Chạy được trên máy tầm trung: hạng thiết bị và ngân sách hiệu năng | Accepted | OQ-04 |
+| [0058](ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) | Game Analytics: tổng hợp trong PostgreSQL qua sự kiện NATS | Accepted | — |
 | [0059](ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) | Hợp nhất API attempt; chưa làm AI giọng nói trong Release 1.0 | Accepted · một phần superseded by ADR-0072 | OQ-22 |
 | [0060](ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) | Danh mục quốc gia, tỉnh/thành, trường; học sinh thuộc một trường một lớp | Accepted | — |
 | [0061](ADR-0061-dong-bo-du-lieu-hoc-sinh-tu-sis-khi-dang-nhap.md) | Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập | Accepted · một phần superseded by ADR-0072 | OQ-01 |
@@ -112,7 +113,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 
 ## Quyết định hiện hành theo chủ đề
 
-Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted hoặc Proposed đang dùng làm mặc định). ADR bị thay toàn phần không được liệt kê; ADR bị thay một phần được ghi kèm phần thay thế.
+Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). ADR bị thay toàn phần không được liệt kê; ADR bị thay một phần được ghi kèm phần thay thế.
 
 ### Kiến trúc & triển khai
 
@@ -127,7 +128,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted ho
 | [0040](ADR-0040-goi-service-to-service-bang-typed-rest-client-sinh-tu-openap.md) | Spec internal là hợp đồng facade có kiểu, `x-allowed-callers` (transport thay bởi ADR-0074) |
 | [0039](ADR-0039-orm-ent-cho-go-tuong-duong-entity-framework-migration-bang-a.md) | ORM ent + migration Atlas (thay phần ORM của 0025) |
 | [0025](ADR-0025-thu-vien-nen-tang-cho-go-backend.md) | Thư viện Go nền tảng còn hiệu lực (chi, oapi-codegen, slog, nats.go…) |
-| [0002](ADR-0002-monorepo.md) | Monorepo (`services/`, `pkg/`, `godot/`, `web/`, `design/`, `specs/`) |
+| [0002](ADR-0002-monorepo.md) | Monorepo (cấu trúc thư mục theo 0092) |
 | [0009](ADR-0009-apache-apisix-lam-api-gateway-backend-van-tu-authorize.md) | APISIX làm gateway; backend vẫn tự authorize; route platform chỉ nội bộ |
 | [0010](ADR-0010-rest-openapi-3-1-contract-first-problem-details-cursor-pagin.md) | REST + OpenAPI 3.1 contract-first, Problem Details, cursor, Idempotency-Key |
 | [0011](ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) | WebSocket qua `realtime-gateway` cho mọi realtime |
@@ -171,7 +172,6 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted ho
 | [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Admin Portal có trang đăng nhập riêng, học sinh không vào được; phân quyền Permission → Role → UserRole |
 | [0067](ADR-0067-portal-khong-chon-tenant-va-dinh-danh-dang-nhap-duy-nhat.md) | Portal đăng nhập không chọn tenant (mục 2–3 được làm rõ bởi 0069) |
 | [0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) | Kiểm tra chéo tenant của phiên (mục 3–4 thay bởi 0063) |
-| [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | Portal: Authorization Code + PKCE trên trình duyệt (phần game thay bởi 0068) |
 | [0008](ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) | Access token Keycloak cho REST; realtime dùng ticket ngắn hạn |
 | [0045](ADR-0045-dang-nhap-nhanh-o-quy-mo-10-000-ccu.md) | Năng lực đăng nhập 10.000 CCU, hàng chờ, warm-up (mục 3 thay bởi 0064, mục 4 thay bởi 0063) |
 | [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu |
@@ -263,4 +263,5 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted ho
 |---|---|
 | [0001](ADR-0001-go-modular-monolith-voi-3-tien-trinh-trien-khai.md) | [0036](ADR-0036-microservices-theo-he-thong-lon-thay-adr-0001.md) — modular monolith → microservices (về sau [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) quay lại modular monolith có ranh giới cưỡng chế) |
 | [0036](ADR-0036-microservices-theo-he-thong-lon-thay-adr-0001.md) | [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) — 6 microservice → modular monolith 3 binary |
+| [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | [0068](ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) (game: form trong game qua backend) và [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) (portal: form riêng qua backend) — bỏ luồng Authorization Code + PKCE qua trình duyệt |
 | [0071](ADR-0071-object-storage-production-dung-floci.md) | [0075](ADR-0075-object-storage-production-khong-dung-floci.md) — floci production → S3 managed/Garage/SeaweedFS |

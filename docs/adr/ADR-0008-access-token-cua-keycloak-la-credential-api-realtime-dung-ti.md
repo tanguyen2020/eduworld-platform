@@ -1,6 +1,6 @@
 # ADR-0008 — Access token của Keycloak là credential API; realtime dùng ticket ngắn hạn
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md), [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md), [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -22,3 +22,4 @@ Tránh phát hành JWT song song với Keycloak; không đặt JWT trong query s
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Phase 0 |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

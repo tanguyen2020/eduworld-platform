@@ -1,6 +1,6 @@
 # ADR-0052 — Thực thi mô phỏng (Simulation Execution)
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -28,3 +28,4 @@ Master Prompt "Re-architecture" §15.1 yêu cầu mô phỏng khoa học, vật 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Audit theo Master Prompt mới |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |

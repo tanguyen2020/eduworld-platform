@@ -1,6 +1,6 @@
 # ADR-0058 — Game Analytics: tổng hợp trong PostgreSQL qua sự kiện NATS
 
-> **Trạng thái:** Proposed · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [Chỉ mục ADR](README.md)
 
 > [!NOTE]
 > **[ADR-0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md)** (2026-11-15): không có ngoại lệ purge cho `analytics.events_raw`; hết hạn chỉ ẩn danh hóa, partition giữ lại; theo dõi dung lượng theo ngưỡng chuyển kho của ADR này.
@@ -15,7 +15,7 @@ Cần phân tích hành vi chơi (DAU/WAU/MAU, retention, funnel quest, tham gia
 2. **Bảng tổng hợp trong PostgreSQL, nạp từ domain event NATS** (đề xuất).
 3. Dịch vụ analytics bên thứ ba (loại: dữ liệu trẻ em ra ngoài, tracking).
 
-## Quyết định (đề xuất)
+## Quyết định
 
 - Nguồn dữ liệu: **domain event phía server** đã có trên NATS (`session`, `quest`, `challenge`, `progression`, `shop`, `party`, `match`, `event`…) và một tập **telemetry client tối thiểu** (vào/ra màn, FPS/hiệu năng, lỗi) gửi qua `/game/telemetry` không chứa PII.
 - **Consumer analytics trong game-service** ghi vào schema `analytics` của `eduworld_game`: bảng sự kiện thô rút gọn (giữ 90 ngày) và bảng tổng hợp theo ngày/tuần/tenant/khối (giữ 2 năm) [Confirmed].
@@ -32,3 +32,4 @@ Cần phân tích hành vi chơi (DAU/WAU/MAU, retention, funnel quest, tham gia
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Bổ sung theo audit |
+| 2026-11-20 | Owner chốt (Accepted) | Owner |
