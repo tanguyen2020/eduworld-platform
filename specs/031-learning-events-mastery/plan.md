@@ -83,7 +83,7 @@ Không có — công thức, tham số và ví dụ tính ở LEARNING_ANALYTICS
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `mastery.WeightedEvidence.Apply/Effective` (§3.2: `w = w_ctx·w_diff·w_rep·w_hint·w_guess`, `α = max(min(α_max, α_base·w), 1/(n+3))`, decay khi đọc), `Level` (§3.2 bảng), `evaluation.Regrade(action)` | Tham số truyền vào, không đọc config trong domain |
-| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `PinLessonSession`, `CompleteLesson`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.class.read` + scope trường/môn [Proposed] |
+| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `PinLessonSession`, `CompleteLesson`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.class.read` + scope trường/môn [Confirmed] |
 | infrastructure | ent repo (UPDATE `WHERE version=$v`), `LearningEventReader` (SQL tường minh có `tenant_id`), `SchemaValidator`, outbox | |
 | presentation | `getMyProgress`, `getStudentProgress`, `createRegradeRequest`, `getLesson`, `completeLesson`; consumer `learning.mastery_on_graded`, `learning.progress_daily`, `learning.lesson_completion`; job `learning-events-partitions` (hằng ngày), `regrade-runner`, `mastery-recompute` (CLI) | |
 
@@ -97,7 +97,7 @@ Không có — công thức, tham số và ví dụ tính ở LEARNING_ANALYTICS
 - `game_player` cho `getMyProgress`; học sinh (self, nhân sự `403 PERMISSION_DENIED` như F032-AC-09) cho `getLesson`, `completeLesson`; `portal_staff` cho `getStudentProgress`, `createRegradeRequest`.
 - Job re-evaluate nội dung platform: `tenancy.Bypass(ctx, "re_evaluation")` (reason trong danh sách đóng ADR-0089 §3, client `learning_platform`), metric `eduworld_tenant_filter_bypass_total{module,reason}`, audit `cross_tenant.accessed` theo tenant (`mode = write`).
 - Idempotency: learning event `idempotency_key`; consumer `processed_events`; `createRegradeRequest` Idempotency-Key.
-- Audit: `content.re_evaluated`, `learning.profile_viewed`, `mastery_model.activated` [Proposed].
+- Audit: `content.re_evaluated`, `learning.profile_viewed`, `mastery_model.activated` [Confirmed].
 
 ### Quan sát
 
