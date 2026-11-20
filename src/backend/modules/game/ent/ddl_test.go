@@ -22,7 +22,7 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 // §2.17 minimal columns, no entx mixin — same decision as F020).
 var migrations = map[string][]string{
 	"20261123000001_f014_game_session.sql": {"game_sessions"},
-	"20261223000001_f070_profile.sql": {"game_profiles", "nickname_changes", "avatar_presets", "character_catalogs",
+	"20261224000001_f070_profile.sql": {"game_profiles", "nickname_changes", "avatar_presets", "character_catalogs",
 		"character_catalog_versions", "item_definitions", "item_definition_versions", "inventory_items"},
 }
 
