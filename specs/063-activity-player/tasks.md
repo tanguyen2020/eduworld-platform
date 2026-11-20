@@ -69,12 +69,12 @@
 
 ### Tests cho User Story 3
 
-- [ ] T026 [P] [US3] Unit test F063-AC-18, F063-AC-20 (kiểm `sha256`, cache path, khóa texture `(sha256, scale, màu)`, lỗi/vượt `math_svg_max` → `speech_text`) — file: `src/game/tests/unit/learning/test_math_svg_cache.gd` — phải FAIL trước khi code
-- [ ] T027 [P] [US3] Visual test F063-AC-19 (bộ công thức mẫu, TC-MATH-001) — file: `src/game/tests/visual/test_math_inline.gd`
+- [x] T026 [P] [US3] Unit test F063-AC-18, F063-AC-20 (kiểm `sha256`, cache path, khóa texture `(sha256, scale, màu)`, lỗi/vượt `math_svg_max` → `speech_text`) — file: `src/game/tests/unit/learning/test_math_svg_cache.gd` — phải FAIL trước khi code — ✅ `test_math_svg_cache.gd` 9/9 pass (sha256 + cache `user://…/<sha256>.svg`, tải lại khi file hỏng, khối render payload → `cdn_base_url` + `math_ref`, texture theo `(sha256, scale, màu)`, sai sha256 / > `math_svg_max` / lỗi tải → null + `speech_text` + telemetry `math_svg_failed`)
+- [x] T027 [P] [US3] Visual test F063-AC-19 (bộ công thức mẫu, TC-MATH-001) — file: `src/game/tests/visual/test_math_inline.gd` — ✅ `tests/visual/test_math_inline.gd` 4/4 pass headless (block căn giữa, pixel gạch phân số đúng màu Theme, scale DPI 2× → texture 2×, inline trong `RichTextLabel`, không ô nhập); ảnh chụp baseline màn player thuộc T035
 
 ### Implementation cho User Story 3
 
-- [ ] T028 [US3] `MathSvgCache`, `MathInline` (inline/block, màu Theme) — file: `src/game/scripts/learning/math_svg_cache.gd`, `src/game/scenes/learning/math/MathInline.tscn`
+- [x] T028 [US3] `MathSvgCache`, `MathInline` (inline/block, màu Theme) — file: `src/game/scripts/learning/math_svg_cache.gd`, `src/game/scenes/learning/math/MathInline.tscn` — ✅ `math_svg_cache.gd`, `scenes/learning/math/MathInline.tscn` (+ `math_inline.gd`, `append_to` cho inline), dùng trong `RichContentView`, nút lựa chọn (icon), gợi ý, phản hồi, giải thích
 
 ## Phase 6: User Story 4 — Màn kết quả học tập (Priority: P2)
 
