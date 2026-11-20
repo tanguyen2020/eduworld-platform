@@ -3988,6 +3988,17 @@
     ]
   },
   {
+    "operation_id": "listRegradeRequests",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/regrade-requests",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listResearchAgreements",
     "module": "learning",
     "method": "GET",
@@ -4644,6 +4655,17 @@
     "module": "learning",
     "method": "POST",
     "path": "/cms/media:presign-upload",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "previewRegradeRequest",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/regrade-requests:preview",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
