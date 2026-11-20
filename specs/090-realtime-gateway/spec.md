@@ -20,6 +20,19 @@
 - Q: Close code tắt node sau đối soát (RB-401)? → A: Gửi `system.server.draining` (`reconnect_after_ms`) rồi đóng `1012` theo [REALTIME_ARCHITECTURE §3.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md); không dùng `4500`. Thu hồi quyền đóng `4403`. AsyncAPI cần thêm message `system.server.draining` (delta contract).
 - Q: Không cấp realtime ticket trong giờ giới nghiêm (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
+### Session 2026-11-20 (triển khai — quyết định [Proposed] ghi lại khi code)
+
+- Q: Envelope Pub/Sub: module game (F014) publish `{type, payload}` hay `RtPubSubEnvelope` (research R1)? → A: [Proposed] Một envelope duy nhất `RtPubSubEnvelope` (`src/backend/pkg/realtime`); publisher của module game chuyển sang envelope này với `target.game_session_id` = session bị kết thúc/bị thay. Gateway tự nhận diện `session.session.replaced` (4409) và `session.session.ended` (`curfew`/`daily_limit` → 4410; lý do thu hồi → 4403) theo `payload.game_session_id`, nên message không cần kèm `control`; control `close 4403` (`realtime.Revoke(reason)`) dành cho F016. Lý do `transferred` được gửi xuống client là `access_revoked` (enum `SessionEnded.reason` không có `transferred`).
+- Q: `ew:rt:broadcast` có trái F090-AC-19 ("không tự đăng ký topic nào ngoài `ew:rt:user:<id>`")? → A: [Proposed] Không: `ew:rt:broadcast` và `ew:rt:node:<id>:in` là kênh **cấp node** (REALTIME_ARCHITECTURE §5 "tất cả node gateway"), không gắn vào kết nối; reply của module chỉ được cấp `ew:rt:party:*`, `ew:rt:room:*:out`, `ew:chat:fanout:*` — kênh user/node/broadcast trong reply bị từ chối (`eduworld_rt_subscribe_refused_total`).
+- Q: "Lỗi giao thức lặp lại" (F090-AC-20) là bao nhiêu? → A: [Proposed] `ws_protocol_errors` = 5 lỗi/phút/kết nối (đăng ký CONFIG_DEFAULTS). Vi phạm rate limit đếm theo đợt (tối đa 1 đợt/giây) để "> 3 lần/phút" của `ws_frame_rate` là vi phạm liên tục, không phải một cụm frame.
+- Q: Frame vượt `ws_max_frame`? → A: [Proposed] Tới 4 × `ws_max_frame`: `system.command.failed VALIDATION_FAILED`, không chuyển tiếp, tính lỗi giao thức; lớn hơn nữa thư viện WebSocket cắt frame và gateway đóng `4400`.
+- Q: Timeout 4408 tính "frame" nào? → A: [Proposed] Frame dữ liệu của client (`system.heartbeat.ping` mỗi `ws_heartbeat`); pong của WS control frame không gia hạn.
+- Q: `system.session.resume` có nhận `system.command.acked`? → A: [Proposed] Không — trả bằng `system.session.resumed`/`resume_failed` có `ref` = `id` (ghi vào AsyncAPI). Resume token dạng `<thời điểm cấp base36>.<256 bit>` để phân biệt `expired` với `unknown_token` khi buffer không còn; token của học sinh hoặc session khác → `unknown_token`; buffer đã bị cắt quá `last_seq` → `seq_gap`. Sau resume `seq` tiếp tục từ max(`last_seq` của buffer, `last_seq` của client).
+- Q: Kết nối mới của cùng học sinh (4409 im lặng, F090-AC-08) có xóa buffer resume? → A: [Proposed] Không — đó chính là đường reconnect khi kết nối cũ chưa bị phát hiện chết. Chỉ `session.session.replaced` (thiết bị khác), thu hồi (4403), kết thúc session (4410) và heartbeat game trả `CONFLICT`/`NOT_FOUND` mới vô hiệu resume token.
+- Q: `presence.status.set` (`x-routing: realtime`)? → A: Presence thuộc F091; F090 trả `system.command.failed UNAVAILABLE` cho lệnh này tới khi F091 làm.
+- Q: `ws_ticket_rate` có nguồn `platform` (CONFIG_DEFAULTS) nhưng chưa có khóa platform settings? → A: [Proposed] Đọc `EW_WS_TICKET_RATE` (mặc định 10/phút) tới khi khóa platform settings có owner.
+- Q: URL trong ticket? → A: `EW_REALTIME_PUBLIC_URL` (LOCAL_DEVELOPMENT, cùng biến với client-config); trống → `503 UNAVAILABLE` (không hardcode, R3).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cấp ticket và mở kết nối WebSocket (Priority: P1)
@@ -199,4 +212,9 @@ Vận hành tăng/giảm replica theo lịch học, deploy không làm học sin
 
 - F003 cung cấp `src/backend/pkg/natsx` (request/reply, header ngữ cảnh) và key builder Valkey; F014 đã có game session và `ew:game:active_session:<student_id>`.
 - Giới hạn tần suất frame, số lệnh đang chờ, hàng đợi gửi, tốc độ nhận kết nối mới chưa có tên trong CONFIG_DEFAULTS; đề xuất `ws_frame_rate`, `ws_inflight_commands`, `ws_send_queue`, `ws_accept_rate` (task Polish) [Confirmed].
-- Stream `EVT_REALTIME` cho `audit.recorded` của gateway [Confirmed] — cần cập nhật EVENT_DESIGN §3.1.
+- Stream `EVT_REALTIME` cho `audit.recorded` của gateway [Confirmed] — đã cập nhật EVENT_DESIGN §3.1 (2026-11-20).
+
+## Câu hỏi mở
+
+- **F090-1:** message `chat.sync` (owner F115) có `name` 2 đoạn, lệch pattern `type` 3 đoạn của `ClientEnvelope`, nên mọi frame `chat.sync` bị gateway trả `VALIDATION_FAILED`. Cần F115 đổi tên (vd. `chat.history.sync`) hoặc nới pattern. Bảng định tuyến vẫn có route `chat.sync` → module chat.
+- **F090-2:** ACL Valkey user `realtime` và user NATS `realtime` (T002) chưa có file cấu hình nào trong `deploy/` cho mọi module (VALKEY_DESIGN: ACL theo module [Proposed], một client mỗi binary). Gateway dùng client của binary; làm cùng lát cắt ACL chung.

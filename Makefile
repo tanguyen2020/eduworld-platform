@@ -150,6 +150,7 @@ gen: ## Generate code: architecture rules from x-allowed-callers, problem codes 
 	$(GO) run ./tools/infragen
 	$(GO) run ./tools/sisgen
 	$(GO) run ./tools/routegroups
+	node scripts/realtime/gen-routes.mjs # routes + client schemas of the realtime gateway from the AsyncAPI (F090)
 	cd $(BACKEND)/pkg/testkit/sample/ent && go generate .
 	cd $(BACKEND)/modules/identity/ent && go generate .
 
@@ -159,6 +160,7 @@ gen-check: gen ## Fail if generated files differ from the committed ones
 	cd $(BACKEND) && go run ./tools/facadegen --check --oapi=oapi-codegen
 	$(GO) run ./tools/infragen --check
 	$(GO) run ./tools/sisgen --check
+	node scripts/realtime/gen-routes.mjs --check
 	$(GO) run ./tools/routegroups --check # apisix.route_groups of getIntegrationOverview from deploy/apisix/routes/routes.yaml (OQ F059-12)
 	git diff --exit-code -- $(BACKEND)/pkg/testkit/sample/ent $(BACKEND)/modules/*/ent $(BACKEND)/modules/*/migrations
 

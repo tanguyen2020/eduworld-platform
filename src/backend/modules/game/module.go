@@ -21,12 +21,14 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/facade"
 	gamehttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/job"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/natscmd"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/migrations"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
+	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 
 	_ "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/runtime" // ent mixin hooks and interceptors (R27)
 )
@@ -61,7 +63,8 @@ func (m *Module) Wire(Imports) {}
 // Register wires the module into the running binary (OQ F014-7, F010-2): health checks everywhere; the F014 routes in
 // core-api; the outbox relay and the consumers game.projection_identity, game.session_end_on_revoke,
 // game.platform_settings (platform_curfew) and game.manifest_on_learning_content in worker events; the jobs
-// session-timeout and curfew-session-closer in worker jobs.
+// session-timeout and curfew-session-closer in worker jobs; createRealtimeTicket and the NATS command
+// ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
 	if err != nil {
@@ -97,11 +100,18 @@ func Register(r *module.Registry) (*Module, error) {
 
 	h := gamehttp.Handlers{Sessions: sessions, ClientConfig: cfg.ClientConfig,
 		Manifest:    query.GetContentManifest{Read: core.ReadSession, Manifests: read.Manifests{}, MinClientVersion: cfg.UseCase.MinClientVersion},
-		LoginEvents: query.LoginEvents{Read: core.ReadSession, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: cursors}}
+		LoginEvents: query.LoginEvents{Read: core.ReadSession, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: cursors},
+		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
 	r.HTTP(Name, func(s *httpx.Server) error { return gamehttp.Register(s, h) })
+	// NATS command of the realtime gateway (F090-AC-12): served by core-api, queue group "game".
+	if nc := r.NATS(); nc != nil && r.ServesHTTP() {
+		r.Go("game.cmd.session_heartbeat", func(ctx context.Context) error {
+			return rt.ServeCommand(ctx, nc, rt.SessionHeartbeatModule, rt.SessionHeartbeatType, natscmd.SessionHeartbeat(sessions), 0)
+		})
+	}
 
 	if err := r.Relay(Name); err != nil {
 		return nil, fmt.Errorf("game: %w", err)

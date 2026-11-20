@@ -36,6 +36,7 @@ Schema payload theo từng `event_type` khác được thêm dần khi service t
 | `EVT_GAME` | `ew.evt.game.<event_type>` | module game | 7 ngày | Game session, login, quest, XP, reward, Game Studio publish |
 | `EVT_COMPETITION` | `ew.evt.competition.<event_type>` | module competition | 7 ngày | Party, match, rating, tournament |
 | `EVT_CHAT` | `ew.evt.chat.<event_type>` | module chat | 7 ngày | Chat/moderation (không chứa nội dung tin) |
+| `EVT_REALTIME` | `ew.evt.realtime.<event_type>` | binary `realtime` (gateway, F090) | 7 ngày | Chỉ `audit.recorded` (vd. `realtime.rate_limit_closed` khi đóng 4429), payload schema chung [`payloads/common/audit.recorded.v1.schema.json`](payloads/common/audit.recorded.v1.schema.json); gateway không có database/outbox nên publish trực tiếp (`Nats-Msg-Id` = `event_id`, at-most-once — chấp nhận cho audit vi phạm rate limit); gateway tạo stream khi khởi động |
 | `CHAT_MESSAGES` | `ew.chat.<tenant_id>.msg.<channel_id>`, `ew.chat.<tenant_id>.evt.<channel_id>`, `ew.chat.<tenant_id>.cursor.<channel_id>` | module chat | 72 giờ | Đường ghi tin nhắn (ADR-0035) — không qua outbox |
 | `DLQ_<SVC>` | `ew.dlq.<module>.<consumer>` | consumer của service nhận | 30 ngày | Event lỗi quá số lần |
 | `IDENTITY_SIS_JOBS` | `ew.job.identity.sis.>` | module identity | Work-queue | Job đồng bộ SIS |
@@ -44,7 +45,8 @@ Subject **không** thuộc JetStream (NATS core, không lưu):
 
 | Subject | Dùng cho |
 |---|---|
-| `ew.cmd.<service>.<domain>.<action>` | Request/reply: `realtime` chuyển lệnh WebSocket tới module sở hữu (ADR-0036) |
+| `ew.cmd.<module>.<type>` | Request/reply: `realtime` chuyển lệnh WebSocket tới handler của module sở hữu trong `core-api` (ADR-0074, bảng `x-routing` của AsyncAPI); header `Ew-Tenant-Id`, `Ew-User-Id`, `Ew-Game-Session-Id`, `Ew-Device-Id`, `Ew-Conn-Id`, `Ew-Node-Id`, `traceparent` do gateway gắn (`src/backend/pkg/realtime`); chỉ user NATS `realtime` được publish |
+| `ew.cmd.game.session.heartbeat` | Gateway → module game mỗi `ws_heartbeat` khi kết nối mở, payload `{game_session_id}`; reply lỗi `CONFLICT`/`NOT_FOUND` → gateway đóng 4409 (F090-AC-12) |
 | `ew.in.room.<room_id>` | Input tần suất cao (di chuyển hub, input co-op/battle không cần ack), fire-and-forget |
 
 **Audit tập trung:** mọi service phát `audit.recorded` (trên stream của chính service đó); module `identity` tiêu thụ và ghi `audit.audit_logs`.

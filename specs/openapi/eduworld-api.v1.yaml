@@ -972,6 +972,13 @@ paths:
       tags: [game]
       operationId: createRealtimeTicket
       summary: Cấp ticket WebSocket dùng 1 lần, TTL 60 giây (ADR-0008)
+      description: |
+        Chỉ học sinh (token game, ADR-0031) cho game session active **của chính mình** trong tenant của phiên (F090 US1).
+        Ticket ngẫu nhiên ≥ 256 bit, server chỉ lưu băm SHA-256 (Valkey `ew:game:rt:ticket:<sha256>`, TTL `realtime_ticket_ttl`)
+        kèm `user_id`, `tenant_id`, `school_id`, `game_session_id`, `device_id`; gateway `/realtime/v1` tiêu thụ bằng `GETDEL`.
+        Session không thuộc người gọi hoặc thuộc tenant khác → `404`; session đã kết thúc hoặc bị thay → `409`; giờ giới nghiêm
+        hiệu lực → `403 CURFEW_ACTIVE` kèm `reopen_at` (ADR-0078); vượt `ws_ticket_rate` → `429`; Valkey không sẵn sàng →
+        `503 UNAVAILABLE` (REST khác vẫn dùng được). Không cần `Idempotency-Key`: mỗi lần gọi cấp một vé mới.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -985,8 +992,26 @@ paths:
                 $ref: '#/components/schemas/RealtimeTicket'
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: GAME_ACCESS_STUDENT_ONLY (token không phải token game của học sinh, có audit), TENANT_MISMATCH (`X-Tenant-Id` khác tenant của phiên), CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: CONFLICT — game session đã kết thúc hoặc đã bị thay bởi thiết bị khác
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '503':
+          description: UNAVAILABLE — kho ticket realtime (Valkey) tạm thời không sẵn sàng; thử lại theo Retry-After
+          headers:
+            Retry-After: { $ref: '#/components/headers/RetryAfter' }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
   /game/content-manifest:
     get:
       x-service: game
@@ -18010,12 +18035,12 @@ components:
         page: { $ref: '#/components/schemas/PageInfo' }
     RealtimeTicket:
       type: object
-      required: [ticket, expires_at, url]
+      required: [ticket, expires_at, url, protocol_version]
       properties:
-        ticket: { type: string, maxLength: 512, description: 'Opaque, dùng 1 lần' }
+        ticket: { type: string, maxLength: 512, description: 'Opaque, dùng 1 lần (≥ 256 bit ngẫu nhiên, base64url); server chỉ lưu băm SHA-256' }
         expires_at: { $ref: '#/components/schemas/Timestamp' }
-        url: { type: string, maxLength: 2048, format: uri, description: 'wss://.../realtime/v1' }
-        protocol_version: { type: integer, default: 1 }
+        url: { type: string, maxLength: 2048, format: uri, description: 'wss://.../realtime/v1 — từ cấu hình môi trường (EW_REALTIME_PUBLIC_URL), không hardcode' }
+        protocol_version: { type: integer, default: 1, description: Phiên bản giao thức WebSocket (subprotocol eduworld.v1) }
     ClientConfig:
       type: object
       required: [min_client_version, maintenance]

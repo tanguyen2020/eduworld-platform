@@ -8,21 +8,31 @@ info:
 
     Tài liệu kiến trúc: docs/06-architecture/REALTIME_ARCHITECTURE.md (ADR-0008, ADR-0011, ADR-0012, ADR-0035, ADR-0036).
 
-    Định tuyến phía server (không ảnh hưởng client):
+    Định tuyến phía server (không ảnh hưởng client; nguồn chuẩn REALTIME_ARCHITECTURE §4.1, F090):
     - `realtime` không chứa logic nghiệp vụ. Lệnh client có phản hồi (ack/error) được chuyển tới module sở hữu
-      bằng **NATS request/reply** `ew.cmd.<service>.<domain>.<action>` (header: `tenant_id`, `user_id`, `game_session_id`).
-    - Input chuyển động tần suất cao (`hub.player.move`, input co-op/battle không cần ack) đi qua **NATS core**
-      `ew.in.room.<room_id>` (fire-and-forget, không JetStream) tới node đang giữ room.
-    - Sự kiện xuống client: service publish **Valkey Pub/Sub** `ew:rt:user:<user_id>`, `ew:rt:room:<room_id>`,
-      `ew:chat:fanout:<channel_id>`; gateway subscribe và giao qua WebSocket.
-    - Bảng domain → service: `chat.*`, `notification.*` → module chat; `party.*`, `matchmaking.*`, `battle.*`,
-      `coop.*` → module competition; `hub.*`, `session.*`, `boss.*`, `challenge.*`, `progression.*`, `quest.*`, `world.*`, `event.*`, `season.*` → module game; `system.*`, `presence.*` → realtime.
+      (handler NATS trong `core-api`) bằng **NATS request/reply** `ew.cmd.<module>.<type>` (vd. `ew.cmd.chat.chat.message.send`),
+      header do gateway gắn: `Ew-Tenant-Id` (luôn lấy từ ticket, không bao giờ từ dữ liệu client), `Ew-User-Id`,
+      `Ew-Game-Session-Id`, `Ew-Device-Id`, `Ew-Conn-Id`, `Ew-Node-Id`, `traceparent`. Reply:
+      `{ok: true, result?, subscribe?: [topic], unsubscribe?: [topic]}` hoặc `{ok: false, problem: {code, retryable, retry_after_ms?}}`.
+    - Mỗi operation `receive` khai báo `x-routing` (`module` đích; `room_input` = các `type` đi **NATS core**
+      `ew.in.room.<payload.room_id>`, fire-and-forget, không ack); bảng định tuyến và validator envelope của gateway sinh từ
+      file này bằng `scripts/realtime/gen-routes.mjs` (CI fail khi lệch). `module: realtime` = xử lý tại gateway.
+    - Subject nội bộ không có message client: gateway gửi `ew.cmd.game.session.heartbeat` (payload `{game_session_id}`) mỗi
+      `ws_heartbeat` để module game cập nhật `last_heartbeat_at` (F090-AC-12).
+    - Sự kiện xuống client: module publish **Valkey Pub/Sub** `ew:rt:user:<user_id>`, `ew:rt:party:<party_id>`,
+      `ew:rt:room:<room_id>:out`, `ew:chat:fanout:<channel_id>`, `ew:rt:broadcast` với envelope
+      `specs/schemas/realtime/rt-pubsub-envelope.schema.json`; gateway gán `seq` và giao qua WebSocket.
+    - Bảng domain → module: `chat.*`, `notification.*` → module chat; `party.*`, `matchmaking.*`, `battle.*`,
+      `coop.*`, `hub.*` → module competition (`hub.player.move` → `ew.in.room.<room_id>`); `session.*`, `boss.*`, `challenge.*`,
+      `progression.*`, `quest.*`, `world.*`, `event.*`, `season.*` → module game; `system.*`, `presence.*` → realtime.
 
     Quy ước:
     - Envelope JSON `{v, type, id|ref, seq, ts, payload}`, field `snake_case`.
     - `type` = `<domain>.<entity>.<action>`. Lệnh client dùng động từ hiện tại (`chat.message.send`);
       sự kiện server dùng quá khứ (`chat.message.created`).
-    - Mỗi lệnh client (trừ `hub.player.move`, `system.heartbeat.ping`) nhận đúng một `system.ack` hoặc `system.error` có `ref` = `id`.
+    - Mỗi lệnh client (trừ `hub.player.move`, `system.heartbeat.ping`) nhận đúng một `system.ack` hoặc `system.error` có `ref` = `id`;
+      riêng `system.session.resume` được trả bằng `system.session.resumed` hoặc `system.session.resume_failed` có `ref` = `id`.
+      Gửi lại lệnh cùng `id` trong `resume_window` nhận lại đúng kết quả đã trả, không chuyển tiếp lần hai (F090-AC-16).
     - Thao tác quản trị cần idempotency (tạo/giải tán party, gửi/chấp nhận lời mời, kick, tạo matchmaking ticket)
       đi qua REST (`specs/openapi`); WebSocket chỉ đẩy sự kiện kết quả.
     - Server không bao giờ gửi answer key (ADR-0016). Không gửi PII: chỉ `nickname`, `avatar_config`, ID.
@@ -60,7 +70,8 @@ channels:
       `session.session.ended` rồi bị đóng: `reason = curfew` hoặc `daily_limit` → close 4410 (không thu hồi credential); lý do khác → close 4403 (credential/phiên bị thu hồi).
       Subprotocol `eduworld.v1`. Ticket lấy từ `POST /api/v1/game/sessions/{id}/realtime-tickets` (TTL 60s, dùng 1 lần).
       Close codes: 4400 bad message · 4401 ticket invalid · 4403 access revoked (đăng xuất, xóa refresh token) · 4408 heartbeat timeout ·
-      4409 replaced · 4410 session ended không thu hồi credential (curfew, daily_limit; không reconnect) · 4429 rate limited · 4500 server shutdown (reconnect + resume).
+      4409 replaced · 4410 session ended không thu hồi credential (curfew, daily_limit; không reconnect) · 4429 rate limited ·
+      1012 node shutdown sau `system.server.draining` (chờ `reconnect_after_ms` rồi reconnect + resume ở node khác).
     bindings:
       ws:
         query:
@@ -90,6 +101,7 @@ channels:
       SystemSessionResumeFailed: { $ref: '#/components/messages/SystemSessionResumeFailed' }
       SystemDegraded: { $ref: '#/components/messages/SystemDegraded' }
       SystemNoticeBroadcast: { $ref: '#/components/messages/SystemNoticeBroadcast' }
+      SystemServerDraining: { $ref: '#/components/messages/SystemServerDraining' }
       SessionReplaced: { $ref: '#/components/messages/SessionReplaced' }
       SessionEnded: { $ref: '#/components/messages/SessionEnded' }
       SessionEndingSoon: { $ref: '#/components/messages/SessionEndingSoon' }
@@ -210,6 +222,7 @@ channels:
 operations:
   receiveSystemCommands:
     action: receive
+    x-routing: { module: realtime }
     channel: { $ref: '#/channels/realtime' }
     summary: Lệnh hệ thống từ client (heartbeat, resume).
     messages:
@@ -228,12 +241,14 @@ operations:
       - $ref: '#/channels/realtime/messages/SystemSessionResumeFailed'
       - $ref: '#/channels/realtime/messages/SystemDegraded'
       - $ref: '#/channels/realtime/messages/SystemNoticeBroadcast'
+      - $ref: '#/channels/realtime/messages/SystemServerDraining'
       - $ref: '#/channels/realtime/messages/SessionReplaced'
       - $ref: '#/channels/realtime/messages/SessionEnded'
       - $ref: '#/channels/realtime/messages/SessionEndingSoon'
       - $ref: '#/channels/realtime/messages/ContentManifestUpdated'
   receivePresenceCommands:
     action: receive
+    x-routing: { module: realtime }
     channel: { $ref: '#/channels/realtime' }
     messages:
       - $ref: '#/channels/realtime/messages/PresenceStatusSet'
@@ -244,6 +259,7 @@ operations:
       - $ref: '#/channels/realtime/messages/PresenceFriendUpdated'
   receiveChatCommands:
     action: receive
+    x-routing: { module: chat }
     channel: { $ref: '#/channels/realtime' }
     summary: Lệnh chat. Quyền gửi do ChatPolicy quyết định (ADR-0020).
     messages:
@@ -282,6 +298,7 @@ operations:
       - $ref: '#/channels/realtime/messages/ChatMentionCreated'
   receiveNotificationCommands:
     action: receive
+    x-routing: { module: chat }
     channel: { $ref: '#/channels/realtime' }
     messages:
       - $ref: '#/channels/realtime/messages/NotificationItemMarkRead'
@@ -292,6 +309,7 @@ operations:
       - $ref: '#/channels/realtime/messages/NotificationItemCreated'
   receivePartyCommands:
     action: receive
+    x-routing: { module: competition }
     channel: { $ref: '#/channels/realtime' }
     summary: Lệnh Party Lobby realtime. Tạo/mời/chấp nhận/kick/giải tán qua REST /api/v1/multiplayer/parties.
     messages:
@@ -316,6 +334,7 @@ operations:
       - $ref: '#/channels/realtime/messages/PartyDisbanded'
   receiveMatchmakingCommands:
     action: receive
+    x-routing: { module: competition }
     channel: { $ref: '#/channels/realtime' }
     summary: Ready check và hủy ticket. Tạo ticket qua REST POST /api/v1/competition/matchmaking/tickets (Idempotency-Key).
     messages:
@@ -333,6 +352,7 @@ operations:
       - $ref: '#/channels/realtime/messages/MatchmakingMatchAssigned'
   receiveHubCommands:
     action: receive
+    x-routing: { module: competition, room_input: [hub.player.move] }
     channel: { $ref: '#/channels/realtime' }
     summary: Đồng bộ thế giới hub (≤10 Hz move, không ack).
     messages:
@@ -353,6 +373,7 @@ operations:
       - $ref: '#/channels/realtime/messages/HubInstanceMigrated'
   receiveBattleCommands:
     action: receive
+    x-routing: { module: competition }
     channel: { $ref: '#/channels/realtime' }
     summary: Knowledge Battle / Team Battle / Timed Quiz — server-authoritative.
     messages:
@@ -375,6 +396,7 @@ operations:
       - $ref: '#/channels/realtime/messages/BattleMatchEnded'
   receiveCoopCommands:
     action: receive
+    x-routing: { module: competition }
     channel: { $ref: '#/channels/realtime' }
     summary: Cooperative Quest / Educational Puzzle trong private instance của Party.
     messages:
@@ -393,6 +415,7 @@ operations:
 
   receiveBossCommands:
     action: receive
+    x-routing: { module: game }
     channel: { $ref: '#/channels/realtime' }
     summary: Boss encounter (module game, ew.cmd.game.boss.*) — server-authoritative.
     messages:
@@ -980,6 +1003,25 @@ components:
                   message_code: { type: string, maxLength: 128 }
                   message: { $ref: '#/components/schemas/LocalizedText' }
                   starts_at: { $ref: '#/components/schemas/EpochMs' }
+
+    SystemServerDraining:
+      name: system.server.draining
+      summary: Node gateway sắp tắt (deploy, bảo trì) — sau message này server đóng kết nối với close 1012 (F090-AC-27, RB-401).
+      description: |
+        Client chờ `reconnect_after_ms` (ngẫu nhiên theo kết nối để giãn tải) rồi xin ticket mới, kết nối lại (APISIX đưa tới
+        node khác) và gửi `system.session.resume` với `last_seq`; message không droppable trong `resume_window` được phát lại.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: system.server.draining }
+              payload:
+                type: object
+                required: [reconnect_after_ms]
+                properties:
+                  reconnect_after_ms: { type: integer, minimum: 0, maximum: 120000 }
+                  reason: { type: string, enum: [deploy, maintenance] }
 
     SessionReplaced:
       name: session.session.replaced

@@ -94,6 +94,7 @@ Bảng `infra.outbox_events` và `infra.processed_events` có trong **database c
 | `EVT_GAME` | `ew.evt.game.>` | module game | 7 ngày | Game session, login, quest, XP, reward, Game Studio publish |
 | `EVT_COMPETITION` | `ew.evt.competition.>` | module competition | 7 ngày | Party, match, rating, tournament |
 | `EVT_CHAT` | `ew.evt.chat.>` | module chat | 7 ngày | Domain event chat/moderation (không chứa nội dung tin) |
+| `EVT_REALTIME` | `ew.evt.realtime.>` | binary `realtime` (gateway, F090) | 7 ngày | Chỉ `audit.recorded` của gateway (vd. `realtime.rate_limit_closed` khi đóng 4429): gateway không có database/outbox nên publish trực tiếp (`Nats-Msg-Id` = `event_id`, at-most-once), tạo stream khi khởi động; consumer `identity.audit_sink` tiêu thụ như mọi `EVT_*` |
 | `CHAT_MESSAGES` | `ew.chat.*.msg.*`, `ew.chat.*.evt.*`, `ew.chat.*.cursor.*` | module chat | 72 h | Đường ghi tin nhắn (ADR-0035, §4.10) |
 | `DLQ_<MODULE>` (`DLQ_IDENTITY`, `DLQ_LEARNING`, `DLQ_GAME`, `DLQ_COMPETITION`, `DLQ_CHAT`) | `ew.dlq.<module>.<consumer>` | consumer của module nhận | 30 ngày | Event và message chat xử lý lỗi quá số lần (theo module nhận; module chat dùng chung `DLQ_CHAT` cho consumer của `CHAT_MESSAGES`) |
 | `IDENTITY_SIS_JOBS` | `ew.job.identity.sis.>` | module identity (`core-api`: upload CSV, webhook SIS; `worker-jobs`: lịch) | Work-queue (retention `WorkQueue`) | Hàng đợi job SIS sync, thay `ew:sis:jobs` cũ |

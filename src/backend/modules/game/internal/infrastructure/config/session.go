@@ -22,6 +22,8 @@ const (
 	DefaultPlatformCurfew   = "21:30-06:30"    // platform_curfew (ADR-0078), Asia/Ho_Chi_Minh
 	DefaultLocales          = "vi-VN,en-US"    // supported_locales (ADR-0056)
 	CurfewTimeZone          = "Asia/Ho_Chi_Minh"
+	DefaultTicketTTL        = 60 * time.Second // realtime_ticket_ttl (ADR-0008)
+	DefaultTicketRate       = 10               // ws_ticket_rate per minute and student
 )
 
 // Session is the configuration of the game session use cases, client-config and the jobs.
@@ -30,6 +32,8 @@ type Session struct {
 	ClientConfig query.ClientConfigSource
 	// IPHashKey keys the HMAC of game.login_events.ip_hash: EW_GAME_IP_HASH_KEY(_FILE); empty = no IP hash.
 	IPHashKey []byte
+	// Tickets configures createRealtimeTicket (F090 US1).
+	Tickets command.TicketConfig
 	// TimeoutScan is the period of the job session-timeout.
 	TimeoutScan time.Duration
 }
@@ -55,7 +59,10 @@ func Location() *time.Location {
 //     true), EW_SUPPORTED_LOCALES (supported_locales);
 //   - EW_CURFEW_WARNING_MINUTES (curfew_warning_minutes, 10; shared with module identity): warning before the daily
 //     play limit ends a session (OQ-17);
-//   - EW_GAME_IP_HASH_KEY(_FILE) (secret; rotated by redeploying a new key).
+//   - EW_GAME_IP_HASH_KEY(_FILE) (secret; rotated by redeploying a new key);
+//   - EW_REALTIME_PUBLIC_URL (url of the realtime gateway returned with each ticket, wss://…/realtime/v1; empty →
+//     createRealtimeTicket answers 503 UNAVAILABLE), EW_RT_TICKET_TTL (realtime_ticket_ttl, 60s),
+//     EW_WS_TICKET_RATE (ws_ticket_rate, 10 per minute and student) — F090.
 func SessionFrom(c *config.Config) (Session, error) {
 	if err := c.Require("EW_GAME_MIN_CLIENT_VERSION"); err != nil {
 		return Session{}, err
@@ -107,6 +114,14 @@ func SessionFrom(c *config.Config) (Session, error) {
 				return query.Maintenance{Active: m.Active, Message: m.Message, Until: m.Until}
 			}},
 		TimeoutScan: c.Duration("EW_GAME_SESSION_TIMEOUT_SCAN", DefaultTimeoutScan),
+		Tickets: command.TicketConfig{URL: c.String("EW_REALTIME_PUBLIC_URL"), TTL: c.Duration("EW_RT_TICKET_TTL", DefaultTicketTTL),
+			Rate: c.Int("EW_WS_TICKET_RATE", DefaultTicketRate), RateWindow: time.Minute},
+	}
+	if t := out.Tickets; t.TTL <= 0 || t.TTL > 5*time.Minute || t.Rate <= 0 {
+		return Session{}, errors.New("game config: EW_RT_TICKET_TTL must be 1s..5m and EW_WS_TICKET_RATE positive")
+	}
+	if u := out.Tickets.URL; u != "" && !strings.HasPrefix(u, "ws://") && !strings.HasPrefix(u, "wss://") {
+		return Session{}, errors.New("game config: EW_REALTIME_PUBLIC_URL must be a ws:// or wss:// URL")
 	}
 	if v := c.String("EW_GAME_IP_HASH_KEY"); v != "" {
 		if len(v) < 32 {

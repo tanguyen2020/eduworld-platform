@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/realtime/rt-pubsub-envelope.schema.json",
+  "title": "RtPubSubEnvelope v1",
+  "description": "Envelope của mọi message publish lên Valkey Pub/Sub cho gateway realtime (F090 research R1): kênh ew:rt:user:<id>, ew:rt:party:<id>, ew:rt:room:<id>:out, ew:chat:fanout:<id>, ew:rt:broadcast, ew:rt:node:<node_id>:in. Module dựng bằng src/backend/pkg/realtime. kind = message: gateway gán seq rồi giao `message` (ServerEnvelope của AsyncAPI không có seq) tới các kết nối local đã đăng ký kênh, lọc theo target; droppable = true cho snapshot/presence (bỏ trước khi hàng đợi gửi đầy, không vào buffer resume). kind = control: lệnh điều khiển kết nối (đóng 4403 khi thu hồi quyền, 4409 khi bị thay). Không PII, không token (AGENTS R14).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "kind"],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "type": "string", "enum": ["message", "control"] },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Lọc người nhận trên node; vắng = mọi kết nối local đã đăng ký kênh",
+      "properties": {
+        "user_ids": { "type": "array", "maxItems": 500, "uniqueItems": true, "items": { "type": "string", "format": "uuid" }, "description": "Chỉ giao cho các học sinh này (gộp snapshot theo node, F091)" },
+        "game_session_id": { "type": "string", "format": "uuid", "description": "Chỉ áp cho kết nối đang giữ game session này (F090-AC-26)" },
+        "conn_id": { "type": "string", "maxLength": 64, "description": "Chỉ kết nối này (kênh ew:rt:node:<node_id>:in: thay kết nối khác node, F090-AC-28)" },
+        "exclude_conn_id": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "droppable": { "type": "boolean", "default": false },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "payload"],
+      "properties": {
+        "type": { "type": "string", "maxLength": 64, "pattern": "^[a-z_]+\\.[a-z_]+\\.[a-z_]+$" },
+        "ts": { "type": "integer", "minimum": 0, "description": "Epoch ms phía server; vắng thì gateway gán" },
+        "payload": { "type": "object" }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "code", "reason"],
+      "properties": {
+        "action": { "type": "string", "enum": ["close"] },
+        "code": { "type": "integer", "enum": [4403, 4409, 4410] },
+        "reason": {
+          "type": "string",
+          "enum": ["account_locked", "access_revoked", "cleanup", "admin", "password_changed", "transferred", "replaced", "curfew", "daily_limit"],
+          "description": "4403: lý do thu hồi (gateway gửi session.session.ended với reason này trước khi đóng; transferred gửi access_revoked); 4409: replaced; 4410: curfew, daily_limit"
+        }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "message" } }, "required": ["kind"] }, "then": { "properties": { "message": true }, "required": ["message"] } },
+    { "if": { "properties": { "kind": { "const": "control" } }, "required": ["kind"] }, "then": { "properties": { "control": true }, "required": ["control"] } }
+  ],
+  "examples": [
+    { "v": 1, "kind": "message", "target": { "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001" }, "droppable": false, "message": { "type": "session.session.replaced", "ts": 1763190000123, "payload": { "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "replaced_at": 1763190000123, "new_device_platform": "android" } } },
+    { "v": 1, "kind": "control", "control": { "action": "close", "code": 4403, "reason": "account_locked" } }
+  ]
+}

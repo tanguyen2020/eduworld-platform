@@ -1,5 +1,6 @@
 // Command realtime terminates WebSocket /realtime/v1 (ADR-0074 §2). It loads only module realtime,
-// has no database and routes commands to core-api over NATS (handlers added by F090).
+// has no database and routes commands to core-api over NATS (F090): the gateway handler is installed by
+// realtime.Register (Registry.SetPublic) and drains on SIGTERM (system.server.draining, close 1012).
 package main
 
 import (
@@ -32,7 +33,7 @@ func run(ctx context.Context, getenv func(string) string, ready func(admin, http
 		Binary:           "realtime",
 		DefaultAdminAddr: ":9106",
 		DefaultHTTPAddr:  ":8106",
-		Public:           http.NotFoundHandler(), // WebSocket handler: F090
+		Public:           http.NotFoundHandler(), // replaced by the gateway of module realtime (Registry.SetPublic)
 		Modules:          []string{realtime.Name},
 		Register: func(r *module.Registry) error {
 			_, err := realtime.Register(r)

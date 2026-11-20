@@ -48,12 +48,18 @@ type LoginEventsHandler interface {
 	CrossTenant(ctx context.Context, in query.LoginEventsInput) (query.LoginEventsPage, error)
 }
 
+// TicketHandler is createRealtimeTicket (command.RealtimeTickets, F090).
+type TicketHandler interface {
+	Issue(ctx context.Context, sessionID uuid.UUID) (command.TicketResult, error)
+}
+
 // Handlers are the F014 use cases served over HTTP.
 type Handlers struct {
 	Sessions     SessionHandler
 	ClientConfig ClientConfigHandler
 	Manifest     ManifestHandler
 	LoginEvents  LoginEventsHandler
+	Tickets      TicketHandler
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -73,6 +79,8 @@ var Operations = map[string]httpx.Operation{
 		httpx.IdempotencyNone, http.StatusNoContent, httpx.GuardGamePlayer),
 	"heartbeatGameSession": op("heartbeatGameSession", http.MethodPost, "/game/sessions/{game_session_id}:heartbeat",
 		httpx.TenantRequired, httpx.IdempotencyNone, http.StatusNoContent, httpx.GuardGamePlayer),
+	"createRealtimeTicket": op("createRealtimeTicket", http.MethodPost, "/game/sessions/{game_session_id}/realtime-tickets",
+		httpx.TenantRequired, httpx.IdempotencyNone, http.StatusCreated, httpx.GuardGamePlayer),
 	"getContentManifest": op("getContentManifest", http.MethodGet, "/game/content-manifest", httpx.TenantRequired,
 		httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
 	"getClientConfig": {ID: "getClientConfig", Module: "game", Method: http.MethodGet, Pattern: "/game/client-config", Public: true,
@@ -84,18 +92,20 @@ var Operations = map[string]httpx.Operation{
 }
 
 // PlayerOperations are the player routes of F014 (F014-AC-18: staff tokens get 403 GAME_ACCESS_STUDENT_ONLY).
-var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbeatGameSession", "getContentManifest"}
+var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbeatGameSession", "getContentManifest",
+	"createRealtimeTicket"}
 
 // Register mounts every F014 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
-	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil {
-		return errors.New("game: every F014 handler is required")
+	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil {
+		return errors.New("game: every F014/F090 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
 		"endGameSession":               h.endGameSession,
 		"heartbeatGameSession":         h.heartbeatGameSession,
 		"getContentManifest":           h.getContentManifest,
+		"createRealtimeTicket":         h.createRealtimeTicket,
 		"getClientConfig":              h.getClientConfig,
 		"listTenantStudentLoginEvents": h.listTenantStudentLoginEvents,
 		"listLoginEventsCrossTenant":   h.listLoginEventsCrossTenant,
@@ -122,6 +132,14 @@ func fail(w http.ResponseWriter, r *http.Request, err error) {
 	var pe *problem.Error
 	if errors.As(err, &pe) && pe.Code == problem.Maintenance {
 		w.Header().Set("Retry-After", "60")
+	}
+	var ra command.RetryAfter
+	if errors.As(err, &ra) {
+		secs := int((ra.After + time.Second - 1) / time.Second)
+		if secs < 1 {
+			secs = 1
+		}
+		w.Header().Set("Retry-After", strconv.Itoa(secs))
 	}
 	httpx.WriteError(w, r, err)
 }
@@ -361,4 +379,21 @@ func (h Handlers) listLoginEventsCrossTenant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	writePage(w, p)
+}
+
+// createRealtimeTicket answers 201 RealtimeTicket (F090-AC-01); the ticket is never logged (R14).
+func (h Handlers) createRealtimeTicket(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "game_session_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	t, err := h.Tickets.Issue(r.Context(), id)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, http.StatusCreated, map[string]any{"ticket": t.Ticket, "expires_at": t.ExpiresAt.UTC(), "url": t.URL,
+		"protocol_version": t.ProtocolVersion})
 }

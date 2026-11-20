@@ -12,6 +12,7 @@ import (
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
+	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
@@ -26,13 +27,13 @@ func TestValkeyPublisher(t *testing.T) {
 	}
 	t.Cleanup(c.Close)
 	student, session := uuid.New(), uuid.New()
-	got := make(chan realtime.Message, 4)
+	got := make(chan rt.Envelope, 4)
 	subCtx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
 	ready := make(chan struct{})
 	go func() {
 		_ = c.Receive(subCtx, c.B().Subscribe().Channel(realtime.Channel(student)).Build(), func(m valkey.PubSubMessage) {
-			var msg realtime.Message
+			var msg rt.Envelope
 			if json.Unmarshal([]byte(m.Message), &msg) == nil {
 				got <- msg
 			}
@@ -64,7 +65,19 @@ func TestValkeyPublisher(t *testing.T) {
 	}
 	for i, want := range []string{"session.session.replaced", "session.session.ended"} {
 		select {
-		case m := <-got:
+		case e := <-got:
+			var m struct {
+				Type    string
+				Payload map[string]any
+			}
+			if e.Message != nil {
+				m.Type = e.Message.Type
+				_ = json.Unmarshal(e.Message.Payload, &m.Payload)
+			}
+			// F090 research R1: RtPubSubEnvelope targeted at the session (the gateway closes only that connection).
+			if e.V != 1 || e.Kind != rt.KindMessage || e.Target == nil || e.Target.GameSessionID == nil || *e.Target.GameSessionID != session {
+				t.Fatalf("envelope %d: %+v", i, e)
+			}
 			if m.Type != want || m.Payload["game_session_id"] != session.String() {
 				t.Fatalf("message %d: %+v", i, m)
 			}

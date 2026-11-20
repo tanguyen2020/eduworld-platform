@@ -20,6 +20,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver "pgx"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
@@ -36,6 +37,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 
@@ -110,6 +112,31 @@ func (p *pushes) all() []string {
 	return append([]string(nil), p.msgs...)
 }
 
+// memTickets is an in-memory TEST DOUBLE of port.TicketStore (R17) for the tests that are not about tickets; the
+// Valkey adapter is covered by realtime_ticket_test.go.
+type memTickets struct {
+	mu    sync.Mutex
+	n     map[uuid.UUID]int
+	saved map[string]rt.TicketClaims
+}
+
+func (m *memTickets) Allow(_ context.Context, user uuid.UUID, limit int, _ time.Duration) (bool, time.Duration, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.n == nil {
+		m.n = map[uuid.UUID]int{}
+	}
+	m.n[user]++
+	return m.n[user] <= limit, time.Minute, nil
+}
+
+func (m *memTickets) Save(_ context.Context, hash string, c rt.TicketClaims, _ time.Duration) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.saved[hash] = c
+	return nil
+}
+
 // env is the game integration environment of one test: pools, UnitOfWork, ReadSession, outbox writer, audit
 // recorder, the use cases, the real pkg/httpx chain with a fake OIDC issuer, and tenants A, B with schools.
 type env struct {
@@ -126,6 +153,8 @@ type env struct {
 	idp                            *httpxtest.IDP
 	res                            *httpxtest.Resolver
 	srv                            *httptest.Server
+	tickets                        port.TicketStore
+	realtimeURL                    string
 	tenantA, tenantB               uuid.UUID
 	schoolA, schoolA2, schoolB     uuid.UUID
 }
@@ -142,7 +171,9 @@ func open(t *testing.T, dsn string) *sql.DB {
 
 type envOpts struct {
 	maintenance bool
-	curfew      string // platform curfew; "" = none (tests not about the curfew)
+	tickets     port.TicketStore // nil: in-memory TEST DOUBLE (tests not about the ticket store)
+	realtimeURL string           // EW_REALTIME_PUBLIC_URL; "" = ws://localhost:9080/realtime/v1
+	curfew      string           // platform curfew; "" = none (tests not about the curfew)
 }
 
 func setup(ctx context.Context, t *testing.T, o envOpts) *env {
@@ -180,6 +211,13 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
 		Directory: write.Directory{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Realtime: e.pushes,
 		Metrics: observability.SessionMetrics{}, Config: e.cfg, Now: e.clock.Now}
+	e.tickets, e.realtimeURL = o.tickets, o.realtimeURL
+	if e.tickets == nil {
+		e.tickets = &memTickets{saved: map[string]rt.TicketClaims{}}
+	}
+	if e.realtimeURL == "" {
+		e.realtimeURL = "ws://localhost:9080/realtime/v1"
+	}
 	e.server(ctx, t)
 	return e
 }
@@ -213,7 +251,9 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 			}},
 		Manifest:    query.GetContentManifest{Read: e.read, Manifests: read.Manifests{}, MinClientVersion: MinVersion},
 		LoginEvents: query.LoginEvents{Read: e.read, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: codec},
-		IPHasher:    security.NewIPHasher([]byte(strings.Repeat("h", 32)))}
+		IPHasher:    security.NewIPHasher([]byte(strings.Repeat("h", 32))),
+		Tickets: command.RealtimeTickets{Sessions: e.sessions, Store: e.tickets,
+			Config: command.TicketConfig{URL: e.realtimeURL, TTL: time.Minute, Rate: 10, RateWindow: time.Minute}}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

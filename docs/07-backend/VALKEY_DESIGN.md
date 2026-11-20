@@ -42,8 +42,10 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:game:login_lock:<student_id>` | STRING owner | 5 s | `game · game_session` | Ephemeral — tránh hai thiết bị tạo session cùng lúc ở tầng cache (PG vẫn tuần tự hóa bằng `FOR UPDATE`) |
 | `ew:rt:nodes` | ZSET node → load | Không TTL; dọn bởi watcher khi `alive` mất | `realtime` | Ephemeral |
 | `ew:rt:node:<node_id>:conns` | SET conn_id | 1 h (gia hạn) | `realtime` | Ephemeral |
-| `ew:rt:conn:<user_id>` | HASH {node, conn_id, since} | 90 s (gia hạn theo heartbeat) | `realtime` | Ephemeral |
-| `ew:rt:resume:<token>` | LIST message JSON (≤500) | 120 s | `realtime` | Ephemeral |
+| `ew:rt:conn:<user_id>` | HASH {node, conn_id, game_session_id, since} — một kết nối hiệu lực mỗi học sinh, ghi bằng Lua trả về chủ cũ (F090-AC-08) | 90 s (gia hạn theo heartbeat) | `realtime` | Ephemeral |
+| `ew:rt:resume:<sha256(token)>` | LIST `<seq>|<server envelope>` của message không droppable (≤500) | 120 s | `realtime` | Ephemeral |
+| `ew:rt:resume:<sha256(token)>:meta` | HASH {user_id, game_session_id, last_seq, trimmed_seq, subs (JSON ≤ 64 topic)} — resume ở node bất kỳ (F090 research R3) | 120 s | `realtime` | Ephemeral |
+| `ew:rt:cmd:<user_id>:<cmd_id>` | STRING kết quả `system.command.acked`/`failed` đã trả (hoặc `pending`) — chống chuyển tiếp lệnh trùng `id` (F090-AC-16) | 120 s | `realtime` | Ephemeral |
 | `ew:rt:room:<room_id>` | HASH {owner_node, type, tenant_id (hoặc tenant_ids cho room liên tenant), school_id, capacity, members, state_version} | 2 h (gia hạn) | `competition · room` | Ephemeral |
 | `ew:rt:room:<room_id>:lease` | STRING owner_node | 10 s | `competition · room` | Ephemeral |
 | `ew:rt:room:<room_id>:ckpt` | STRING (JSON) | 1 h | `competition · battle/coop` | Ephemeral (kết quả cuối ghi PG) |

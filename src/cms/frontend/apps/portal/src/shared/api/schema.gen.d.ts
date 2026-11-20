@@ -5210,7 +5210,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Cấp ticket WebSocket dùng 1 lần, TTL 60 giây (ADR-0008) */
+        /**
+         * Cấp ticket WebSocket dùng 1 lần, TTL 60 giây (ADR-0008)
+         * @description Chỉ học sinh (token game, ADR-0031) cho game session active **của chính mình** trong tenant của phiên (F090 US1).
+         *     Ticket ngẫu nhiên ≥ 256 bit, server chỉ lưu băm SHA-256 (Valkey `ew:game:rt:ticket:<sha256>`, TTL `realtime_ticket_ttl`)
+         *     kèm `user_id`, `tenant_id`, `school_id`, `game_session_id`, `device_id`; gateway `/realtime/v1` tiêu thụ bằng `GETDEL`.
+         *     Session không thuộc người gọi hoặc thuộc tenant khác → `404`; session đã kết thúc hoặc bị thay → `409`; giờ giới nghiêm
+         *     hiệu lực → `403 CURFEW_ACTIVE` kèm `reopen_at` (ADR-0078); vượt `ws_ticket_rate` → `429`; Valkey không sẵn sàng →
+         *     `503 UNAVAILABLE` (REST khác vẫn dùng được). Không cần `Idempotency-Key`: mỗi lần gọi cấp một vé mới.
+         */
         post: operations["createRealtimeTicket"];
         delete?: never;
         options?: never;
@@ -13227,13 +13235,16 @@ export interface components {
         };
         RealtimeTicket: {
             expires_at: components["schemas"]["Timestamp"];
-            /** @default 1 */
+            /**
+             * @description Phiên bản giao thức WebSocket (subprotocol eduworld.v1)
+             * @default 1
+             */
             protocol_version: number;
-            /** @description Opaque, dùng 1 lần */
+            /** @description Opaque, dùng 1 lần (≥ 256 bit ngẫu nhiên, base64url); server chỉ lưu băm SHA-256 */
             ticket: string;
             /**
              * Format: uri
-             * @description wss://.../realtime/v1
+             * @description wss://.../realtime/v1 — từ cấu hình môi trường (EW_REALTIME_PUBLIC_URL), không hardcode
              */
             url: string;
         };
@@ -28572,8 +28583,37 @@ export interface operations {
                     "application/json": components["schemas"]["RealtimeTicket"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            /** @description GAME_ACCESS_STUDENT_ONLY (token không phải token game của học sinh, có audit), TENANT_MISMATCH (`X-Tenant-Id` khác tenant của phiên), CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             404: components["responses"]["NotFound"];
+            /** @description CONFLICT — game session đã kết thúc hoặc đã bị thay bởi thiết bị khác */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             429: components["responses"]["RateLimited"];
+            /** @description UNAVAILABLE — kho ticket realtime (Valkey) tạm thời không sẵn sàng; thử lại theo Retry-After */
+            503: {
+                headers: {
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     listShopItems: {

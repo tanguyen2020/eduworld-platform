@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	entgo.io/ent v0.14.6
+	github.com/coder/websocket v1.8.14
 	github.com/failsafe-go/failsafe-go v0.9.8
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/go-chi/chi/v5 v5.5.0
