@@ -54,3 +54,25 @@ make specs-lint
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo F031-AC-*, kết quả golden test (SC-001), độ trễ mastery p95 (SC-002), trace_id bước 1 và 16.
+
+## 5. Bằng chứng US1–US3 (2026-11-20, local, testcontainers PostgreSQL + NATS JetStream thật)
+
+| Kịch bản | Test tự động | Kết quả |
+|---|---|---|
+| 1 (envelope, schema) | `persistence/write` TestLearningEventEnvelopeValidation; integration TestMasteryOnGraded (`validateStoredEvents`: 6 event của attempt dựng lại envelope hợp lệ `learning-event.schema.json`, `event_id` UUIDv7) | pass |
+| 2 (giao lại event) | TestMasteryOnGraded: cùng `activity.graded` giao 2 lần → `processed_events` 1 dòng mỗi consumer, history/`progress_daily` không đổi | pass |
+| 3 (append-only) | TestLearningRecordAppendOnlyAndIsolated (role app/platform: UPDATE/DELETE `learning_events`, partition `learning_events_2026_11`, `mastery_history`, `attempt_answers` → permission denied) | pass |
+| 4 (partition) | TestLearningPartitionsJob (clock 2027-11-15: 8 partition mới, gauge 3 tháng tới, chạy lại 0, partition mới không có quyền trực tiếp) | pass |
+| 5 (payload ngoài schema) | TestLearningEventEnvelopeValidation (`nickname`, `email`, `world_position`, `chat_text` → từ chối, lỗi không chứa giá trị) | pass |
+| 6 (Valkey dừng) | — | chưa có test chaos (OQ F031-1) |
+| 7 (thiếu scope) | TestLearningRecordAppendOnlyAndIsolated (0 dòng ở 4 bảng; repository trong scope tenant B không thấy dữ liệu tenant A) | pass |
+| 8, 9, 10, 11, 12 | domain `mastery` TestGoldenTable, TestGoldenAdditional, TestMasteredNeedsEvidenceOnDays, TestEffectiveDecay, TestWeights, TestReplay; TestMasteryOnGraded (M 0,720 → 0,837, `we-1.0`, mastered ngày 2 đúng một lần, tính lại không phát lại, decay 104 ngày → proficient, giá trị lưu giữ nguyên) | pass |
+| 13 (đồng thời) | TestMasteryConcurrentEvidence (2 attempt áp song song = tuần tự: M 0,837, n 6, 2 ngày, 1 `mastered`) | pass |
+| 14 (`getStudentProgress`) | TestStudentProgressAuthz (200 + 3 audit `learning.profile_viewed`; trường khác/tenant B 404; môn ngoài scope, grant theo môn thiếu `subject_id`, không quyền, token học sinh 403) | pass |
+| 15 (`progress_daily`) | TestMasteryOnGraded (1 activity, 3 câu, 3 đúng; không cộng đôi) | pass |
+| Không hồi quy F030 | TestAttemptAdHoc, TestAttemptRespondSubmitReview, TestAttemptPauseResumeExpire (payload `score` mới được kiểm schema) | pass |
+| 16–27 (US4–US6) | — | chưa làm |
+
+SC-001: 100% dòng golden §3.3 khớp (sai số ≤ 0,0005). SC-002: metric `eduworld_mastery_update_lag_seconds` có, chưa đo p95 trên stack thật.
+
+Toàn bộ test tích hợp module learning (trước khi merge): `TESTCONTAINERS_RYUK_DISABLED=true GOMAXPROCS=2 go test -p 1 -tags integration -timeout 75m ./modules/learning/tests/integration/` → 78/78 pass (1169 s). Gate tĩnh: gofmt, `go vet -tags integration`, golangci-lint (default + arch) 0 issues, tenancyguard, ewlint, entlint, `archgen --check` 0 vi phạm, `routematrix check` 0 problems, facadegen/allowedcallers check, check-maxlength/enums/features/cross-features, validate-schemas, check-portal-catalog, check-problem-codes, `split-public --check`, portal `gen:check`; unit + contract learning và `cmd/internal/wiring` 36 gói ok.

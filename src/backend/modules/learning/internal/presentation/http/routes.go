@@ -94,6 +94,8 @@ type Handlers struct {
 	ActivityTypes    ActivityTypeQueries // F030 US4
 	Attempts         AttemptCommands     // F030 US1–US3, US6
 	AttemptQueries   AttemptQueries      // F030 US1–US3
+	Progress         ProgressQueries     // F031 US3
+	ProfileAudit     ProfileAudit        // F031 US3 (learning.profile_viewed)
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -184,6 +186,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	activitiesWired := h.CmsActivities != nil && h.ActivityTypes != nil
 	for id, fn := range cmsActivityRoutes {
 		routes[id] = wiredOr(activitiesWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	progressWired := h.Progress != nil && h.ProfileAudit != nil
+	for id, fn := range progressRoutes {
+		routes[id] = wiredOr(progressWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

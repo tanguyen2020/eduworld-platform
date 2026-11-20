@@ -252,7 +252,7 @@ Kết quả trên dashboard là **tham khảo** cho nhà trường, không thay 
 
 | Method | Path | Mô tả |
 |---|---|---|
-| GET | `/api/v1/learning/progress/me?subject_id=` (`getMyProgress`) | Tiến độ của tôi: tổng quan (`lessons_completed`, `items_answered`, `accuracy`, `active_minutes`) và mastery theo LO (level + biểu tượng, giá trị số chỉ cho lớp 6–9 [Proposed]) trong cùng một response; không có endpoint mastery riêng |
+| GET | `/api/v1/learning/progress/me?subject_id=` (`getMyProgress`) | Tiến độ của tôi: tổng quan (`lessons_completed`, `items_answered`, `accuracy`, `active_minutes`) và mastery theo LO (level + biểu tượng, giá trị số chỉ cho lớp 6–9 [Proposed]) trong cùng một response; không có endpoint mastery riêng (thay `/learning/mastery/me` cũ); level tính sau decay lúc đọc, không trả giá trị thô [Proposed thay giá trị số lớp 6–9 cho tới khi có màn hình cần] (F031) |
 | GET | `/api/v1/learning/recommendations/me` | Gợi ý |
 | GET | `/api/v1/lms/dashboards/school` | School Learning Dashboard: tổng quan trường → lớp (`school_admin`, `academic_manager`) |
 | GET | `/api/v1/lms/classes/{class_id}/analytics/objectives?subject=` | Bảng LO × HS của lớp (`school_admin`; `academic_manager` theo môn) |

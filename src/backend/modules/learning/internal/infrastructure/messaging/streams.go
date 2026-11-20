@@ -60,3 +60,22 @@ var MediaWorkerStream = natsx.EventStream("learning")
 func MediaWorkerSubjects() []string {
 	return []string{natsx.EventSubject("learning", "media.uploaded")}
 }
+
+// MasteryName is the durable consumer that applies the evidence of graded attempts to the mastery of
+// (student, objective) (F031 US2); attempt.re_evaluated joins it with F031 US4.
+const MasteryName = "learning.mastery_on_graded"
+
+// ProgressDailyName is the durable consumer of the progress_daily counters (F031 US3).
+const ProgressDailyName = "learning.progress_daily"
+
+// AttemptStream is the stream of the attempt events of module learning (EVT_LEARNING).
+var AttemptStream = natsx.EventStream("learning")
+
+// MasterySubjects are the filter subjects of learning.mastery_on_graded.
+func MasterySubjects() []string { return []string{natsx.EventSubject("learning", "activity.graded")} }
+
+// ProgressDailySubjects are the filter subjects of learning.progress_daily: the counters of an attempt are taken from its
+// activity.graded (activity.submitted of the same attempt carries nothing more) [Proposed].
+func ProgressDailySubjects() []string {
+	return []string{natsx.EventSubject("learning", "activity.graded")}
+}

@@ -5666,7 +5666,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tiến độ và mastery của mình */
+        /**
+         * Tiến độ và mastery của mình
+         * @description Học sinh (game_player) xem dữ liệu của chính mình trong tenant phiên; level từng LO tính sau decay tại thời điểm đọc (LEARNING_ANALYTICS §3.2), `accuracy` theo lần trả lời có tính điểm đầu tiên, vắng khi chưa trả lời câu nào (F031).
+         */
         get: operations["getMyProgress"];
         put?: never;
         post?: never;
@@ -7495,7 +7498,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tiến độ & mastery của một học sinh (học sinh xem của mình; school_admin, academic_manager trong scope) */
+        /**
+         * Tiến độ & mastery của một học sinh cho nhân sự nhà trường (school_admin trường mình, academic_manager trong scope)
+         * @description Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.class.read` [Proposed] trong scope trường của học sinh
+         *     (`school_admin`) hoặc toàn tenant (`academic_manager`); grant chỉ ở trường khác hoặc học sinh không thuộc tenant phiên → `404`
+         *     (không lộ học sinh, vẫn audit `authz.denied`); không có quyền, hoặc grant giới hạn theo môn mà `subject_id` vắng/ngoài scope →
+         *     `403 PERMISSION_DENIED`. Mỗi lần đọc thành công ghi audit `learning.profile_viewed` (LEARNING_ANALYTICS §9). Level tính sau decay
+         *     tại thời điểm đọc; không trả giá trị mastery thô (F031).
+         */
         get: operations["getStudentProgress"];
         put?: never;
         post?: never;
@@ -28358,6 +28368,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getMyRecommendations: {
@@ -33159,6 +33170,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };

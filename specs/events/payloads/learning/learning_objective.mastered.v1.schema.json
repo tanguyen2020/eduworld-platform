@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/learning_objective.mastered.v1.schema.json",
+  "title": "Payload learning_objective.mastered v1 (module learning, owner F031)",
+  "description": "Level của (student, learning objective) lần đầu thành mastered (M_eff ≥ 0,80, n ≥ n_min, ≥ d_min ngày khác nhau; LEARNING_ANALYTICS §3.2, §3.4). Phát đúng một lần mỗi học sinh × LO: decay, recompute hay re-evaluate làm level giảm rồi đạt lại không phát lại. Khớp learning-event.schema.json#/$defs/payload_objective_mastered. Envelope subject = {type: learning_objective, id: objective_id}; idempotency_key = mastered:<student_id>:<objective_id>. Consumer: GAM (XP nguồn mastery.objective_mastered, F074), NTF, LMS.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "objective_id", "value", "evidence_count", "distinct_days", "model_version", "new_level", "mastered_at"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "objective_id": { "type": "string", "format": "uuid" },
+    "previous_level": { "type": "string", "enum": ["not_started", "beginning", "developing", "proficient", "mastered"] },
+    "new_level": { "const": "mastered" },
+    "value": { "type": "number", "minimum": 0.8, "maximum": 1 },
+    "evidence_count": { "type": "integer", "minimum": 1 },
+    "distinct_days": { "type": "integer", "minimum": 1 },
+    "model_version": { "type": "string", "maxLength": 64 },
+    "mastered_at": { "type": "string", "format": "date-time", "description": "occurred_at của evidence làm đạt mức (giờ server)" }
+  }
+}

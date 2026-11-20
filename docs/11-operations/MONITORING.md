@@ -88,6 +88,8 @@ Nguyên tắc:
 | | `eduworld_auth_common_tenant_total` | Counter | `result` (`created`/`failed`) | `createCommonTenantStudents` — tài khoản tenant chung do System Admin tạo (F010, ACCOUNT_PROVISIONING §3.4) |
 | | `eduworld_events_consumed_total` | Counter | `module`, `consumer`, `event_type`, `result` (`ok`/`duplicate`/`retry`/`dlq`) | `src/backend/pkg/outbox.Consumer` (F003) |
 | | `eduworld_outbox_unpublished_count`, `eduworld_outbox_lag_seconds` | Gauge | `module` | `src/backend/pkg/outbox.Relay` (F003) |
+| | `eduworld_learning_events_partition_months_ahead` | Gauge | `table` | job `learning-events-partitions` (F031) |
+| | `eduworld_mastery_updates_total` / `eduworld_mastery_update_lag_seconds` | Counter / Histogram | `result` / — | consumer `learning.mastery_on_graded` (F031, SC-002) |
 | | `eduworld_infra_partition_days_ahead` | Gauge | `module`, `table` | job `infra-partition-maintenance` (F003, ADR-0089 §5) |
 | | `eduworld_infra_partition_dropped_total`, `eduworld_infra_partition_refused_total` | Counter | `module`, `table` | job `infra-partition-maintenance` — refused = partition hết hạn còn outbox chưa publish / dead letter chưa xử lý |
 | | `eduworld_principal_cache_hits_total` | Counter | `layer` (`l1`/`valkey`), `result` (`hit`/`miss`/`error`) | `src/backend/pkg/authz.CachedResolver` (F002) |
@@ -227,6 +229,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `AuditPartitionMissing` | `increase(eduworld_partition_missing_total[1d])` > 0 (tháng kế tiếp chưa có partition, kiểm trước ≥ 7 ngày) | Critical | Chạy job `partition-maintainer`; audit không có partition DEFAULT nên ghi sẽ lỗi |
 | `AuditTenantMismatch` | `increase(eduworld_audit_records_total{result="tenant_mismatch"}[1h])` > 0 | Warning | Event audit nêu trường của tenant khác: xem DLQ_IDENTITY và module nguồn |
 | `InfraPartitionsMissing` | `eduworld_infra_partition_days_ahead < 7` | P2 / Warning | Job `infra-partition-maintenance` không chạy hoặc lỗi; ghi vẫn chạy nhờ partition `DEFAULT`, sửa trước khi dòng dồn vào `*_default` (ADR-0089 §5) |
+| `LearningPartitionsMissing` | `eduworld_learning_events_partition_months_ahead < 2` (bảng `learning_events`, `attempt_answers`, `mastery_history`, `progress_daily`) | Critical | Job `learning-events-partitions` (worker `jobs`, mỗi ngày) không chạy hoặc lỗi; các bảng này không có partition `DEFAULT` nên ghi sẽ lỗi khi hết tháng (F031-AC-04) |
 | `InfraPartitionRefused` | `increase(eduworld_infra_partition_refused_total[1d]) > 0` | Warning | Partition hết hạn còn outbox chưa publish hoặc dead letter chưa xử lý: kiểm tra relay/DLQ |
 | `MatchmakingStalled` | `mm_queue_size` > 0 và không có proposal mới trong 3 phút (giờ học) | Warning | Kiểm tra lock matchmaker |
 | `MatchmakingWaitHigh` | p95 `mm_wait_seconds` > 90s trong 15 phút | Warning | Xem mở rộng rating window |

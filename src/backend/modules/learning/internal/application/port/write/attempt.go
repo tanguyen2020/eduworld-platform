@@ -89,6 +89,7 @@ type LearningEvent struct {
 	ObjectiveIDs     []uuid.UUID
 	Context          string
 	ActorType        string
+	ActorID          *uuid.UUID // staff user of a staff event (nil: the student, or the zero UUID for system events)
 	Payload          any
 	IdempotencyKey   string
 }

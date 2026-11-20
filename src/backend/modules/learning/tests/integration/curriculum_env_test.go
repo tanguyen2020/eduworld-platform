@@ -212,6 +212,9 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
 		Clock: clk.Now}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
+	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
+	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Clock: clk.Now}
+	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {

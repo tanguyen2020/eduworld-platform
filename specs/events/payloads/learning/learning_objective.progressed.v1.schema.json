@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/learning_objective.progressed.v1.schema.json",
+  "title": "Payload learning_objective.progressed v1 (module learning, owner F031)",
+  "description": "Giá trị mastery của một (student, learning objective) thay đổi sau một evidence, một lần chấm lại (attempt.re_evaluated) hoặc tính lại (LEARNING_ANALYTICS §3.4, ADR-0017). Khớp learning-event.schema.json#/$defs/payload_objective_progressed. Envelope subject = {type: learning_objective, id: objective_id}. Chỉ ID, giá trị, level — không PII (R14). Consumer: GAM (achievement), RT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "objective_id", "from", "to", "level", "model_version", "source_event_id"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid" },
+    "objective_id": { "type": "string", "format": "uuid" },
+    "from": { "type": "number", "minimum": 0, "maximum": 1, "description": "Giá trị lưu trước khi áp (chưa decay)" },
+    "to": { "type": "number", "minimum": 0, "maximum": 1, "description": "Giá trị lưu sau khi áp (chưa decay)" },
+    "level": { "type": "string", "enum": ["not_started", "beginning", "developing", "proficient", "mastered"] },
+    "previous_level": { "type": "string", "enum": ["not_started", "beginning", "developing", "proficient", "mastered"] },
+    "evidence_count": { "type": "integer", "minimum": 0 },
+    "model_version": { "type": "string", "maxLength": 64 },
+    "source_event_id": { "type": "string", "format": "uuid", "description": "Learning event gây ra thay đổi (question.answered hoặc attempt.re_evaluated)" }
+  }
+}

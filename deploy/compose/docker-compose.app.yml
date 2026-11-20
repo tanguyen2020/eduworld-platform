@@ -20,6 +20,7 @@ x-db-env: &db-env
   EW_DB_CHAT_PLATFORM_DSN: postgres://chat_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
   EW_DB_CHAT_RELAY_DSN: postgres://chat_relay:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
   EW_DB_IDENTITY_PARTITION_ADMIN_DSN: postgres://identity_partition_admin:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_identity?sslmode=disable
+  EW_DB_LEARNING_PARTITION_ADMIN_DSN: postgres://learning_partition_admin:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
 
 # Module configuration of core-api and worker (LOCAL_DEVELOPMENT §4; OQ F010-2). Local values only: secrets use the
 # same change-me-local defaults as deploy/keycloak (KC_*_SECRET) and can be overridden from the shell.

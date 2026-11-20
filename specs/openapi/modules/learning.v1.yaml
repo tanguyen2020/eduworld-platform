@@ -50,7 +50,13 @@ paths:
         - students
       operationId: getStudentProgress
       x-portal-action: action.school_lms.classes.view
-      summary: Tiến độ & mastery của một học sinh (học sinh xem của mình; school_admin, academic_manager trong scope)
+      summary: Tiến độ & mastery của một học sinh cho nhân sự nhà trường (school_admin trường mình, academic_manager trong scope)
+      description: |
+        Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.class.read` [Proposed] trong scope trường của học sinh
+        (`school_admin`) hoặc toàn tenant (`academic_manager`); grant chỉ ở trường khác hoặc học sinh không thuộc tenant phiên → `404`
+        (không lộ học sinh, vẫn audit `authz.denied`); không có quyền, hoặc grant giới hạn theo môn mà `subject_id` vắng/ngoài scope →
+        `403 PERMISSION_DENIED`. Mỗi lần đọc thành công ghi audit `learning.profile_viewed` (LEARNING_ANALYTICS §9). Level tính sau decay
+        tại thời điểm đọc; không trả giá trị mastery thô (F031).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/StudentId'
@@ -64,6 +70,8 @@ paths:
                 $ref: '#/components/schemas/LearningProgress'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /learning/curricula:
@@ -234,6 +242,7 @@ paths:
         - learning
       operationId: getMyProgress
       summary: Tiến độ và mastery của mình
+      description: Học sinh (game_player) xem dữ liệu của chính mình trong tenant phiên; level từng LO tính sau decay tại thời điểm đọc (LEARNING_ANALYTICS §3.2), `accuracy` theo lần trả lời có tính điểm đầu tiên, vắng khi chưa trả lời câu nào (F031).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -250,6 +259,8 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /learning/lessons/{lesson_id}:
     get:
       x-service: learning
@@ -14090,6 +14101,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     NotFound:
       description: Không tồn tại hoặc ngoài tenant scope (NOT_FOUND)
       content:
@@ -14108,12 +14125,6 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ValidationProblem'
-    Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
     PreconditionRequired:
       description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
       content:

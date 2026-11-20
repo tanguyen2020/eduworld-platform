@@ -175,3 +175,18 @@ func (w AttemptLifecycle) Count(ctx context.Context) (int, error) {
 	rep, err := w.RunOnce(ctx)
 	return rep.Paused + rep.Abandoned + rep.Expired, err
 }
+
+// PartitionRunner keeps the monthly partitions of the learning tables (command.LearningPartitions, F031 T016).
+type PartitionRunner interface {
+	RunOnce(ctx context.Context) (int, error)
+}
+
+// LearningEventsPartitions is the daily job learning-events-partitions (F031-AC-04).
+type LearningEventsPartitions struct {
+	Runner PartitionRunner
+}
+
+// RunOnce creates the missing partitions and returns how many were created.
+func (w LearningEventsPartitions) RunOnce(ctx context.Context) (int, error) {
+	return w.Runner.RunOnce(ctx)
+}

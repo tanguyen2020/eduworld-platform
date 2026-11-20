@@ -403,13 +403,13 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 	at := *a.GradedAt
 	correct := r.CorrectCount
 	submitted := map[string]any{"attempt_id": a.ID, "activity_id": nullableID(a.ActivityID), "activity_version_id": a.SourceVersionID,
-		"activity_type": a.ActivityType, "status": string(attempt.StatusGraded), "score": *a.Score, "correct_count": correct,
+		"activity_type": a.ActivityType, "status": string(attempt.StatusGraded), "score": learningScore(*a.Score, *a.MaxScore), "correct_count": correct,
 		"item_count": len(a.Items), "hints_used": 0, "duration_ms": *a.DurationMS, "submit_reason": *a.SubmitReason}
 	if err := h.learningEvent(ctx, a, EventActivitySubmitted, "sub:"+a.ID.String(), *a.SubmittedAt, a.ObjectiveIDs, "student",
 		submittedLearningPayload(submitted)); err != nil {
 		return err
 	}
-	gradedPayload := map[string]any{"attempt_id": a.ID, "evaluation_id": evaluationID, "activity_type": a.ActivityType, "score": *a.Score,
+	gradedPayload := map[string]any{"attempt_id": a.ID, "evaluation_id": evaluationID, "activity_type": a.ActivityType, "score": learningScore(*a.Score, *a.MaxScore),
 		"correct_count": correct, "item_count": len(a.Items), "result_release": "immediate"}
 	if r.Passed != nil {
 		gradedPayload["passed"] = *r.Passed
@@ -477,4 +477,13 @@ func (h Attempts) view(ctx context.Context, a attempt.Attempt, rendered []questi
 		render = &r
 	}
 	return attemptview.Attempt(a, attemptview.Items(a.Items, rendered), saved, render, ev, h.now()), nil
+}
+
+// learningScore is $defs/score of learning-event.schema.json ({raw, max, scaled}); the mastery outcome is raw / max.
+func learningScore(raw, maxScore float64) map[string]any {
+	s := map[string]any{"raw": raw, "max": maxScore}
+	if maxScore > 0 {
+		s["scaled"] = min(1, max(0, raw/maxScore))
+	}
+	return s
 }

@@ -264,7 +264,7 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		}
 		if err := h.learningEvent(ctx, a, EventQuestionAnswered, "qa:"+a.ID.String()+":"+itoa(in.Position)+":"+itoa(ans.AttemptNo), now,
 			it.ObjectiveIDs, "student", map[string]any{"attempt_id": a.ID, "position": in.Position, "question_version_id": it.QuestionVersionID,
-				"question_type": it.QuestionType, "is_correct": g.IsCorrect, "is_scored": ans.IsScored, "score": score, "response_ms": ans.ResponseMS,
+				"question_type": it.QuestionType, "is_correct": g.IsCorrect, "is_scored": ans.IsScored, "score": learningScore(score, it.MaxScore), "response_ms": ans.ResponseMS,
 				"attempt_no": ans.AttemptNo, "hints_used": 0, "rapid_guess": false}); err != nil {
 			return err
 		}

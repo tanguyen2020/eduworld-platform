@@ -24,6 +24,7 @@ import (
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/mediaproc"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/messaging"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/write"
@@ -55,6 +56,8 @@ const (
 	ScheduledPublishInterval = time.Minute
 	// AttemptLifecycleInterval: F030 T003/T035 pauses idle attempts, abandons and expires due attempts every minute.
 	AttemptLifecycleInterval = time.Minute
+	// LearningPartitionsInterval: F031 T016 keeps the monthly partitions of the learning tables ahead once a day.
+	LearningPartitionsInterval = 24 * time.Hour
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -130,10 +133,26 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("learning.release_pointer_cache", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ReleasePointerOptions(consumer.ReleasePointerCache{Cache: cache.SnapshotCache{C: w.valkey}}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.MasteryName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MasteryOptions(consumer.MasteryOnGraded{Apply: w.mastery}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.ProgressDailyName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ProgressDailyOptions(consumer.ProgressDaily{Record: w.progress}, core.UoW, core.App, js)
+	})
 	r.Job(Name, "import-jobs", ImportJobInterval, job.ImportWorker{Runner: w.curriculum}.RunOnce)
 	r.Job(Name, "translation-jobs", TranslationJobInterval, job.TranslationWorker{Runner: w.translations}.RunOnce)
 	r.Job(Name, "content-scheduled-publish", ScheduledPublishInterval, job.ScheduleWorker{Runner: w.releases}.RunOnce)
 	r.Job(Name, "attempt-lifecycle", AttemptLifecycleInterval, job.AttemptLifecycle{Runner: w.attempts}.Count)
+	// The partition job runs as learning_partition_admin (EXECUTE on the partition functions only, F031 migration); the
+	// pool is opened where the job runs.
+	partitionDB := core.Platform
+	if r.RunsJobs() {
+		if partitionDB, err = r.SQL(Name, "partition_admin"); err != nil {
+			return nil, fmt.Errorf("learning: %w", err)
+		}
+	}
+	parts := command.LearningPartitions{Maint: write.PartitionMaint{DB: partitionDB}, Metrics: observability.MasteryCounter{}}
+	r.Job(Name, "learning-events-partitions", LearningPartitionsInterval, job.LearningEventsPartitions{Runner: parts}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -148,6 +167,8 @@ type wiring struct {
 	releases     command.Releases
 	attempts     command.Attempts
 	activities   *activity.Registry
+	mastery      command.Mastery
+	progress     command.Progress
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -190,6 +211,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterWorkflow(reg)
 	observability.RegisterRelease(reg)
 	observability.RegisterAttempts(reg)
+	observability.RegisterMastery(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -260,7 +282,13 @@ func build(r *module.Registry) (*wiring, error) {
 		Translations: tr, TranslationJobs: query.TranslationJobs{Session: core.ReadSession, Model: read.TranslationJobModel{}, Files: files},
 		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors},
 		CmsActivities: query.CmsActivities{Docs: docQueries}, ActivityTypes: query.ActivityTypes{Registry: activities},
-		Attempts: att, AttemptQueries: attq}
+		Attempts: att, AttemptQueries: attq,
+		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}},
+		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
+	learningRecord := write.MasteryRepo{}
+	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
+		Metrics: observability.MasteryCounter{}}
+	prg := command.Progress{Store: learningRecord, Evidence: learningRecord}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}
@@ -274,5 +302,5 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
-		attempts: att, activities: activities}, nil
+		attempts: att, activities: activities, mastery: mst, progress: prg}, nil
 }
