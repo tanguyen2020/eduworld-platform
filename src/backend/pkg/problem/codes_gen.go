@@ -22,6 +22,7 @@ const (
 	AttemptExpired                   Code = "ATTEMPT_EXPIRED"
 	AttemptNotFound                  Code = "ATTEMPT_NOT_FOUND"
 	AttemptNotInProgress             Code = "ATTEMPT_NOT_IN_PROGRESS"
+	AudioPlayLimitReached            Code = "AUDIO_PLAY_LIMIT_REACHED"
 	AudioRequired                    Code = "AUDIO_REQUIRED"
 	BadRequest                       Code = "BAD_REQUEST"
 	BossEncounterFull                Code = "BOSS_ENCOUNTER_FULL"
@@ -150,6 +151,7 @@ const (
 	SetupTicketInvalid               Code = "SETUP_TICKET_INVALID"
 	ShopItemUnavailable              Code = "SHOP_ITEM_UNAVAILABLE"
 	SimulationLogInvalid             Code = "SIMULATION_LOG_INVALID"
+	SimulationRunLimitReached        Code = "SIMULATION_RUN_LIMIT_REACHED"
 	SisConnectionNotActive           Code = "SIS_CONNECTION_NOT_ACTIVE"
 	SisContractVersionUnsupported    Code = "SIS_CONTRACT_VERSION_UNSUPPORTED"
 	SisSchoolAlreadyConnected        Code = "SIS_SCHOOL_ALREADY_CONNECTED"
@@ -193,6 +195,7 @@ var statusByCode = map[Code]int{
 	AttemptExpired:                   410,
 	AttemptNotFound:                  404,
 	AttemptNotInProgress:             409,
+	AudioPlayLimitReached:            422,
 	AudioRequired:                    422,
 	BadRequest:                       400,
 	BossEncounterFull:                409,
@@ -321,6 +324,7 @@ var statusByCode = map[Code]int{
 	SetupTicketInvalid:               401,
 	ShopItemUnavailable:              409,
 	SimulationLogInvalid:             422,
+	SimulationRunLimitReached:        422,
 	SisConnectionNotActive:           409,
 	SisContractVersionUnsupported:    422,
 	SisSchoolAlreadyConnected:        409,
@@ -364,6 +368,7 @@ var allCodes = []Code{
 	AttemptExpired,
 	AttemptNotFound,
 	AttemptNotInProgress,
+	AudioPlayLimitReached,
 	AudioRequired,
 	BadRequest,
 	BossEncounterFull,
@@ -492,6 +497,7 @@ var allCodes = []Code{
 	SetupTicketInvalid,
 	ShopItemUnavailable,
 	SimulationLogInvalid,
+	SimulationRunLimitReached,
 	SisConnectionNotActive,
 	SisContractVersionUnsupported,
 	SisSchoolAlreadyConnected,

@@ -130,14 +130,17 @@ type loaded struct {
 	progress *videolesson.Progress
 }
 
-// timeline loads the assets and progress of a media attempt (F065).
+// timeline loads the assets and progress of a media attempt (video_lesson F065, audio_lesson F066).
 func (q Attempts) timeline(ctx context.Context, out *loaded) error {
-	if out.src == nil || out.src.Body.ActivityType != string(activity.VideoLesson) {
+	if out.src == nil {
 		return nil
 	}
-	vc, err := videolesson.Parse(out.src.Config.Raw)
+	vc, ok, err := attemptview.TimelineOf(out.src.Body.ActivityType, out.src.Config.Raw)
+	if !ok {
+		return nil
+	}
 	if err != nil {
-		return problem.New(problem.ActivityConfigInvalid, "the published video config cannot be read")
+		return problem.New(problem.ActivityConfigInvalid, "the published media config cannot be read")
 	}
 	out.video, out.assets = &vc, map[uuid.UUID]media.Asset{}
 	if q.Media != nil {

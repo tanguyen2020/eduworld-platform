@@ -17,8 +17,8 @@ func TestRegistryCheck(t *testing.T) {
 	if err := RegistryCheck(reg, published("quiz", "interactive_exercise"))(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	err := RegistryCheck(reg, published("quiz", "audio_lesson"))(context.Background())
-	if !errors.Is(err, ErrPluginMissing) || err.Error() != "activity registry: published content has no plugin: audio_lesson" {
+	err := RegistryCheck(reg, published("quiz", "minigame"))(context.Background())
+	if !errors.Is(err, ErrPluginMissing) || err.Error() != "activity registry: published content has no plugin: minigame" {
 		t.Fatalf("missing plugin: %v", err)
 	}
 	failing := func(context.Context) ([]string, error) { return nil, errors.New("db down") }

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/audio-lesson.schema.json",
+  "title": "AudioLessonActivityVersion",
+  "description": "activity_type = audio_lesson. Xem docs/02-learning/AUDIO_LANGUAGE_LEARNING.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "audio_lesson" },
+    "content": {
+      "type": "object",
+      "required": ["audio_asset_id"],
+      "properties": {
+        "audio_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "transcript_asset_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "segments": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["segment_id", "start_ms", "end_ms"],
+            "properties": {
+              "segment_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "start_ms": { "type": "integer", "minimum": 0 },
+              "end_ms": { "type": "integer", "minimum": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "questions": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["question_version_id"],
+            "properties": {
+              "question_version_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+              "at_ms": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "max_plays": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "allow_speed_change": { "type": "boolean", "default": true },
+        "show_transcript": { "type": "string", "enum": ["never", "after_complete", "always"], "default": "after_complete" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false,
+  "$defs": {
+    "render": {
+      "title": "AudioLessonRender",
+      "description": "ActivityRender.render_payload của audio_lesson (F066-AC-02/03): không đáp án; transcript chỉ là media kind transcript khi show_transcript = always (hoặc after_complete sau khi hoàn thành).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_ms", "heartbeat_seconds", "segments", "questions", "interaction", "plays_used", "completion"],
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 7200000, "description": "0 khi chưa biết thời lượng (client dùng độ dài stream)" },
+        "heartbeat_seconds": { "type": "integer", "minimum": 1, "maximum": 120 },
+        "segments": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["segment_id", "start_ms", "end_ms"],
+            "properties": {
+              "segment_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "start_ms": { "type": "integer", "minimum": 0 },
+              "end_ms": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "questions": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cue_id", "position"],
+            "properties": {
+              "cue_id": { "type": "string", "maxLength": 64 },
+              "position": { "type": "integer", "minimum": 1 },
+              "at_ms": { "type": "integer", "minimum": 0, "description": "Vắng = câu hỏi sau khi nghe hết bài" }
+            }
+          }
+        },
+        "interaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_plays", "allow_speed_change", "show_transcript", "playback_rates"],
+          "properties": {
+            "max_plays": { "type": ["integer", "null"], "minimum": 1, "maximum": 20 },
+            "allow_speed_change": { "type": "boolean" },
+            "show_transcript": { "type": "string", "enum": ["never", "after_complete", "always"] },
+            "playback_rates": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "number", "minimum": 0.5, "maximum": 2 } }
+          }
+        },
+        "plays_used": { "type": "integer", "minimum": 0 },
+        "resume_position_ms": { "type": "integer", "minimum": 0 },
+        "completion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min_watched_ratio"],
+          "properties": {
+            "min_watched_ratio": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

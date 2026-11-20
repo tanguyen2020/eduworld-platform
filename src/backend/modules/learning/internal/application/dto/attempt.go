@@ -79,6 +79,9 @@ type ProgressStateView struct {
 	WatchedRanges []WatchedRangeView `json:"watched_ranges"`
 	SegmentID     string             `json:"segment_id,omitempty"`
 	PendingCueIDs []string           `json:"pending_cue_ids"`
+	// PlaysUsed and MaxPlays are the listening plays of an audio lesson (F066 research R1; 0 and null for a video).
+	PlaysUsed int  `json:"plays_used"`
+	MaxPlays  *int `json:"max_plays"`
 }
 
 // EvaluationView is Evaluation.

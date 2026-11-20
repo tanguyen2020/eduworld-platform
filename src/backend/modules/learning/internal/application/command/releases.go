@@ -704,5 +704,11 @@ func (h Releases) activityReady(s Subject) error {
 	if vs := p.ValidateConfig(cfg); len(vs) > 0 {
 		return configProblem(vs)
 	}
+	// Rules checked only at publish (audio_lesson: transcript required, F066-AC-01).
+	if pc, ok := p.(activity.PublishCheck); ok {
+		if vs := pc.ValidatePublish(cfg); len(vs) > 0 {
+			return configProblem(vs)
+		}
+	}
 	return nil
 }

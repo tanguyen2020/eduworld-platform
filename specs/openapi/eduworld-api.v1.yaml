@@ -15641,7 +15641,7 @@ paths:
       x-service: learning
       tags: [learning]
       operationId: reportActivityProgress
-      summary: Heartbeat tiến độ video/audio (idempotent theo client_seq; VIDEO_SEEK_NOT_ALLOWED)
+      summary: Heartbeat tiến độ video/audio (idempotent theo client_seq; VIDEO_SEEK_NOT_ALLOWED, AUDIO_PLAY_LIMIT_REACHED)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -15659,6 +15659,9 @@ paths:
               schema: { $ref: '#/components/schemas/ActivityProgressState' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
   /learning/activity-attempts/{attempt_id}/responses:
@@ -15728,7 +15731,7 @@ paths:
       x-service: learning
       tags: [learning]
       operationId: submitSimulationRun
-      summary: Gửi tham số + action log để server kiểm chứng xác định (ADR-0052; SIMULATION_LOG_INVALID)
+      summary: Gửi tham số + action log để server kiểm chứng xác định (ADR-0052; SIMULATION_LOG_INVALID, SIMULATION_RUN_LIMIT_REACHED)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -15748,8 +15751,12 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /learning/activity-attempts/{attempt_id}:submit:
     post:
       x-service: learning
@@ -17078,6 +17085,8 @@ components:
         - CUE_ANSWER_REQUIRED
         - RESPONSE_TOO_LONG
         - SIMULATION_LOG_INVALID
+        - AUDIO_PLAY_LIMIT_REACHED
+        - SIMULATION_RUN_LIMIT_REACHED
         # Exam (EXAM_ENGINE)
         - EXAM_NOT_ASSIGNED
         - EXAM_NOT_OPEN
@@ -22420,7 +22429,7 @@ components:
             properties:
               asset_id: { $ref: '#/components/schemas/Uuid' }
               url: { type: string, maxLength: 2048, format: uri }
-              kind: { type: string, enum: [image, audio, video, subtitle] }
+              kind: { type: string, enum: [image, audio, video, subtitle, transcript] }
               variant: { type: string, maxLength: 32, description: 'Biến thể media (ogv_480, ogv_720, ogg, vtt…) — client chọn theo preset chất lượng (F065 research R3)' }
               language: { type: string, maxLength: 8, description: Ngôn ngữ của phụ đề (kind subtitle) }
               segment_id: { type: string, maxLength: 64, description: Đoạn của video tương tác (vắng = video chính) }
@@ -22464,6 +22473,10 @@ components:
               start_ms: { type: integer, minimum: 0 }
               end_ms: { type: integer, minimum: 0 }
         playback_rate: { type: number, minimum: 0.5, maximum: 2 }
+        play_started:
+          type: boolean
+          default: false
+          description: Bài nghe — học sinh bắt đầu một lượt nghe (phát từ đầu hoặc phát lại sau khi hết bài); server tăng plays_used một lần theo client_seq, vượt max_plays → 422 AUDIO_PLAY_LIMIT_REACHED (F066 research R1)
     ActivityProgressState:
       type: object
       required: [watched_ratio, completed]
@@ -22486,6 +22499,8 @@ components:
           type: array
           maxItems: 50
           items: { type: string, maxLength: 64 }
+        plays_used: { type: integer, minimum: 0, description: Lượt nghe server đã ghi nhận (bài nghe; video luôn 0) }
+        max_plays: { type: [integer, 'null'], minimum: 1, maximum: 20, description: Giới hạn lượt nghe của version (null = không giới hạn) }
     ActivityResponseResult:
       type: object
       required: [accepted]
@@ -22562,8 +22577,21 @@ components:
         verified_outcome:
           type: object
           maxProperties: 50
+          description: Metric template đánh dấu display (không có điều kiện kiểm chứng của mục tiêu, F066 research R3)
           additionalProperties: true
         feedback: { type: string, maxLength: 1000 }
+        verification_status: { type: string, enum: [verified, rejected, not_verifiable] }
+        goals_met:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [goal_id, met]
+            properties:
+              goal_id: { type: string, maxLength: 64 }
+              met: { type: boolean }
+        runs_used: { type: integer, minimum: 0 }
+        max_runs: { type: [integer, 'null'], minimum: 1, maximum: 50 }
 
     # ---------- cms: activity definitions, types, simulation templates
     ActivityDefinitionInput:
@@ -22659,11 +22687,32 @@ components:
         template_code: { type: string, maxLength: 64 }
         template_version: { type: integer, minimum: 1 }
         title: { type: string, maxLength: 255 }
-        kind: { type: string, enum: [science, physics, geometry_3d, virtual_lab, experiment] }
+        simulation_kind: { type: string, enum: [science_simulation, physics, geometry_3d, virtual_lab, interactive_experiment], description: Cùng enum với simulation.schema.json (F066 T004) }
         parameter_schema:
           type: object
           description: JSON Schema tham số mà CMS được phép cấu hình (không có script, ADR-0052)
           additionalProperties: true
+        actions:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [action]
+            properties:
+              action: { type: string, maxLength: 64 }
+              args_schema: { type: object, additionalProperties: true }
+        metrics:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [metric]
+            properties:
+              metric: { type: string, maxLength: 64 }
+              unit: { type: string, maxLength: 16 }
+              display: { type: boolean }
+        checker_available: { type: boolean }
+        status: { type: string, enum: [active, retired] }
         min_client_version: { type: string, maxLength: 32 }
 
     ActivityAttemptStart:

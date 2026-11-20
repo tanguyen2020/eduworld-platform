@@ -130,7 +130,19 @@ type Config struct {
 	Content        Content     `json:"content"`
 	Interaction    Interaction `json:"interaction"`
 	CompletionRule Completion  `json:"completion_rule"`
+	// Kind is KindAudio for the timeline of an audio_lesson (audiolesson.Config.Timeline, F066); empty for a video.
+	Kind string `json:"-"`
+	// MaxPlays is interaction.max_plays of an audio lesson (nil = unlimited).
+	MaxPlays *int `json:"-"`
+	// ShowTranscript is interaction.show_transcript of an audio lesson (never, after_complete, always).
+	ShowTranscript string `json:"-"`
 }
+
+// KindAudio marks the timeline of an audio lesson: Ogg Vorbis instead of Theora, plays counted, transcript.
+const KindAudio = "audio"
+
+// Audio reports the timeline of an audio lesson.
+func (c Config) Audio() bool { return c.Kind == KindAudio }
 
 // ErrConfig: the config cannot be decoded.
 var ErrConfig = errors.New("videolesson: config cannot be read")
@@ -246,6 +258,9 @@ func (c Config) AssetIDs() []uuid.UUID {
 	}
 	for _, s := range c.Content.Subtitles {
 		out = append(out, s.SubtitleAssetID)
+	}
+	if c.Audio() && c.Content.TranscriptAssetID != nil {
+		out = append(out, *c.Content.TranscriptAssetID)
 	}
 	return out
 }

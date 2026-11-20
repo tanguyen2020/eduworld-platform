@@ -187,6 +187,8 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 422 | `CUE_ANSWER_REQUIRED` | Submit khi còn câu hỏi chèn bắt buộc |
 | 422 | `RESPONSE_TOO_LONG` | Câu trả lời `short_answer`/`fill_in_blank` vượt `max_length` của item |
 | 422 | `SIMULATION_LOG_INVALID` | Action log mô phỏng không hợp lệ (ngoài phạm vi, quá dài) |
+| 422 | `AUDIO_PLAY_LIMIT_REACHED` | Báo `play_started` khi bài nghe đã dùng hết `max_plays` (F066, [AUDIO_LANGUAGE_LEARNING §2](../02-learning/AUDIO_LANGUAGE_LEARNING.md)) |
+| 422 | `SIMULATION_RUN_LIMIT_REACHED` | Gửi run mô phỏng khi attempt đã đủ `interaction.max_runs` (F066, [SIMULATION_ENGINE §4](../02-learning/SIMULATION_ENGINE.md)) |
 | 403 | `ASSIGNMENT_NOT_OPEN` | Ngoài `open_at`–`due_at` |
 | 409 | `ASSIGNMENT_MAX_ATTEMPTS` | Hết lượt làm bài được giao |
 | 409 | `ASSIGNMENT_NOT_EDITABLE` | Sửa bài giao đã `open` ngoài các trường được phép (`due_at`, `instructions`, `late_policy`), hoặc bài đã `closed`/`archived`/`cancelled` ([SCHOOL_LMS §4](../04-admin-portal/SCHOOL_LMS.md#4-assignment)) |

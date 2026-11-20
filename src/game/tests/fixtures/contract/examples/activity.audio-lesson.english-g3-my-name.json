@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "activity_id": "01936a10-0000-7000-8000-000000000501",
+  "activity_version_id": "01936a10-0000-7000-8000-000000000502",
+  "version": 1,
+  "activity_type": "audio_lesson",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "title": {
+    "vi": "Nghe: My name is Mai",
+    "en": "Listening: My name is Mai"
+  },
+  "description": {
+    "vi": "Bài nghe 45 giây, 4 câu nghe hiểu và nghe chép, nghe tối đa 2 lượt."
+  },
+  "grade_levels": [
+    3
+  ],
+  "subject_id": "01936a10-0000-7000-8000-000000000601",
+  "topic_id": "01936a10-0000-7000-8000-000000000602",
+  "objective_ids": [
+    "01936a10-0000-7000-8000-000000000603"
+  ],
+  "difficulty": 1,
+  "instructions": {
+    "vi": "Nghe đoạn hội thoại và trả lời câu hỏi. Em được nghe tối đa 2 lượt."
+  },
+  "evaluation": {
+    "strategies": [
+      "completion",
+      "auto"
+    ],
+    "max_score": 4,
+    "pass_threshold": 0.5
+  },
+  "feedback": {
+    "timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": true
+  },
+  "completion_rule": {
+    "mode": "min_watched_ratio",
+    "min_watched_ratio": 0.9
+  },
+  "media_refs": [
+    "01936a10-0000-7000-8000-000000000701",
+    "01936a10-0000-7000-8000-000000000702"
+  ],
+  "status": "published",
+  "content": {
+    "audio_asset_id": "01936a10-0000-7000-8000-000000000701",
+    "transcript_asset_id": "01936a10-0000-7000-8000-000000000702",
+    "segments": [
+      {
+        "segment_id": "greeting",
+        "title": {
+          "vi": "Chào hỏi",
+          "en": "Greeting"
+        },
+        "start_ms": 0,
+        "end_ms": 18000
+      },
+      {
+        "segment_id": "name",
+        "title": {
+          "vi": "Giới thiệu tên",
+          "en": "Names"
+        },
+        "start_ms": 18000,
+        "end_ms": 45000
+      }
+    ],
+    "questions": [
+      {
+        "question_version_id": "01936a10-0000-7000-8000-000000000801",
+        "at_ms": 18000
+      },
+      {
+        "question_version_id": "01936a10-0000-7000-8000-000000000802",
+        "at_ms": 44999
+      },
+      {
+        "question_version_id": "01936a10-0000-7000-8000-000000000803"
+      },
+      {
+        "question_version_id": "01936a10-0000-7000-8000-000000000804"
+      }
+    ]
+  },
+  "interaction": {
+    "max_plays": 2,
+    "allow_speed_change": true,
+    "show_transcript": "after_complete"
+  },
+  "content_language": "en"
+}

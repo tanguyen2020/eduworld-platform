@@ -28,6 +28,8 @@ func (c *curEnv) videoAsset(ctx context.Context, t *testing.T, kind, status stri
 	mime := "video/mp4"
 	if kind == "document" {
 		mime = "text/csv"
+	} else if kind == "audio" {
+		mime = "audio/mpeg"
 	}
 	// tenancyguard:ok TEST helper under learning_platform: the row of the media pipeline
 	if _, err := c.platform.ExecContext(ctx, `INSERT INTO content.media_assets (asset_id, tenant_id, created_at, updated_at, owner_scope, kind,

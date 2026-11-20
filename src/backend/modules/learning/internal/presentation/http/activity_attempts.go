@@ -239,13 +239,14 @@ func (h Handlers) reportActivityProgress(w http.ResponseWriter, r *http.Request)
 		PositionMS    int64                  `json:"position_ms"`
 		WatchedRanges []dto.WatchedRangeView `json:"watched_ranges"`
 		PlaybackRate  *float64               `json:"playback_rate"`
+		PlayStarted   bool                   `json:"play_started"`
 	}
 	if err := decode(r, &b); err != nil {
 		fail(w, r, err)
 		return
 	}
 	v, err := h.Attempts.ReportProgress(r.Context(), command.ProgressInput{AttemptID: id, ClientSeq: b.ClientSeq, PositionMS: b.PositionMS,
-		WatchedRanges: b.WatchedRanges, PlaybackRate: b.PlaybackRate})
+		WatchedRanges: b.WatchedRanges, PlaybackRate: b.PlaybackRate, PlayStarted: b.PlayStarted})
 	if err != nil {
 		fail(w, r, err)
 		return

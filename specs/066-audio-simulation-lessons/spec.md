@@ -14,6 +14,19 @@
 - Q: Điểm phần mô phỏng lấy từ lần chạy nào? → A: Lần chạy `verified` cuối cùng trước submit (nhất quán ACTIVITY_ENGINE §7.2).
 - Q: Template nào trong phạm vi? → A: Khung template + checker và một template tham chiếu `physics.lever` v1 (ví dụ của SIMULATION_ENGINE). Template khác là sản xuất nội dung, theo cùng khung.
 
+### Session 2026-11-20 (triển khai — các điểm spec/plan chưa chốt, dùng mặc định [Proposed])
+
+- Q: Câu hỏi bài nghe có phải "câu chèn bắt buộc" như video (chặn submit bằng `CUE_ANSWER_REQUIRED`)? → A: [Proposed] Không. Câu hỏi bài nghe là cue không bắt buộc của timeline dùng chung với video; câu chưa trả lời được 0 điểm, không chặn nộp; hoàn thành theo `min_watched_ratio` (mặc định `video_completion`). Câu không có `at_ms` hỏi sau khi nghe hết, xếp sau mọi câu có mốc, giữ thứ tự khai báo.
+- Q: Tua trong bài nghe và tốc độ? → A: [Proposed] Tua tự do trong một lượt (lượt chỉ tính khi phát từ đầu/phát lại sau khi hết bài, research R1); tốc độ 0,75×/1× khi `allow_speed_change`, chỉ 1× khi tắt (STUDENT_GAME_UX_LEARNING §6). Tiến độ vẫn qua kiểm tra hợp lý của F065 (cắt phần nhanh hơn thời gian thực × tốc độ tối đa, integrity signal `audio_progress_implausible`).
+- Q: Transcript trả về thế nào? → A: [Proposed] Là phần tử `ActivityRender.media[]` với `kind = transcript` (thêm giá trị enum), signed URL; có khi `show_transcript = always`, hoặc `after_complete` khi attempt đã `submitted`/`graded`; không bao giờ khi `never`.
+- Q: Asset audio chưa sẵn sàng trả mã nào? (API_DESIGN §4.1 ghi `VIDEO_NOT_READY` cho "video/audio", spec F066-AC-03 ghi `MEDIA_NOT_READY`) → A: [Proposed] Theo spec: `422 MEDIA_NOT_READY` (thiếu biến thể `ogg`); video giữ `VIDEO_NOT_READY`.
+- Q: Danh mục template lưu ở đâu? (research R2: bảng `content.simulation_templates` + job `simtemplates.Sync`) → A: [Proposed] Registry nhúng trong mã module learning (`internal/domain/activity/simulation/templates/<code>/v<n>/descriptor.json`, `go:embed`), trạng thái `active`/`retired` khai báo trong descriptor; `listSimulationTemplates` và kiểm cấu hình đọc thẳng registry. Bảng `content.simulation_templates` và job Sync hoãn tới khi có consumer đọc DB (không ảnh hưởng AC; DATABASE_DESIGN §2.6a ghi chú).
+- Q: Template version nào được ghim? (attempt không có cột lưu template version) → A: [Proposed] Version `active` cao nhất ≥ `min_template_version` của nội dung, xác định từ registry trong bản phát hành; khi một template có version thứ hai sẽ thêm cột ghim (expand) — hiện chỉ có `physics.lever` v1.
+- Q: `parameters` của `physics.lever` gồm mảng `masses_kg[]` (research R4) nhưng `simulation.schema.json` chỉ cho giá trị vô hướng? → A: [Proposed] Dùng tham số vô hướng `mass_1_kg`…`mass_4_kg` (vật 1–2 bắt buộc), `arm_length_m`, `slots_per_side`; `g = 9,8` trong descriptor.
+- Q: Run bị từ chối có tính vào `max_runs`? Thiếu `max_runs`? → A: [Proposed] Mọi run đã lưu (kể cả `rejected`) tính lượt — giới hạn số dòng; thiếu `max_runs` dùng trần 50 của schema.
+- Q: Điểm phần mô phỏng? → A: [Proposed] Mỗi mục tiêu đạt ở run `verified` cuối = 1 điểm, cộng điểm câu hỏi kết luận; hoàn thành (`goals_met`) khi run `verified` cuối đạt mọi mục tiêu; template `checker_available = false`: hoàn thành khi có ít nhất một run `not_verifiable`, không điểm/evidence từ mô phỏng.
+- Q: Editor portal (US4) phụ thuộc F058 (editor registry của Activity Builder) đang `Ready`, chưa có mã? → A: Không làm US4 trong lần này (R34: không tự dựng Activity Builder); T044, T045, T052, T053 để mở, chờ F058.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Server phục vụ và chấm bài nghe (Priority: P1) 🎯 MVP

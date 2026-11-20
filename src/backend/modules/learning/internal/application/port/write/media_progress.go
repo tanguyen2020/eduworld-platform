@@ -38,6 +38,9 @@ type IntegritySignal struct {
 // SignalVideoProgressImplausible is the signal of watched ranges growing faster than real time × the fastest rate.
 const SignalVideoProgressImplausible = "video_progress_implausible"
 
+// SignalAudioProgressImplausible is the same signal for an audio lesson (F066-AC-04).
+const SignalAudioProgressImplausible = "audio_progress_implausible"
+
 // MediaProgressStore persists the progress of the media attempts (video_lesson F065, audio_lesson F066) in the
 // transaction of ctx (TenantScope; RLS T).
 type MediaProgressStore interface {

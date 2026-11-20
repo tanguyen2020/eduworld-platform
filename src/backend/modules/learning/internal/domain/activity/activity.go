@@ -208,7 +208,7 @@ type Plugin interface {
 	CompletionRule(v Version) CompletionRule
 }
 
-// Timeline is implemented by the plugins of the media activities (video_lesson; audio_lesson in F066): the items of an
+// Timeline is implemented by the plugins of the media activities (video_lesson F065, audio_lesson F066): the items of an
 // attempt are the embedded questions of the version in time order (never shuffled) and the attempt receives progress
 // heartbeats (ACTIVITY_ENGINE §5, F065 research R1).
 type Timeline interface {
@@ -216,6 +216,18 @@ type Timeline interface {
 	CueQuestions(v Version) ([]uuid.UUID, error)
 	// MediaAssetIDs are the media the version plays (start checks they are ready, the render signs their URLs).
 	MediaAssetIDs(v Version) ([]uuid.UUID, error)
+}
+
+// PublishCheck is implemented by the plugins with a rule checked only at publish (audio_lesson: the transcript,
+// F066-AC-01); a draft may still miss it.
+type PublishCheck interface {
+	ValidatePublish(c Config) contentmodel.Violations
+}
+
+// MediaCheck is implemented by the media plugins whose rules need the probed duration of the main media (audio_lesson:
+// segments and question times inside the audio, F066-AC-01); durationMS is 0 when unknown.
+type MediaCheck interface {
+	ValidateMedia(c Config, durationMS int64) contentmodel.Violations
 }
 
 // ErrNotSupported is returned for a type outside the release or without plugin (ACTIVITY_TYPE_NOT_SUPPORTED).

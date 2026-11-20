@@ -98,14 +98,23 @@ func (h Docs) prepareActivity(ctx context.Context, v *dto.DocVersion, body map[s
 			return configProblem(contentmodel.Violations{{Field: ptr, Reason: "has a question type not allowed by the activity"}})
 		}
 	}
-	// Media activities (F065-AC-01): every embedded question is a published, auto-graded question version.
+	// Media activities (F065-AC-01, F066-AC-01): every embedded question is a published, auto-graded question version;
+	// the times of an audio lesson are checked against the probed duration of its audio.
 	if tl, ok := p.(activity.Timeline); ok {
-		cues, err := tl.CueQuestions(activity.Version{Type: activity.Type(typ), Config: cfg})
+		dv := activity.Version{Type: activity.Type(typ), Config: cfg}
+		if err := h.checkMedia(ctx, p, tl, dv); err != nil {
+			return err
+		}
+		cues, err := tl.CueQuestions(dv)
 		if err != nil {
 			return configProblem(contentmodel.Violations{{Field: "/config/content", Reason: "cannot be read"}})
 		}
+		list := "embedded_questions"
+		if typ == string(activity.AudioLesson) {
+			list = "questions"
+		}
 		for i, id := range cues {
-			ptr := "/config/content/embedded_questions/" + strconv.Itoa(i) + "/question_version_id"
+			ptr := "/config/content/" + list + "/" + strconv.Itoa(i) + "/question_version_id"
 			qv, err := h.checkQuestion(ctx, v.Owner, id, ptr)
 			if err != nil {
 				return err
@@ -125,6 +134,29 @@ func (h Docs) prepareActivity(ctx context.Context, v *dto.DocVersion, body map[s
 		if err := json.Unmarshal(raw, &n); err != nil || n < 10 || n > 14400 {
 			return problem.Invalid("/time_limit_seconds", problem.SubInvalid, "must be between 10 and 14400")
 		}
+	}
+	return nil
+}
+
+// checkMedia runs the rules of a MediaCheck plugin with the probed duration of its main media (0 when the media store
+// is absent or the asset has no duration yet: only the relative rules apply).
+func (h Docs) checkMedia(ctx context.Context, p activity.Plugin, tl activity.Timeline, v activity.Version) error {
+	mc, ok := p.(activity.MediaCheck)
+	if !ok {
+		return nil
+	}
+	var duration int64
+	if ids, err := tl.MediaAssetIDs(v); err == nil && len(ids) > 0 && h.Media != nil {
+		assets, err := h.Media.Assets(ctx, ids[:1])
+		if err != nil {
+			return err
+		}
+		if a, ok := assets[ids[0]]; ok && a.DurationMS != nil {
+			duration = int64(*a.DurationMS)
+		}
+	}
+	if vs := mc.ValidateMedia(v.Config, duration); len(vs) > 0 {
+		return configProblem(vs)
 	}
 	return nil
 }

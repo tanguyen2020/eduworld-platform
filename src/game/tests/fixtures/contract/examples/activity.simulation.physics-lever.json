@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "activity_id": "01936a10-0000-7000-8000-000000000901",
+  "activity_version_id": "01936a10-0000-7000-8000-000000000902",
+  "version": 1,
+  "activity_type": "simulation",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "title": {
+    "vi": "Cân bằng đòn bẩy",
+    "en": "Balance the lever"
+  },
+  "description": {
+    "vi": "Đặt vật 2 kg và 1 kg lên đòn bẩy sao cho cân bằng, rồi trả lời câu kết luận."
+  },
+  "grade_levels": [
+    6
+  ],
+  "subject_id": "01936a10-0000-7000-8000-000000000a01",
+  "topic_id": "01936a10-0000-7000-8000-000000000a02",
+  "objective_ids": [
+    "01936a10-0000-7000-8000-000000000a03"
+  ],
+  "difficulty": 2,
+  "instructions": {
+    "vi": "Kéo các vật lên đòn bẩy rồi bấm Thả để kiểm tra."
+  },
+  "evaluation": {
+    "strategies": [
+      "deterministic_check",
+      "auto"
+    ],
+    "max_score": 2,
+    "pass_threshold": 0.5
+  },
+  "feedback": {
+    "timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": false
+  },
+  "completion_rule": {
+    "mode": "goals_met"
+  },
+  "media_refs": [],
+  "status": "published",
+  "content": {
+    "simulation_kind": "physics",
+    "template_code": "physics.lever",
+    "min_template_version": 1,
+    "parameters": {
+      "arm_length_m": 1,
+      "slots_per_side": 4,
+      "mass_1_kg": 2,
+      "mass_2_kg": 1
+    },
+    "goals": [
+      {
+        "goal_id": "balance",
+        "description": {
+          "vi": "Làm cho đòn bẩy cân bằng",
+          "en": "Balance the lever"
+        },
+        "check": {
+          "metric": "balanced",
+          "operator": "eq",
+          "value": 1
+        }
+      }
+    ],
+    "steps": [
+      {
+        "step_id": "place-heavy",
+        "instruction": {
+          "vi": "Đặt vật 2 kg bên trái"
+        }
+      },
+      {
+        "step_id": "place-light",
+        "instruction": {
+          "vi": "Đặt vật 1 kg bên phải sao cho cân bằng"
+        }
+      },
+      {
+        "step_id": "release",
+        "instruction": {
+          "vi": "Bấm Thả"
+        }
+      }
+    ],
+    "questions": [
+      {
+        "question_version_id": "01936a10-0000-7000-8000-000000000b01"
+      }
+    ],
+    "seed_policy": "fixed"
+  },
+  "interaction": {
+    "max_runs": 5,
+    "show_measurements": true
+  },
+  "content_language": "vi"
+}

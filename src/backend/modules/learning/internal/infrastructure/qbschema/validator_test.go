@@ -23,7 +23,7 @@ func TestEmbeddedSchemas(t *testing.T) {
 		"question-set.schema.json": QuestionSetSchemaJSON, "assessment-blueprint.schema.json": BlueprintSchemaJSON, "lesson.schema.json": LessonSchemaJSON,
 		"activities/activity-base.schema.json": ActivityBaseSchemaJSON, "activities/quiz.schema.json": QuizSchemaJSON,
 		"activities/interactive-exercise.schema.json": InteractiveExerciseSchemaJSON,
-		"activities/video-lesson.schema.json":         VideoLessonSchemaJSON, "learning-event.schema.json": LearningEventSchemaJSON} {
+		"activities/video-lesson.schema.json":         VideoLessonSchemaJSON, "activities/audio-lesson.schema.json": AudioLessonSchemaJSON, "learning-event.schema.json": LearningEventSchemaJSON} {
 		src, err := os.ReadFile(filepath.Join(repo(t), "specs", "schemas", filepath.FromSlash(name)))
 		if err != nil {
 			t.Fatal(err)

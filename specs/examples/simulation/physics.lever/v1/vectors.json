@@ -1,0 +1,1033 @@
+{
+  "description": "Vector kiểm thử chung của template physics.lever v1 (F066 research R4, AC-17, AC-24): tham số + seed + action log → kết quả mong đợi. Đọc bởi test Go (simulation.Lever) và GdUnit4 (lever_model.gd). Metric làm tròn 4 chữ số thập phân (nửa xa số 0); balanced = 1 khi hai bên đều có vật và |torque_diff| < 1e-6. Sửa công thức phải sửa cả checker, lever_model.gd và file này trong một MR.",
+  "template_code": "physics.lever",
+  "template_version": 1,
+  "g": 9.8,
+  "vectors": [
+    {
+      "name": "balanced_2kg_1kg",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 800,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 1500,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.8,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "unbalanced_same_slot",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 800,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 1500,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 4.9,
+          "torque_diff": 4.9,
+          "balanced": 0,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "empty_log",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 0,
+          "torque_right": 0,
+          "torque_diff": 0,
+          "balanced": 0,
+          "masses_placed": 0
+        }
+      }
+    },
+    {
+      "name": "no_release",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 800,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 0,
+          "torque_right": 0,
+          "torque_diff": 0,
+          "balanced": 0,
+          "masses_placed": 0
+        }
+      }
+    },
+    {
+      "name": "one_side_only",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 100,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 200,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 0,
+          "torque_diff": 9.8,
+          "balanced": 0,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "moved_mass_then_balanced",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 100,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 200,
+          "action": "release",
+          "args": {}
+        },
+        {
+          "t_ms": 300,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 400,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.8,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "removed_mass",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 100,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 200,
+          "action": "remove_mass",
+          "args": {
+            "mass_index": 1
+          }
+        },
+        {
+          "t_ms": 300,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 0,
+          "torque_diff": 9.8,
+          "balanced": 0,
+          "masses_placed": 1
+        }
+      }
+    },
+    {
+      "name": "release_twice_last_counts",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 100,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 200,
+          "action": "release",
+          "args": {}
+        },
+        {
+          "t_ms": 300,
+          "action": "remove_mass",
+          "args": {
+            "mass_index": 0
+          }
+        },
+        {
+          "t_ms": 400,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 0,
+          "torque_right": 9.8,
+          "torque_diff": -9.8,
+          "balanced": 0,
+          "masses_placed": 1
+        }
+      }
+    },
+    {
+      "name": "thirds_balanced",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 3,
+        "mass_1_kg": 3,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 10,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 3
+          }
+        },
+        {
+          "t_ms": 20,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.8,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "three_masses_balanced",
+      "parameters": {
+        "arm_length_m": 2,
+        "slots_per_side": 5,
+        "mass_1_kg": 1,
+        "mass_2_kg": 2,
+        "mass_3_kg": 3
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 5
+          }
+        },
+        {
+          "t_ms": 5,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 9,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 2,
+            "side": "right",
+            "slot": 3
+          }
+        },
+        {
+          "t_ms": 9,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 35.28,
+          "torque_right": 35.28,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 3
+        }
+      }
+    },
+    {
+      "name": "three_masses_unbalanced",
+      "parameters": {
+        "arm_length_m": 2,
+        "slots_per_side": 5,
+        "mass_1_kg": 1,
+        "mass_2_kg": 2,
+        "mass_3_kg": 3
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 5
+          }
+        },
+        {
+          "t_ms": 5,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "left",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 9,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 2,
+            "side": "right",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 10,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 27.44,
+          "torque_right": 23.52,
+          "torque_diff": 3.92,
+          "balanced": 0,
+          "masses_placed": 3
+        }
+      }
+    },
+    {
+      "name": "four_masses",
+      "parameters": {
+        "arm_length_m": 1.5,
+        "slots_per_side": 6,
+        "mass_1_kg": 0.5,
+        "mass_2_kg": 1.5,
+        "mass_3_kg": 2.5,
+        "mass_4_kg": 4
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 6
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "left",
+            "slot": 3
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 2,
+            "side": "right",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 3,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 3,
+            "side": "right",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 4,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 18.375,
+          "torque_right": 25.725,
+          "torque_diff": -7.35,
+          "balanced": 0,
+          "masses_placed": 4
+        }
+      }
+    },
+    {
+      "name": "decimal_arm",
+      "parameters": {
+        "arm_length_m": 0.75,
+        "slots_per_side": 10,
+        "mass_1_kg": 1.2,
+        "mass_2_kg": 0.8
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 3
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 1.764,
+          "torque_right": 1.764,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "heavy_masses",
+      "parameters": {
+        "arm_length_m": 5,
+        "slots_per_side": 10,
+        "mass_1_kg": 50,
+        "mass_2_kg": 25
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 5
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 10
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 1225,
+          "torque_right": 1225,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "light_masses",
+      "parameters": {
+        "arm_length_m": 0.2,
+        "slots_per_side": 1,
+        "mass_1_kg": 0.1,
+        "mass_2_kg": 0.1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 0.196,
+          "torque_right": 0.196,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "equal_times_allowed",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 0,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.8,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "slot_out_of_range",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 5
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "argument_out_of_range"
+      }
+    },
+    {
+      "name": "mass_index_out_of_range",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 2,
+            "side": "left",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "argument_out_of_range"
+      }
+    },
+    {
+      "name": "bad_side",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "up",
+            "slot": 1
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "argument_out_of_range"
+      }
+    },
+    {
+      "name": "remove_unknown_mass",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "remove_mass",
+          "args": {
+            "mass_index": 7
+          }
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "argument_out_of_range"
+      }
+    },
+    {
+      "name": "remove_unplaced_is_noop",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "remove_mass",
+          "args": {
+            "mass_index": 1
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 3,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.8,
+          "torque_diff": 0,
+          "balanced": 1,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "nearly_balanced",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1.01
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 1,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 1,
+            "side": "right",
+            "slot": 4
+          }
+        },
+        {
+          "t_ms": 2,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": true,
+        "outcome": {
+          "torque_left": 9.8,
+          "torque_right": 9.898,
+          "torque_diff": -0.098,
+          "balanced": 0,
+          "masses_placed": 2
+        }
+      }
+    },
+    {
+      "name": "t_ms_decreasing",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 500,
+          "action": "place_mass",
+          "args": {
+            "mass_index": 0,
+            "side": "left",
+            "slot": 2
+          }
+        },
+        {
+          "t_ms": 100,
+          "action": "release",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "time_not_increasing"
+      }
+    },
+    {
+      "name": "unknown_action",
+      "parameters": {
+        "arm_length_m": 1,
+        "slots_per_side": 4,
+        "mass_1_kg": 2,
+        "mass_2_kg": 1
+      },
+      "seed": 42,
+      "action_log": [
+        {
+          "t_ms": 0,
+          "action": "teleport",
+          "args": {}
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "reject_code": "unknown_action"
+      }
+    }
+  ]
+}

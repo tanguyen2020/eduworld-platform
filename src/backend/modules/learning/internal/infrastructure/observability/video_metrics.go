@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Video lesson metrics (plan F065 "Quan sát"). Labels never carry ids or answers (R14).
+// Media lesson metrics (plan F065, F066 "Quan sát"): video and audio share the progress counters. Labels never carry ids or answers (R14).
 var (
 	videoProgressTrimmed = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "eduworld_video_progress_trimmed_total",
@@ -20,11 +20,15 @@ var (
 		Name: "eduworld_video_completion_total",
 		Help: "Video attempts submitted, by completion of the rule.",
 	}, []string{"completed"})
+	audioPlayLimitRejected = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "eduworld_audio_play_limit_rejected_total",
+		Help: "Listening plays refused with AUDIO_PLAY_LIMIT_REACHED (F066).",
+	})
 )
 
 // RegisterVideo adds the video metrics to r; already registered collectors are ignored.
 func RegisterVideo(r prometheus.Registerer) {
-	for _, c := range []prometheus.Collector{videoProgressTrimmed, videoSeekRejected, videoCompletion} {
+	for _, c := range []prometheus.Collector{videoProgressTrimmed, videoSeekRejected, videoCompletion, audioPlayLimitRejected} {
 		_ = r.Register(c)
 	}
 }
@@ -42,3 +46,6 @@ func (VideoCounter) SeekRejected() { videoSeekRejected.Inc() }
 func (VideoCounter) Completion(completed bool) {
 	videoCompletion.WithLabelValues(strconv.FormatBool(completed)).Inc()
 }
+
+// PlayLimitRejected counts one refused listening play.
+func (VideoCounter) PlayLimitRejected() { audioPlayLimitRejected.Inc() }

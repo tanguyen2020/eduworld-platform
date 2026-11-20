@@ -65,6 +65,14 @@
       "source": "specs/examples/achievement.explorer-math-zone.json",
       "sha256": "e6003dc883ec9c39ba5e6d0128b2b04f00c3ab45d63902dfef995b122d3aad9b"
     },
+    "examples/activity.audio-lesson.english-g3-my-name.json": {
+      "source": "specs/examples/activity.audio-lesson.english-g3-my-name.json",
+      "sha256": "e69a48697a6d22074bd21baa701248859d14b6175129170822ea80e0e991cd0f"
+    },
+    "examples/activity.simulation.physics-lever.json": {
+      "source": "specs/examples/activity.simulation.physics-lever.json",
+      "sha256": "0c730bb698fcd271418231038c747896bbab6002581b46a0a6f5ae134fbe89a8"
+    },
     "examples/activity.video-lesson.science-g4-water-cycle.json": {
       "source": "specs/examples/activity.video-lesson.science-g4-water-cycle.json",
       "sha256": "f1e5dcbe18ea5480232c02e6e2f9263e961f4e549b7d2b38d88baceb2592d526"

@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/audiolesson"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/videolesson"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/media"
@@ -41,19 +42,21 @@ type VideoMetrics interface {
 	ProgressTrimmed()
 	SeekRejected()
 	Completion(completed bool)
+	// PlayLimitRejected counts eduworld_audio_play_limit_rejected_total (F066).
+	PlayLimitRejected()
 }
 
-// timeline returns the video config of a version whose plugin is a Timeline (video_lesson); ok is false for the
-// question-based types.
+// timeline returns the media timeline of a version whose plugin is a Timeline (video_lesson, audio_lesson); ok is
+// false for the other types.
 func timeline(p activity.Plugin, v activity.Version) (videolesson.Config, bool, error) {
-	if _, ok := p.(activity.Timeline); !ok || v.Type != activity.VideoLesson {
+	if _, ok := p.(activity.Timeline); !ok {
 		return videolesson.Config{}, false, nil
 	}
-	vc, err := videolesson.Parse(v.Config.Raw)
+	vc, ok, err := attemptview.TimelineOf(string(v.Type), v.Config.Raw)
 	if err != nil {
-		return vc, true, problem.New(problem.ActivityConfigInvalid, "the published video config cannot be read")
+		return vc, ok, problem.New(problem.ActivityConfigInvalid, "the published media config cannot be read")
 	}
-	return vc, true, nil
+	return vc, ok, nil
 }
 
 func (h Attempts) mediaAssets(ctx context.Context, vc videolesson.Config) (map[uuid.UUID]media.Asset, error) {
@@ -63,8 +66,9 @@ func (h Attempts) mediaAssets(ctx context.Context, vc videolesson.Config) (map[u
 	return h.Media.Assets(ctx, vc.AssetIDs())
 }
 
-// timelineStart returns the cue questions of a media version and checks its video is playable (F065-AC-02, AC-04:
-// 422 VIDEO_NOT_READY without a ready Theora variant, no attempt created).
+// timelineStart returns the cue questions of a media version and checks its media is playable (F065-AC-02, AC-04:
+// 422 VIDEO_NOT_READY without a ready Theora variant; F066-AC-03: 422 MEDIA_NOT_READY without the Ogg Vorbis variant
+// of the audio; no attempt created).
 func (h Attempts) timelineStart(ctx context.Context, src ActivitySource) ([]uuid.UUID, bool, error) {
 	vc, ok, err := timeline(src.Plugin, src.DomainVersion())
 	if !ok || err != nil {
@@ -74,7 +78,10 @@ func (h Attempts) timelineStart(ctx context.Context, src ActivitySource) ([]uuid
 	if err != nil {
 		return nil, true, err
 	}
-	if !attemptview.VideoReady(vc, assets) {
+	if !attemptview.MediaReady(vc, assets) {
+		if vc.Audio() {
+			return nil, true, problem.New(problem.MediaNotReady, "the audio has no playable variant yet")
+		}
 		return nil, true, problem.New(problem.VideoNotReady, "the video has no playable variant yet")
 	}
 	qids, err := src.Plugin.(activity.Timeline).CueQuestions(src.DomainVersion())
@@ -125,6 +132,8 @@ type ProgressInput struct {
 	PositionMS    int64
 	WatchedRanges []dto.WatchedRangeView
 	PlaybackRate  *float64
+	// PlayStarted reports the start of a listening play (audio_lesson, F066 research R1).
+	PlayStarted bool
 }
 
 func (in ProgressInput) ranges() []videolesson.Range {
@@ -161,7 +170,8 @@ func (in ProgressInput) Validate() error {
 // stored state; the new watched time is bounded by real time × the fastest playback rate (the excess is trimmed and
 // recorded as an integrity signal); allow_seek refuses a position past the accepted frontier with 422
 // VIDEO_SEEK_NOT_ALLOWED and nothing changes; video.progressed is written once per milestone. A graded attempt keeps
-// receiving heartbeats (watching again) without changing its evaluation.
+// receiving heartbeats (watching again) without changing its evaluation. For an audio lesson (F066-AC-04) play_started
+// counts one play per new client_seq; at max_plays it is 422 AUDIO_PLAY_LIMIT_REACHED and nothing changes.
 func (h Attempts) ReportProgress(ctx context.Context, in ProgressInput) (out dto.ProgressStateView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.ReportActivityProgress")
 	defer func() { done(err) }()
@@ -207,6 +217,14 @@ func (h Attempts) ReportProgress(ctx context.Context, in ProgressInput) (out dto
 			out = attemptview.ProgressState(vc, prog)
 			return nil
 		}
+		if in.PlayStarted && vc.Audio() {
+			if prog.PlaysUsed, err = audiolesson.AcceptPlay(prog.PlaysUsed, vc.MaxPlays); err != nil {
+				if h.MediaMetrics != nil {
+					h.MediaMetrics.PlayLimitRejected()
+				}
+				return problem.New(problem.AudioPlayLimitReached, "every listening play of this lesson is used")
+			}
+		}
 		assets, err := h.mediaAssets(ctx, vc)
 		if err != nil {
 			return err
@@ -225,8 +243,12 @@ func (h Attempts) ReportProgress(ctx context.Context, in ProgressInput) (out dto
 			}
 			ev, _ := json.Marshal(map[string]any{"trimmed_ms": acc.TrimmedMS, "client_seq": in.ClientSeq,
 				"elapsed_ms": now.Sub(prog.LastHeartbeatAt).Milliseconds(), "max_rate": vc.MaxRate()})
+			signal := write.SignalVideoProgressImplausible
+			if vc.Audio() {
+				signal = write.SignalAudioProgressImplausible
+			}
 			if err := h.Progress.InsertIntegritySignal(ctx, write.IntegritySignal{ID: ids.New(), TenantID: a.TenantID, SchoolID: a.SchoolID,
-				StudentID: a.StudentID, AttemptID: a.ID, SignalType: write.SignalVideoProgressImplausible, Score: float64(acc.TrimmedMS) / 1000,
+				StudentID: a.StudentID, AttemptID: a.ID, SignalType: signal, Score: float64(acc.TrimmedMS) / 1000,
 				Evidence: ev, CreatedAt: now}); err != nil {
 				return err
 			}
@@ -255,7 +277,7 @@ func (h Attempts) ReportProgress(ctx context.Context, in ProgressInput) (out dto
 }
 
 // cueAnswered closes a cue after a graded answer (F065-AC-08, AC-09): processed when right, or after
-// attempts_per_question answers when allow_skip_after_wrong; writes video.cue_answered.
+// attempts_per_question answers when allow_skip_after_wrong; writes video.cue_answered (not for an audio lesson).
 func (h Attempts) cueAnswered(ctx context.Context, a attempt.Attempt, vc videolesson.Config, it attempt.Item, ans attempt.Answer, isCorrect,
 	rapid bool, limit int) error {
 	cue, ok := vc.CueAt(it.Position)
@@ -271,6 +293,9 @@ func (h Attempts) cueAnswered(ctx context.Context, a attempt.Attempt, vc videole
 		if err := h.Progress.SaveProgress(ctx, prog); err != nil {
 			return err
 		}
+	}
+	if vc.Audio() {
+		return nil // an audio question writes question.answered only (F066-AC-05)
 	}
 	return h.learningEvent(ctx, a, EventVideoCueAnswered, "vc:"+a.ID.String()+":"+itoa(it.Position)+":"+itoa(ans.AttemptNo), h.now(), it.ObjectiveIDs,
 		"student", map[string]any{"attempt_id": a.ID, "cue_id": cue.CueID, "question_version_id": it.QuestionVersionID, "is_correct": isCorrect,

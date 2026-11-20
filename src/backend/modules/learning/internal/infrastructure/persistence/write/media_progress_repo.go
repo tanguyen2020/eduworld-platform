@@ -31,7 +31,7 @@ func ScanProgress(row interface{ Scan(...any) error }) (*videolesson.Progress, e
 	var segment sql.NullString
 	var ratio float64
 	err := row.Scan(&p.AttemptID, &p.TenantID, &p.SchoolID, &p.PositionMS, &ranges, &ratio, &p.LastHeartbeatAt, &p.ClientSeq,
-		&p.Milestones, &cues, &segment, &p.ReachedEnding, &p.Version)
+		&p.Milestones, &cues, &segment, &p.ReachedEnding, &p.Version, &p.PlaysUsed)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -54,7 +54,7 @@ func ScanProgress(row interface{ Scan(...any) error }) (*videolesson.Progress, e
 
 // ProgressColumns are the columns ScanProgress reads.
 const ProgressColumns = `attempt_id, tenant_id, school_id, position_ms, watched_ranges, watched_ratio::float8, last_heartbeat_at, client_seq,
-	milestones_emitted, array_to_string(processed_cue_ids, ','), segment_id, reached_ending, version`
+	milestones_emitted, array_to_string(processed_cue_ids, ','), segment_id, reached_ending, version, plays_used`
 
 // Progress implements write.MediaProgressStore.
 func (MediaProgressRepo) Progress(ctx context.Context, attemptID uuid.UUID) (*videolesson.Progress, error) {
@@ -88,16 +88,16 @@ func (MediaProgressRepo) SaveProgress(ctx context.Context, p videolesson.Progres
 	// tenancyguard:ok the row carries the tenant of the session (RLS WITH CHECK infra.current_tenant_id()); the update
 	// targets the live row of the attempt only.
 	_, err = tx.ExecContext(ctx, `INSERT INTO assessment.video_progress (attempt_id, tenant_id, school_id, position_ms, watched_ranges,
-		watched_ratio, last_heartbeat_at, client_seq, milestones_emitted, processed_cue_ids, segment_id, reached_ending)
-		VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		watched_ratio, last_heartbeat_at, client_seq, milestones_emitted, processed_cue_ids, segment_id, reached_ending, plays_used)
+		VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (attempt_id) DO UPDATE SET position_ms = EXCLUDED.position_ms, watched_ranges = EXCLUDED.watched_ranges,
 		  watched_ratio = EXCLUDED.watched_ratio, last_heartbeat_at = EXCLUDED.last_heartbeat_at, client_seq = EXCLUDED.client_seq,
 		  milestones_emitted = EXCLUDED.milestones_emitted, processed_cue_ids = EXCLUDED.processed_cue_ids,
-		  segment_id = EXCLUDED.segment_id, reached_ending = EXCLUDED.reached_ending, version = assessment.video_progress.version + 1,
+		  segment_id = EXCLUDED.segment_id, reached_ending = EXCLUDED.reached_ending, plays_used = EXCLUDED.plays_used, version = assessment.video_progress.version + 1,
 		  updated_at = now()
 		WHERE assessment.video_progress.deleted_at IS NULL AND assessment.video_progress.tenant_id = infra.current_tenant_id()`,
 		p.AttemptID, p.SchoolID, p.PositionMS, ranges, round4(p.Ratio), p.LastHeartbeatAt, p.ClientSeq, p.Milestones,
-		"{"+strings.Join(cues, ",")+"}", segment, p.ReachedEnding)
+		"{"+strings.Join(cues, ",")+"}", segment, p.ReachedEnding, p.PlaysUsed)
 	return mediaErr(err)
 }
 

@@ -4668,6 +4668,8 @@ components:
         - CUE_ANSWER_REQUIRED
         - RESPONSE_TOO_LONG
         - SIMULATION_LOG_INVALID
+        - AUDIO_PLAY_LIMIT_REACHED
+        - SIMULATION_RUN_LIMIT_REACHED
         - EXAM_NOT_ASSIGNED
         - EXAM_NOT_OPEN
         - EXAM_WINDOW_CLOSED
@@ -6334,6 +6336,17 @@ components:
           items:
             type: string
             maxLength: 64
+        plays_used:
+          type: integer
+          minimum: 0
+          description: Lượt nghe server đã ghi nhận (bài nghe; video luôn 0)
+        max_plays:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          maximum: 20
+          description: Giới hạn lượt nghe của version (null = không giới hạn)
     ActivityRender:
       type: object
       description: Render payload — KHÔNG chứa đáp án, phản hồi theo phương án hay scoring rule (ADR-0016)
@@ -6415,6 +6428,7 @@ components:
                   - audio
                   - video
                   - subtitle
+                  - transcript
               variant:
                 type: string
                 maxLength: 32

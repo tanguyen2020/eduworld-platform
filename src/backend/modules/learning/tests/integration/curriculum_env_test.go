@@ -186,7 +186,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	registry := plugins.Registry()
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
 		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
-		Activities: registry, ActivitySchema: actSchema, ActivityEnabled: true}
+		Activities: registry, ActivitySchema: actSchema, ActivityEnabled: true, Media: write.MediaRepo{}}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
 	wf := command.Workflow{UoW: e.uow, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{}, Docs: write.DocRepo{},
 		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}

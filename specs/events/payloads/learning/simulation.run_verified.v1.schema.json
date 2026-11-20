@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/simulation.run_verified.v1.schema.json",
+  "title": "Payload simulation.run_verified v1 (module learning, F066, ADR-0052)",
+  "description": "Run mô phỏng đã kiểm chứng (verification_status verified hoặc not_verifiable) — checker Go tính lại từ tham số ghim + seed server + action log (ADR-0052). Consumer: learning_record (evidence khi verified), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "attempt_id", "student_id", "template_code", "template_version", "goals_met", "verification_status"],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "activity_id": { "type": ["string", "null"], "format": "uuid" },
+    "template_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)+$" },
+    "template_version": { "type": "integer", "minimum": 1 },
+    "run_no": { "type": "integer", "minimum": 1, "maximum": 50 },
+    "goals_met": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["goal_id", "met"],
+        "properties": {
+          "goal_id": { "type": "string", "maxLength": 64 },
+          "met": { "type": "boolean" }
+        }
+      }
+    },
+    "verification_status": { "enum": ["verified", "not_verifiable"] },
+    "reject_code": { "type": ["string", "null"], "maxLength": 64 }
+  }
+}

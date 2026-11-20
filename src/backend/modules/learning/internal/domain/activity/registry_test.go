@@ -9,27 +9,27 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/quiz"
 )
 
-// F030-AC-20 (T036): the registry resolves only types of the release with a plugin (video_lesson since F065).
+// F030-AC-20 (T036): the registry resolves only types of the release with a plugin (video_lesson since F065, audio_lesson since F066).
 func TestRegistryResolve(t *testing.T) {
 	r := plugins.Registry()
-	for _, ok := range []string{"quiz", "interactive_exercise", "video_lesson"} {
+	for _, ok := range []string{"quiz", "interactive_exercise", "video_lesson", "audio_lesson"} {
 		if p, err := r.Resolve(ok); err != nil || string(p.Info().Type) != ok {
 			t.Fatalf("%s: %v", ok, err)
 		}
 	}
-	for _, no := range []string{"audio_lesson", "simulation", "minigame", "speaking", "written_response", "project", ""} {
+	for _, no := range []string{"simulation", "minigame", "speaking", "written_response", "project", ""} {
 		if _, err := r.Resolve(no); !errors.Is(err, activity.ErrNotSupported) {
 			t.Fatalf("%s: %v", no, err)
 		}
 	}
-	if got := r.Missing([]string{"quiz", "audio_lesson", "audio_lesson"}); len(got) != 1 || got[0] != "audio_lesson" {
+	if got := r.Missing([]string{"quiz", "minigame", "minigame"}); len(got) != 1 || got[0] != "minigame" {
 		t.Fatalf("missing: %v", got)
 	}
 	if r.MinClientVersion("quiz") == "" || r.MinClientVersion("simulation") != "" {
 		t.Fatal("min client version")
 	}
-	if infos := r.Infos(); len(infos) != 3 || infos[0].Type != activity.InteractiveExercise || infos[1].Type != activity.Quiz ||
-		infos[2].Type != activity.VideoLesson {
+	if infos := r.Infos(); len(infos) != 4 || infos[0].Type != activity.AudioLesson || infos[1].Type != activity.InteractiveExercise ||
+		infos[2].Type != activity.Quiz || infos[3].Type != activity.VideoLesson {
 		t.Fatalf("infos: %v", infos)
 	}
 }

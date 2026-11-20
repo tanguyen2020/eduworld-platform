@@ -185,6 +185,8 @@ type Progress struct {
 	// ReachedEnding: a branch choice led to an ending segment.
 	ReachedEnding bool
 	Version       int64
+	// PlaysUsed are the listening plays accepted by the server (audio_lesson, F066 research R1; always 0 for video).
+	PlaysUsed int
 }
 
 // NewProgress is the progress row of a started attempt (position 0, nothing watched).

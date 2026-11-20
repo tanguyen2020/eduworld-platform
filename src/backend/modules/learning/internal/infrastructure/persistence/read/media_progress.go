@@ -28,7 +28,7 @@ func (MediaProgressModel) Progress(ctx context.Context, attemptID uuid.UUID) (*v
 	}
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()); the _live view has deleted_at IS NULL
 	rows, err := q.QueryContext(ctx, `SELECT attempt_id, tenant_id, school_id, position_ms, watched_ranges, watched_ratio::float8,
-		last_heartbeat_at, client_seq, milestones_emitted, array_to_string(processed_cue_ids, ','), segment_id, reached_ending, version
+		last_heartbeat_at, client_seq, milestones_emitted, array_to_string(processed_cue_ids, ','), segment_id, reached_ending, version, plays_used
 		FROM assessment.video_progress_live WHERE tenant_id = infra.current_tenant_id() AND attempt_id = $1 AND deleted_at IS NULL`, attemptID)
 	if err != nil {
 		return nil, fmt.Errorf("video progress: %w", err)
@@ -42,7 +42,7 @@ func (MediaProgressModel) Progress(ctx context.Context, attemptID uuid.UUID) (*v
 	var cues string
 	var segment sql.NullString
 	if err := rows.Scan(&p.AttemptID, &p.TenantID, &p.SchoolID, &p.PositionMS, &ranges, &p.Ratio, &p.LastHeartbeatAt, &p.ClientSeq,
-		&p.Milestones, &cues, &segment, &p.ReachedEnding, &p.Version); err != nil {
+		&p.Milestones, &cues, &segment, &p.ReachedEnding, &p.Version, &p.PlaysUsed); err != nil {
 		return nil, fmt.Errorf("video progress: %w", err)
 	}
 	p.Ranges = []videolesson.Range{}
