@@ -20,7 +20,9 @@ import (
 // fakeRefs is a TEST DOUBLE of port.ProjectionWriter (R17): it records which projection each event reached.
 type fakeRefs struct{ calls []string }
 
-func (f *fakeRefs) OwnerTenant(context.Context, string, uuid.UUID) (*uuid.UUID, error) { return nil, nil }
+func (f *fakeRefs) OwnerTenant(context.Context, string, uuid.UUID) (*uuid.UUID, error) {
+	return nil, nil
+}
 func (f *fakeRefs) Tenant(context.Context, uuid.UUID, *string, string, string, *bool, []byte, int64) (bool, error) {
 	f.calls = append(f.calls, "tenant")
 	return true, nil
@@ -85,7 +87,7 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 	revoked := consumer.HubAccessRevoked{Hub: h}
 	cases := []struct {
 		producer, event, want string
-		handle               func(context.Context, outbox.Envelope) error
+		handle                func(context.Context, outbox.Envelope) error
 	}{
 		{"identity", "tenant.created", "tenant", id.Handle},
 		{"identity", "tenant.updated", "tenant", id.Handle},
