@@ -11,7 +11,7 @@
 ## Requirement Completeness
 
 - [x] Không còn marker [NEEDS CLARIFICATION]
-- [ ] Mọi FR chính của feature (theo CODE_PLAN) có mặt và có mã PRD đúng — PRD chưa có FR riêng; dùng FR gần nhất, ghi Câu hỏi mở 1
+- [x] Mọi FR chính của feature (theo CODE_PLAN) có mặt và có mã PRD đúng — PRD đã có FR-ANL-017…FR-ANL-023 (owner chốt 2026-11-20)
 - [x] Mọi tiêu chí viết theo EARS, kiểm thử được, không mơ hồ
 - [x] Có tiêu chí cho authorization, tenant isolation, idempotency/audit (nếu có thao tác ghi), lỗi chính
 - [x] Success criteria đo được và không phụ thuộc công nghệ

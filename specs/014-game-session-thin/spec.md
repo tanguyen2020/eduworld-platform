@@ -42,6 +42,18 @@ Quyết định khi triển khai (theo mặc định `[Confirmed]` của spec/t�
 - OQ F014-8: `game.content_manifests` theo DDL DATABASE_DESIGN §3.13 (`etag varchar(64)`, `entries` ≤ 4 MiB) — data-model ghi `varchar(128)`/64 KiB; đã theo tài liệu sở hữu.
 - OQ F014-9: message trên Valkey `ew:rt:user:<id>` là `{type, payload}` (payload theo AsyncAPI `session.session.replaced`/`session.session.ended`); gateway F090 bọc `ServerEnvelope` (`v`, `seq`, `ts`) [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F014-1 → **Chốt:** `login_events.sis_connection_id` lấy từ projection `ref.students.sis_connection_id` của module game, chiếu từ `student.sis_link_created`/`student.sis_link_superseded`/`student.synced` (payload đã có `sis_connection_id`); không thêm vào Principal (R30). Task bổ sung.
+- OQ F014-2 → đã giải quyết (projection `ref.platform_settings`).
+- OQ F014-3 → **Chốt:** theo API_DESIGN §6 (tài liệu sở hữu): response lỗi không được lưu nên dùng lại key sau `409 ACTIVE_SESSION_ON_OTHER_DEVICE` được xử lý như lời gọi mới; Clarification 2026-11-16 ("→ `409 IDEMPOTENCY_KEY_REUSED`") chỉ đúng khi key đã gắn với một response thành công. Client F061 vẫn sinh key mới cho `takeover`. Không đổi mã.
+- OQ F014-4 → **Chốt:** chấp nhận `403 TENANT_MISMATCH` (vẫn 403, không ghi gì) khi nhân sự gửi `X-Tenant-Id` không thuộc phiên; F014-AC-18 kiểm "403 không tạo dữ liệu".
+- OQ F014-5 → **Chốt:** không xảy ra (OQ F011-1); không thiết kế tra cứu liên tenant.
+- OQ F014-6 → **Chốt:** metric chung `eduworld_projection_lag_seconds{module, projection}` trong `pkg/` (task ở F003).
+- OQ F014-7 → đã giải quyết (nối binary 2026-11-20); E2E hai client trên stack và `login_slo` chạy khi có môi trường compose (không phải câu hỏi mở).
+- OQ F014-8 → **Chốt:** theo DATABASE_DESIGN §3.13 (`etag varchar(64)`, `entries` ≤ 4 MiB); data-model F014 đã sửa theo.
+- OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** module game cưỡng chế chính: tổng thời gian game session active của học sinh trong ngày ICT so với giới hạn của trường (projection `ref.schools.settings_subset`, từ `school.updated`); cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc session với `end_reason = daily_limit`, từ chối tạo session bằng `403 DAILY_PLAY_LIMIT_REACHED` + `reopen_at` (mã mới, cùng F013-AC-33). Thêm F014-AC-27; `end_reason` mới cần ghi ở EVENT_DESIGN (agent docs) và schema `game_session.ended`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo game session, một thiết bị mỗi tài khoản (Priority: P1)
@@ -65,6 +77,7 @@ Học sinh vào game sau đăng nhập; nếu đang chơi ở máy khác, máy m
 | F014-AC-07 | NẾU thiếu `Idempotency-Key`, THÌ module game PHẢI trả `428 PRECONDITION_REQUIRED`; gửi lại cùng key và cùng body PHẢI trả cùng kết quả, không tạo session thứ hai; cùng key nhưng body khác (ví dụ thêm `takeover: true`) PHẢI trả `409 IDEMPOTENCY_KEY_REUSED` | FR-GAME-007 · NFR-SEC-004 · [API_DESIGN §6](../../docs/07-backend/API_DESIGN.md) | — |
 | F014-AC-08 | NẾU `X-Tenant-Id` khác tenant của học sinh, THÌ module game PHẢI trả `403 TENANT_MISMATCH`; session luôn mang `tenant_id` của học sinh | FR-GAME-007 · ADR-0065 | TC-TEN-011 |
 | F014-AC-25 | TRONG KHI thời điểm server nằm trong giới nghiêm hiệu lực của học sinh, module game PHẢI từ chối `createGameSession` (kể cả `takeover`) bằng `403 CURFEW_ACTIVE` kèm `reopen_at`, không tạo session hay login event thành công | NFR-SAFE-005 · AC-AUTH-032 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 | TC-AUTH-092 |
+| F014-AC-27 | TRONG KHI trường của học sinh bật `daily_play_limit_minutes` và tổng thời gian game session active của học sinh trong ngày (ICT) đã đạt giới hạn, module game PHẢI từ chối `createGameSession` (kể cả `takeover`) bằng `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau; KHI session đang chạy sắp đạt giới hạn, job đóng phiên PHẢI gửi cảnh báo trước `curfew_warning_minutes`, rồi khi đạt giới hạn kết thúc session (`end_reason = daily_limit`) như giờ giới nghiêm; trường không bật hoặc tenant `common` thì không áp | NFR-SAFE-005 · [CHILD_SAFETY §4](../../docs/10-security/CHILD_SAFETY.md) · ADR-0078 | — |
 
 ---
 

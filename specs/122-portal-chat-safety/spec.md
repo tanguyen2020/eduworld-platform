@@ -16,6 +16,10 @@
 
 - Q: UI phê duyệt hai người cho công tắc kiểm duyệt và UI chọn preset trường (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
+### Session 2026-11-20 (owner chốt — OQ-09)
+
+- Màn chat policy → **Chốt:** giờ chat mặc định hiển thị 06:30–21:30 (chỉ thu hẹp được); phạm vi World chỉ có "Theo trường" và (tenant `unit`) "Toàn đơn vị" — không có lựa chọn organization/liên tenant (CONFIG_DEFAULTS `world_chat_scope`, CHAT_SYSTEM §2).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Hàng đợi case của Platform Safety Team (Priority: P1) 🎯 MVP

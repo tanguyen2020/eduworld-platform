@@ -11,7 +11,7 @@
 - Q: GODOT_ARCHITECTURE §11 còn intent filter `oauth2/callback` (Android) và "redirect OIDC cùng tab" (Web)? → A: Đã gỡ theo ADR-0068 (CODE_PLAN D16): build không có intent filter OAuth, không redirect OIDC; task tài liệu sửa §11.
 - Q: Windows phân phối qua Microsoft Store hay installer? → A: Installer ký Authenticode tải qua CDN + kênh phần mềm quản lý phòng máy ([DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md)); Microsoft Store không làm trong Release 1.0 [Confirmed].
 - Q: Tải trước ngoài giờ không có đăng nhập học sinh thì biết tải gì? → A: Từ chỉ mục gói công khai có chữ ký trên CDN theo `client_version` (vùng thế giới, không theo tenant) + media công khai đã có trong manifest nội dung tenant được cache ở phiên trước (URL theo hash). Không gọi API cần token [Confirmed].
-- Q: Firefox/Safari? → A: Không hỗ trợ trong Release 1.0 ([TBD] NFR-COMP-004); trình duyệt không có WebGL 2 nhận trang thông báo.
+- Q: Firefox/Safari? → A: Không hỗ trợ trong Release 1.0 (NFR-COMP-004; OQ-04 owner chốt 2026-11-20: Chrome/Edge bắt buộc, Firefox/Safari ngoài ma trận); trình duyệt không có WebGL 2 nhận trang thông báo.
 
 ### Session 2026-11-16 (ADR-0086)
 
@@ -20,6 +20,12 @@
 ### Session 2026-11-17
 
 - Q: Bộ cài Windows chọn "Máy dùng chung"/"Máy cá nhân" (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
+
+### Session 2026-11-20 (owner chốt — OQ-04, pinning)
+
+- Nền tảng và trình duyệt (OQ-04) → **Chốt:** OS tối thiểu Windows 10 x86_64, Android 9, iOS 15 (khớp F133-AC-01); Web hỗ trợ chính thức Chrome và Edge bản mới; Firefox/Safari không được hỗ trợ trong Release 1.0 (không kiểm thử) nhưng **không bị chặn**; thiếu WebGL 2 thì hiện trang thông báo. F133-AC-16 sửa theo (bỏ chặn trình duyệt không phải Chrome/Edge).
+- Certificate pinning (GODOT_ARCHITECTURE §14) → **Chốt:** pin theo **CA bundle**: `TLSOptions.client(trusted_chain)` với `trusted_chain` chỉ gồm CA chính + một CA dự phòng phát hành chứng chỉ của tên miền API/realtime, đóng gói trong build (Windows/Android/iOS; Web dùng TLS của trình duyệt); xoay chứng chỉ lá không cần cập nhật client. F133 đóng gói bundle theo môi trường và bật cờ `certificate_pinning` (T029); `ApiClient` (F061) và `RealtimeClient` (F092) dùng bundle — task ở hai feature đó.
+- Nhà cung cấp CDN (OQ-10) → chọn khi dựng môi trường, cấu hình header độc lập nhà cung cấp (không phải câu hỏi mở).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -80,7 +86,7 @@ QA chạy bản release candidate trên thiết bị lab mọi hạng; báo cáo
 | F133-AC-13 | KHI có release candidate, QA PHẢI chạy bộ kiểm hiệu năng client trên toàn bộ thiết bị hạng Tầm trung và ít nhất 1 thiết bị Tối thiểu mỗi nền tảng ([TEST_STRATEGY §4.1](../../docs/12-project/TEST_STRATEGY.md)); mọi AC-PERF-001…011 PHẢI đạt; NẾU không đạt, THÌ release PHẢI bị chặn hoặc có phương án giảm chất lượng được duyệt (không loại thiết bị tầm trung) | FR-GAME-009 · NFR-COMP-001 · ADR-0057 | TC-PERF-009 · TC-PERF-019 · TC-PERF-020 · TC-PERF-021 · TC-PERF-022 · TC-PERF-023 · TC-PERF-024 |
 | F133-AC-14 | Bản build release của mỗi nền tảng PHẢI qua benchmark headless từng zone; NẾU vượt ngân sách quá `perf_budget_tolerance_ci`, THÌ CI PHẢI chặn | FR-GAME-009 · [PERFORMANCE_BUDGET §15](../../docs/08-game-client/PERFORMANCE_BUDGET.md) | TC-PERF-018 |
 | F133-AC-15 | Trên cả 4 nền tảng, học sinh PHẢI đăng nhập bằng form trong game (bàn phím vật lý, bàn phím ảo mobile, Web), không mở trình duyệt/WebView; trên Windows/Android/iOS, mở lại game khi phiên còn hạn PHẢI tự vào Hub không hiện form, trên Web PHẢI luôn hiện form; Ở NƠI nền tảng là desktop/mobile, client PHẢI bật `certificate_pinning`; Web dựa vào HSTS | ADR-0068 · ADR-0086 | TC-AUTH-001 · TC-AUTH-082 · TC-AUTH-084 |
-| F133-AC-16 | Bản Web PHẢI dùng renderer Compatibility (WebGL 2), export single-threaded (không cần COOP/COEP), preset tối đa Trung bình, heap theo [PERFORMANCE_BUDGET §14](../../docs/08-game-client/PERFORMANCE_BUDGET.md), âm thanh bật sau tương tác đầu; NẾU trình duyệt không có WebGL 2 hoặc không phải Chrome/Edge được hỗ trợ, THÌ trang PHẢI hiện thông báo thân thiện thay vì tải engine | NFR-COMP-004 · ADR-0057 | TC-SIM-005 |
+| F133-AC-16 | Bản Web PHẢI dùng renderer Compatibility (WebGL 2), export single-threaded (không cần COOP/COEP), preset tối đa Trung bình, heap theo [PERFORMANCE_BUDGET §14](../../docs/08-game-client/PERFORMANCE_BUDGET.md), âm thanh bật sau tương tác đầu; NẾU trình duyệt không có WebGL 2, THÌ trang PHẢI hiện thông báo thân thiện thay vì tải engine; trình duyệt khác Chrome/Edge có WebGL 2 PHẢI không bị chặn (không hỗ trợ chính thức — OQ-04) | NFR-COMP-004 · ADR-0057 | TC-SIM-005 |
 
 ---
 
@@ -199,7 +205,7 @@ Học sinh cài bản chính thức trên laptop Windows, điện thoại Androi
 ## Assumptions
 
 - Tài khoản Google Play Console, Apple Developer (tổ chức) và chứng chỉ Authenticode được mua trước M6 (quy trình tổ chức).
-- Nhà cung cấp CDN theo OQ-10 [TBD]; cấu hình header viết dạng độc lập nhà cung cấp.
+- Nhà cung cấp CDN chọn khi dựng môi trường (OQ-10 đã trả lời 2026-11-20, không phải câu hỏi mở của feature); cấu hình header viết dạng độc lập nhà cung cấp.
 - Thiết bị lab §2.1 có sẵn; device matrix chốt sau khảo sát OQ-04 [Confirmed].
 - ADR-0079 Rejected: giữ đủ 4 nền tảng (ADR-0013). ADR-0075 Accepted không đổi quy trình build (client dùng URL CDN; upload gói qua API S3 chuẩn).
 - CI/CD là GitHub Actions (ADR-0088): `godot.yml` export Windows/Android/Web trên runner Linux, export + ký iOS trên runner macOS (tốn phút tính phí — chỉ chạy job iOS trên tag và nhánh `main`); action ghim SHA commit, Dependabot cập nhật action.

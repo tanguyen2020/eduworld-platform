@@ -137,6 +137,12 @@
 - [x] T053 [P] CHANGELOG mục F001 — file: `CHANGELOG.md` — ✅ CHANGELOG: mục F001 và ADR-0092.
 - [x] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/001-monorepo-compose-ci-skeleton/quickstart.md` — ✅ Bằng chứng ở quickstart §5.
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T055 **OQ chốt 2026-11-20** (OQ F020-2) `archgen` kiểm theo operation: mỗi literal `modcall.Op{Operation: …}` phải nằm trong `x-allowed-callers` của spec internal bên nhận cho module gọi; fixture F020-AC-19 fail — file: `src/backend/tools/archgen/`, `src/backend/modules/learning/tests/arch/` — kiểm: `make arch-check` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1, US2, US3, US4 (song song được sau T015) → US5 → Polish.

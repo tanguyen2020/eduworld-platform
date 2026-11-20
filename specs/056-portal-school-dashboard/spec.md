@@ -16,6 +16,10 @@
 
 - Q: Tên thư mục workspace và component ô bị ẩn? → A: Workspace C là `school-lms` (ADMIN_PORTAL §1.2, RB-619); ô < 5 dùng **một** component `SuppressedCell` (DESIGN_SYSTEM §4) do F056 tạo, F080/F081 dùng lại (thay `SuppressedValue`).
 
+### Session 2026-11-20 (owner chốt)
+
+- Endpoint hồ sơ học sinh và phân tích đề/bài (contracts §6, Assumptions "chờ owner F043/F044 chốt") → **Chốt:** theo đề xuất ở contracts §6; F043 làm `getStudentLearningProfile` và `SchoolDashboard.widgets.self_study`, F044 làm `getExamSessionReport`/`getAssignmentItemAnalysis` (đã có trong spec/tasks của hai feature).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP
@@ -203,5 +207,5 @@ Academic Manager xuất kết quả bài giao (XLSX) và báo cáo tham khảo T
 ## Assumptions
 
 - Thư mục `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/`, route `/portal/school-lms/dashboard/*` (ADMIN_PORTAL §1.2, F051).
-- [Confirmed] Endpoint hồ sơ học sinh và phân tích đề/bài theo đề xuất ở [contracts §6](contracts/README.md) — chờ owner F043/F044 chốt; US2 phần hồ sơ và US3 phần phân tích chỉ chạy sau delta.
+- [Confirmed] Endpoint hồ sơ học sinh và phân tích đề/bài theo đề xuất ở [contracts §6](contracts/README.md) — owner chốt 2026-11-20 (F043/F044 làm, đã có trong spec/tasks của hai feature); US2 phần hồ sơ và US3 phần phân tích chỉ chạy sau delta.
 - Số liệu "tự học sau gợi ý" (câu hỏi 4) cần trường bổ sung trong `SchoolDashboard` (delta [Confirmed]); trước khi có, widget ẩn kèm "Chưa có số liệu".

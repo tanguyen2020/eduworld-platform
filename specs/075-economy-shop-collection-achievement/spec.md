@@ -201,7 +201,7 @@ System Admin sửa số dư/vật phẩm/XP sai do lỗi hoặc gian lận bằn
 - HTTP workflow `/game-admin/*` cho `items`, `currencies`, `shop-items`, `collections`, `achievements` → F078; màn Item/Shop/Achievement Builder → F079.
 - Handler `updateAvatar`, preset trang phục → F070; vật sưu tầm khám phá (nguồn) → F071.
 - Màn Shop/Kho đồ/Bộ sưu tập/Thành tựu trong Godot → nhóm F (chưa có mã trong danh mục).
-- Loại tiền thứ hai → chờ OQ-14; trading → cần ADR mới.
+- Loại tiền thứ hai → không có trong Release 1.0 (OQ-14 owner chốt 2026-11-20); trading → cần ADR mới.
 
 ## Assumptions
 

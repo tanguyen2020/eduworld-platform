@@ -29,6 +29,10 @@
 - OQ F022-13: Luồng publish (`status = published` + `current_version_id`) thuộc F025/F026; test tích hợp đặt trạng thái bằng SQL dưới role `learning_platform` (helper `publishQuestion`, gắn nhãn TEST). → [Confirmed].
 - OQ F022-14: Pool cache Valkey `ew:learning:qb:pool:<tenant_id>:<hash(subject_id)>` (TTL 5 phút) giữ toàn bộ câu hiện hành của một môn; bộ lọc còn lại áp trong bộ nhớ bởi `selection.Select`. → [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- Mọi OQ F022-1…14 giữ [Confirmed]. OQ F022-12 (cache answer key) → **Chốt:** quyết định theo số đo p95 chấm của F132 (không cache trước khi có số đo). OQ F022-8 → đã nối binary 2026-11-20.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn câu hỏi 8 loại có kiểm hợp lệ (Priority: P1)

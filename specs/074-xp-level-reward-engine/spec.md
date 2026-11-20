@@ -17,6 +17,10 @@
 - Q: Nguồn XP `lesson.completed` (PROGRESSION_SYSTEM §3.1) lấy từ event nào? → A: Domain event `lesson.completed` do module learning phát (owner F031, payload `lesson.completed.v1`) khi học sinh hoàn thành mọi activity bắt buộc của bài, version bài ghim, một lần mỗi học sinh × version bài (Technical Architect 2026-11-17); F074 tiêu thụ trong `game.reward_engine` (F074-AC-27).
 - Q: Tên config type bảng level, tên cột ngưỡng và permission? → A: Config type `levels` đổi thành `progression-levels` (kebab, bảng level sinh khi publish curve, chỉ đọc/ghi đè theo level — API_DESIGN, RB-308); cột `game.progression_levels.xp_required` (PROGRESSION_SYSTEM §6, DATABASE_DESIGN §2.8a); permission `game.progression.write` cho `progression-curves` và `progression-levels` (thay `game.level.write`, RB-309). Field API `Progression.xp_to_next` (XP còn thiếu tới level kế) giữ nguyên.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F016-2/F045-3)
+
+- Gộp tài khoản (`mergeUserData` của module game) → **Chốt:** F074 cộng gộp ledger XP/phần thưởng của user nguồn vào user đích bằng bản ghi bù (append-only, không sửa dòng cũ), idempotent theo `merge_id` (IDENTITY_MAPPING §7).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cộng XP server-side từ sự kiện đã kiểm chứng (Priority: P1)

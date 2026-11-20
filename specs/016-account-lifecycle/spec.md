@@ -36,9 +36,17 @@
 - OQ F016-12: Job `retention-anonymizer` tính `student_data_retention` (365 ngày, CONFIG_DEFAULTS) từ lần đổi sang `deactivated` gần nhất trong lịch sử trạng thái, không có lịch sử thì dùng `users.updated_at`; mỗi lần chạy tối đa 100 học sinh [Confirmed].
 - OQ F016-13: Khi khôi phục lúc đăng nhập, identity được khôi phục trước; nếu facade một module tạm lỗi, đăng nhập vẫn thành công, saga thử lại bước đó và module tự khôi phục khi nhận `student.restored` (ACCOUNT_PROVISIONING §6b.1).
 
-### Session 2026-11-20 (bổ sung sau F057 — [Confirmed], chờ Technical Architect duyệt)
+### Session 2026-11-20 (bổ sung sau F057 — [Confirmed], owner chốt 2026-11-20)
 
 - Q: Hủy lần dọn đang `awaiting_approval` (OQ F057-2, Clarification 2026-11-16 của F057)? → A: [Confirmed] Thêm `cancelStudentCleanupRun` (`POST /admin/student-cleanup/runs/{run_id}:cancel`, `platform.student_cleanup.approve`, `Idempotency-Key`, body `{reason}` 3..500 ký tự, `204`; run không ở `awaiting_approval` → `409 CONFLICT`, không có → `404`). Run chuyển `cancelled` (`finished_at` = lúc hủy), audit `student_cleanup.cancelled` kèm lý do; không học sinh nào bị dọn; lần chạy job sau tạo lần dọn mới theo cấu hình hiện hành. `StudentCleanupRun.status` thêm `cancelled`; CHECK của `platform.student_cleanup_runs` mở rộng bằng migration `20261127000001_f016_cleanup_run_cancel.sql` (expand). Portal dùng chung action `action.platform_admin.system_settings.approve_cleanup` (ADR-0090) với `approveStudentCleanupRun`.
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F016-2 (facade vòng đời của module chưa có dữ liệu riêng) → **Chốt:** feature tạo dữ liệu học sinh mở rộng facade của module mình: learning `mergeUserData` (giữ attempt theo `student_id` gốc, thêm liên kết sang user đích — IDENTITY_MAPPING §7) ở F030; game `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData`/`mergeUserData` cho GameProfile ở F070 và gộp ledger XP bằng bản ghi bù ở F074; competition ở F100; chat ở F115. Task đã thêm vào tasks.md của các feature đó.
+- OQ F016-7 → đã giải quyết (nối binary); T036 end-to-end chạy khi có môi trường compose (không phải câu hỏi mở).
+- OQ F016-10 → **Chốt:** giữ `editUsernameAllowed = false` (KEYCLOAK_SSO, ADR-0067). Khi ẩn danh hóa: user Keycloak bị tắt, xóa email/họ tên/thuộc tính, **giữ username**; `identity.users.username` = `anon.<user_id>`. Username không được chứa tên thật theo quy ước: học sinh theo mã (`hs.<mã trường>.<mã học sinh>` hoặc username SIS), nhân sự theo mã/viết tắt. ACCOUNT_PROVISIONING (dòng ẩn danh hóa) cần ghi rõ username Keycloak giữ nguyên — agent docs cập nhật.
+- OQ F016-11, OQ F016-13 → **Chốt:** giữ đúng như mô tả (System Admin ghi nhận = đã duyệt, `export` → `422`; khôi phục identity trước, module tự khôi phục khi nhận `student.restored`).
+- Mọi OQ F016-1…13 còn lại giữ [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 

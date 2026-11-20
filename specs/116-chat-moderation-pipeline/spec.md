@@ -180,7 +180,7 @@ Học sinh lớp 2 chạm "Cố lên!"; bạn chọn tiếng Anh thấy "Go for 
 - Giao diện Portal danh mục/công tắc/nhóm từ tenant → F122; UI phản hồi kiểm duyệt trong game → F119.
 - Chạy lại pipeline khi sửa/forward/quote → F118 (dùng lại bộ kiểm tra của F116).
 - Tên party/đội/study group qua pipeline → F100/F120 gọi cùng port.
-- Mô hình ML/LLM phân loại bắt nạt: [TBD] theo MODERATION §4 (cần ADR).
+- Mô hình ML/LLM phân loại bắt nạt: không có trong Release 1.0 (owner chốt 2026-11-20); làm sau cần ADR mới theo MODERATION §4.
 
 ## Assumptions
 

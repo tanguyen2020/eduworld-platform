@@ -105,6 +105,12 @@
 - [x] T039 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/024-question-set-lesson-blueprint/quickstart.md` — ✅ 2026-11-19: quickstart §5
 - [x] T040 [P] Cập nhật DATABASE_DESIGN §2.5 (DDL question set, lesson, learning material, blueprint, `search_tsv`) — file: `docs/07-backend/DATABASE_DESIGN.md` — ✅ 2026-11-19: DATABASE_DESIGN §2.5
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T041 **OQ chốt 2026-11-20** (OQ F054-2) Tham số `content_language`, `translation_status` cho `searchQuestions` và list bốn loại F024 (contract + read model + index nếu cần); test lọc + tenant isolation — file: `specs/openapi/modules/learning.v1.yaml`, `src/backend/modules/learning/internal/infrastructure/persistence/content/` — kiểm: `make specs-breaking`, `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → US3 / US4 (song song) → US6 → US5 → Polish.

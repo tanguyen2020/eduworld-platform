@@ -23,7 +23,7 @@
 
 ### Session 2026-11-19 (triển khai)
 
-Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Confirmed], chờ Technical Architect/UX Lead duyệt.
+Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Confirmed]; owner chốt 2026-11-20.
 
 - OQ F051-1 — Đường dẫn route workspace? → A: [Confirmed] Lấy `path` của danh mục `specs/portal/menu-catalog.yaml` (`/school-lms`, `/content-studio`, `/game-ops`, `/live-ops`, `/platform-admin` — nguồn duy nhất, ADR-0090, khớp Assumptions), thay route `/school`, `/content`, `/platform` F050 đặt tạm; thư mục `src/workspaces/<slug>` giữ nguyên.
 - OQ F051-2 — `.env.example` (T001)? → A: [Confirmed] Theo quyết định F050 (cấu hình runtime `/config.json`, mẫu `apps/portal/public/config.example.json`, `VITE_*` chỉ là fallback khi dev): bỏ `oidcIssuer`/`oidcClientId` (ADR-0091), thêm `principalCacheTtlSeconds` (`principal_cache_ttl`) và `sessionIdleTimeoutSeconds` (idle của `portal_session_sso`); không có `VITE_PORTAL_BASE_PATH` (portal phục vụ ở gốc origin).
@@ -37,6 +37,14 @@ Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [C
 - OQ F051-10 — Đếm `portal_login_route{result}`? → A: [Confirmed] Chưa làm: F050 chưa có kênh telemetry.
 - OQ F051-11 — Vị trí test và hook? → A: [Confirmed] Theo quy ước F050: test đặt cạnh mã (`src/**/*.test.ts(x)`), hook API ở `src/shared/api/hooks/`.
 - OQ F051-12 — Placeholder "Tất cả tenant" (màu mặc định Ant Design `#bfbfbf`, 1,83:1) bị axe chặn? → A: [Confirmed] Thêm seed `antd.colorTextPlaceholder` = `ops.color.text.secondary` vào `design/admin-tokens` (tokens@0.3.0, MINOR), như F050 đã làm với `colorText*`.
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F051-1…F051-12 (mặc định [Confirmed] chờ duyệt) → owner chốt 2026-11-20, giữ nguyên các quyết định trên. Riêng:
+- OQ F051-3 → **Chốt:** `getMe` đổi sang header tùy chọn ở contract và backend (task ở F012); portal giữ cách gọi không header ở phạm vi platform.
+- OQ F051-4 → **Chốt:** token breakpoint/vùng chạm vào `design/admin-tokens` (task ở F005).
+- OQ F051-9 → **Chốt:** E2E Playwright với backend thật và kiểm realm (T015, T016, T027, T039, T044, T055–T057, T060, T052) chạy khi có môi trường compose (binary đã nối 2026-11-20) — không phải câu hỏi mở.
+- OQ F051-10 → **Chốt:** không có telemetry trình duyệt cho đăng nhập trong Release 1.0; số liệu đăng nhập portal đo phía server bằng `eduworld_portal_login_total{result}` của module identity, bỏ `portal_login_route` ở plan.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

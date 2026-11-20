@@ -87,7 +87,7 @@ deploy/observability/alertmanager/alertmanager.yml                # route team=s
 
 ## Phase 0: Research
 
-Không có. Quy tắc ở [MODERATION §6–§7, §9](../../docs/03-social-multiplayer/MODERATION.md), [CHILD_SAFETY §7, §11](../../docs/10-security/CHILD_SAFETY.md), [ACCOUNT_PROVISIONING §6](../../docs/09-identity/ACCOUNT_PROVISIONING.md). Gửi SMTP chuẩn (local mailpit) không cần đánh giá nhà cung cấp; nhà cung cấp email production theo OQ-10 [TBD], chỉ đổi cấu hình.
+Không có. Quy tắc ở [MODERATION §6–§7, §9](../../docs/03-social-multiplayer/MODERATION.md), [CHILD_SAFETY §7, §11](../../docs/10-security/CHILD_SAFETY.md), [ACCOUNT_PROVISIONING §6](../../docs/09-identity/ACCOUNT_PROVISIONING.md). Gửi SMTP chuẩn (local mailpit) không cần đánh giá nhà cung cấp; nhà cung cấp email production chọn khi dựng môi trường (OQ-10 đã trả lời 2026-11-20 — không phải câu hỏi mở của feature), chỉ đổi cấu hình.
 
 ## Phase 1: Design & Contracts
 

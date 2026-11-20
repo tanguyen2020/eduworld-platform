@@ -33,6 +33,13 @@
 - OQ F027-13: Tham chiếu media trong nội dung (`media_refs` + `media_ref`/`audio_ref`/`background_media_ref`/`image_media_ref`) phải là asset có trong thư viện của phạm vi (tenant khác/không tồn tại → `422 /media_refs/<i>`); ghi `media_usages` mới làm cho câu hỏi — loại nội dung khác ghi khi feature của chúng dùng `command.MediaRefs`. `kind = document` (file import) được quét + kiểm magic bytes rồi lưu nguyên (`original`) ở `ew-media-private`; `storage.AssetReader` là adapter thật của OQ F021-4. → [Confirmed].
 - OQ F027-14: Test tích hợp đặt phẳng trong `tests/integration/{media_*,math,preview}_test.go` (dùng chung `TestMain`/cluster, như OQ F022-2). → [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F027-2 → **Chốt:** `media.upload` cho mọi role có `learning_content.write` (`tenant_admin`, `school_admin`, `academic_manager`, `content_admin`); task ở F002.
+- OQ F027-8 (bước worker trong transaction consumer) → **Chốt:** giữ; chuyển sang job queue khi đo tải F132 cho thấy video dài giữ transaction quá `AckWait`.
+- OQ F027-10 → biến cấu hình ghi trong quickstart; `.env.example` do người có quyền sửa file `.env*` cập nhật (không phải câu hỏi mở).
+- Mọi OQ F027 khác giữ [Confirmed]; route/consumer đã nối binary 2026-11-20.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Upload media an toàn (Priority: P1)

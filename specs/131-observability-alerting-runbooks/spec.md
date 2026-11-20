@@ -160,6 +160,6 @@ Trực vận hành, đội backend, Safety Team có dashboard đúng [MONITORING
 
 - Alertmanager được thêm vào sơ đồ MONITORING §1 (task tài liệu) [Confirmed].
 - Tenant QA được loại khỏi analytics/dashboard nhà trường và khỏi job dọn học sinh bằng cấu hình tenant; cơ chế loại trừ analytics chưa có trong tài liệu — cần bổ sung ở F080/F043 (ghi báo cáo).
-- OQ-11 chưa chốt: mục tiêu SLO dùng `availability` [TBD]; đổi giá trị chỉ sửa CONFIG_DEFAULTS + MONITORING.
+- OQ-11 đã trả lời 2026-11-20: mục tiêu SLO dùng `availability` (99,5 %/tháng trong giờ học, CONFIG_DEFAULTS); đổi giá trị chỉ sửa CONFIG_DEFAULTS + MONITORING.
 - ADR-0074 Accepted (2026-11-17): nhãn `service` = binary (`core-api`, `realtime`, `worker`) kèm `module` và `profile` ([MONITORING §2](../../docs/11-operations/MONITORING.md)); dashboard/alert theo 5 Swarm service và 5 module domain.
 - CI là GitHub Actions (ADR-0088): kiểm tra cấu hình quan sát chạy trong workflow `obs.yml` theo path filter [Confirmed]; ticket lỗi tạo trên GitHub Issues.

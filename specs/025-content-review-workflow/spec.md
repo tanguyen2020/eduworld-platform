@@ -23,6 +23,11 @@
 - Q: Trường portal F053 cần (OQ F053)? → A: `ContentVersion.outdated_fields` (JSON pointer các bản dịch lỗi thời, `i18ntext.OutdatedFields` từ `translation_meta`) trả ở mọi view CMS của question và loại F024 cùng `translation_status`; `QuestionAuthoringInput.audio_exempt_reason`/`LessonAuthoringInput.audio_exempt_reason` nhận, lưu (≤ 255) và dùng cho luật `g1_3`; `warnings[]` trả trong `ContentVersion` của `submit_review`.
 - Q: Export dịch chọn version nào? → A: Version con trỏ release nếu có, không thì version mới nhất; `content_ids` bắt buộc 1–500 [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- Engine TTS ([TBD] Assumptions) → **Chốt (OQ-23):** lồng tiếng **giọng người ghi âm** bắt buộc cho đề bài/hướng dẫn nhóm `g1_3` (điều kiện publish, luật readiness hiện có); không tích hợp engine TTS phía server; audio do đội nội dung ghi âm rồi tải lên như media thường, người duyệt nghe lại; TTS của hệ điều hành trên thiết bị chỉ là dự phòng khi thiếu file lồng tiếng ở nội dung không bắt buộc.
+- OQ F054-1 (`field_comments[]`) → **Chốt:** body `transitionContentVersion` thêm `field_comments[]` tùy chọn (`path` JSON pointer ≤ 256, `comment` ≤ 1000; maxItems 50; chỉ nhận ở `reject`/`request_changes`), lưu cùng review task/transition, trả trong `ContentReviewTask` và lịch sử transition để tác giả thấy theo trường; portal F054 bỏ cách ghép vào `note`. Task bổ sung.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi duyệt, duyệt, từ chối nội dung (Priority: P1)
@@ -190,5 +195,5 @@ SLA cảnh báo task quá hạn ([ADMIN_PORTAL §4](../../docs/04-admin-portal/A
 
 - `review_lane` dùng `tenant` | `platform_learning` theo ADMIN_PORTAL §3.5; enum trong OpenAPI (`school`/`organization`) được sửa ở Phase 2 (D8).
 - Tên event theo EVENT_DESIGN §4.2 (`content.version_submitted/approved/rejected`), không theo CONTENT_MODEL §6 (D11).
-- Engine TTS chưa chọn [TBD]; audio là media thường do F027 xử lý; F025 chỉ kiểm tra tham chiếu và trạng thái `ready`.
+- OQ-23 (owner chốt 2026-11-20): lồng tiếng giọng người bắt buộc cho `g1_3`, không có TTS phía server (TTS của thiết bị chỉ là dự phòng); audio là media thường do F027 xử lý; F025 chỉ kiểm tra tham chiếu và trạng thái `ready`.
 - Media status đọc từ `content.media_assets` (F027) → đề xuất thêm F027 vào phụ thuộc của F025 (OQ-23 [Confirmed] cho phạm vi hỗ trợ `g1_3`).

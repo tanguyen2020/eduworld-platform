@@ -88,7 +88,7 @@ Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết t�
 - [x] T033 [US3] `CreateStaffForm` (`createTenantUser`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/users/CreateStaffForm.tsx` — **2026-11-20:** `users/CreateStaffForm.tsx`, `ScopeTargetField.tsx`.
 - [x] T034 [US3] `RoleListPage`, `RoleEditor`, `PermissionPicker`, `useRoles` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/roles/RoleEditor.tsx` — **2026-11-20:** `roles/RoleListPage.tsx`, `RoleEditor.tsx`, `PermissionPicker.tsx`, `useRoles.ts`.
 - [x] T035 [US3] `UserRolesPanel`, `GrantUserRoleDialog`, `canGrant.ts`, `useUserRoles` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/users/GrantUserRoleDialog.tsx` — **2026-11-20:** `users/UserRolesPanel.tsx`, `GrantUserRoleDialog.tsx`, `canGrant.ts`, `useUserRoles.ts`.
-- [x] T036 [P] [US3] `PermissionAuditPage` (`listTenantAuditLogs` lọc `role.*`, `user_role.*`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/audit/PermissionAuditPage.tsx` — **2026-11-20:** `audit/PermissionAuditPage.tsx` (một action/lần — Câu hỏi mở F052-2).
+- [x] T036 [P] [US3] `PermissionAuditPage` (`listTenantAuditLogs` lọc `role.*`, `user_role.*`) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/audit/PermissionAuditPage.tsx` — **2026-11-20:** `audit/PermissionAuditPage.tsx` (một action/lần — OQ F052-2 đã chốt 2026-11-20, task bổ sung dùng `action_prefix`).
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
 
@@ -143,6 +143,14 @@ Gốc mã: `src/cms/frontend/apps/portal/src/workspaces/school-lms/` (viết t�
 - [x] T052 Cập nhật trạng thái F052 — file: `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — **2026-11-20:** F052 Done.
 - [x] T053 [P] Test F052-AC-28: tắt `menu.school_lms.audit_logs` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/feature-toggle.spec.ts` — **2026-11-20:** `audit/audit.test.tsx` › menu/action turned off (3 test).
 - [x] T054 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F052-AC-28) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx` — **2026-11-20:** menu/route từ catalog; nút bọc `<ActionGate>`; `catalogMenus.test.tsx` (không path/label tay) xanh.
+
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T060 **OQ chốt 2026-11-20** (OQ F052-2) `PermissionAuditPage` dùng `action_prefix=role&action_prefix=user_role`, ô Hành động tùy chọn (AND); cập nhật test — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/audit/PermissionAuditPage.tsx` — kiểm: `make web-test` — cỡ S
+- [ ] T061 **OQ chốt 2026-11-20** (OQ F045-7) Hành động "Đề nghị gộp" trên issue trùng định danh (`merge_requested` + lý do, `ActionGate`), sau task F011 — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/sis/` — kiểm: `make web-test` — cỡ S
+- [ ] T062 **OQ chốt 2026-11-20** (OQ-17, F052-AC-32) Ô "Giới hạn chơi mỗi ngày" trong Cài đặt trường, sau task F015; test F052-AC-32 — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/settings/` — kiểm: `make web-test` — cỡ S
 
 ## Dependencies & Execution Order
 

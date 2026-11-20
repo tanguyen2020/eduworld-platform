@@ -18,6 +18,11 @@
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Vòng phụ thuộc F041 ↔ F042 (bài `graded` + blueprint cần `CreateExamSession`) xử lý thế nào? → A: Technical Architect chốt thứ tự F040 → F041 → F042 ([CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý)). F041 sở hữu port `ExamSessionCreator` (application) và adapter mặc định "chưa khả dụng"; trong khi chưa có adapter thật, tạo bài `graded` + `assessment_blueprint` trả `422 VALIDATION_FAILED` (F041-AC-09). Tạo ExamSession khi publish, lưu `exam_session_id`, hủy ExamSession khi hủy bài và adapter gọi `CreateExamSession`/`CancelExamSession` thuộc F042 (F042-AC-31).
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F062)
+
+- OQ F062-1 → **Chốt:** `MyAssignment` thêm `subject_name` (`LearningName`, như `subject_name` ở schema lớp), điền từ danh mục môn ở server theo ngôn ngữ hiển thị; client không tự tra danh mục.
+- OQ F062-2 → **Chốt:** bài `content_kind = question_set` được bắt đầu bằng `startAdHocAttempt` (`mode = assignment`, `source.kind = question_set`, `context_type = assignment`, `context_id` = assignment); F041 mở `mode = assignment` cho endpoint này với cùng kiểm tra F041-AC-13 (cửa sổ mở, số lần, thuộc lớp). Client mở bằng `activity_host` (F062, F063).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo và giao bài (Priority: P1)
@@ -210,6 +215,6 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 ## Assumptions
 
 - [Confirmed] `follow_latest`, nhắc học sinh, xử lý enrollment thay đổi theo SCHOOL_LMS §4.3; mặc định graded và cửa sổ muộn là Confirmed trong CONFIG_DEFAULTS.
-- F040 cung cấp port đọc thành viên study group; khi sở hữu study group chưa chốt, đối tượng `study_group` bị từ chối `422 VALIDATION_FAILED` (feature flag cấu hình, không mock).
+- F040 cung cấp port đọc thành viên study group; study group thuộc module learning (ADR-0084, đã chốt); tới khi port của F040 có, đối tượng `study_group` bị từ chối `422 VALIDATION_FAILED` (feature flag cấu hình, không mock).
 - F041 sở hữu port `ExamSessionCreator` và đăng ký adapter mặc định "chưa khả dụng" (không phải mock: adapter thật, trả lỗi có kiểu) ở composition root; trước khi F042 `Done`, bài `graded` + `assessment_blueprint` bị từ chối `422 VALIDATION_FAILED` (F041-AC-09). F042 thay adapter bằng adapter gọi `CreateExamSession`/`CancelExamSession` (F042-AC-31).
 - Event module game cho danh mục quest/mini-game do F078 định nghĩa; projection có sẵn bảng trước.

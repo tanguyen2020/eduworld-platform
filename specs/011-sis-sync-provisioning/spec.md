@@ -15,7 +15,7 @@
 
 ### Session 2026-11-18 (triển khai)
 
-Quyết định khi hiện thực F011; mục [Confirmed] chờ Technical Architect xác nhận.
+Quyết định khi hiện thực F011; mục [Confirmed] đã được owner chốt 2026-11-20.
 
 - Q: `sis.sync_runs` là bảng G hay T? → A: T (có `tenant_id`, RLS): mỗi run thuộc một connection của một tenant; đọc run của System Admin đi qua `tenancy.Bypass(system_admin_cross_tenant)` để lấy tenant rồi chỉ đọc tenant đó. DATABASE_DESIGN §2.3 cập nhật.
 - Q: Khóa ghép của `sis_links`, `synced_students`, `student_login_keys`? → A: Khóa chính surrogate + unique index một phần (`WHERE deleted_at IS NULL`) trên khóa nguồn, để dùng mixin `entx` chung (ADR-0089).
@@ -33,7 +33,7 @@ Quyết định khi hiện thực F011; mục [Confirmed] chờ Technical Archit
 - Q: Một import nhiều loại bản ghi? → A: [Confirmed] Một file CSV một loại (`entity_kinds` đúng 1 phần tử); thêm `dry_run` (mặc định `true`), `diff`, `errors` vào contract `SisImport`.
 - Q: Phát hiện file đã upload? → A: [Confirmed] Job watcher HEAD object mỗi 15 giây (không phụ thuộc bucket notification của storage S3-compatible), xếp job `csv_import` vào `IDENTITY_SIS_JOBS` (`Nats-Msg-Id import:<id>`); bucket riêng `ew-sis-imports` (private); file được quét clamd trước khi đọc.
 - Q: School Admin xem danh sách issue? → A: `listSisReconciliationIssues` nhận `tenant.sis.read` hoặc `tenant.sis.import` (theo trường của grant) và header `X-Tenant-Id` tùy chọn (sửa contract); `entity_refs.user_id` của tài khoản giữ định danh trùng chỉ trả cho nhân sự platform.
-- Q: `routematrix` (F002-AC-28) có kiểm các operation của identity? → A: Chưa: tool chỉ nhận `httpx.Operation` viết dạng literal, còn route F010/F011 dùng helper `op(...)`, nên ma trận role/tenant của 36 operation identity không bị bắt buộc (dù test HTTP/integration có kiểm 403/404). Câu hỏi mở OQ F011-3: sửa tool hoặc đổi route sang literal kèm `authztest.Cover`.
+- Q: `routematrix` (F002-AC-28) có kiểm các operation của identity? → A: Chưa: tool chỉ nhận `httpx.Operation` viết dạng literal, còn route F010/F011 dùng helper `op(...)`, nên ma trận role/tenant của 36 operation identity không bị bắt buộc (dù test HTTP/integration có kiểm 403/404). OQ F011-3 đã chốt 2026-11-20: sửa tool (owner F002).
 - Q: Gắn binary (core-api/worker)? → A: Vẫn theo OQ F010-2: F011 cung cấp handler, consumer (`keycloak-provisioner`, `sis-jobs`), job (`WatchSisImports`, `AnonymizeSisStaging`) và adapter; composition root của `cmd/worker`/`cmd/core-api` chưa có feature sở hữu.
 
 ### Session 2026-11-20 (việc tiếp theo — backend route theo trường cho F052, Câu hỏi mở F052-1)
@@ -41,7 +41,17 @@ Quyết định khi hiện thực F011; mục [Confirmed] chờ Technical Archit
 - Q: Backend của `listSchoolReconciliationIssues` và `resolveSchoolReconciliationIssue` (route public theo trường do F052 thêm vào contract)? → A: Đã làm trong module `identity`, dùng lại logic F011 (R33): danh sách là `query.Sis.ListSchoolSisIssues` trên cùng read model `SisIssueModel` (lọc `school_id` của path, `issue_type`, `status`, `import_id` → issue của run thuộc lần nhập đó; import của trường khác/tenant khác → `404`, import chưa xử lý → rỗng), quyền `tenant.sis.read` hoặc `tenant.sis.import` phủ trường của path; xử lý là use case `ResolveSisIssue` với `SchoolID` của path (chỉ `fixed_in_source`/`ignore`, `reason` 3–500 sau trim ghi vào `resolution_note`, chỉ `tenant.sis.import`, không có nhánh `platform.sis_connection.manage`, issue phải thuộc trường của path). Phạm vi: không có quyền → `403`; trường ngoài grant, ngoài tenant hoặc không tồn tại, issue của trường khác → `404`; issue không `open` → `409`; `Idempotency-Key` bắt buộc (`428`), gửi lại trả kết quả cũ. Route theo trường không bao giờ trả `entity_refs.user_id` của tài khoản giữ định danh trùng.
 - Q: Tên audit action khi xử lý issue? → A: Thống nhất theo contract `resolveSchoolReconciliationIssue`: `sis.reconciliation_issue.resolved` cho **cả hai** route (trước đây route nội bộ ghi `sis.reconciliation_issue_resolved`; chưa có consumer nào lọc theo tên cũ). Audit có `school_id` của issue (bộ lọc nhật ký School Admin, F015) và `metadata.route = school` với route theo trường.
 - Q: Gửi lại cùng `Idempotency-Key` khi xử lý issue? → A: Sửa lỗi: `ResolveSisIssue` trước đây không gọi `idempotency.SetResult`, nên lần gửi lại trả `409 CONFLICT` thay vì kết quả cũ (cả route nội bộ `resolveSisReconciliationIssue`). Nay kết quả được lưu trong cùng transaction; gửi lại trả `200` + `Idempotent-Replayed: true` (R10).
-- Q: `routematrix` cho ba operation mới? → A: Có `authztest.Cover(..., CrossTenant, RoleDenied)` trong `TestSchoolScopedRoutes`; OQ F011-3 (tool không nhận helper `op(...)`) vẫn mở.
+- Q: `routematrix` cho ba operation mới? → A: Có `authztest.Cover(..., CrossTenant, RoleDenied)` trong `TestSchoolScopedRoutes`; OQ F011-3 đã chốt 2026-11-20 (sửa tool, task F002).
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F011-1 (học sinh trùng người liên tenant) → **Chốt:** không gộp liên tenant trong Release 1.0; một học sinh chỉ thuộc một tenant (`org.students` khóa theo `user_id`, một enrollment active). Chuyển trường liên tenant = tenant cũ kết thúc enrollment (SIS báo nghỉ hoặc nhà trường kết thúc) → membership bị gỡ → issue `same_person` ở tenant mới xử lý `same_person` để liên kết tài khoản sẵn có (membership mới). `409` "chuyển trường trước" giữ khi tài khoản còn membership tenant khác. `mergeUsers` (F045) chỉ gộp hai tài khoản trong cùng tenant. Cũng đóng OQ F013-2, OQ F014-5.
+- OQ F011-2 (quản lý/xoay khóa hash `national_student_id`) → **Chốt:** khóa có phiên bản: `EW_SIS_ID_HASH_KEYS` (danh sách `kid` → secret, Docker secret do F130 phân phối); hash mới dùng khóa hiện hành và lưu `kid` cạnh hash; so khớp thử mọi khóa còn hiệu lực; khóa cũ gỡ khi không còn hash nào mang `kid` đó (lần đồng bộ full ghi lại hash bằng khóa mới). Không bao giờ log khóa/hash.
+- OQ F011-3 → **Chốt:** sửa tool `routematrix` (owner F002), không đổi route sang literal.
+- OQ F020-1 → **Chốt:** `class.synced` thêm `source_version` (= version aggregate lớp), `academic_year_id`, `is_virtual` (thêm field tùy chọn, schema v1 tương thích); `school.synced` phát `source_version` (schema đã có). Consumer learning/game so theo `source_version` khi có.
+- OQ F045-7 (ai đặt `merge_requested`) → **Chốt:** School Admin đề nghị gộp qua `resolveSchoolReconciliationIssue` với `resolution = merge_requested` (chỉ issue `duplicate_identifier`/`possible_duplicate` thuộc trường của path, quyền `tenant.sis.import`, `reason` bắt buộc; issue giữ `open`); System Admin thực hiện `mergeUsers` (F045). Theo IDENTITY_MAPPING §7 (nhà trường khởi xướng liên kết trên CMS); trước đây không ai đặt được giá trị này nên saga gộp không chạy được.
+- OQ F010-1 → **Chốt:** F011 làm `importSchools`/`getSchoolImport` bất đồng bộ (task dưới).
+- Mọi mục [Confirmed] của Session 2026-11-18 được owner chốt 2026-11-20.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

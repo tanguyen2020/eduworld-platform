@@ -17,6 +17,11 @@
 
 - Q: Độ dài và phạm vi duy nhất của nickname? → A: Tối đa 32 ký tự ở mọi nơi (DB `varchar(32)`, OpenAPI/AsyncAPI `maxLength: 32`), duy nhất trong tenant ([CHARACTER_SYSTEM §5.3](../../docs/01-game-design/CHARACTER_SYSTEM.md#53-nickname), RB-302).
 
+### Session 2026-11-20 (owner chốt)
+
+- Facade vòng đời học sinh của module game (OQ F016-2, F045-3) → **Chốt:** F070 (tạo `game_profiles`) hiện thực `cleanupStudentData`/`restoreStudentData` (soft-delete/khôi phục GameProfile, giữ chặn khi có session active), `anonymizeUserData` (nickname → giá trị ẩn danh, xóa avatar tùy biến không cần cho thống kê) và `mergeUserData` (chọn một GameProfile — profile user đích giữ, profile nguồn soft-delete; idempotent theo `merge_id`); gộp ledger XP ở F074.
+- OQ-16 (asset 3D) → đã trả lời (owner 2026-11-20, OPEN_QUESTIONS): stylized low-poly, asset pack có license thương mại + tự làm nhân vật chính.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo nhân vật lần đầu (Priority: P1)
@@ -180,5 +185,5 @@ Chỉ học sinh dùng được các API hồ sơ của mình; dữ liệu của
 ## Assumptions
 
 - F014 đã có `StartGameSession`, projection `ref.students`, `ref.tenants`; F070 thêm bước `EnsureGameProfile` vào transaction đó.
-- Danh mục v1 (6 preset, 4 dáng, bảng màu, đồ mặc định, 6 emote, bộ từ nickname vi/en) do content team cung cấp qua seed [Confirmed]; asset 3D theo OQ-16 [TBD].
+- Danh mục v1 (6 preset, 4 dáng, bảng màu, đồ mặc định, 6 emote, bộ từ nickname vi/en) do content team cung cấp qua seed [Confirmed]; asset 3D theo OQ-16 (đã trả lời 2026-11-20: stylized low-poly, asset pack có license thương mại + tự làm nhân vật chính).
 - Gợi ý nickname giữ tạm trong Valkey (không phải dữ liệu quan trọng, ADR-0004); nickname đã chọn lưu PostgreSQL.

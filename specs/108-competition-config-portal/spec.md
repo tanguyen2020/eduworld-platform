@@ -16,6 +16,10 @@
 
 - Q: Cấu hình phần thưởng thi đấu sau đối soát (RB-415)? → A: Thêm loại thứ 7 `config_type = competition-rewards` (kebab, [API_DESIGN §9.13](../../docs/07-backend/API_DESIGN.md)) với quyền `competition.config.reward.write`; phần thưởng chỉ cosmetic/badge/title, tham chiếu reward rule của module game. Delta contract ở contracts §6.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F054-3)
+
+- Nơi dùng nội dung học tập trong cấu hình thi đấu → **Chốt:** event publish cấu hình thi đấu của module competition mang `content_refs[]` như F078; module learning dùng chung projection `content.external_usages` (`ref_type = competition`). Platform-ops cho cấu hình thi đấu (OQ F045-3) cũng thuộc F108.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cấu hình thi đấu phiên bản hóa qua `/game-admin/*` (Priority: P1) 🎯 MVP

@@ -2,7 +2,7 @@
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md)
 
-## R1. Nguồn secret khi OQ-10 chưa chốt
+## R1. Nguồn secret (OQ-10, đã trả lời 2026-11-20: giữ SOPS)
 
 - **Decision**: SOPS + age; file `deploy/secrets/<env>/<owner>.sops.yaml` (khóa = tên secret, giá trị mã hóa). Workflow `secrets-sync.yml` (self-hosted runner nhãn `deploy`, GitHub Environment `staging`/`production` có required reviewers) giải mã bằng khóa age lưu trong secret của environment, tạo `docker secret create <owner>_<name>_v<N>` khi giá trị đổi (so hash SHA-256 lưu ở label `ew.sha256`), rồi cập nhật stack. Khóa age production chỉ Release Manager + DevOps lead giữ.
 - **Rationale**: DEPLOYMENT §13 cho phép "SOPS trong Git"; không thêm hạ tầng stateful khi OQ-10 còn mở; diff được review, có lịch sử.

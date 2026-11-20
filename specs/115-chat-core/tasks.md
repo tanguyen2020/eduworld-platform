@@ -84,6 +84,12 @@
 - [ ] T037 [P] Đề xuất tên CONFIG_DEFAULTS cho timeout PubAck, lô persister, `max_deliver`; sửa REALTIME_ARCHITECTURE §8 (rate chat theo policy), CHAT_SYSTEM §3 (cache theo `chat_policy_cache`); thêm `specs/events/payloads/chat/` vào DATABASE_DESIGN/EVENT_DESIGN; CHANGELOG — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/06-architecture/REALTIME_ARCHITECTURE.md`, `docs/03-social-multiplayer/CHAT_SYSTEM.md`, `CHANGELOG.md`
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module chat; facade test với identity — file: `src/backend/modules/chat/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US2 (policy, membership) → US1 (gửi) → US3 (persister, lịch sử) → Polish; US1 và US3 có thể song song sau T018.

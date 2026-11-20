@@ -16,6 +16,10 @@
 
 - Q: Close code tắt node và enum presence sau đối soát? → A: Tắt node là `system.server.draining` + `1012` (RB-401, [GAME_NETWORKING §4.4](../../docs/08-game-client/GAME_NETWORKING.md)), không còn `4500`; presence theo [MULTIPLAYER_GAMEPLAY §5](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) (RB-404).
 
+### Session 2026-11-20 (owner chốt — certificate pinning)
+
+- Certificate pinning cho `wss` → **Chốt:** `RealtimeClient` dùng cùng CA bundle với `ApiClient` (`TLSOptions.client(trusted_chain)`, CA chính + dự phòng do F133 đóng gói) trên Windows/Android/iOS ở build release; Web dùng TLS trình duyệt.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Kết nối realtime ổn định (Priority: P1)

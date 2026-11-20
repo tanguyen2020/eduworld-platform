@@ -28,9 +28,21 @@
 - Q: Gỡ gán mặc định (`apply_to_new_tenants`)? → A: Không có API gỡ trong Release 1.0 (contract không có) — **OQ F045-9**.
 - Q: Vị trí và phạm vi test? → A: Integration ở `src/backend/modules/identity/tests/integration/platform_admin_*_integration_test.go` (dùng chung `TestMain`/helper của package), test hợp đồng facade phía bên gọi ở `tests/contract/owner_gateway_test.go` với fake facade learning (phía bên nhận đã kiểm ở F020). `RESOURCE_NOT_ASSIGNED` và chỉ đọc do module learning cưỡng chế (F020-AC-16, AC-18); test module identity không import được `modules/learning/internal` nên dùng TEST DOUBLE có cùng luật [Confirmed].
 
-### Session 2026-11-20 (bổ sung sau F057 — [Confirmed], chờ Technical Architect duyệt)
+### Session 2026-11-20 (bổ sung sau F057 — [Confirmed], owner chốt 2026-11-20)
 
 - Q: `learning_material` (F024 thêm vào enum `ResourceType`) chưa có trong bảng định tuyến `resource_type → module` nên lọc/khôi phục Thùng rác theo loại này lỗi? → A: [Confirmed] Thêm `learning_material → learning` vào `internal/domain/platformadmin/routing.go`, cùng cờ với `lesson`: gán được, nằm trong allowlist clone, khôi phục được qua Thùng rác (facade learning chịu trách nhiệm từng loại). Unit test kiểm mọi giá trị enum `ResourceType` của spec gộp đều có module sở hữu.
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F045-3 → **Chốt:** facade vòng đời/merge của từng module do feature tạo dữ liệu làm: learning F030, game F070 + F074, competition F100, chat F115; platform-ops (gán/clone/Thùng rác) của game ở F078, competition ở F108, chat (sticker/GIF) ở F082. Tới khi có, bước tương ứng vẫn `503 UNAVAILABLE` (không bao giờ cho qua).
+- OQ F045-4 → **Chốt:** clone `tenant_settings`, `school_settings` đọc/ghi bảng cài đặt của F015 (đã có); `class_template` không có trong Release 1.0: tạo job clone với loại này trả `422 VALIDATION_FAILED` ngay (thay vì job `failed` do `503`), Thùng rác trả rỗng.
+- OQ F045-5, OQ F045-8 → giữ [Confirmed] (không làm cơ chế phân giải lại Principal chung trong Release 1.0).
+- OQ F045-6 → **Chốt:** gộp chỉ trong cùng tenant (OQ F011-1); bước identity chuyển enrollment active của user nguồn sang user đích nếu user đích chưa có enrollment active (có thì giữ của user đích), soft-delete `org.students` của user nguồn (`delete_reason = merged`), gỡ membership của user nguồn qua `tenant_membership.changed`.
+- OQ F045-7 → **Chốt:** School Admin đề nghị gộp bằng `resolveSchoolReconciliationIssue` `resolution = merge_requested` (task ở F011, nút ở F052).
+- OQ F045-9 → **Chốt:** `unassignFromTenants` thêm `remove_default` (boolean, mặc định `false`): `true` thì soft-delete luôn quy tắc gán mặc định (`apply_to_new_tenants`) của tài nguyên, có audit; không thêm endpoint mới.
+- OQ F057-1 → **Chốt:** thêm `previewTenantClone` (`POST /admin/tenant-clones:preview`, cùng body `TenantCloneRequest`, chỉ đọc, không `Idempotency-Key`, `platform.tenant_data.clone` + MFA) trả đồ thị phụ thuộc (`TenantClonePreview`: nút, cạnh, hành động `clone`/`keep_reference`/`conflict`) theo ADMIN_PORTAL bước 3; identity gom qua operation facade mới `previewTenantDataClone` của module sở hữu (learning trước, `x-allowed-callers` identity).
+- `activity` trong `ResourceType` (OQ F030) → **Chốt:** thêm vào bảng định tuyến (`activity → learning`), test enum đầy đủ.
+- Mọi mục [Confirmed] của Session bổ sung sau F057 được owner chốt 2026-11-20.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -100,6 +100,13 @@
 - [x] T032 [P] Đề xuất sửa GODOT_ARCHITECTURE §10 (nhắc nghỉ dùng ngưỡng bootstrap ở M-C2) và CHANGELOG — file: `docs/08-game-client/GODOT_ARCHITECTURE.md`, `CHANGELOG.md` — ✅ GODOT_ARCHITECTURE §10 đã mô tả nhắc nghỉ theo ngưỡng bootstrap (không cần đề xuất thêm); §4 cập nhật danh sách `EventBus` (`ui_requested`, `ui_closed`); CHANGELOG
 - [ ] T033 Chạy [quickstart.md](quickstart.md) trên backend thật (sau F041 Done) và ghi bằng chứng — file: `specs/062-main-hub-greybox/quickstart.md` — ⏳ **chưa chạy**: chờ F041 `Done` và backend compose; bằng chứng local thay thế ở quickstart.md mục Bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T036 **OQ chốt 2026-11-20** (F062-1) Hàng bài giao hiện `subject_name`; test scene với fixture có/không có field — file: `src/game/scripts/learning/`, `src/game/tests/scene/test_quest_journal_assigned.gd` — kiểm: `make godot-test` — cỡ S
+- [ ] T037 **OQ chốt 2026-11-20** (F062-2) Ánh xạ `question_set` → intent `activity_host {question_set_id, mode: "assignment", context_type, context_id}` thay `update_required`; test scene — file: `src/game/scripts/learning/`, `src/game/tests/scene/test_quest_journal_assigned.gd` — kiểm: `make godot-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → (US2 ∥ US3) → US4 → Polish.

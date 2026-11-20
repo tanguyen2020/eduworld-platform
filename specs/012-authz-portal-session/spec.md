@@ -44,6 +44,13 @@
 - Q: `TenantUserCreateRequest.initial_user_roles[].scope_type` còn `class` (OQ F059-4)? → A: Đã bỏ trước đó (enum `tenant`/`school`/`subject`, F052); backend vẫn từ chối `class` (ADR-0072). Không đổi thêm.
 - Q: `platform.audit.read` hay `platform.audit.read_all` (OQ F059-11)? → A: `platform.audit.read` — đúng catalog `src/backend/pkg/authz/catalog.go`, OpenAPI, `specs/portal/menu-catalog.yaml` và ADMIN_PORTAL §2.2 (F015 đã gỡ `read_all`); không có permission `platform.audit.read_all`.
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F012-1 (đổi username/email) → **Chốt:** `updateTenantUser` (và `updatePlatformUser` nếu có) nhận đổi `email`: kiểm trùng `lower(email)` toàn hệ thống (ADR-0067, ADR-0069), ghi trong transaction + outbox, worker `keycloak-provisioner` cập nhật email Keycloak (đặt `emailVerified = false`); **username không đổi qua API** (realm `editUsernameAllowed = false`, KEYCLOAK_SSO) — cần username khác thì tạo tài khoản mới. Thống nhất với OQ F016-10.
+- OQ F012-2 → đã [Confirmed] (F013/F014), không còn việc.
+- OQ F051-3 (`getMe` bắt buộc `X-Tenant-Id`) → **Chốt:** `getMe` dùng `TenantIdHeaderOptional`: nhân sự platform không gửi header nhận hồ sơ ở phạm vi platform; người dùng tenant thiếu header vẫn `400 TENANT_HEADER_REQUIRED` (ADR-0065).
+- OQ F059-12 (`route_groups[]` của màn Tích hợp) → **Chốt:** thêm `IntegrationOverview.apisix.route_groups[]` (`prefix` ≤ 256, `gateway` ∈ {`public`, `internal`}, `service` ≤ 64; maxItems 100). Danh mục **sinh lúc build** từ `deploy/apisix/routes/routes.yaml` (`make gen` → file nhúng `go:embed` trong module identity, `gen-check` chặn lệch) — vẫn một nguồn route-as-code, `core-api` không đọc file triển khai lúc chạy. F059-AC-22 yêu cầu nhóm prefix → service.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Permission catalog và role hệ thống (Priority: P1)

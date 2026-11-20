@@ -141,6 +141,14 @@
 - [x] T053 [P] CHANGELOG mục F002 — file: `CHANGELOG.md`
 - [x] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/002-platform-kit-core/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T059 **OQ chốt 2026-11-20** (OQ F027-2) Thêm `media.upload` cho `tenant_admin`, `school_admin`, `academic_manager`, `content_admin`; test catalog role + test `presignMediaUpload` với `academic_manager` — file: `src/backend/pkg/authz/roles.go`, `src/backend/pkg/authz/scope_test.go` — kiểm: `make test MOD=identity` — cỡ S
+- [ ] T060 **OQ chốt 2026-11-20** (OQ F011-3) `routematrix` đọc operation từ `pkg/module.Registry` (route thật) thay vì literal; bật ma trận role/tenant cho toàn bộ operation identity — file: `src/backend/tools/routematrix/`, `src/backend/pkg/authz/authztest/` — kiểm: `make test`, `make arch-check` — cỡ M
+- [ ] T061 **OQ chốt 2026-11-20** (OQ F013-5) `httpx.ClientIP` + cấu hình `EW_TRUSTED_PROXY_CIDRS`; identity (`ip_hash`) và game (`clientIP` của `login_events`) chuyển sang dùng — file: `src/backend/pkg/httpx/clientip.go`, `src/backend/modules/game/internal/presentation/http/routes.go`, `src/backend/modules/identity/internal/presentation/http/` — kiểm: unit test proxy tin cậy/không tin cậy — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần claims của US1) → US3 (cần Principal của US2) → US4 (song song US2/US3 được) → US5 → Polish.

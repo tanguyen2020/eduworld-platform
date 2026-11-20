@@ -113,6 +113,12 @@
 - [ ] T047 [P] Kịch bản đo chuyển vùng trên thiết bị lab hạng Tầm trung (TC-PERF-020), kết quả nộp kèm bằng chứng quickstart — file: `src/game/tests/perf/area_transition_perf.gd`
 - [ ] T048 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T049 **OQ chốt 2026-11-20** (vị trí hub) Khai báo operation vị trí hub trong `specs/openapi/modules/competition.internal.v1.yaml` (`x-allowed-callers: [game]`), hiện thực bên nhận trong module competition (đọc dữ liệu room host của F091) và adapter + port phía game dùng khi kiểm khoảng cách tương tác có giá trị; facade test hai phía — file: `specs/openapi/modules/competition.internal.v1.yaml`, `src/backend/modules/game/internal/infrastructure/` — kiểm: `make gen MOD=competition`, `make test-contract` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T007–T010 trước mọi story; T011 trước US3) → US1 → US2 → US3 → US4, US5, US6 song song → Polish.

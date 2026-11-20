@@ -14,6 +14,11 @@
 - Q: Loại A/B nào trong F035? → A: `mastery_model` và `recommendation_rule`; `selection_rule` ngoài phạm vi. Nhánh thử nghiệm chỉ đổi trải nghiệm phía học sinh (tiến độ hiển thị, gợi ý, độ khó luyện tập); báo cáo nhà trường và XP vẫn theo mô hình `active` (rào chắn §6).
 - Q: Hồi quy đa mức chạy trong hệ thống? → A: Không. Báo cáo trong hệ thống tính thống kê mô tả, Hedges' g có hiệu chỉnh cụm (design effect) và predictive validity; mô hình đa mức do chuyên gia thống kê chạy trên bộ dữ liệu giả danh xuất ra.
 
+### Session 2026-11-20 (owner chốt)
+
+- Câu hỏi mở 1 (ADR cho hạ tầng A/B) → **Chốt:** bổ sung ADR-0080 (T008) trước khi code US5; không cần ADR riêng.
+- Checklist "PRD chưa có FR riêng" → đã có FR-ANL-017…FR-ANL-023 trong PRD; spec đã dùng.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu và đề đo hiệu quả độc lập với luyện tập (Priority: P1)
@@ -268,6 +273,6 @@ Chưa có tên trong CONFIG_DEFAULTS (giá trị ở [LEARNING_EFFICACY_PLAN](..
 - [Confirmed] Khóa giả danh lấy từ Docker secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (đăng ký ở LOCAL_DEVELOPMENT §4 qua task).
 - ExamSession đo hiệu quả không bao giờ công bố kết quả cho học sinh, kể cả sau khi study `completed` ([LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
 
-### Câu hỏi mở (không chặn triển khai)
+### Câu hỏi mở (đã chốt 2026-11-20: bổ sung ADR-0080 ở T008 trước US5)
 
 1. LEARNING_EFFICACY_PLAN §6 yêu cầu ADR riêng hoặc bổ sung ADR-0080 cho hạ tầng A/B (chạm schema learning event) — task Phase 2 viết bổ sung trước khi code US5.

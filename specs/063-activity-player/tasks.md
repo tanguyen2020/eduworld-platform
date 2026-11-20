@@ -111,6 +111,12 @@
 - [ ] T035 [P] Visual `vi`/`en`/`xx-PS` cho player, câu hỏi, kết quả (TC-I18N-006) — file: `src/game/tests/visual/learning_screens.gd`
 - [ ] T036 Chạy [quickstart.md](quickstart.md) trên backend thật (sau F030, F032 Done) và ghi bằng chứng — file: `specs/063-activity-player/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T037 **OQ chốt 2026-11-20** (OQ F062-2) `ActivityHost`/`LearningService` nhận intent `question_set_id` → `startAdHocAttempt` (`mode = assignment`); test với FakeHttp — file: `src/game/scripts/learning/learning_service.gd`, `src/game/tests/unit/learning/` — kiểm: `make godot-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → (US2 ∥ US3) → US4 → US5 → Polish.

@@ -12,6 +12,10 @@
 - Q: Phần thưởng game trên màn kết quả khi chưa có module game progression (M2)? → A: Hiện `AttemptResult.rewards` nếu có; vùng "Phần thưởng" ẩn khi rỗng. Không tự tính XP.
 - Q: SVG lỗi thì hiển thị gì? → A: `MathAssetRef` không có `latex`; dùng `speech_text` làm văn bản thay thế.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F062-2)
+
+- Intent `activity_host` cho bài giao loại question set → **Chốt:** `ActivityHost` nhận thêm dạng intent `{question_set_id, mode: "assignment", context_type: "assignment", context_id}` và gọi `startAdHocAttempt` (`source.kind = question_set`, `mode = assignment`, `Idempotency-Key`) thay vì `startActivityAttempt`; renderer và luồng trả lời/nộp như activity `quiz`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Làm hoạt động câu hỏi trong khung activity player (Priority: P1)

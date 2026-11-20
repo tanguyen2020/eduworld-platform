@@ -11,6 +11,10 @@
 - Q: Trọng số `w_hint`, `w_guess` và loại `rapid_guess` khỏi mastery do F031 hay F032? → A: F031 dựng `MasteryModel` v1; F032 bổ sung các trọng số này thành `model_version` mới theo [LEARNING_ANALYTICS §3.1](../../docs/02-learning/LEARNING_ANALYTICS.md#31-định-nghĩa) (FR-PRG-006, FR-EXR-012).
 - Q: Mode `assignment`, `exam`, `quest` có trong F032? → A: Không. F032 chỉ phủ mode `practice`, `retry_wrong`, `diagnostic` của FR-EXR-001.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F030)
+
+- Question set theo quy tắc trong `startAdHocAttempt` → **Chốt:** `source.kind = question_set` nhận cả bộ tĩnh và bộ theo luật: bộ theo luật được chọn câu lúc bắt đầu bằng `selection.Select` theo luật của version đã ghim, ghim `question_version_id` từng câu (R31); thiếu câu → `422` theo pool stats của F024.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tự luyện có phản hồi ngay (Priority: P1)

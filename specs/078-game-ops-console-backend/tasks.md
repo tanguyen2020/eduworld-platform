@@ -100,6 +100,12 @@
 - [ ] T037 [P] Metric `eduworld_game_config_*`, `eduworld_game_publish_to_visible_seconds`, `eduworld_game_render_*` — file: `src/backend/modules/game/internal/infrastructure/observability/metrics.go`
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T040 **OQ chốt 2026-11-20** (OQ F054-3) `content.published` của cấu hình game mang `content_refs[]`; phía learning: consumer + projection `content.external_usages` + `getContentUsages` thêm `ref_type` `quest`/`minigame`/`challenge` (contract) + nhãn portal — file: `specs/events/payloads/game/`, `src/backend/modules/game/internal/application/command/`, `src/backend/modules/learning/internal/presentation/consumer/`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, integration hai module — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T005 cần F045/F041 xác nhận; T009 cần F004) → US1 → US2 → US3 → US4, US5, US6 (song song) → Polish.

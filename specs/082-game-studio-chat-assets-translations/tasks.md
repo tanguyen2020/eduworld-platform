@@ -89,6 +89,12 @@
 - [ ] T038 [P] Test F082-AC-20: tắt `menu.game_ops.translations` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/game-ops/chat-assets-feature-toggle.spec.ts`
 - [ ] T039 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F082-AC-20) — file: `src/cms/frontend/apps/portal/src/workspaces/game-ops/routes.tsx`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T040 **OQ chốt 2026-11-20** (OQ F045-3) Facade platform-ops của module chat cho sticker pack/GIF (gán, gỡ gán, clone, Thùng rác); facade test với identity — file: `src/backend/modules/chat/internal/presentation/facade/` — kiểm: `make test-contract` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T008) → US1 → US2 (dùng `useChecksumUpload` của US1) → US3 → US4 (cần domain/command US3) → US5 → Polish.

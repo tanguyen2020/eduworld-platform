@@ -16,6 +16,10 @@
 
 - Q: Permission ghi cho `progression-curves`/`progression-levels`, `shop-items`, `collections`? → A: `game.progression.write` (thay `game.level.write`), `game.shop.write`, `game.collection.write`; `currencies` giữ `game.economy.write` (ADMIN_PORTAL §2.2, API_DESIGN, RB-309). Config type `levels` đổi thành `progression-levels` (RB-308).
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F054-3)
+
+- "Đang dùng ở đâu" của nội dung học tập (FR-CNT-008) gồm quest/mini-game/challenge → **Chốt:** payload `content.published` của cấu hình game mang `content_refs[]` (loại, id, version nội dung học tập được tham chiếu; schema owner F071 thêm field tùy chọn); module learning tiêu thụ và dựng projection `content.external_usages`, `getContentUsages` trả thêm `ref_type` `quest`, `minigame`, `challenge`. Không gọi đồng bộ (R29).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Ranh giới quyền của Game Operations Console (Priority: P1)

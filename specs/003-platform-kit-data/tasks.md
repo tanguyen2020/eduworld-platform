@@ -187,6 +187,14 @@
 - [x] T071 [P] Đăng ký cảnh báo P2 "thiếu partition `infra`" và metric của job `infra-partition-maintenance` ở MONITORING — file: `docs/11-operations/MONITORING.md`
 - [x] T059 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/003-platform-kit-data/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T077 **OQ chốt 2026-11-20** (OQ F010-3) `tenancy.Bypass` reason `platform_job`: audit `cross_tenant.accessed` chỉ khi job báo ≥ 1 dòng (kèm số dòng), metric vẫn đếm mỗi lần; cập nhật job learning/identity báo số dòng — file: `src/backend/pkg/tenancy/bypass.go`, các `presentation/job/*.go` — kiểm: unit + integration (job rỗng không sinh audit) — cỡ M
+- [ ] T078 **OQ chốt 2026-11-20** (OQ F020-4) Lint `forbidigo` cấm `UpdateOne`/`UpdateOneID` trong module — file: `src/backend/.golangci.yml` — kiểm: `make lint` — cỡ S
+- [ ] T079 **OQ chốt 2026-11-20** (OQ F014-6) Helper metric `eduworld_projection_lag_seconds{module, projection}` trong `pkg/`; learning (F020) và game (F014) chuyển sang, gỡ metric riêng — file: `src/backend/pkg/outbox/` (hoặc `pkg/observability`), `src/backend/modules/learning/internal/infrastructure/observability/`, `src/backend/modules/game/internal/infrastructure/observability/metrics.go` — kiểm: `make test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần `InTenantTx` của T017) → US3, US4 (song song, cần US2) → US5 → US6 → US7 → Polish.

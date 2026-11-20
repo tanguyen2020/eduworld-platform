@@ -154,6 +154,16 @@
 - [x] T056 [P] Cập nhật ADMIN_PORTAL §3.7–§3.8 nếu thêm `reason` khi khôi phục và danh sách `resource_type`, ADMIN_PORTAL §2.2 (`platform.user.merge`), DATABASE_DESIGN §2.16 (`identity.user_merges.saga_id`, `reconciliation_issue_id`), SIS_INTEGRATION (issue `merge_requested`); CHANGELOG; trạng thái F045 trong CODE_PLAN — file: `docs/04-admin-portal/ADMIN_PORTAL.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — ✅ 2026-11-19: ADMIN_PORTAL §2.2 (`platform.user.merge`), §3.8 (lý do khôi phục, loại `user`/`student`); DATABASE_DESIGN §2.0/§2.16; CHANGELOG; CODE_PLAN
 - [x] T057 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/045-platform-administration/quickstart.md` — ✅ 2026-11-19: quickstart.md §5 bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T058 **OQ chốt 2026-11-20** (OQ F057-1) `previewTenantClone` + `TenantClonePreview` (contract public) và operation facade `previewTenantDataClone` (spec internal learning, `x-allowed-callers: [identity]`), hiện thực phía identity + learning; test authorization, tenant, phụ thuộc platform giữ tham chiếu — file: `specs/openapi/modules/identity.v1.yaml`, `specs/openapi/modules/learning.internal.v1.yaml`, `src/backend/modules/identity/internal/application/query/platform_admin.go`, `src/backend/modules/learning/internal/presentation/facade/` — kiểm: `make specs-lint`, `make test-contract`, integration — cỡ M
+- [ ] T059 **OQ chốt 2026-11-20** (OQ F030) `activity` trong `ResourceType` (API public + `internal-common`) và bảng định tuyến `activity → learning` — file: `specs/openapi/modules/identity.v1.yaml`, `specs/openapi/modules/internal-common.v1.yaml`, `src/backend/modules/identity/internal/domain/platformadmin/routing.go` — kiểm: unit enum đủ module, `make specs-breaking` — cỡ S
+- [ ] T060 **OQ chốt 2026-11-20** (OQ F045-4) Clone `tenant_settings`/`school_settings` từ bảng F015; `class_template` → `422` khi tạo job — file: `src/backend/modules/identity/internal/infrastructure/persistence/identity_clone_step.go` — kiểm: integration — cỡ S
+- [ ] T061 **OQ chốt 2026-11-20** (OQ F045-6) Bước identity của saga gộp: chuyển enrollment active, soft-delete `org.students` nguồn (`merged`), gỡ membership nguồn — file: `src/backend/modules/identity/internal/application/command/platform_admin.go` — kiểm: integration saga gộp — cỡ M
+- [ ] T062 **OQ chốt 2026-11-20** (OQ F045-9) `unassignFromTenants.remove_default` (contract + soft-delete quy tắc mặc định + audit) — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/application/command/platform_admin.go` — kiểm: `make specs-breaking`, integration — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T011) → US1 → US2 → US3, US4 (song song) → US5 → US6 (cần engine saga của US3 và callee `mergeUserData` ở learning/game) → Polish.

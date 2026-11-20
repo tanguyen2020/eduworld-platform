@@ -25,6 +25,10 @@
 - Q: `design.yml` gọi `godot.yml`/`web.yml` chưa tồn tại? → A: [Confirmed] F005 tạo hai lane khung (`workflow_call` + path filter DEPLOYMENT §10.2) chỉ kiểm file sinh của phía mình (`run-all.mjs --only godot|web`); F060/F050 bổ sung job còn lại. `src/game/.godot-version` = `4.5.1` (F060 xác nhận).
 - Q: Ngưỡng cỡ chữ/nút lấy ở đâu? → A: Đọc trực tiếp bảng DESIGN_SYSTEM §5.2 và câu "Cỡ chữ tối thiểu 13 px ở compact" §4.5 (một nguồn, R33); thiếu dòng → build fail.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ của feature khác)
+
+- OQ F051-4 (breakpoint 1280 px chưa có token) → **Chốt:** thêm token breakpoint `ops.breakpoint.desktop` (1280 px) và vùng chạm tối thiểu (44 px) vào `design/admin-tokens` (MINOR), sinh ra theme web; shell portal thay hằng `DESKTOP_MIN_WIDTH_PX` bằng token (R32).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Một nguồn token sinh theme cho game và web (Priority: P1)

@@ -37,6 +37,13 @@
 - Q: F020-AC-11/13 kiểm qua API nào khi F020 không có endpoint public? → A: Một route fixture (chỉ trong test) chạy qua chuỗi `pkg/httpx` thật + `scope.ForRead`; các endpoint nội dung của F021+ dùng cùng helper.
 
 
+### Session 2026-11-20 (owner chốt — mục "Câu hỏi mở")
+
+- F020-1 → **Chốt:** F011 phát `source_version` trong `school.synced`/`class.synced` (+ `academic_year_id`, `is_virtual` của lớp); projection learning so theo `source_version` khi có, `occurred_at` chỉ là dự phòng. Task ở F011 và tasks.md này.
+- F020-2 → **Chốt:** `arch-check` theo operation (task ở F001).
+- F020-3 → đã giải quyết (nối binary 2026-11-20).
+- F020-4 → **Chốt:** lint cấm `UpdateOne*` (task ở F003).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Projection dữ liệu identity trong module learning (Priority: P1)
@@ -217,7 +224,7 @@ Saga clone của module identity gọi module learning để sao sâu nội dung
 - Thư mục module `src/backend/modules/learning/` theo ADR-0074.
 - Tenant Admin dùng Thùng rác khi tenant được cấp `tenant.trash.*` [Confirmed] — identity kiểm quyền (F045).
 
-## Câu hỏi mở
+## Câu hỏi mở (đã chốt 2026-11-20 — xem Clarifications, Session owner chốt)
 
 - **F020-1** (owner identity, F011): `school.synced` và `class.synced` chưa mang `source_version` nên projection dùng `occurred_at` (micro giây) — lớn hơn mọi `source_version` của `school.updated`; sau một `school.synced`, `school.updated` cũ hơn về số version sẽ bị bỏ. Đề xuất F011 phát `source_version` (= version của aggregate) trong `school.synced`/`class.synced` và thêm `academic_year_id`, `is_virtual` vào `class.synced`.
 - **F020-2** (owner F001/archgen): `make arch-check` chỉ kiểm import theo package; đề xuất kiểm theo operation (lời gọi `modcall.Op{Operation: …}` khớp `x-allowed-callers`) để F020-AC-19 fail ngay ở CI khi `game` gọi operation platform-ops (hiện bị chặn lúc chạy bằng `CALLER_NOT_ALLOWED`).

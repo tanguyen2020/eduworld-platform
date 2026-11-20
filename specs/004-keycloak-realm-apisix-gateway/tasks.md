@@ -120,6 +120,12 @@
 - [x] T037 [P] CHANGELOG mục F004 — file: `CHANGELOG.md` — **xong 2026-11-18**
 - [x] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/004-keycloak-realm-apisix-gateway/quickstart.md` — **xong 2026-11-18**
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T046 **OQ chốt 2026-11-20** `ew-api-rate` hỗ trợ `profile` theo route; khai báo profile cho các nhóm route mức gateway của API_DESIGN §8; test 429 Problem Details theo profile — file: `deploy/apisix/plugins/ew-api-rate.lua`, `deploy/apisix/routes/routes.yaml`, `deploy/apisix/tests/` — kiểm: test plugin + smoke gateway — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 và US2 (song song) → US3 (cần route của US2) → US4 → Polish.

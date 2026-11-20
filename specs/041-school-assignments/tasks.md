@@ -142,6 +142,13 @@
 - [ ] T044 [P] Đồng bộ mã lỗi AM ngoài scope giữa TEST_STRATEGY TC-TEN-002 và API_DESIGN §4.1 (đề xuất sửa tài liệu) + CHANGELOG + trạng thái F041 trong CODE_PLAN — file: `docs/12-project/TEST_STRATEGY.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T045 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/041-school-assignments/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T046 **OQ chốt 2026-11-20** (OQ F062-1) `MyAssignment.subject_name` (contract + read model) — file: `specs/openapi/modules/learning.v1.yaml`, `src/backend/modules/learning/internal/infrastructure/persistence/lms/` — kiểm: `make specs-breaking`, integration — cỡ S
+- [ ] T047 **OQ chốt 2026-11-20** (OQ F062-2) `startAdHocAttempt` nhận `mode = assignment` cho bài `question_set` với kiểm tra F041-AC-13; test cửa sổ/số lần/không thuộc lớp — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go` — kiểm: `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2 → US3 → US4, US5 (song song) → US6 → Polish.

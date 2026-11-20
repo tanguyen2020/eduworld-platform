@@ -102,6 +102,12 @@
 - [x] T029 [P] Metric `eduworld_audit_*`, `eduworld_partition_missing_total`; alert partition — file: `src/backend/modules/identity/internal/infrastructure/observability/audit_metrics.go` — **xong 2026-11-19 — `infrastructure/auditmaint` (`eduworld_audit_records_total`, `eduworld_audit_sanitized_fields_total`, `eduworld_partition_missing_total`); MONITORING**
 - [x] T030 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19 (local, quickstart §5)**
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T043 **OQ chốt 2026-11-20** (OQ-17, F015-AC-30) `SchoolSettings.daily_play_limit_minutes` (contract + lưu + audit + `school.updated` payload thêm field tùy chọn); test F015-AC-30 — file: `specs/openapi/modules/identity.v1.yaml`, `specs/events/payloads/identity/school.updated.v1.schema.json`, `src/backend/modules/identity/internal/application/command/settings.go` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → US3, US4 song song → US5 → Polish.

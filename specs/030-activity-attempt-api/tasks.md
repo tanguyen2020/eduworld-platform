@@ -109,9 +109,18 @@
 
 ## Phase 9: Polish & Cross-Cutting
 
-- [ ] T049 [P] Metric `eduworld_attempt_*`, span `attempt.*`; gắn cờ `suspicious_speed_flag` gửi ANTI_CHEAT (không phạt) — file: `src/backend/modules/learning/internal/infrastructure/observability/attempt_metrics.go` — ⏳ đã có: `observability.AttemptCounter` (`eduworld_attempt_started_total`, `_submitted_total`, `_expired_total`), span qua `observability.UseCase`; chưa có `suspicious_speed_flag` → ANTI_CHEAT và `eduworld_attempt_response_latency_seconds`
+- [ ] T049 [P] Metric `eduworld_attempt_*`, span `attempt.*`; gắn cờ `suspicious_speed_flag` gửi ANTI_CHEAT (không phạt) — file: `src/backend/modules/learning/internal/infrastructure/observability/attempt_metrics.go` — ⏳ đã có: `observability.AttemptCounter` (`eduworld_attempt_started_total`, `_submitted_total`, `_expired_total`), span qua `observability.UseCase`; chưa có `suspicious_speed_flag` → ANTI_CHEAT và `eduworld_attempt_response_latency_seconds` — OQ chốt 2026-11-20: cờ trên attempt + metric `eduworld_attempt_suspicious_speed_total`, không phạt (Session owner chốt)
 - [x] T050 [P] Đồng bộ tên event (`activity.submitted`) và mã lỗi trong ACTIVITY_ENGINE §9–§10, TEST_STRATEGY TC-LRN-004; CHANGELOG — file: `docs/02-learning/ACTIVITY_ENGINE.md` — ✅ ACTIVITY_ENGINE §6.4 (context_type), §9 (`CONTENT_NOT_PUBLISHED`); TEST_STRATEGY TC-LRN-004 đã dùng `activity.submitted`; CHANGELOG
 - [ ] T051 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/030-activity-attempt-api/quickstart.md` — ⏳ bằng chứng tự động thay kịch bản tay (bảng ở quickstart §4); chạy trên stack thật sau khi agent wiring nối module
+
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T053 **OQ chốt 2026-11-20** `answer_rate`: bộ đếm Valkey theo học sinh (trả lời, nộp, khoảng cách tối thiểu theo thời điểm server), `429 RATE_LIMITED` + `Retry-After`, giá trị từ cấu hình; test vượt ngưỡng + Valkey lỗi cho qua có metric — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go`, `internal/infrastructure/cache/` — kiểm: `make test-integration MOD=learning` — cỡ S
+- [ ] T054 **OQ chốt 2026-11-20** `createCmsActivityVersion` (contract cùng mẫu `createQuestionVersion` + handler dùng `command.Docs.NewVersion`); test version published → draft mới, idempotency, authorization, tenant isolation — file: `specs/openapi/modules/learning.v1.yaml`, `src/backend/modules/learning/internal/presentation/http/` — kiểm: `make specs-breaking`, `make test-integration MOD=learning` — cỡ S
+- [ ] T055 **OQ chốt 2026-11-20** Facade platform-ops learning nhận `ResourceType = activity` (gán, gỡ gán, clone, Thùng rác, khôi phục) — file: `src/backend/modules/learning/internal/presentation/facade/`, `specs/openapi/modules/internal-common.v1.yaml` — kiểm: facade test bên nhận — cỡ S
+- [ ] T056 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) `mergeUserData` của learning: liên kết `student_id` gốc → user đích, idempotent theo `merge_id`, `nothing_to_do` khi không có dữ liệu; nối `LearningMerge` của identity — file: `src/backend/modules/learning/internal/application/command/merge_user_data.go`, migration learning, `src/backend/modules/identity/module.go` — kiểm: facade test hai phía — cỡ M
 
 ## Dependencies & Execution Order
 

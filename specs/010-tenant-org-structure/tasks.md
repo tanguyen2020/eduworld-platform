@@ -94,7 +94,7 @@
 ### Implementation cho User Story 4
 
 - [x] T033 [US4] Consumer `keycloak-membership` nhánh `tenant_membership.changed`, `user_role.changed`, `user.status_changed` — file: `src/backend/modules/identity/internal/presentation/consumer/keycloak_membership.go` — **xong 2026-11-19 — consumer `tenant_membership.changed`, `user_role.changed` (F012 phát); `user.status_changed` thuộc F016**
-- [ ] T034 [US4] Job `org-membership-reconcile` (hằng đêm, lệnh `--once`) — file: `src/backend/modules/identity/internal/presentation/job/org_membership_reconcile.go` — **một phần** — use case `command/org_reconcile.go` xong + test; issue `unexpected_org_member` ghi bằng audit `reconciliation_issue.raised` (bảng `sis.reconciliation_issues` của F011); lịch hằng đêm + lệnh `--once` trong worker chờ phần wiring binary (Câu hỏi mở)
+- [ ] T034 [US4] Job `org-membership-reconcile` (hằng đêm, lệnh `--once`) — file: `src/backend/modules/identity/internal/presentation/job/org_membership_reconcile.go` — **một phần** — use case `command/org_reconcile.go` xong + test; issue `unexpected_org_member` ghi bằng audit `reconciliation_issue.raised` (bảng `sis.reconciliation_issues` của F011); lịch 24 h đã nối (OQ F010-2); lệnh `--once` và ghi issue vào bảng → task bổ sung "OQ chốt 2026-11-20"
 
 ## Phase 7: User Story 5 — Tenant chung và tài khoản học sinh do platform tạo (Priority: P2)
 
@@ -118,6 +118,13 @@
 - [x] T039 [P] Cập nhật DATABASE_DESIGN nếu cột/enum thay đổi (`enrollments.source` thêm `platform_common`), CHANGELOG — file: `docs/07-backend/DATABASE_DESIGN.md`, `CHANGELOG.md` — **xong 2026-11-19 — DATABASE_DESIGN (trạng thái trường, `enrollments.source`, `effective_from` nullable, view `security_invoker`, quyền infra `_platform`), ADR-0089 (làm rõ), MONITORING, CHANGELOG**
 - [x] T040 [P] Metric `eduworld_identity_org_sync_total`, `eduworld_auth_common_tenant_total`; span Keycloak — file: `src/backend/modules/identity/internal/infrastructure/keycloak/metrics.go` — **xong 2026-11-19 — `eduworld_identity_org_sync_total{op,result}` trong adapter (test `TestOrgSyncMetric`), `eduworld_auth_common_tenant_total{result}` ở handler; MONITORING cập nhật**
 - [x] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19 — bằng chứng test tự động ở quickstart §5; kịch bản trên stack chờ OQ F010-2**; 2026-11-20: binary đã nối, smoke trên stack ở quickstart §6 (kịch bản thành công cần seed identity — chưa có)
+
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T045 **OQ chốt 2026-11-20** (audit đọc hồ sơ) `getStudentProfile` ghi audit `student_profile.viewed` qua `audit.Recorder`; test có audit khi đọc thành công, không audit khi 403/404 — file: `src/backend/modules/identity/internal/application/query/`, `tests/integration/` — kiểm: `make test-integration MOD=identity` — cỡ S
+- [ ] T046 **OQ chốt 2026-11-20** (T034) Lệnh `--once` cho job `org-membership-reconcile` và ghi issue `unexpected_org_member` vào `sis.reconciliation_issues` — file: `src/backend/cmd/worker/`, `src/backend/modules/identity/internal/application/command/org_reconcile.go` — kiểm: integration — cỡ S
 
 ## Dependencies & Execution Order
 

@@ -19,6 +19,11 @@
 - Q: Nội dung riêng tenant lên CDN? → A: Không; chỉ nội dung platform không phải đề kiểm tra (`cdn_eligible`) lên `ew-media-public`; còn lại phục vụ qua API [Confirmed].
 - Q: `active_pinned_sessions`, nơi sử dụng ngoài question set? → A: 0 và chỉ question set cho tới F030/F041/F042 [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F054-3 (nơi dùng từ quest/challenge/thi đấu, FR-CNT-008) → **Chốt:** module learning giữ projection tham chiếu ngoài (`content.external_usages`, theo version) dựng từ event: module game đưa `content_refs[]` (loại, id, version nội dung học tập) vào payload `content.published` của cấu hình game (F078; schema owner F071), module competition làm tương tự cho cấu hình thi đấu đã publish (F108). `getContentUsages` thêm `ref_type` `quest`, `minigame`, `challenge`, `competition` đọc từ projection này; không gọi đồng bộ module khác (R29). Task ở F078 (gồm phía learning) và F108.
+- Route/consumer/job → đã nối binary 2026-11-20.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Xuất bản ngay một version đã duyệt (Priority: P1)

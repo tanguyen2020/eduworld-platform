@@ -126,6 +126,12 @@
 - [ ] T042 [P] Sửa câu chữ CURRICULUM_MODEL §5 về nơi lưu curriculum version theo năm học (sau khi duyệt) + CHANGELOG + trạng thái F040 trong CODE_PLAN — file: `docs/02-learning/CURRICULUM_MODEL.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T043 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/040-lms-course-path-schedule/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T044 **OQ chốt 2026-11-20** (OQ F021-5) Resolver version mặc định lọc theo năm học của lớp — file: `src/backend/modules/learning/internal/infrastructure/persistence/curriculum/tree_read_model.go` — kiểm: `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2, US3, US4 (song song) → US5 (test chạy trên US1–US4) → Polish.

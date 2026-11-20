@@ -128,6 +128,12 @@
 - [ ] T053 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T060 **OQ chốt 2026-11-20** (OQ-09) Seed chat policy mặc định platform: `allowed_hours` 06:30–21:30 từ cấu hình `chat_allowed_hours` cho channel bền vững, `world_scope = school`; test học sinh nhắn 21:45 → `CHAT_NOT_ALLOWED`, giá trị `world_scope` khác `school`/`tenant` → `422` — file: `src/backend/modules/chat/cmd/seed/`, `src/backend/modules/chat/tests/integration/` — kiểm: `make test-integration MOD=chat` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T010) → US1 → US2 → US3, US4, US5 song song → US6 (cần module moderation F121 cho kiểm case mở; trước đó port trả "không có case") → Polish.

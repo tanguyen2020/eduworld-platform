@@ -17,6 +17,10 @@
 
 - Q: Xác nhận sau đối soát (RB-405, RB-302)? → A: Block → `403 PARTY_INVITE_NOT_ALLOWED`; `PARTY_ACTIVITY_NOT_ELIGIBLE` là `409`; `party_invite_rate` = 10/phút, **50/ngày** mỗi học sinh ([CONFIG_DEFAULTS](../../docs/00-overview/CONFIG_DEFAULTS.md) C-3); nickname `maxLength` 32.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F016-2/F045-3)
+
+- Facade vòng đời học sinh và gộp tài khoản của module competition → **Chốt:** F100 (dữ liệu học sinh đầu tiên của module competition) hiện thực `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData`/`mergeUserData` (cập nhật tham chiếu thành viên party, idempotent theo `merge_id`); feature competition sau mở rộng cho dữ liệu của mình.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo party và xem party của mình (Priority: P1)

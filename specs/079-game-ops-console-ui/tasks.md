@@ -113,6 +113,12 @@
 - [ ] T043 [P] Test F079-AC-21: tắt `menu.game_ops.shop` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/game-ops/feature-toggle.spec.ts`
 - [ ] T044 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F079-AC-21) — file: `src/cms/frontend/apps/portal/src/workspaces/game-ops/routes.tsx`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T045 **OQ chốt 2026-11-20** Game Dashboard workspace A (đếm cấu hình theo trạng thái + item cần dịch), menu theo catalog — file: `src/cms/frontend/apps/portal/src/workspaces/game-ops/dashboard/` — kiểm: `make web-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T010) → US1 → US6 → US2 → US3, US4 (song song; cần T005) → US5 (cần T004 `media`) → Polish.

@@ -14,6 +14,11 @@
 - Q: File nhập dịch upload thế nào? → A: [Confirmed] `presignGameMediaUpload` với `kind = document` (XLIFF/CSV); file không gắn `media_usages`, không phát hành CDN.
 - Q: Nhập dịch khi item đã có version mới hơn version trong khóa? → A: Bỏ dòng, báo `stale_version` ([research](research.md) R2).
 
+### Session 2026-11-20 (owner chốt)
+
+- Game Dashboard → **Chốt:** thuộc F079 (đếm item cần dịch theo `translation_status`).
+- Platform-ops (gán/clone/Thùng rác) cho sticker pack/GIF của module chat (OQ F045-3) → **Chốt:** F082 hiện thực facade platform-ops của module chat cho hai loại này (hộp gán ở F057, saga ở F045).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Quản lý sticker pack (Priority: P1) 🎯 MVP
@@ -172,7 +177,7 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 - Hộp gán sticker pack/GIF cho tenant và saga gán: F057/F045.
 - Workflow chung `/game-admin/{config_type}`, chặn `TRANSLATION_INCOMPLETE` khi gửi duyệt: F078; `ContentEditorShell`, builder từng loại: F079.
 - Dịch nội dung học tập (`/cms/learning/translations*`): F025/F053. Chuỗi UI game (`.po`): F060. Dịch máy: không làm (ADMIN_PORTAL §1.5).
-- Bảng điều khiển Game Dashboard (đếm số item cần dịch): [TBD] trong ADMIN_PORTAL — chưa làm.
+- Bảng điều khiển Game Dashboard (đếm số item cần dịch): F079 (owner chốt 2026-11-20), đếm theo `translation_status` của F082.
 
 ## Assumptions
 

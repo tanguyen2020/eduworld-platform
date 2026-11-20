@@ -169,6 +169,12 @@
 - [ ] T056 [P] Cập nhật CHANGELOG và trạng thái F032 trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T057 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/032-self-study-practice/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T058 **OQ chốt 2026-11-20** (OQ F030) `startAdHocAttempt` với question set theo luật: chọn câu bằng `selection.Select`, ghim version từng câu; test đủ câu/thiếu câu — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go` — kiểm: `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T009) → US1 → US2, US3 (song song) → US4, US5 (song song) → US6 (cần US3–US5 cho dữ liệu rule) → US7 → Polish.

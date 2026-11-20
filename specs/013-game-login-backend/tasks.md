@@ -104,6 +104,12 @@
 - [x] T033 [P] Kịch bản k6 hàng chờ đăng nhập (TC-PERF-016) — file: `tests/perf/login_queue.js` — **xong 2026-11-19 — `tests/perf/login_queue.js` (chỉ chạy trên staging; chưa có báo cáo)**
 - [x] T034 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19 (local, quickstart §5); phần staging/realm thật còn chờ**
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T048 **OQ chốt 2026-11-20** (OQ-17, F013-AC-33) Projection thời gian chơi/ngày từ `game_session.ended` + kiểm `daily_play_limit_minutes` của trường trong `GameLogin`/`SelectGameLoginTenant`/`RefreshGameToken` (`resume`); `ProblemCode` thêm `DAILY_PLAY_LIMIT_REACHED` (`reopen_at`); test F013-AC-33 — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/presentation/consumer/`, `internal/infrastructure/gameauth/policy.go` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Consumer `user.access_revoked`/`user.status_changed`/`student.cleaned_up` (T037, T040) chỉ cần fixture của T045 (schema owner F011/F016), không cần F016 triển khai; kiểm end-to-end ở F016 (F016-AC-24, CODE_PLAN §4.1).

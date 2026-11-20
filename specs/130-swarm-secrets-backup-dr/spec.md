@@ -18,6 +18,12 @@
 - Q: Đơn vị triển khai backend sau ADR-0074? → A: 3 image (`core-api`, `realtime`, `worker`) + image `migrate`, đẩy lên `ghcr.io` ([ADR-0088](../../docs/adr/ADR-0088-ci-cd-bang-github-actions.md)); `deploy/swarm/<env>/app.stack.yml` chứa 5 Swarm service `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs` (`src/backend/cmd/worker --profile=events|chat|jobs`); một version backend `backend/vX.Y.Z` cho cả 3 binary; job migrate `migrate --module=<module>` cho từng database module trước rollout ([DEPLOYMENT §3.1, §11, §12](../../docs/11-operations/DEPLOYMENT.md)).
 - Q: Nền CI/CD? → A: GitHub Actions (ADR-0088): `deploy-config.yml` (validate stack, secret refs, schema), `release.yml` (build, quét, ký, deploy theo tag), `security.yml` (gitleaks); job deploy chạy trên self-hosted runner nhãn `deploy` trong mạng quản trị; secret theo GitHub Environment `staging`/`production` (production có required reviewers).
 
+### Session 2026-11-20 (owner chốt)
+
+- Hạ tầng và secret (OQ-10) → **Chốt:** VM của nhà cung cấp cloud tại Việt Nam, thành phần có trạng thái tự vận hành trên Docker Swarm; nguồn secret giữ **SOPS (age)** như Clarification 2026-11-16. Tên nhà cung cấp chọn khi ký hợp đồng (không phải câu hỏi mở của feature).
+- Object storage (OQ-21, ADR-0075) → quyết định đang được owner điều chỉnh (tự host S3-compatible ở giai đoạn đầu, chuyển managed sau chỉ đổi cấu hình + sao chép dữ liệu); F130-AC-14, F130-AC-20 do agent docs căn chỉnh cùng ADR — không đổi ở phiên này.
+- APISIX staging/production (DEPLOYMENT §5) → **Chốt:** F130 sở hữu đầu ra ADC sinh từ `deploy/apisix/routes/routes.yaml` (+ `routes/env/<env>.env`) và CI job `apisix:sync` áp vào APISIX mode etcd; admin key APISIX chỉ job này dùng (secret). F004 chỉ giữ đầu ra standalone và diff render.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Deploy, rollback và scale từng Swarm service độc lập trên Swarm (Priority: P1)
@@ -185,7 +191,7 @@ Trước giờ vào học, replica Keycloak, `core-api`, `realtime`… tự tăn
 
 ## Assumptions
 
-- OQ-10 chưa chốt: thiết kế không phụ thuộc cloud hay on-prem; secret qua SOPS [Confirmed]; Vault/OpenBao thay được bằng script `secrets-sync`.
+- OQ-10 đã trả lời 2026-11-20: VM cloud tại Việt Nam, stateful tự vận hành; secret qua SOPS [Confirmed].
 - CI/CD là GitHub Actions (ADR-0088): job deploy chạy trên self-hosted runner nhãn `deploy` trong mạng quản trị, có quyền Docker API manager qua TLS, không nhận job từ PR của fork; secret theo GitHub Environment `staging`/`production`; action ghim theo SHA commit (DEPLOYMENT §10).
 - `reconcile-<module>` (lệnh con `worker reconcile --module=<module>` [Confirmed]) chưa có feature sở hữu trong CODE_PLAN; F130 định nghĩa giao diện CLI (mã thoát, JSON kết quả) và chờ module bổ sung — rủi ro cho TC-SVC-014.
 - ADR-0074 (modular monolith) Accepted 2026-11-17: stack, secret, migrate, canary, rollback trong spec này theo 3 binary/5 Swarm service và một cụm PostgreSQL.

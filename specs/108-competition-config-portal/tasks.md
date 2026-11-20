@@ -88,6 +88,12 @@
 - [ ] T032 [P] Test F108-AC-17: tắt `menu.school_lms.challenges` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/competition/feature-toggle.spec.ts`
 - [ ] T033 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F108-AC-17) — file: `src/cms/frontend/apps/portal/src/workspaces/game-ops/competition/routes.tsx`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T034 **OQ chốt 2026-11-20** (OQ F054-3, F045-3) `content_refs[]` trong event publish cấu hình thi đấu + `ref_type = competition` ở learning; facade platform-ops của module competition — file: `specs/events/payloads/competition/`, `src/backend/modules/competition/`, `src/backend/modules/learning/internal/presentation/consumer/` — kiểm: `make specs-lint`, `make test-contract` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 (backend) → US2, US3 (song song, web) → Polish.

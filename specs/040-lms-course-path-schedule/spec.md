@@ -18,6 +18,10 @@
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Learning path có version/workflow phát hành không? → A: Không (RB-216, [SCHOOL_LMS §3](../../docs/04-admin-portal/SCHOOL_LMS.md#3-course-và-learning-path)): sửa trực tiếp với `If-Match` + audit, áp dụng tiếp cho học sinh, tiến độ giữ theo `node_id`; cột `version` chỉ là khóa lạc quan.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F021-5)
+
+- Resolver version curriculum mặc định của trường chưa lọc năm học (OQ F021-5) → **Chốt:** F040 bổ sung lọc theo năm học hiện hành của lớp (`academic_year_id` từ projection lớp, OQ F020-1) khi đọc `lms.school_curriculum_settings`; chưa có năm học thì giữ quy tắc hiện tại.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Course tự tạo theo lớp × môn × năm học (Priority: P1)

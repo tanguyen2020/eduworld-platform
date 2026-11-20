@@ -31,6 +31,10 @@
 - Q: Domain dev/staging/production chưa chốt (OQ-10)? → A: [Confirmed] `config/env/{dev,staging,production}.json` dùng placeholder `*.eduworld.example` như `servers` của OpenAPI; thay khi OQ-10 có câu trả lời. Prism phục vụ path không có tiền tố `/api/v1` nên `mock.json` dùng `http://localhost:4011`.
 - Q: Ký bản Android trong CI PR? → A: [Confirmed] `godot.yml` export Android **debug-signed** (không cần secret); ký release bằng keystore từ GitHub Environment thuộc `release.yml`/F133.
 
+### Session 2026-11-20 (owner chốt)
+
+- Mọi mục "Câu hỏi mở, dùng mặc định [Confirmed]" của Session 2026-11-19 → owner chốt 2026-11-20. Domain dev/staging/production (OQ-10) → giữ placeholder tới khi môi trường có tên miền (cấu hình, không phải câu hỏi mở). Emulator Android → F133.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Project Godot đúng kiến trúc lớp, cấu hình không chứa secret (Priority: P1)

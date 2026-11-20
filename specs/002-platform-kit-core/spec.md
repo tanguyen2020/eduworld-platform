@@ -35,6 +35,12 @@
 - Q: Linter `bypassreason`/`scopeguard` chạy thế nào? → A: Lệnh `tools/lint/ewlint` (go/analysis multichecker) trong `make lint` và `make arch-check`, không qua plugin golangci; F002-AC-26/27 kiểm bởi `tools/archgen`.
 - Q: `routematrix` biết test nào phủ operation bằng cách nào? → A: Quét tĩnh lời gọi `authztest.Cover(t, "<operationId>", authztest.CrossTenant, authztest.RoleDenied)` (literal), thay cho đăng ký lúc chạy; operation "đã cài đặt" = literal `httpx.Operation{ID: …}` ngoài test.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ của feature khác)
+
+- OQ F027-2 (`media.upload` chỉ có ở `tenant_content_editor`, `system_admin`) → **Chốt:** thêm `media.upload` vào mọi role hệ thống có `learning_content.write`: `tenant_admin`, `school_admin`, `academic_manager`, `content_admin` (ADMIN_PORTAL §2.2 xếp `media.upload` cùng nhóm soạn nội dung; người soạn được phải tải được ảnh/âm thanh). Không thêm permission mới, chỉ sửa danh sách role trong `pkg/authz/roles.go`.
+- OQ F011-3 (`routematrix` không nhận route viết bằng helper `op(...)`) → **Chốt:** sửa tool: `routematrix` lấy danh sách operation từ `pkg/module.Registry` (route thật đã đăng ký) trong test thay vì phân tích literal; không đổi route sang literal. Ma trận role/tenant bắt buộc cho mọi operation của mọi module.
+- OQ F013-5 (IP client sau APISIX) → **Chốt:** `pkg/httpx` thêm `ClientIP(r)`: chỉ tin `X-Forwarded-For` (lấy địa chỉ không tin cậy ngoài cùng bên phải) khi `RemoteAddr` thuộc `EW_TRUSTED_PROXY_CIDRS` (node APISIX); ngoài ra dùng `RemoteAddr`. Module identity (`ip_hash` đăng nhập) và game (`login_events`) dùng chung hàm này; chỉ hash, không lưu IP thô (R23).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Service tự xác thực token, không tin APISIX (Priority: P1)

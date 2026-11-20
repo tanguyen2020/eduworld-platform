@@ -115,6 +115,16 @@
 - [x] T037 [P] Metric và alert `eduworld_sis_last_success_timestamp` theo SIS_INTEGRATION §8 — file: `src/backend/modules/identity/internal/infrastructure/sis/metrics.go` — **xong 2026-11-18 — `infrastructure/sis/metrics` (`eduworld_sis_login_sync_total`, `_duration_seconds`, `eduworld_sis_last_success_timestamp` qua `SyncRunObserver`); alert theo MONITORING**
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T039 **OQ chốt 2026-11-20** (OQ F010-1) `importSchools` (`202` + `Location`) và `getSchoolImport`: lưu file `ew-sis-imports`, quét clamd, job `IDENTITY_SIS_JOBS` gọi `ImportSchools` theo lô (dry-run, `pending_review`); test tenant isolation/authorization + idempotency — file: `src/backend/modules/identity/internal/presentation/http/public/catalog_schools.go`, `internal/application/command/school_import.go` — kiểm: `make test-integration MOD=identity` — cỡ M
+- [ ] T040 **OQ chốt 2026-11-20** (OQ F020-1) `class.synced` thêm `source_version`, `academic_year_id`, `is_virtual`; `school.synced` phát `source_version` — file: `specs/events/payloads/identity/class.synced.v1.schema.json`, `src/backend/modules/identity/internal/application/command/sis_*.go` — kiểm: `make specs-lint`, test payload theo schema — cỡ S
+- [ ] T041 **OQ chốt 2026-11-20** (OQ F045-7) `resolveSchoolReconciliationIssue` nhận `resolution = merge_requested` (issue trùng định danh của trường, `tenant.sis.import`, issue giữ `open`, audit); contract `SchoolReconciliationResolve` thêm giá trị — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/application/command/sis_issue.go` — kiểm: `make specs-breaking`, integration (`mergeUsers` chạy được sau đề nghị) — cỡ S
+- [ ] T042 **OQ chốt 2026-11-20** (OQ F011-2) Khóa hash có `kid`: `EW_SIS_ID_HASH_KEYS`, lưu `kid` cạnh hash (migration expand), so khớp mọi khóa hiệu lực — file: `src/backend/modules/identity/internal/infrastructure/sis/`, migration identity — kiểm: unit + integration xoay khóa — cỡ M
+- [ ] T043 **OQ chốt 2026-11-20** (OQ F011-1) Test integration chuyển trường liên tenant: tenant cũ kết thúc enrollment → issue `same_person` ở tenant mới xử lý được, membership chuyển; còn membership cũ → `409` — file: `src/backend/modules/identity/tests/integration/sis_transfer_test.go` — kiểm: `make test-integration MOD=identity` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US6 (connection `csv_import` cần trước import thật) → US1 → US2 (cần provisioning sau apply) → US3, US4, US5 song song → Polish.

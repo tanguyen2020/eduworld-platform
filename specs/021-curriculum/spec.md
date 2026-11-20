@@ -37,6 +37,13 @@
 
 - Q: Portal kéo-thả cây chủ đề/LO cần `If-Match` từ danh sách? → A: `Topic.row_version`, `LearningObjective.row_version` (readOnly, = phiên bản dòng của ETag `W/"<row_version>"`) trả trong mọi list/get topic và LO (F053-AC-27, AC-28); test `TestF053Followups`.
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F021-5 (chưa lọc theo năm học) → **Chốt:** F040 (sở hữu `lms.school_curriculum_settings` theo trường × năm học × khối) bổ sung lọc năm học vào resolver version mặc định, dùng `academic_year_id` của projection lớp (OQ F020-1). Task ở F040.
+- OQ F021-10 (cache Valkey cây curriculum) → **Chốt:** không cache cho tới khi đo tải F132 cho thấy p95 đọc cây vượt NFR; F132 quyết định và mở task.
+- OQ-08 (US7) → đã trả lời (owner 2026-11-20, OPEN_QUESTIONS): mapping bộ sách → LO chỉ lưu metadata bộ sách/tập/bài.
+- Mọi OQ F021-1…9 khác giữ [Confirmed].
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn cấu trúc chương trình (Priority: P1)
@@ -160,7 +167,7 @@ Khi publish version thay thế, người soạn khai báo LO cũ ánh xạ sang 
 
 Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để người biên tập và Academic Manager lọc theo bài sách.
 
-**Why this priority**: FR-CUR-012 P3, [TBD] OQ-08.
+**Why this priority**: FR-CUR-012 P3, OQ-08 [Confirmed] (owner chốt 2026-11-20: chỉ lưu metadata bộ sách/tập/bài).
 
 **Independent Test**: Tạo bộ sách "Cánh Diều" Toán 3 tập 1, bài 12 gắn 2 LO; lọc LO theo bài.
 

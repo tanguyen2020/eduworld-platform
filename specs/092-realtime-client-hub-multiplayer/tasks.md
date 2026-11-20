@@ -68,6 +68,12 @@
 - [ ] T028 [P] Thu `NetStats` (RTT p50/p95, reconnect, resume) vào `AppState` cho F080 — file: `src/game/scripts/core/app_state.gd`
 - [ ] T029 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T030 **OQ chốt 2026-11-20** (pinning) `RealtimeClient` (`WebSocketPeer`) dùng `TLSOptions.client(trusted_chain)` với CA bundle chung; test chứng chỉ ngoài bundle bị từ chối — file: `src/game/scripts/networking/realtime_client.gd`, `src/game/tests/unit/networking/` — kiểm: `make godot-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → US3 → Polish. US1 dùng được fixture AsyncAPI (gắn nhãn MOCK) trước khi F090/F091 Done; T020, T025 cần backend thật.

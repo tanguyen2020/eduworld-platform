@@ -166,4 +166,4 @@ Một bạn rớt mạng thì cả nhóm vẫn chơi tiếp (nếu hoạt độn
 - Ngưỡng "số online dưới tối thiểu quá 120 s" (PARTY_SYSTEM §9) và tần suất lệnh lobby 5/giây (§10) chưa có tên CONFIG_DEFAULTS; đề xuất `party_activity_min_members_timeout`, `party_lobby_cmd_rate` (task Polish) [Confirmed].
 - Chu kỳ quét presence 5 s theo PARTY_SYSTEM §9 là hằng số code của worker [Confirmed].
 - F103 phát `boss.encounter_completed` có `party_activity_id` và event mới `quest.party_completed`; F090 ghi presence `ew:presence:user:<id>`.
-- Kiểm tra giờ truy cập theo trường (OQ-17) chưa có quyết định; không áp dụng trong feature này [TBD].
+- Giờ truy cập/giới hạn chơi (OQ-17, đã trả lời 2026-11-20): không kiểm riêng ở party/lobby; game session bị từ chối hoặc kết thúc theo giờ giới nghiêm và giới hạn/ngày ở F014 nên học sinh không vào được phòng.

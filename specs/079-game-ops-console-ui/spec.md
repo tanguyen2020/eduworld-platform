@@ -16,6 +16,10 @@
 
 - Q: Permission ẩn/hiện builder Level & XP, Shop, Bộ sưu tập? → A: `game.progression.write`, `game.shop.write`, `game.collection.write` (ADMIN_PORTAL §2.2, RB-309; thay `game.level.write`); config type bảng level là `progression-levels`.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ F082)
+
+- Game Dashboard ([TBD] ở ADMIN_PORTAL, F082 Ngoài phạm vi) → **Chốt:** F079 làm Game Dashboard tối thiểu của workspace A: số cấu hình theo trạng thái workflow và số item cần dịch (`translation_status` ≠ `complete`, từ `listGameConfigs` có field của F082). Không có số liệu chơi (thuộc F080).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Danh sách và editor có version chung (Priority: P1) 🎯 MVP

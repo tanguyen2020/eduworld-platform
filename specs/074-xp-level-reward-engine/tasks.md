@@ -99,6 +99,12 @@
 - [ ] T037 [P] Metric `eduworld_game_xp_*`, `eduworld_game_level_reached_total`, `eduworld_game_ledger_mismatch_total` + span — file: `src/backend/modules/game/internal/infrastructure/observability/metrics.go`
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T041 **OQ chốt 2026-11-20** (OQ F016-2) Bước gộp ledger XP bằng bản ghi bù trong `mergeUserData` của module game, idempotent theo `merge_id` — file: `src/backend/modules/game/internal/application/command/` — kiểm: `make test-integration MOD=game` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T006 cần module learning; T007–T008 trước mọi test integration) → US1 → US2 → US3 (song song US2 sau T018) → US4 → US5 → Polish.

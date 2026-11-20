@@ -18,6 +18,10 @@
 - Q: Tên khóa idempotency tin nhắn sau đối soát (RB-508)? → A: Một tên `client_message_id` ở REST, realtime và DB ([CHAT_SYSTEM §5](../../docs/03-social-multiplayer/CHAT_SYSTEM.md)); AsyncAPI đổi `client_msg_id` → `client_message_id` (delta contract). Tiêu chí chi tiết của CHAT_SYSTEM dùng mã `AC-CHS-NNN`; cột Nguồn của feature giữ mã PRD `AC-CHAT-NNN` (RB-505).
 - Q: Từ chối gửi chat trong giờ giới nghiêm và áp preset "chỉ quick message + emote" ở đường gửi (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ F016-2/F045-3)
+
+- Facade vòng đời học sinh và gộp tài khoản của module chat → **Chốt:** F115 hiện thực `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData` (theo chính sách tin nhắn của CHAT_SYSTEM, không xóa vật lý — R21) và `mergeUserData` (cập nhật tham chiếu thành viên channel), idempotent theo `merge_id`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi và nhận tin realtime, bền vững trước khi "Sent" (Priority: P1)

@@ -104,6 +104,12 @@
 - [x] T044 [P] Đồng bộ tên event `content.version_*` trong CONTENT_MODEL §6 (D11) — file: `docs/02-learning/CONTENT_MODEL.md`
 - [x] T045 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/025-content-review-workflow/quickstart.md`
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T046 **OQ chốt 2026-11-20** (OQ F054-1) `field_comments[]` trong `transitionContentVersion` (contract, lưu jsonb có CHECK độ dài, trả trong `ContentReviewTask` + lịch sử); test validation `422` + đọc lại — file: `specs/openapi/modules/learning.v1.yaml`, `src/backend/modules/learning/internal/application/command/workflow.go`, migration learning — kiểm: `make specs-breaking`, `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → (US2, US3 song song) → US4 → US5 → Polish.

@@ -100,6 +100,13 @@
 - [x] T036 [P] E2E takeover hai client headless (TC-AUTH-015) — file: `tests/e2e/game_session_takeover_test.go` — **xong 2026-11-19** — mức integration: `TestTakeover` (hai client HTTP qua chuỗi `pkg/httpx` thật) + `TestRevokeOnSessionReplaced`; E2E trên binary chạy thật chờ nối composition root (OQ F014-7) và gateway F090
 - [x] T037 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **xong 2026-11-19** — bằng chứng ở [quickstart.md](quickstart.md) §5
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T044 **OQ chốt 2026-11-20** (OQ F014-1) Projection `ref.students.sis_connection_id` từ `student.sis_link_created`/`student.sis_link_superseded`/`student.synced`; `login_events` ghi giá trị này — file: `src/backend/modules/game/internal/presentation/consumer/`, migration game — kiểm: `make test-integration MOD=game` — cỡ S
+- [ ] T045 **OQ chốt 2026-11-20** (OQ-17, F014-AC-27) Giới hạn chơi/ngày: projection `daily_play_limit_minutes` của trường, tổng thời gian session trong ngày ICT, chặn `createGameSession` bằng `DAILY_PLAY_LIMIT_REACHED` + cảnh báo/đóng phiên (`end_reason = daily_limit`) trong job đóng phiên; schema `game_session.ended` thêm giá trị `end_reason`; test F014-AC-27 — file: `specs/events/payloads/game/game_session.ended.v1.schema.json`, `src/backend/modules/game/internal/application/command/session.go`, `internal/presentation/job/curfew_session_closer.go` — kiểm: `make test-integration MOD=game` — cỡ M
+
 ## Dependencies & Execution Order
 
 - T038, T039 chỉ cần fixture (F013 T045); contract test với schema owner F011/F016 khi có, không cần F016; kiểm end-to-end ở F016-AC-24 (CODE_PLAN §4.1).

@@ -88,6 +88,12 @@
 - [x] T032 [P] CHANGELOG mục F005 — file: `CHANGELOG.md` — **xong 2026-11-19 — CHANGELOG mục F005**
 - [x] T033 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/005-design-tokens/quickstart.md` — **xong 2026-11-19 — quickstart.md mục Bằng chứng**
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T034 **OQ chốt 2026-11-20** (OQ F051-4) Token `ops.breakpoint.desktop` = 1280 px và kích thước vùng chạm 44 px trong `design/admin-tokens` (MINOR), `make design-tokens`; portal shell dùng token thay hằng — file: `design/admin-tokens/`, `src/cms/frontend/apps/portal/src/shell/` — kiểm: `make design-tokens-check`, `make web-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần đầu ra US1) → US3 → Polish.

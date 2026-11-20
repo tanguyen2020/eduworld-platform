@@ -135,6 +135,13 @@
 - [x] T049 [P] Test F057-AC-22: tắt `action.platform_admin.tenant_data.clone` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/platform-admin/feature-toggle.spec.ts` — **2026-11-19:** mức integration `src/cms/frontend/apps/portal/src/workspaces/platform-admin/__tests__/workspaceGuard.test.tsx` › Menu/action tắt (3 pass); E2E chờ OQ F057-10
 - [x] T050 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F057-AC-22) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/routes.tsx` — **2026-11-19:** `index.tsx` gắn màn vào khóa menu catalog; tab/nút theo `actionStatus`/`<ActionGate>`; `check-portal-catalog` 0 lỗi
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T053 **OQ chốt 2026-11-20** (OQ F057-1) Bước 3 wizard clone gọi `previewTenantClone` (đồ thị phụ thuộc, xung đột chặn bước tiếp), gỡ cờ `CLONE_PREVIEW_AVAILABLE`; sau task F045 — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/clones.ts`, `…/clones/` — kiểm: `make web-test` — cỡ M
+- [ ] T054 **OQ chốt 2026-11-20** (OQ F045-9) Ô `remove_default` trong hộp gỡ gán — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/assignments/` — kiểm: `make web-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 (chặn F053/F054/F055/F056 phần liên tenant) → US8 → US2 → US4, US5, US6 (song song) → US3 (cần T005 cho bước xem trước) → US7 (cần T004) → Polish.

@@ -39,6 +39,17 @@
 - Q: Integration với backend compose (T035, T044, T053, T047)? → A: Test viết sẵn ở `tests/integration/auth/`, tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL` (mật khẩu seed lấy từ `EDUWORLD_IT_STUDENT_PASSWORD`/`EDUWORLD_IT_STAFF_PASSWORD`, không nằm trong repo); chưa chạy vì binary backend chưa nối trong compose (OQ F014-7). Đường HTTP thật (`HttpRequestPool`) đã chạy với Prism MOCK :4011.
 - Q: Chỉ HTTPS (Ràng buộc phi chức năng)? → A: [Confirmed] `ApiClient` từ chối URL không phải `https://` trong build release (`INSECURE_TRANSPORT`); build debug cho phép `http://` (compose local, Prism). Certificate pinning vẫn là việc mở GODOT_ARCHITECTURE §14.
 
+### Session 2026-11-20 (owner chốt)
+
+- Mọi mục "Câu hỏi mở, dùng mặc định [Confirmed]" của Session triển khai → owner chốt 2026-11-20.
+- Gửi telemetry hàng đợi `AppState.pending_telemetry` → đã giải quyết ở F062 (`TelemetryService` chuyển hàng đợi cũ và gửi `postTelemetry`).
+- Integration với backend compose (T035, T044, T053, T047) → **Chốt:** binary đã nối 2026-11-20; chạy khi có môi trường compose và thiết bị/emulator (F133) — không phải câu hỏi mở.
+- Certificate pinning (GODOT_ARCHITECTURE §14) → **Chốt:** thuộc F133.
+
+### Session 2026-11-20 (owner chốt — certificate pinning)
+
+- Certificate pinning (Ràng buộc phi chức năng, GODOT_ARCHITECTURE §14) → **Chốt:** `ApiClient` dùng `TLSOptions.client(trusted_chain)` với CA bundle (CA chính + CA dự phòng) do F133 đóng gói, chỉ ở build release trên Windows/Android/iOS (Web dùng TLS trình duyệt; debug giữ như cũ); chứng chỉ không khớp bundle → lỗi `NETWORK_ERROR` loại TLS, không thử lại không pin. Task bổ sung.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Đăng nhập bằng form trong game (Priority: P1) 🎯 MVP
@@ -249,7 +260,7 @@ Học sinh bấm "Đăng xuất" hoặc đóng cửa sổ; máy phòng tin học
 - `RealtimeClient`, nhận `session.session.replaced`/close 4409 qua WebSocket: F092 (F061 dùng heartbeat REST).
 - Tạo avatar lần đầu (S02): F070; Main Hub: F062.
 - Đăng nhập nhanh (QR, PIN, IdP trường): ngoài Release 1.0 (ADR-0063).
-- Certificate pinning: việc còn mở GODOT_ARCHITECTURE §14.
+- Certificate pinning: đã chốt 2026-11-20 — CA bundle qua `TLSOptions.client(trusted_chain)` (Session owner chốt, task bổ sung; bundle do F133 đóng gói).
 
 ## Assumptions
 

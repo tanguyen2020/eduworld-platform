@@ -137,6 +137,12 @@
 - [x] T057 [P] Test F059-AC-28: tắt `menu.platform_admin.student_activity` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/platform-admin/users-audit-feature-toggle.spec.ts` — **2026-11-20:** mức integration: `IntegrationsGuard.test.tsx` › Menu/action tắt
 - [x] T058 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F059-AC-28) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/routes.tsx` — **2026-11-20:** không đăng ký menu tay; nút bọc `<ActionGate actionKey>` theo bảng khóa plan.md; `node scripts/specs/check-portal-catalog.mjs` 0 lỗi
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T059 **OQ chốt 2026-11-20** (OQ F059-12) Bảng `route_groups[]` ở tab "Keycloak · APISIX" (F059-AC-22), sau task F012 — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/integrations/` — kiểm: `make web-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US8 + US1 (MVP) → US2 → US4 → US3 (cần T004, T006) → US5 → US6 (cần T007) → US7 (cần T008, T009) → Polish.

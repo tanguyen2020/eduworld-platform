@@ -18,7 +18,7 @@
 
 - Q: Tên thư mục workspace D? → A: `platform-admin` (ADMIN_PORTAL §1.2, RB-603); route `/portal/platform-admin/*`.
 
-### Session 2026-11-20 (triển khai — Câu hỏi mở)
+### Session 2026-11-20 (triển khai — câu hỏi mở, owner chốt 2026-11-20)
 
 - OQ F059-1 — `listPlatformUsers`, `createPlatformUser` (T004, owner F012) chưa có trong contract và backend? → A: [Confirmed] Không tự thêm contract thay owner khi chưa có backend (cùng cách OQ F057-1). Tab Người dùng ghi rõ "Danh sách tài khoản mọi tenant có khi API listPlatformUsers được bổ sung" và dùng phần contract có: tài khoản theo một tenant (`listTenantUsers`, `X-Tenant-Id` = tenant đó, lọc `q`/loại, nhãn SIS, học sinh chỉ đọc), tra cứu theo mã người dùng (ngăn chi tiết + UserRole mọi tenant), "Tạo nhân sự trường" (`createTenantUser` với tenant đích). Lựa chọn "Nhân sự platform" hiện nhưng khóa. Cờ `PLATFORM_USERS_AVAILABLE` trong `api/users.ts` bật khi owner áp delta. **Đã giải quyết 2026-11-20 (owner F012):** `listPlatformUsers` (`GET /admin/users`) và `createPlatformUser` (`POST /admin/users`, `PlatformUserCreateRequest`) có trong contract và backend; khác đề xuất: không có `platform_only` (vắng `tenant_ids` = chỉ nhân sự platform, AGENTS R8), `user_roles` trống (dùng `listAllUserRoles?user_id=`), `User.tenant_ids[]` chỉ khi lọc `tenant_ids` (cũng đáp OQ F059-5 phần membership). Cờ `PLATFORM_USERS_AVAILABLE` của portal chờ bật ở lượt portal. **Portal đã áp 2026-11-20** (Session 2026-11-20 portal).
 - OQ F059-2 — `getIntegrationOverview` (T009, owner identity/F012) chưa có? → A: [Confirmed] Tab "Keycloak · APISIX" chỉ ghi rõ API chưa có và cấu hình quản lý bằng realm-as-code/route-as-code; tab SIS dùng `listSisConnections`/`listSisConnectionSchools`/`listSisSyncRuns` (đã có). Cờ `INTEGRATION_OVERVIEW_AVAILABLE` trong `api/integrations.ts`. **Đã giải quyết 2026-11-20 (owner F012):** `getIntegrationOverview` (`GET /admin/integrations`) có trong contract và backend (Keycloak, URL gateway APISIX tùy chọn, SIS theo trạng thái); `route_groups[]` chưa làm — OQ F059-12. Cờ `INTEGRATION_OVERVIEW_AVAILABLE` chờ bật ở lượt portal. **Portal đã áp 2026-11-20** (Session 2026-11-20 portal).
@@ -40,6 +40,12 @@
 - OQ F059-3 → **Đã giải quyết ở portal:** nhật ký phân quyền là một truy vấn `action_prefix=role&action_prefix=user_role`; ô "Hành động" tùy chọn để thu hẹp về một action chính xác (AND).
 - OQ F059-5 → **Đã giải quyết ở portal:** "Gán role" mở từ dòng của danh sách người dùng chỉ cho chọn tenant đích trong `User.tenant_ids` (hoặc tenant gốc); server vẫn kiểm (`422`). Hộp gán mở từ tab UserRole (không biết tài khoản) giữ `TenantTargetField`. Tên hiển thị trong cột Người dùng của tab UserRole vẫn là mã người dùng (UserRole không có tên).
 - OQ F059-11 → Portal dùng `platform.audit.read` (đã chốt); không đổi mã.
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F059-1…F059-11 → đã giải quyết/owner chốt 2026-11-20 như các Session trên.
+- OQ F059-12 → **Chốt:** `route_groups[]` sinh lúc build từ route-as-code (task ở F012); tab "Keycloak · APISIX" hiển thị bảng nhóm prefix → gateway → service thay cho "Chưa có dữ liệu". Task bổ sung.
+- OQ F059-9 → **Chốt:** E2E Playwright, axe/visual sáng-tối với backend thật chạy khi có môi trường compose — không phải câu hỏi mở.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -261,7 +267,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 - Backend role/UserRole/permission, tạo nhân sự: F012; audit sink, truy vấn audit, feature flag backend: F015; khóa/mở/vô hiệu hóa: F016; login events backend: F014; SIS connection backend: F011/F017.
 - `TenantFilter`, tenant, gán/clone, Thùng rác, danh mục, cấu hình dọn học sinh/chat retention, guard chunk D: F057.
 - Người dùng/role/UserRole/audit trong một tenant (workspace C), sửa role tùy biến của tenant: F052.
-- Danh mục từ nhạy cảm, công tắc kiểm duyệt: F122. Integration Monitoring, dashboard sức khỏe tích hợp: [TBD] (F080/F131).
+- Danh mục từ nhạy cảm, công tắc kiểm duyệt: F122. Integration Monitoring, dashboard sức khỏe tích hợp: không có màn portal trong Release 1.0 (owner chốt 2026-11-20, ADMIN_PORTAL ⛔) — dùng Grafana/alert của F131.
 - Sửa cấu hình Keycloak/APISIX: realm-as-code, route-as-code (F004). Xuất audit ra file: chưa có contract, không làm.
 - Yêu cầu dữ liệu cá nhân (`/admin/data-requests`): chưa thuộc feature này.
 

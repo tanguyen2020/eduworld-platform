@@ -32,6 +32,16 @@
 - Q: `ip_hash`? → A: HMAC-SHA-256 khóa `EW_LOGIN_IP_HASH_KEY` của địa chỉ kết nối tới `core-api`; sau APISIX cần cấu hình proxy tin cậy để lấy IP client thật [Confirmed] — OQ F013-5.
 - Q: Keycloak thật trong testcontainers (plan Testing)? → A: Như F012, test integration dùng Keycloak giả có nhãn (`fakeKeycloak`, endpoint token/logout/Admin `DELETE /sessions/{sid}` theo Keycloak 26) cùng PostgreSQL và Valkey thật; kiểm với realm thật thuộc smoke F004/quickstart. Handler và consumer chưa nối vào binary `core-api`/`worker` (cùng OQ F010-2).
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F013-1 → **Chốt:** giữ `401 INVALID_CREDENTIALS` cho tài khoản còn required action; nhà trường đặt lại mật khẩu (F016).
+- OQ F013-2 → **Chốt:** không xảy ra theo mô hình dữ liệu (OQ F011-1: một học sinh một tenant); giữ luồng `TENANT_NOT_SELECTED` + test double có nhãn.
+- OQ F013-3 → **Chốt:** không bật client scope `organization` trong Release 1.0 (portal theo ADR-0091 mục 4, game không dùng); mã đọc claim giữ nguyên.
+- OQ F013-4 → đã giải quyết bởi F015 (`gameauth.SettingsPolicy`).
+- OQ F013-5 → **Chốt:** `httpx.ClientIP` với `EW_TRUSTED_PROXY_CIDRS` (task ở F002).
+- k6 hàng chờ đăng nhập → chạy khi có môi trường staging (không phải câu hỏi mở).
+- OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** module identity từ chối `gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume` khi học sinh đã đạt giới hạn/ngày của trường, bằng mã lỗi mới `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau (cùng shape `CURFEW_ACTIVE`). Không gọi module game đồng bộ (R30, ADR-0045): identity dựng projection thời gian chơi trong ngày từ `game_session.ended` (`duration_ms`, đã có trong EVENT_DESIGN) và đọc giới hạn trong cài đặt trường của chính module (F015-AC-30); module game là nơi cưỡng chế chính (F014-AC-27). Thêm F013-AC-33. Mã lỗi mới cần đăng ký ở API_DESIGN §4.1 (agent docs) và enum `ProblemCode`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Học sinh đăng nhập bằng form trong game (Priority: P1)
@@ -57,6 +67,7 @@ Học sinh (`hs.an.3a`) nhập username + mật khẩu, không chọn trường;
 | F013-AC-30 | KHI `gameLogin`, `selectGameLoginTenant` hoặc `refreshGameToken` cần membership trước khi có `TenantScope`, module identity PHẢI gọi `identity.memberships_for_user(user_id)` của user vừa xác thực bên trong `tenancy.Bypass(ctx, "auth_login")` bằng role `identity_app` (không `BYPASSRLS`), ghi audit `cross_tenant.accessed` và tăng `eduworld_tenant_filter_bypass_total{reason="auth_login"}`; kết quả PHẢI chỉ gồm tenant của chính user đó; NẾU code ngoài route `/auth/session`, `/auth/game/*`, `login-credentials:verify` dùng lý do `auth_login` hoặc gọi hàm này, THÌ test kiến trúc PHẢI fail | ADR-0089 §3 · [MULTITENANCY §4.4](../../docs/06-architecture/MULTITENANCY.md) | — |
 | F013-AC-31 | KHI đăng nhập thất bại trước khi xác định tenant, module identity PHẢI ghi dòng nhật ký xác thực `tenant_id` NULL bằng role `identity_platform` dưới `PlatformScope`; NẾU `identity_app` thử ghi dòng `tenant_id` NULL vào `identity.login_events`, THÌ RLS PHẢI từ chối; NẾU `identity_app` truy vấn `identity.tenant_memberships_v` trực tiếp khi chưa đặt `app.tenant_id`, THÌ PHẢI nhận 0 dòng | ADR-0089 §2–3 · AC-ORG-028 | TC-AUTH-019 |
 | F013-AC-32 | TRONG KHI thời điểm server (ICT) nằm trong giới nghiêm hiệu lực của học sinh (`platform_curfew` hợp khung trường, F015-AC-22), module identity PHẢI từ chối `gameLogin`, `selectGameLoginTenant` và `refreshGameToken` `mode = resume` bằng `403 CURFEW_ACTIVE` kèm `reopen_at`, kiểm sau bước xác thực SSO và trạng thái tài khoản; với `resume` phiên game PHẢI không bị thu hồi (học sinh vào lại sau giờ giới nghiêm không cần mật khẩu); `renew` của phiên đang chạy không bị chặn (phiên game đã kết thúc theo F014-AC-26); áp như nhau cho mọi khối, tenant `common` bắt buộc | NFR-SAFE-005 · AC-AUTH-032 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 · ADR-0086 | TC-AUTH-092 |
+| F013-AC-33 | TRONG KHI trường của học sinh bật `daily_play_limit_minutes` và tổng thời gian game session của học sinh trong ngày (ICT, projection từ `game_session.ended`) đã đạt giới hạn, module identity PHẢI từ chối `gameLogin`, `selectGameLoginTenant` và `refreshGameToken` `mode = resume` bằng `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau, kiểm sau xác thực SSO, không thu hồi phiên game lưu trên thiết bị; trường không bật hoặc tenant `common` thì không áp | NFR-SAFE-005 · [CHILD_SAFETY §4](../../docs/10-security/CHILD_SAFETY.md) · ADR-0078 | — |
 
 ---
 

@@ -95,6 +95,12 @@
 - [ ] T037 [P] Metric `eduworld_game_avatar_*`, `eduworld_game_nickname_conflict_total` — file: `src/backend/modules/game/internal/infrastructure/observability/metrics.go`
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T039 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData`/`mergeUserData` của module game cho GameProfile; facade test hai phía với identity — file: `src/backend/modules/game/internal/presentation/facade/`, `src/backend/modules/game/internal/application/command/` — kiểm: `make test-contract`, `make test-integration MOD=game` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004, T006 trước mọi story) → US1 → US2, US5 song song → US3 → US4 → Polish.

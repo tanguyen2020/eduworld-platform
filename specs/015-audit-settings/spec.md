@@ -42,6 +42,13 @@
 
 - Q: Module game đọc `platform_curfew` từ `EW_PLATFORM_CURFEW` lúc khởi động nên lệch với module identity sau `putPlatformCurfewSettings` (smoke seed dev, [quickstart F010 §6.1](../010-tenant-org-structure/quickstart.md)) — module game lấy giá trị hiệu lực thế nào? → A: [Confirmed] Qua event, không gọi đồng bộ (R13, R29): consumer `game.platform_settings` của module game chiếu `platform_settings.changed` (`key = platform_curfew`, `scope = platform`) vào `ref.platform_settings` của `eduworld_game`, dùng cho `createGameSession` và job `curfew-session-closer` ngay khi nhận (không restart). **Không đổi payload schema** (owner F015): `curfew_window` (F015 T032) đã mang giá trị sau thay đổi; `after` cùng giá trị là dự phòng. Thứ tự theo `occurred_at` của envelope (event cũ đến muộn không ghi đè). Chi tiết và giới hạn (stream giữ 7 ngày; env chỉ là mặc định trước event đầu tiên): [F014 Clarifications OQ F014-2](../014-game-session-thin/spec.md).
 
+### Session 2026-11-20 (owner chốt)
+
+- OQ F015-1…F015-5 → giữ quyết định [Confirmed] đã ghi.
+- OQ F015-6 (`getTenant` facade) → **Chốt:** không hiện thực trước; feature đầu tiên cần gọi đồng bộ thêm vào tasks của mình (module khác nhận thay đổi tenant qua `tenant.updated`/`platform_settings.changed`).
+- OQ F015-7 (partition `sis.*`) → **Chốt:** giữ partition DEFAULT trong Release 1.0; F132 đo khối lượng `sis.staging_records`/`sis.sync_record_errors` và mở task partition tháng nếu vượt ngưỡng.
+- OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** cài đặt cấp trường trong `getSchoolSettings`/`updateSchoolSettings` (mặc định tắt = `null`), phát trong `school.updated` cho module game; thêm F015-AC-30.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)
@@ -122,6 +129,7 @@ School Admin đặt khung giờ truy cập game và chính sách trường (tạ
 | F015-AC-18 | TRONG KHI thời điểm hiện tại nằm ngoài khung giờ truy cập của trường học sinh, module identity PHẢI từ chối `gameLogin` với `403 ACCESS_OUTSIDE_ALLOWED_HOURS` (thứ tự kiểm tra IDENTITY_MAPPING §4.1) | FR-ORG-007 · [IDENTITY_MAPPING §4.1](../../docs/09-identity/IDENTITY_MAPPING.md) | — |
 | F015-AC-19 | HỆ THỐNG PHẢI không nhận cài đặt trường làm nới lỏng giới hạn platform (cấp dưới chỉ siết chặt) | FR-ORG-007 · ADR-0020 | — |
 | F015-AC-22 | KHI School Admin cập nhật khung giới nghiêm của trường, module identity PHẢI chỉ nhận khung bao trùm `platform_curfew` (siết thêm); NẾU khung trường không chứa trọn `platform_curfew`, THÌ PHẢI trả `422 VALIDATION_FAILED` chỉ rõ trường; giới nghiêm hiệu lực của học sinh PHẢI là hợp của `platform_curfew` và khung trường (tenant `common` luôn áp `platform_curfew`, không có khung trường), cung cấp qua `PlayerBootstrap.policies.play_time` và event `school.updated`/`platform_settings.changed` cho module game, chat | FR-ORG-007 · NFR-SAFE-005 · AC-AUTH-032 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) | TC-AUTH-092 |
+| F015-AC-30 | KHI School Admin bật, sửa hoặc tắt `daily_play_limit_minutes` của trường qua `updateSchoolSettings` (số phút nguyên dương trong giới hạn của CONFIG_DEFAULTS, `null` = tắt — mặc định), module identity PHẢI lưu theo `If-Match`, ghi audit có lý do và đưa giá trị vào event `school.updated` cho module game; tenant `common` và trường chưa bật PHẢI không có giới hạn | NFR-SAFE-005 · [CHILD_SAFETY §4](../../docs/10-security/CHILD_SAFETY.md) · ADR-0078 | — |
 
 ---
 

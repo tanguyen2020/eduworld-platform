@@ -45,7 +45,7 @@ Database `eduworld_game`.
 
 ### ContentManifest — `game.content_manifests` (Có sẵn §2.16, T)
 
-`tenant_id`, `manifest_version bigint`, `etag varchar(128)`, `entries jsonb` (CHECK `octet_length <= 65536`), `generated_at`, `cause_release_id uuid`; PK `(tenant_id, manifest_version)`. F014 chỉ đọc; không có dòng → trả manifest rỗng `manifest_version = 0`.
+`tenant_id`, `manifest_version bigint`, `etag varchar(64)`, `entries jsonb` (CHECK `octet_length <= 4194304`, theo DATABASE_DESIGN §3.13 — OQ F014-8), `generated_at`, `cause_release_id uuid`; PK `(tenant_id, manifest_version)`. F014 chỉ đọc; không có dòng → trả manifest rỗng `manifest_version = 0`.
 
 ### Projection — `ref.tenants`, `ref.students` (Có sẵn §2.17)
 

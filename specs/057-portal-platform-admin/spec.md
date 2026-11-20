@@ -19,7 +19,7 @@
 
 ### Session 2026-11-19 (triển khai)
 
-Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Confirmed], chờ Technical Architect/UX Lead duyệt.
+Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [Confirmed]; owner chốt 2026-11-20.
 
 - OQ F057-1 — `previewTenantClone` (T005) chưa có trong contract và backend F045? → A: [Confirmed] Không tự thêm contract thay owner F045 (không có backend tương ứng); wizard bỏ bước 3 và hiện "Chưa có API xem trước đồ thị phụ thuộc…" (đúng Clarification 2026-11-16). Cờ `CLONE_PREVIEW_AVAILABLE` trong `api/clones.ts` bật khi owner áp delta.
 - OQ F057-2 — `cancelStudentCleanupRun` (T006) chưa có? → A: [Confirmed] Không có nút Hủy; màn ghi rõ "Nút Hủy có khi API cancelStudentCleanupRun được bổ sung" (cờ `CLEANUP_CANCEL_AVAILABLE`). Delta thuộc owner F016. **Backend đã giải quyết 2026-11-20** (xem Session 2026-11-20). **Portal đã áp 2026-11-20** (Session 2026-11-20 portal).
@@ -44,7 +44,14 @@ Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [C
 - OQ F057-2 → **Đã giải quyết ở portal:** lần dọn `awaiting_approval` có nút "Hủy lần dọn" (cùng `ActionGate` `action.platform_admin.system_settings.approve_cleanup`) → `ReasonDialog` (lý do 3..500 theo contract) → `cancelStudentCleanupRun` với `Idempotency-Key` (giữ nguyên khi thử lại cùng dữ liệu) và `X-Tenant-Id` = tenant của lần dọn; thành công → lần dọn "Đã hủy". Cờ `CLEANUP_CANCEL_AVAILABLE` và dòng "Nút Hủy có khi…" đã gỡ (luôn bật).
 - OQ F057-3 → **Đã giải quyết ở portal:** sửa/tắt tenant, sửa/tắt quốc gia, sửa tỉnh gửi `If-Match: W/"<version>"` lấy từ `version` của dòng danh sách (không còn `428` khi sửa bản ghi chưa ghi trong phiên); `412 VERSION_MISMATCH` hiển thị theo `code` và tải lại danh sách để lần sửa sau dùng version mới.
 - OQ F057-4 → **Đã giải quyết ở portal:** danh mục trường của System Admin đọc liên tenant bằng `tenant_ids[]` của bộ lọc tenant (`useCrossTenantScope`, không `X-Tenant-Id`, chọn được nhiều tenant), có cột Tenant và bộ lọc trạng thái (`status`); chưa chọn tenant nào thì màn yêu cầu chọn ít nhất một (backend từ chối đọc liên tenant không có `tenant_ids`). Người dùng tenant vẫn khóa vào tenant của phiên.
-- OQ F057-1 giữ nguyên: `CLONE_PREVIEW_AVAILABLE` vẫn tắt (chưa có backend `previewTenantClone`).
+- OQ F057-1: `CLONE_PREVIEW_AVAILABLE` vẫn tắt tới khi backend `previewTenantClone` xong (đã chốt làm 2026-11-20, task F045 + task bổ sung của F057).
+
+### Session 2026-11-20 (owner chốt)
+
+- OQ F057-1…F057-10 (mặc định [Confirmed] chờ duyệt) → owner chốt 2026-11-20. Riêng:
+- OQ F057-1 → **Chốt:** làm `previewTenantClone` (owner F045, task ở F045); wizard bật bước 3 "Xem trước đồ thị phụ thuộc" (ADMIN_PORTAL) và gỡ cờ `CLONE_PREVIEW_AVAILABLE`. Task bổ sung.
+- OQ F045-9 → **Chốt:** hộp gỡ gán có ô "Gỡ cả gán mặc định cho tenant mới" (`remove_default`) khi tài nguyên có quy tắc mặc định.
+- OQ F057-10 → **Chốt:** E2E backend thật (T019, T040, T046, T048, T049) chạy khi có môi trường compose — không phải câu hỏi mở.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

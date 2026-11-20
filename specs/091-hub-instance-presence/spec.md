@@ -17,6 +17,10 @@
 
 - Q: Enum presence sau đối soát (RB-404)? → A: Một enum duy nhất theo [MULTIPLAYER_GAMEPLAY §5](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md): `offline`, `online`, `in_activity`, `in_match`, `away` (dùng chung AsyncAPI, `PlayerCard`, REST); bỏ `busy`/`invisible`. "Ẩn trạng thái" là cờ `hidden` riêng, người không được thấy nhận `offline`. Delta AsyncAPI ở contracts §6.
 
+### Session 2026-11-20 (owner chốt — vị trí hub)
+
+- Facade vị trí hub cho module game → **Chốt:** F071 (làm sau F091) khai báo operation trong spec internal của module competition và hiện thực cả bên nhận (đọc vị trí đã kiểm chứng của room host do F091 dựng) lẫn adapter phía game; F091 không cần thay đổi phạm vi, chỉ giữ dữ liệu vị trí đọc được trong module competition.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Vào khu và được gán hub instance đúng phạm vi (Priority: P1)

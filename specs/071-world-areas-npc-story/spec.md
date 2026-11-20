@@ -1,6 +1,6 @@
 # Feature Specification: F071 — Thế giới: 8 vùng đất, zone, world map, cổng, mở khóa, mạch truyện, NPC và hội thoại
 
-**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070
+**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070, F091
 **Input**: Thế giới "Quần đảo Tri Thức" 8 vùng bao trọn 7 khu chức năng; học sinh xem bản đồ, đi qua cổng gió, vào khu theo quyền do server quyết; vùng phiêu lưu mở theo quest/level/LO, khu học tập luôn mở; mạch truyện 7 chương; khám phá và % hoàn thành bản đồ; NPC hội thoại data-driven có version. FR nguồn: FR-GAME-001, FR-GAME-002, FR-GAME-003, FR-GAME-006, FR-GAME-016, FR-GAME-017, FR-GAME-018, FR-GAM-009.
 
 ## Clarifications
@@ -15,7 +15,16 @@
 
 ### Session 2026-11-17
 
-- Q: REST `joinFriendInWorld` và config type `levels`? → A: Gỡ `joinFriendInWorld` khỏi contract — "Tham gia bạn" chỉ qua WS `hub.instance.join {follow_user_id}` (API_DESIGN, RB-625). Enum `levels` đổi thành `progression-levels` (bảng level của F074, RB-308); config type cho gói level `game.level_definitions` chưa có trong API_DESIGN — Câu hỏi mở, tạm `level-packages` [Confirmed].
+- Q: REST `joinFriendInWorld` và config type `levels`? → A: Gỡ `joinFriendInWorld` khỏi contract — "Tham gia bạn" chỉ qua WS `hub.instance.join {follow_user_id}` (API_DESIGN, RB-625). Enum `levels` đổi thành `progression-levels` (bảng level của F074, RB-308); config type cho gói level `game.level_definitions` chưa có trong API_DESIGN — owner chốt 2026-11-20: `level-packages` là tên chính thức.
+
+### Session 2026-11-20 (owner chốt)
+
+- Config type gói level → **Chốt:** `level-packages` là tên chính thức (API_DESIGN ghi theo — agent docs cập nhật).
+- OQ-16 → đã trả lời (owner 2026-11-20): stylized low-poly; zone greybox vẫn được chấp nhận ở M2 nếu đạt lint và ngân sách.
+
+### Session 2026-11-20 (owner chốt — vị trí hub)
+
+- Facade vị trí hub (SECURITY_ARCHITECTURE: "competition: vị trí hub — operation khai báo ở F071, dữ liệu từ F091") → **Chốt:** F071 khai báo operation trong spec internal của module competition (bên gọi `game`, kiểm khoảng cách tương tác có giá trị) và hiện thực bên nhận (module competition) cùng adapter phía game; dữ liệu vị trí do room host của F091 cung cấp → F071 phụ thuộc F091.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -207,5 +216,5 @@ Học sinh tìm điểm khám phá, vật sưu tầm; bản đồ thế giới h
 ## Assumptions
 
 - F026 cung cấp mẫu phát hành và event `content.published` của learning; F071 áp cùng mẫu cho `eduworld_game`.
-- Asset 3D 12 zone theo pipeline WORLD_RENDERING; nguồn asset OQ-16 [TBD] — zone greybox được chấp nhận ở M2 nếu đạt lint và ngân sách.
+- Asset 3D 12 zone theo pipeline WORLD_RENDERING; nguồn asset OQ-16 (đã trả lời 2026-11-20: stylized low-poly, asset pack có license + tự làm nhân vật chính) — zone greybox được chấp nhận ở M2 nếu đạt lint và ngân sách.
 - Cài đặt môn bật/tắt của trường đến qua projection `ref.schools.settings_subset` (event `school.updated` của identity) [Confirmed].

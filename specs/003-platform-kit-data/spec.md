@@ -39,6 +39,12 @@
 - Q: `resolvePrincipal` trả permission gộp, áp phạm vi trường/môn thế nào? → A: Delta hợp đồng `Principal.grants[]` (`PrincipalGrant`) trong `identity.internal.v1.yaml`; adapter từ chối Principal thiếu `grants` (503, fail-closed). Phần cài đặt thuộc F012.
 - Q: Linter read/write, entlint, tenancyguard chạy ở đâu? → A: Luật read/write trong `tools/archgen`, cùng `tools/entlint`, `tools/tenancyguard` trong `make arch-check`; không dùng `go-arch-lint`.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ của feature khác)
+
+- OQ F010-3 (job nền ghi `cross_tenant.accessed` mỗi lần chạy kể cả khi không xử lý dòng nào) → **Chốt:** với reason `platform_job`, `tenancy.Bypass` chỉ ghi audit khi lần chạy có đọc/ghi ít nhất một dòng nghiệp vụ (job báo số dòng trước khi kết thúc; audit ghi một lần mỗi lần chạy kèm số dòng); metric `eduworld_tenant_filter_bypass_total{module,reason}` vẫn tăng mỗi lần. Reason khác giữ audit mỗi lần dùng. Làm rõ ADR-0089 §3 (tài liệu do agent docs cập nhật).
+- OQ F020-4 (`UpdateOne`/`UpdateOneID` của ent tự mở transaction và panic với `entx.Driver`) → **Chốt:** không hỗ trợ trong `entx`; lint `forbidigo` cấm `UpdateOne`/`UpdateOneID` trong `src/backend/modules/**`, repository dùng `Update().Where(ID(...))`.
+- OQ F014-6 (tên metric projection lệch giữa module) → **Chốt:** một helper chung trong `pkg/` đăng ký `eduworld_projection_lag_seconds{module, projection}` theo MONITORING (tài liệu sở hữu); learning và game chuyển sang, gỡ `eduworld_game_projection_lag_seconds` và nhãn `{table}` cũ (dashboard/alert F131 dùng tên chung).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Repository ent an toàn tenant và chỉ soft-delete (Priority: P1)

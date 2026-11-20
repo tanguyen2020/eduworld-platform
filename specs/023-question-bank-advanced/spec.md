@@ -22,6 +22,10 @@
 - OQ F023-6: `image_based` thêm `render_payload.max_selections.maximum = 10` (khớp tối đa 10 điểm của response) và `answer_key.placements.maxProperties = 16`; chạm nhiều lần cùng một vùng tính một lần; với `partial/proportional` hotspot cho điểm theo phần vùng trúng khi không vượt `max_selections`. Ảnh phải nằm trong `media_refs` của version (kiểm có thật/`ready` thuộc F027/F025). → [Confirmed].
 - OQ F023-7: Test tích hợp đặt phẳng `tests/integration/question_advanced_test.go`; benchmark T031 chưa viết (đo khi F030 cần). → [Confirmed].
 
+### Session 2026-11-20 (owner chốt)
+
+- Mọi OQ F023-1…7 giữ [Confirmed]. OQ F023-7 (benchmark T031) → **Chốt:** chạy cùng đợt đo tải F132 (phụ thuộc máy đo, không phải câu hỏi mở). OQ F023-2 → binary đã dùng `question.Full()`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu trả lời ngắn chấm tự động (Priority: P1)

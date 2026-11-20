@@ -92,6 +92,12 @@
 - [ ] T040 [P] Metric `eduworld_party_*`, `eduworld_projection_lag_seconds` — file: `src/backend/modules/competition/internal/infrastructure/observability/metrics.go`
 - [ ] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module competition; facade test với identity — file: `src/backend/modules/competition/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T010 projection trước mọi story) → US1 → US2, US3 song song → US4 → Polish.

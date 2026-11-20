@@ -133,6 +133,12 @@
 - [x] T046 [P] Cập nhật CHANGELOG — file: `CHANGELOG.md` — ✅ `CHANGELOG.md`
 - [ ] T047 Chạy [quickstart.md](quickstart.md) trên Windows + Android với backend thật và ghi bằng chứng — **chưa làm**: backend compose chưa nối binary (OQ F014-7) và chưa có thiết bị/emulator Android (lane F133); bằng chứng local thay thế ở quickstart.md mục Bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T059 **OQ chốt 2026-11-20** (pinning) `ApiClient`/`HttpRequestPool` dùng `TLSOptions.client(trusted_chain)` với CA bundle từ cấu hình build (release, Windows/Android/iOS); test chứng chỉ ngoài bundle bị từ chối, không fallback — file: `src/game/scripts/networking/api_client.gd`, `src/game/tests/unit/networking/` — kiểm: `make godot-test` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US3 (`ApiClient`) → US1 → US2, US4, US5, US6 (song song sau US1) → Polish.

@@ -18,6 +18,10 @@
 - Q: Mã AC cục bộ của CHAT_SYSTEM và mã lỗi tắt tạo club sau đối soát? → A: Tham chiếu tiêu chí chi tiết CHAT_SYSTEM §13 dùng `AC-CHS-NNN` (RB-505), mã PRD giữ `AC-CHAT-NNN`. Trường tắt tạo club → `403 PERMISSION_DENIED`; `SOCIAL_SCOPE_VIOLATION` chỉ cho vi phạm phạm vi (RB-626). `student_club_creation` = `disabled`/`requires_approval`/`auto` (RB-511).
 - Q: Ghi preset cấp trường, giới hạn `allowed_hours` theo giờ giới nghiêm, mặc định tenant `common` (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
+### Session 2026-11-20 (owner chốt — OQ-09)
+
+- Khung giờ chat và phạm vi World (OQ-09 đã trả lời) → **Chốt:** chat policy mặc định cấp platform có `allowed_hours` 06:30–21:30 ICT cho channel bền vững (`class`, `study_group`, `direct`, club, `world`/`area`), giá trị đọc từ `chat_allowed_hours` (CONFIG_DEFAULTS), luôn nằm ngoài `platform_curfew`, tenant/trường chỉ thu hẹp (F120-AC-27); `match`/`team`/`party` không có khung giờ riêng. World theo trường (`world_scope = school`), chỉ tenant `unit` bật được `tenant`; không có phạm vi organization/liên tenant; tenant `common` tắt World (F120-AC-12, F120-AC-28 đã đúng).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Channel lớp và nhóm học tập tự đồng bộ (Priority: P1) 🎯 MVP
@@ -214,4 +218,4 @@ Sau 180 ngày, nội dung tin channel lớp được ẩn danh hóa; tin liên q
 - [Confirmed] Thời hạn lưu channel bền vững đọc từ `platform.platform_settings` khóa `chat_retention.persistent_days` (mặc định 180, CHAT_SYSTEM §2); đề xuất đăng ký tên `persistent_chat_retention_days` trong CONFIG_DEFAULTS (task Polish).
 - [Confirmed] `student_club_creation` đọc từ projection `ref.schools` (event `school.updated` của identity, F015); giá trị theo SOCIAL_SYSTEM `disabled`/`requires_approval`/`auto` (RB-511 đã chốt theo SOCIAL_SYSTEM).
 - [Confirmed] Metric `minutes_learning` của club goal chỉ tính khi `activity.graded` có `duration_seconds` (delta, owner F031); trước đó tạo goal metric này trả `422 VALIDATION_FAILED`.
-- OQ-09: khung giờ chat mặc định còn mở; dùng mặc định `[Confirmed]` CHAT_SYSTEM §3.1.
+- OQ-09 (đã trả lời 2026-11-20): `chat_allowed_hours` 06:30–21:30 ICT cho channel bền vững, trường chỉ thu hẹp; `world_chat_scope` = `school` (CONFIG_DEFAULTS, CHAT_SYSTEM §3.1).

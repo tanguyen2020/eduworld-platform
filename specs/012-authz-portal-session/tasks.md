@@ -164,6 +164,14 @@
 - [x] T036 [P] Metric `eduworld_identity_principal_cache_hit_ratio`, `eduworld_auth_tenant_mismatch_total`, `eduworld_authz_denied_total` — file: `src/backend/modules/identity/internal/infrastructure/cache/metrics.go` — **xong 2026-11-19 — `eduworld_principal_cache_hits_total` (F002), `eduworld_auth_tenant_mismatch_total` (`pkg/httpx`), denial audit `authz.denied`**
 - [ ] T037 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T055 **OQ chốt 2026-11-20** (OQ F012-1) Đổi email qua `updateTenantUser`: kiểm trùng, outbox, worker cập nhật Keycloak (`emailVerified=false`), audit; username từ chối thay đổi (`422`) — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/application/command/tenant_users.go`, `internal/infrastructure/keycloak/` — kiểm: integration (fake Keycloak có nhãn) — cỡ M
+- [ ] T056 **OQ chốt 2026-11-20** (OQ F051-3) `getMe` → `TenantIdHeaderOptional`, route `TenantOptional`; test nhân sự platform không header → `200`, người dùng tenant không header → `400` — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/presentation/http/` — kiểm: `make specs-breaking`, integration — cỡ S
+- [ ] T057 **OQ chốt 2026-11-20** (OQ F059-12) `IntegrationOverview.apisix.route_groups[]` sinh từ `deploy/apisix/routes/routes.yaml` khi `make gen` (nhúng `go:embed`), contract + `gen-check` — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/infrastructure/integration/`, `scripts/` — kiểm: `make gen-check MOD=identity`, test handler — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2, US3 song song → US4 → US5 → US6 → Polish.

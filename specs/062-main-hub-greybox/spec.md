@@ -25,9 +25,14 @@
 - Q: Làm mới danh sách khi "quay lại Hub" khi chưa có `SceneRouter.zone_entered`? → A: Signal toàn cục mới `EventBus.ui_closed(screen_id)` phát khi đóng panel; `ZoneRoot` làm mới khi vào zone và khi nhận `ui_closed`. Dịch vụ miền giữ trong `AppState.services` (`ServiceLocator`, GODOT_ARCHITECTURE §4); hàng đợi telemetry chưa gửi bị xóa khi hết phiên (không gửi sự kiện của học sinh trước bằng token học sinh sau).
 - Q: Màn tạm `WorldPlaceholder` của F061 có "Đăng xuất" và cảnh báo giờ giới nghiêm. → A: Đã xóa; `GameStateMachine.IN_WORLD_SCENE = WorldRoot.tscn` (Hub + HUD); "Đăng xuất" ở Cài đặt → Tài khoản (`LogoutConfirm`), cảnh báo giờ giới nghiêm là banner hệ thống của HUD.
 
-**Câu hỏi mở (chưa tự quyết, R34):**
+**Câu hỏi mở (đã chốt 2026-11-20 — Session owner chốt):**
 - F062-1: `MyAssignment` chỉ có `subject_id`, không có tên môn; AC-08 yêu cầu hiện "môn". Cần `subject_name` (`LocalizedText`) trong `MyAssignment` hoặc danh mục môn cho client (F041/F032 quyết). Tạm thời hàng bài giao **không** hiện môn.
 - F062-2: `content_kind = question_set` không có trong ánh xạ của F062-AC-09 nên hiện `update_required`; có mở bằng `activity_host` không (F063)?
+
+### Session 2026-11-20 (owner chốt)
+
+- F062-1 → **Chốt:** F041 thêm `MyAssignment.subject_name` (`LearningName`); hàng bài giao hiện tên môn từ field này (không tra danh mục ở client). Task bổ sung (sau task F041).
+- F062-2 → **Chốt:** có — bài `content_kind = question_set` phát `ui_requested("activity_host", {question_set_id: content_ref, mode: "assignment", context_type: "assignment", context_id: assignment_id})`; `ActivityHost` (F063) gọi `startAdHocAttempt` (`source.kind = question_set`, `mode = assignment`), F041 mở `mode = assignment` ở server. Task bổ sung.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

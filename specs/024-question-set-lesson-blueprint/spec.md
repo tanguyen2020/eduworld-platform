@@ -35,6 +35,11 @@
 
 - Q: Công thức trong khối rich_text/worked_example của lesson? → A: `LessonAuthoringInput.math_assets[]` (cùng shape với câu hỏi) lưu trong body của version lesson; khi có pipeline công thức (F027) server kiểm LaTeX, sanitize SVG và lưu `math/<sha256>.svg` như câu hỏi, trả `svg_asset` (không trả lại SVG thô); test `TestF053Followups`.
 
+### Session 2026-11-20 (owner chốt)
+
+- Mọi OQ F024-1…12 giữ [Confirmed]. OQ F024-11 (benchmark T038) → **Chốt:** chạy cùng đợt đo tải F132. OQ F024-12 → đã nối binary 2026-11-20.
+- OQ F054-2 (bộ lọc ngôn ngữ, `translation_status`) → **Chốt:** `searchQuestions` và danh sách question set/lesson/learning material/blueprint thêm tham số tùy chọn `content_language` (`ContentLanguage`) và `translation_status` (`TranslationStatus`), lọc trên version mới nhất; portal F054 thêm hai bộ lọc. Task bổ sung.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Question set tĩnh và theo luật (Priority: P1)

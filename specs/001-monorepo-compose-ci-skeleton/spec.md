@@ -23,6 +23,10 @@
 - Q: Role `<module>_readonly/_relay/_partition_admin` tạo ở đâu? → A: Trong script init của cụm (`deploy/postgres/init/02-roles.sh`) cùng các role khác, vì role là đối tượng cấp cụm và `<module>_migrator` không được có `CREATEROLE`; F003 chỉ `GRANT` trong migration.
 - Q: Kiểm tra ranh giới module dùng công cụ nào? → A: `tools/archgen --check` (phân tích `go list`) là kiểm tra chính cho import chéo module, `x-allowed-callers`, `pkg/`, `cmd/` và quy tắc tầng; `archgen` sinh thêm `src/backend/.golangci.arch.yml` (depguard) cho `make lint`.
 
+### Session 2026-11-20 (owner chốt — việc nhận từ OQ của feature khác)
+
+- OQ F020-2 (`make arch-check` chỉ kiểm theo package) → **Chốt:** `archgen` thêm kiểm theo operation: quét literal `modcall.Op{Operation: …}` của module gọi và đối chiếu `x-allowed-callers` của spec internal bên nhận; fixture F020-AC-19 (`game` gọi operation platform-ops của learning) phải làm CI fail. Lý do: bắt lỗi lúc build thay vì `403 CALLER_NOT_ALLOWED` lúc chạy (ADR-0074, R29). Task ở mục "OQ chốt 2026-11-20" của tasks.md.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Developer dựng toàn bộ stack local (Priority: P1)

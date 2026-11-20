@@ -106,6 +106,12 @@
 - [x] T040 [P] Metric/span theo plan (projection lag, bypass, rejected) — file: `src/backend/modules/learning/internal/infrastructure/observability/metrics.go` — **xong 2026-11-19 — `infrastructure/observability/metrics.go` (`eduworld_consumer_rejected_total`, `eduworld_projection_lag_seconds`, `eduworld_tenant_assignments_total`; bypass metric của `pkg/tenancy`), span `observability.UseCase`**
 - [x] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/020-learning-foundation/quickstart.md` — **xong 2026-11-19 — quickstart §5 (bằng chứng tự động; bước chạy tay chờ F021/F045 và composition root F020-3)**
 
+## OQ chốt 2026-11-20 (việc bổ sung)
+
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+
+- [ ] T044 **OQ chốt 2026-11-20** (F020-1) Projection `ref.schools`/`ref.classes` so theo `source_version` khi payload có (sau task F011), lưu `academic_year_id`, `is_virtual` của lớp — file: `src/backend/modules/learning/internal/presentation/consumer/projection_identity.go`, migration learning — kiểm: `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T010) → US1 → US2 → US3 (cần US2) → US4 → US5 → Polish.
