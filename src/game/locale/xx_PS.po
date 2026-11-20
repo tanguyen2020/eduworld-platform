@@ -8,8 +8,74 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "ui.activity_player.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.activity_player.check"
+msgstr "[!! Çĥëçķ ~~ !!]"
+
+msgid "ui.activity_player.continue"
+msgstr "[!! Ķëëþ ğöïñğ ~~~~ !!]"
+
+msgid "ui.activity_player.details"
+msgstr "[!! Đëţáïĺš ~~~ !!]"
+
+msgid "ui.activity_player.error_load"
+msgstr "[!! Çöüĺđñ'ţ ĺöáđ ţĥë áçţïvïţý. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.exit"
+msgstr "[!! Ẹxïţ ~~ !!]"
+
+msgid "ui.activity_player.finish"
+msgstr "[!! Fïñïšĥ ~~~ !!]"
+
+msgid "ui.activity_player.hint"
+msgstr "[!! 💡 Ĥïñţ ~~~ !!]"
+
+msgid "ui.activity_player.hint_error"
+msgstr "[!! Çöüĺđñ'ţ ğëţ á ĥïñţ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.hint_intro"
+msgstr "[!! Ĥëŕë'š á ĺïţţĺë ĥïñţ ƒŕöɱ Mâý. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.hint_level"
+msgstr "[!! Ĥïñţ {n}/{total} ~~~~~~~ !!]"
+
+msgid "ui.activity_player.hints_exhausted"
+msgstr "[!! Ýöü'vë šëëñ áĺĺ ţĥë ĥïñţš. ~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.loading"
+msgstr "[!! Ğëţţïñğ ýöüŕ áçţïvïţý ŕëáđý… ~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.next"
+msgstr "[!! Ñëxţ ~~ !!]"
+
+msgid "ui.activity_player.offline"
+msgstr "[!! Öƒƒĺïñë — ýöüŕ áñšŵëŕš ŵïĺĺ ƀë šëñţ ŵĥëñ ýöü'ŕë ƀáçķ öñĺïñë. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.pause"
+msgstr "[!! Ţáķë á ƀŕëáķ ~~~~~ !!]"
+
+msgid "ui.activity_player.pause_confirm"
+msgstr "[!! Ţáķë á ƀŕëáķ? Ýöüŕ þŕöğŕëšš ïš šávëđ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.read_aloud"
+msgstr "[!! 🔊 Ŕëáđ áĺöüđ ~~~~~ !!]"
+
+msgid "ui.activity_player.results_later"
+msgstr "[!! Šüƀɱïţţëđ! Ŕëšüĺţš ŵïĺĺ áþþëáŕ ŵĥëñ ýöüŕ šçĥööĺ ŕëĺëášëš ţĥëɱ. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.time_up"
+msgstr "[!! Ţïɱë'š üþ! Ýöüŕ ŵöŕķ ĥáš ƀëëñ šüƀɱïţţëđ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.update_button"
+msgstr "[!! Üþđáţë ~~~ !!]"
+
 msgid "ui.activity_player.update_required"
 msgstr "[!! Ţĥïš áçţïvïţý ñëëđš á ñëŵëŕ vëŕšïöñ öƒ ţĥë ğáɱë. Pĺëášë ášķ á ţëáçĥëŕ öŕ þáŕëñţ ţö üþđáţë ïţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.waiting"
+msgstr "[!! Šëñđïñğ… ~~~~ !!]"
 
 msgid "ui.boot.loading"
 msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
@@ -68,11 +134,23 @@ msgstr "[!! Ýöüŕ áççöüñţ ïš ñöţ áçţïváţëđ ïñ ẸđüŴ
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
 msgstr "[!! Ýöüŕ áççöüñţ ïš ƀëïñğ üšëđ öñ áñöţĥëŕ đëvïçë. ~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.ACTIVITY_TYPE_NOT_SUPPORTED"
+msgstr "[!! Pĺëášë üþđáţë ţĥë ğáɱë ţö þĺáý ţĥïš áçţïvïţý. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.ASSIGNMENT_MAX_ATTEMPTS"
+msgstr "[!! Ýöü'vë üšëđ áĺĺ ýöüŕ ţŕïëš ƒöŕ ţĥïš áššïğñɱëñţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.ASSIGNMENT_NOT_OPEN"
 msgstr "[!! Ţĥïš áššïğñɱëñţ ïš ñöţ öþëñ ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
 msgstr "[!! Ţĥïš ŵöŕķ ĥáš áĺŕëáđý ƀëëñ šüƀɱïţţëđ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.ATTEMPT_EXPIRED"
+msgstr "[!! Ţĥïš áţţëɱþţ ĥáš ëxþïŕëđ. ~~~~~~~~~~ !!]"
+
+msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
+msgstr "[!! Ţĥïš áçţïvïţý ĥáš ëñđëđ; ñö ɱöŕë áñšŵëŕš çáñ ƀë šëñţ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
 msgstr "[!! Ţĥë ğáɱë ñëëđš ţö ƀë üþđáţëđ ţö á ñëŵ vëŕšïöñ. ~~~~~~~~~~~~~~~~~~~ !!]"
@@ -83,11 +161,20 @@ msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. ẸđüŴöŕĺđ ŵïĺĺ öþëñ á�
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "[!! Ţĥïš áççöüñţ ïš ƒöŕ šçĥööĺ šţáƒƒ áñđ çáññöţ ƀë üšëđ ţö þĺáý. Pĺëášë üšë ţĥë ẸđüŴöŕĺđ áđɱïñ þöŕţáĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.HINTS_EXHAUSTED"
+msgstr "[!! Ýöü'vë šëëñ áĺĺ ţĥë ĥïñţš. ~~~~~~~~~~~ !!]"
+
+msgid "ui.error.HINTS_NOT_ALLOWED"
+msgstr "[!! Ĥïñţš áŕëñ'ţ áváïĺáƀĺë ĥëŕë. ~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.INTERNAL"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.INVALID_CREDENTIALS"
 msgstr "[!! Ţĥë üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕëçţ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.INVALID_RESPONSE"
+msgstr "[!! Ţĥáţ áñšŵëŕ çöüĺđñ'ţ ƀë ŕëáđ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr "[!! Ĵöïñïñğ ţĥë çĺášš… ~~~~~~~~ !!]"
@@ -97,6 +184,9 @@ msgstr "[!! Ţĥë šçĥööĺ çĥöïçë ĥáš ëxþïŕëđ, þĺëášë 
 
 msgid "ui.error.MAINTENANCE"
 msgstr "[!! ẸđüŴöŕĺđ ïš üñđëŕ ɱáïñţëñáñçë. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.NOT_FOUND"
+msgstr "[!! Ţĥïš áçţïvïţý çöüĺđñ'ţ ƀë ƒöüñđ. ~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr "[!! Ýöü ĥávë ñöţ ƀëëñ þĺáçëđ ïñ á çĺášš ƒöŕ ţĥïš šçĥööĺ ýëáŕ. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -133,6 +223,18 @@ msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë �
 
 msgid "ui.error.generic"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.feedback.correct"
+msgstr "[!! Çöŕŕëçţ! ~~~~ !!]"
+
+msgid "ui.feedback.incorrect"
+msgstr "[!! Ñöţ qüïţë — ĺëţ'š ĺööķ áğáïñ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.feedback.saved"
+msgstr "[!! Ýöüŕ áñšŵëŕ ïš šávëđ. ~~~~~~~~~ !!]"
+
+msgid "ui.feedback.worked_example"
+msgstr "[!! Šëë á šţëþ-ƀý-šţëþ ëxáɱþĺë ~~~~~~~~~~~ !!]"
 
 msgid "ui.format.am"
 msgstr "AM"
@@ -316,6 +418,9 @@ msgstr "[!! Ẹxþĺöŕëŕ ~~~~ !!]"
 
 msgid "ui.hub.settings"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.learning.no_translation"
+msgstr "[!! Ẹñğĺïšĥ vëŕšïöñ ñöţ áváïĺáƀĺë ~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.button_sign_in"
 msgstr "[!! Šïğñ ïñ ~~~ !!]"
@@ -574,6 +679,87 @@ msgstr "[!! Fŕöɱ šçĥööĺ ~~~~~ !!]"
 
 msgid "ui.quest.title"
 msgstr "[!! Qüëšţ ĵöüŕñáĺ ~~~~~~ !!]"
+
+msgid "ui.question.backspace"
+msgstr "[!! Đëĺëţë ~~~ !!]"
+
+msgid "ui.question.drag_items"
+msgstr "[!! Đŕáğ á çáŕđ, öŕ ţáþ ïţ ţĥëñ ţáþ á ƀöx ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.question.false"
+msgstr "[!! Fáĺšë ~~ !!]"
+
+msgid "ui.question.fill_blanks"
+msgstr "[!! Fïĺĺ ïñ ţĥë ƀĺáñķš ~~~~~~~~ !!]"
+
+msgid "ui.question.match_pairs"
+msgstr "[!! Ţáþ á çáŕđ öñ ţĥë ĺëƒţ, ţĥëñ öñë öñ ţĥë ŕïğĥţ ţö ɱáţçĥ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.question.move_down"
+msgstr "[!! Mövë đöŵñ ~~~~ !!]"
+
+msgid "ui.question.move_up"
+msgstr "[!! Mövë üþ ~~~ !!]"
+
+msgid "ui.question.order_items"
+msgstr "[!! Püţ ţĥë çáŕđš ïñ ţĥë ŕïğĥţ öŕđëŕ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.question.select_all"
+msgstr "[!! Çĥööšë áĺĺ çöŕŕëçţ áñšŵëŕš ~~~~~~~~~~~ !!]"
+
+msgid "ui.question.select_answer"
+msgstr "[!! Çĥööšë áñ áñšŵëŕ ~~~~~~~ !!]"
+
+msgid "ui.question.tap_image"
+msgstr "[!! Ţáþ ţĥë þïçţüŕë ţö áñšŵëŕ ~~~~~~~~~~ !!]"
+
+msgid "ui.question.true"
+msgstr "[!! Ţŕüë ~~ !!]"
+
+msgid "ui.question.true_false"
+msgstr "[!! Çĥööšë Ţŕüë öŕ Fáĺšë ~~~~~~~~ !!]"
+
+msgid "ui.question.type_answer"
+msgstr "[!! Ţýþë á šĥöŕţ áñšŵëŕ ~~~~~~~~ !!]"
+
+msgid "ui.question.type_number"
+msgstr "[!! Ẹñţëŕ á ñüɱƀëŕ ~~~~~~ !!]"
+
+msgid "ui.question.use_widget"
+msgstr "[!! Üšë ţĥë ţööĺ ţö áñšŵëŕ ~~~~~~~~~ !!]"
+
+msgid "ui.result.back_to_quest"
+msgstr "[!! Ɓáçķ ţö qüëšţ ~~~~~~ !!]"
+
+msgid "ui.result.correct_count"
+msgstr "[!! {correct}/{total} çöŕŕëçţ ~~~~~~~~~~ !!]"
+
+msgid "ui.result.done"
+msgstr "[!! 🎉 Åĺĺ đöñë! ~~~~~ !!]"
+
+msgid "ui.result.learning"
+msgstr "[!! Ĺëáŕñïñğ ŕëšüĺţš ~~~~~~~ !!]"
+
+msgid "ui.result.recommendation"
+msgstr "[!! Mâý šüğğëšţš šöɱë þŕáçţïçë: ~~~~~~~~~~~ !!]"
+
+msgid "ui.result.reward_badge"
+msgstr "[!! 🏅 Ñëŵ ƀáđğë ~~~~~ !!]"
+
+msgid "ui.result.reward_item"
+msgstr "[!! +{amount} ïţëɱ(š) ~~~~~~~ !!]"
+
+msgid "ui.result.reward_xp"
+msgstr "[!! +{amount} XP ~~~~~ !!]"
+
+msgid "ui.result.rewards"
+msgstr "[!! Ğáɱë ŕëŵáŕđš ~~~~~ !!]"
+
+msgid "ui.result.score"
+msgstr "[!! Šçöŕë: {score}/{max} ~~~~~~~~ !!]"
+
+msgid "ui.result.weak_count"
+msgstr "[!! Ţö ŕëvïëŵ: {n} ğöáĺš ~~~~~~~~ !!]"
 
 msgid "ui.settings.account"
 msgstr "[!! Åççöüñţ ~~~ !!]"

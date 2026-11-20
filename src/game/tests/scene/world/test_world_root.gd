@@ -106,7 +106,7 @@ func test_matching_device_profile_replaces_the_benchmark() -> void:
 func test_intent_without_a_screen_shows_update_required() -> void:
 	var r: Array = await _world()
 	var world: Node = r[1] as Node
-	EventBus.ui_requested.emit(&"activity_host", {"activity_id": "x", "mode": "assignment"})
+	# `activity_host` is registered since F063 (tests/scene/learning/test_activity_host.gd); `exam_lobby` comes with F064.
 	EventBus.ui_requested.emit(&"exam_lobby", {"exam_session_id": "y"})
 	var notice: Control = world.find_child("Notice", true, false) as Control
 	assert_bool(notice.visible).is_true()

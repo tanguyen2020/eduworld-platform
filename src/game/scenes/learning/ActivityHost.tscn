@@ -1,0 +1,196 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/activity_host.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/learning/FeedbackStrip.tscn" id="2_feedback"]
+[ext_resource type="PackedScene" path="res://scenes/learning/HintPanel.tscn" id="3_hints"]
+[ext_resource type="PackedScene" path="res://scenes/learning/VoiceOverPlayer.tscn" id="4_voice"]
+[ext_resource type="PackedScene" path="res://scenes/learning/WorkedExampleOverlay.tscn" id="5_worked"]
+
+[node name="ActivityHost" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Frame" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Frame"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Frame/Layout"]
+layout_mode = 2
+
+[node name="Exit" type="Button" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.exit"
+
+[node name="Title" type="Label" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+auto_translate_mode = 2
+text_overrun_behavior = 3
+
+[node name="NoTranslation" type="Label" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.learning.no_translation"
+
+[node name="Progress" type="Label" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Clock" type="Label" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Offline" type="Label" parent="Frame/Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.activity_player.offline"
+autowrap_mode = 3
+
+[node name="VoiceOver" parent="Frame/Layout" instance=ExtResource("4_voice")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="StatePanel" type="VBoxContainer" parent="Frame/Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="StateLabel" type="Label" parent="Frame/Layout/StatePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailsLabel" type="Label" parent="Frame/Layout/StatePanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+auto_translate_mode = 2
+horizontal_alignment = 1
+
+[node name="StateButtons" type="HBoxContainer" parent="Frame/Layout/StatePanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="Back" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.back"
+
+[node name="Details" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.details"
+
+[node name="Retry" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.common.retry"
+
+[node name="Body" type="VBoxContainer" parent="Frame/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FeedbackStrip" parent="Frame/Layout" instance=ExtResource("2_feedback")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HintPanel" parent="Frame/Layout" instance=ExtResource("3_hints")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ActionBar" type="HBoxContainer" parent="Frame/Layout"]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="Frame/Layout/ActionBar"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+autowrap_mode = 3
+
+[node name="ActionDetails" type="Button" parent="Frame/Layout/ActionBar"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.details"
+
+[node name="Primary" type="Button" parent="Frame/Layout/ActionBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 10
+text = "ui.activity_player.check"
+
+[node name="ExitConfirm" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.35
+anchor_right = 0.75
+anchor_bottom = 0.65
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="ExitConfirm"]
+layout_mode = 2
+
+[node name="Body" type="Label" parent="ExitConfirm/Box"]
+layout_mode = 2
+text = "ui.activity_player.pause_confirm"
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="ExitConfirm/Box"]
+layout_mode = 2
+alignment = 1
+
+[node name="Continue" type="Button" parent="ExitConfirm/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.activity_player.continue"
+
+[node name="Pause" type="Button" parent="ExitConfirm/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.pause"
+
+[node name="WorkedExample" parent="." instance=ExtResource("5_worked")]
+unique_name_in_owner = true
+layout_mode = 1

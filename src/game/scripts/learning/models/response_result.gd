@@ -1,0 +1,62 @@
+class_name ResponseResultModel
+extends RefCounted
+## Server grading of one answer (`ActivityResponseResult`). Verdict, explanation and per-option feedback are present
+## only when the attempt's FeedbackTiming allows (ACTIVITY_ENGINE §8); null fields mean "do not show right/wrong"
+## (F063-AC-14). The client never computes them (ADR-0016).
+
+## `explanation` / `AnswerFeedback.text` maxLength (specs/openapi).
+const EXPLANATION_MAX_LENGTH: int = 4000
+const FEEDBACK_MAX_LENGTH: int = 2000
+
+var accepted: bool = false
+var position: int = 0
+## `is_correct` was sent (not null).
+var has_verdict: bool = false
+var is_correct: bool = false
+var explanation: String = ""
+var explanation_math: Array[MathAssetRefModel] = []
+var feedback: AnswerFeedback = null
+var hints_used: int = 0
+
+
+## Per-option feedback (`AnswerFeedback`).
+class AnswerFeedback:
+	extends RefCounted
+	var option_id: String = ""
+	var text: String = ""
+	var math_assets: Array[MathAssetRefModel] = []
+	## Lesson / learning material id of a worked example (F063-AC-17), empty when none.
+	var worked_example_ref: String = ""
+
+	static func from_dict(data: Dictionary) -> AnswerFeedback:
+		var f: AnswerFeedback = AnswerFeedback.new()
+		f.option_id = String(data.get("option_id", "")) if data.get("option_id") is String else ""
+		f.text = (data.get("text") as String).left(FEEDBACK_MAX_LENGTH) if data.get("text") is String else ""
+		f.math_assets = MathAssetRefModel.list_from(data.get("math_assets"))
+		var ref: Variant = data.get("worked_example_ref")
+		f.worked_example_ref = ref as String if ref is String and Uuid.is_valid(ref as String) else ""
+		return f
+
+
+static func from_dict(data: Dictionary) -> ResponseResultModel:
+	var r: ResponseResultModel = ResponseResultModel.new()
+	r.accepted = data.get("accepted") == true
+	var pos: Variant = data.get("position")
+	r.position = int(pos) if pos is int or pos is float else 0
+	var verdict: Variant = data.get("is_correct")
+	r.has_verdict = verdict is bool
+	r.is_correct = verdict == true
+	var text: Variant = data.get("explanation")
+	r.explanation = (text as String).left(EXPLANATION_MAX_LENGTH) if text is String else ""
+	r.explanation_math = MathAssetRefModel.list_from(data.get("explanation_math_assets"))
+	var fb: Variant = data.get("feedback")
+	if fb is Dictionary:
+		r.feedback = AnswerFeedback.from_dict(fb as Dictionary)
+	var used: Variant = data.get("hints_used")
+	r.hints_used = maxi(0, int(used)) if used is int or used is float else 0
+	return r
+
+
+## Anything to show in the feedback strip besides "answer saved".
+func has_feedback_content() -> bool:
+	return has_verdict or not explanation.is_empty() or feedback != null

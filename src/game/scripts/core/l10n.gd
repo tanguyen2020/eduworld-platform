@@ -41,6 +41,14 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.MAINTENANCE",
 	"ui.error.VALIDATION_FAILED",
 	"ui.error.ASSIGNMENT_NOT_OPEN",
+	"ui.error.ASSIGNMENT_MAX_ATTEMPTS",
+	"ui.error.ATTEMPT_EXPIRED",
+	"ui.error.ATTEMPT_NOT_IN_PROGRESS",
+	"ui.error.INVALID_RESPONSE",
+	"ui.error.HINTS_NOT_ALLOWED",
+	"ui.error.HINTS_EXHAUSTED",
+	"ui.error.ACTIVITY_TYPE_NOT_SUPPORTED",
+	"ui.error.NOT_FOUND",
 ]
 
 

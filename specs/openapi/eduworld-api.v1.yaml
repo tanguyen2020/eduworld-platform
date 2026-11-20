@@ -18900,7 +18900,6 @@ components:
           render_payload: {}
           math_assets:
             - {'math_id': 'm_three_quarters', 'svg_url': 'https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg', 'sha256': 'a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1', 'speech_text': 'ba phần tư', 'display': 'inline'}
-          min_client_version: '0.0.0'
           content_language: 'vi'
           display_language: 'vi-VN'
           translation_missing: false

@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/math/math_inline.gd" id="1_script"]
+
+[node name="MathInline" type="HBoxContainer"]
+script = ExtResource("1_script")
+
+[node name="Fallback" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Image" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+stretch_mode = 3

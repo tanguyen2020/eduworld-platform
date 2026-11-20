@@ -36,6 +36,12 @@ func reply(route: String, status: int, body: Variant = null, headers: Dictionary
 	return self
 
 
+## Queues a reply with a raw body (CDN files such as formula SVGs or media; F063).
+func reply_bytes(route: String, status: int, bytes: PackedByteArray) -> FakeHttp:
+	_queue(route, {"status": status, "body": null, "raw": bytes, "headers": {}, "network_error": false})
+	return self
+
+
 ## Queues a network failure (no response) for `route`.
 func fail(route: String) -> FakeHttp:
 	_queue(route, {"status": 0, "body": null, "headers": {}, "network_error": true})
@@ -72,7 +78,9 @@ func send(method: HTTPClient.Method, url: String, headers: PackedStringArray, bo
 	for key: Variant in reply_headers.keys():
 		out_headers.append("%s: %s" % [key, reply_headers[key]])
 	var payload: Variant = spec["body"]
-	if payload != null:
+	if spec.get("raw") is PackedByteArray:
+		response.body = spec["raw"] as PackedByteArray
+	elif payload != null:
 		out_headers.append("Content-Type: application/json")
 		response.body = JSON.stringify(payload).to_utf8_buffer()
 	response.headers = out_headers

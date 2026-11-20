@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/voice_over_player.gd" id="1_script"]
+
+[node name="VoiceOverPlayer" type="PanelContainer"]
+theme_type_variation = &"VoiceCaption"
+script = ExtResource("1_script")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"VoiceCaptionLabel"
+text = "🔊"
+
+[node name="Caption" type="Label" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"VoiceCaptionLabel"
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Replay" type="Button" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.read_aloud"
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true

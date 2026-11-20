@@ -9237,7 +9237,6 @@ export interface components {
          *             "display": "inline"
          *           }
          *         ],
-         *         "min_client_version": "0.0.0",
          *         "content_language": "vi",
          *         "display_language": "vi-VN",
          *         "translation_missing": false

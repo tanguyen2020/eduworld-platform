@@ -7,6 +7,10 @@ extends RefCounted
 var assignments: AssignmentService = null
 var play_time: PlayTimeService = null
 var telemetry: TelemetryService = null
+## Activity player (F063): attempts, formula SVG cache and item media (RAM).
+var learning: LearningService = null
+var math_svg: MathSvgCache = null
+var media: MediaLoader = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -17,6 +21,12 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	play_time = PlayTimeService.new()
 	play_time.break_reminder_shown.connect(_on_break_reminder_shown)
 	assignments.access_denied.connect(_on_access_denied)
+	learning = LearningService.new(rest, telemetry, clock)
+	learning.access_denied.connect(_on_access_denied)
+	var transport: HttpTransport = rest.transport if rest != null else null
+	math_svg = MathSvgCache.new(transport, _cdn_base_url())
+	math_svg.failure_handler = func(_reason: String) -> void: learning.report_math_failed()
+	media = MediaLoader.new(transport)
 
 
 ## Applies the bootstrap of a new session (policies, product telemetry switch) and drops the previous data.
@@ -34,8 +44,16 @@ func start_session(bootstrap: Dictionary) -> void:
 ## is ever sent with the next student's token or tenant.
 func end_session() -> void:
 	assignments.clear()
+	learning.clear()
+	media.clear()
 	play_time.configure({})
 	telemetry.clear()
+
+
+static func _cdn_base_url() -> String:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var config: Node = tree.root.get_node_or_null("Config") if tree != null else null
+	return String(config.get("cdn_base_url")) if config != null else ""
 
 
 func _on_break_reminder_shown(reminder_no: int, minutes_played: int) -> void:

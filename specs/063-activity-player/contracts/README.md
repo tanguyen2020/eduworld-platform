@@ -18,7 +18,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (bundle) và `specs/openapi/modules/l
 | `getActivityAttemptReview` | `GET /api/v1/learning/activity-attempts/{attempt_id}/review` | eduworld-api | `game_player` + owner | Có sẵn |
 | `getLesson` | `GET /api/v1/learning/lessons/{lesson_id}` | eduworld-api | `game_player` | Có sẵn (worked example) |
 | `getMyProgress` | `GET /api/v1/learning/progress/me` | eduworld-api | `game_player` | Có sẵn (mức mastery LO) |
-| `getContentManifest` | `GET /api/v1/game/content-manifest` | eduworld-api | `game_player` | Cần sửa (§6) |
+| `getContentManifest` | `GET /api/v1/game/content-manifest` | eduworld-api | `game_player` | Đã sửa (§6) |
 | `postTelemetry` | `POST /api/v1/game/telemetry` | eduworld-api | `game_player` | Có sẵn |
 
 Schema dùng: `Attempt`, `QuestionRender`, `ActivityRender`, `MathAssetRef`, `ActivityAttemptStart`, `AdHocAttemptStart`, `ActivityResponseSubmission`, `QuestionResponse` (11 loại), `ActivityResponseResult`, `AnswerFeedback`, `HintResult`, `AttemptResult`, `AttemptReview`, `Problem` (`ProblemCode`: `ATTEMPT_ALREADY_SUBMITTED`, `ATTEMPT_EXPIRED`, `ATTEMPT_NOT_IN_PROGRESS`, `INVALID_RESPONSE`, `HINTS_NOT_ALLOWED`, `HINTS_EXHAUSTED`, `ASSIGNMENT_NOT_OPEN`, `ASSIGNMENT_MAX_ATTEMPTS`, `ACTIVITY_TYPE_NOT_SUPPORTED`, `GAME_ACCESS_STUDENT_ONLY`).
@@ -50,6 +50,7 @@ Schema dùng: `Attempt`, `QuestionRender`, `ActivityRender`, `MathAssetRef`, `Ac
 
 ## 6. Delta cần thực hiện
 
-- **Cần thêm** `QuestionRender.hint_count` (`integer`, 0–5): số cấp gợi ý của item, không lộ nội dung (GODOT_ARCHITECTURE §6.2). Task T004.
-- **Cần thêm** `ContentManifest.activity_min_client_versions` (object, key = `ActivityType`, value `string maxLength 32`, SemVer) cho FR-EXR-015. Task T004.
+- **Đã thêm (T004, 2026-11-20)** `QuestionRender.hint_count` (`integer`, 0–5): số cấp gợi ý của item, không lộ nội dung (GODOT_ARCHITECTURE §6.2). Task T004.
+- **Đã thêm (T004, 2026-11-20)** `ContentManifest.activity_min_client_versions` (object, key = `ActivityType`, value `string maxLength 32`, SemVer) cho FR-EXR-015. Task T004.
+- **Đã thêm (T004, 2026-11-20) [Proposed]** `AttemptReview.recommendations[].recommendation_id` (tùy chọn) cho F063-AC-24 (spec Clarifications 2026-11-20), cùng `example` cho `Attempt` (11 loại câu), `ActivityResponseResult`, `HintResult`, `AttemptReview` (Prism MOCK + fixture game).
 - Phụ thuộc Bước 0 (không làm ở đây): S1 response schema theo loại câu, S3 hints API/`hints_used`, S4 đóng chặt `render_payload`.

@@ -4,15 +4,15 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Khóa dịch `ui.activity_player.*`, `ui.question.*`, `ui.feedback.worked_example`, `ui.result.*`, `ui.learning.no_translation`, `ui.error.<CODE>` cho mã lỗi attempt — file: `src/game/locale/vi.po`, `src/game/locale/en.po`
-- [ ] T002 [P] Script sinh fixture từ example OpenAPI (`Attempt` 11 loại câu, `ActivityResponseResult` có/không feedback, `HintResult`, `AttemptReview`) — file: `src/game/tests/fixtures/learning/`, `src/game/tools/gen_fixtures.gd`
-- [ ] T003 [P] Typed model parse JSON — file: `src/game/scripts/learning/models/attempt.gd`, `question_render.gd`, `response_result.gd`, `attempt_review.gd`
+- [x] T001 [P] Khóa dịch `ui.activity_player.*`, `ui.question.*`, `ui.feedback.worked_example`, `ui.result.*`, `ui.learning.no_translation`, `ui.error.<CODE>` cho mã lỗi attempt — file: `src/game/locale/vi.po`, `src/game/locale/en.po` — ✅ 62 khóa mới vi/en (`ui.activity_player.*`, `ui.question.*`, `ui.feedback.*`, `ui.result.*`, `ui.learning.no_translation`, `ui.error.{ATTEMPT_EXPIRED, ATTEMPT_NOT_IN_PROGRESS, ASSIGNMENT_MAX_ATTEMPTS, INVALID_RESPONSE, HINTS_NOT_ALLOWED, HINTS_EXHAUSTED, ACTIVITY_TYPE_NOT_SUPPORTED, NOT_FOUND}` — thêm vào `L10n.ERROR_KEYS`); `messages.pot` 257 khóa, `xx_PS.po` sinh lại; `extract_pot --check` OK
+- [x] T002 [P] Script sinh fixture từ example OpenAPI (`Attempt` 11 loại câu, `ActivityResponseResult` có/không feedback, `HintResult`, `AttemptReview`) — file: `src/game/tests/fixtures/learning/`, `src/game/tools/gen_fixtures.gd` — ✅ dùng `src/game/tools/gen_fixtures.mjs` có sẵn (không viết `gen_fixtures.gd`): sinh `tests/fixtures/contract/openapi/{Attempt,ActivityResponseResult,HintResult,AttemptReview}.json` từ `example` thêm vào OpenAPI (T004); biến thể (không feedback, đúng, đã nộp, theo loại câu…) dựng trong `tests/fakes/learning_fixtures.gd` từ chính fixture; SVG công thức mẫu `tests/fixtures/learning/math_three_quarters.svg.txt` (sha256 khớp example) — `gen_fixtures --check` OK (26 file)
+- [x] T003 [P] Typed model parse JSON — file: `src/game/scripts/learning/models/attempt.gd`, `question_render.gd`, `response_result.gd`, `attempt_review.gd` — ✅ `models/{attempt,question_render,activity_render,response_result,hint_result,attempt_review,math_asset_ref}.gd` — `test_attempt_fixtures.gd` (6 test)
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Delta contract: `QuestionRender.hint_count`, `ContentManifest.activity_min_client_versions` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/modules/game.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
-- [ ] T005 Hợp đồng `ActivityRendererBase`, `QuestionRendererBase`, `ActivityRendererRegistry` (autoload), `QuestionRendererRegistry` — file: `src/game/scripts/learning/activity_renderer_base.gd`, `question_renderer_base.gd`, `activity_renderer_registry.gd`, `question_renderer_registry.gd`
-- [ ] T006 `PendingWrites` (hàng đợi RAM, flush theo thứ tự, giữ `Idempotency-Key`) — file: `src/game/scripts/networking/pending_writes.gd`
+- [x] T004 Delta contract: `QuestionRender.hint_count`, `ContentManifest.activity_min_client_versions` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/modules/game.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — ✅ additive: `QuestionRender.hint_count` (0–5), `ContentManifest.activity_min_client_versions` (key `ActivityType`, value ≤ 32), `AttemptReview.recommendations[].recommendation_id` (cần cho F063-AC-24, Clarifications 2026-11-20), `example` cho `Attempt` (11 loại câu), `ActivityResponseResult`, `HintResult`, `AttemptReview`; `split-public.mjs`, portal `pnpm gen:api` (`schema.gen.d.ts`), `routematrix gen`/`facadegen --check` không đổi; `check-maxlength`/`check-enums`/`validate-schemas` OK; `make specs-breaking` (oasdiff qua docker) không chạy local — chỉ thêm trường tùy chọn và example. Backend chưa điền `hint_count` (client có fallback theo Clarifications 2026-11-16)
+- [x] T005 Hợp đồng `ActivityRendererBase`, `QuestionRendererBase`, `ActivityRendererRegistry` (autoload), `QuestionRendererRegistry` — file: `src/game/scripts/learning/activity_renderer_base.gd`, `question_renderer_base.gd`, `activity_renderer_registry.gd`, `question_renderer_registry.gd` — ✅ `activity_renderer_base.gd`, `question_renderer_base.gd`, autoload `ActivityRendererRegistry` (#13, `test_boot.gd`), `question_renderer_registry.gd`; signal thì quá khứ theo lint (`response_submitted`/`response_prepared` = `response_ready` của plan)
+- [x] T006 `PendingWrites` (hàng đợi RAM, flush theo thứ tự, giữ `Idempotency-Key`) — file: `src/game/scripts/networking/pending_writes.gd` — ✅ `pending_writes.gd` (RAM, ≤ 200, giữ key, dừng ở lỗi tạm thời) — `test_pending_writes.gd` (5 test)
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -24,24 +24,24 @@
 
 ### Tests cho User Story 1
 
-- [ ] T007 [P] [US1] Unit test `LearningService` F063-AC-01, F063-AC-05, F063-AC-08 (body start, `Idempotency-Key` mới mỗi lần trả lời, giữ khi retry, 409 → thành công) — file: `src/game/tests/unit/learning/test_learning_service.gd` — phải FAIL trước khi code
-- [ ] T008 [P] [US1] Scene test 11 renderer câu hỏi F063-AC-02, F063-AC-03 (payload fixture → `response_ready` đúng shape `QuestionResponse`; không có trường điểm) — file: `src/game/tests/scene/learning/test_question_renderers.gd`
-- [ ] T009 [P] [US1] Contract test F063-AC-03 (parse mọi fixture; quét không có `answer_key`, `correct_option_id(s)`, `feedback`, `hints`, `explanation` trước chấm) — file: `src/game/tests/contract/learning/test_attempt_fixtures.gd`
-- [ ] T010 [P] [US1] Scene test F063-AC-04 (dấu tiếng Việt, ảnh, audio; `g1_3` tự phát lồng tiếng, tắt tiếng → phụ đề + icon) — file: `src/game/tests/scene/learning/test_voice_over.gd`
-- [ ] T011 [P] [US1] Unit test F063-AC-06 (mất mạng → `PendingWrites`, banner, flush cùng key; không ghi `user://`) — file: `src/game/tests/unit/learning/test_pending_writes.gd`
-- [ ] T012 [P] [US1] Unit test F063-AC-07 (thoát → `:pause`; resume dựng đúng position, `saved_responses`, `hints_revealed`) — file: `src/game/tests/unit/learning/test_learning_service_resume.gd`
-- [ ] T013 [P] [US1] Scene test F063-AC-09 (mở → `suspend_world("activity")`, đóng → `resume_world`, quay đúng cảnh) — file: `src/game/tests/scene/learning/test_activity_host.gd`
-- [ ] T014 [P] [US1] Unit test F063-AC-10, F063-AC-11 (map `ATTEMPT_EXPIRED`, `ASSIGNMENT_NOT_OPEN`, `ASSIGNMENT_MAX_ATTEMPTS`, `ATTEMPT_NOT_IN_PROGRESS`, `INVALID_RESPONSE` → `ui.error.<CODE>`; 404/`GAME_ACCESS_STUDENT_ONLY` → không hiển thị dữ liệu) — file: `src/game/tests/unit/learning/test_learning_errors.gd`
-- [ ] T015 [P] [US1] Scene test F063-AC-12, F063-AC-13 (giới hạn độ dài ô nhập; `translation_missing` → nhãn; đổi locale giữ ngôn ngữ câu đang làm) — file: `src/game/tests/scene/learning/test_question_input_limits.gd`
-- [ ] T016 [US1] Integration headless với compose: `hs.an.3a` làm hết activity; truy cập attempt của `hs.dung.7a` → 404 (tenant isolation + authorization, TC-TEN-001) — file: `src/game/tests/integration/learning/test_activity_flow.gd`
+- [x] T007 [P] [US1] Unit test `LearningService` F063-AC-01, F063-AC-05, F063-AC-08 (body start, `Idempotency-Key` mới mỗi lần trả lời, giữ khi retry, 409 → thành công) — file: `src/game/tests/unit/learning/test_learning_service.gd` — phải FAIL trước khi code — ✅ `test_learning_service.gd` 10/10 pass
+- [x] T008 [P] [US1] Scene test 11 renderer câu hỏi F063-AC-02, F063-AC-03 (payload fixture → `response_ready` đúng shape `QuestionResponse`; không có trường điểm) — file: `src/game/tests/scene/learning/test_question_renderers.gd` — ✅ `test_question_renderers.gd` 17/17 pass (11 loại; ghép cặp/kéo thả chạm-chạm; không trường điểm)
+- [x] T009 [P] [US1] Contract test F063-AC-03 (parse mọi fixture; quét không có `answer_key`, `correct_option_id(s)`, `feedback`, `hints`, `explanation` trước chấm) — file: `src/game/tests/contract/learning/test_attempt_fixtures.gd` — ✅ `test_attempt_fixtures.gd` 6/6 pass
+- [x] T010 [P] [US1] Scene test F063-AC-04 (dấu tiếng Việt, ảnh, audio; `g1_3` tự phát lồng tiếng, tắt tiếng → phụ đề + icon) — file: `src/game/tests/scene/learning/test_voice_over.gd` — ✅ `test_voice_over.gd` 6/6 pass
+- [x] T011 [P] [US1] Unit test F063-AC-06 (mất mạng → `PendingWrites`, banner, flush cùng key; không ghi `user://`) — file: `src/game/tests/unit/learning/test_pending_writes.gd` — ✅ `test_pending_writes.gd` 5/5 pass
+- [x] T012 [P] [US1] Unit test F063-AC-07 (thoát → `:pause`; resume dựng đúng position, `saved_responses`, `hints_revealed`) — file: `src/game/tests/unit/learning/test_learning_service_resume.gd` — ✅ `test_learning_service_resume.gd` 5/5 pass
+- [x] T013 [P] [US1] Scene test F063-AC-09 (mở → `suspend_world("activity")`, đóng → `resume_world`, quay đúng cảnh) — file: `src/game/tests/scene/learning/test_activity_host.gd` — ✅ `test_activity_host.gd` 11/11 pass (suspend/resume, luồng Kiểm tra → Tiếp → Hoàn thành → kết quả, 409 khi nộp, thoát → pause, lỗi giữ câu trả lời, mất mạng, phím tắt, intent `question_set_id`, 404)
+- [x] T014 [P] [US1] Unit test F063-AC-10, F063-AC-11 (map `ATTEMPT_EXPIRED`, `ASSIGNMENT_NOT_OPEN`, `ASSIGNMENT_MAX_ATTEMPTS`, `ATTEMPT_NOT_IN_PROGRESS`, `INVALID_RESPONSE` → `ui.error.<CODE>`; 404/`GAME_ACCESS_STUDENT_ONLY` → không hiển thị dữ liệu) — file: `src/game/tests/unit/learning/test_learning_errors.gd` — ✅ `test_learning_errors.gd` 7/7 pass
+- [x] T015 [P] [US1] Scene test F063-AC-12, F063-AC-13 (giới hạn độ dài ô nhập; `translation_missing` → nhãn; đổi locale giữ ngôn ngữ câu đang làm) — file: `src/game/tests/scene/learning/test_question_input_limits.gd` — ✅ `test_question_input_limits.gd` 8/8 pass
+- [ ] T016 [US1] Integration headless với compose: `hs.an.3a` làm hết activity; truy cập attempt của `hs.dung.7a` → 404 (tenant isolation + authorization, TC-TEN-001) — file: `src/game/tests/integration/learning/test_activity_flow.gd` — viết sẵn (skip khi thiếu `EDUWORLD_IT_API_BASE_URL`); **chưa chạy**: cần backend compose với F030/F032 thật + seed F041 (không khởi động container trong phiên này)
 
 ### Implementation cho User Story 1
 
-- [ ] T017 [US1] `LearningService` (start/resume/respond/pause/submit, signal) — file: `src/game/scripts/learning/learning_service.gd`
-- [ ] T018 [P] [US1] 11 answer model — file: `src/game/scripts/learning/answer_models/*_answer.gd`
-- [ ] T019 [P] [US1] 11 scene câu hỏi theo bố cục §4.3 + skin grade band — file: `src/game/scenes/learning/questions/*.tscn`
-- [ ] T020 [US1] `QuizRenderer`, `InteractiveExerciseRenderer`, đăng ký registry — file: `src/game/scenes/learning/activity_renderers/quiz/QuizRenderer.tscn`, `src/game/scenes/learning/activity_renderers/interactive_exercise/InteractiveExerciseRenderer.tscn`
-- [ ] T021 [US1] `ActivityHost` (header, tiến độ, đồng hồ theo `Clock`, action bar, hộp thoát, phím tắt `Enter/Esc/H/R/1–6/Tab`), `VoiceOverPlayer`, đăng ký màn `activity_host` cho intent F062 — file: `src/game/scenes/learning/ActivityHost.tscn`, `src/game/scenes/learning/activity_host.gd`, `src/game/scenes/learning/VoiceOverPlayer.tscn`
+- [x] T017 [US1] `LearningService` (start/resume/respond/pause/submit, signal) — file: `src/game/scripts/learning/learning_service.gd` — ✅ `scripts/learning/learning_service.gd` (+ `ServiceLocator.learning`, `math_svg`, `media`)
+- [x] T018 [P] [US1] 11 answer model — file: `src/game/scripts/learning/answer_models/*_answer.gd` — ✅ `answer_models/*_answer.gd` (11 + `answer_model.gd`)
+- [x] T019 [P] [US1] 11 scene câu hỏi theo bố cục §4.3 + skin grade band — file: `src/game/scenes/learning/questions/*.tscn` — ✅ `scenes/learning/questions/*.tscn` (11) + `drop_button.gd`; widget `interactive` có `number_line`, widget khác → thông báo cập nhật trong item
+- [x] T020 [US1] `QuizRenderer`, `InteractiveExerciseRenderer`, đăng ký registry — file: `src/game/scenes/learning/activity_renderers/quiz/QuizRenderer.tscn`, `src/game/scenes/learning/activity_renderers/interactive_exercise/InteractiveExerciseRenderer.tscn` — ✅ `QuizRenderer.tscn` (`QuizActivityRenderer`), `InteractiveExerciseRenderer.tscn`
+- [x] T021 [US1] `ActivityHost` (header, tiến độ, đồng hồ theo `Clock`, action bar, hộp thoát, phím tắt `Enter/Esc/H/R/1–6/Tab`), `VoiceOverPlayer`, đăng ký màn `activity_host` cho intent F062 — file: `src/game/scenes/learning/ActivityHost.tscn`, `src/game/scenes/learning/activity_host.gd`, `src/game/scenes/learning/VoiceOverPlayer.tscn` — ✅ `ActivityHost.tscn` + `activity_host.gd`, `VoiceOverPlayer.tscn`, `RichContentView.tscn`; `UiScreenRegistry` có `activity_host`; dải phản hồi/gợi ý/kết quả/cập nhật dùng scene của US2–US5 (cùng lát)
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -115,7 +115,7 @@
 
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
-- [ ] T037 **OQ chốt 2026-11-20** (OQ F062-2) `ActivityHost`/`LearningService` nhận intent `question_set_id` → `startAdHocAttempt` (`mode = assignment`); test với FakeHttp — file: `src/game/scripts/learning/learning_service.gd`, `src/game/tests/unit/learning/` — kiểm: `make godot-test` — cỡ S
+- [x] T037 **OQ chốt 2026-11-20** (OQ F062-2) `ActivityHost`/`LearningService` nhận intent `question_set_id` → `startAdHocAttempt` (`mode = assignment`); test với FakeHttp — file: `src/game/scripts/learning/learning_service.gd`, `src/game/tests/unit/learning/` — kiểm: `make godot-test` — cỡ S — ✅ `LearningService.start_request` (`question_set_id` → `startAdHocAttempt`, `source.kind = question_set`, mặc định `mode = assignment`) — `test_learning_service.gd::test_question_set_assignment_starts_an_ad_hoc_attempt`, `test_activity_host.gd::test_question_set_assignment_intent_uses_an_ad_hoc_attempt`
 
 ## Dependencies & Execution Order
 

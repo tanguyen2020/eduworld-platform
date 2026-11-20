@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/feedback_strip.gd" id="1_script"]
+
+[node name="FeedbackStrip" type="VBoxContainer"]
+script = ExtResource("1_script")
+
+[node name="VerdictPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FeedbackCorrectPanel"
+
+[node name="Row" type="HBoxContainer" parent="VerdictPanel"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="VerdictPanel/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FeedbackLabel"
+text = "✓"
+
+[node name="Verdict" type="Label" parent="VerdictPanel/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"FeedbackLabel"
+text = "ui.feedback.correct"
+autowrap_mode = 3
+
+[node name="Details" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Box" type="VBoxContainer" parent="Details"]
+layout_mode = 2
+
+[node name="Saved" type="Label" parent="Details/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.feedback.saved"
+autowrap_mode = 3
+
+[node name="FeedbackText" type="RichTextLabel" parent="Details/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+fit_content = true
+auto_translate_mode = 2
+
+[node name="Explanation" type="RichTextLabel" parent="Details/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+fit_content = true
+auto_translate_mode = 2
+
+[node name="WorkedExample" type="Button" parent="Details/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.feedback.worked_example"

@@ -29,6 +29,7 @@ SceneRouter="*res://scripts/core/scene_router.gd"
 AudioDirector="*res://scripts/core/audio_director.gd"
 Settings="*res://scripts/core/settings.gd"
 QualityManager="*res://scripts/core/quality_manager.gd"
+ActivityRendererRegistry="*res://scripts/learning/activity_renderer_registry.gd"
 
 [debug]
 

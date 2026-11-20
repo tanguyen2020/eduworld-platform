@@ -1,0 +1,94 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/activity_result.gd" id="1_script"]
+
+[node name="ActivityResult" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.result.done"
+horizontal_alignment = 1
+
+[node name="Regions" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Learning" type="PanelContainer" parent="Regions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Box" type="VBoxContainer" parent="Regions/Learning"]
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Regions/Learning/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.result.learning"
+
+[node name="Score" type="Label" parent="Regions/Learning/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Points" type="Label" parent="Regions/Learning/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Weak" type="Label" parent="Regions/Learning/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Later" type="Label" parent="Regions/Learning/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.activity_player.results_later"
+autowrap_mode = 3
+
+[node name="Rewards" type="PanelContainer" parent="Regions"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Box" type="VBoxContainer" parent="Regions/Rewards"]
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Regions/Rewards/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.result.rewards"
+
+[node name="RewardList" type="VBoxContainer" parent="Regions/Rewards/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Recommendations" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Recommendations"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.result.recommendation"
+
+[node name="RecommendationList" type="VBoxContainer" parent="Recommendations"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Back" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+text = "ui.result.back_to_quest"

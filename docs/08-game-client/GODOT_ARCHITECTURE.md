@@ -154,6 +154,7 @@ Thứ tự khai báo trong `project.godot` (phụ thuộc từ trên xuống):
 | 10 | `AudioDirector` | Node | Nhạc nền/zone, SFX, volume theo settings | — |
 | 11 | `Settings` | Node | Settings người dùng (`user://settings.cfg`): âm lượng, chất lượng đồ họa, ngôn ngữ, cỡ chữ, chế độ màu | Lưu dữ liệu nghiệp vụ |
 | 12 | `QualityManager` | Node | Chọn renderer và preset Thấp/Trung bình/Cao, benchmark tự phát hiện lần đầu, độ phân giải động, trần FPS, hạ cấp theo nhiệt/pin, tạm dừng render 3D khi mở activity player, phát signal `quality_changed` cho zone/hiệu ứng; mọi giá trị theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4–§6, §12 | Tự đổi preset giữa trận/bài; lưu lên server |
+| 13 | `ActivityRendererRegistry` | Node | Ánh xạ `activity_type` → scene renderer (§6.2); kiểm `min_client_version` của nội dung với phiên bản client trước khi mở (F063) | Chấm điểm, giữ đáp án |
 
 Service theo domain (`QuestService`, `LearningService`, `PartyService`, `ChatService`, `InventoryService`, `MatchmakingService`...) là `RefCounted` tạo bởi `ServiceLocator` trong `AppState` sau bootstrap, nhận `ApiClient`/`RealtimeClient` qua constructor → test bằng fake.
 

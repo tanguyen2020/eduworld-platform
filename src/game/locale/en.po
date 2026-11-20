@@ -9,8 +9,74 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "ui.activity_player.back"
+msgstr "Back"
+
+msgid "ui.activity_player.check"
+msgstr "Check"
+
+msgid "ui.activity_player.continue"
+msgstr "Keep going"
+
+msgid "ui.activity_player.details"
+msgstr "Details"
+
+msgid "ui.activity_player.error_load"
+msgstr "Couldn't load the activity. Please try again."
+
+msgid "ui.activity_player.exit"
+msgstr "Exit"
+
+msgid "ui.activity_player.finish"
+msgstr "Finish"
+
+msgid "ui.activity_player.hint"
+msgstr "💡 Hint"
+
+msgid "ui.activity_player.hint_error"
+msgstr "Couldn't get a hint. Please try again."
+
+msgid "ui.activity_player.hint_intro"
+msgstr "Here's a little hint from Mây."
+
+msgid "ui.activity_player.hint_level"
+msgstr "Hint {n}/{total}"
+
+msgid "ui.activity_player.hints_exhausted"
+msgstr "You've seen all the hints."
+
+msgid "ui.activity_player.loading"
+msgstr "Getting your activity ready…"
+
+msgid "ui.activity_player.next"
+msgstr "Next"
+
+msgid "ui.activity_player.offline"
+msgstr "Offline — your answers will be sent when you're back online."
+
+msgid "ui.activity_player.pause"
+msgstr "Take a break"
+
+msgid "ui.activity_player.pause_confirm"
+msgstr "Take a break? Your progress is saved."
+
+msgid "ui.activity_player.read_aloud"
+msgstr "🔊 Read aloud"
+
+msgid "ui.activity_player.results_later"
+msgstr "Submitted! Results will appear when your school releases them."
+
+msgid "ui.activity_player.time_up"
+msgstr "Time's up! Your work has been submitted."
+
+msgid "ui.activity_player.update_button"
+msgstr "Update"
+
 msgid "ui.activity_player.update_required"
 msgstr "This activity needs a newer version of the game. Please ask a teacher or parent to update it."
+
+msgid "ui.activity_player.waiting"
+msgstr "Sending…"
 
 msgid "ui.boot.loading"
 msgstr "Loading…"
@@ -69,11 +135,23 @@ msgstr "Your account is not activated in EduWorld yet. Please ask your school to
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
 msgstr "Your account is being used on another device."
 
+msgid "ui.error.ACTIVITY_TYPE_NOT_SUPPORTED"
+msgstr "Please update the game to play this activity."
+
+msgid "ui.error.ASSIGNMENT_MAX_ATTEMPTS"
+msgstr "You've used all your tries for this assignment."
+
 msgid "ui.error.ASSIGNMENT_NOT_OPEN"
 msgstr "This assignment is not open right now."
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
 msgstr "This work has already been submitted."
+
+msgid "ui.error.ATTEMPT_EXPIRED"
+msgstr "This attempt has expired."
+
+msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
+msgstr "This activity has ended; no more answers can be sent."
 
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
 msgstr "The game needs to be updated to a new version."
@@ -84,11 +162,20 @@ msgstr "It is rest time. EduWorld will open again during the allowed hours."
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "This account is for school staff and cannot be used to play. Please use the EduWorld admin portal."
 
+msgid "ui.error.HINTS_EXHAUSTED"
+msgstr "You've seen all the hints."
+
+msgid "ui.error.HINTS_NOT_ALLOWED"
+msgstr "Hints aren't available here."
+
 msgid "ui.error.INTERNAL"
 msgstr "Something went wrong. Please try again later."
 
 msgid "ui.error.INVALID_CREDENTIALS"
 msgstr "The username or password is not correct."
+
+msgid "ui.error.INVALID_RESPONSE"
+msgstr "That answer couldn't be read. Please try again."
 
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr "Joining the class…"
@@ -98,6 +185,9 @@ msgstr "The school choice has expired, please sign in again."
 
 msgid "ui.error.MAINTENANCE"
 msgstr "EduWorld is under maintenance. Please come back later."
+
+msgid "ui.error.NOT_FOUND"
+msgstr "This activity couldn't be found."
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr "You have not been placed in a class for this school year."
@@ -134,6 +224,18 @@ msgstr "Some information is not valid. Please check it."
 
 msgid "ui.error.generic"
 msgstr "Something went wrong. Please try again later."
+
+msgid "ui.feedback.correct"
+msgstr "Correct!"
+
+msgid "ui.feedback.incorrect"
+msgstr "Not quite — let's look again."
+
+msgid "ui.feedback.saved"
+msgstr "Your answer is saved."
+
+msgid "ui.feedback.worked_example"
+msgstr "See a step-by-step example"
 
 msgid "ui.format.am"
 msgstr "AM"
@@ -317,6 +419,9 @@ msgstr "Explorer"
 
 msgid "ui.hub.settings"
 msgstr "Settings"
+
+msgid "ui.learning.no_translation"
+msgstr "English version not available"
 
 msgid "ui.login.button_sign_in"
 msgstr "Sign in"
@@ -575,6 +680,87 @@ msgstr "From school"
 
 msgid "ui.quest.title"
 msgstr "Quest journal"
+
+msgid "ui.question.backspace"
+msgstr "Delete"
+
+msgid "ui.question.drag_items"
+msgstr "Drag a card, or tap it then tap a box"
+
+msgid "ui.question.false"
+msgstr "False"
+
+msgid "ui.question.fill_blanks"
+msgstr "Fill in the blanks"
+
+msgid "ui.question.match_pairs"
+msgstr "Tap a card on the left, then one on the right to match"
+
+msgid "ui.question.move_down"
+msgstr "Move down"
+
+msgid "ui.question.move_up"
+msgstr "Move up"
+
+msgid "ui.question.order_items"
+msgstr "Put the cards in the right order"
+
+msgid "ui.question.select_all"
+msgstr "Choose all correct answers"
+
+msgid "ui.question.select_answer"
+msgstr "Choose an answer"
+
+msgid "ui.question.tap_image"
+msgstr "Tap the picture to answer"
+
+msgid "ui.question.true"
+msgstr "True"
+
+msgid "ui.question.true_false"
+msgstr "Choose True or False"
+
+msgid "ui.question.type_answer"
+msgstr "Type a short answer"
+
+msgid "ui.question.type_number"
+msgstr "Enter a number"
+
+msgid "ui.question.use_widget"
+msgstr "Use the tool to answer"
+
+msgid "ui.result.back_to_quest"
+msgstr "Back to quest"
+
+msgid "ui.result.correct_count"
+msgstr "{correct}/{total} correct"
+
+msgid "ui.result.done"
+msgstr "🎉 All done!"
+
+msgid "ui.result.learning"
+msgstr "Learning results"
+
+msgid "ui.result.recommendation"
+msgstr "Mây suggests some practice:"
+
+msgid "ui.result.reward_badge"
+msgstr "🏅 New badge"
+
+msgid "ui.result.reward_item"
+msgstr "+{amount} item(s)"
+
+msgid "ui.result.reward_xp"
+msgstr "+{amount} XP"
+
+msgid "ui.result.rewards"
+msgstr "Game rewards"
+
+msgid "ui.result.score"
+msgstr "Score: {score}/{max}"
+
+msgid "ui.result.weak_count"
+msgstr "To review: {n} goals"
 
 msgid "ui.settings.account"
 msgstr "Account"

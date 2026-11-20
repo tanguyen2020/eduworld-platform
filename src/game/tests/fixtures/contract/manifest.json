@@ -43,7 +43,7 @@
     },
     "openapi/Attempt.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Attempt",
-      "sha256": "76fd9eeb9ec66ee1d789591dff31ce62ccb5439ba7c4396af9956c33ffccb5d8"
+      "sha256": "2e2626436132a72299694497fa1024f508468765b806229e217bb17ac310c520"
     },
     "openapi/ActivityResponseResult.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ActivityResponseResult",

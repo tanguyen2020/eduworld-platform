@@ -6,7 +6,73 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "ui.activity_player.back"
+msgstr ""
+
+msgid "ui.activity_player.check"
+msgstr ""
+
+msgid "ui.activity_player.continue"
+msgstr ""
+
+msgid "ui.activity_player.details"
+msgstr ""
+
+msgid "ui.activity_player.error_load"
+msgstr ""
+
+msgid "ui.activity_player.exit"
+msgstr ""
+
+msgid "ui.activity_player.finish"
+msgstr ""
+
+msgid "ui.activity_player.hint"
+msgstr ""
+
+msgid "ui.activity_player.hint_error"
+msgstr ""
+
+msgid "ui.activity_player.hint_intro"
+msgstr ""
+
+msgid "ui.activity_player.hint_level"
+msgstr ""
+
+msgid "ui.activity_player.hints_exhausted"
+msgstr ""
+
+msgid "ui.activity_player.loading"
+msgstr ""
+
+msgid "ui.activity_player.next"
+msgstr ""
+
+msgid "ui.activity_player.offline"
+msgstr ""
+
+msgid "ui.activity_player.pause"
+msgstr ""
+
+msgid "ui.activity_player.pause_confirm"
+msgstr ""
+
+msgid "ui.activity_player.read_aloud"
+msgstr ""
+
+msgid "ui.activity_player.results_later"
+msgstr ""
+
+msgid "ui.activity_player.time_up"
+msgstr ""
+
+msgid "ui.activity_player.update_button"
+msgstr ""
+
 msgid "ui.activity_player.update_required"
+msgstr ""
+
+msgid "ui.activity_player.waiting"
 msgstr ""
 
 msgid "ui.boot.loading"
@@ -66,10 +132,22 @@ msgstr ""
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
 msgstr ""
 
+msgid "ui.error.ACTIVITY_TYPE_NOT_SUPPORTED"
+msgstr ""
+
+msgid "ui.error.ASSIGNMENT_MAX_ATTEMPTS"
+msgstr ""
+
 msgid "ui.error.ASSIGNMENT_NOT_OPEN"
 msgstr ""
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
+msgstr ""
+
+msgid "ui.error.ATTEMPT_EXPIRED"
+msgstr ""
+
+msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
 msgstr ""
 
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
@@ -81,10 +159,19 @@ msgstr ""
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr ""
 
+msgid "ui.error.HINTS_EXHAUSTED"
+msgstr ""
+
+msgid "ui.error.HINTS_NOT_ALLOWED"
+msgstr ""
+
 msgid "ui.error.INTERNAL"
 msgstr ""
 
 msgid "ui.error.INVALID_CREDENTIALS"
+msgstr ""
+
+msgid "ui.error.INVALID_RESPONSE"
 msgstr ""
 
 msgid "ui.error.LOGIN_QUEUE_BUSY"
@@ -94,6 +181,9 @@ msgid "ui.error.LOGIN_TICKET_INVALID"
 msgstr ""
 
 msgid "ui.error.MAINTENANCE"
+msgstr ""
+
+msgid "ui.error.NOT_FOUND"
 msgstr ""
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
@@ -130,6 +220,18 @@ msgid "ui.error.VALIDATION_FAILED"
 msgstr ""
 
 msgid "ui.error.generic"
+msgstr ""
+
+msgid "ui.feedback.correct"
+msgstr ""
+
+msgid "ui.feedback.incorrect"
+msgstr ""
+
+msgid "ui.feedback.saved"
+msgstr ""
+
+msgid "ui.feedback.worked_example"
 msgstr ""
 
 msgid "ui.format.am"
@@ -313,6 +415,9 @@ msgid "ui.hub.player_default"
 msgstr ""
 
 msgid "ui.hub.settings"
+msgstr ""
+
+msgid "ui.learning.no_translation"
 msgstr ""
 
 msgid "ui.login.button_sign_in"
@@ -571,6 +676,87 @@ msgid "ui.quest.tab.assigned"
 msgstr ""
 
 msgid "ui.quest.title"
+msgstr ""
+
+msgid "ui.question.backspace"
+msgstr ""
+
+msgid "ui.question.drag_items"
+msgstr ""
+
+msgid "ui.question.false"
+msgstr ""
+
+msgid "ui.question.fill_blanks"
+msgstr ""
+
+msgid "ui.question.match_pairs"
+msgstr ""
+
+msgid "ui.question.move_down"
+msgstr ""
+
+msgid "ui.question.move_up"
+msgstr ""
+
+msgid "ui.question.order_items"
+msgstr ""
+
+msgid "ui.question.select_all"
+msgstr ""
+
+msgid "ui.question.select_answer"
+msgstr ""
+
+msgid "ui.question.tap_image"
+msgstr ""
+
+msgid "ui.question.true"
+msgstr ""
+
+msgid "ui.question.true_false"
+msgstr ""
+
+msgid "ui.question.type_answer"
+msgstr ""
+
+msgid "ui.question.type_number"
+msgstr ""
+
+msgid "ui.question.use_widget"
+msgstr ""
+
+msgid "ui.result.back_to_quest"
+msgstr ""
+
+msgid "ui.result.correct_count"
+msgstr ""
+
+msgid "ui.result.done"
+msgstr ""
+
+msgid "ui.result.learning"
+msgstr ""
+
+msgid "ui.result.recommendation"
+msgstr ""
+
+msgid "ui.result.reward_badge"
+msgstr ""
+
+msgid "ui.result.reward_item"
+msgstr ""
+
+msgid "ui.result.reward_xp"
+msgstr ""
+
+msgid "ui.result.rewards"
+msgstr ""
+
+msgid "ui.result.score"
+msgstr ""
+
+msgid "ui.result.weak_count"
 msgstr ""
 
 msgid "ui.settings.account"
