@@ -1,0 +1,15 @@
+{
+  "accepted": true,
+  "position": 1,
+  "is_correct": false,
+  "score": 0,
+  "explanation": "Có 3 túi, mỗi túi 6 quả nên lấy 6 × 3 = 18.",
+  "explanation_math_assets": [],
+  "feedback": {
+    "option_id": "o_a",
+    "text": "Em đã cộng 3 + 6. Đề hỏi 3 túi, mỗi túi 6 quả, nên cần nhân.",
+    "worked_example_ref": "0f630000-0000-4000-8000-0000000000d1"
+  },
+  "hints_used": 1,
+  "correct_response": null
+}

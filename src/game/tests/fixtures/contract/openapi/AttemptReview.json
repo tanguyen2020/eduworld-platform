@@ -1,0 +1,185 @@
+{
+  "attempt_id": "0f630000-0000-7000-8000-000000000001",
+  "score": 7,
+  "max_score": 8,
+  "items": [
+    {
+      "position": 1,
+      "question": {
+        "position": 1,
+        "question_version_id": "0f630000-0000-4000-8000-000000000101",
+        "type": "single_choice",
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Bạn Nam có 3 túi, mỗi túi 6 quả cam. Nam có tất cả bao nhiêu quả cam?"
+              }
+            ],
+            "audio_ref": "0f630000-0000-4000-8000-0000000000c1"
+          },
+          "options": [
+            {
+              "id": "o_a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "9 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "18 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_d",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3 + 6 quả"
+                  }
+                ]
+              }
+            }
+          ],
+          "shuffle_options": true
+        }
+      },
+      "response": {
+        "option_id": "o_a"
+      },
+      "feedback": {
+        "option_id": "o_a",
+        "text": "Em đã cộng 3 + 6. Đề hỏi 3 túi, mỗi túi 6 quả, nên cần nhân.",
+        "worked_example_ref": "0f630000-0000-4000-8000-0000000000d1"
+      },
+      "hints_used": 1,
+      "is_correct": false,
+      "score": 0,
+      "explanation": {
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Có 3 túi, mỗi túi 6 quả nên lấy 6 × 3 = 18."
+          }
+        ]
+      },
+      "objective_ids": [
+        "0f630000-0000-4000-8000-0000000000e1"
+      ]
+    },
+    {
+      "position": 2,
+      "question": {
+        "position": 2,
+        "question_version_id": "0f630000-0000-4000-8000-000000000102",
+        "type": "multiple_choice",
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Chọn các số chia hết cho 3."
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "o_a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "9"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "10"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_d",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "14"
+                  }
+                ]
+              }
+            }
+          ],
+          "shuffle_options": true,
+          "show_correct_count": false
+        }
+      },
+      "response": {
+        "option_ids": [
+          "o_a",
+          "o_c"
+        ]
+      },
+      "hints_used": 0,
+      "is_correct": true,
+      "score": 1,
+      "explanation": null,
+      "objective_ids": [
+        "0f630000-0000-4000-8000-0000000000e2"
+      ]
+    }
+  ],
+  "weak_objectives": [
+    "0f630000-0000-4000-8000-0000000000e1"
+  ],
+  "recommendations": [
+    {
+      "kind": "question_set",
+      "ref_id": "0f630000-0000-4000-8000-0000000000f1",
+      "recommendation_id": "0f630000-0000-4000-8000-0000000000f2",
+      "title": "Luyện 3 câu nhân 7"
+    }
+  ]
+}

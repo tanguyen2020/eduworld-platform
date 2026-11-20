@@ -41,6 +41,22 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/TelemetryBatch",
       "sha256": "ae571d131fe2f63c1ed8cc58c0240a6b618f8001d643a2dbf9f524c600e1792f"
     },
+    "openapi/Attempt.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Attempt",
+      "sha256": "76fd9eeb9ec66ee1d789591dff31ce62ccb5439ba7c4396af9956c33ffccb5d8"
+    },
+    "openapi/ActivityResponseResult.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ActivityResponseResult",
+      "sha256": "fc3413a3b3220eac29ceabf42a034f82ab66af4bc5ee17b862a4fd87787c2031"
+    },
+    "openapi/HintResult.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/HintResult",
+      "sha256": "74ed70a97db17089743c46463e9a7f7beb578c233c0b1a4bbc437ed6294b22b4"
+    },
+    "openapi/AttemptReview.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/AttemptReview",
+      "sha256": "6cc17d7705bbb6d0f3658898fd43d22a1428150615d0b2847bef7a39fc9dc184"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"

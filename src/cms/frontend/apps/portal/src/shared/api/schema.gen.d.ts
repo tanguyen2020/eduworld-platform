@@ -8350,6 +8350,23 @@ export interface components {
             translation_missing?: boolean;
             version?: number;
         };
+        /**
+         * @example {
+         *       "accepted": true,
+         *       "position": 1,
+         *       "is_correct": false,
+         *       "score": 0,
+         *       "explanation": "Có 3 túi, mỗi túi 6 quả nên lấy 6 × 3 = 18.",
+         *       "explanation_math_assets": [],
+         *       "feedback": {
+         *         "option_id": "o_a",
+         *         "text": "Em đã cộng 3 + 6. Đề hỏi 3 túi, mỗi túi 6 quả, nên cần nhân.",
+         *         "worked_example_ref": "0f630000-0000-4000-8000-0000000000d1"
+         *       },
+         *       "hints_used": 1,
+         *       "correct_response": null
+         *     }
+         */
         ActivityResponseResult: {
             accepted: boolean;
             /** @description Chỉ trả khi FeedbackTiming = immediate và chính sách practice cho phép hiện đáp án sau khi trả lời */
@@ -8673,7 +8690,560 @@ export interface components {
             targets?: components["schemas"]["AssignmentTarget"][];
             title?: string;
         };
-        /** @description Entity Attempt duy nhất cho mọi activity_type và mode (ADR-0048, ADR-0059). Server-authoritative: không chứa đáp án (ADR-0016). */
+        /**
+         * @description Entity Attempt duy nhất cho mọi activity_type và mode (ADR-0048, ADR-0059). Server-authoritative: không chứa đáp án (ADR-0016).
+         * @example {
+         *       "attempt_id": "0f630000-0000-7000-8000-000000000001",
+         *       "activity_id": "0f630000-0000-4000-8000-0000000000a1",
+         *       "activity_version_id": "0f630000-0000-4000-8000-0000000000a2",
+         *       "activity_type": "quiz",
+         *       "mode": "practice",
+         *       "status": "in_progress",
+         *       "context_type": "free_play",
+         *       "started_at": "2026-11-20T02:00:00Z",
+         *       "server_time": "2026-11-20T02:05:00Z",
+         *       "feedback_timing": "immediate",
+         *       "result_release": "immediate",
+         *       "display_language": "vi-VN",
+         *       "items": [
+         *         {
+         *           "position": 1,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000101",
+         *           "type": "single_choice",
+         *           "max_score": 1,
+         *           "hint_count": 2,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Bạn Nam có 3 túi, mỗi túi 6 quả cam. Nam có tất cả bao nhiêu quả cam?"
+         *                 }
+         *               ],
+         *               "audio_ref": "0f630000-0000-4000-8000-0000000000c1"
+         *             },
+         *             "options": [
+         *               {
+         *                 "id": "o_a",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "9 quả"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_b",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "18 quả"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_c",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "12 quả"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_d",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "3 + 6 quả"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "shuffle_options": true
+         *           },
+         *           "media": [
+         *             {
+         *               "asset_id": "0f630000-0000-4000-8000-0000000000c1",
+         *               "url": "https://cdn.example.invalid/media/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1/stem-q1.ogg",
+         *               "kind": "audio"
+         *             }
+         *           ]
+         *         },
+         *         {
+         *           "position": 2,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000102",
+         *           "type": "multiple_choice",
+         *           "max_score": 1,
+         *           "hint_count": 1,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Chọn các số chia hết cho 3."
+         *                 }
+         *               ]
+         *             },
+         *             "options": [
+         *               {
+         *                 "id": "o_a",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "9"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_b",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "10"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_c",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "12"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "o_d",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "14"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "shuffle_options": true,
+         *             "show_correct_count": false
+         *           }
+         *         },
+         *         {
+         *           "position": 3,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000103",
+         *           "type": "true_false",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "6 × 7 = 42. Đúng hay sai?"
+         *                 }
+         *               ]
+         *             },
+         *             "labels": {
+         *               "true": "Đúng",
+         *               "false": "Sai"
+         *             }
+         *           }
+         *         },
+         *         {
+         *           "position": 4,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000104",
+         *           "type": "fill_in_blank",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Điền số thích hợp: 6 × ___ = 24"
+         *                 }
+         *               ]
+         *             },
+         *             "blanks": [
+         *               {
+         *                 "id": "b_1",
+         *                 "input": "numeric",
+         *                 "max_length": 3
+         *               }
+         *             ]
+         *           }
+         *         },
+         *         {
+         *           "position": 5,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000105",
+         *           "type": "short_answer",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Muốn tính tổng của 3 nhóm, mỗi nhóm 6 quả, em dùng phép tính gì?"
+         *                 }
+         *               ]
+         *             },
+         *             "max_length": 40,
+         *             "keyboard": "text"
+         *           }
+         *         },
+         *         {
+         *           "position": 6,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000106",
+         *           "type": "numeric",
+         *           "max_score": 1,
+         *           "hint_count": 1,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Tính"
+         *                 },
+         *                 {
+         *                   "type": "math",
+         *                   "math_ref": "math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+         *                   "speech_text": "ba phần tư"
+         *                 },
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "của 8 quả cam."
+         *                 }
+         *               ]
+         *             },
+         *             "keyboard": "numeric",
+         *             "unit_label": "quả",
+         *             "allow_fraction_input": false,
+         *             "decimal_separator": ","
+         *           }
+         *         },
+         *         {
+         *           "position": 7,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000107",
+         *           "type": "matching",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Nối phép nhân với kết quả đúng."
+         *                 }
+         *               ]
+         *             },
+         *             "left": [
+         *               {
+         *                 "id": "l_1",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "2 × 6"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "l_2",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "3 × 6"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "l_3",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "4 × 6"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "right": [
+         *               {
+         *                 "id": "r_1",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "18"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "r_2",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "12"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "r_3",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "24"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "shuffle": true
+         *           }
+         *         },
+         *         {
+         *           "position": 8,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000108",
+         *           "type": "ordering",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Sắp xếp các số theo thứ tự từ bé đến lớn."
+         *                 }
+         *               ]
+         *             },
+         *             "items": [
+         *               {
+         *                 "id": "i_1",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "18"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "i_2",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "6"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "i_3",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "24"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "i_4",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "12"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "shuffle": true
+         *           }
+         *         },
+         *         {
+         *           "position": 9,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000109",
+         *           "type": "drag_drop",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Kéo mỗi số vào đúng nhóm."
+         *                 }
+         *               ]
+         *             },
+         *             "background_media_ref": null,
+         *             "draggables": [
+         *               {
+         *                 "id": "d_1",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "12"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "d_2",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "15"
+         *                     }
+         *                   ]
+         *                 }
+         *               },
+         *               {
+         *                 "id": "d_3",
+         *                 "content": {
+         *                   "blocks": [
+         *                     {
+         *                       "type": "paragraph",
+         *                       "text": "18"
+         *                     }
+         *                   ]
+         *                 }
+         *               }
+         *             ],
+         *             "zones": [
+         *               {
+         *                 "id": "z_1",
+         *                 "label": "Chia hết cho 6",
+         *                 "capacity": null
+         *               },
+         *               {
+         *                 "id": "z_2",
+         *                 "label": "Không chia hết cho 6",
+         *                 "capacity": null
+         *               }
+         *             ],
+         *             "reusable_draggables": false
+         *           }
+         *         },
+         *         {
+         *           "position": 10,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000110",
+         *           "type": "image_based",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Chạm vào túi cam có nhiều quả nhất."
+         *                 }
+         *               ]
+         *             },
+         *             "interaction": "hotspot",
+         *             "image_media_ref": "0f630000-0000-4000-8000-0000000000c2",
+         *             "image_size": {
+         *               "w": 800,
+         *               "h": 450
+         *             },
+         *             "max_selections": 1
+         *           },
+         *           "media": [
+         *             {
+         *               "asset_id": "0f630000-0000-4000-8000-0000000000c2",
+         *               "url": "https://cdn.example.invalid/media/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1/bags.png",
+         *               "kind": "image"
+         *             }
+         *           ]
+         *         },
+         *         {
+         *           "position": 11,
+         *           "question_version_id": "0f630000-0000-4000-8000-000000000111",
+         *           "type": "interactive",
+         *           "max_score": 1,
+         *           "hint_count": 0,
+         *           "render_payload": {
+         *             "stem": {
+         *               "blocks": [
+         *                 {
+         *                   "type": "paragraph",
+         *                   "text": "Đặt điểm 18 trên tia số."
+         *                 }
+         *               ]
+         *             },
+         *             "widget": "number_line",
+         *             "widget_version": "1.0",
+         *             "config": {
+         *               "min": 0,
+         *               "max": 30,
+         *               "step": 6
+         *             }
+         *           }
+         *         }
+         *       ],
+         *       "saved_responses": [
+         *         {
+         *           "position": 1,
+         *           "response": {
+         *             "option_id": "o_b"
+         *           },
+         *           "hints_revealed": 1
+         *         }
+         *       ],
+         *       "render": {
+         *         "activity_id": "0f630000-0000-4000-8000-0000000000a1",
+         *         "activity_version_id": "0f630000-0000-4000-8000-0000000000a2",
+         *         "version": 3,
+         *         "activity_type": "quiz",
+         *         "title": "Phép nhân trong bảng 6",
+         *         "instructions": "Trả lời từng câu rồi bấm Kiểm tra.",
+         *         "render_payload": {},
+         *         "math_assets": [
+         *           {
+         *             "math_id": "m_three_quarters",
+         *             "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+         *             "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+         *             "speech_text": "ba phần tư",
+         *             "display": "inline"
+         *           }
+         *         ],
+         *         "min_client_version": "0.0.0",
+         *         "content_language": "vi",
+         *         "display_language": "vi-VN",
+         *         "translation_missing": false
+         *       }
+         *     }
+         */
         Attempt: {
             /** @description Vắng mặt với attempt ad-hoc (question_set/selection/retry_wrong) */
             activity_id?: components["schemas"]["Uuid"];
@@ -8723,6 +9293,193 @@ export interface components {
             score?: number | null;
             status: components["schemas"]["AttemptStatus"];
         };
+        /**
+         * @example {
+         *       "attempt_id": "0f630000-0000-7000-8000-000000000001",
+         *       "score": 7,
+         *       "max_score": 8,
+         *       "items": [
+         *         {
+         *           "position": 1,
+         *           "question": {
+         *             "position": 1,
+         *             "question_version_id": "0f630000-0000-4000-8000-000000000101",
+         *             "type": "single_choice",
+         *             "render_payload": {
+         *               "stem": {
+         *                 "blocks": [
+         *                   {
+         *                     "type": "paragraph",
+         *                     "text": "Bạn Nam có 3 túi, mỗi túi 6 quả cam. Nam có tất cả bao nhiêu quả cam?"
+         *                   }
+         *                 ],
+         *                 "audio_ref": "0f630000-0000-4000-8000-0000000000c1"
+         *               },
+         *               "options": [
+         *                 {
+         *                   "id": "o_a",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "9 quả"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_b",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "18 quả"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_c",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "12 quả"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_d",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "3 + 6 quả"
+         *                       }
+         *                     ]
+         *                   }
+         *                 }
+         *               ],
+         *               "shuffle_options": true
+         *             }
+         *           },
+         *           "response": {
+         *             "option_id": "o_a"
+         *           },
+         *           "feedback": {
+         *             "option_id": "o_a",
+         *             "text": "Em đã cộng 3 + 6. Đề hỏi 3 túi, mỗi túi 6 quả, nên cần nhân.",
+         *             "worked_example_ref": "0f630000-0000-4000-8000-0000000000d1"
+         *           },
+         *           "hints_used": 1,
+         *           "is_correct": false,
+         *           "score": 0,
+         *           "explanation": {
+         *             "blocks": [
+         *               {
+         *                 "type": "paragraph",
+         *                 "text": "Có 3 túi, mỗi túi 6 quả nên lấy 6 × 3 = 18."
+         *               }
+         *             ]
+         *           },
+         *           "objective_ids": [
+         *             "0f630000-0000-4000-8000-0000000000e1"
+         *           ]
+         *         },
+         *         {
+         *           "position": 2,
+         *           "question": {
+         *             "position": 2,
+         *             "question_version_id": "0f630000-0000-4000-8000-000000000102",
+         *             "type": "multiple_choice",
+         *             "render_payload": {
+         *               "stem": {
+         *                 "blocks": [
+         *                   {
+         *                     "type": "paragraph",
+         *                     "text": "Chọn các số chia hết cho 3."
+         *                   }
+         *                 ]
+         *               },
+         *               "options": [
+         *                 {
+         *                   "id": "o_a",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "9"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_b",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "10"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_c",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "12"
+         *                       }
+         *                     ]
+         *                   }
+         *                 },
+         *                 {
+         *                   "id": "o_d",
+         *                   "content": {
+         *                     "blocks": [
+         *                       {
+         *                         "type": "paragraph",
+         *                         "text": "14"
+         *                       }
+         *                     ]
+         *                   }
+         *                 }
+         *               ],
+         *               "shuffle_options": true,
+         *               "show_correct_count": false
+         *             }
+         *           },
+         *           "response": {
+         *             "option_ids": [
+         *               "o_a",
+         *               "o_c"
+         *             ]
+         *           },
+         *           "hints_used": 0,
+         *           "is_correct": true,
+         *           "score": 1,
+         *           "explanation": null,
+         *           "objective_ids": [
+         *             "0f630000-0000-4000-8000-0000000000e2"
+         *           ]
+         *         }
+         *       ],
+         *       "weak_objectives": [
+         *         "0f630000-0000-4000-8000-0000000000e1"
+         *       ],
+         *       "recommendations": [
+         *         {
+         *           "kind": "question_set",
+         *           "ref_id": "0f630000-0000-4000-8000-0000000000f1",
+         *           "recommendation_id": "0f630000-0000-4000-8000-0000000000f2",
+         *           "title": "Luyện 3 câu nhân 7"
+         *         }
+         *       ]
+         *     }
+         */
         AttemptReview: {
             attempt_id: components["schemas"]["Uuid"];
             items: {
@@ -8743,6 +9500,8 @@ export interface components {
             recommendations?: {
                 /** @enum {string} */
                 kind?: "lesson" | "question_set" | "quest";
+                /** @description Gợi ý ôn tập (GET /learning/recommendations/me) — client gửi lại trong AdHocAttemptStart.recommendation_id khi học sinh bấm luyện tập (F063-AC-24) */
+                recommendation_id?: components["schemas"]["Uuid"];
                 ref_id?: components["schemas"]["Uuid"];
                 title?: string;
             }[];
@@ -9316,6 +10075,17 @@ export interface components {
         ContentLanguage: "vi" | "en";
         /** @description Manifest nội dung theo tenant (ADR-0043). Snapshot bất biến theo (item_id, version); client cache theo khóa có version */
         ContentManifest: {
+            /**
+             * @description Phiên bản client tối thiểu theo `activity_type` (FR-EXR-015, ACTIVITY_ENGINE §12) — client chặn mở hoạt động trước khi start (F063-AC-25)
+             * @example {
+             *       "quiz": "0.0.0",
+             *       "interactive_exercise": "0.0.0",
+             *       "simulation": "1.4.0"
+             *     }
+             */
+            activity_min_client_versions?: {
+                [key: string]: string;
+            };
             areas?: {
                 area_id: string;
                 bundle_id: string;
@@ -10445,7 +11215,26 @@ export interface components {
         /** @enum {string} */
         GradeBand: "g1_3" | "g4_5" | "g6_7" | "g8_9";
         GradeLevel: number;
-        /** @description Gợi ý cấp tiếp theo (ACTIVITY_ENGINE §8.3) — `{level, total_levels, hint}` */
+        /**
+         * @description Gợi ý cấp tiếp theo (ACTIVITY_ENGINE §8.3) — `{level, total_levels, hint}`
+         * @example {
+         *       "position": 1,
+         *       "level": 1,
+         *       "total_levels": 2,
+         *       "hint": {
+         *         "text": "Mỗi túi có 6 quả. Có 3 túi như vậy — em thử nhân xem.",
+         *         "math_assets": [
+         *           {
+         *             "math_id": "m_three_quarters",
+         *             "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+         *             "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+         *             "speech_text": "ba phần tư",
+         *             "display": "inline"
+         *           }
+         *         ]
+         *       }
+         *     }
+         */
         HintResult: {
             hint: {
                 math_assets?: components["schemas"]["MathAssetRef"][];
@@ -12105,6 +12894,8 @@ export interface components {
         };
         /** @description Render payload — KHÔNG chứa đáp án, scoring rule hay giải thích (ADR-0016) */
         QuestionRender: {
+            /** @description Số cấp gợi ý của item (`hints[]` của version đã ghim) — không lộ nội dung gợi ý; client hiện nút Gợi ý khi > 0 (GODOT_ARCHITECTURE §6.2, F063) */
+            hint_count?: number;
             max_score?: number;
             media?: {
                 asset_id?: components["schemas"]["Uuid"];
