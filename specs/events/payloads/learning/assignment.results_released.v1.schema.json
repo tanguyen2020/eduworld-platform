@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.results_released.v1.schema.json",
+  "title": "Payload assignment.results_released v1 (module learning, owner F041)",
+  "description": "Kết quả bài giao được công bố (SCHOOL_LMS §4.5): tự động khi bài `after_close` đóng, hoặc `school_admin`/`academic_manager` bấm công bố (`manual`, có `released_by`). Envelope subject = {type: assignment, id: assignment_id}. Chỉ ID (R14). Consumer: NTF, RT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "released_at",
+    "trigger"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "released_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "after_close",
+        "manual"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000401",
+      "school_id": "0193a1f0-0000-7000-8000-000000000402",
+      "released_at": "2026-11-27T10:00:00Z",
+      "released_by": "0193a1f0-0000-7000-8000-000000000403",
+      "trigger": "manual"
+    }
+  ]
+}

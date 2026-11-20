@@ -2,6 +2,10 @@
   "assignment_id": "00000000-0000-4000-8000-000000000001",
   "title": "sample",
   "subject_id": "00000000-0000-4000-8000-000000000001",
+  "subject_name": {
+    "vi": "sample",
+    "en": "sample"
+  },
   "content_kind": "activity",
   "content_ref": "00000000-0000-4000-8000-000000000001",
   "open_at": "2026-11-15T07:30:00Z",

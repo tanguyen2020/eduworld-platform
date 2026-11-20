@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.closed.v1.schema.json",
+  "title": "Payload assignment.closed v1 (module learning, owner F041)",
+  "description": "Worker assignment-scheduler đóng bài khi qua `due_at` + cửa sổ nộp muộn (SCHOOL_LMS §4, §12): học sinh chưa nộp và không được miễn bị đánh `missed`. Envelope subject = {type: assignment, id: assignment_id}. Consumer: NTF, LMS read model, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "closed_at",
+    "missed_count",
+    "status"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "missed_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "closed",
+        "results_released",
+        "archived"
+      ],
+      "description": "Trạng thái sau khi đóng theo result_release"
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000421",
+      "school_id": "0193a1f0-0000-7000-8000-000000000422",
+      "closed_at": "2026-11-27T17:00:00Z",
+      "missed_count": 2,
+      "status": "results_released"
+    }
+  ]
+}

@@ -106,6 +106,9 @@ type Handlers struct {
 	Mastery          MasteryQueries      // F032 US7
 	LMSCommands      LMSCommands         // F040
 	LMS              LMSQueries          // F040
+	// F041: school assignments.
+	AssignmentCommands SchoolAssignmentCommands
+	Assignments        SchoolAssignmentQueries
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -216,6 +219,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	lmsWired := h.LMSCommands != nil && h.LMS != nil
 	for id, fn := range lmsRoutes {
 		routes[id] = wiredOr(lmsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	assignmentsWired := h.AssignmentCommands != nil && h.Assignments != nil
+	for id, fn := range schoolAssignmentRoutes {
+		routes[id] = wiredOr(assignmentsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

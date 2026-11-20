@@ -22,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
@@ -64,6 +65,8 @@ const (
 	RegradeRunnerInterval = 30 * time.Second
 	// RecommendationNightlyInterval: F032 T051 recomputes the recommendations once a day (decay R4, warm-up R7).
 	RecommendationNightlyInterval = 24 * time.Hour
+	// AssignmentSchedulerInterval: F041 T028 opens and closes the school assignments every minute.
+	AssignmentSchedulerInterval = time.Minute
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -150,6 +153,12 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.LMSCoursesName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LMSCoursesOptions(consumer.LMSCourses{Courses: w.lms}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.AssignmentSubmissionsName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.AssignmentSubmissionsOptions(consumer.AssignmentSubmissions{Tracker: w.assignments}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.AssignmentEnrollmentName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.AssignmentEnrollmentOptions(consumer.AssignmentEnrollment{Tracker: w.assignments}, core.UoW, core.App, js)
+	})
 	r.Consumer(messaging.LMSScheduleName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LMSScheduleOptions(consumer.LMSSchedule{Schedule: w.lms}, core.UoW, core.App, js)
 	})
@@ -172,6 +181,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, "regrade-runner", RegradeRunnerInterval, w.regrades.RunOnce)
 	r.Job(Name, "learning-events-partitions", LearningPartitionsInterval, job.LearningEventsPartitions{Runner: parts}.RunOnce)
 	r.Job(Name, "recommendation-nightly", RecommendationNightlyInterval, job.RecommendationNightly{Runner: w.recommendations}.RunOnce)
+	r.Job(Name, "assignment-scheduler", AssignmentSchedulerInterval, job.AssignmentScheduler{Runner: w.assignments}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -193,7 +203,8 @@ type wiring struct {
 	// F032: the rule engine of the recommendations (R1/R5/R6 are registered here by F041/F042/F040).
 	recommendations command.Recommendations
 	// F040: the school LMS (courses, paths, schedule, study groups).
-	lms command.LMS
+	lms         command.LMS
+	assignments command.Assignments
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -242,6 +253,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterLessons(reg)
 	observability.RegisterSelfStudy(reg)
 	observability.RegisterLMS(reg)
+	observability.RegisterAssignments(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -310,10 +322,17 @@ func build(r *module.Registry) (*wiring, error) {
 		Metrics: observability.SelfStudyCounter{}, Sources: []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}}
 	// F040: R6 (next lesson of the LMS schedule) registers into the engine of F032.
 	recs.Engine.Register(recommendation.R6{})
+	// F041: school assignments (ExamSessionCreator "unavailable" until F042), R1 and the gate of the assignment attempts.
+	asg := command.Assignments{UoW: core.UoW, Store: write.SchoolAssignmentRepo{}, Read: core.ReadSession, Exams: examsession.Unavailable{},
+		Events: events, Audit: auditor, Metrics: observability.SchoolAssignmentCounter{}}
+	att.Gate = asg
+	recs.Sources = append(recs.Sources, command.AssignmentsDue{Store: write.SchoolAssignmentRepo{}})
+	recs.Engine.Register(recommendation.R1{})
+	asgq := query.SchoolAssignments{Session: core.ReadSession, Model: read.SchoolAssignmentModel{}, Cursors: cursors}
 	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
 		Metrics: observability.LMSCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
-		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer}
+		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq}
 
 	h := learninghttp.Handlers{Commands: cur,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},
@@ -332,6 +351,7 @@ func build(r *module.Registry) (*wiring, error) {
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
 	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}}
 	h.LMSCommands = lmsCmd
+	h.AssignmentCommands, h.Assignments = asg, asgq
 	h.LMS = query.LMS{Session: core.ReadSession, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: cursors}
 	h.SelfStudy = query.SelfStudy{Session: core.ReadSession, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: cursors}
 	learningRecord := write.MasteryRepo{}
@@ -357,5 +377,5 @@ func build(r *module.Registry) (*wiring, error) {
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd}, nil
+		lms: lmsCmd, assignments: asg}, nil
 }

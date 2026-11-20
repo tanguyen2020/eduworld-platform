@@ -42,3 +42,20 @@ make test-contract
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail package `assignment`, trace_id kịch bản 5, 9, 12; bản ghi audit kịch bản 5, 11, 12, 14.
+
+## 5. Bằng chứng (2026-11-20, local, Kiri)
+
+Kịch bản chạy bằng integration test (đồng hồ giả, PostgreSQL + NATS testcontainers) thay cho stack chạy tay:
+
+| Kịch bản | Test |
+|---|---|
+| 1, 2, 4, 6 | `TestAssignmentCreate` (+ unit `TestAssignmentContentActivityType` cho `written_response`) |
+| 3, 14 | `TestAssignmentScope` |
+| 5, 7 | `TestAssignmentPublishUpdateCancel` |
+| 8, 9 | `TestAssignmentStudentFlow`, `TestAssignmentVersionPinning`, `TestAssignmentQuestionSet`, `TestAssignmentReEvaluated` |
+| 10 | `TestAssignmentEnrollmentChanges` |
+| 11, 13 | `TestAssignmentStudentExceptions` |
+| 12 | `TestAssignmentCloseAndRelease` |
+| 15 | `TestAssignmentGameCatalog` (projection nạp trực tiếp — event F078 chưa có, F041-2), unit `TestR1AssignmentDue` |
+
+Lệnh: `go test -tags integration -run TestAssignment ./modules/learning/tests/integration/` → 11 PASS; toàn bộ integration module learning PASS; gate tĩnh (gofmt, vet, golangci + arch, tenancyguard, ewlint, entlint, archgen, routematrix, allowedcallers, facadegen, specs, fixture Godot, RTM) 0 lỗi.

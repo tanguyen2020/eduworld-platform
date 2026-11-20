@@ -334,3 +334,32 @@ func (R6) Evaluate(s Snapshot) []Candidate {
 	}
 	return out
 }
+
+// R1Window is how close the personal due date of an assignment makes R1 recommend it (48 hours, LEARNING_ANALYTICS §6).
+const R1Window = 48 * time.Hour
+
+// R1 — an open school assignment not submitted whose personal due date is less than 48 hours ahead: finish it first
+// (priority 1, LEARNING_ANALYTICS §6; registered by F041). One recommendation per assignment.
+type R1 struct{}
+
+// Code implements Rule.
+func (R1) Code() string { return "R1" }
+
+// Evaluate implements Rule.
+func (R1) Evaluate(s Snapshot) []Candidate {
+	var out []Candidate
+	for _, a := range s.Assignments {
+		left := a.DueAt.Sub(s.Now)
+		if left <= 0 || left > R1Window {
+			continue
+		}
+		sub := a.SubjectID
+		los := a.ObjectiveIDs
+		if len(los) > MaxObjectives {
+			los = los[:MaxObjectives]
+		}
+		out = append(out, Candidate{RuleCode: "R1", Kind: KindAssignment, TargetType: "assignment", TargetID: a.ID, SubjectID: &sub,
+			ObjectiveIDs: los, Reason: "assignment_soon", ReasonCode: "rec.assignment_soon", Params: map[string]string{"title": a.Title}, Priority: 1})
+	}
+	return out
+}

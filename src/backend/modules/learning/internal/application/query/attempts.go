@@ -36,6 +36,13 @@ type Attempts struct {
 	Media    read.MediaReadModel
 	Progress read.MediaProgressReadModel
 	Signer   port.URLSigner
+	// Assignments tells whether the results of a school assignment are released (F041-AC-19); nil = no assignment.
+	Assignments AssignmentResults
+}
+
+// AssignmentResults tells whether the results of a school assignment are visible to its students (SchoolAssignments).
+type AssignmentResults interface {
+	ResultsVisible(ctx context.Context, assignmentID uuid.UUID) (bool, error)
 }
 
 func (q Attempts) now() time.Time {
@@ -184,6 +191,19 @@ func (q Attempts) Get(ctx context.Context, id uuid.UUID) (out dto.AttemptView, l
 		r := attemptview.Render(*l.src, q.Registry, l.a.DisplayLanguage)
 		render = &r
 	}
+	if l.ev != nil && l.a.ContextType == "assignment" && q.Assignments != nil {
+		visible := false
+		if err := q.Session.Read(ctx, func(ctx context.Context) error {
+			var err error
+			visible, err = q.Assignments.ResultsVisible(ctx, l.a.ContextID)
+			return err
+		}); err != nil {
+			return out, "", err
+		}
+		if !visible {
+			l.ev = nil // F041-AC-19: no result before the assignment releases it
+		}
+	}
 	v := attemptview.Attempt(l.a, attemptview.Items(l.a.Items, rendered), saved, render, l.ev, q.now())
 	if l.video != nil {
 		v = attemptview.WithTimeline(v, *l.video, l.assets, q.Signer, l.progress, q.now())
@@ -227,6 +247,15 @@ func (q Attempts) ListMine(ctx context.Context, in ListMineInput) (out Page[dto.
 		for _, a := range as {
 			s := dto.AttemptSummaryView{AttemptID: a.ID, ActivityID: a.ActivityID, ActivityType: a.ActivityType, Mode: string(a.Mode),
 				Status: string(a.Status), StartedAt: a.StartedAt, SubmittedAt: a.SubmittedAt, Score: a.Score, MaxScore: a.MaxScore}
+			if a.ContextType == "assignment" && q.Assignments != nil {
+				visible, err := q.Assignments.ResultsVisible(ctx, a.ContextID)
+				if err != nil {
+					return err
+				}
+				if !visible {
+					s.Score, s.MaxScore = nil, nil // F041-AC-19
+				}
+			}
 			if a.ActivityID != nil {
 				if _, v, err := q.Model.ActivityVersion(ctx, *a.ActivityID, a.SourceVersionID); err == nil {
 					t, _ := i18ntext.Resolve(v.Title, a.DisplayLanguage, v.ContentLanguage)
@@ -264,12 +293,26 @@ func (q Attempts) Review(ctx context.Context, id uuid.UUID) (out dto.ReviewView,
 	if err != nil {
 		return out, "", err
 	}
+	released := false
+	if l.a.ContextType == "assignment" && q.Assignments != nil && l.a.Status == attempt.StatusGraded {
+		if err := q.Session.Read(ctx, func(ctx context.Context) error {
+			var err error
+			released, err = q.Assignments.ResultsVisible(ctx, l.a.ContextID)
+			return err
+		}); err != nil {
+			return out, "", err
+		}
+		if !released {
+			// F041-AC-19: before the release only the submitted state, no score, answer nor explanation.
+			return dto.ReviewView{AttemptID: l.a.ID, Items: []dto.ReviewItemView{}, WeakObjectives: []uuid.UUID{}}, l.a.DisplayLanguage, nil
+		}
+	}
 	switch {
 	case l.a.Status == attempt.StatusAbandoned:
 		return out, "", problem.New(problem.AttemptExpired, "")
 	case l.a.Status != attempt.StatusGraded:
 		return out, "", problem.New(problem.Conflict, "the attempt is not graded yet")
-	case l.a.Feedback == attempt.FeedbackNever || l.a.Feedback == attempt.FeedbackAfterClose:
+	case l.a.Feedback == attempt.FeedbackNever || (l.a.Feedback == attempt.FeedbackAfterClose && !released):
 		return out, "", problem.New(problem.PermissionDenied, "the review of this attempt is not released")
 	}
 	rendered, err := q.rendered(ctx, l.a)

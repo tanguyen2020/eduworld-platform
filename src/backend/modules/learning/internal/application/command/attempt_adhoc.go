@@ -61,6 +61,8 @@ var adHocKinds = map[attempt.Mode][]string{
 	attempt.ModePractice:   {activity.SourceQuestionSet, activity.SourceSelection},
 	attempt.ModeRetryWrong: {kindRetryWrong},
 	attempt.ModeDiagnostic: {kindDiagnostic},
+	// F041 (OQ F062-2): a school assignment on a question set.
+	attempt.ModeAssignment: {activity.SourceQuestionSet},
 }
 
 // quizTypes are the question types of a quiz: an ad-hoc attempt made of them only is a quiz, otherwise an
@@ -80,10 +82,13 @@ func adHocType(items []attempt.Item) string {
 func (h Attempts) validateAdHoc(in StartAdHocInput) error {
 	mode := attempt.Mode(in.Mode)
 	kinds, ok := adHocKinds[mode]
-	if !ok || (mode != attempt.ModePractice && h.Self == nil) {
+	if !ok || ((mode == attempt.ModeRetryWrong || mode == attempt.ModeDiagnostic) && h.Self == nil) || (mode == attempt.ModeAssignment && h.Gate == nil) {
 		return problem.Invalid("/mode", problem.SubInvalid, "this mode is not available for an ad-hoc attempt in this release")
 	}
-	if in.ContextType != "" && in.ContextType != "free_play" {
+	switch {
+	case mode == attempt.ModeAssignment && (in.ContextType != "assignment" || in.ContextID == nil):
+		return problem.Invalid("/context_id", problem.SubRequired, "an assignment attempt needs context_type assignment and its context_id")
+	case mode != attempt.ModeAssignment && in.ContextType != "" && in.ContextType != "free_play":
 		return problem.Invalid("/context_type", problem.SubInvalid, "this context is not available in this release")
 	}
 	src := in.Source
@@ -171,6 +176,9 @@ func (h Attempts) StartAdHoc(ctx context.Context, in StartAdHocInput) (out dto.A
 		return out, err
 	}
 	mode, src := attempt.Mode(in.Mode), in.Source
+	if mode == attempt.ModeAssignment {
+		return h.startAssignmentSet(ctx, p, in)
+	}
 	key := idemKey(ctx)
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		if prev, err := h.Store.AttemptByKey(ctx, p.UserID, key); err != nil || prev != nil {
@@ -193,7 +201,7 @@ func (h Attempts) StartAdHoc(ctx context.Context, in StartAdHocInput) (out dto.A
 		var setItems []uuid.UUID
 		var open *attempt.Attempt
 		if src.Kind == activity.SourceQuestionSet {
-			if sourceVersion, setItems, err = h.questionSetItems(ctx, *src.QuestionSetID, seed); err != nil {
+			if sourceVersion, setItems, err = h.questionSetItems(ctx, *src.QuestionSetID, nil, seed); err != nil {
 				return err
 			}
 			sourceKind = "question_set"

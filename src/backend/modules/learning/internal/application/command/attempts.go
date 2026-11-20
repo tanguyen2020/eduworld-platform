@@ -69,6 +69,8 @@ type Attempts struct {
 	Lessons LessonPinner
 	// Self are the self-study stores of F032 (review list, recommendations, rapid_guess); nil = F030 behaviour.
 	Self *SelfStudy
+	// Gate admits the attempts of a school assignment (F041 mode assignment); nil = the mode is refused.
+	Gate AssignmentGate
 	// Rate counts answer_rate (T053); nil = not limited. AnswerRate zero = DefaultAnswerRate.
 	Rate       RateLimiter
 	AnswerRate AnswerRate
@@ -278,7 +280,7 @@ func (h Attempts) sourceQuestions(ctx context.Context, src activity.QuestionSour
 		if src.QuestionSetID == nil {
 			return nil, problem.New(problem.ActivityConfigInvalid, "question_set_id is missing")
 		}
-		_, ids, err := h.questionSetItems(ctx, *src.QuestionSetID, seed)
+		_, ids, err := h.questionSetItems(ctx, *src.QuestionSetID, nil, seed)
 		return ids, err
 	case activity.SourceSelection:
 		if src.Selection == nil {
@@ -321,10 +323,13 @@ func (h Attempts) selectQuestions(ctx context.Context, f selection.Filters, coun
 // of the release, then the questions drawn by each selection rule of the release with selection.Select and the seed of
 // the attempt (rule_based and mixed sets, OQ F030 owner 2026-11-20); every version is pinned by the attempt (R31) and a
 // rule the pool cannot satisfy is 422 QUESTION_POOL_INSUFFICIENT (the pool of the F024 pool stats).
-func (h Attempts) questionSetItems(ctx context.Context, setID uuid.UUID, seed int64) (uuid.UUID, []uuid.UUID, error) {
+func (h Attempts) questionSetItems(ctx context.Context, setID uuid.UUID, versionID *uuid.UUID, seed int64) (uuid.UUID, []uuid.UUID, error) {
 	d, err := h.Docs.Doc(ctx, contentmodel.TypeQuestionSet, setID)
 	if err != nil {
 		return uuid.Nil, nil, err
+	}
+	if versionID != nil {
+		d.CurrentVersionID = versionID // the version pinned by a school assignment (R31)
 	}
 	if d.CurrentVersionID == nil {
 		return uuid.Nil, nil, problem.New(problem.ContentNotPublished, "the question set is not published")
@@ -443,8 +448,12 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 		submittedLearningPayload(submitted)); err != nil {
 		return err
 	}
+	release, visibleAt, err := h.resultRelease(ctx, a, at)
+	if err != nil {
+		return err
+	}
 	gradedPayload := map[string]any{"attempt_id": a.ID, "evaluation_id": evaluationID, "activity_type": a.ActivityType, "score": learningScore(*a.Score, *a.MaxScore),
-		"correct_count": correct, "item_count": len(a.Items), "result_release": "immediate"}
+		"correct_count": correct, "item_count": len(a.Items), "result_release": release}
 	if r.Passed != nil {
 		gradedPayload["passed"] = *r.Passed
 	}
@@ -455,13 +464,14 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 		"activity_id": nullableID(a.ActivityID), "activity_type": a.ActivityType, "content_version_id": a.SourceVersionID, "mode": a.Mode,
 		"context_type": a.ContextType, "context_id": a.ContextID, "status": string(attempt.StatusGraded), "score": *a.Score,
 		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "hints_used": 0, "rapid_guess_count": 0,
-		"duration_ms": *a.DurationMS, "submit_reason": *a.SubmitReason, "objective_ids": nonNilUUIDs(a.ObjectiveIDs)}); err != nil {
+		"duration_ms": *a.DurationMS, "submit_reason": *a.SubmitReason, "objective_ids": nonNilUUIDs(a.ObjectiveIDs),
+		"assignment_id": assignmentOf(a)}); err != nil {
 		return err
 	}
 	ev := map[string]any{"attempt_id": a.ID, "student_id": a.StudentID, "evaluation_id": evaluationID, "activity_id": nullableID(a.ActivityID),
 		"activity_type": a.ActivityType, "mode": a.Mode, "source": "system", "strategies": r.Strategies, "score": *a.Score,
-		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "result_release": "immediate",
-		"results_visible_at": at, "objective_ids": nonNilUUIDs(a.ObjectiveIDs)}
+		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "result_release": release,
+		"results_visible_at": visibleAt, "objective_ids": nonNilUUIDs(a.ObjectiveIDs), "assignment_id": assignmentOf(a)}
 	if r.Passed != nil {
 		ev["passed"] = *r.Passed
 	}
@@ -469,6 +479,35 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 		h.Metrics.Submitted(*a.SubmitReason)
 	}
 	return h.publish(ctx, a, EventActivityGraded, ev)
+}
+
+// assignmentOf is the assignment of an attempt started for a school assignment (nil otherwise).
+func assignmentOf(a attempt.Attempt) *uuid.UUID {
+	if a.ContextType != "assignment" {
+		return nil
+	}
+	id := a.ContextID
+	return &id
+}
+
+// resultRelease is the ResultRelease of an attempt (immediate outside an assignment) and when its results are visible
+// (nil while an assignment has not released them, F041-AC-19).
+func (h Attempts) resultRelease(ctx context.Context, a attempt.Attempt, at time.Time) (string, *time.Time, error) {
+	id := assignmentOf(a)
+	if id == nil || h.Gate == nil {
+		return "immediate", &at, nil
+	}
+	release, visible, err := h.Gate.Release(ctx, *id)
+	if err != nil {
+		return "", nil, err
+	}
+	if release == "" {
+		release = "immediate"
+	}
+	if !visible {
+		return release, nil, nil
+	}
+	return release, &at, nil
 }
 
 // submittedLearningPayload is payload_activity_submitted of learning-event.schema.json (no mode/context: envelope).

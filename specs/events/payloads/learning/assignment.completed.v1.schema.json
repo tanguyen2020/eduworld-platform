@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.completed.v1.schema.json",
+  "title": "Payload assignment.completed v1 (module learning, owner F041)",
+  "description": "Một học sinh hoàn thành bài giao (lượt đầu tiên được chấm, đúng hạn hoặc trong cửa sổ nộp muộn — SCHOOL_LMS §4.2). Envelope subject = {type: assignment, id: assignment_id}. Chỉ ID (R14). Consumer: GAM, LMS read model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "student_id",
+    "attempt_id",
+    "late"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "late": {
+      "type": "boolean"
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000411",
+      "school_id": "0193a1f0-0000-7000-8000-000000000412",
+      "student_id": "0193a1f0-0000-7000-8000-000000000413",
+      "attempt_id": "0193a1f0-0000-7000-8000-000000000414",
+      "late": false
+    }
+  ]
+}

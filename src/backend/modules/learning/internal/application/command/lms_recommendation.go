@@ -41,3 +41,21 @@ func (u LMSUpcoming) Fill(ctx context.Context, studentID uuid.UUID, s *recommend
 	}
 	return nil
 }
+
+// AssignmentsDue is the SnapshotSource of F041: the open school assignments the student has not submitted (rule R1).
+type AssignmentsDue struct {
+	Store write.SchoolAssignmentStore
+}
+
+// Fill implements SnapshotSource.
+func (u AssignmentsDue) Fill(ctx context.Context, studentID uuid.UUID, s *recommendation.Snapshot) error {
+	xs, err := u.Store.PendingAssignments(ctx, studentID)
+	if err != nil {
+		return err
+	}
+	for _, x := range xs {
+		s.Assignments = append(s.Assignments, recommendation.PendingAssignment{ID: x.AssignmentID, Title: x.Title, SubjectID: x.SubjectID,
+			ObjectiveIDs: x.ObjectiveIDs, DueAt: x.DueAt})
+	}
+	return nil
+}

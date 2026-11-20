@@ -1,4 +1,4 @@
-h1:YVNElT9NhshkmnP6jqn/3DlmPP7f92jmknARLYtNgOo=
+h1:d5dxVfdaY0ybpYJq58emJErNaydlY+wnsF13WwsglcQ=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -19,3 +19,4 @@ h1:YVNElT9NhshkmnP6jqn/3DlmPP7f92jmknARLYtNgOo=
 20261207000001_f030_student_merge_links.sql h1:2YlpGGfQNX5Qee6h2j375FJpzVgR8K1ndfCArjEJtJM=
 20261208000001_f025_field_comments.sql h1:BfeftkcwOReNeZZJdGUV278Q2wx6LBg7ElJHYQyeWQU=
 20261215000001_f065_video_lesson.sql h1:WCluJgVS+OJCVfstouQJyD+7XVjChYx/SZc1RMhgX0w=
+20261216000001_f041_assignments.sql h1:a2KBIc5MiNPupDbNv5AAylm3Mvj71j9Htqo42WdB05k=

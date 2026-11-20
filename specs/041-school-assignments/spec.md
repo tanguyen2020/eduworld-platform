@@ -23,6 +23,21 @@
 - OQ F062-1 → **Chốt:** `MyAssignment` thêm `subject_name` (`LearningName`, như `subject_name` ở schema lớp), điền từ danh mục môn ở server theo ngôn ngữ hiển thị; client không tự tra danh mục.
 - OQ F062-2 → **Chốt:** bài `content_kind = question_set` được bắt đầu bằng `startAdHocAttempt` (`mode = assignment`, `source.kind = question_set`, `context_type = assignment`, `context_id` = assignment); F041 mở `mode = assignment` cho endpoint này với cùng kiểm tra F041-AC-13 (cửa sổ mở, số lần, thuộc lớp). Client mở bằng `activity_host` (F062, F063).
 
+### Session 2026-11-20 (triển khai)
+
+- Lưu trữ → **[Proposed]** bảng `lms.assignments`, `lms.assignment_targets`, `lms.assignment_target_students`, `lms.assignment_submissions`, `lms.assignment_student_exceptions`, `lms.assignment_reminders` (TA) và projection `ref.game_activities` viết tay trong migration `20261216000001_f041_assignments.sql` với repository SQL tường minh (như F040), không qua ent; RLS T.
+- Tham số → **[Proposed]** `graded_assignment_release_default` (after_close/after_close), `late_window_hours` tối đa 168, `assignment_remind_limit` 1/ngày (ngày ICT) là `command.DefaultAssignmentConfig()` cho tới khi module learning đọc platform/tenant settings (cùng cách `attempt_start_rate`).
+- `feedback_timing` so với `result_release` → **[Proposed]** theo ACTIVITY_ENGINE §8.1: `result_release = immediate` nhận mọi `feedback_timing`; `after_close` và `manual` chỉ nhận `after_close` hoặc `never`; ngoài ra `422` tại `/feedback_timing`.
+- Blueprint → **[Proposed]** mọi bài `assessment_blueprint` (cả `practice`) giao bằng ExamSession nên bị `422` tại `/content_ref` khi `ExamSessionCreator` là adapter "chưa khả dụng" (F041-AC-09); hoạt động `written_response`/`speaking`/`project` không lưu được (CHECK `activity_versions_type_ck`) nên AC-03 kiểm ở unit test của use case.
+- Đối tượng → **[Proposed]** lớp bất kỳ của trường của course (không chỉ lớp của course), nhóm học tập của trường, học sinh active của trường; ngoài trường/tenant → `404`. Snapshot khi publish gồm học sinh active có enrollment active; một học sinh chỉ một submission.
+- `created_by_role` → **[Proposed]** `system_admin` khi principal có grant `system_admin` (ghi với `X-Tenant-Id`), `school_admin` khi có grant `school_admin` phủ trường, còn lại `academic_manager`. `tenant_id` trong body khác tenant của phiên → `422`.
+- Sửa và publish → **[Proposed]** `publishAssignment` cần `If-Match`; bài `scheduled` sửa như draft trừ `targets` (đã chụp snapshot); `open` chỉ `due_at`/`instructions`/`late_policy`. Hủy không phát event riêng (mục lịch `assignment_due` của F040 còn lại) — Câu hỏi mở F041-1.
+- Submission → **[Proposed]** tính lại từ attempt của bài (idempotent): `attempts_used` = số attempt đã bắt đầu, điểm = evaluation hiệu lực của lượt giữ theo `score_policy` (chấm lại cập nhật theo), `submitted`/`late` theo lượt chấm đầu tiên so với hạn cá nhân, `rapid_guess_count` của lượt được giữ; `assignment.completed` phát một lần khi có lượt chấm đầu tiên.
+- Gia hạn → **[Proposed]** nhận ở `scheduled`/`open`/`closed`; bài `closed` vẫn cho học sinh được gia hạn làm trong hạn cá nhân, scheduler chưa đóng bài khi còn học sinh có gia hạn đang chạy. Khóa tài khoản (`user.access_revoked`) trước hạn → `excused` với lý do `account_locked`.
+- Học sinh → **[Proposed]** `MyAssignment.status`: `submitted`/`late` thành `graded` khi kết quả đã công bố, `missed` thành `overdue`; `content_kind`: `assessment_blueprint` → `assessment`, `minigame_config` → `activity`; tham số `status` lọc theo `MyAssignment.status`; `subject_name` là `LearningName` của danh mục môn (OQ F062-1); `due_at` là hạn cá nhân khi được gia hạn.
+- Công bố → **[Proposed]** trước khi công bố, `getActivityAttempt` không trả `evaluation`, `listMyActivityAttempts` không trả điểm, `getActivityAttemptReview` chỉ trả `attempt_id` (không câu, điểm, đáp án); sau khi công bố review mở cả với `feedback_timing = after_close`.
+- Danh mục game → `ref.game_activities` có bảng; event `content.published`/`content.rolled_back`/`content.unpublished` của module game và `tenant_data.assigned/unassigned` cho `quest`/`minigame_config` chưa có schema (T005) nên chưa có consumer — danh mục rỗng, không dữ liệu giả; giao quest/mini-game không có trong danh mục → `403 RESOURCE_NOT_ASSIGNED`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo và giao bài (Priority: P1)
@@ -218,3 +233,8 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 - F040 cung cấp port đọc thành viên study group; study group thuộc module learning (ADR-0084, đã chốt); tới khi port của F040 có, đối tượng `study_group` bị từ chối `422 VALIDATION_FAILED` (feature flag cấu hình, không mock).
 - F041 sở hữu port `ExamSessionCreator` và đăng ký adapter mặc định "chưa khả dụng" (không phải mock: adapter thật, trả lỗi có kiểu) ở composition root; trước khi F042 `Done`, bài `graded` + `assessment_blueprint` bị từ chối `422 VALIDATION_FAILED` (F041-AC-09). F042 thay adapter bằng adapter gọi `CreateExamSession`/`CancelExamSession` (F042-AC-31).
 - Event module game cho danh mục quest/mini-game do F078 định nghĩa; projection có sẵn bảng trước.
+
+## Câu hỏi mở
+
+- F041-1 — Hủy bài giao (`cancelAssignment`) chưa có event (`assignment.cancelled`): mục lịch `assignment_due` do F040 tạo từ `assignment.published` và thông báo đã gửi không được gỡ. Đề xuất: thêm event `assignment.cancelled` (owner F041) và để consumer lịch F040 soft-delete mục lịch [Proposed, chờ owner].
+- F041-2 — Danh mục quest/mini-game (`ref.game_activities`) cần payload `content.published`/`content.rolled_back`/`content.unpublished` của module game (khối `catalog`, owner F071/F078) và `tenant_data.assigned/unassigned` cho `quest`/`minigame_config` (owner F045); chưa có schema nên consumer chưa làm (T005, T041 phần projection) — `listGameActivities` trả rỗng.

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.reminded.v1.schema.json",
+  "title": "Payload assignment.reminded v1 (module learning, owner F041)",
+  "description": "Nhà trường nhắc học sinh chưa nộp (`remindAssignment`, giới hạn `assignment_remind_limit`). Envelope subject = {type: assignment, id: assignment_id}. Chỉ ID (R14). Consumer: NTF (thông báo trong game, F123), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "student_ids",
+    "reminder_no",
+    "due_at",
+    "reminded_by"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_ids": {
+      "type": "array",
+      "maxItems": 2000,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "reminder_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "due_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reminded_by": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000441",
+      "school_id": "0193a1f0-0000-7000-8000-000000000442",
+      "student_ids": [
+        "0193a1f0-0000-7000-8000-000000000443"
+      ],
+      "reminder_no": 1,
+      "due_at": "2026-11-27T17:00:00Z",
+      "reminded_by": "0193a1f0-0000-7000-8000-000000000444"
+    }
+  ]
+}

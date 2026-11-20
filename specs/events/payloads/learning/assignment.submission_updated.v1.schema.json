@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.submission_updated.v1.schema.json",
+  "title": "Payload assignment.submission_updated v1 (module learning, owner F041)",
+  "description": "Trạng thái nộp bài của một học sinh đổi (read model AssignmentSubmission, SCHOOL_LMS §4.2). Envelope subject = {type: assignment, id: assignment_id}. Chỉ ID và điểm tự chấm (R14). Consumer: LMS read model, dashboard rollup (F043).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "student_id",
+    "status",
+    "attempts_used"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "submitted",
+        "late",
+        "missed",
+        "excused"
+      ]
+    },
+    "attempts_used": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "best_attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "score": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "max_score": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "rapid_guess_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000431",
+      "school_id": "0193a1f0-0000-7000-8000-000000000432",
+      "student_id": "0193a1f0-0000-7000-8000-000000000433",
+      "status": "submitted",
+      "attempts_used": 1,
+      "best_attempt_id": "0193a1f0-0000-7000-8000-000000000434",
+      "score": 8,
+      "max_score": 10,
+      "rapid_guess_count": 0
+    }
+  ]
+}

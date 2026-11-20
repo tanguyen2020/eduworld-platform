@@ -12176,6 +12176,8 @@ export interface components {
             /** @enum {string} */
             status: "not_started" | "in_progress" | "submitted" | "graded" | "overdue" | "excused";
             subject_id?: components["schemas"]["Uuid"];
+            /** @description Tên môn từ danh mục môn của server (OQ F062-1); client không tự tra danh mục */
+            subject_name?: components["schemas"]["LearningName"];
             title: string;
         };
         /** @description Lộ trình của học sinh theo course (listMyLearningPaths, F040) */
@@ -30394,6 +30396,8 @@ export interface operations {
                 grade_level?: components["parameters"]["GradeLevelQuery"];
                 limit?: components["parameters"]["Limit"];
                 objective_id?: components["schemas"]["Uuid"];
+                /** @description Quest/mini-game gắn ít nhất một LO trong danh sách (giao theo LO yếu, F041-AC-30) */
+                objective_ids?: components["schemas"]["Uuid"][];
                 subject_id?: components["parameters"]["SubjectIdQuery"];
             };
             header?: {

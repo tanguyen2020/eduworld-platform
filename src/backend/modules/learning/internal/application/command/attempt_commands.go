@@ -34,7 +34,7 @@ type StartActivityInput struct {
 
 // publicStartModes are the modes a student starts from an activity in F030 (assignment F041, retry_wrong and
 // diagnostic F032; quest and challenge through the facade of module game).
-var publicStartModes = []attempt.Mode{attempt.ModePractice, attempt.ModeMinigame}
+var publicStartModes = []attempt.Mode{attempt.ModePractice, attempt.ModeMinigame, attempt.ModeAssignment}
 
 var practiceContexts = []string{"free_play", "lesson", "learning_path", "recommendation"}
 
@@ -94,6 +94,9 @@ func (h Attempts) StartActivity(ctx context.Context, in StartActivityInput) (out
 	ctxType, ctxID := in.ContextType, in.ActivityID
 	if ctxType == "" {
 		ctxType = "free_play"
+	}
+	if mode == attempt.ModeAssignment {
+		return h.startAssignment(ctx, p, in)
 	}
 	if !contains(practiceContexts, ctxType) {
 		return out, problem.Invalid("/context_type", problem.SubInvalid, "this context is not available in this release")
@@ -436,6 +439,11 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 		}
 		if err := h.completed(ctx, a, outcome); err != nil {
 			return err
+		}
+		if _, visibleAt, err := h.resultRelease(ctx, a, h.now()); err != nil {
+			return err
+		} else if visibleAt == nil {
+			ev = nil // F041-AC-19: no result before the assignment releases it
 		}
 		if out, err = h.view(ctx, a, nil, src, nil, ev); err != nil {
 			return err

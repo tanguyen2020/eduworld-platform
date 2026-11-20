@@ -24,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
@@ -99,6 +100,8 @@ type curEnv struct {
 	rgd     command.Regrades        // F031 US4
 	recs    command.Recommendations // F032 US6
 	lms     command.LMS             // F040
+	asg     command.Assignments     // F041
+	asgq    query.SchoolAssignments // F041
 }
 
 // envOpt configures newCurEnv.
@@ -239,6 +242,14 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Metrics: observability.SelfStudyCounter{}}
 	recs.Sources = []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}
 	recs.Engine.Register(recommendation.R6{})
+	// F041: school assignments with the test clock; exam sessions unavailable until F042.
+	asg := command.Assignments{UoW: e.uow, Store: write.SchoolAssignmentRepo{}, Read: e.read, Exams: examsession.Unavailable{},
+		Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Metrics: observability.SchoolAssignmentCounter{}}
+	att.Gate = asg
+	recs.Sources = append(recs.Sources, command.AssignmentsDue{Store: write.SchoolAssignmentRepo{}})
+	recs.Engine.Register(recommendation.R1{})
+	asgq := query.SchoolAssignments{Session: e.read, Model: read.SchoolAssignmentModel{}, Cursors: codec, Clock: clk.Now}
+	handlers.AssignmentCommands, handlers.Assignments = asg, asgq
 	lmsCmd := command.LMS{UoW: e.uow, Store: write.LMSRepo{}, Read: e.read, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
 		Clock: clk.Now, Metrics: observability.LMSCounter{}}
 	handlers.LMSCommands = lmsCmd
@@ -248,7 +259,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
-		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner}
+		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
 	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
@@ -265,7 +276,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
-		lms: lmsCmd}
+		lms: lmsCmd, asg: asg, asgq: asgq}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

@@ -103,6 +103,17 @@ type Snapshot struct {
 	LastDiagnostic map[uuid.UUID]time.Time
 	// Upcoming are the next lessons of the LMS schedule of the student's courses (filled by F040 for R6).
 	Upcoming []Upcoming
+	// Assignments are the open school assignments the student has not submitted (filled by F041 for R1).
+	Assignments []PendingAssignment
+}
+
+// PendingAssignment is an open school assignment of the student not submitted yet, with its personal due date.
+type PendingAssignment struct {
+	ID           uuid.UUID
+	Title        string
+	SubjectID    uuid.UUID
+	ObjectiveIDs []uuid.UUID
+	DueAt        time.Time
 }
 
 // Upcoming is a lesson (or activity) of the LMS schedule of a course of the student.

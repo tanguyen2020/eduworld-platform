@@ -35,7 +35,7 @@
     },
     "openapi/MyAssignment.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/MyAssignment",
-      "sha256": "9d3e85e98ac8d19ecb3359fac284f0ba40ba5544afeb8f352127958bf27d798f"
+      "sha256": "e5fdfc56380cb124cf337bfd8844ce48173ab09cb2dc66083187804ddff13337"
     },
     "openapi/TelemetryBatch.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/TelemetryBatch",

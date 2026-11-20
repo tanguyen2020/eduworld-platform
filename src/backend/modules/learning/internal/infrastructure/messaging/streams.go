@@ -103,3 +103,26 @@ const LMSScheduleName = "learning.lms_schedule"
 func LMSScheduleSubjects() []string {
 	return []string{natsx.EventSubject("learning", "assignment.published"), natsx.EventSubject("learning", "exam.opened")}
 }
+
+// AssignmentSubmissionsName is the durable consumer that keeps the submissions of the school assignments from the attempt
+// events (F041-AC-15).
+const AssignmentSubmissionsName = "learning.assignment_submissions"
+
+// AssignmentSubmissionsSubjects are the attempt events of module learning an assignment submission follows (exam.graded
+// joins with F042).
+func AssignmentSubmissionsSubjects() []string {
+	out := []string{}
+	for _, e := range []string{"activity.started", "activity.submitted", "activity.graded", "attempt.re_evaluated"} {
+		out = append(out, natsx.EventSubject("learning", e))
+	}
+	return out
+}
+
+// AssignmentEnrollmentName is the durable consumer that applies the enrollment changes and account locks of module
+// identity to the open assignments (F041-AC-16).
+const AssignmentEnrollmentName = "learning.assignment_enrollment"
+
+// AssignmentEnrollmentSubjects are enrollment.changed and user.access_revoked of module identity.
+func AssignmentEnrollmentSubjects() []string {
+	return []string{natsx.EventSubject("identity", "enrollment.changed"), natsx.EventSubject("identity", "user.access_revoked")}
+}

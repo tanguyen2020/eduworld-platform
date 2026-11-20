@@ -8044,6 +8044,15 @@ paths:
         - name: objective_id
           in: query
           schema: { $ref: '#/components/schemas/Uuid' }
+        - name: objective_ids
+          in: query
+          description: Quest/mini-game gắn ít nhất một LO trong danh sách (giao theo LO yếu, F041-AC-30)
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 20
+            items: { $ref: '#/components/schemas/Uuid' }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -23317,6 +23326,9 @@ components:
         assignment_id: { $ref: '#/components/schemas/Uuid' }
         title: { type: string, maxLength: 255 }
         subject_id: { $ref: '#/components/schemas/Uuid' }
+        subject_name:
+          $ref: '#/components/schemas/LearningName'
+          description: Tên môn từ danh mục môn của server (OQ F062-1); client không tự tra danh mục
         content_kind: { type: string, enum: [activity, question_set, assessment, quest, lesson] }
         content_ref: { $ref: '#/components/schemas/Uuid' }
         open_at: { $ref: '#/components/schemas/Timestamp' }
