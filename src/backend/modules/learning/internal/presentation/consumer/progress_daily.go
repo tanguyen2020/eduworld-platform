@@ -3,6 +3,7 @@ package consumer
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ import (
 // ProgressRecorder adds a graded attempt to progress_daily (command.Progress).
 type ProgressRecorder interface {
 	RecordGraded(ctx context.Context, tenantID, attemptID uuid.UUID, at time.Time) error
+	RecordLessonCompleted(ctx context.Context, tenantID, sessionID uuid.UUID, subjectID *uuid.UUID, at time.Time) error
 }
 
 // ProgressDaily is the consumer learning.progress_daily (F031-AC-17): counters per student × subject × day, exactly once
@@ -32,6 +34,17 @@ func ProgressDailyOptions(h ProgressDaily, uow *entx.UnitOfWork, dlq *sql.DB, js
 
 // Handle implements outbox.Handler.
 func (c ProgressDaily) Handle(ctx context.Context, e outbox.Envelope) error {
+	if e.EventType == "lesson.completed" {
+		var p struct {
+			SessionID   uuid.UUID  `json:"lesson_session_id"`
+			SubjectID   *uuid.UUID `json:"subject_id"`
+			CompletedAt time.Time  `json:"completed_at"`
+		}
+		if err := json.Unmarshal(e.Payload, &p); err != nil || p.SessionID == uuid.Nil || e.TenantID == nil {
+			return invalid(e.EventType, "payload has no lesson_session_id or no tenant")
+		}
+		return c.Record.RecordLessonCompleted(ctx, *e.TenantID, p.SessionID, p.SubjectID, p.CompletedAt)
+	}
 	id, err := attemptOf(e)
 	if err != nil {
 		return err

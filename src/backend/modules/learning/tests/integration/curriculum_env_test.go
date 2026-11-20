@@ -75,25 +75,26 @@ func (m *memAssets) Open(_ context.Context, id uuid.UUID) (io.ReadCloser, int64,
 // validation, idempotency) over the use cases of F021, with demo principals of tenants A and B.
 type curEnv struct {
 	*env
-	srv    *httptest.Server
-	idp    *httpxtest.IDP
-	res    *httpxtest.Resolver
-	cmd    command.Curriculum
-	qry    query.Curriculum
-	qcmd   command.Questions
-	dcmd   command.Docs
-	wf     command.Workflow
-	tr     command.Translations
-	rel    command.Releases
-	schema *qbschema.Validator
-	assets *memAssets
-	users  map[string]authz.PrincipalData
-	tokens map[string]string
-	media  *mediaKit        // F027 (newCurEnv(..., withMedia))
-	att    command.Attempts // F030
-	attq   query.Attempts   // F030
-	clk    *testClock       // F030
-	rgd    command.Regrades // F031 US4
+	srv     *httptest.Server
+	idp     *httpxtest.IDP
+	res     *httpxtest.Resolver
+	cmd     command.Curriculum
+	qry     query.Curriculum
+	qcmd    command.Questions
+	dcmd    command.Docs
+	wf      command.Workflow
+	tr      command.Translations
+	rel     command.Releases
+	schema  *qbschema.Validator
+	assets  *memAssets
+	users   map[string]authz.PrincipalData
+	tokens  map[string]string
+	media   *mediaKit        // F027 (newCurEnv(..., withMedia))
+	att     command.Attempts // F030
+	attq    query.Attempts   // F030
+	clk     *testClock       // F030
+	lessons command.Lessons  // F031 US6
+	rgd     command.Regrades // F031 US4
 }
 
 // envOpt configures newCurEnv.
@@ -169,7 +170,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	registry := plugins.Registry()
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
 		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
-		Activities: registry, ActivitySchema: actSchema}
+		Activities: registry, ActivitySchema: actSchema, ActivityEnabled: true}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
 	wf := command.Workflow{UoW: e.uow, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{}, Docs: write.DocRepo{},
 		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}
@@ -210,6 +211,11 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	att := command.Attempts{UoW: e.uow, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: write.Publisher{W: e.writer},
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: registry,
 		Clock: clk.Now, Metrics: observability.AttemptCounter{}}
+	// F031 US6: lesson sessions pinned at the start of an attempt in the context of a lesson.
+	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{},
+		Events: write.Publisher{W: e.writer}, UoW: e.uow, Clock: clk.Now}
+	att.Lessons = lessons
+	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
 		Clock: clk.Now}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
@@ -227,7 +233,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd}
+		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

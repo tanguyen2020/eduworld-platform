@@ -19,6 +19,24 @@ var ProgressDayZone = time.FixedZone("ICT", 7*3600)
 type Progress struct {
 	Store    write.ProgressStore
 	Evidence write.EvidenceReader
+	Lessons  write.LessonStore // F031 US6: lessons_completed
+}
+
+// RecordLessonCompleted adds one completed lesson to the day of its completion (F031-AC-30); the student and school come
+// from the lesson session of the event.
+func (h Progress) RecordLessonCompleted(ctx context.Context, tenantID, sessionID uuid.UUID, subjectID *uuid.UUID, at time.Time) (err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.UpsertProgressDailyLesson")
+	defer func() { done(err) }()
+	s, err := h.Lessons.Session(ctx, sessionID)
+	if err != nil || s == nil {
+		return err
+	}
+	subject := uuid.Nil
+	if subjectID != nil {
+		subject = *subjectID
+	}
+	return h.Store.AddDaily(ctx, write.ProgressDelta{TenantID: tenantID, StudentID: s.StudentID, SchoolID: s.SchoolID, SubjectID: subject,
+		Day: at.In(ProgressDayZone), LessonsCompleted: 1})
 }
 
 // RecordGraded adds a graded attempt: one activity completed (mode ≠ exam), its first scored answers, its active time.

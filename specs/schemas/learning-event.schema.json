@@ -543,9 +543,9 @@
         "objective_id": { "$ref": "#/$defs/uuid" },
         "previous_level": { "$ref": "#/$defs/mastery_level" },
         "new_level": { "$ref": "#/$defs/mastery_level", "description": "Mức sau khi đạt ngưỡng (mastered); module game cấp XP nguồn mastery.objective_mastered một lần mỗi học sinh × LO." },
-        "value": { "type": "number", "minimum": 0.8, "maximum": 1 },
-        "evidence_count": { "type": "integer", "minimum": 5 },
-        "distinct_days": { "type": "integer", "minimum": 2 },
+        "value": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence_count": { "type": "integer", "minimum": 1 },
+        "distinct_days": { "type": "integer", "minimum": 1 },
         "model_version": { "type": "string", "maxLength": 64 }
       }
     },

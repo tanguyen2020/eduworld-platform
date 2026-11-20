@@ -54,9 +54,10 @@ func TestLessonsMaterialsWorkedExamples(t *testing.T) {
 	authztest.Cover(t, "deleteCmsLearningMaterial", authztest.CrossTenant, authztest.RoleDenied)
 	// AC-06 / AC-07.
 	must(t, c.do(t, http.MethodPost, lessonsPath, qlcmA, idem(), lessonBody(qc, workedExample("we_mul7", 9, qc.lo))), http.StatusUnprocessableEntity, "9 steps")
+	// Activity blocks are enabled since F030 is wired (F031 US6 lessons with activities).
 	r := must(t, c.do(t, http.MethodPost, lessonsPath, qlcmA, idem(), lessonBody(qc, map[string]any{"kind": "activity",
-		"activity_id": "0193a5f4-6c1e-7b2a-9d1f-000000000999"})), http.StatusUnprocessableEntity, "activity")
-	if !strings.Contains(r.raw, "BLOCK_KIND_NOT_ENABLED") {
+		"activity_id": "0193a5f4-6c1e-7b2a-9d1f-000000000999"})), http.StatusCreated, "activity")
+	if strings.Contains(r.raw, "BLOCK_KIND_NOT_ENABLED") {
 		t.Fatalf("activity: %s", r.raw)
 	}
 	must(t, c.do(t, http.MethodPost, lessonsPath, qlcmA, idem(), lessonBody(qc, workedExample("we_a", 1, qc.lo), workedExample("we_a", 1, qc.lo))),

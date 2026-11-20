@@ -98,6 +98,8 @@ type Handlers struct {
 	ProfileAudit     ProfileAudit        // F031 US3 (learning.profile_viewed)
 	Regrades         RegradeCommands     // F031 US4
 	RegradeQueries   RegradeQueries      // F031 US4
+	Lessons          LessonCommands      // F031 US6
+	LessonQueries    LessonQueries       // F031 US6
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -196,6 +198,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	regradeWired := h.Regrades != nil && h.RegradeQueries != nil
 	for id, fn := range regradeRoutes {
 		routes[id] = wiredOr(regradeWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	lessonsWired := h.Lessons != nil && h.LessonQueries != nil
+	for id, fn := range lessonRoutes {
+		routes[id] = wiredOr(lessonsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

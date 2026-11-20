@@ -17,6 +17,10 @@ import (
 // PoolTTL is the lifetime of a cached question pool (QUESTION_BANK §6: 5 minutes).
 const PoolTTL = 5 * time.Minute
 
+// PoolTimeout bounds one cache call: a Valkey that is down or slow never blocks a delivery, it is a cache miss
+// (ADR-0004, NFR-AVAIL-003, F031-AC-06) [Proposed].
+const PoolTimeout = 200 * time.Millisecond
+
 // PoolPrefix is the key prefix of the question pools: ew:learning:qb:pool:<tenant_id>:<filter_hash>.
 const PoolPrefix = "ew:learning:qb:pool:"
 
@@ -29,6 +33,8 @@ func poolKey(tenant uuid.UUID, key string) string { return PoolPrefix + tenant.S
 
 // Get implements read.PoolCache.
 func (p Pool) Get(ctx context.Context, tenant uuid.UUID, key string) ([]selection.Candidate, bool) {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	b, err := p.C.Do(ctx, p.C.B().Get().Key(poolKey(tenant, key)).Build()).AsBytes()
 	if err != nil {
 		if !valkey.IsValkeyNil(err) {
@@ -45,6 +51,8 @@ func (p Pool) Get(ctx context.Context, tenant uuid.UUID, key string) ([]selectio
 
 // Put implements read.PoolCache.
 func (p Pool) Put(ctx context.Context, tenant uuid.UUID, key string, pool []selection.Candidate) {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	b, err := json.Marshal(pool)
 	if err != nil {
 		return

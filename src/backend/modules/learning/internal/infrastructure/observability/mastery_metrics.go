@@ -56,3 +56,19 @@ type RegradeCounter struct{}
 
 // ReEvaluated counts one re-evaluated attempt.
 func (RegradeCounter) ReEvaluated(action string) { regradeAttempts.WithLabelValues(action).Inc() }
+
+var lessonCompletions = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "eduworld_lesson_completions_total",
+	Help: "Lesson sessions completed by trigger (activity_graded, complete_lesson).",
+}, []string{"trigger"})
+
+// RegisterLessons adds the lesson metric to r; already registered collectors are ignored.
+func RegisterLessons(r prometheus.Registerer) { _ = r.Register(lessonCompletions) }
+
+// LessonCounter adapts the lesson metric to command.LessonMetrics.
+type LessonCounter struct{}
+
+// LessonCompleted counts one completed lesson session.
+func (LessonCounter) LessonCompleted(trigger string) {
+	lessonCompletions.WithLabelValues(trigger).Inc()
+}

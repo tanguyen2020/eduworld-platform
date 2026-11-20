@@ -138,6 +138,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.MasteryName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MasteryOptions(consumer.MasteryOnGraded{Apply: w.mastery}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.LessonCompletionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LessonCompletionOptions(consumer.LessonCompletion{Lessons: w.lessons}, core.UoW, core.App, js)
+	})
 	r.Consumer(messaging.ProgressDailyName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ProgressDailyOptions(consumer.ProgressDaily{Record: w.progress}, core.UoW, core.App, js)
 	})
@@ -173,6 +176,7 @@ type wiring struct {
 	mastery      command.Mastery
 	progress     command.Progress
 	regrades     command.Regrades
+	lessons      command.Lessons
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -217,6 +221,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterAttempts(reg)
 	observability.RegisterMastery(reg)
 	observability.RegisterRegrade(reg)
+	observability.RegisterLessons(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -254,7 +259,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: write.DocRepo{}}
 	dcmd := command.Docs{UoW: core.UoW, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{},
 		Catalog: write.CatalogRepo{}, Schema: docSchema, Media: write.MediaRepo{}, Read: core.ReadSession, Resources: resources,
-		Events: events, Audit: auditor, Math: math, Activities: activities, ActivitySchema: activitySchema}
+		Events: events, Audit: auditor, Math: math, Activities: activities, ActivitySchema: activitySchema, ActivityEnabled: true}
 	wf := command.Workflow{UoW: core.UoW, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{},
 		Docs: write.DocRepo{}, Schema: schema, Media: write.MediaRepo{}, Guard: readiness.Default(), Events: events, Audit: auditor,
 		Metrics: observability.WorkflowCounter{}}
@@ -272,6 +277,9 @@ func build(r *module.Registry) (*wiring, error) {
 	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
 		Metrics: observability.AttemptCounter{}}
+	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
+		UoW: core.UoW, Metrics: observability.LessonCounter{}}
+	att.Lessons = lessons
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
 		Registry: activities, Cursors: cursors}
 
@@ -293,7 +301,8 @@ func build(r *module.Registry) (*wiring, error) {
 	learningRecord := write.MasteryRepo{}
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
 		Metrics: observability.MasteryCounter{}}
-	prg := command.Progress{Store: learningRecord, Evidence: learningRecord}
+	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}}
+	h.Lessons, h.LessonQueries = lessons, query.Lessons{Session: core.ReadSession, Model: read.LessonModel{}}
 	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}}
 	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}}
 
@@ -309,5 +318,5 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
-		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd}, nil
+		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons}, nil
 }

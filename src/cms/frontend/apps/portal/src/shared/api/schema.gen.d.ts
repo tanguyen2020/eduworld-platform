@@ -11232,7 +11232,15 @@ export interface components {
             content_kind?: "activity" | "question_set" | "assessment" | "quest" | "lesson";
             content_ref?: components["schemas"]["Uuid"];
             due_at?: components["schemas"]["Timestamp"];
+            /** @description Có khi content_kind = assessment và bài mode = graded đã tạo ExamSession (SCHOOL_LMS §4, F042); client mở exam lobby bằng id này (F062, F064) */
+            exam_session_id?: components["schemas"]["Uuid"];
+            /** @description Cùng shape AssignmentCreate.late_policy; client chỉ dùng để hiện nhãn quá hạn, server quyết định có cho nộp muộn */
+            late_policy?: {
+                allow_late?: boolean;
+                late_window_hours?: number;
+            };
             open_at?: components["schemas"]["Timestamp"];
+            result_release?: components["schemas"]["ResultRelease"];
             /** @enum {string} */
             status: "not_started" | "in_progress" | "submitted" | "graded" | "overdue" | "excused";
             subject_id?: components["schemas"]["Uuid"];
@@ -28316,6 +28324,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "assignment_id": "0190f0a0-0000-7000-8000-000000000101",
+                     *           "title": "Phép nhân bảng 3",
+                     *           "subject_id": "0190f0a0-0000-7000-8000-000000000201",
+                     *           "content_kind": "activity",
+                     *           "content_ref": "0190f0a0-0000-7000-8000-000000000301",
+                     *           "open_at": "2026-11-16T00:00:00Z",
+                     *           "due_at": "2026-11-20T16:59:00Z",
+                     *           "status": "not_started",
+                     *           "attempts_left": 3,
+                     *           "result_release": "immediate",
+                     *           "late_policy": {
+                     *             "allow_late": true,
+                     *             "late_window_hours": 24
+                     *           }
+                     *         },
+                     *         {
+                     *           "assignment_id": "0190f0a0-0000-7000-8000-000000000102",
+                     *           "title": "Kiểm tra 15 phút: Đo độ dài",
+                     *           "subject_id": "0190f0a0-0000-7000-8000-000000000201",
+                     *           "content_kind": "assessment",
+                     *           "content_ref": "0190f0a0-0000-7000-8000-000000000302",
+                     *           "exam_session_id": "0190f0a0-0000-7000-8000-000000000401",
+                     *           "open_at": "2026-11-16T00:00:00Z",
+                     *           "due_at": "2026-11-21T09:00:00Z",
+                     *           "status": "in_progress",
+                     *           "attempt_id": "0190f0a0-0000-7000-8000-000000000501",
+                     *           "attempts_left": 0,
+                     *           "result_release": "manual",
+                     *           "late_policy": {
+                     *             "allow_late": false,
+                     *             "late_window_hours": 0
+                     *           }
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "has_more": false,
+                     *         "limit": 50
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["MyAssignment"][];
                         page: components["schemas"]["PageInfo"];
@@ -28323,6 +28375,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listLearningObjectives: {

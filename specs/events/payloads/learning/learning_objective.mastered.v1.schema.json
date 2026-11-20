@@ -11,7 +11,7 @@
     "objective_id": { "type": "string", "format": "uuid" },
     "previous_level": { "type": "string", "enum": ["not_started", "beginning", "developing", "proficient", "mastered"] },
     "new_level": { "const": "mastered" },
-    "value": { "type": "number", "minimum": 0.8, "maximum": 1 },
+    "value": { "type": "number", "minimum": 0, "maximum": 1, "description": "Giá trị lưu lúc đạt mức; ngưỡng mastered, n_min, d_min theo tham số của model_version (ADR-0017)" },
     "evidence_count": { "type": "integer", "minimum": 1 },
     "distinct_days": { "type": "integer", "minimum": 1 },
     "model_version": { "type": "string", "maxLength": 64 },

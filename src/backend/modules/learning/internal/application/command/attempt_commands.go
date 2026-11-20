@@ -122,6 +122,12 @@ func (h Attempts) StartActivity(ctx context.Context, in StartActivityInput) (out
 		if err != nil {
 			return err
 		}
+		if ctxType == "lesson" && h.Lessons != nil {
+			if err := h.Lessons.Pin(ctx, PinInput{StudentID: p.UserID, TenantID: *p.TenantID, SchoolID: school, LessonID: ctxID,
+				ActivityID: in.ActivityID, Mode: string(mode), RecommendationID: in.RecommendationID}); err != nil {
+				return err
+			}
+		}
 		now := h.now()
 		if mode == attempt.ModePractice {
 			open, err := h.Store.OpenPractice(ctx, p.UserID, src.Version.ID)

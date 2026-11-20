@@ -64,6 +64,13 @@ type Attempts struct {
 	StartRate int // attempt_start_rate per hour (0 = AttemptStartRate)
 	Clock     func() time.Time
 	Metrics   AttemptMetrics
+	// Lessons pins the lesson session of an attempt started with context_type lesson (F031 US6); nil = no session.
+	Lessons LessonPinner
+}
+
+// LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
+type LessonPinner interface {
+	Pin(ctx context.Context, in PinInput) error
 }
 
 func (h Attempts) now() time.Time { return now(h.Clock).UTC() }

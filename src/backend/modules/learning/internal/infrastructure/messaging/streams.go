@@ -79,5 +79,13 @@ func MasterySubjects() []string {
 // ProgressDailySubjects are the filter subjects of learning.progress_daily: the counters of an attempt are taken from its
 // activity.graded (activity.submitted of the same attempt carries nothing more) [Proposed].
 func ProgressDailySubjects() []string {
+	return []string{natsx.EventSubject("learning", "activity.graded"), natsx.EventSubject("learning", "lesson.completed")}
+}
+
+// LessonCompletionName is the durable consumer that completes lesson sessions (F031 US6).
+const LessonCompletionName = "learning.lesson_completion"
+
+// LessonCompletionSubjects are the filter subjects of learning.lesson_completion.
+func LessonCompletionSubjects() []string {
 	return []string{natsx.EventSubject("learning", "activity.graded")}
 }

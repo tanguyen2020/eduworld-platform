@@ -1,4 +1,4 @@
-h1:7cZLeVtuk7kRKc//Nbn3e/juqsITnvqbNR0EECqGLO4=
+h1:55Mr3Z6DLFdDnhM1d4nYBdqgGsOFBAJAzvDaM53r2G8=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -12,3 +12,5 @@ h1:7cZLeVtuk7kRKc//Nbn3e/juqsITnvqbNR0EECqGLO4=
 20261130000001_f030_activity_attempt.sql h1:J+jKeoGcBS1WpM/ROaSNOCk2m/esjEs5FUpg+xkZvks=
 20261201000001_f031_mastery.sql h1:mz1FiE/XFub1XR2qf1L/VZu+oj4gWa6vtsf1iXMMywE=
 20261202000001_f031_regrade.sql h1:VPdVN/IG3cDyw3MFrlMO+oe5YOauu2C0PmTdYL8gzNc=
+20261203000001_f031_recompute.sql h1:2cEm+M/w7NOjswJXkE8aJLL/ptn8U3pThZKbmfE5Ex4=
+20261204000001_f031_lesson_sessions.sql h1:7uy7jCbSXQcHO4gcm3MjxCouCHIRUFNcCsUYbgixE9g=
