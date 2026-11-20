@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -27,10 +28,12 @@ type DocResource struct {
 
 var _ port.ResourceHandler = DocResource{}
 
-// DocResources returns the handlers of the four types.
+// DocResources returns the handlers of the four F024 types and of activity (OQ F030 owner 2026-11-20: assigned,
+// cloned and trashed like a question set).
 func DocResources(store write.DocStore, questions write.QuestionStore) []port.ResourceHandler {
-	out := make([]port.ResourceHandler, len(DocTypes))
-	for i, t := range DocTypes {
+	types := append(slices.Clone(DocTypes), contentmodel.TypeActivity)
+	out := make([]port.ResourceHandler, len(types))
+	for i, t := range types {
 		out[i] = DocResource{Type: t, Store: store, Questions: QuestionResource{Store: questions}}
 	}
 	return out
@@ -113,8 +116,13 @@ func (r DocResource) Clone(ctx context.Context, in port.CloneInput) (uuid.UUID, 
 	latest := v.ID
 	v.ID, v.ItemID, v.VersionNo, v.Status, v.AuthorID, v.ReviewerID, v.PublishedAt, v.BasedOnID, v.Owner =
 		ids.New(), d.ID, 1, contentmodel.StatusDraft, in.Actor, nil, nil, &latest, o
-	if r.Type == contentmodel.TypeQuestionSet {
+	switch r.Type {
+	case contentmodel.TypeQuestionSet:
 		if err := r.cloneItems(ctx, in, &v); err != nil {
+			return uuid.Nil, err
+		}
+	case contentmodel.TypeActivity:
+		if err := r.cloneActivityRefs(ctx, in, &v); err != nil {
 			return uuid.Nil, err
 		}
 	}
@@ -126,30 +134,15 @@ func (r DocResource) Clone(ctx context.Context, in port.CloneInput) (uuid.UUID, 
 func (r DocResource) cloneItems(ctx context.Context, in port.CloneInput, v *dto.DocVersion) error {
 	remap := map[uuid.UUID]uuid.UUID{}
 	for i, it := range v.Items {
-		qv, err := r.Questions.Store.QuestionVersionByID(ctx, it.QuestionVersionID)
+		newQ, newQV, ok, err := r.cloneQuestion(ctx, in, it.QuestionVersionID)
 		if err != nil {
 			return err
 		}
-		if qv.Owner.Platform() {
+		if !ok {
 			continue
 		}
-		newQ, ok := in.IDMap[it.QuestionID]
-		if !ok {
-			newQ, err = r.Questions.Clone(ctx, port.CloneInput{JobID: in.JobID, SourceID: it.QuestionID, SourceTenant: in.SourceTenant,
-				TargetTenant: in.TargetTenant, Actor: in.Actor, At: in.At, IDMap: in.IDMap})
-			if err != nil {
-				return err
-			}
-			if in.IDMap != nil {
-				in.IDMap[it.QuestionID] = newQ
-			}
-		}
-		nv, err := r.Questions.Store.QuestionVersion(ctx, newQ, 1)
-		if err != nil {
-			return err
-		}
-		remap[it.QuestionVersionID] = nv.ID
-		v.Items[i].QuestionID, v.Items[i].QuestionVersionID = newQ, nv.ID
+		remap[it.QuestionVersionID] = newQV
+		v.Items[i].QuestionID, v.Items[i].QuestionVersionID = newQ, newQV
 	}
 	if len(remap) == 0 {
 		return nil
@@ -177,6 +170,105 @@ func (r DocResource) cloneItems(ctx context.Context, in port.CloneInput, v *dto.
 		return err
 	}
 	body["definition"] = b
+	v.Body, err = json.Marshal(body)
+	return err
+}
+
+// cloneQuestion clones the question of a source-tenant question version once per job (IDMap) and returns the new
+// question and its version 1; ok is false for a platform question, which is kept.
+func (r DocResource) cloneQuestion(ctx context.Context, in port.CloneInput, qvID uuid.UUID) (uuid.UUID, uuid.UUID, bool, error) {
+	qv, err := r.Questions.Store.QuestionVersionByID(ctx, qvID)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, false, err
+	}
+	if qv.Owner.Platform() {
+		return uuid.Nil, uuid.Nil, false, nil
+	}
+	newQ, ok := in.IDMap[qv.QuestionID]
+	if !ok {
+		newQ, err = r.Questions.Clone(ctx, port.CloneInput{JobID: in.JobID, SourceID: qv.QuestionID, SourceTenant: in.SourceTenant,
+			TargetTenant: in.TargetTenant, Actor: in.Actor, At: in.At, IDMap: in.IDMap})
+		if err != nil {
+			return uuid.Nil, uuid.Nil, false, err
+		}
+		if in.IDMap != nil {
+			in.IDMap[qv.QuestionID] = newQ
+		}
+	}
+	nv, err := r.Questions.Store.QuestionVersion(ctx, newQ, 1)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, false, err
+	}
+	return newQ, nv.ID, true, nil
+}
+
+// cloneActivityRefs points the config of a cloned activity version to clones of its source-tenant content
+// (OQ F030 owner 2026-11-20, like a question set): questions of question_source.questions and a tenant question set
+// of question_source.question_set_id (its version 1); platform content is kept, a selection needs no change.
+func (r DocResource) cloneActivityRefs(ctx context.Context, in port.CloneInput, v *dto.DocVersion) error {
+	body := bodyOf(*v)
+	var cfg map[string]any
+	if err := json.Unmarshal(body["config"], &cfg); err != nil {
+		return err
+	}
+	content, _ := cfg["content"].(map[string]any)
+	src, _ := content["question_source"].(map[string]any)
+	if src == nil {
+		return nil
+	}
+	changed := false
+	if qs, ok := src["questions"].([]any); ok {
+		for _, x := range qs {
+			m, ok := x.(map[string]any)
+			if !ok {
+				continue
+			}
+			s, _ := m["question_version_id"].(string)
+			id, err := uuid.Parse(s)
+			if err != nil {
+				continue
+			}
+			_, newQV, ok, err := r.cloneQuestion(ctx, in, id)
+			if err != nil {
+				return err
+			}
+			if ok {
+				m["question_version_id"], changed = newQV.String(), true
+			}
+		}
+	}
+	if s, ok := src["question_set_id"].(string); ok {
+		setID, err := uuid.Parse(s)
+		if err != nil {
+			return err
+		}
+		set, err := r.Store.Doc(ctx, contentmodel.TypeQuestionSet, setID)
+		if err != nil {
+			return err
+		}
+		if !set.Owner.Platform() {
+			newSet, ok := in.IDMap[setID]
+			if !ok {
+				sets := DocResource{Type: contentmodel.TypeQuestionSet, Store: r.Store, Questions: r.Questions}
+				if newSet, err = sets.Clone(ctx, port.CloneInput{JobID: in.JobID, SourceID: setID, SourceTenant: in.SourceTenant,
+					TargetTenant: in.TargetTenant, Actor: in.Actor, At: in.At, IDMap: in.IDMap}); err != nil {
+					return err
+				}
+				if in.IDMap != nil {
+					in.IDMap[setID] = newSet
+				}
+			}
+			src["question_set_id"], src["question_set_version"], changed = newSet.String(), 1, true
+		}
+	}
+	if !changed {
+		return nil
+	}
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	body["config"] = b
 	v.Body, err = json.Marshal(body)
 	return err
 }

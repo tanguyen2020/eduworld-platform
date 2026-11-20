@@ -38,8 +38,8 @@ func ParseContentType(s string) (ContentType, error) {
 
 // ResourceType is the ResourceType of the trash, assignment and clone operations
 // (specs/openapi/modules/common/internal-common.v1.yaml) restricted to the resources owned by module
-// learning (DATABASE_DESIGN §2.17: curriculum, lesson, question, question set, blueprint, plus media and
-// the LMS resources).
+// learning (DATABASE_DESIGN §2.17: curriculum, lesson, question, question set, blueprint, activity, plus media
+// and the LMS resources).
 type ResourceType string
 
 // Resource types owned by module learning.
@@ -54,10 +54,11 @@ const (
 	ResourceAssignment          ResourceType = "assignment"
 	ResourceCourse              ResourceType = "course"
 	ResourceLearningPath        ResourceType = "learning_path"
+	ResourceActivity            ResourceType = "activity" // OQ F030 owner 2026-11-20
 )
 
 var resourceTypes = []ResourceType{ResourceCurriculum, ResourceLesson, ResourceLearningMaterial, ResourceQuestion, ResourceQuestionSet,
-	ResourceAssessmentBlueprint, ResourceMedia, ResourceAssignment, ResourceCourse, ResourceLearningPath}
+	ResourceAssessmentBlueprint, ResourceMedia, ResourceAssignment, ResourceCourse, ResourceLearningPath, ResourceActivity}
 
 // ParseResourceType accepts only the resource types owned by module learning (F020-AC-06).
 func ParseResourceType(s string) (ResourceType, error) {
@@ -67,11 +68,11 @@ func ParseResourceType(s string) (ResourceType, error) {
 	return "", ErrInvalid{Field: "resource_type", Reason: "is not a resource type of module learning"}
 }
 
-// ResourceOf maps a content type to its ResourceType; ok is false for content types that are not
-// trash/assignment/clone resources (activity).
+// ResourceOf maps a content type to its ResourceType (every content type is a trash/assignment/clone resource).
 func ResourceOf(t ContentType) (ResourceType, bool) {
 	switch t {
-	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningMaterial, TypeLearningPath:
+	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningMaterial, TypeLearningPath,
+		TypeActivity:
 		return ResourceType(t), true
 	}
 	return "", false

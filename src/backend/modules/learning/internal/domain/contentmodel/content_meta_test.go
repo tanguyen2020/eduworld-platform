@@ -26,12 +26,12 @@ func TestContentAndResourceTypes(t *testing.T) {
 		}
 	}
 	for _, s := range []string{"curriculum", "lesson", "question", "question_set", "assessment_blueprint", "media", "assignment",
-		"course", "learning_path"} {
+		"course", "learning_path", "activity"} {
 		if _, err := ParseResourceType(s); err != nil {
 			t.Errorf("resource %s refused: %v", s, err)
 		}
 	}
-	for _, s := range []string{"quest", "item", "tournament_template", "activity"} {
+	for _, s := range []string{"quest", "item", "tournament_template", "class_template"} {
 		if _, err := ParseResourceType(s); err == nil {
 			t.Errorf("resource %s of another module accepted", s)
 		}
@@ -39,8 +39,9 @@ func TestContentAndResourceTypes(t *testing.T) {
 	if r, ok := ResourceOf(TypeQuestionSet); !ok || r != ResourceQuestionSet {
 		t.Fatalf("ResourceOf(question_set) = %v %v", r, ok)
 	}
-	if _, ok := ResourceOf(TypeActivity); ok {
-		t.Fatal("activity is not a trash/assignment resource")
+	// OQ F030 owner 2026-11-20: activity is assigned, cloned and trashed like a question set.
+	if r, ok := ResourceOf(TypeActivity); !ok || r != ResourceActivity {
+		t.Fatalf("ResourceOf(activity) = %v %v", r, ok)
 	}
 	if c, ok := ContentOf(ResourceCurriculum); !ok || c != TypeCurriculum {
 		t.Fatalf("ContentOf(curriculum) = %v %v", c, ok)
