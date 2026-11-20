@@ -91,3 +91,22 @@ func (Refs) PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickna
 		ON CONFLICT (student_id) DO UPDATE SET nickname = $3, level = $4, avatar_config = $5::jsonb, source_version = $6
 		WHERE p.source_version < $6 AND p.tenant_id = $2`, student, tenant, nickname, level, a, version)
 }
+
+// Friendship upserts ref.friendships from friend.added / friend.removed (newer source_version only; a pair never moves
+// to another tenant).
+func (Refs) Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return exec(ctx, `INSERT INTO ref.friendships AS f (tenant_id, user_low_id, user_high_id, active, source_version)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (user_low_id, user_high_id) DO UPDATE SET active = $4, source_version = $5
+		WHERE f.source_version < $5 AND f.tenant_id = $1`, tenant, low, high, active, version)
+}
+
+// Block upserts ref.blocks from user.blocked / user.unblocked (newer source_version only).
+func (Refs) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return exec(ctx, `INSERT INTO ref.blocks AS b (tenant_id, blocker_id, blocked_id, active, source_version)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (blocker_id, blocked_id) DO UPDATE SET active = $4, source_version = $5
+		WHERE b.source_version < $5 AND b.tenant_id = $1`, tenant, blocker, blocked, active, version)
+}

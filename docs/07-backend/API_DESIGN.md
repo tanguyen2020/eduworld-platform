@@ -364,7 +364,7 @@ Retry-After: 18        # chỉ khi 429
 | Ghi chung | 60 req/phút | `sub` |
 | `/learning/activity-attempts/*/responses` | 120 req/phút | `sub` |
 | `/multiplayer/parties/*/invitations` | 10 lời mời/phút, 50/ngày | `sub` (nghiệp vụ, Valkey) |
-| `/social/friend-requests` | theo `friend_limits` ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)) | `sub` (nghiệp vụ, Valkey) |
+| `/social/friend-requests` | theo `friend_limits` ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)) | `sub` (nghiệp vụ trong module chat: đếm lời mời đã gửi trong `social.friend_requests` từ đầu ngày platform, vượt → `429 RATE_LIMITED` + `Retry-After` tới ngày mới; áp cả `friend-codes:redeem` — F095) |
 | `/chat/channels/*/messages` (REST fallback) | theo [CHAT_SYSTEM §3.1](../03-social-multiplayer/CHAT_SYSTEM.md) (tài liệu sở hữu rate limit chat; WS và REST dùng chung bộ đếm) | `sub` + channel |
 | `/cms/media:presign-upload` | 30/phút | `sub` |
 | `/schools/*/sis-imports` | 10/giờ | `sub` + `school_id` |

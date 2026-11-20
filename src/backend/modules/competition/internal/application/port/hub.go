@@ -191,4 +191,7 @@ type ProjectionWriter interface {
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
+	// Friendship and Block apply friend.added/removed and user.blocked/unblocked of module chat (owner F095).
+	Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error)
+	Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error)
 }

@@ -151,7 +151,9 @@ func TestFeatureFlagsAndMenuCatalog(t *testing.T) {
 		}
 		return bs.FeatureFlags
 	}
-	if fa, fb := boot(tA, st), boot(tB, stB); fa["preview_game_frame"] != true || fb["preview_game_frame"] != false || len(fa) != 1 {
+	// F095-AC-23: social.friends_enabled is on outside a common tenant (the common tenant case is in game_login).
+	if fa, fb := boot(tA, st), boot(tB, stB); fa["preview_game_frame"] != true || fb["preview_game_frame"] != false || len(fa) != 2 ||
+		fa[read.FriendsEnabledFlag] != true || fb[read.FriendsEnabledFlag] != true {
 		t.Fatalf("bootstrap flags A=%v B=%v", fa, fb)
 	}
 

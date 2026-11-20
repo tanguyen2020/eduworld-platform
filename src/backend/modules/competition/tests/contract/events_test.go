@@ -44,6 +44,15 @@ func (f *fakeRefs) PlayerProfile(context.Context, uuid.UUID, uuid.UUID, *string,
 	return true, nil
 }
 
+func (f *fakeRefs) Friendship(_ context.Context, _, _, _ uuid.UUID, active bool, _ int64) (bool, error) {
+	f.calls = append(f.calls, map[bool]string{true: "friend+", false: "friend-"}[active])
+	return true, nil
+}
+func (f *fakeRefs) Block(_ context.Context, _, _, _ uuid.UUID, active bool, _ int64) (bool, error) {
+	f.calls = append(f.calls, map[bool]string{true: "block+", false: "block-"}[active])
+	return true, nil
+}
+
 // fakeHub is a TEST DOUBLE of the hub side of the consumers (R17).
 type fakeHub struct{ removed []uuid.UUID }
 
@@ -84,6 +93,7 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 	h := &fakeHub{}
 	id := consumer.IdentityProjection{P: command.Projection{Refs: refs}}
 	game := consumer.GameProjection{P: command.Projection{Refs: refs}}
+	socialP := consumer.SocialProjection{P: command.Projection{Refs: refs}}
 	revoked := consumer.HubAccessRevoked{Hub: h}
 	cases := []struct {
 		producer, event, want string
@@ -96,6 +106,11 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		{"identity", "student.cleaned_up", "deleted", id.Handle},
 		{"identity", "student.restored", "deleted", id.Handle},
 		{"game", "game_profile.updated", "profile", game.Handle},
+		// F095 T021: the relation events of module chat (spec F091 A-1).
+		{"chat", "friend.added", "friend+", socialP.Handle},
+		{"chat", "friend.removed", "friend-", socialP.Handle},
+		{"chat", "user.blocked", "block+", socialP.Handle},
+		{"chat", "user.unblocked", "block-", socialP.Handle},
 	}
 	for _, c := range cases {
 		payload, tenant := example(t, c.producer, c.event)
@@ -117,5 +132,27 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 	bad := outbox.Envelope{EventType: "game_profile.updated", TenantID: tenant, Payload: json.RawMessage(`{"student_id":"x"}`)}
 	if err := game.Handle(context.Background(), bad); err == nil || !errors.Is(err, outbox.ErrPermanent) {
 		t.Fatalf("invalid payload not refused: %v", err)
+	}
+}
+
+// F095 T021: a relation event breaking the chat schema (pair not normalized, no source_version) goes to the DLQ at once.
+func TestSocialProjectionRefusesInvalidPayloads(t *testing.T) {
+	refs := &fakeRefs{}
+	h := consumer.SocialProjection{P: command.Projection{Refs: refs}}
+	tenant := uuid.New()
+	lo, hi := "00000000-0000-7000-8000-000000000001", "00000000-0000-7000-8000-000000000002"
+	for _, c := range []struct{ typ, payload string }{
+		{"friend.added", `{"tenant_id":"` + tenant.String() + `","user_low_id":"` + hi + `","user_high_id":"` + lo + `","source_version":1}`},
+		{"user.blocked", `{"tenant_id":"` + tenant.String() + `","blocker_id":"` + lo + `","blocked_id":"` + lo + `","source_version":1}`},
+		{"friend.removed", `{"tenant_id":"` + tenant.String() + `","user_low_id":"` + lo + `","user_high_id":"` + hi + `"}`},
+		{"user.unblocked", `{"tenant_id":"` + uuid.NewString() + `","blocker_id":"` + lo + `","blocked_id":"` + hi + `","source_version":1}`},
+	} {
+		e := outbox.Envelope{EventType: c.typ, TenantID: &tenant, OccurredAt: time.Now(), Payload: json.RawMessage(c.payload)}
+		if err := h.Handle(context.Background(), e); err == nil || !errors.Is(err, outbox.ErrPermanent) {
+			t.Errorf("%s %s: %v", c.typ, c.payload, err)
+		}
+	}
+	if len(refs.calls) != 0 {
+		t.Fatalf("invalid payloads reached the projection: %v", refs.calls)
 	}
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/friend_request.sent.v1.schema.json",
+  "title": "Payload friend_request.sent v1 (module chat, owner F095)",
+  "description": "Học sinh gửi lời mời kết bạn (sendFriendRequest hoặc redeemFriendCode, F095-AC-01, AC-08). Consumer: thông báo trong game (F123), AUD. Chỉ ID (R14, R16); từ chối là lặng lẽ nên không có event từ chối. Envelope tenant_id = tenant_id của payload.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "tenant_id", "requester_id", "addressee_id", "source", "expires_at"],
+  "properties": {
+    "request_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "requester_id": { "type": "string", "format": "uuid" },
+    "addressee_id": { "type": "string", "format": "uuid" },
+    "source": { "type": "string", "enum": ["direct", "friend_code"] },
+    "expires_at": { "type": "string", "format": "date-time", "description": "created_at + friend_request_ttl" }
+  },
+  "examples": [
+    { "request_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "requester_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "addressee_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "source": "direct", "expires_at": "2026-11-28T03:00:00Z" }
+  ]
+}

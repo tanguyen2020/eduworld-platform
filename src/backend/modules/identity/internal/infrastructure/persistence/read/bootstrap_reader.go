@@ -25,6 +25,9 @@ type BootstrapReader struct {
 
 var _ read.BootstrapReader = BootstrapReader{}
 
+// FriendsEnabledFlag is the bootstrap feature flag of the friend features (module chat, F095-AC-23).
+const FriendsEnabledFlag = "social.friends_enabled"
+
 // Bootstrap implements read.BootstrapReader.
 func (r BootstrapReader) Bootstrap(ctx context.Context, userID uuid.UUID) (out dto.PlayerBootstrap, err error) {
 	err = r.Session.Read(ctx, func(ctx context.Context) error {
@@ -54,6 +57,11 @@ func (r BootstrapReader) Bootstrap(ctx context.Context, userID uuid.UUID) (out d
 		out.IsCommonTenant = out.TenantType == "common"
 		if err := r.featureFlags(ctx, tx, &out); err != nil {
 			return err
+		}
+		// F095-AC-23 (ADR-0078, CHILD_SAFETY §3.6): friends and friend codes are off by default in a common tenant, so the
+		// client hides the buttons; a feature flag row of the same key (System Admin, tenant override) decides when present.
+		if _, set := out.FeatureFlags[FriendsEnabledFlag]; !set {
+			out.FeatureFlags[FriendsEnabledFlag] = !out.IsCommonTenant
 		}
 		return r.student(ctx, tx, userID, &out)
 	})

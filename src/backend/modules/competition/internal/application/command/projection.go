@@ -63,3 +63,13 @@ func (p Projection) PlayerProfile(ctx context.Context, tenant, student uuid.UUID
 	}
 	return p.Refs.PlayerProfile(ctx, student, tenant, nickname, level, avatar, version)
 }
+
+// Friendship applies friend.added (active) and friend.removed (inactive) of module chat (owner F095, spec F091 A-1).
+func (p Projection) Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error) {
+	return p.Refs.Friendship(ctx, tenant, low, high, active, version)
+}
+
+// Block applies user.blocked (active) and user.unblocked (inactive) of module chat (owner F095).
+func (p Projection) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error) {
+	return p.Refs.Block(ctx, tenant, blocker, blocked, active, version)
+}

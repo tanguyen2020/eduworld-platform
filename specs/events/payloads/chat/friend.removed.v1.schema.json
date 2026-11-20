@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/friend.removed.v1.schema.json",
+  "title": "Payload friend.removed v1 (module chat, owner F095)",
+  "description": "Tình bạn kết thúc: hủy kết bạn (reason removed, F095-AC-12) hoặc do chặn (reason blocked, F095-AC-14). Không có thông báo cho người kia. Consumer: competition (ref.friendships active = false), chat, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "user_low_id", "user_high_id", "reason", "source_version"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "user_low_id": { "type": "string", "format": "uuid" },
+    "user_high_id": { "type": "string", "format": "uuid" },
+    "reason": { "type": "string", "enum": ["removed", "blocked"] },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Thời điểm thay đổi (epoch µs): projection chỉ áp bản mới hơn (DATABASE_DESIGN §2.17)" }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "user_low_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "user_high_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "reason": "removed", "source_version": 1763190000123456 }
+  ]
+}

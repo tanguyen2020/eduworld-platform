@@ -52,6 +52,8 @@ type Service struct {
 
 	mu     sync.Mutex
 	timers map[uuid.UUID]*time.Timer
+	// refreshed is the time of the last refresh signal per student (node-local, F095: at most one per presence_ttl/3).
+	refreshed map[uuid.UUID]time.Time
 }
 
 // New builds the service.
@@ -113,6 +115,11 @@ func (s *Service) apply(ctx context.Context, c Caller, reason string, fn func(st
 		if err := r.Error(); err != nil {
 			return st, fmt.Errorf("presence: write: %w", err)
 		}
+	}
+	if st.Status == rt.PresenceOffline {
+		s.mu.Lock()
+		delete(s.refreshed, c.UserID)
+		s.mu.Unlock()
 	}
 	s.publish(c, st, reason, now)
 	return st, nil
@@ -247,14 +254,39 @@ func (s *Service) SetArea(ctx context.Context, c Caller, area, room string) erro
 	return err
 }
 
-// Refresh extends the TTL and the last-seen score while the connection lives (gateway heartbeat).
+// Refresh extends the TTL and the last-seen score while the connection lives (gateway heartbeat). At most every
+// presence_ttl/3 it also republishes the current state (reason refresh): the modules that keep their own copy with TTL
+// presence_ttl (module chat, F095-AC-22) then never expire a student who stays connected without a change, and a lost
+// signal turns into offline after presence_ttl (F095 edge case).
 func (s *Service) Refresh(ctx context.Context, c Caller) error {
-	now := s.Now().UnixMilli()
+	at := s.Now()
+	now := at.UnixMilli()
 	for _, r := range s.C.DoMulti(ctx, s.C.B().Expire().Key(userKey(c.UserID)).Seconds(int64(s.TTL/time.Second)).Build(),
 		s.C.B().Zadd().Key(onlineKey(c.TenantID)).Xx().ScoreMember().ScoreMember(float64(now), c.UserID.String()).Build()) {
 		if err := r.Error(); err != nil {
 			return err
 		}
 	}
+	if s.NC == nil || !s.dueRefresh(c.UserID, at) {
+		return nil
+	}
+	st, err := s.Get(ctx, c.UserID)
+	if err != nil || st == nil || st.Status == rt.PresenceOffline {
+		return err
+	}
+	s.publish(c, *st, rt.PresenceRefresh, at)
 	return nil
+}
+
+func (s *Service) dueRefresh(user uuid.UUID, at time.Time) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.refreshed == nil {
+		s.refreshed = map[uuid.UUID]time.Time{}
+	}
+	if last, ok := s.refreshed[user]; ok && at.Sub(last) < s.TTL/3 {
+		return false
+	}
+	s.refreshed[user] = at
+	return true
 }

@@ -276,6 +276,9 @@ func TestGameLogin(t *testing.T) {
 	}
 	b := r.body["bootstrap"].(map[string]any)
 	class, _ := b["class"].(map[string]any)
+	if ff, _ := b["feature_flags"].(map[string]any); ff["social.friends_enabled"] != true {
+		t.Fatalf("bootstrap feature flags: %v", b["feature_flags"])
+	}
 	school, _ := b["school"].(map[string]any)
 	if b["tenant_id"] != a.tenant || b["tenant_type"] != "unit" || b["is_common_tenant"] != false || b["grade_band"] != "g1_3" ||
 		class["class_id"] != a.class || class["name"] != "3A" || school["school_id"] != a.school || school["province"] == nil {
@@ -393,6 +396,10 @@ func TestGameLogin(t *testing.T) {
 		t.Fatalf("common: %d %v", r.code, r.body)
 	}
 	cb := r.body["bootstrap"].(map[string]any)
+	// F095-AC-23: friends are off by default in the common tenant (the client hides the buttons).
+	if ff, _ := cb["feature_flags"].(map[string]any); ff["social.friends_enabled"] != false {
+		t.Fatalf("common bootstrap feature flags: %v", cb["feature_flags"])
+	}
 	if cb["is_common_tenant"] != true || cb["tenant_type"] != "common" || cb["grade_band"] != "g4_5" ||
 		cb["school"].(map[string]any)["is_virtual"] != true || cb["class"].(map[string]any)["class_id"] != commonG4 {
 		t.Fatalf("common bootstrap: %v", cb)

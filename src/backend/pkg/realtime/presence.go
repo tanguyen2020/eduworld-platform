@@ -21,6 +21,8 @@ const (
 	PresenceTimeout      = "timeout"
 	PresenceStatusSet    = "status_set"
 	PresenceAreaChanged  = "area_changed"
+	// PresenceRefresh republishes an unchanged state while the connection lives (at most every presence_ttl/3, F095).
+	PresenceRefresh = "refresh"
 )
 
 // presencePrefix is the NATS core subject of presence signals (F091 research R3): ew.rt.presence.<tenant_id>.

@@ -30,6 +30,16 @@ const ProjectionGameName = "competition.projection_game"
 // world.area_unlocked join this consumer when F071 defines their payload (F091 T005: not created here).
 var ProjectionGameEvents = []string{"game_profile.updated"}
 
+// ChatStream is the stream of the producer chat.
+var ChatStream = natsx.EventStream("chat")
+
+// ProjectionSocialName keeps ref.friendships and ref.blocks from the relation events of module chat (owner F095, spec
+// F091 A-1): "join a friend", friends first and block avoidance in the hub (F091), party and matchmaking (F100, F104).
+const ProjectionSocialName = "competition.projection_social"
+
+// ProjectionSocialEvents are the chat events it projects.
+var ProjectionSocialEvents = []string{"friend.added", "friend.removed", "user.blocked", "user.unblocked"}
+
 // Subjects returns the exact subjects of the events of producer.
 func Subjects(producer string, events []string) []string {
 	out := make([]string, len(events))

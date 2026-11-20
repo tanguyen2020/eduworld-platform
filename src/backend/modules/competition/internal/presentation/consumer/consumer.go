@@ -264,3 +264,51 @@ func (c HubAccessRevoked) Handle(ctx context.Context, e outbox.Envelope) error {
 	}
 	return c.Hub.RemoveStudent(ctx, p.UserID, "kicked")
 }
+
+// SocialProjection is the consumer competition.projection_social: ref.friendships from friend.added/removed and
+// ref.blocks from user.blocked/unblocked of module chat (owner F095, spec F091 A-1). Ids only (R14, R16).
+type SocialProjection struct{ P command.Projection }
+
+// SocialProjectionOptions returns its options.
+func SocialProjectionOptions(h SocialProjection, uow *entx.UnitOfWork, dlq *sql.DB, js jetstream.JetStream) outbox.ConsumerOptions {
+	return outbox.ConsumerOptions{Module: "competition", Name: messaging.ProjectionSocialName, Stream: messaging.ChatStream,
+		Subjects: messaging.Subjects("chat", messaging.ProjectionSocialEvents), UoW: uow, DLQDB: dlq, JS: js, Handler: h.Handle}
+}
+
+// Handle implements outbox.Handler.
+func (c SocialProjection) Handle(ctx context.Context, e outbox.Envelope) error {
+	var p struct {
+		TenantID      uuid.UUID `json:"tenant_id"`
+		UserLowID     uuid.UUID `json:"user_low_id"`
+		UserHighID    uuid.UUID `json:"user_high_id"`
+		BlockerID     uuid.UUID `json:"blocker_id"`
+		BlockedID     uuid.UUID `json:"blocked_id"`
+		SourceVersion *int64    `json:"source_version"`
+	}
+	switch e.EventType {
+	case "friend.added", "friend.removed", "user.blocked", "user.unblocked":
+	default:
+		return nil
+	}
+	if err := decode(e, &p); err != nil {
+		return outbox.Permanent(err)
+	}
+	tenant, err := envTenant(e)
+	if err != nil || p.TenantID != tenant || p.SourceVersion == nil {
+		return outbox.Permanent(invalid(e.EventType, "tenant_id/source_version"))
+	}
+	switch e.EventType {
+	case "friend.added", "friend.removed":
+		if p.UserLowID == uuid.Nil || p.UserHighID == uuid.Nil || p.UserLowID.String() >= p.UserHighID.String() {
+			return outbox.Permanent(invalid(e.EventType, "user_low_id < user_high_id"))
+		}
+		ok, err := c.P.Friendship(ctx, tenant, p.UserLowID, p.UserHighID, e.EventType == "friend.added", *p.SourceVersion)
+		return classify("friendships", e, ok, err)
+	default:
+		if p.BlockerID == uuid.Nil || p.BlockedID == uuid.Nil || p.BlockerID == p.BlockedID {
+			return outbox.Permanent(invalid(e.EventType, "blocker_id/blocked_id"))
+		}
+		ok, err := c.P.Block(ctx, tenant, p.BlockerID, p.BlockedID, e.EventType == "user.blocked", *p.SourceVersion)
+		return classify("blocks", e, ok, err)
+	}
+}

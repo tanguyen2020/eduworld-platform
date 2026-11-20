@@ -5271,6 +5271,7 @@ components:
                       description: curfew_warning_minutes (CONFIG_DEFAULTS)
         feature_flags:
           type: object
+          description: 'Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: `false` ở tenant `common` (kết bạn và mã bạn bè tắt mặc định — ADR-0078, F095-AC-23), client ẩn nút; cờ cùng tên do System Admin đặt (nếu có) quyết định.'
           additionalProperties:
             type: boolean
         content_manifest_version:

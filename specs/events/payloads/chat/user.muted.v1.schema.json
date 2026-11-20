@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/user.muted.v1.schema.json",
+  "title": "Payload user.muted v1 (module chat, owner F095)",
+  "description": "Quan hệ tắt tiếng một chiều được tạo/gỡ (muteUser/unmuteUser, F095-AC-17): chỉ ảnh hưởng người tắt tiếng (ẩn tin/emote), người bị tắt tiếng không được báo. Consumer: chat (F115, F118), client emote hub (F119), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "muter_id", "muted_id", "source_version"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "muter_id": { "type": "string", "format": "uuid" },
+    "muted_id": { "type": "string", "format": "uuid" },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Thời điểm thay đổi (epoch µs): projection chỉ áp bản mới hơn (DATABASE_DESIGN §2.17)" }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "muter_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "muted_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "source_version": 1763190000123456 }
+  ]
+}

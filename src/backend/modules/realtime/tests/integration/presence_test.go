@@ -11,6 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/presence"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
 
@@ -237,4 +238,61 @@ func TestRoomSnapshotBundle(t *testing.T) {
 		}
 	}
 	clients["chi"].none("hub.snapshot.updated", 300*time.Millisecond)
+}
+
+// F095-AC-22 (gateway side): while the connection lives, the heartbeat republishes the unchanged presence with reason
+// refresh at most every presence_ttl/3, so module chat keeps its copy (TTL presence_ttl) without expiring a student
+// who stays connected; an offline student gets no refresh signal.
+func TestPresenceRefreshSignal(t *testing.T) {
+	e := newEnv(t)
+	an := newStudent()
+	signals := e.presenceSignals(an)
+	svc := presence.New(e.vk, e.nc, 3*time.Second, 45*time.Second, nil, nil)
+	c := presence.Caller{UserID: an.user, TenantID: an.tenant, SchoolID: an.school}
+	ctx := context.Background()
+	if err := svc.Connected(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	nextSignal(t, signals, rt.PresenceOnline, 2*time.Second)
+	refreshes := func(within time.Duration) int {
+		n, timeout := 0, time.After(within)
+		for {
+			select {
+			case p := <-signals:
+				if p.Reason == rt.PresenceRefresh {
+					if p.Status != rt.PresenceOnline || p.UserID != an.user {
+						t.Fatalf("refresh signal %+v", p)
+					}
+					n++
+				}
+			case <-timeout:
+				return n
+			}
+		}
+	}
+	for i := 0; i < 3; i++ { // three heartbeats within presence_ttl/3: one refresh
+		if err := svc.Refresh(ctx, c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n := refreshes(300 * time.Millisecond); n != 1 {
+		t.Fatalf("refresh signals within ttl/3: %d", n)
+	}
+	time.Sleep(time.Second + 50*time.Millisecond)
+	if err := svc.Refresh(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	if n := refreshes(300 * time.Millisecond); n != 1 {
+		t.Fatalf("refresh signals after ttl/3: %d", n)
+	}
+	if err := svc.Disconnected(ctx, c, 1000); err != nil {
+		t.Fatal(err)
+	}
+	nextSignal(t, signals, rt.PresenceOffline, 2*time.Second)
+	if err := svc.Refresh(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	if n := refreshes(300 * time.Millisecond); n != 0 {
+		t.Fatalf("refresh of an offline student: %d", n)
+	}
 }

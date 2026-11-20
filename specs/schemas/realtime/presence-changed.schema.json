@@ -16,7 +16,7 @@
     "area_id": { "type": "string", "maxLength": 64 },
     "room_id": { "type": "string", "maxLength": 64 },
     "hidden": { "type": "boolean", "description": "Ẩn trạng thái: consumer hiển thị offline với người không được thấy (MULTIPLAYER_GAMEPLAY §5)" },
-    "reason": { "type": "string", "enum": ["connected", "disconnected", "timeout", "status_set", "area_changed"], "description": "Nguyên nhân thay đổi; timeout = đóng 4408 (away) hoặc hết ws_timeout không kết nối lại (offline)" },
+    "reason": { "type": "string", "enum": ["connected", "disconnected", "timeout", "status_set", "area_changed", "refresh"], "description": "Nguyên nhân thay đổi; timeout = đóng 4408 (away) hoặc hết ws_timeout không kết nối lại (offline); refresh = trạng thái không đổi, gateway phát lại tối đa mỗi presence_ttl/3 khi kết nối còn sống để consumer giữ bản sao có TTL presence_ttl (F095-AC-22)" },
     "ts": { "type": "integer", "minimum": 0, "description": "Epoch ms phía gateway" }
   },
   "examples": [

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/user.unblocked.v1.schema.json",
+  "title": "Payload user.unblocked v1 (module chat, owner F095)",
+  "description": "Quan hệ chặn một chiều được tạo/gỡ (blockUser/unblockUser, F095-AC-14, AC-16); hiệu lực hai chiều với tương tác. Người bị chặn không được báo. Consumer: competition (ref.blocks: party, ghép trận, hub — F091/F100/F104), chat (F115), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "blocker_id", "blocked_id", "source_version"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "blocker_id": { "type": "string", "format": "uuid" },
+    "blocked_id": { "type": "string", "format": "uuid" },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Thời điểm thay đổi (epoch µs): projection chỉ áp bản mới hơn (DATABASE_DESIGN §2.17)" }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "blocker_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "blocked_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "source_version": 1763190000123456 }
+  ]
+}

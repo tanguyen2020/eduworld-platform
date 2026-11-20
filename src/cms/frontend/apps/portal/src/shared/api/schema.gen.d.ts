@@ -7417,7 +7417,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách người mình đã chặn */
+        /**
+         * Danh sách người mình đã chặn
+         * @description Chỉ quan hệ do chính học sinh tạo; không có API cho biết ai đã chặn mình (F095-AC-19).
+         */
         get: operations["listBlocks"];
         put?: never;
         post?: never;
@@ -7435,10 +7438,17 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Chặn người dùng */
+        /**
+         * Chặn người dùng
+         * @description Idempotent (đã chặn → `204`). Kết thúc tình bạn nếu có (lặng lẽ), hủy lời mời kết bạn đang chờ hai chiều; người bị chặn
+         *     không được báo (F095-AC-14). Chặn chính mình → `422`; đích không phải học sinh trong tenant phiên → `404`.
+         */
         put: operations["blockUser"];
         post?: never;
-        /** Bỏ chặn người dùng */
+        /**
+         * Bỏ chặn người dùng
+         * @description Không khôi phục tình bạn (F095-AC-16); chưa chặn người này → `404`.
+         */
         delete: operations["unblockUser"];
         options?: never;
         head?: never;
@@ -7715,7 +7725,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tạo mã bạn bè ngắn hạn (10 phút) để bạn ngồi cạnh nhập */
+        /**
+         * Tạo mã bạn bè ngắn hạn (10 phút) để bạn ngồi cạnh nhập
+         * @description Mã 8 ký tự A–Z0–9, hết hạn sau `friend_code_ttl`; mã mới thay mã cũ của học sinh (F095-AC-08). Tenant `common` chưa
+         *     được System Admin bật lại kết bạn → `403 SOCIAL_SCOPE_VIOLATION` (ADR-0078, F095-AC-23).
+         */
         post: operations["createFriendCode"];
         delete?: never;
         options?: never;
@@ -7732,7 +7746,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Nhập mã bạn bè để gửi lời mời kết bạn (vẫn kiểm tra phạm vi trường — ADR-0054) */
+        /**
+         * Nhập mã bạn bè để gửi lời mời kết bạn (vẫn kiểm tra phạm vi trường — ADR-0054)
+         * @description Mã còn hạn của học sinh khác trong tenant phiên tạo lời mời `source = friend_code` với cùng kiểm tra như
+         *     `sendFriendRequest` (F095-AC-08). Mã sai hoặc hết hạn → `404 FRIEND_CODE_INVALID`; mã sai định dạng hoặc mã của
+         *     chính mình → `422`.
+         */
         post: operations["redeemFriendCode"];
         delete?: never;
         options?: never;
@@ -7747,10 +7766,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lời mời kết bạn đến/đi */
+        /**
+         * Lời mời kết bạn đến/đi
+         * @description `incoming`: lời mời `pending` còn hạn gửi tới chính học sinh; `outgoing`: lời mời chính học sinh đã gửi và chưa hết
+         *     hạn. Từ chối là lặng lẽ: lời mời bị từ chối vẫn hiện `pending` với người gửi tới khi hết hạn (F095-AC-06, SC-003).
+         *     Lời mời của người khác không bao giờ xuất hiện (F095-AC-13); tối đa 100 lời mời mới nhất.
+         */
         get: operations["listFriendRequests"];
         put?: never;
-        /** Gửi lời mời kết bạn */
+        /**
+         * Gửi lời mời kết bạn
+         * @description Tới học sinh cùng trường (khác trường chỉ khi tenant `unit` bật `cross_school_social_enabled`, ADR-0054). Người nhận
+         *     khác tenant hoặc không phải học sinh hoạt động → `404`; khác trường khi chưa bật, hai người đã chặn nhau (không tiết lộ
+         *     chiều chặn) hoặc tenant `common` chưa được System Admin bật lại kết bạn (ADR-0078) → `403 SOCIAL_SCOPE_VIOLATION`;
+         *     đã là bạn hoặc đã có lời mời chờ cùng chiều → `409 CONFLICT`; vượt `friend_limits` (lời mời đang chờ, số bạn) →
+         *     `409 FRIEND_LIMIT_REACHED`; vượt số lời mời/ngày → `429 RATE_LIMITED` kèm `Retry-After`; gửi cho chính mình → `422`.
+         */
         post: operations["sendFriendRequest"];
         delete?: never;
         options?: never;
@@ -7767,7 +7798,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Chấp nhận lời mời kết bạn */
+        /**
+         * Chấp nhận lời mời kết bạn
+         * @description Chỉ người nhận, với lời mời `pending` còn hạn; người khác, lời mời hết hạn hoặc đã xử lý → `404` (F095-AC-05). Tạo
+         *     đúng một tình bạn (cặp chuẩn hóa), hủy lời mời ngược chiều đang chờ; một trong hai đã đủ số bạn tối đa →
+         *     `409 FRIEND_LIMIT_REACHED`.
+         */
         post: operations["acceptFriendRequest"];
         delete?: never;
         options?: never;
@@ -7799,7 +7835,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách bạn bè */
+        /**
+         * Danh sách bạn bè
+         * @description Chỉ bạn bè của chính học sinh trong tenant phiên, dạng `PlayerCard` (nickname, avatar, level, presence) — không tên
+         *     thật, trường, lớp, điểm (R16, F095-AC-11). `presence` là trạng thái gần nhất module chat nhận (TTL `presence_ttl`),
+         *     `offline` khi không có dữ liệu hoặc bạn bật "Ẩn trạng thái" (F095-AC-21, AC-22). Chỉ học sinh (`game_player`).
+         */
         get: operations["listFriends"];
         put?: never;
         post?: never;
@@ -7833,7 +7874,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách người mình đã tắt tiếng */
+        /**
+         * Danh sách người mình đã tắt tiếng
+         * @description Chỉ quan hệ do chính học sinh tạo (F095-AC-19).
+         */
         get: operations["listMutes"];
         put?: never;
         post?: never;
@@ -7851,10 +7895,17 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Tắt tiếng người chơi (ẩn tin/emote của họ với mình) */
+        /**
+         * Tắt tiếng người chơi (ẩn tin/emote của họ với mình)
+         * @description Idempotent (đã tắt tiếng → `204`); chỉ ảnh hưởng người tắt tiếng, người bị tắt tiếng không được báo (F095-AC-17).
+         *     Chính mình → `422`; đích không phải học sinh trong tenant phiên → `404`.
+         */
         put: operations["muteUser"];
         post?: never;
-        /** Bỏ tắt tiếng */
+        /**
+         * Bỏ tắt tiếng
+         * @description Idempotent (chưa tắt tiếng → `204`); đích không phải học sinh trong tenant phiên → `404`.
+         */
         delete: operations["unmuteUser"];
         options?: never;
         head?: never;
@@ -11569,9 +11620,14 @@ export interface components {
         FriendRequest: {
             addressee?: components["schemas"]["PlayerCard"];
             created_at: components["schemas"]["Timestamp"];
+            /** @description Hết hạn sau `friend_request_ttl` */
+            expires_at?: components["schemas"]["Timestamp"];
             request_id: components["schemas"]["Uuid"];
             requester?: components["schemas"]["PlayerCard"];
-            /** @enum {string} */
+            /**
+             * @description Người gửi thấy lời mời bị từ chối là `pending` tới khi hết hạn (từ chối lặng lẽ)
+             * @enum {string}
+             */
             status: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
         };
         FunnelReport: {
@@ -13133,6 +13189,7 @@ export interface components {
         PlayerBootstrap: {
             class?: components["schemas"]["PlayerClass"];
             content_manifest_version?: string;
+            /** @description Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: `false` ở tenant `common` (kết bạn và mã bạn bè tắt mặc định — ADR-0078, F095-AC-23), client ẩn nút; cờ cùng tên do System Admin đặt (nếu có) quyết định. */
             feature_flags: {
                 [key: string]: boolean;
             };
@@ -13199,7 +13256,9 @@ export interface components {
             grade_level: components["schemas"]["GradeLevel"];
             name: string;
         };
+        /** @description Người mình đã chặn/tắt tiếng (listBlocks, listMutes) — chỉ nickname, avatar, thời điểm (R16, F095-AC-19) */
         PlayerRelation: {
+            avatar_config?: components["schemas"]["AvatarConfig"];
             /** Format: uri */
             avatar_thumbnail_url?: string;
             created_at: components["schemas"]["Timestamp"];
@@ -34597,6 +34656,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     blockUser: {
@@ -34627,7 +34687,9 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     unblockUser: {
@@ -34658,7 +34720,9 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     acceptClubInvitation: {
@@ -35541,6 +35605,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimited"];
         };
     };
@@ -35587,8 +35652,17 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            410: components["responses"]["Gone"];
+            /** @description FRIEND_CODE_INVALID (mã không tồn tại hoặc hết hạn), NOT_FOUND (chủ mã không còn là học sinh hoạt động) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
         };
     };
@@ -35625,6 +35699,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     sendFriendRequest: {
@@ -35668,8 +35743,11 @@ export interface operations {
                     "application/json": components["schemas"]["FriendRequest"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
         };
     };
@@ -35707,7 +35785,10 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     rejectFriendRequest: {
@@ -35738,6 +35819,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -35777,6 +35859,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     removeFriend: {
@@ -35807,6 +35890,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -35846,6 +35930,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     muteUser: {
@@ -35876,7 +35961,9 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     unmuteUser: {
@@ -35907,7 +35994,9 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getStudentProfile: {

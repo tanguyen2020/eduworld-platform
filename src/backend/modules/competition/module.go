@@ -37,7 +37,8 @@ type Module struct{}
 // Register wires the module into the running binary (F091): health checks everywhere; in core-api the room host of
 // the hub instances and the NATS commands hub.instance.join / hub.player.emote of the realtime gateway; in worker
 // events the outbox relay and the consumers competition.projection_identity, competition.projection_game,
-// competition.hub_access_revoked; in worker jobs the job close-idle-hub-instances.
+// competition.projection_social (relation events of module chat, F095) and competition.hub_access_revoked; in worker jobs
+// the job close-idle-hub-instances.
 func Register(r *module.Registry) (*Module, error) {
 	db, err := r.Database(Name)
 	if err != nil {
@@ -92,6 +93,9 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	r.Consumer("competition.projection_game", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.GameProjectionOptions(consumer.GameProjection{P: projection, Hub: hub}, core.UoW, core.App, js)
+	})
+	r.Consumer("competition.projection_social", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.SocialProjectionOptions(consumer.SocialProjection{P: projection}, core.UoW, core.App, js)
 	})
 	r.Consumer("competition.hub_access_revoked", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)

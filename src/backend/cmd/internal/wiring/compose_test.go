@@ -26,11 +26,11 @@ import (
 )
 
 // wiredModules are the modules whose Done features are wired into the binaries (OQ F010-2).
-var wiredModules = []string{"identity", "learning", "game"}
+var wiredModules = []string{"identity", "learning", "game", "chat"}
 
 // workerModules are the modules with worker entry points (relay, consumers, jobs): competition has no public HTTP
 // operation yet but runs its consumers and jobs since F091.
-var workerModules = []string{"identity", "learning", "game", "competition"}
+var workerModules = []string{"identity", "learning", "game", "competition", "chat"}
 
 // testEnv is a complete configuration of core-api/worker with unreachable endpoints: pools, Valkey and NATS are lazy
 // or test doubles, so composition runs without any container (values are TEST FIXTURES, not secrets).
@@ -71,9 +71,7 @@ func specOperations(t *testing.T, module string) map[string]bool {
 		t.Fatal(err)
 	}
 	var doc struct {
-		Paths map[string]map[string]struct {
-			OperationID string `yaml:"operationId"`
-		} `yaml:"paths"`
+		Paths map[string]map[string]any `yaml:"paths"` // path items may carry a parameters list next to the operations
 	}
 	if err := yaml.Unmarshal(b, &doc); err != nil {
 		t.Fatal(err)
@@ -81,8 +79,10 @@ func specOperations(t *testing.T, module string) map[string]bool {
 	out := map[string]bool{}
 	for _, ops := range doc.Paths {
 		for _, op := range ops {
-			if op.OperationID != "" {
-				out[op.OperationID] = true
+			if m, ok := op.(map[string]any); ok {
+				if id, _ := m["operationId"].(string); id != "" {
+					out[id] = true
+				}
 			}
 		}
 	}
@@ -230,6 +230,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 			"report-jobs", "item-analysis-nightly", "calibration-weekly", "reference-levels-nightly", "efficacy-wave-monitor", "efficacy-reports", "experiment-guardrail", "experiment-lifecycle"},
 		"game":        {"session-timeout", "curfew-session-closer"},
 		"competition": {"close-idle-hub-instances"},
+		"chat":        {"expire-friend-requests"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {
 		t.Run(profile, func(t *testing.T) {
