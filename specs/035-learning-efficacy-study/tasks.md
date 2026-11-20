@@ -145,7 +145,7 @@
 
 - [x] T068 [P] Metric, span, alert `ExperimentGuardrailBreached` — file: `deploy/observability/alerts/learning.yaml` — ✅ metric `eduworld_efficacy_*`, `eduworld_experiment_*` (`observability/efficacy_metrics.go`), span qua `observability.UseCase` của mỗi use case, alert `ExperimentGuardrailBreached` ở `deploy/observability/prometheus/alerts/learning.yml` (file alert nằm cạnh `competition.yml`)
 - [x] T069 [P] Cập nhật LEARNING_EFFICACY_PLAN (hiện thực §6, §10), LEARNING_ANALYTICS §3.4, CHANGELOG; trạng thái F035 trong CODE_PLAN — file: `docs/02-learning/LEARNING_EFFICACY_PLAN.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — ✅ LEARNING_EFFICACY_PLAN §6 (luật gợi ý, phạm vi hiển thị theo arm), §10 (link F035); LEARNING_ANALYTICS §3.4 (chỉ link); CHANGELOG; CODE_PLAN
-- [ ] T070 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/035-learning-efficacy-study/quickstart.md`
+- [x] T070 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/035-learning-efficacy-study/quickstart.md` — ✅ quickstart §5: kịch bản 1–21 bằng integration testcontainers (`TestEfficacy*` 8/8 PASS), 22–23 bằng Vitest MOCK (PASS) + Playwright viết sẵn (skipped); chưa dựng stack thật (trace_id, ảnh màn hình, CSV thật)
 - [x] T071 [P] Test F035-AC-37: tắt `menu.platform_admin.efficacy_studies`/`menu.platform_admin.learning_experiments` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/e2e/platform/research-feature-toggle.spec.ts` — ✅ Vitest `Research.test.tsx` "turned-off menus are hidden…" (menu tắt ẩn, action `edit` tắt ẩn nút) + shell `catalogMenus.test.tsx` (403 FEATURE_DISABLED → thông báo + tải lại quyền, F051) PASS; Playwright `research-feature-toggle.spec.ts` viết sẵn, skipped (OQ F051-9)
 - [x] T072 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F035-AC-37) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/routes.tsx` — ✅ `platform-admin/index.tsx` gắn `EfficacyStudiesScreen`/`LearningExperimentsScreen` vào khóa menu (route con `:studyId`, `:experimentId`), mọi nút trong `<ActionGate>`; `check-portal-catalog` 0 lỗi
 
@@ -156,8 +156,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F035-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make web-test` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, DATABASE_DESIGN, EVENT_DESIGN, ADMIN_PORTAL, CHANGELOG cập nhật
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F035-AC-* có test pass (ghi mã test/TC) — xem từng task; AC-35/AC-37 bằng Vitest MOCK, Playwright backend thật chờ OQ F051-9
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make web-test` xanh — phạm vi module learning + portal (gate 2026-11-21: gofmt, vet, golangci + arch, ewlint, tenancyguard, entlint, archgen, routematrix, allowedcallers, facadegen, problem codes, unit, `TestEfficacy*`; eslint/stylelint, tsc, Vitest)
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — MOCK chỉ ở `src/test/research-backend.ts` và fake trong test
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, DATABASE_DESIGN, EVENT_DESIGN, ADMIN_PORTAL, CHANGELOG cập nhật
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

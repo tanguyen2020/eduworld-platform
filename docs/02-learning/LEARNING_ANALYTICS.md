@@ -135,7 +135,7 @@ type MasteryModel interface {
 - **Recompute**: job có thể tính lại toàn bộ mastery từ `learning_events` khi đổi `model_version` (chạy shadow, so sánh, rồi chuyển). Kích hoạt một `model_version` đã chạy shadow chỉ bằng **CLI vận hành có audit** (System Admin), không có API công khai hay màn portal; kích hoạt không phát lại `learning_objective.mastered` cho LO đã từng đạt.
 - Regrade/re-evaluate ([EXAM_ENGINE §9](EXAM_ENGINE.md#9-chấm-lại-regrade), [ACTIVITY_ENGINE §7.3](ACTIVITY_ENGINE.md#73-thực-thể-evaluation)) phát event bù → recompute LO bị ảnh hưởng của học sinh đó.
 - **Sự kiện đạt mức:** khi level của `(student, LO)` **lần đầu** chuyển sang `mastered`, learning_record phát `learning_objective.mastered` (`student_id`, `learning_objective_id`, `model_version`, `mastered_at`) qua outbox; module game cấp XP một lần cho mỗi LO ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md)). Decay, recompute hay re-evaluate làm level giảm rồi đạt lại không phát lần nữa và không thu hồi phần thưởng đã cấp.
-- So sánh mô hình/tham số bằng thử nghiệm A/B có kiểm soát theo [LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md).
+- So sánh mô hình/tham số bằng thử nghiệm A/B có kiểm soát theo [LEARNING_EFFICACY_PLAN §6](LEARNING_EFFICACY_PLAN.md#6-hạ-tầng-ab-cho-mastery-model-và-selection-rule) (hiện thực ở [F035](../../specs/035-learning-efficacy-study/spec.md)): mô hình của arm tính song song từ cùng evidence, phạm vi hiển thị theo arm và rào chắn do tài liệu đó sở hữu; trạng thái mastery chính thức, `learning_objective.mastered` và mọi đọc phía nhà trường luôn theo mô hình `active` của mục này.
 
 **Mốc dữ liệu để chuyển sang BKT/IRT** [Confirmed — Technical Architect 2026-11-15] — chỉ đánh giá khi đủ **tất cả** điều kiện, và quyết định bằng ADR mới:
 

@@ -63,6 +63,10 @@ x-module-env: &module-env
   EW_MEDIA_SCAN: ${EW_MEDIA_SCAN:-disabled}
   EW_CLAMAV_ADDR: clamav:3310
   EW_SIS_SECRETS_DIR: /run/eduworld/sis-secrets
+  # F035: HMAC key of the pseudonymous codes of the efficacy dataset — a file, never a value (R3); created by
+  # scripts/dev/gen-dev-secrets.sh (make dev-secrets, run by make up-app) in deploy/compose/secrets/ (git-ignored).
+  # Missing file → the efficacy_dataset export fails without output (F035-AC-33).
+  EW_EFFICACY_PSEUDONYM_KEY_FILE: /run/eduworld/secrets/efficacy_pseudonym_key
   EW_SIS_ALLOW_HTTP_BASE_URL: "true"
 
 x-common-env: &common-env
@@ -103,6 +107,7 @@ services:
     ports: ["8100:8100", "9100:9090"]
     volumes: &sis-secrets
       - ${EW_SIS_SECRETS_HOST_DIR:-./sis-secrets.example}:/run/eduworld/sis-secrets:ro
+      - ${EW_DEV_SECRETS_HOST_DIR:-./secrets}:/run/eduworld/secrets:ro
     depends_on: *app-deps
     healthcheck:
       <<: *hc

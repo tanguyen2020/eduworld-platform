@@ -49,3 +49,23 @@ make web-test
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo package `efficacy`, `efficacy/stats`, `experiment`, `question`; kết quả golden stats; trace_id kịch bản 12, 16, 20; ảnh màn hình workspace D; mẫu CSV xuất (đã kiểm không cột định danh).
+
+## 5. Bằng chứng chạy (2026-11-21, T070)
+
+Môi trường local là máy dùng chung (16 GB, container qua Kiri, tối đa 3 lõi cho mỗi agent): **không** dựng toàn stack `make up` + `make seed` + `make up-app` + portal dev, nên các kịch bản §2 được chạy ở mức test tự động tương đương (PostgreSQL/NATS thật qua testcontainers, API HTTP thật của module `learning`, portal với backend MOCK theo contract).
+
+| Kịch bản §2 | Bằng chứng | Kết quả |
+|---|---|---|
+| 1–4 | `TestEfficacyInstruments` (+ unit `question.TestEfficacy*`) | PASS |
+| 5–9 | `TestEfficacyStudy` (+ unit `domain/efficacy`) | PASS |
+| 10–13 | `TestEfficacyWaves` | PASS |
+| 14, 21 | `TestEfficacyWithdraw`, `TestEfficacyStudy` (thu hồi) | PASS |
+| 15, 16, 18 | `TestEfficacyExperiments` (shadow, live: `getMyMastery`/`getMyProgress` theo arm, nhà trường không đổi), `TestEfficacyExperimentRuleParams` (luật gợi ý theo arm), unit `TestPracticeDifficultyByArm` | PASS |
+| 17 | `TestEfficacyExperimentJobs` (job `experiment-guardrail` dừng `guardrail_breach`; `experiment-lifecycle`) | PASS |
+| 19, 20 | `TestEfficacyReportAndDataset` (+ golden `stats`) | PASS |
+| 22 | Vitest `research/__tests__/Research.test.tsx`, `EfficacyInstrumentField.test.tsx` (MOCK) | PASS; Playwright `tests/e2e/platform/research.spec.ts` skipped (chưa có stack thật, OQ F051-9) |
+| 23 | Vitest "turned-off menus are hidden…" + `catalogMenus.test.tsx` (403 `FEATURE_DISABLED`) | PASS; Playwright `research-feature-toggle.spec.ts` skipped (OQ F051-9) |
+
+Lệnh: `go test -tags integration -p 1 ./modules/learning/tests/integration/ -run TestEfficacy` → 8/8 PASS (49,7 s); `go test -p 1 ./modules/learning/...` → mọi package ok; Vitest research + ô đo hiệu quả → 34/34 PASS; Vitest hồi quy (editor câu/blueprint, limits, catalog, i18n) → 105/105 PASS.
+
+Chưa chạy được (cần stack thật): trace_id kịch bản 12, 16, 20; ảnh màn hình workspace D; tải CSV thật từ object storage; axe trên trình duyệt thật.

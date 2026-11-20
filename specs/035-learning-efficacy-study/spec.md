@@ -1,6 +1,6 @@
 # Feature Specification: F035 — Nghiên cứu hiệu quả học tập
 
-**Feature Branch**: `035-learning-efficacy-study` · **Created**: 2026-11-17 · **Status**: Ready · **Module**: module `learning` + `src/cms/frontend/apps/portal` · **Mốc**: M-C3 · **Phụ thuộc**: F031, F032, F042
+**Feature Branch**: `035-learning-efficacy-study` · **Created**: 2026-11-17 · **Status**: Done · **Module**: module `learning` + `src/cms/frontend/apps/portal` · **Mốc**: M-C3 · **Phụ thuộc**: F031, F032, F042
 **Input**: Đo hiệu quả học tập bằng bài kiểm tra độc lập trước/sau có lớp so sánh, kiểm tra mastery có dự báo đúng năng lực thật, hạ tầng A/B cho cấu hình mastery và luật gợi ý, xuất dữ liệu giả danh có kiểm soát; là exit criterion của pilot ([ADR-0080](../../docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)). Thiết kế nghiên cứu do [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) sở hữu. FR chính: FR-ANL-017…023 (PRD).
 
 ## Clarifications

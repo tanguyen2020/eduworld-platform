@@ -34,7 +34,7 @@ PW ?= change-me-local
 define dsn
 postgres://$(1)_$(2):$(PW)@localhost:5432/eduworld_$(1)?sslmode=disable
 endef
-NATIVE_ENV = EW_VALKEY_ADDR=localhost:6379 EW_NATS_URLS=nats://localhost:4222 EW_LOG_FORMAT=text \
+NATIVE_ENV = EW_VALKEY_ADDR=localhost:6379 EW_NATS_URLS=nats://localhost:4222 EW_LOG_FORMAT=text   EW_EFFICACY_PSEUDONYM_KEY_FILE=$(CURDIR)/deploy/compose/secrets/efficacy_pseudonym_key \
   $(foreach m,$(MODULES),EW_DB_$(shell echo $(m) | tr a-z A-Z)_DSN=$(call dsn,$(m),app))
 MIGRATOR_ENV = $(foreach m,$(MODULES),EW_DB_$(shell echo $(m) | tr a-z A-Z)_MIGRATOR_DSN=$(call dsn,$(m),migrator))
 # Atlas runs in the compose network and reaches PostgreSQL as "postgres" (no host networking on Docker Desktop).
@@ -74,11 +74,14 @@ up-obs: ## Start observability (otel-collector, Prometheus, Grafana, Loki, Tempo
 	$(DC) --profile obs up -d --wait
 
 # ---------- binaries ----------
-.PHONY: up-app run-core-api run-realtime run-worker dev build
+.PHONY: up-app dev-secrets run-core-api run-realtime run-worker dev build
 EXCEPT ?=
-up-app: ## Run core-api, realtime, worker in containers (EXCEPT=<binary> to skip one)
+up-app: dev-secrets ## Run core-api, realtime, worker in containers (EXCEPT=<binary> to skip one)
 	EW_GAME_LOGIN_TICKET_KEY=$${EW_GAME_LOGIN_TICKET_KEY:-$$(head -c 32 /dev/urandom | base64)} \
 	  $(DC) --profile app up -d --build --wait $(filter-out $(EXCEPT),$(BINARIES))
+
+dev-secrets: ## Generate the local secrets never committed (deploy/compose/secrets/, e.g. efficacy_pseudonym_key)
+	bash scripts/dev/gen-dev-secrets.sh
 
 run-core-api: ## Run core-api natively (admin :9100, http :8100)
 	$(NATIVE_ENV) $(GO) run -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=core-api" ./cmd/core-api

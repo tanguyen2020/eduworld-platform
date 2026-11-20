@@ -85,6 +85,8 @@ Kết quả là đầu vào cho việc chỉnh tham số mastery và cho quyết
 | Phân nhánh | Hash ổn định `(experiment_id, unit_id) mod 100` → arm; mặc định đơn vị là **lớp** để tránh học sinh cùng lớp nhận trải nghiệm khác nhau; tenant phải đồng ý tham gia |
 | Mastery model | Mỗi arm trỏ một `mastery_model_configs` version; arm không phải control **chạy shadow** cho mọi học sinh (tính song song, không hiển thị) trước khi hiển thị cho arm thật |
 | Selection rule | Arm đổi tham số SelectionRule (ví dụ tỉ lệ câu anh em, interleaving, phân bố độ khó) |
+| Luật gợi ý (`recommendation_rule`) | Arm không phải control đổi tham số của rule engine gợi ý ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) trong danh mục có miền giá trị: `review_threshold` 0,10–0,95, `max_recommendations` 1–3 (chỉ giảm), `prerequisite_depth` 1–3, `spaced_review_days` 0–60, `practice_difficulty` −1…+1, `diagnostic_threshold` 1–10; arm control giữ tham số mặc định |
+| Phạm vi hiển thị theo arm | Arm `live` chỉ đổi trải nghiệm học sinh của arm: mức mastery/tiến độ hiển thị, gợi ý, độ khó luyện tập thích ứng; báo cáo/dashboard nhà trường, XP, `learning_objective.mastered` và bài kiểm tra luôn theo mô hình `active`. Học sinh ở nhiều thử nghiệm `live`: thử nghiệm bắt đầu sớm nhất thắng (theo từng tham số) |
 | Ghi nhận | Learning event mang `experiment_arms` (danh sách `experiment_code:arm`) để phân tích; không lộ cho client |
 | Chỉ số đánh giá | Chính: kết quả bài kiểm tra độc lập (nếu có) hoặc độ chính xác lần đầu trên câu **mới** cùng LO sau 7 ngày (`experiment_eval_delay_days`); phụ: log-loss dự đoán, thời gian học |
 | Rào chắn | Không thử nghiệm trên đề `is_official` hoặc thứ ảnh hưởng điểm trong sổ điểm; dừng sớm khi arm làm giảm độ chính xác ≥ 5 điểm phần trăm so với control (`experiment_guardrail_drop_pp`); không thử nghiệm làm tăng thời gian chơi hay áp lực (R19) |
@@ -124,3 +126,5 @@ Kết quả nghiên cứu là điều kiện ra khỏi pilot ([ADR-0080](../adr/
 | AC-EFF-003 | Bộ dữ liệu xuất cho phân tích chỉ có mã giả danh; ô < 5 học sinh bị ẩn trong báo cáo |
 | AC-EFF-004 | Hai học sinh cùng lớp luôn ở cùng arm khi `unit = class`; arm được ghi trong learning event |
 | AC-EFF-005 | Báo cáo pilot có đủ effect size, khoảng tin cậy, predictive validity theo LO và tỉ lệ rời nghiên cứu |
+
+Hiện thực và kiểm thử: [F035](../../specs/035-learning-efficacy-study/spec.md) (tiêu chí F035-AC-01…AC-37, bằng chứng trong [tasks.md](../../specs/035-learning-efficacy-study/tasks.md)).
