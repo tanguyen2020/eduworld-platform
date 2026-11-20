@@ -34,7 +34,7 @@
 - [x] T014 [P] [US1] Domain `FriendRequest`, `Friendship`, `FriendCode`, `ScopePolicy`, `FriendLimits` — file: `src/backend/modules/chat/internal/domain/social/`
 - [x] T015 [US1] Command `SendFriendRequest`, `AcceptFriendRequest`, `RejectFriendRequest`, `CreateFriendCode`, `RedeemFriendCode`, `ExpireFriendRequests` + repo ent — file: `src/backend/modules/chat/internal/application/command/`, `src/backend/modules/chat/internal/infrastructure/persistence/social/`
 - [x] T016 [US1] Handler HTTP (middleware `game_player`, `tenant`, `idempotency`) + job hết hạn — file: `src/backend/modules/chat/internal/presentation/http/public/social.go`, `src/backend/modules/chat/internal/presentation/job/expire_friend_requests.go` (`presentation/http/routes.go`, `presentation/job/jobs.go`)
-- [x] T029 [US1] Kiểm `common_tenant_social_defaults` (projection `ref.tenants.kind` + cờ bật lại của F120 T059) trong `SendFriendRequest`, `CreateFriendCode`, `AddFriendByCode` — file: `src/backend/modules/chat/internal/application/command/social_scope_guard.go` (hiện thực trong `Tenant.FriendsEnabled` + `command.Social` — tên `AddFriendByCode` = `RedeemFriendCode`; cờ bật lại `common_social_enabled` [Proposed] tới khi có F120 T059)
+- [x] T029 [US1] Kiểm `common_tenant_social_defaults` (projection `ref.tenants.kind` + cờ bật lại của F120 T059) trong `SendFriendRequest`, `CreateFriendCode`, `AddFriendByCode` — file: `src/backend/modules/chat/internal/application/command/social_scope_guard.go` (hiện thực trong `Tenant.FriendsEnabled` + `command.Social` — tên `AddFriendByCode` = `RedeemFriendCode`; cờ bật lại `common_social_enabled` [Confirmed] tới khi có F120 T059)
 
 **Checkpoint**: kết bạn chạy độc lập.
 

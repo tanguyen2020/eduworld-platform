@@ -107,6 +107,7 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Đã làm 2026-11-20.
 
 - [x] T043 **OQ chốt 2026-11-20** (OQ-17, F015-AC-30) `SchoolSettings.daily_play_limit_minutes` (contract + lưu + audit + `school.updated` payload thêm field tùy chọn); test F015-AC-30 — file: `specs/openapi/modules/identity.v1.yaml`, `specs/events/payloads/identity/school.updated.v1.schema.json`, `src/backend/modules/identity/internal/application/command/settings.go` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S — ✅ 2026-11-20: `SchoolSettings.daily_play_limit_minutes` (15–300 phút [Confirmed], `null` = tắt; đổi giá trị cần `reason`, audit `school.settings_updated`), `school.updated.settings_subset` mang giá trị; domain `settings.ValidateDailyPlayLimit`; test `TestSchoolSettings` (F015-AC-30), `TestValidateDailyPlayLimit` PASS
+- [ ] T044 **Nhận từ F095** (A-1, phạm vi kết bạn) Payload `tenant.updated` mang `settings_subset` gồm `cross_school_social_enabled` và `common_social_enabled` (contract + emit trong command cập nhật tenant settings + test contract/integration) để projection `ref.tenants.settings_subset` của module chat bật/tắt kết bạn liên trường từ đầu đến cuối — file: `specs/events/payloads/identity/tenant.updated.v1.schema.json`, `src/backend/modules/identity/internal/application/command/` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S
 
 ## Dependencies & Execution Order
 
