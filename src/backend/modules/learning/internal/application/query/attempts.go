@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +39,45 @@ type Attempts struct {
 	Signer   port.URLSigner
 	// Assignments tells whether the results of a school assignment are released (F041-AC-19); nil = no assignment.
 	Assignments AssignmentResults
+	// Recommendations reads the active recommendations of the student for the review (F063-AC-24); nil = none.
+	Recommendations ReviewRecommendations
+}
+
+// ReviewRecommendations reads the active recommendations of a student (read.SelfStudyModel).
+type ReviewRecommendations interface {
+	Recommendations(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID, now time.Time) ([]read.RecommendationRecord, error)
+}
+
+// reviewKinds are the target types of a recommendation the review shows (AttemptReview.recommendations[].kind).
+var reviewKinds = map[string]bool{"lesson": true, "question_set": true, "quest": true}
+
+// reviewRecommendations are the active recommendations (≤ 3) of the student whose objectives meet the weak objectives
+// of the attempt, with their recommendation_id for AdHocAttemptStart.recommendation_id [Proposed].
+func (q Attempts) reviewRecommendations(ctx context.Context, studentID uuid.UUID, weak []uuid.UUID) ([]dto.ReviewRecommendationView, error) {
+	if q.Recommendations == nil || len(weak) == 0 {
+		return nil, nil
+	}
+	var recs []read.RecommendationRecord
+	if err := q.Session.Read(ctx, func(ctx context.Context) error {
+		var err error
+		recs, err = q.Recommendations.Recommendations(ctx, studentID, nil, q.now())
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	var out []dto.ReviewRecommendationView
+	for _, r := range recs {
+		if !reviewKinds[r.TargetType] || len(out) == 3 {
+			continue
+		}
+		for _, o := range r.ObjectiveIDs {
+			if slices.Contains(weak, o) {
+				out = append(out, dto.ReviewRecommendationView{Kind: r.TargetType, RefID: r.TargetID, RecommendationID: r.ID})
+				break
+			}
+		}
+	}
+	return out, nil
 }
 
 // AssignmentResults tells whether the results of a school assignment are visible to its students (SchoolAssignments).
@@ -364,6 +404,9 @@ func (q Attempts) Review(ctx context.Context, id uuid.UUID) (out dto.ReviewView,
 			}
 		}
 		out.Items = append(out.Items, item)
+	}
+	if out.Recommendations, err = q.reviewRecommendations(ctx, l.a.StudentID, out.WeakObjectives); err != nil {
+		return out, "", err
 	}
 	return out, l.a.DisplayLanguage, nil
 }

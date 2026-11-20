@@ -278,7 +278,7 @@ func (r *Registry) Render(c Content, seed uint64) (Rendered, Presentation, error
 	if len(p.Orders) == 0 {
 		p.Orders = nil
 	}
-	return Rendered{QuestionVersionID: c.VersionID, Type: c.Type, Stem: stem, Payload: payload, MaxScore: c.MaxScore}, p, nil
+	return Rendered{QuestionVersionID: c.VersionID, Type: c.Type, Stem: stem, Payload: payload, MaxScore: c.MaxScore, HintCount: c.HintCount}, p, nil
 }
 
 // renderOptions rewrites the formulas of the option contents of a payload (math_ref instead of LaTeX).

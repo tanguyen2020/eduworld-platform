@@ -25,6 +25,7 @@ type QuestionRenderView struct {
 	Type              string         `json:"type"`
 	RenderPayload     map[string]any `json:"render_payload"`
 	MaxScore          float64        `json:"max_score"`
+	HintCount         int            `json:"hint_count"`
 }
 
 // SavedResponseView is one entry of Attempt.saved_responses.
@@ -173,4 +174,13 @@ type ReviewView struct {
 	MaxScore       *float64         `json:"max_score"`
 	Items          []ReviewItemView `json:"items"`
 	WeakObjectives []uuid.UUID      `json:"weak_objectives"`
+	// Recommendations are the active study recommendations of the student about the weak objectives (F063-AC-24).
+	Recommendations []ReviewRecommendationView `json:"recommendations,omitempty"`
+}
+
+// ReviewRecommendationView is AttemptReview.recommendations[].
+type ReviewRecommendationView struct {
+	Kind             string    `json:"kind"`
+	RefID            uuid.UUID `json:"ref_id"`
+	RecommendationID uuid.UUID `json:"recommendation_id"`
 }

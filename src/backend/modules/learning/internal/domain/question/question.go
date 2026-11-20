@@ -95,6 +95,7 @@ type Content struct {
 	MaxScore   float64
 	Language   string
 	MathAssets []MathAsset
+	HintCount  int // hint levels of the version (render only, never the hints)
 }
 
 // Authoring is the authoring form of a version (question.schema.json): render payload with option feedback.
@@ -147,6 +148,8 @@ type Rendered struct {
 	Stem              any            `json:"stem"`
 	Payload           map[string]any `json:"render_payload"`
 	MaxScore          float64        `json:"max_score"`
+	// HintCount is the number of hint levels of the version (QuestionRender.hint_count, 0–5); never the hints.
+	HintCount int `json:"hint_count"`
 }
 
 var itemIDRe = regexp.MustCompile(`^[a-z]_[a-z0-9_]{1,24}$`)

@@ -115,7 +115,7 @@ func Item(it attempt.Item, r question.Rendered) dto.QuestionRenderView {
 		payload["stem"] = r.Stem
 	}
 	return dto.QuestionRenderView{Position: it.Position, QuestionVersionID: it.QuestionVersionID, Type: it.QuestionType,
-		RenderPayload: payload, MaxScore: it.MaxScore}
+		RenderPayload: payload, MaxScore: it.MaxScore, HintCount: r.HintCount}
 }
 
 // Attempt is the Attempt view of an attempt (server_time = now).

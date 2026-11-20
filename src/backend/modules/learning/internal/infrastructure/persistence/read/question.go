@@ -2,6 +2,7 @@ package read
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -250,7 +251,8 @@ func (Delivery) Deliverable(ctx context.Context, versionIDs []uuid.UUID) ([]ques
 	args = append(args, uuidList(versionIDs))
 	// tenancyguard:ok the condition of HybridCondition on q holds tenant_id and deleted_at IS NULL; the view keeps published live rows
 	rows, err := tx.QueryContext(ctx, `SELECT v.question_version_id, v.type, v.stem, v.render_payload, COALESCE(v.math_assets, '[]'::jsonb),
-		v.max_score, v.content_language FROM content.question_delivery_v v
+		v.max_score, v.content_language, (SELECT LEAST(CASE WHEN jsonb_typeof(x.hints) = 'array' THEN jsonb_array_length(x.hints) ELSE 0 END, 5)
+			FROM content.question_versions x WHERE x.question_version_id = v.question_version_id) FROM content.question_delivery_v v
 		JOIN content.questions q ON q.question_id = v.question_id
 		WHERE `+cond+fmt.Sprintf(` AND v.question_version_id = ANY($%d::uuid[])`, len(args)), args...)
 	if err != nil {
@@ -262,11 +264,13 @@ func (Delivery) Deliverable(ctx context.Context, versionIDs []uuid.UUID) ([]ques
 		var c question.Content
 		var typ string
 		var math []byte
-		if err := rows.Scan(&c.VersionID, &typ, &c.Stem, &c.Render, &math, &c.MaxScore, &c.Language); err != nil {
+		var hints sql.NullInt32
+		if err := rows.Scan(&c.VersionID, &typ, &c.Stem, &c.Render, &math, &c.MaxScore, &c.Language, &hints); err != nil {
 			return nil, err
 		}
 		c.Type = question.Type(typ)
 		_ = json.Unmarshal(math, &c.MathAssets)
+		c.HintCount = int(hints.Int32)
 		by[c.VersionID] = c
 	}
 	if err := rows.Err(); err != nil {
