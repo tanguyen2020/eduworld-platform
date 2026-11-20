@@ -25,6 +25,8 @@ const CODE_NOT_SUPPORTED: String = "ACTIVITY_TYPE_NOT_SUPPORTED"
 const CODE_HINTS_EXHAUSTED: String = "HINTS_EXHAUSTED"
 const CODE_HINTS_NOT_ALLOWED: String = "HINTS_NOT_ALLOWED"
 const CODE_NOT_FOUND: String = "NOT_FOUND"
+const CODE_VIDEO_NOT_READY: String = "VIDEO_NOT_READY"
+const CODE_SEEK_NOT_ALLOWED: String = "VIDEO_SEEK_NOT_ALLOWED"
 ## `ActivityAttemptStart` / `AdHocAttemptStart` enums (specs/openapi): other values are not sent.
 const ACTIVITY_MODES: PackedStringArray = ["practice", "assignment", "minigame", "retry_wrong", "diagnostic"]
 const ACTIVITY_CONTEXTS: PackedStringArray = ["free_play", "assignment", "lesson", "learning_path", "recommendation"]
@@ -140,12 +142,16 @@ func resume(attempt_id: String) -> AttemptModel:
 ## Coroutine: sends one answer (F063-AC-05): `{kind: question, position, question_version_id, response,
 ## client_elapsed_ms}`. A network loss queues it in PendingWrites with its key and returns null (`offline` = true,
 ## F063-AC-06). Returns the server result otherwise (null + `last_error_code` on a refusal).
-func respond(position: int, response: Dictionary, client_elapsed_ms: int) -> ResponseResultModel:
+func respond(position: int, response: Dictionary, client_elapsed_ms: int, extra: Dictionary = {}) -> ResponseResultModel:
 	if attempt == null:
 		return null
 	var body: Dictionary = {
 		"kind": "question", "position": position, "response": response, "client_elapsed_ms": maxi(0, client_elapsed_ms),
 	}
+	# F065: an embedded question of a video is `{kind: cue_answer, cue_id}` (the server maps it to its item).
+	for key: String in ["kind", "cue_id"]:
+		if extra.get(key) is String and not (extra[key] as String).is_empty():
+			body[key] = (extra[key] as String).left(64)
 	var item: QuestionRenderModel = attempt.item_at(position)
 	if item != null and Uuid.is_valid(item.question_version_id):
 		body["question_version_id"] = item.question_version_id
@@ -207,6 +213,44 @@ func request_next_hint(attempt_id: String, position: int) -> HintResultModel:
 	last_error_code = ""
 	hint_received.emit(hint)
 	return hint
+
+
+## Coroutine: the branch chosen at a branch point of an interactive video (F065-AC-24): `{kind: branch_choice,
+## branch_point_id, option_id}` with a new key (same key on retry); the result names `next_segment_id`.
+func choose_branch(branch_point_id: String, option_id: String) -> ResponseResultModel:
+	if attempt == null:
+		return null
+	var body: Dictionary = {"kind": "branch_choice", "branch_point_id": branch_point_id.left(64), "option_id": option_id.left(64)}
+	var signature: String = "branch|%s|%s|%s" % [attempt.attempt_id, branch_point_id, option_id]
+	var req: ApiRequest = ApiRequest.make_post("%s/%s/responses" % [PATH_ATTEMPTS, attempt.attempt_id], body)
+	req.idempotency_key = _key(signature)
+	var result: ApiResult = await _send(req)
+	if result.is_transient():
+		last_error_code = result.code
+		return null
+	_forget(signature)
+	if not result.ok:
+		_failed(result)
+		return null
+	last_error_code = ""
+	return ResponseResultModel.from_dict(result.body())
+
+
+## Coroutine: a heartbeat of a media attempt (F065-AC-19): `ActivityProgressReport` → `ActivityProgressState`. Not
+## keyed: `client_seq` makes it idempotent and every report carries all watched ranges, so a lost one loses nothing.
+## Returns the state, or {} with `last_error_code` (e.g. `VIDEO_SEEK_NOT_ALLOWED`).
+func report_progress(report: Dictionary) -> Dictionary:
+	if attempt == null or report.is_empty():
+		return {}
+	var result: ApiResult = await _send(ApiRequest.make_post("%s/%s/progress" % [PATH_ATTEMPTS, attempt.attempt_id], report))
+	if not result.ok:
+		last_error_code = result.code if not result.code.is_empty() else ApiResult.CODE_INVALID_RESPONSE
+		if result.status == 404 or (result.status == 403 and last_error_code in ACCESS_DENIED_CODES):
+			_failed(result)
+		return {}
+	last_error_code = ""
+	attempt.progress = result.body()
+	return result.body()
 
 
 ## Coroutine: pauses the attempt when the student leaves (F063-AC-07). Best effort: returns false on failure.

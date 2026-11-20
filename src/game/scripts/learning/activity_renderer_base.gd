@@ -92,3 +92,23 @@ func current_item_unsupported() -> bool:
 
 func teardown() -> void:
 	pass
+
+
+## Whether the host shows its main button now (a video shows it only while an embedded question is open, F065).
+func wants_action_bar() -> bool:
+	return true
+
+
+## The server's `ActivityProgressState` after a heartbeat (media renderers mirror the accepted ranges and pending cues).
+func apply_progress(_state: Dictionary) -> void:
+	pass
+
+
+## A heartbeat refused by the server (`VIDEO_SEEK_NOT_ALLOWED` → back to the watched frontier).
+func progress_refused(_code: String) -> void:
+	pass
+
+
+## The last `ActivityProgressReport` to send before the player closes or pauses ({} when none).
+func final_report() -> Dictionary:
+	return {}

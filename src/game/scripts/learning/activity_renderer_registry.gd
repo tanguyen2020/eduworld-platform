@@ -1,7 +1,7 @@
 extends Node
 ## Autoload `ActivityRendererRegistry` (GODOT_ARCHITECTURE §6.2, ADR-0048, ACTIVITY_ENGINE §12): `activity_type` →
-## renderer scene under scenes/learning/activity_renderers/. F063 registers `quiz` and `interactive_exercise`;
-## F065 (`video_lesson`), F066 (`audio_lesson`, `simulation`) and F073 (`minigame`) add theirs. Before a renderer is
+## renderer scene under scenes/learning/activity_renderers/. F063 registers `quiz` and `interactive_exercise`,
+## F065 `video_lesson`; F066 (`audio_lesson`, `simulation`) and F073 (`minigame`) add theirs. Before a renderer is
 ## opened, `check()` refuses an unknown type or a version newer than this client (`ActivityRender.min_client_version`,
 ## `ContentManifest.activity_min_client_versions`): the player shows "update required" instead (F063-AC-25).
 
@@ -13,6 +13,7 @@ var renderers: Dictionary = {
 	"quiz": "res://scenes/learning/activity_renderers/quiz/QuizRenderer.tscn",
 	"interactive_exercise":
 			"res://scenes/learning/activity_renderers/interactive_exercise/InteractiveExerciseRenderer.tscn",
+	"video_lesson": "res://scenes/learning/activity_renderers/video_lesson/VideoLessonRenderer.tscn",
 }
 
 
@@ -36,6 +37,9 @@ func scene_path(activity_type: String) -> String:
 func check(activity_type: String, client_version: String, min_versions: PackedStringArray = []) -> String:
 	if not has_renderer(activity_type):
 		return REASON_UNKNOWN_TYPE
+	# A debug build of the source tree ("x.y.z-dev") opens every registered type: minimum versions are for released clients.
+	if client_version.ends_with("-dev") and OS.is_debug_build():
+		return REASON_OK
 	for minimum: String in min_versions:
 		if not minimum.is_empty() and VersionCheck.compare_versions(client_version, minimum) < 0:
 			return REASON_CLIENT_TOO_OLD

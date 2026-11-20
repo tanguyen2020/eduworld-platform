@@ -8,6 +8,8 @@ var content_language: String = L10n.FALLBACK_LANGUAGE
 var grade_band: String = ""
 var math: MathSvgCache = null
 var media: MediaLoader = null
+## Theora files of video lessons (F065).
+var video: VideoFileCache = null
 var clock: ClientClock = null
 ## g1_3 reads the stem aloud automatically (STUDENT_GAME_UX_LEARNING §7).
 var auto_voice: bool = false

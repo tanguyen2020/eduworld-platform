@@ -776,3 +776,24 @@ msgstr ""
 
 msgid "ui.settings.title"
 msgstr ""
+
+msgid "ui.video.not_ready"
+msgstr ""
+
+msgid "ui.video.play_pause"
+msgstr ""
+
+msgid "ui.video.restart"
+msgstr ""
+
+msgid "ui.video.resume"
+msgstr ""
+
+msgid "ui.video.resume_prompt"
+msgstr ""
+
+msgid "ui.video.seek_locked"
+msgstr ""
+
+msgid "ui.video.subtitles"
+msgstr ""

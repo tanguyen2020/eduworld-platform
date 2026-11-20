@@ -779,3 +779,24 @@ msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
 
 msgid "ui.settings.title"
 msgstr "Cài đặt"
+
+msgid "ui.video.not_ready"
+msgstr "Video đang được chuẩn bị, em quay lại sau nhé."
+
+msgid "ui.video.play_pause"
+msgstr "▶ / ❚❚"
+
+msgid "ui.video.restart"
+msgstr "Xem từ đầu"
+
+msgid "ui.video.resume"
+msgstr "Xem tiếp"
+
+msgid "ui.video.resume_prompt"
+msgstr "Xem tiếp từ {time}?"
+
+msgid "ui.video.seek_locked"
+msgstr "Em xem hết phần này trước nhé."
+
+msgid "ui.video.subtitles"
+msgstr "Phụ đề"

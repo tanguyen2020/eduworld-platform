@@ -36,6 +36,9 @@ var items: Array[QuestionRenderModel] = []
 ## position → `{response: Dictionary, hints_revealed: int}` (resume, F063-AC-07).
 var saved: Dictionary = {}
 var render: ActivityRenderModel = null
+## Media activities (F065): position to resume at and `ActivityProgressState` (`watched_ranges`, `pending_cue_ids`…).
+var resume_position_ms: int = 0
+var progress: Dictionary = {}
 ## Local unix seconds when this attempt was received (server clock offset for the countdown).
 var received_unix: float = 0.0
 
@@ -81,6 +84,10 @@ static func from_dict(data: Dictionary, now_unix: float = 0.0) -> AttemptModel:
 		a.render = ActivityRenderModel.from_dict(raw_render as Dictionary)
 		if a.activity_type.is_empty():
 			a.activity_type = a.render.activity_type
+	var resume: Variant = data.get("resume_position_ms")
+	a.resume_position_ms = maxi(0, int(resume)) if resume is int or resume is float else 0
+	var prog: Variant = data.get("progress")
+	a.progress = prog as Dictionary if prog is Dictionary else {}
 	a.received_unix = now_unix if now_unix > 0.0 else Time.get_unix_time_from_system()
 	return a
 

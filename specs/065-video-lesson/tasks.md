@@ -5,8 +5,8 @@
 ## Phase 1: Setup
 
 - [x] T001 [P] Fixture nội dung video mẫu (config hợp lệ/không hợp lệ, 2 nhánh) theo `video-lesson.schema.json` — file: `src/backend/modules/learning/tests/fixtures/videolesson/*.json` — ✅ config mẫu hợp lệ/không hợp lệ và 2 nhánh dựng trong test (`videolesson_test.go`, `tests/contract/videolesson_render_test.go`, `tests/integration/videolesson_test.go`) thay cho file JSON riêng
-- [ ] T002 [P] Khóa dịch `ui.video.*` (`seek_locked`, `not_ready`, `subtitles`, `resume_prompt`, `chapters`, `completed`) — file: `src/game/locale/vi.po`, `src/game/locale/en.po`
-- [ ] T003 [P] Fixture client (`Attempt` video có cue/nhánh, `ActivityProgressState`, file `.vtt` mẫu vi/en) — file: `src/game/tests/fixtures/video/`
+- [x] T002 [P] Khóa dịch `ui.video.*` (`seek_locked`, `not_ready`, `subtitles`, `resume_prompt`, `chapters`, `completed`) — file: `src/game/locale/vi.po`, `src/game/locale/en.po` — ✅ `ui.video.{seek_locked, not_ready, subtitles, resume_prompt, resume, restart, play_pause}` vi/en (khóa dùng thực tế; chương dùng tên chương của nội dung, hoàn thành dùng màn kết quả F063); `messages.pot` 264 khóa, `xx_PS.po` sinh lại
+- [x] T003 [P] Fixture client (`Attempt` video có cue/nhánh, `ActivityProgressState`, file `.vtt` mẫu vi/en) — file: `src/game/tests/fixtures/video/` — ✅ `tests/fakes/video_fixtures.gd` (Attempt video dựng từ fixture hợp đồng `Attempt` + `$defs/render`, media biến thể/phụ đề, `.vtt` vi/en mẫu), `fake_video_playback.gd`, `video_renderer_harness.gd` (TEST-ONLY)
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -56,18 +56,18 @@
 
 ### Tests cho User Story 2
 
-- [ ] T025 [P] [US2] Unit test `VttParser` + chọn phụ đề F065-AC-16 (cue timing, nhiều dòng, fallback `is_default`) — file: `src/game/tests/unit/video/test_vtt_parser.gd` — phải FAIL trước khi code
-- [ ] T026 [P] [US2] Unit test `WatchedRanges` + `VideoProgressReporter` F065-AC-17, F065-AC-19 (khóa tua theo mép, `client_seq` tăng, gửi khi pause/exit, gộp khi offline) — file: `src/game/tests/unit/video/test_video_progress.gd`
-- [ ] T027 [P] [US2] Scene test F065-AC-15, F065-AC-23 (biến thể theo preset, hạ 480p sau 2 lần đệm > 3 s, `suspend_world("video")`) — file: `src/game/tests/scene/video/test_video_player_quality.gd`
-- [ ] T028 [P] [US2] Scene test F065-AC-18, F065-AC-21 (dừng đúng `at_ms`, overlay renderer câu hỏi, không bỏ qua cue bắt buộc, hết video → tua về cue còn thiếu hoặc submit) — file: `src/game/tests/scene/video/test_cue_overlay.gd`
-- [ ] T029 [P] [US2] Scene test F065-AC-20, F065-AC-22 (hỏi xem tiếp; `VIDEO_NOT_READY`; `VIDEO_SEEK_NOT_ALLOWED` → tua về mép) — file: `src/game/tests/scene/video/test_video_resume_errors.gd`
-- [ ] T030 [US2] Integration headless với compose: `hs.an.3a` xem video có cue 01:30 tới hoàn thành (TC-VID-001, TC-VID-003, TC-VID-004) — file: `src/game/tests/integration/video/test_video_flow.gd`
+- [x] T025 [P] [US2] Unit test `VttParser` + chọn phụ đề F065-AC-16 (cue timing, nhiều dòng, fallback `is_default`) — file: `src/game/tests/unit/video/test_vtt_parser.gd` — phải FAIL trước khi code — ✅ `tests/unit/video/test_vtt_parser.gd` 4/4 pass
+- [x] T026 [P] [US2] Unit test `WatchedRanges` + `VideoProgressReporter` F065-AC-17, F065-AC-19 (khóa tua theo mép, `client_seq` tăng, gửi khi pause/exit, gộp khi offline) — file: `src/game/tests/unit/video/test_video_progress.gd` — ✅ `tests/unit/video/test_video_progress.gd` 4/4 pass (khóa tua, `client_seq` tăng theo unix ms, gửi khi pause, khoảng cộng dồn thay hàng đợi khi mất mạng; heartbeat không key; body `cue_answer`/`branch_choice`)
+- [x] T027 [P] [US2] Scene test F065-AC-15, F065-AC-23 (biến thể theo preset, hạ 480p sau 2 lần đệm > 3 s, `suspend_world("video")`) — file: `src/game/tests/scene/video/test_video_player_quality.gd` — ✅ `tests/scene/video/test_video_player_quality.gd` 3/3 pass (Low/Web → `ogv_480`, Trung bình/Cao → `ogv_720`, 2 lần đứng > 3 s → 480p giữ vị trí, `suspend_world("video")`/resume khi teardown, phụ đề theo ngôn ngữ UI, vi → en → tắt, panel `VoiceCaption`)
+- [x] T028 [P] [US2] Scene test F065-AC-18, F065-AC-21 (dừng đúng `at_ms`, overlay renderer câu hỏi, không bỏ qua cue bắt buộc, hết video → tua về cue còn thiếu hoặc submit) — file: `src/game/tests/scene/video/test_cue_overlay.gd` — ✅ `tests/scene/video/test_cue_overlay.gd` 4/4 pass (dừng ở `at_ms`, overlay renderer câu hỏi F063, không có nút bỏ qua, `cue_answer`, phát tiếp sau phản hồi; heartbeat khi phát/pause; khóa tua + toast; hết video → tua về cue bắt buộc còn thiếu, không còn → `finish_requested`)
+- [x] T029 [P] [US2] Scene test F065-AC-20, F065-AC-22 (hỏi xem tiếp; `VIDEO_NOT_READY`; `VIDEO_SEEK_NOT_ALLOWED` → tua về mép) — file: `src/game/tests/scene/video/test_video_resume_errors.gd` — ✅ `tests/scene/video/test_video_resume_errors.gd` 3/3 pass ("Xem tiếp từ 03:12?" → tua; `VIDEO_SEEK_NOT_ALLOWED` → về mép; `VIDEO_NOT_READY` → `ui.video.not_ready`)
+- [ ] T030 [US2] Integration headless với compose: `hs.an.3a` xem video có cue 01:30 tới hoàn thành (TC-VID-001, TC-VID-003, TC-VID-004) — file: `src/game/tests/integration/video/test_video_flow.gd` — viết sẵn `tests/integration/video/test_video_flow.gd` (skip khi thiếu `EDUWORLD_IT_API_BASE_URL`/`EDUWORLD_IT_VIDEO_ACTIVITY_ID`); **chưa chạy**: cần backend compose + video seed đã transcode (F027) — không khởi động container trong phiên này
 
 ### Implementation cho User Story 2
 
-- [ ] T031 [P] [US2] `VttParser`, `WatchedRanges`, `VideoProgressReporter` — file: `src/game/scripts/learning/vtt_parser.gd`, `src/game/scripts/learning/watched_ranges.gd`, `src/game/scripts/learning/video_progress_reporter.gd`
-- [ ] T032 [US2] `VideoLessonPlayer` (VideoStreamPlayer, SubtitleLayer, CueOverlay, ChapterList, SeekBar, CC vi/en/tắt) — file: `src/game/scenes/learning/video/VideoLessonPlayer.tscn`, `src/game/scenes/learning/video/video_lesson_player.gd`
-- [ ] T033 [US2] `VideoLessonRenderer` kế thừa `ActivityRendererBase`, đăng ký `ActivityRendererRegistry` — file: `src/game/scenes/learning/activity_renderers/video_lesson/VideoLessonRenderer.tscn`, `src/game/scenes/learning/activity_renderers/video_lesson/video_lesson_renderer.gd`
+- [x] T031 [P] [US2] `VttParser`, `WatchedRanges`, `VideoProgressReporter` — file: `src/game/scripts/learning/vtt_parser.gd`, `src/game/scripts/learning/watched_ranges.gd`, `src/game/scripts/learning/video_progress_reporter.gd` — ✅ `scripts/learning/{vtt_parser,watched_ranges,video_progress_reporter}.gd` + `video_playback.gd` (bọc VideoStreamPlayer), `video_file_cache.gd` (`user://cache/media/<sha256>/<variant>.ogv`, không lưu query ký)
+- [x] T032 [US2] `VideoLessonPlayer` (VideoStreamPlayer, SubtitleLayer, CueOverlay, ChapterList, SeekBar, CC vi/en/tắt) — file: `src/game/scenes/learning/video/VideoLessonPlayer.tscn`, `src/game/scenes/learning/video/video_lesson_player.gd` — ✅ gộp vào `VideoLessonRenderer.tscn` (VideoStreamPlayer, SubtitlePanel `VoiceCaption`, Overlay câu chèn, Branch, Resume, SeekBar, CC, chương) thay cho scene `VideoLessonPlayer` riêng
+- [x] T033 [US2] `VideoLessonRenderer` kế thừa `ActivityRendererBase`, đăng ký `ActivityRendererRegistry` — file: `src/game/scenes/learning/activity_renderers/video_lesson/VideoLessonRenderer.tscn`, `src/game/scenes/learning/activity_renderers/video_lesson/video_lesson_renderer.gd` — ✅ `video_lesson_renderer.gd` (`VideoLessonRenderer` kế thừa `ActivityRendererBase`), đăng ký `ActivityRendererRegistry`; hợp đồng renderer thêm `wants_action_bar`, `apply_progress`, `progress_refused`, `final_report`; `ActivityHost` nối `progress_reported`/`finish_requested`, gửi heartbeat cuối trước `:pause`; LearningService `report_progress`, `choose_branch`, `respond(..., {kind, cue_id})`
 
 **Checkpoint**: User Story 2 chạy và kiểm độc lập được.
 

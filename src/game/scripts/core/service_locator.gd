@@ -11,6 +11,7 @@ var telemetry: TelemetryService = null
 var learning: LearningService = null
 var math_svg: MathSvgCache = null
 var media: MediaLoader = null
+var video_files: VideoFileCache = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -27,6 +28,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	math_svg = MathSvgCache.new(transport, _cdn_base_url())
 	math_svg.failure_handler = func(_reason: String) -> void: learning.report_math_failed()
 	media = MediaLoader.new(transport)
+	video_files = VideoFileCache.new(rest)
 
 
 ## Applies the bootstrap of a new session (policies, product telemetry switch) and drops the previous data.

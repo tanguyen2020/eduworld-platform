@@ -158,6 +158,8 @@ func present(attempt: AttemptModel) -> void:
 	renderer.response_submitted.connect(_on_response_submitted)
 	renderer.answer_changed.connect(_on_answer_changed)
 	renderer.item_shown.connect(_on_item_shown)
+	renderer.progress_reported.connect(_on_progress_reported)
+	renderer.finish_requested.connect(_on_finish_requested)
 	_set_state(State.PRESENTING)
 	renderer.setup(attempt, context)
 	service.report_open_time(Time.get_ticks_msec() - _opened_msec)
@@ -186,8 +188,16 @@ func ask_exit() -> void:
 
 func _on_response_submitted(submission: Dictionary) -> void:
 	_set_state(State.AWAITING_RESULT)
-	var result: ResponseResultModel = await service.respond(int(submission.get("position", 0)),
-			submission.get("response", {}) as Dictionary, int(submission.get("client_elapsed_ms", 0)))
+	var result: ResponseResultModel = null
+	if String(submission.get("kind", "")) == "branch_choice":
+		result = await service.choose_branch(String(submission.get("branch_point_id", "")), String(submission.get("option_id", "")))
+		if state == State.AWAITING_RESULT and result != null:
+			renderer.show_result(result)
+			_set_state(State.PRESENTING)
+			return
+	else:
+		result = await service.respond(int(submission.get("position", 0)), submission.get("response", {}) as Dictionary,
+				int(submission.get("client_elapsed_ms", 0)), submission)
 	if state != State.AWAITING_RESULT:
 		return
 	if result != null:
@@ -324,7 +334,9 @@ func _on_math_failed() -> void:
 
 func _on_start_failed(known_type: String) -> void:
 	var code: String = service.last_error_code
-	if code == LearningService.CODE_NOT_SUPPORTED:
+	if code == LearningService.CODE_VIDEO_NOT_READY:
+		_show_error(code, start.bind(args), "ui.video.not_ready")
+	elif code == LearningService.CODE_NOT_SUPPORTED:
 		_show_update_required(known_type if not known_type.is_empty() else String(args.get("activity_type", "")))
 	elif code in LearningService.ACCESS_DENIED_CODES:
 		close()
@@ -412,8 +424,31 @@ func _on_retry_pressed() -> void:
 
 func _on_pause_pressed() -> void:
 	_exit_confirm.hide()
+	if renderer != null:
+		var report: Dictionary = renderer.final_report()
+		if not report.is_empty():
+			await service.report_progress(report)
 	await service.pause()
 	close()
+
+
+## A media heartbeat (F065-AC-19): the server state goes back to the renderer; a refused seek returns it to the frontier.
+func _on_progress_reported(report: Dictionary) -> void:
+	if service == null or service.attempt == null:
+		return
+	var st: Dictionary = await service.report_progress(report)
+	if renderer == null or not visible:
+		return
+	if not st.is_empty():
+		renderer.apply_progress(st)
+	elif service.last_error_code == LearningService.CODE_SEEK_NOT_ALLOWED:
+		renderer.progress_refused(service.last_error_code)
+
+
+## The media renderer reached the end with nothing pending (F065-AC-21): submit.
+func _on_finish_requested() -> void:
+	if state in [State.PRESENTING, State.FEEDBACK]:
+		await _submit()
 
 
 func _on_answer_changed(_complete: bool) -> void:
@@ -452,10 +487,11 @@ func _render_action_bar() -> void:
 	_offline.visible = service != null and service.offline and answering
 	match state:
 		State.PRESENTING:
+			_primary.visible = renderer == null or renderer.wants_action_bar()
 			_primary.text = "ui.activity_player.check"
 			var complete: bool = renderer != null and renderer.is_answer_complete()
 			_primary.disabled = not complete
-			if not complete and renderer != null and not renderer.current_item_unsupported():
+			if not complete and renderer != null and not renderer.current_item_unsupported() and _primary.visible:
 				_status.text = "ui.question.select_answer"
 				_status.visible = true
 		State.FEEDBACK:
@@ -503,6 +539,7 @@ func _make_context(attempt: AttemptModel) -> RendererContext:
 	ctx.grade_band = grade_band
 	ctx.math = services.math_svg
 	ctx.media = services.media
+	ctx.video = services.video_files
 	ctx.clock = service.clock
 	ctx.auto_voice = grade_band == BAND_NO_CLOCK
 	return ctx

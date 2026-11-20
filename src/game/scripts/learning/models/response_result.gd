@@ -17,6 +17,8 @@ var explanation: String = ""
 var explanation_math: Array[MathAssetRefModel] = []
 var feedback: AnswerFeedback = null
 var hints_used: int = 0
+## Segment to play after a branch choice of an interactive video (F065-AC-24), empty otherwise.
+var next_segment_id: String = ""
 
 
 ## Per-option feedback (`AnswerFeedback`).
@@ -54,6 +56,8 @@ static func from_dict(data: Dictionary) -> ResponseResultModel:
 		r.feedback = AnswerFeedback.from_dict(fb as Dictionary)
 	var used: Variant = data.get("hints_used")
 	r.hints_used = maxi(0, int(used)) if used is int or used is float else 0
+	var segment: Variant = data.get("next_segment_id")
+	r.next_segment_id = (segment as String).left(64) if segment is String else ""
 	return r
 
 

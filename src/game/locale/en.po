@@ -779,3 +779,24 @@ msgstr "Do you want to sign out? Next time you will need your password."
 
 msgid "ui.settings.title"
 msgstr "Settings"
+
+msgid "ui.video.not_ready"
+msgstr "The video is still being prepared. Please come back later."
+
+msgid "ui.video.play_pause"
+msgstr "▶ / ❚❚"
+
+msgid "ui.video.restart"
+msgstr "Start over"
+
+msgid "ui.video.resume"
+msgstr "Continue"
+
+msgid "ui.video.resume_prompt"
+msgstr "Continue from {time}?"
+
+msgid "ui.video.seek_locked"
+msgstr "Watch this part first."
+
+msgid "ui.video.subtitles"
+msgstr "Subtitles"

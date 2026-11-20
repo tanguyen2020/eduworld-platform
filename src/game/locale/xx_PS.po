@@ -778,3 +778,24 @@ msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ? Ñëxţ ţïɱë ýöü �
 
 msgid "ui.settings.title"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.video.not_ready"
+msgstr "[!! Ţĥë vïđëö ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.video.play_pause"
+msgstr "[!! ▶ / ❚❚ ~~~ !!]"
+
+msgid "ui.video.restart"
+msgstr "[!! Šţáŕţ övëŕ ~~~~ !!]"
+
+msgid "ui.video.resume"
+msgstr "[!! Çöñţïñüë ~~~~ !!]"
+
+msgid "ui.video.resume_prompt"
+msgstr "[!! Çöñţïñüë ƒŕöɱ {time}? ~~~~~~~~~ !!]"
+
+msgid "ui.video.seek_locked"
+msgstr "[!! Ŵáţçĥ ţĥïš þáŕţ ƒïŕšţ. ~~~~~~~~~ !!]"
+
+msgid "ui.video.subtitles"
+msgstr "[!! Šüƀţïţĺëš ~~~~ !!]"
