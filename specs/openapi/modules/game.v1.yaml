@@ -4949,6 +4949,7 @@ components:
         - hair_colors
         - default_item_ids
         - default_emote_ids
+        - items
       properties:
         catalog_version_id:
           $ref: '#/components/schemas/Uuid'
@@ -4989,6 +4990,12 @@ components:
           maxItems: 6
           items:
             $ref: '#/components/schemas/CatalogCode'
+        items:
+          type: array
+          maxItems: 206
+          description: Tên vi/en và ô trang phục của mỗi item và emote mặc định (một mục cho mỗi mã của default_item_ids và default_emote_ids; OQ F070-1). Rỗng với version publish trước khi có tên — client hiển thị nhãn thứ tự.
+          items:
+            $ref: '#/components/schemas/CatalogItem'
     CatalogName:
       type: object
       required:
@@ -5014,6 +5021,34 @@ components:
             $ref: '#/components/schemas/CatalogCode'
           name:
             $ref: '#/components/schemas/CatalogName'
+    CatalogItem:
+      type: object
+      description: Mục hiển thị của một item/emote trong danh mục nhân vật (không nói học sinh sở hữu hay không — server quyết)
+      required:
+        - item_id
+        - equip_slot
+        - name
+      properties:
+        item_id:
+          $ref: '#/components/schemas/CatalogCode'
+        equip_slot:
+          type: string
+          enum:
+            - hair
+            - outfit
+            - head
+            - face
+            - back
+            - hand
+            - emote
+        name:
+          $ref: '#/components/schemas/CatalogName'
+      example:
+        item_id: hair_short_01
+        equip_slot: hair
+        name:
+          vi: Tóc ngắn
+          en: Short hair
     NicknameSuggestion:
       type: object
       required:

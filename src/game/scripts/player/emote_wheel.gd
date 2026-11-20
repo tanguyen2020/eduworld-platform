@@ -13,6 +13,8 @@ signal wheel_closed()
 const RADIUS_FACTOR: float = 1.6
 
 @export var anim_driver: AnimDriver = null
+## Published catalog for the emote names (T040); null → ordinal labels "Emote n".
+var catalog: CharacterCatalogModel = null
 
 var _emotes: PackedStringArray = []
 var _buttons: Array[Button] = []
@@ -120,7 +122,8 @@ func _rebuild() -> void:
 	for i: int in _emotes.size():
 		var b: Button = Button.new()
 		b.name = "Emote%d" % i
-		b.text = tr("ui.emote.slot").format({"n": i + 1})
+		var ordinal: String = tr("ui.emote.slot").format({"n": i + 1})
+		b.text = catalog.item_label(_emotes[i], ordinal) if catalog != null else ordinal
 		b.tooltip_text = b.text
 		b.custom_minimum_size = Vector2(_target, _target)
 		b.pressed.connect(choose.bind(_emotes[i]))

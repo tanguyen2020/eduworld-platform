@@ -82,6 +82,50 @@ func TestSeedCatalogMatchesSchema(t *testing.T) {
 			t.Errorf("default item %s: %+v", id, it)
 		}
 	}
+	// T040 (OQ F070-1): one catalog item entry per default item and emote, with the slot and the names of the item
+	// definition (the seed keeps both files in step).
+	if len(p.Items) != len(p.DefaultItemIDs)+len(p.DefaultEmoteIDs) {
+		t.Fatalf("catalog items %d", len(p.Items))
+	}
+	for _, it := range p.Items {
+		def := defined[it.ItemID]
+		if it.Name != def.Name || it.EquipSlot != def.EquipSlot {
+			t.Errorf("catalog item %s %+v differs from the item definition %+v", it.ItemID, it, def)
+		}
+	}
+}
+
+// T040: a catalog whose items miss a default item, use an unknown slot, lack a name or list a non-default id is
+// refused before publishing.
+func TestCatalogItemsAreChecked(t *testing.T) {
+	raw := read(t, "src", "backend", "modules", "game", "seed", "character_catalog.v1.json")
+	cases := map[string]func(p *catalog.Payload){
+		"missing default item": func(p *catalog.Payload) { p.Items = p.Items[1:] },
+		"unknown slot":         func(p *catalog.Payload) { p.Items[0].EquipSlot = "shoes" },
+		"missing en name":      func(p *catalog.Payload) { p.Items[0].Name.EN = "" },
+		"extra id": func(p *catalog.Payload) {
+			p.Items = append(p.Items, catalog.Item{ItemID: "hat_extra_01", EquipSlot: "head", Name: catalog.Name{VI: "Mũ", EN: "Hat"}})
+		},
+		"emote in an item slot": func(p *catalog.Payload) {
+			for i := range p.Items {
+				if p.Items[i].ItemID == p.DefaultEmoteIDs[0] {
+					p.Items[i].EquipSlot = "hand"
+				}
+			}
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			var p catalog.Payload
+			if err := json.Unmarshal(raw, &p); err != nil {
+				t.Fatal(err)
+			}
+			mutate(&p)
+			if err := catalog.CheckPayload(p); err == nil {
+				t.Fatal("accepted")
+			}
+		})
+	}
 }
 
 // realNames are the full and given names of the seeded students (identity SIS seed, every school).

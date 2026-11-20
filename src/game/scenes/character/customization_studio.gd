@@ -214,7 +214,7 @@ func _relabel() -> void:
 			b.text = "" if b.has_meta(&"swatch") else label
 		else:
 			index += 1
-			b.text = tr("ui.wardrobe.item_n").format({"n": index})
+			b.text = catalog.item_label(code, tr("ui.wardrobe.item_n").format({"n": index}))
 			b.tooltip_text = b.text
 	for slot: int in range(ProfileService.PRESET_SLOT_MIN, ProfileService.PRESET_SLOT_MAX + 1):
 		var wear: Button = _presets.get_node_or_null("WearPreset%d" % slot) as Button

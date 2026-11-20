@@ -31,6 +31,17 @@ type NamedCode struct {
 	Name Name   `json:"name"`
 }
 
+// Item is the display entry of one default item or emote (T040, OQ F070-1): its wardrobe slot and its name vi/en.
+// The catalog lists one entry per id of DefaultItemIDs and DefaultEmoteIDs; ownership stays server-side.
+type Item struct {
+	ItemID    string `json:"item_id"`
+	EquipSlot string `json:"equip_slot"`
+	Name      Name   `json:"name"`
+}
+
+// EquipSlots are the wardrobe slots of a catalog item (character-catalog.schema.json).
+var EquipSlots = []string{"hair", "outfit", "head", "face", "back", "hand", "emote"}
+
 // Preset is a ready-made character of the creation screen.
 type Preset struct {
 	PresetCode       string               `json:"preset_code"`
@@ -48,6 +59,7 @@ type Payload struct {
 	HairColors      []NamedCode              `json:"hair_colors"`
 	DefaultItemIDs  []string                 `json:"default_item_ids"`
 	DefaultEmoteIDs []string                 `json:"default_emote_ids"`
+	Items           []Item                   `json:"items"`
 	NicknameParts   map[string]profile.Words `json:"nickname_parts"`
 }
 
@@ -120,8 +132,34 @@ func checkNames(kind string, list []NamedCode) error {
 	return nil
 }
 
+// checkItems: exactly one display entry (slot, names vi and en) per default item and emote; emotes use the emote slot.
+func checkItems(p Payload) error {
+	byID := map[string]Item{}
+	for _, it := range p.Items {
+		if _, dup := byID[it.ItemID]; dup || !profile.ValidCode(it.ItemID) || it.Name.VI == "" || it.Name.EN == "" ||
+			!slices.Contains(EquipSlots, it.EquipSlot) {
+			return fmt.Errorf("character catalog: item %q needs a unique code, a slot and names vi and en", it.ItemID)
+		}
+		byID[it.ItemID] = it
+	}
+	for _, id := range p.DefaultItemIDs {
+		if it, ok := byID[id]; !ok || it.EquipSlot == "emote" {
+			return fmt.Errorf("character catalog: default item %s has no item entry", id)
+		}
+	}
+	for _, id := range p.DefaultEmoteIDs {
+		if it, ok := byID[id]; !ok || it.EquipSlot != "emote" {
+			return fmt.Errorf("character catalog: default emote %s has no emote entry", id)
+		}
+	}
+	if len(byID) != len(p.DefaultItemIDs)+len(p.DefaultEmoteIDs) {
+		return errors.New("character catalog: items lists an id that is not a default item or emote")
+	}
+	return nil
+}
+
 // CheckPayload checks the rules of a publishable catalog: schema version, bilingual palette, at least one default
-// emote, nickname words for vi and en, and presets that only use the palette and the free items.
+// emote, a named entry per default item and emote, nickname words for vi and en, and presets that only use the palette and the free items.
 func CheckPayload(p Payload) error {
 	if p.SchemaVersion != 1 {
 		return errors.New("character catalog: schema_version must be 1")
@@ -142,6 +180,9 @@ func CheckPayload(p Payload) error {
 	}
 	if len(p.Presets) == 0 {
 		return errors.New("character catalog: presets is empty")
+	}
+	if err := checkItems(p); err != nil {
+		return err
 	}
 	c := Catalog{Payload: p}
 	for _, pr := range p.Presets {

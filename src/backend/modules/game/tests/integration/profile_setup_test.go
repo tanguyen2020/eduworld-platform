@@ -89,6 +89,18 @@ func TestCharacterCatalog(t *testing.T) {
 	if !slices.Equal(r.body["default_emote_ids"].([]any), defaultEmotes) || len(r.body["default_item_ids"].([]any)) != 16 {
 		t.Fatalf("defaults: %s", r.raw)
 	}
+	// T040: every default item and emote has its slot and names vi/en.
+	items, _ := r.body["items"].([]any)
+	if len(items) != 22 {
+		t.Fatalf("items: %s", r.raw)
+	}
+	for _, it := range items {
+		im := it.(map[string]any)
+		name, _ := im["name"].(map[string]any)
+		if im["item_id"] == "" || im["equip_slot"] == "" || name["vi"] == "" || name["en"] == "" || name["vi"] == nil || name["en"] == nil {
+			t.Fatalf("item %v", im)
+		}
+	}
 	if _, ok := r.body["nickname_parts"]; ok {
 		t.Fatal("nickname words sent to the client")
 	}

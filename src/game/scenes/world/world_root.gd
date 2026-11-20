@@ -161,6 +161,7 @@ func _apply_avatar(config: AvatarConfigModel) -> void:
 	var rig: AvatarBuilder = local.avatar as AvatarBuilder if local != null else null
 	if rig != null and config != null:
 		rig.apply(config, AppState.get_services().inventory.catalog)
+	_emotes.catalog = AppState.get_services().inventory.catalog
 	_emotes.set_emotes(config.emote_slots if config != null else PackedStringArray())
 
 

@@ -38,5 +38,29 @@
     "outfit_explorer_01", "outfit_sport_01", "outfit_school_01", "outfit_casual_01", "outfit_rain_01", "outfit_star_01",
     "acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"
   ],
-  "default_emote_ids": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]
+  "default_emote_ids": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"],
+  "items": [
+    {"item_id": "hair_short_01", "equip_slot": "hair", "name": {"vi": "Tóc ngắn", "en": "Short hair"}},
+    {"item_id": "hair_ponytail_01", "equip_slot": "hair", "name": {"vi": "Tóc đuôi ngựa", "en": "Ponytail"}},
+    {"item_id": "hair_curly_01", "equip_slot": "hair", "name": {"vi": "Tóc xoăn", "en": "Curly hair"}},
+    {"item_id": "hair_bob_01", "equip_slot": "hair", "name": {"vi": "Tóc ngang vai", "en": "Bob"}},
+    {"item_id": "hair_spiky_01", "equip_slot": "hair", "name": {"vi": "Tóc dựng", "en": "Spiky hair"}},
+    {"item_id": "hair_braids_01", "equip_slot": "hair", "name": {"vi": "Tóc tết", "en": "Braids"}},
+    {"item_id": "outfit_explorer_01", "equip_slot": "outfit", "name": {"vi": "Bộ thám hiểm", "en": "Explorer outfit"}},
+    {"item_id": "outfit_sport_01", "equip_slot": "outfit", "name": {"vi": "Bộ thể thao", "en": "Sport outfit"}},
+    {"item_id": "outfit_school_01", "equip_slot": "outfit", "name": {"vi": "Đồng phục", "en": "School uniform"}},
+    {"item_id": "outfit_casual_01", "equip_slot": "outfit", "name": {"vi": "Áo phông", "en": "T-shirt"}},
+    {"item_id": "outfit_rain_01", "equip_slot": "outfit", "name": {"vi": "Áo mưa", "en": "Raincoat"}},
+    {"item_id": "outfit_star_01", "equip_slot": "outfit", "name": {"vi": "Áo ngôi sao", "en": "Star shirt"}},
+    {"item_id": "acc_cap_star", "equip_slot": "head", "name": {"vi": "Mũ ngôi sao", "en": "Star cap"}},
+    {"item_id": "acc_glasses_round", "equip_slot": "face", "name": {"vi": "Kính tròn", "en": "Round glasses"}},
+    {"item_id": "acc_backpack_owl", "equip_slot": "back", "name": {"vi": "Ba lô cú mèo", "en": "Owl backpack"}},
+    {"item_id": "acc_flag_small", "equip_slot": "hand", "name": {"vi": "Lá cờ nhỏ", "en": "Small flag"}},
+    {"item_id": "emote_wave", "equip_slot": "emote", "name": {"vi": "Vẫy tay", "en": "Wave"}},
+    {"item_id": "emote_clap", "equip_slot": "emote", "name": {"vi": "Vỗ tay", "en": "Clap"}},
+    {"item_id": "emote_dance", "equip_slot": "emote", "name": {"vi": "Nhảy", "en": "Dance"}},
+    {"item_id": "emote_celebrate", "equip_slot": "emote", "name": {"vi": "Ăn mừng", "en": "Celebrate"}},
+    {"item_id": "emote_thank", "equip_slot": "emote", "name": {"vi": "Cảm ơn", "en": "Thank you"}},
+    {"item_id": "emote_apologize", "equip_slot": "emote", "name": {"vi": "Xin lỗi", "en": "Sorry"}}
+  ]
 }

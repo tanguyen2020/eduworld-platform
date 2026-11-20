@@ -5,7 +5,7 @@
   "description": "Payload của một version CharacterCatalog (nội dung platform có version, ADR-0043; F070): preset tạo nhân vật, dáng người, bảng màu da/tóc, item và emote mặc định (miễn phí cho mọi học sinh), bộ từ sinh nickname theo ngôn ngữ (CHARACTER_SYSTEM §5.0, §5.3). Seed bởi module game; biên tập trên Game Operations Console ở F078. Không hardcode trong client (R2). Mọi chuỗi có maxLength (ADR-0041).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "presets", "body_types", "skin_tones", "hair_colors", "default_item_ids", "default_emote_ids", "nickname_parts"],
+  "required": ["schema_version", "presets", "body_types", "skin_tones", "hair_colors", "default_item_ids", "default_emote_ids", "items", "nickname_parts"],
   "properties": {
     "schema_version": { "const": 1 },
     "presets": {
@@ -30,6 +30,21 @@
     "hair_colors": { "$ref": "#/$defs/namedCodes" },
     "default_item_ids": { "type": "array", "maxItems": 200, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
     "default_emote_ids": { "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
+    "items": {
+      "type": "array",
+      "maxItems": 206,
+      "description": "Tên hiển thị vi/en và ô trang phục của mỗi item mặc định và emote mặc định — đúng một mục cho mỗi mã của default_item_ids và default_emote_ids (OQ F070-1, T040). Quyền sở hữu vẫn do server quyết.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "equip_slot", "name"],
+        "properties": {
+          "item_id": { "$ref": "#/$defs/code" },
+          "equip_slot": { "type": "string", "enum": ["hair", "outfit", "head", "face", "back", "hand", "emote"] },
+          "name": { "$ref": "#/$defs/name" }
+        }
+      }
+    },
     "nickname_parts": {
       "type": "object",
       "additionalProperties": false,

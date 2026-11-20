@@ -267,5 +267,13 @@ func (h Handlers) getCharacterCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"catalog_version_id": c.VersionID, "version": c.Version, "presets": presets,
 		"body_types": c.BodyTypes, "skin_tones": c.SkinTones, "hair_colors": c.HairColors, "default_item_ids": c.DefaultItemIDs,
-		"default_emote_ids": c.DefaultEmoteIDs})
+		"default_emote_ids": c.DefaultEmoteIDs, "items": catalogItems(c.Items)})
+}
+
+// catalogItems keeps "items" an array for a version published before the item names (T040).
+func catalogItems(items []catalog.Item) []catalog.Item {
+	if items == nil {
+		return []catalog.Item{}
+	}
+	return items
 }

@@ -63,7 +63,7 @@
     },
     "openapi/CharacterCatalog.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/CharacterCatalog",
-      "sha256": "656358e8a845b0792f6275d96cd17eb054cf3a85ff6da08cf595b34c884c978f"
+      "sha256": "983edae6d05ff892ac7b7d420e31941f5f25e03edb7005301ebc377fece6efd0"
     },
     "openapi/NicknameSuggestion.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/NicknameSuggestion",

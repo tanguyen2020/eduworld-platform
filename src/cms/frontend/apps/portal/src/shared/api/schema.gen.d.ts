@@ -9982,6 +9982,23 @@ export interface components {
         };
         /** @description Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID */
         CatalogCode: string;
+        /**
+         * @description Mục hiển thị của một item/emote trong danh mục nhân vật (không nói học sinh sở hữu hay không — server quyết)
+         * @example {
+         *       "item_id": "hair_short_01",
+         *       "equip_slot": "hair",
+         *       "name": {
+         *         "vi": "Tóc ngắn",
+         *         "en": "Short hair"
+         *       }
+         *     }
+         */
+        CatalogItem: {
+            /** @enum {string} */
+            equip_slot: "hair" | "outfit" | "head" | "face" | "back" | "hand" | "emote";
+            item_id: components["schemas"]["CatalogCode"];
+            name: components["schemas"]["CatalogName"];
+        };
         CatalogName: {
             en: string;
             vi: string;
@@ -10073,6 +10090,8 @@ export interface components {
             default_emote_ids: components["schemas"]["CatalogCode"][];
             default_item_ids: components["schemas"]["CatalogCode"][];
             hair_colors: components["schemas"]["CatalogNamedCodes"];
+            /** @description Tên vi/en và ô trang phục của mỗi item và emote mặc định (một mục cho mỗi mã của default_item_ids và default_emote_ids; OQ F070-1). Rỗng với version publish trước khi có tên — client hiển thị nhãn thứ tự. */
+            items: components["schemas"]["CatalogItem"][];
             presets: {
                 avatar_config: components["schemas"]["AvatarConfig"];
                 name: components["schemas"]["CatalogName"];

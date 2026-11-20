@@ -70,5 +70,15 @@
   ],
   "default_emote_ids": [
     "SAMPLE1"
+  ],
+  "items": [
+    {
+      "item_id": "hair_short_01",
+      "equip_slot": "hair",
+      "name": {
+        "vi": "Tóc ngắn",
+        "en": "Short hair"
+      }
+    }
   ]
 }

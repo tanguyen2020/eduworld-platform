@@ -273,8 +273,11 @@ func _label_carousels() -> void:
 		return
 	var hair: PackedStringArray = model.inventory.items_for_slot(ItemVisual.SLOT_HAIR)
 	var outfits: PackedStringArray = model.inventory.items_for_slot(ItemVisual.SLOT_OUTFIT)
-	_hair_name.text = tr("ui.avatar.option_n").format({"n": hair.find(model.draft.hair_item_id) + 1})
-	_outfit_name.text = tr("ui.avatar.option_n").format({"n": outfits.find(model.draft.outfit_item_id) + 1})
+	var catalog: CharacterCatalogModel = model.inventory.catalog
+	_hair_name.text = catalog.item_label(model.draft.hair_item_id,
+			tr("ui.avatar.option_n").format({"n": hair.find(model.draft.hair_item_id) + 1}))
+	_outfit_name.text = catalog.item_label(model.draft.outfit_item_id,
+			tr("ui.avatar.option_n").format({"n": outfits.find(model.draft.outfit_item_id) + 1}))
 
 
 func _mark_selection() -> void:
