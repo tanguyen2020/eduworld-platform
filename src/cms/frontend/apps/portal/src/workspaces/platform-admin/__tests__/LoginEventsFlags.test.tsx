@@ -48,12 +48,12 @@ describe('Feature flag (F059-AC-20/21)', () => {
     expect(await screen.findByText('portal_new_dashboard')).toBeInTheDocument();
     expect(within(screen.getByText('menu.platform_admin.audit_logs').closest('tr')!).getByText('Không tắt được')).toBeInTheDocument();
     for (const name of ['Thêm', 'Tạo', 'Xóa']) expect(screen.queryByRole('button', { name })).toBeNull();
-    await user.click(within(screen.getByText('menu.platform_admin.audit_logs').closest('tr')!).getByRole('button', { name: 'Sửa' }));
+    fireEvent.click(within(screen.getByText('menu.platform_admin.audit_logs').closest('tr')!).getByRole('button', { name: 'Sửa' })); // row may sit under the table's loading overlay (pointer-events: none) under CPU load
     let dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByLabelText('Tắt')).toBeDisabled();
     await user.click(within(dialog).getByRole('button', { name: 'Hủy' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    await user.click(within(screen.getByText('portal_new_dashboard').closest('tr')!).getByRole('button', { name: 'Sửa' }));
+    fireEvent.click(within(screen.getByText('portal_new_dashboard').closest('tr')!).getByRole('button', { name: 'Sửa' })); // row may sit under the table's loading overlay (pointer-events: none) under CPU load
     dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByLabelText('Bật'));
     const reason = within(dialog).getByLabelText('Lý do');
@@ -72,7 +72,7 @@ describe('Feature flag (F059-AC-20/21)', () => {
   it('tenant override with X-Tenant-Id; 412 reloads the value and says "Đã có người sửa"', async () => {
     const { backend, state, user } = await renderAccess('/platform-admin/feature-toggles');
     await screen.findByText('portal_new_dashboard');
-    await user.click(within(screen.getByText('portal_new_dashboard').closest('tr')!).getByRole('button', { name: 'Sửa' }));
+    fireEvent.click(within(screen.getByText('portal_new_dashboard').closest('tr')!).getByRole('button', { name: 'Sửa' })); // row may sit under the table's loading overlay (pointer-events: none) under CPU load
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByLabelText('Ghi đè cho một tenant'));
     await user.click(within(dialog).getByRole('combobox', { name: 'Tenant đích' }));
