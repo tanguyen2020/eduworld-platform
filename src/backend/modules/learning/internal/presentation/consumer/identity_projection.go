@@ -228,11 +228,16 @@ func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool
 		SettingsSubset: settings, SourceVersion: version(p.SourceVersion, e)})
 }
 
+// classPayload is class.synced; source_version, academic_year_id and is_virtual are read when module identity sends
+// them (OQ F020-1, F011 T040), the envelope time orders the events otherwise (F020 T044).
 type classPayload struct {
-	ClassID    uuid.UUID `json:"class_id"`
-	SchoolID   uuid.UUID `json:"school_id"`
-	GradeLevel int       `json:"grade_level"`
-	Name       string    `json:"name"`
+	ClassID        uuid.UUID  `json:"class_id"`
+	SchoolID       uuid.UUID  `json:"school_id"`
+	GradeLevel     int        `json:"grade_level"`
+	Name           string     `json:"name"`
+	AcademicYearID *uuid.UUID `json:"academic_year_id"`
+	IsVirtual      *bool      `json:"is_virtual"`
+	SourceVersion  *int64     `json:"source_version"`
 }
 
 func (c IdentityProjection) class(ctx context.Context, e outbox.Envelope) (bool, error) {
@@ -249,7 +254,7 @@ func (c IdentityProjection) class(ctx context.Context, e outbox.Envelope) (bool,
 		return false, invalid(e.EventType, "name")
 	}
 	return c.Upsert.Class(ctx, e.TenantID, write.RefClass{ClassID: p.ClassID, SchoolID: p.SchoolID, GradeLevel: p.GradeLevel,
-		Name: p.Name, SourceVersion: version(nil, e)})
+		Name: p.Name, AcademicYearID: p.AcademicYearID, IsVirtual: p.IsVirtual, SourceVersion: version(p.SourceVersion, e)})
 }
 
 type studentPayload struct {

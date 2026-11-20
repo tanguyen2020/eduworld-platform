@@ -43,6 +43,7 @@
 - F020-2 → **Chốt:** `arch-check` theo operation (task ở F001).
 - F020-3 → đã giải quyết (nối binary 2026-11-20).
 - F020-4 → **Chốt:** lint cấm `UpdateOne*` (task ở F003).
+- Triển khai T044: `source_version` (version aggregate, nhỏ) và `occurred_at` µs (lớn hơn 10¹²) cùng nằm trong cột `source_version`; quy tắc trộn: cùng loại chỉ áp bản mới hơn, `source_version` thay dòng đang xếp theo thời gian, event chỉ có `occurred_at` không thay dòng đã có `source_version` (tránh event cũ phát lại ghi đè) [Proposed]. Áp cho `ref.schools`, `ref.classes`; bảng `ref.*` khác giữ so sánh cũ.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -110,7 +110,7 @@
 
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
-- [ ] T044 **OQ chốt 2026-11-20** (F020-1) Projection `ref.schools`/`ref.classes` so theo `source_version` khi payload có (sau task F011), lưu `academic_year_id`, `is_virtual` của lớp — file: `src/backend/modules/learning/internal/presentation/consumer/projection_identity.go`, migration learning — kiểm: `make test-integration MOD=learning` — cỡ S
+- [x] T044 **OQ chốt 2026-11-20** (F020-1) Projection `ref.schools`/`ref.classes` so theo `source_version` khi payload có (sau task F011), lưu `academic_year_id`, `is_virtual` của lớp — file: `src/backend/modules/learning/internal/presentation/consumer/projection_identity.go`, migration learning — kiểm: `make test-integration MOD=learning` — cỡ S — bằng chứng: consumer `identity_projection.go` đọc `source_version`, `academic_year_id`, `is_virtual` của `class.synced` khi có (cột `ref.classes` đã có từ F020, không cần migration); `RefRepo.UpsertSchool`/`UpsertClass` dùng `newerVersion` (cùng loại thì chỉ bản mới hơn; `source_version` thay dòng xếp theo thời gian; event xếp theo thời gian không thay dòng đã có `source_version`); `TestProjectionSourceVersionOrdering` PASS. Phía phát (F011 T040: `class.synced` thêm `source_version`, `academic_year_id`, `is_virtual`) chưa làm — consumer sẵn sàng.
 
 ## Dependencies & Execution Order
 

@@ -573,7 +573,7 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 | `ref.platform_settings` | game | identity · `platform_settings.changed` (`scope = platform`; hiện chỉ `key = platform_curfew`) | `key varchar(128)` (PK), `value jsonb` (≤ 16 KB; `platform_curfew` = `{start, end}` giờ ICT), `source_version bigint` (`occurred_at` µs), `updated_at`; dữ liệu platform, không `tenant_id`/RLS; chỉ consumer `game.platform_settings` (role `game_platform`) ghi, `game_app` chỉ đọc. Chưa có dòng → mặc định khởi động `EW_PLATFORM_CURFEW` (OQ F014-2) [Confirmed] |
 
 Quy tắc projection:
-1. Mỗi dòng có `source_version bigint` (version của aggregate nguồn hoặc `occurred_at`); consumer chỉ áp bản mới hơn (chống event đến lệch thứ tự).
+1. Mỗi dòng có `source_version bigint` (version của aggregate nguồn hoặc `occurred_at`); consumer chỉ áp bản mới hơn (chống event đến lệch thứ tự). `ref.schools`/`ref.classes` của learning (F020 T044): version aggregate luôn thay giá trị `occurred_at` (µs, > 10¹²), giá trị `occurred_at` không thay version aggregate [Proposed].
 2. Projection không có `deleted_at` riêng: phản ánh trạng thái nguồn (gồm `deleted_at` nguồn nếu cần lọc).
 3. Có job **rebuild** projection qua facade của module nguồn (operation liệt kê theo trang trong spec internal, gọi trong tiến trình) khi tạo database mới hoặc phát hiện lệch [Confirmed].
 4. Không ghi projection từ use case nghiệp vụ; sai lệch được sửa ở nguồn.

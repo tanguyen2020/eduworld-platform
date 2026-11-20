@@ -15,6 +15,19 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 )
 
+// timeOrdered is the smallest stored version that is an envelope time (UnixMicro) rather than a source_version: real
+// aggregate versions stay far below it, any event time after 1970-01-12 is above it.
+const timeOrdered = 1_000_000_000_000
+
+// newerVersion is the condition of the ref.schools / ref.classes upserts on the stored row alias and the argument
+// $arg of the incoming version (F020 T044, OQ F020-1): within one kind (source_version or envelope time) only a newer
+// value applies; a source_version replaces a time-ordered row, a time-ordered event never replaces a row ordered by
+// source_version.
+func newerVersion(alias string, arg int) string {
+	return fmt.Sprintf("(((%[1]s.source_version < %[3]d) = ($%[2]d < %[3]d) AND %[1]s.source_version < $%[2]d) OR "+
+		"(%[1]s.source_version >= %[3]d AND $%[2]d < %[3]d))", alias, arg, timeOrdered)
+}
+
 // RefRepo implements write.ProjectionWriter with explicit SQL on the consumer's transaction (the projections
 // have no ent schema: DATABASE_DESIGN §2.17 minimal columns). Every upsert applies only a newer source_version
 // and never moves a row to another tenant (the WHERE of ON CONFLICT keeps the stored tenant).
@@ -100,7 +113,7 @@ func (RefRepo) UpsertSchool(ctx context.Context, r write.RefSchool) (bool, error
 			province_name_i18n = (SELECT p.name_i18n FROM ref.provinces p WHERE p.code = coalesce($5, s.province_code)),
 			school_level = coalesce($6, s.school_level), is_virtual = coalesce($7, s.is_virtual), status = coalesce($8, s.status),
 			settings_subset = coalesce($9::jsonb, s.settings_subset), source_version = $10
-		WHERE s.source_version < $10 AND s.tenant_id = $2`,
+		WHERE s.tenant_id = $2 AND `+newerVersion("s", 10),
 		r.SchoolID, r.TenantID, r.Name, jsonOrNil(r.NameI18n), r.ProvinceCode, r.SchoolLevel, r.IsVirtual, r.Status,
 		jsonOrNil(r.SettingsSubset), r.SourceVersion)
 }
@@ -112,7 +125,7 @@ func (RefRepo) UpsertClass(ctx context.Context, r write.RefClass) (bool, error) 
 		VALUES ($1, $2, $3, $4, $5, $6::uuid, coalesce($7::boolean, false), $8)
 		ON CONFLICT (class_id) DO UPDATE SET school_id = $3, grade_level = $4, name = $5,
 			academic_year_id = coalesce($6, c.academic_year_id), is_virtual = coalesce($7, c.is_virtual), source_version = $8
-		WHERE c.source_version < $8 AND c.tenant_id = $2`,
+		WHERE c.tenant_id = $2 AND `+newerVersion("c", 8),
 		r.ClassID, r.TenantID, r.SchoolID, r.GradeLevel, r.Name, r.AcademicYearID, r.IsVirtual, r.SourceVersion)
 }
 
