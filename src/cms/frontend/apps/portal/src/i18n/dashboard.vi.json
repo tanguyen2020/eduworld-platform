@@ -1,0 +1,240 @@
+{
+  "dashboard": {
+    "outOfScope": "Ngoài phạm vi quyền",
+    "notFound": "Không tìm thấy",
+    "featureDisabled": "Tính năng này đang tạm tắt.",
+    "pickSchool": "Chọn trường để xem số liệu.",
+    "noValue": "chưa có số liệu",
+    "suppressedShort": "dưới 5 học sinh",
+    "metric": {
+      "noData": "Chưa có số liệu"
+    },
+    "action": {
+      "newAssignment": "Giao bài mới",
+      "reference": "Mức tham khảo TT27/TT22"
+    },
+    "breadcrumb": {
+      "school": "Tổng quan trường"
+    },
+    "widget": {
+      "assignments": "① Bài giao đang mở / sắp hạn",
+      "weak": "② LO cần củng cố",
+      "attention": "③ Cần chú ý",
+      "selfStudy": "④ Tự học & gợi ý",
+      "safety": "⑤ An toàn"
+    },
+    "empty": {
+      "assignments": "Chưa có bài giao đang mở. Hãy giao bài đầu tiên cho lớp.",
+      "weak": "Chưa có LO nào cần củng cố trong khoảng này.",
+      "attention": "Chưa có học sinh cần chú ý trong khoảng này.",
+      "selfStudy": "Chưa có số liệu tự học.",
+      "safety": "Chưa có số liệu.",
+      "heatmap": "Lớp chưa có bằng chứng học tập theo LO trong khoảng này.",
+      "summary": "Chưa có số liệu tổng hợp cho phạm vi này."
+    },
+    "filter": {
+      "grade": "Khối",
+      "allGrades": "Tất cả khối",
+      "gradeN": "Khối {{n}}",
+      "class": "Lớp",
+      "allClasses": "Tất cả lớp",
+      "subject": "Môn",
+      "allSubjects": "Tất cả môn"
+    },
+    "assignments": {
+      "open": "Bài đang mở",
+      "dueSoon": "Sắp hạn (48 giờ)",
+      "completion": "Tỉ lệ nộp",
+      "none": "Không có bài giao sắp hạn.",
+      "item": "{{title}} — hạn {{due}}",
+      "submitted": "{{submitted}}/{{total}}",
+      "byClass": "Tỉ lệ nộp theo lớp"
+    },
+    "weak": {
+      "skillMap": "Bản đồ kỹ năng",
+      "assignPractice": "Giao ôn tập theo LO",
+      "codeRef": "{{code}} ({{ref}})",
+      "belowProficient": "{{ratio}} học sinh dưới mức thành thạo · {{classes}}"
+    },
+    "attention": {
+      "total": "{{count}} học sinh cần hỗ trợ"
+    },
+    "reason": {
+      "missed_assignments": "Chưa làm bài giao gần đây",
+      "beginning_objectives": "Nhiều LO ở mức mới bắt đầu",
+      "inactive_game": "Chưa vào học gần đây",
+      "rapid_guess": "Làm quá nhanh",
+      "scheduled_cleanup": "Sắp bị dọn do lâu không đăng nhập"
+    },
+    "selfStudy": {
+      "avgMinutes": "Thời gian học trung bình/học sinh",
+      "started": "Học sinh làm ôn tập gợi ý",
+      "improved": "LO tiến bộ sau gợi ý",
+      "chartAria": "Phút học theo kỳ: {{values}}"
+    },
+    "safety": {
+      "pending": "Thông báo chờ xác nhận liên hệ phụ huynh",
+      "open": "Xem thông báo an toàn"
+    },
+    "class": {
+      "unnamed": "Lớp",
+      "summary": "Tổng quan lớp {{name}}",
+      "activeStudents": "Học sinh hoạt động",
+      "rapidGuess": "Tỉ lệ làm quá nhanh",
+      "heatmap": "Bản đồ kỹ năng (LO × mức)",
+      "heatmapCaption": "Phân bố mức thành thạo theo LO của lớp {{name}}",
+      "objective": "LO",
+      "actions": "Thao tác",
+      "students": "Học sinh của lớp",
+      "searchStudent": "Tìm học sinh theo tên",
+      "noMatch": "Không có học sinh khớp."
+    },
+    "heatmap": {
+      "cell": "{{lo}} · {{level}}: {{count}} học sinh",
+      "topicCell": "{{topic}} · {{level}}: {{count}} LO"
+    },
+    "mastery": {
+      "not_started": "Chưa bắt đầu",
+      "beginning": "Mới bắt đầu",
+      "developing": "Đang tiến bộ",
+      "proficient": "Thành thạo",
+      "mastered": "Xuất sắc"
+    },
+    "student": {
+      "unnamed": "Học sinh",
+      "name": "Học sinh",
+      "activities": "Hoạt động hoàn thành",
+      "lessons": "Bài học hoàn thành",
+      "minutes": "Phút học",
+      "accuracy": "Tỉ lệ đúng",
+      "flags": "Cần chú ý"
+    },
+    "submission": {
+      "not_started": "Chưa làm",
+      "in_progress": "Đang làm",
+      "submitted": "Đã nộp",
+      "late": "Nộp muộn",
+      "missed": "Không nộp",
+      "excused": "Được miễn"
+    },
+    "profile": {
+      "title": "Hồ sơ học tập: {{name}}",
+      "subjectAccuracy": "Tỉ lệ đúng {{subject}}",
+      "period": "Số liệu từ {{from}} đến {{to}}",
+      "masteryCaption": "Mức thành thạo theo chủ đề — {{subject}}",
+      "topic": "Chủ đề",
+      "trendAria": "Số LO đạt mức xuất sắc theo tuần, {{subject}}: {{values}}",
+      "assignment": "Bài giao",
+      "status": "Trạng thái",
+      "score": "Điểm",
+      "scoreOf": "{{score}}/{{max}}",
+      "due": "Hạn",
+      "submittedAt": "Nộp lúc",
+      "noRecommendation": "Không có gợi ý đang hiển thị.",
+      "tab": {
+        "mastery": "Mức thành thạo",
+        "trend": "Xu hướng 8 tuần",
+        "history": "Lịch sử bài",
+        "recommendations": "Gợi ý đang hiển thị",
+        "login": "Hoạt động đăng nhập"
+      }
+    },
+    "reco": {
+      "R1": "Hoàn thành bài nhà trường giao",
+      "R2": "Luyện LO còn yếu",
+      "R3": "Ôn LO tiên quyết trước",
+      "R4": "Ôn lại kiến thức đang quên",
+      "R5": "Học lại LO sau bài kiểm tra",
+      "R6": "Học bài mới theo lịch lớp",
+      "R7": "Làm bài khởi động",
+      "R8": "Luyện trộn nhiều chủ đề",
+      "R9": "Ôn câu sai"
+    },
+    "results": {
+      "pickCourse": "Chọn khóa học để xem bảng kết quả các bài kiểm tra tự chấm.",
+      "scale": "Điểm tự chấm theo thang 10; không có điểm nhập tay.",
+      "openAnalysis": "Mở phân tích bài {{title}}",
+      "tooFastHint": "Có lượt trả lời được đánh dấu làm quá nhanh.",
+      "noGraded": "Khóa học chưa có bài kiểm tra tự chấm.",
+      "back": "Về danh sách khóa học",
+      "courses": "Kết quả bài/đề",
+      "tab": "Kết quả"
+    },
+    "analysis": {
+      "title": "Phân tích {{title}}",
+      "unavailable": "Phân tích theo câu hiện có cho bài kiểm tra theo đề (có phiên thi). Bài này chưa có phân tích theo câu.",
+      "notComputed": "Phân tích sẽ có sau khi phiên kiểm tra đóng và được tính.",
+      "exportAssignment": "Xuất kết quả bài giao",
+      "reliabilityWarning": "Độ tin cậy của đề thấp: hãy thận trọng khi dùng kết quả.",
+      "variantGap": "Điểm trung bình giữa các biến thể đề chênh lệch đáng kể.",
+      "students": "Số học sinh",
+      "mean": "Điểm trung bình",
+      "median": "Trung vị",
+      "passRate": "Tỉ lệ đạt",
+      "distributionAria": "Phổ điểm (số học sinh theo khoảng 0,5 điểm): {{values}}",
+      "item": "Câu",
+      "itemN": "Câu {{n}}",
+      "pValue": "Tỉ lệ đúng (p)",
+      "rapidGuess": "Làm quá nhanh",
+      "commonWrong": "Lựa chọn sai phổ biến",
+      "misconception": "{{tag}} · {{count}}",
+      "avgTime": "Thời gian trung bình",
+      "seconds": "{{value}} giây",
+      "flag": "Cảnh báo",
+      "problemItem": "Câu cần xem lại",
+      "assignWrong": "Giao ôn tập cho học sinh sai câu này",
+      "pValueNote": "Tỉ lệ đúng không tính các lượt làm quá nhanh."
+    },
+    "export": {
+      "limit": "Bạn đang có quá nhiều báo cáo đang chuẩn bị. Hãy chờ một báo cáo xong rồi thử lại.",
+      "type": "Loại báo cáo",
+      "format": "Định dạng",
+      "course": "Khóa học",
+      "assignment": "Bài giao",
+      "types": {
+        "assignment_results": "Kết quả bài giao",
+        "course_results": "Bảng kết quả khóa học",
+        "regulation_reference": "Báo cáo tham khảo TT27/TT22",
+        "skill_map": "Bản đồ kỹ năng",
+        "school_monthly": "Báo cáo trường theo tháng"
+      }
+    },
+    "reference": {
+      "label": "Tham khảo — không thay đánh giá chính thức",
+      "level": "Mức tham khảo",
+      "coverage": "Độ phủ LO",
+      "reliability": "Độ tin cậy đề",
+      "lowReliability": "Đề có độ tin cậy thấp",
+      "period": "Kỳ đánh giá",
+      "pickSubject": "Chọn môn để xem mức tham khảo.",
+      "periods": {
+        "mid_term_1": "Giữa học kỳ I",
+        "end_term_1": "Cuối học kỳ I",
+        "mid_term_2": "Giữa học kỳ II",
+        "end_term_2": "Cuối học kỳ II"
+      },
+      "levels": {
+        "excellent": "Hoàn thành tốt / Tốt",
+        "completed": "Hoàn thành",
+        "not_completed": "Chưa hoàn thành",
+        "pass": "Đạt",
+        "not_pass": "Chưa đạt",
+        "insufficient_data": "Chưa đủ dữ liệu"
+      }
+    },
+    "reports": {
+      "exportTab": "Xuất báo cáo",
+      "summaryTab": "Tổng hợp đơn vị"
+    },
+    "summary": {
+      "title": "Tổng hợp học tập của đơn vị",
+      "platformTitle": "Tổng hợp học tập toàn platform",
+      "schools": "Trường",
+      "allSchools": "Tất cả trường",
+      "students": "Học sinh",
+      "minutes": "Phút học trung bình",
+      "attempts": "Lượt làm bài",
+      "excluded": "{{count}} tenant thử nghiệm không được tính vào tổng hợp."
+    }
+  }
+}

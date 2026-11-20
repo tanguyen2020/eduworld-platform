@@ -1,0 +1,240 @@
+{
+  "dashboard": {
+    "outOfScope": "Outside your permission scope",
+    "notFound": "Not found",
+    "featureDisabled": "This feature is temporarily turned off.",
+    "pickSchool": "Choose a school to see the data.",
+    "noValue": "no data",
+    "suppressedShort": "fewer than 5 students",
+    "metric": {
+      "noData": "No data yet"
+    },
+    "action": {
+      "newAssignment": "New assignment",
+      "reference": "Reference levels TT27/TT22"
+    },
+    "breadcrumb": {
+      "school": "School overview"
+    },
+    "widget": {
+      "assignments": "① Open / due-soon assignments",
+      "weak": "② Objectives to consolidate",
+      "attention": "③ Needs attention",
+      "selfStudy": "④ Self-study & recommendations",
+      "safety": "⑤ Safety"
+    },
+    "empty": {
+      "assignments": "No open assignment yet. Assign the first one to a class.",
+      "weak": "No objective needs consolidation in this period.",
+      "attention": "No student needs attention in this period.",
+      "selfStudy": "No self-study data yet.",
+      "safety": "No data yet.",
+      "heatmap": "The class has no learning evidence per objective in this period.",
+      "summary": "No summary data for this scope yet."
+    },
+    "filter": {
+      "grade": "Grade",
+      "allGrades": "All grades",
+      "gradeN": "Grade {{n}}",
+      "class": "Class",
+      "allClasses": "All classes",
+      "subject": "Subject",
+      "allSubjects": "All subjects"
+    },
+    "assignments": {
+      "open": "Open assignments",
+      "dueSoon": "Due soon (48 hours)",
+      "completion": "Submission rate",
+      "none": "No assignment due soon.",
+      "item": "{{title}} — due {{due}}",
+      "submitted": "{{submitted}}/{{total}}",
+      "byClass": "Submission rate by class"
+    },
+    "weak": {
+      "skillMap": "Skill map",
+      "assignPractice": "Assign practice for this objective",
+      "codeRef": "{{code}} ({{ref}})",
+      "belowProficient": "{{ratio}} of students below proficient · {{classes}}"
+    },
+    "attention": {
+      "total": "{{count}} students need support"
+    },
+    "reason": {
+      "missed_assignments": "Missed recent assignments",
+      "beginning_objectives": "Several objectives at beginning level",
+      "inactive_game": "Has not studied recently",
+      "rapid_guess": "Answers too fast",
+      "scheduled_cleanup": "Scheduled for clean-up (no sign-in)"
+    },
+    "selfStudy": {
+      "avgMinutes": "Average study time per student",
+      "started": "Students starting recommended practice",
+      "improved": "Objectives improved after recommendations",
+      "chartAria": "Study minutes per period: {{values}}"
+    },
+    "safety": {
+      "pending": "Notifications awaiting parent-contact confirmation",
+      "open": "Open safety notifications"
+    },
+    "class": {
+      "unnamed": "Class",
+      "summary": "Class {{name}} overview",
+      "activeStudents": "Active students",
+      "rapidGuess": "Too-fast answer rate",
+      "heatmap": "Skill map (objective × level)",
+      "heatmapCaption": "Mastery level distribution per objective of class {{name}}",
+      "objective": "Objective",
+      "actions": "Actions",
+      "students": "Students of the class",
+      "searchStudent": "Search a student by name",
+      "noMatch": "No matching student."
+    },
+    "heatmap": {
+      "cell": "{{lo}} · {{level}}: {{count}} students",
+      "topicCell": "{{topic}} · {{level}}: {{count}} objectives"
+    },
+    "mastery": {
+      "not_started": "Not started",
+      "beginning": "Beginning",
+      "developing": "Developing",
+      "proficient": "Proficient",
+      "mastered": "Excellent"
+    },
+    "student": {
+      "unnamed": "Student",
+      "name": "Student",
+      "activities": "Activities completed",
+      "lessons": "Lessons completed",
+      "minutes": "Study minutes",
+      "accuracy": "Accuracy",
+      "flags": "Attention"
+    },
+    "submission": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "submitted": "Submitted",
+      "late": "Late",
+      "missed": "Missed",
+      "excused": "Excused"
+    },
+    "profile": {
+      "title": "Learning profile: {{name}}",
+      "subjectAccuracy": "{{subject}} accuracy",
+      "period": "Data from {{from}} to {{to}}",
+      "masteryCaption": "Mastery by topic — {{subject}}",
+      "topic": "Topic",
+      "trendAria": "Objectives at excellent level per week, {{subject}}: {{values}}",
+      "assignment": "Assignment",
+      "status": "Status",
+      "score": "Score",
+      "scoreOf": "{{score}}/{{max}}",
+      "due": "Due",
+      "submittedAt": "Submitted at",
+      "noRecommendation": "No recommendation shown now.",
+      "tab": {
+        "mastery": "Mastery",
+        "trend": "8-week trend",
+        "history": "Assignment history",
+        "recommendations": "Current recommendations",
+        "login": "Sign-in activity"
+      }
+    },
+    "reco": {
+      "R1": "Finish the school assignment",
+      "R2": "Practise a weak objective",
+      "R3": "Review the prerequisite first",
+      "R4": "Review fading knowledge",
+      "R5": "Relearn an objective after the test",
+      "R6": "New lesson from the class schedule",
+      "R7": "Take the warm-up test",
+      "R8": "Mixed practice across topics",
+      "R9": "Retry wrong questions"
+    },
+    "results": {
+      "pickCourse": "Choose a course to see the table of self-scored tests.",
+      "scale": "Self-scored marks on a 10-point scale; no manual grades.",
+      "openAnalysis": "Open the analysis of {{title}}",
+      "tooFastHint": "Some answers were flagged as too fast.",
+      "noGraded": "The course has no self-scored test yet.",
+      "back": "Back to courses",
+      "courses": "Results",
+      "tab": "Results"
+    },
+    "analysis": {
+      "title": "Analysis of {{title}}",
+      "unavailable": "Item analysis is available for tests with an exam session. This assignment has no item analysis yet.",
+      "notComputed": "The analysis is available once the exam session is closed and computed.",
+      "exportAssignment": "Export assignment results",
+      "reliabilityWarning": "Low test reliability: use the results with care.",
+      "variantGap": "Average scores differ significantly between test variants.",
+      "students": "Students",
+      "mean": "Mean score",
+      "median": "Median",
+      "passRate": "Pass rate",
+      "distributionAria": "Score distribution (students per 0.5-point bucket): {{values}}",
+      "item": "Item",
+      "itemN": "Item {{n}}",
+      "pValue": "Correct rate (p)",
+      "rapidGuess": "Too fast",
+      "commonWrong": "Common wrong choices",
+      "misconception": "{{tag}} · {{count}}",
+      "avgTime": "Average time",
+      "seconds": "{{value}} s",
+      "flag": "Warning",
+      "problemItem": "Item to review",
+      "assignWrong": "Assign practice to students who missed this item",
+      "pValueNote": "The correct rate excludes too-fast answers."
+    },
+    "export": {
+      "limit": "You already have too many reports being prepared. Wait for one to finish and try again.",
+      "type": "Report type",
+      "format": "Format",
+      "course": "Course",
+      "assignment": "Assignment",
+      "types": {
+        "assignment_results": "Assignment results",
+        "course_results": "Course results table",
+        "regulation_reference": "Reference report TT27/TT22",
+        "skill_map": "Skill map",
+        "school_monthly": "Monthly school report"
+      }
+    },
+    "reference": {
+      "label": "Reference only — does not replace the official assessment",
+      "level": "Reference level",
+      "coverage": "Objective coverage",
+      "reliability": "Test reliability",
+      "lowReliability": "Low-reliability test",
+      "period": "Assessment period",
+      "pickSubject": "Choose a subject to see the reference levels.",
+      "periods": {
+        "mid_term_1": "Mid-term I",
+        "end_term_1": "End of term I",
+        "mid_term_2": "Mid-term II",
+        "end_term_2": "End of term II"
+      },
+      "levels": {
+        "excellent": "Excellent / Good",
+        "completed": "Completed",
+        "not_completed": "Not completed",
+        "pass": "Pass",
+        "not_pass": "Not passed",
+        "insufficient_data": "Not enough data"
+      }
+    },
+    "reports": {
+      "exportTab": "Export reports",
+      "summaryTab": "Unit summary"
+    },
+    "summary": {
+      "title": "Learning summary of the unit",
+      "platformTitle": "Learning summary across the platform",
+      "schools": "Schools",
+      "allSchools": "All schools",
+      "students": "Students",
+      "minutes": "Average study minutes",
+      "attempts": "Attempts",
+      "excluded": "{{count}} test tenants are excluded from the summary."
+    }
+  }
+}

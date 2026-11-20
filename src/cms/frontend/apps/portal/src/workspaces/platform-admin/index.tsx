@@ -13,6 +13,7 @@ import { FeatureFlagListPage } from './feature-flags/FeatureFlagListPage';
 import { registerPlatformI18n } from './i18n';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { LoginEventsPage } from './login-events/LoginEventsPage';
+import { PlatformReportsPage } from './reports/PlatformReportsPage';
 import { EfficacyStudiesScreen } from './research/EfficacyStudiesScreen';
 import { registerResearchI18n } from './research/i18n';
 import { LearningExperimentsScreen } from './research/LearningExperimentsScreen';
@@ -33,7 +34,7 @@ export const screens = {
   'menu.platform_admin.system_settings': SystemSettingsPage,
   'menu.platform_admin.feature_toggles': FeatureFlagListPage,
   'menu.platform_admin.student_activity': LoginEventsPage,
-  'menu.platform_admin.reports': placeholderScreen,
+  'menu.platform_admin.reports': PlatformReportsPage, // F056 US5
   'menu.platform_admin.efficacy_studies': EfficacyStudiesScreen,
   'menu.platform_admin.learning_experiments': LearningExperimentsScreen,
   'menu.platform_admin.data_requests': placeholderScreen,
