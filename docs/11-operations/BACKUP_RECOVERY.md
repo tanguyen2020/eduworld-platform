@@ -98,9 +98,9 @@ Khôi phục toàn bộ hệ thống về cùng thời điểm T chỉ dùng khi
 - Asset còn được bất kỳ content version nào tham chiếu không được xóa (ADR-0044 mục 4); job đối soát hằng tuần so `media_assets` (DB của module sở hữu) với object storage, báo object thiếu/mồ côi.
 - Snapshot nội dung (ADR-0043) có thể **dựng lại** từ PostgreSQL (version bất biến) nếu mất: chạy lại `content-snapshot-builder` cho các version đang được tham chiếu, rồi dựng lại manifest các tenant.
 - **Staging/production không dùng floci** ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md), [Confirmed — Technical Architect 2026-11-17]; thay toàn phần ADR-0071). floci chỉ ở local/CI, không cần backup.
-- **Backend: S3 managed tại Việt Nam** [Confirmed — owner 2026-11-20, OQ-21] ([DEPLOYMENT §9b](DEPLOYMENT.md#9b-object-storage-và-media-pipeline-adr-0044-adr-0043)); dòng Garage/SeaweedFS dưới đây chỉ áp dụng nếu một ADR mới đổi sang tự host:
-  - *S3 managed tại Việt Nam:* replication của nhà cung cấp (đa vùng lỗi) + versioning; bản sao **ngoài tài khoản/nhà cung cấp** hằng ngày cho mọi bucket trừ `ew-media-quarantine` (`rclone`/`aws s3 sync`), giữ 30 bản ngày + 12 bản tháng [Confirmed].
-  - *Garage/SeaweedFS tự host:* replication factor 3 trên 3 node `storage` (mất 1 node không mất dữ liệu, không gián đoạn); bản sao **ngoài cụm, khác site** (trong lãnh thổ Việt Nam nếu OQ-12 yêu cầu) hằng ngày, giữ như trên; mã hóa khi lưu.
+- **Backend: SeaweedFS tự host** [Confirmed — owner 2026-11-20, OQ-21] ([ADR-0093](../adr/ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md), [DEPLOYMENT §9b](DEPLOYMENT.md#9b-object-storage-và-media-pipeline-adr-0044-adr-0043)); chuyển S3 managed tại Việt Nam khi có ngân sách theo RB-05b:
+  - *SeaweedFS tự host (hiện hành):* replication factor 3 trên 3 node `storage` (mất 1 node không mất dữ liệu, không gián đoạn); bản sao **ngoài cụm, khác site** (trong lãnh thổ Việt Nam nếu OQ-12 yêu cầu) hằng ngày, giữ 30 bản ngày + 12 bản tháng; mã hóa khi lưu. Nếu spike cho thấy không có object lock: bản sao ngoài site dùng credential chỉ ghi (không có quyền xóa) và retention theo chính sách trên.
+  - *S3 managed tại Việt Nam (sau khi chuyển):* replication của nhà cung cấp (đa vùng lỗi) + versioning; bản sao **ngoài tài khoản/nhà cung cấp** hằng ngày cho mọi bucket trừ `ew-media-quarantine` (`rclone`/`aws s3 sync`), giữ 30 bản ngày + 12 bản tháng [Confirmed].
 - **Bucket riêng tư** (`ew-media-private`; `ew-student-submissions` nếu sau này có): RPO bằng dữ liệu học tập — bật replication liên tục sang vị trí thứ hai (cross-region replication của dịch vụ managed hoặc replication bất đồng bộ sang cụm/site thứ hai) để độ trễ sao chép ≤ 5 phút; giám sát độ trễ replication ([MONITORING](MONITORING.md)).
 - Versioning, object lock, SSE, lifecycle phải được backend hỗ trợ — là tiêu chí chọn trong spike (ADR-0075 mục 4); kiểm tra checksum khóa `media/<sha256>/…` sau mỗi lần đồng bộ.
 - Asset game đặt theo hash nội dung, bất biến → dễ khôi phục và kiểm tra toàn vẹn.
@@ -173,12 +173,22 @@ Kết quả mỗi lần kiểm thử ghi vào `docs/11-operations/restore-tests/
 4. Kiểm tra brokering IdP, đăng nhập thử theo từng loại tài khoản.
 5. Nếu DB Keycloak mất hoàn toàn: dựng realm từ Git → chạy SIS sync full để provisioning lại user → ExternalIdentity trong EduWorld vẫn dùng `(issuer, subject)`; **lưu ý** `subject` mới khác cũ → chạy job `identity-relink` ghép theo khóa SIS (`student_code` + `school_id`) đã được thiết kế trong [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md).
 
-### RB-05 — Mất object storage chính (ADR-0075)
+### RB-05 — Mất object storage chính (ADR-0075, ADR-0093)
 
-1. **Mất 1 node `storage` (tự host):** cụm RF3 vẫn phục vụ; thay node, để Garage/SeaweedFS tự cân bằng lại; theo dõi tiến độ rebalance. **Dịch vụ managed gián đoạn:** theo SLA nhà cung cấp; nếu kéo dài, chuyển `EW_S3_ENDPOINT` sang vị trí replication thứ hai (đổi cấu hình, redeploy `core-api` và `worker`).
+1. **Mất 1 node `storage` (SeaweedFS):** cụm replication 3 bản vẫn phục vụ; thay node, chạy `volume.fix.replication` để SeaweedFS sao chép lại đủ bản; theo dõi tiến độ rebalance. **Dịch vụ managed gián đoạn:** theo SLA nhà cung cấp; nếu kéo dài, chuyển `EW_S3_ENDPOINT` sang vị trí replication thứ hai (đổi cấu hình, redeploy `core-api` và `worker`).
 2. **Mất toàn bộ cụm/bucket:** dựng cụm hoặc bucket mới (cùng tên bucket, credential mới qua Docker secret), khôi phục từ vị trí replication hoặc bản sao ngoài cụm gần nhất (§6).
 3. Kiểm tra checksum theo khóa `media/<sha256>/…`; job đối soát `media_assets` liệt kê object thiếu; dựng lại snapshot/manifest nội dung thiếu từ PostgreSQL (§6).
 4. Bucket riêng tư khôi phục từ replication liên tục (RPO ≤ 5 phút); media công khai tải lên sau bản sao gần nhất (RPO 24 giờ) phải tải lên lại: gửi danh sách cho Content Admin.
+
+### RB-05b — Chuyển object storage từ SeaweedFS sang S3 managed (ADR-0093)
+
+Chạy khi owner chốt chuyển (có ngân sách). Không sửa mã; chỉ đổi cấu hình và di chuyển dữ liệu.
+
+1. Ở đích: tạo 6 bucket cùng tên, bucket policy, versioning, lifecycle (quarantine 7 ngày), replication bucket riêng tư; tạo credential mỗi binary; kiểm nhà cung cấp hỗ trợ URL path-style (nếu không, bật cấu hình virtual-hosted style trong adapter trước — ADR-0093 mục 3).
+2. `rclone sync` tăng dần SeaweedFS → đích cho mọi bucket trừ `ew-media-quarantine`; kiểm checksum khóa `media/<sha256>/…`; lặp tới khi chênh lệch nhỏ.
+3. Trong `maintenance_window`: chặn ghi (upload portal, export, import SIS) bằng thông báo bảo trì; sync lần cuối; đối soát `media_assets` với đích (0 object thiếu).
+4. Đổi Docker secret `EW_S3_ENDPOINT`, `EW_S3_REGION`, `EW_S3_ACCESS_KEY`, `EW_S3_SECRET_KEY` và origin của CDN; redeploy `core-api`, `worker`; kiểm presigned PUT/GET, tải media qua CDN từ game và portal.
+5. Giữ cụm SeaweedFS chỉ đọc 30 ngày làm đường lùi (rollback = đổi lại cấu hình); sau đó gỡ node `storage` và cập nhật DEPLOYMENT §4, CONFIG_DEFAULTS `object_storage_backend`, lịch sử ADR-0093.
 
 ## 10. Script backup đề xuất
 

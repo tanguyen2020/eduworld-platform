@@ -118,7 +118,7 @@ flowchart TB
   rt <--> nats
   app --> pg[(data-pg x3\n1 cụm PostgreSQL + Patroni\n5 database module)]
   app & rt --> vk[(data-cache x3\nValkey + Sentinel)]
-  app --> obj[(object storage\nS3 managed tại VN hoặc\nGarage/SeaweedFS x3, ADR-0075)]
+  app --> obj[(object storage\nSeaweedFS x3, ADR-0093\n(chuyển S3 managed bằng cấu hình))]
   mgr[manager x3\nSwarm manager, không chạy workload] -.điều phối.- edge & rt & app & idp
   ops[ops x2\nobservability · APISIX internal · scheduler] -.-> app
 ```
@@ -135,7 +135,7 @@ flowchart TB
 | `data-pg` | 3 | 32 vCPU / 128 GB / NVMe | **Một cụm** PostgreSQL (ADR-0074 mục 4): primary + 2 replica (Patroni) + PgBouncer, chứa 5 database module + `keycloak`. Tách `eduworld_learning` hoặc `eduworld_chat` sang cụm riêng chỉ khi số đo load test/vận hành cho thấy cần (chuyển database, không đổi mã) |
 | `data-cache` | 3 | 8 vCPU / 32 GB | Valkey `cache`, `realtime`, `ratelimit` (primary/replica đặt chéo node) + Sentinel |
 | `data-nats` | 3 | 4 vCPU / 8 GB / 200 GB SSD | NATS JetStream cluster |
-| `storage` | **0** — object storage dùng S3 managed tại Việt Nam (OQ-21, owner 2026-11-20) | — | Không triển khai Garage/SeaweedFS; chỉ quay lại tự host (3 node, replication factor 3) bằng ADR mới |
+| `storage` | 3 (staging: 1) | 4 vCPU / 8 GB / ổ dữ liệu = dung lượng media đo được × 3 bản + 50% dư | SeaweedFS (master ×3 quorum, volume server, filer, S3 gateway) theo [ADR-0093](../adr/ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md); gỡ khi chuyển sang S3 managed |
 | `ops` | 2 | 8 vCPU / 16 GB / 500 GB | OTel, Prometheus, Grafana, Loki, Tempo, APISIX internal, scheduler scale theo lịch, bastion |
 
 **Replica ở đỉnh** (giới hạn bằng `deploy.resources.limits`; tổng phải nằm trong năng lực node vai trò tương ứng):
@@ -418,10 +418,10 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 - **Công thức (ADR-0055):** SVG công thức do portal render (MathJax 4 trên trình duyệt) gửi kèm nội dung; module learning sanitize và lưu `ew-media-public` theo khóa `math/<sha256>.svg` (không ghi đè, cache CDN immutable). `content-snapshot-builder` chỉ kiểm tra mọi công thức của version đã có SVG hợp lệ **trước** khi đổi con trỏ; thiếu/không hợp lệ → publish bị chặn (`422 MATH_RENDER_FAILED`) với danh sách vị trí.
 - Media worker (`media-processor`) chạy trong profile `worker-events` trên node `app`; tăng replica `worker-events` (hoặc tách profile `media` khi tải lớn) theo alert số job pending (runbook, §4.4); ffmpeg chạy với giới hạn CPU/RAM/thời gian mỗi job (video ≤ 300 MB, timeout 15 phút).
 - **Local và CI dùng [floci](https://github.com/floci-io/floci)** (ADR-0044) + ClamAV tùy chọn ([LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md)). CI: service `floci` (`FLOCI_STORAGE_MODE=memory` cho tốc độ, `FLOCI_SERVICES_S3_ENFORCE_AUTH=true`) và job `s3-init` tạo 6 bucket. floci **không** dùng cho staging/production.
-- **Staging/production ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md), [Confirmed — Technical Architect 2026-11-17]; thay toàn phần ADR-0071; phương án [Confirmed — owner 2026-11-20, OQ-21]):** dịch vụ **S3-compatible managed của nhà cung cấp cloud tại Việt Nam** — replication, SLA, dữ liệu lưu tại Việt Nam (OQ-10, OQ-12). Nhà cung cấp chọn khi ký hợp đồng (cùng nhà cung cấp VM hoặc nhà cung cấp khác trong nước) và phải pass spike nghiệm thu dưới đây.
-  - **Không triển khai** Garage/SeaweedFS tự host. Nếu không nhà cung cấp managed nào pass spike, quay lại phương án tự host (cụm ≥ 3 node `storage`, replication factor 3) bằng ADR mới.
+- **Staging/production ([ADR-0093](../adr/ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md), [Confirmed — owner 2026-11-20, OQ-21]; thay mục 2, 4 của [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md)):** **SeaweedFS tự host** — production 3 node `storage` (replication 3 bản trên 3 node, master 3 instance), staging 1 node; replication bất đồng bộ bucket riêng tư sang site thứ hai trong Việt Nam; bản sao ngoài cụm hằng ngày (BACKUP_RECOVERY §6). Lý do: chưa có ngân sách cho S3 managed.
+  - **Chuyển sang S3 managed tại Việt Nam** khi có ngân sách: chỉ đổi `EW_S3_ENDPOINT`, `EW_S3_REGION`, `EW_S3_ACCESS_KEY`, `EW_S3_SECRET_KEY` và origin CDN + di chuyển dữ liệu bằng `rclone sync` theo runbook RB-05b ([BACKUP_RECOVERY](BACKUP_RECOVERY.md)); code chỉ dùng API S3 chuẩn (SigV4, path-style), không dùng API riêng của SeaweedFS.
   - Chung: credential riêng mỗi binary qua Docker secret (R3, R4); người dùng tải media qua CDN/APISIX + signed URL; code chỉ dùng AWS SDK S3 chuẩn với `EW_S3_ENDPOINT`, `EW_S3_FORCE_PATH_STYLE` (đổi backend chỉ là đổi cấu hình + di chuyển dữ liệu).
-- **Spike trước pilot** (ADR-0075 mục 4): kiểm chứng presigned URL (PUT/GET), versioning, lifecycle (quarantine 7 ngày), bucket policy, SSE, signed URL qua CDN; đo hiệu năng upload/tải; diễn tập khôi phục theo [BACKUP_RECOVERY §6](BACKUP_RECOVERY.md#6-object-storage), RB-05. Spike là nghiệm thu nhà cung cấp trước khi ký hợp đồng; kết quả ghi tên nhà cung cấp vào bảng §3.2 (không đổi `object_storage_backend` ở CONFIG_DEFAULTS).
+- **Spike trước pilot** (ADR-0093 mục 4): nghiệm thu SeaweedFS — presigned URL (PUT/GET, SigV4 ký `Content-Length`/`Content-Type`), multipart, versioning, lifecycle (quarantine 7 ngày), bucket policy, signed URL qua CDN, replication sang site thứ hai; đo hiệu năng upload/tải; diễn tập khôi phục theo [BACKUP_RECOVERY §6](BACKUP_RECOVERY.md#6-object-storage), RB-05. Tính năng không đạt ghi biện pháp bù ở BACKUP_RECOVERY.
 - Bucket chứa dữ liệu riêng tư (`ew-media-private`; `ew-student-submissions` nếu sau này có — version này học sinh không upload, ADR-0082) có RPO như dữ liệu học tập ([BACKUP_RECOVERY](BACKUP_RECOVERY.md)).
 
 ## 10. CI/CD (GitHub Actions)

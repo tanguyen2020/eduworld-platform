@@ -12,7 +12,7 @@ Viết stack file Docker Swarm cho staging/production theo DEPLOYMENT §4 (node 
 |---|---|
 | Language/Version | YAML (Compose spec 3.9 cho Swarm), Bash (POSIX + `set -euo pipefail`), Go ≥ 1.24 (`src/backend/tools/ops-scheduler`) |
 | Primary Dependencies | Docker Engine Swarm ≥ 25, pgBackRest 2.5x (TLS server), Patroni + etcd riêng, SOPS + age, `aws` CLI (S3 sync tới đích backup), HAProxy (socket proxy), APISIX Admin API (`traffic-split`), `keycloak-config-cli` |
-| Storage | PostgreSQL 17 (Patroni, một cụm, 5 database module + `keycloak`), object storage theo `object_storage_backend` (ADR-0075: S3-compatible managed tại Việt Nam hoặc Garage/SeaweedFS ≥ 3 node RF3; floci chỉ local/CI), repo S3 ngoài hạ tầng chính |
+| Storage | PostgreSQL 17 (Patroni, một cụm, 5 database module + `keycloak`), object storage theo `object_storage_backend` (ADR-0093: SeaweedFS tự host 3 node replication 3 bản, chuyển S3 managed bằng cấu hình; floci chỉ local/CI), repo S3 ngoài hạ tầng chính |
 | Testing | Bats (`tests/ops/*.bats`) cho script; `go test` cho `ops-scheduler`; diễn tập trên staging (bằng chứng ở `restore-tests/`) |
 | Target Platform | VM Linux amd64, Docker Swarm 3 manager |
 | Project Type | Hạ tầng + công cụ vận hành |

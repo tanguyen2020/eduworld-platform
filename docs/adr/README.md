@@ -92,7 +92,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Bỏ vai trò giáo viên: học sinh tự học, bỏ hoạt động chấm tay, kiểm duyệt tập trung ở platform | Accepted · một phần superseded by ADR-0081 · một phần superseded by ADR-0084 | OQ-07 |
 | [0073](ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | Phát hành theo pilot ưu tiên giáo dục | Accepted | OQ-08 |
 | [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) | Modular monolith có ranh giới cưỡng chế thay cho 6 microservice | Accepted · supersedes ADR-0036 | OQ-10 |
-| [0075](ADR-0075-object-storage-production-khong-dung-floci.md) | Object storage staging/production không dùng floci | Accepted | OQ-10, OQ-21 |
+| [0075](ADR-0075-object-storage-production-khong-dung-floci.md) | Object storage staging/production không dùng floci | Accepted · mục 2, 4 superseded by ADR-0093 | OQ-10, OQ-21 |
 | [0076](ADR-0076-dang-nhap-nhanh-cho-lop-1-3.md) | Đăng nhập nhanh cho lớp 1–3: thẻ QR + PIN/mật khẩu hình | Rejected | OQ-03 |
 | [0077](ADR-0077-mo-hinh-consent-va-vai-tro-du-lieu.md) | Mô hình consent, vai trò xử lý dữ liệu, quy định game cho người dưới 18 tuổi | Proposed · hoãn (ADR-0082) | OQ-12, OQ-17 |
 | [0078](ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) | Mặc định an toàn cho trẻ nhỏ | Accepted | OQ-17 |
@@ -110,6 +110,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0090](ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) | Danh mục menu/action của Admin Portal và bật/tắt lưu trong database | Accepted | — |
 | [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | Admin Portal đăng nhập bằng form riêng qua backend, không chuyển hướng OIDC | Accepted · một phần supersedes ADR-0066, 0067, 0068 | — |
 | [0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) | Tổ chức mã nguồn trong src/: backend dùng chung, cms/frontend, game | Accepted · một phần supersedes ADR-0074 | — |
+| [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Object storage tự host SeaweedFS trước, chuyển S3 managed bằng cấu hình | Accepted · một phần supersedes ADR-0075 | OQ-10, OQ-21 |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -149,7 +150,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0029](ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) | System Admin gán và clone dữ liệu giữa tenant |
 | [0041](ADR-0041-moi-cot-truong-kieu-chuoi-phai-co-gioi-han-do-dai.md) | Mọi trường chuỗi có giới hạn độ dài |
 | [0044](ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) | Media trên object storage S3-compatible + CDN (mục 1 staging/production thay bởi 0075) |
-| [0075](ADR-0075-object-storage-production-khong-dung-floci.md) | Local/CI dùng floci; staging/production dùng S3-compatible managed tại VN hoặc Garage/SeaweedFS ≥ 3 node (chọn sau spike); bucket dữ liệu học sinh có RPO như dữ liệu học tập |
+| [0075](ADR-0075-object-storage-production-khong-dung-floci.md) + [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Local/CI dùng floci; staging/production dùng SeaweedFS tự host (3 node, replication 3 bản), chuyển S3 managed tại VN bằng cấu hình khi có ngân sách; bucket dữ liệu học sinh có RPO như dữ liệu học tập |
 | [0089](ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) | RLS chỉ lọc tenant; mixin ent theo loại bảng; scope Tenant/CrossTenant/Platform + `tenancy.Bypass` reason đóng; outbox không RLS; gỡ partition chỉ cho `infra.*` |
 | [0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) | Release 1.0 không xóa vật lý (chỉ ẩn danh hóa, ngoại lệ 0033); không purge dữ liệu analytics thô |
 | [0065](ADR-0065-tenant-id-tren-header-moi-request.md) | Header `X-Tenant-Id` bắt buộc trên request tenant-scoped, luôn kiểm tra chéo với token + membership |
