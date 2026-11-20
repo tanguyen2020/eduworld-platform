@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.20.2"
+catalog_version: "2026.11.20.3"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -682,7 +682,7 @@ workspaces:
             label_key: portal.action.content_studio.activities.edit
             title: Tạo, sửa bản nháp, tạo version mới, xóa mềm
             required_permissions: [learning_content.activity.write]
-            operation_ids: [createCmsActivity, updateCmsActivityDraft]
+            operation_ids: [createCmsActivity, updateCmsActivityDraft, createCmsActivityVersion]
             can_disable: true
           - key: action.content_studio.activities.workflow
             label_key: portal.action.content_studio.activities.workflow

@@ -517,6 +517,18 @@
     ]
   },
   {
+    "operation_id": "createCmsActivityVersion",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/activities/{activity_id}/versions",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createCmsAssessmentBlueprint",
     "module": "learning",
     "method": "POST",

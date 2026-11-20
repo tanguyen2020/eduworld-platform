@@ -11,7 +11,7 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T005 Delta contract (owner F030): `createCmsActivityVersion` — file: `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [x] T005 Delta contract (owner F030): `createCmsActivityVersion` (đã có: F030 T054, 2026-11-20) — file: `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
 - [ ] T006 Delta contract (owner F031): `previewRegradeRequest` + `RegradeImpact`, `listRegradeRequests`, thêm trường version vào `RegradeRequest` (cùng `getRegradeRequest` của F031) — file: `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T007 Delta contract (owner F027): `MediaKind` thêm `subtitle` (`text/vtt`); cập nhật CONTENT_MODEL §7 — file: `specs/openapi/modules/learning.v1.yaml`, `docs/02-learning/CONTENT_MODEL.md` — kiểm: `make specs-lint`
 - [ ] T008 Sửa ADMIN_PORTAL §3.13 permission builder = `learning_content.activity.write`; ghi CHANGELOG — file: `docs/04-admin-portal/ADMIN_PORTAL.md`, `CHANGELOG.md` — kiểm: `make docs-check`

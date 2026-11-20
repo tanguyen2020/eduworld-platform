@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/attemptview"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
@@ -34,58 +33,26 @@ func init() {
 		"createCmsActivity":      op("createCmsActivity", http.MethodPost, cmsActivities, httpx.TenantOptional, httpx.IdempotencyRequired, 201),
 		"getCmsActivity":         op("getCmsActivity", http.MethodGet, cmsActivities+"/{activity_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 		"updateCmsActivityDraft": op("updateCmsActivityDraft", http.MethodPatch, cmsActivities+"/{activity_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
-		"listActivityTypes":      op("listActivityTypes", http.MethodGet, "/cms/learning/activity-types", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+		"createCmsActivityVersion": op("createCmsActivityVersion", http.MethodPost, cmsActivities+"/{activity_id}/versions", httpx.TenantOptional,
+			httpx.IdempotencyRequired, 201),
+		"listActivityTypes": op("listActivityTypes", http.MethodGet, "/cms/learning/activity-types", httpx.TenantOptional, httpx.IdempotencyNone, 200),
 	} {
 		Operations[id] = o
 	}
 }
 
 var cmsActivityRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request){
-	"listCmsActivities":      Handlers.listCmsActivities,
-	"createCmsActivity":      Handlers.createCmsActivity,
-	"getCmsActivity":         Handlers.getCmsActivity,
-	"updateCmsActivityDraft": Handlers.updateCmsActivityDraft,
-	"listActivityTypes":      Handlers.listActivityTypes,
+	"listCmsActivities":        Handlers.listCmsActivities,
+	"createCmsActivity":        Handlers.createCmsActivity,
+	"getCmsActivity":           Handlers.getCmsActivity,
+	"updateCmsActivityDraft":   Handlers.updateCmsActivityDraft,
+	"createCmsActivityVersion": Handlers.createCmsActivityVersion,
+	"listActivityTypes":        Handlers.listActivityTypes,
 }
 
-// activityDefinition is ActivityDefinition: the activity fields of the version body plus its metadata columns.
+// activityDefinition is ActivityDefinition (command.ActivityJSON, also the idempotent replay body).
 func activityDefinition(d query.DocView, current *int) map[string]any {
-	v := d.Version
-	a := attemptview.ParseBody(v.Body)
-	out := map[string]any{"activity_id": d.Doc.ID, "activity_version_id": v.ID, "version": v.VersionNo, "activity_type": a.ActivityType,
-		"title": v.Title, "status": string(v.Status), "owner_scope": string(d.Doc.Owner.Scope), "grade_levels": nonNil(v.GradeLevels),
-		"objective_ids": nonNilIDs(v.ObjectiveIDs), "current_published_version": current, "updated_at": v.UpdatedAt,
-		"content_language": v.ContentLanguage}
-	if d.Doc.Owner.TenantID != nil {
-		out["tenant_id"] = *d.Doc.Owner.TenantID
-	}
-	if v.SubjectID != nil {
-		out["subject_id"] = *v.SubjectID
-	}
-	if a.Difficulty != nil {
-		out["difficulty"] = *a.Difficulty
-	}
-	if len(a.Config) > 0 {
-		out["config"] = a.Config
-	}
-	if v.TranslationStatus != nil {
-		out["translation_status"] = *v.TranslationStatus
-	}
-	return out
-}
-
-func nonNil(v []int) []int {
-	if v == nil {
-		return []int{}
-	}
-	return v
-}
-
-func nonNilIDs(v []uuid.UUID) []uuid.UUID {
-	if v == nil {
-		return []uuid.UUID{}
-	}
-	return v
+	return command.ActivityJSON(d.Doc, d.Version, current)
 }
 
 func (h Handlers) createCmsActivity(w http.ResponseWriter, r *http.Request) {
@@ -166,6 +133,36 @@ func (h Handlers) updateCmsActivityDraft(w http.ResponseWriter, r *http.Request)
 	}
 	etag(w, res.Version.RowVersion)
 	writeJSON(w, http.StatusOK, activityDefinition(query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
+}
+
+// createCmsActivityVersion opens a new draft from a version of the activity (OQ F030 owner 2026-11-20, same pattern as
+// createQuestionVersion): a published version is never edited (R11), its content is copied into version n+1 draft.
+func (h Handlers) createCmsActivityVersion(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "activity_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		FromVersion int    `json:"from_version"`
+		Note        string `json:"note"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	cur, err := h.CmsActivities.Get(r.Context(), id)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	res, err := h.Docs.NewVersion(r.Context(), command.NewDocVersionInput{Type: contentmodel.TypeActivity, ID: id, FromVersion: b.FromVersion, Note: b.Note})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	etag(w, res.Version.RowVersion)
+	writeJSON(w, http.StatusCreated, activityDefinition(query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
 }
 
 // activityTypeInfo is ActivityTypeInfo.

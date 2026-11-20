@@ -236,7 +236,7 @@ func (h Docs) Create(ctx context.Context, t contentmodel.ContentType, f DocField
 		if out, err = h.load(ctx, t, d.ID, 1); err != nil {
 			return err
 		}
-		return idempotency.SetResult(ctx, DocJSON(out, p.TenantID))
+		return idempotency.SetResult(ctx, docResultJSON(out, p.TenantID, nil))
 	})
 	return out, err
 }
@@ -379,9 +379,23 @@ func (h Docs) NewVersion(ctx context.Context, in NewDocVersionInput) (out DocRes
 		if out, err = h.load(ctx, in.Type, d.ID, v.VersionNo); err != nil {
 			return err
 		}
-		return idempotency.SetResult(ctx, DocJSON(out, p.TenantID))
+		return idempotency.SetResult(ctx, docResultJSON(out, p.TenantID, publishedNo(vs, d.CurrentVersionID)))
 	})
 	return out, err
+}
+
+// publishedNo is the number of the version current points to (nil without a current version).
+func publishedNo(vs []dto.DocVersion, current *uuid.UUID) *int {
+	if current == nil {
+		return nil
+	}
+	for _, v := range vs {
+		if v.ID == *current {
+			n := v.VersionNo
+			return &n
+		}
+	}
+	return nil
 }
 
 // DeleteDocInput is a delete request.
