@@ -117,7 +117,7 @@
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 
-- [ ] T057 **OQ chốt 2026-11-20** Cache snapshot và preview của module learning: thời hạn 200 ms cho Get/Put như `cache.PoolTimeout`, lỗi = miss, đọc lại PostgreSQL; test tích hợp dừng Valkey cho delivery snapshot + preview (mở rộng `TestLearningRecordWithoutValkey`)
+- [x] T057 **OQ chốt 2026-11-20** Cache snapshot và preview của module learning: thời hạn 200 ms cho Get/Put như `cache.PoolTimeout`, lỗi = miss, đọc lại PostgreSQL; test tích hợp dừng Valkey cho delivery snapshot + preview (mở rộng `TestLearningRecordWithoutValkey`) — ✅ `cache.SnapshotCache` (Get/Put/Current/SetCurrent) và `cache.PreviewStore` (Get/Put) có thời hạn `PoolTimeout` 200 ms, lỗi = miss (ghi log), snapshot dựng lại từ PostgreSQL; `TestLearningRecordWithoutValkey` (snapshot delivery, release pointer, preview khi Valkey dừng, < 5 s) pass 2026-11-20
 
 **Checkpoint**: US6 chạy và kiểm độc lập được; module game (F074) tiêu thụ `lesson.completed`.
 

@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,20 +27,26 @@ func (s PreviewStore) Put(ctx context.Context, p preview.Session, ttl time.Durat
 	if err != nil {
 		return err
 	}
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
+	// Bounded by PoolTimeout; a failed write is logged and the session is simply not found later (cache only, OQ F031
+	// owner 2026-11-20): the preview is rendered again from PostgreSQL by a new request.
 	if err := s.C.Do(ctx, s.C.B().Set().Key(PreviewPrefix+p.ID.String()).Value(string(b)).Ex(ttl).Build()).Error(); err != nil {
-		return fmt.Errorf("cache: put preview: %w", err)
+		slog.WarnContext(ctx, "preview cache write failed", "error", err)
 	}
 	return nil
 }
 
 // Get implements port.PreviewStore.
 func (s PreviewStore) Get(ctx context.Context, id uuid.UUID) (preview.Session, error) {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	b, err := s.C.Do(ctx, s.C.B().Get().Key(PreviewPrefix+id.String()).Build()).AsBytes()
-	if valkey.IsValkeyNil(err) {
-		return preview.Session{}, port.ErrPreviewNotFound
-	}
 	if err != nil {
-		return preview.Session{}, fmt.Errorf("cache: get preview: %w", err)
+		if !valkey.IsValkeyNil(err) {
+			slog.WarnContext(ctx, "preview cache read failed", "error", err)
+		}
+		return preview.Session{}, port.ErrPreviewNotFound
 	}
 	var p preview.Session
 	if err := json.Unmarshal(b, &p); err != nil {

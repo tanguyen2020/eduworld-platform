@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,22 +33,27 @@ func (s SnapshotCache) ttl() time.Duration {
 	return s.TTL
 }
 
-// Get implements port.SnapshotCache (the TTL slides on every hit).
+// Get implements port.SnapshotCache (the TTL slides on every hit). The call is bounded by PoolTimeout and any error is
+// a miss: the caller reads PostgreSQL (ADR-0004, OQ F031 owner 2026-11-20).
 func (s SnapshotCache) Get(ctx context.Context, key string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	b, err := s.C.Do(ctx, s.C.B().Getex().Key(key).Ex(s.ttl()).Build()).AsBytes()
-	if valkey.IsValkeyNil(err) {
-		return nil, port.ErrCacheMiss
-	}
 	if err != nil {
-		return nil, fmt.Errorf("cache: get snapshot: %w", err)
+		if !valkey.IsValkeyNil(err) {
+			slog.WarnContext(ctx, "content snapshot cache read failed", "error", err)
+		}
+		return nil, port.ErrCacheMiss
 	}
 	return b, nil
 }
 
-// Put implements port.SnapshotCache.
+// Put implements port.SnapshotCache: bounded by PoolTimeout; a failed write is logged, never an error (cache only).
 func (s SnapshotCache) Put(ctx context.Context, key string, b []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	if err := s.C.Do(ctx, s.C.B().Set().Key(key).Value(string(b)).Ex(s.ttl()).Build()).Error(); err != nil {
-		return fmt.Errorf("cache: put snapshot: %w", err)
+		slog.WarnContext(ctx, "content snapshot cache write failed", "error", err)
 	}
 	return nil
 }
@@ -62,6 +68,8 @@ func currentKey(tenant *uuid.UUID, itemType string, itemID uuid.UUID) string {
 
 // SetCurrent implements port.SnapshotCache.
 func (s SnapshotCache) SetCurrent(ctx context.Context, tenant *uuid.UUID, itemType string, itemID uuid.UUID, versionID *uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	key := currentKey(tenant, itemType, itemID)
 	var err error
 	if versionID == nil {
@@ -75,14 +83,20 @@ func (s SnapshotCache) SetCurrent(ctx context.Context, tenant *uuid.UUID, itemTy
 	return nil
 }
 
-// Current implements port.SnapshotCache.
+// Current implements port.SnapshotCache: bounded by PoolTimeout, any error is a miss (the pointer is read from PostgreSQL).
 func (s SnapshotCache) Current(ctx context.Context, tenant *uuid.UUID, itemType string, itemID uuid.UUID) (uuid.UUID, error) {
+	ctx, cancel := context.WithTimeout(ctx, PoolTimeout)
+	defer cancel()
 	v, err := s.C.Do(ctx, s.C.B().Get().Key(currentKey(tenant, itemType, itemID)).Build()).ToString()
-	if valkey.IsValkeyNil(err) {
+	if err != nil {
+		if !valkey.IsValkeyNil(err) {
+			slog.WarnContext(ctx, "release pointer cache read failed", "error", err)
+		}
 		return uuid.Nil, port.ErrCacheMiss
 	}
+	id, err := uuid.Parse(v)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("cache: get release pointer: %w", err)
+		return uuid.Nil, port.ErrCacheMiss
 	}
-	return uuid.Parse(v)
+	return id, nil
 }

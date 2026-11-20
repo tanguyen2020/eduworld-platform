@@ -5,13 +5,20 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/preview"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
@@ -63,5 +70,39 @@ func TestLearningRecordWithoutValkey(t *testing.T) {
 	}
 	if m := c.masteryOf(ctx, t, c.users[hsAn].UserID, s.qc.lo); m.evidence != 3 {
 		t.Fatalf("mastery: %+v", m)
+	}
+	// F031 T057 (OQ owner 2026-11-20): the snapshot and preview caches are bounded too (200 ms, error = miss): the
+	// delivery snapshot is rebuilt from PostgreSQL, the release pointer and the preview session are misses.
+	snapshots, previews := cache.SnapshotCache{C: vk}, cache.PreviewStore{C: vk}
+	start := time.Now()
+	var qid uuid.UUID
+	if err := c.platform.QueryRowContext(ctx, `SELECT question_id FROM content.question_versions WHERE question_version_id = $1`,
+		s.questions[0]).Scan(&qid); err != nil {
+		t.Fatal(err)
+	}
+	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}, Cache: snapshots}
+	var snap []byte
+	if err := c.read.Read(sctx, func(ctx context.Context) error {
+		var err error
+		snap, err = reader.Snapshot(ctx, contentmodel.TypeQuestion, qid, 1)
+		return err
+	}); err != nil || len(snap) == 0 {
+		t.Fatalf("snapshot with Valkey down: %v", err)
+	}
+	if err := snapshots.Put(ctx, "ew:learning:cv:x", []byte("{}")); err != nil {
+		t.Fatalf("snapshot put: %v", err)
+	}
+	if _, err := snapshots.Current(ctx, nil, "question", qid); !errors.Is(err, port.ErrCacheMiss) {
+		t.Fatalf("release pointer: %v", err)
+	}
+	sess := preview.Session{ID: uuid.New()}
+	if err := previews.Put(ctx, sess, time.Minute); err != nil {
+		t.Fatalf("preview put: %v", err)
+	}
+	if _, err := previews.Get(ctx, sess.ID); !errors.Is(err, port.ErrPreviewNotFound) {
+		t.Fatalf("preview get: %v", err)
+	}
+	if d := time.Since(start); d > 5*time.Second {
+		t.Fatalf("cache calls with Valkey down took %s", d)
 	}
 }
