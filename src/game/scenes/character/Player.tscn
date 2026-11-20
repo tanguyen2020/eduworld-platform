@@ -1,0 +1,72 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/player/camera_rig.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="3_anim"]
+[ext_resource type="Script" path="res://scripts/player/tap_to_move.gd" id="4_tap"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.35
+height = 1.4
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.35
+height = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.28
+height = 0.56
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_empty"]
+
+[node name="Player" type="CharacterBody3D" node_paths=PackedStringArray("camera_rig", "anim_driver", "tap_to_move", "avatar")]
+script = ExtResource("1_controller")
+camera_rig = NodePath("CameraRig")
+anim_driver = NodePath("AnimDriver")
+tap_to_move = NodePath("TapToMove")
+avatar = NodePath("AvatarRig")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="AvatarRig" type="Node3D" parent="."]
+
+[node name="Bob" type="Node3D" parent="AvatarRig"]
+
+[node name="Body" type="MeshInstance3D" parent="AvatarRig/Bob"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Head" type="MeshInstance3D" parent="AvatarRig/Bob"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.05)
+mesh = SubResource("SphereMesh_head")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="AvatarRig"]
+libraries = {
+&"": SubResource("AnimationLibrary_empty")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+
+[node name="AnimDriver" type="Node" parent="." node_paths=PackedStringArray("animation_player", "animation_tree")]
+script = ExtResource("3_anim")
+animation_player = NodePath("../AvatarRig/AnimationPlayer")
+animation_tree = NodePath("../AnimationTree")
+
+[node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("spring_arm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+script = ExtResource("2_camera")
+spring_arm = NodePath("SpringArm3D")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.34202015, 0, 0.34202015, 0.9396926, 0, 0, 0)
+spring_length = 6.0
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/SpringArm3D"]
+current = true
+
+[node name="TapToMove" type="Node" parent="." node_paths=PackedStringArray("camera")]
+script = ExtResource("4_tap")
+camera = NodePath("../CameraRig/SpringArm3D/Camera3D")

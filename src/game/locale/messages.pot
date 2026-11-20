@@ -6,10 +6,34 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "ui.activity_player.update_required"
+msgstr ""
+
 msgid "ui.boot.loading"
 msgstr ""
 
 msgid "ui.boot.title"
+msgstr ""
+
+msgid "ui.common.break_reminder"
+msgstr ""
+
+msgid "ui.common.break_reminder.ok"
+msgstr ""
+
+msgid "ui.common.break_reminder.title"
+msgstr ""
+
+msgid "ui.common.close"
+msgstr ""
+
+msgid "ui.common.ok"
+msgstr ""
+
+msgid "ui.common.outside_access_window"
+msgstr ""
+
+msgid "ui.common.retry"
 msgstr ""
 
 msgid "ui.config_error.body"
@@ -40,6 +64,9 @@ msgid "ui.error.ACCOUNT_NOT_PROVISIONED"
 msgstr ""
 
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
+msgstr ""
+
+msgid "ui.error.ASSIGNMENT_NOT_OPEN"
 msgstr ""
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
@@ -243,6 +270,51 @@ msgstr ""
 msgid "ui.gallery.toast.message"
 msgstr ""
 
+msgid "ui.hub.action.interact"
+msgstr ""
+
+msgid "ui.hub.action.read"
+msgstr ""
+
+msgid "ui.hub.assignments"
+msgstr ""
+
+msgid "ui.hub.assignments_count"
+msgstr ""
+
+msgid "ui.hub.board.school_assignments"
+msgstr ""
+
+msgid "ui.hub.grade_band.g1_3"
+msgstr ""
+
+msgid "ui.hub.grade_band.g4_5"
+msgstr ""
+
+msgid "ui.hub.grade_band.g6_7"
+msgstr ""
+
+msgid "ui.hub.grade_band.g8_9"
+msgstr ""
+
+msgid "ui.hub.home"
+msgstr ""
+
+msgid "ui.hub.home.tooltip"
+msgstr ""
+
+msgid "ui.hub.journal"
+msgstr ""
+
+msgid "ui.hub.journal.tooltip"
+msgstr ""
+
+msgid "ui.hub.player_default"
+msgstr ""
+
+msgid "ui.hub.settings"
+msgstr ""
+
 msgid "ui.login.button_sign_in"
 msgstr ""
 
@@ -423,6 +495,90 @@ msgstr ""
 msgid "ui.login.wait_hint"
 msgstr ""
 
+msgid "ui.quality.antialiasing"
+msgstr ""
+
+msgid "ui.quality.benchmark.body"
+msgstr ""
+
+msgid "ui.quality.benchmark.choose"
+msgstr ""
+
+msgid "ui.quality.benchmark.skip"
+msgstr ""
+
+msgid "ui.quality.benchmark.title"
+msgstr ""
+
+msgid "ui.quality.preset.high"
+msgstr ""
+
+msgid "ui.quality.preset.low"
+msgstr ""
+
+msgid "ui.quality.preset.medium"
+msgstr ""
+
+msgid "ui.quality.shadows"
+msgstr ""
+
+msgid "ui.quality.suggest_lower"
+msgstr ""
+
+msgid "ui.quality.title"
+msgstr ""
+
+msgid "ui.quest.due"
+msgstr ""
+
+msgid "ui.quest.empty"
+msgstr ""
+
+msgid "ui.quest.late_allowed"
+msgstr ""
+
+msgid "ui.quest.load_failed"
+msgstr ""
+
+msgid "ui.quest.loading"
+msgstr ""
+
+msgid "ui.quest.overdue"
+msgstr ""
+
+msgid "ui.quest.start"
+msgstr ""
+
+msgid "ui.quest.status.excused"
+msgstr ""
+
+msgid "ui.quest.status.graded"
+msgstr ""
+
+msgid "ui.quest.status.in_progress"
+msgstr ""
+
+msgid "ui.quest.status.not_started"
+msgstr ""
+
+msgid "ui.quest.status.submitted"
+msgstr ""
+
+msgid "ui.quest.status.unsupported"
+msgstr ""
+
+msgid "ui.quest.tab.assigned"
+msgstr ""
+
+msgid "ui.quest.title"
+msgstr ""
+
+msgid "ui.settings.account"
+msgstr ""
+
+msgid "ui.settings.language"
+msgstr ""
+
 msgid "ui.settings.logout"
 msgstr ""
 
@@ -432,5 +588,5 @@ msgstr ""
 msgid "ui.settings.logout_confirm"
 msgstr ""
 
-msgid "ui.world.placeholder"
+msgid "ui.settings.title"
 msgstr ""

@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/settings/quality_settings.gd" id="1_script"]
+
+[node name="QualitySettings" type="VBoxContainer"]
+script = ExtResource("1_script")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.quality.title"
+
+[node name="Presets" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="PresetLow" type="Button" parent="Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+text = "ui.quality.preset.low"
+
+[node name="PresetMedium" type="Button" parent="Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+text = "ui.quality.preset.medium"
+
+[node name="PresetHigh" type="Button" parent="Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryButton"
+text = "ui.quality.preset.high"
+
+[node name="Shadows" type="CheckButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.quality.shadows"
+
+[node name="Antialiasing" type="CheckButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.quality.antialiasing"
+
+[node name="Suggestion" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+autowrap_mode = 3

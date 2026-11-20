@@ -1,7 +1,8 @@
 class_name ClientConfig
 extends RefCounted
 ## Public client configuration `GET /game/client-config` (`ClientConfig` in specs/openapi/eduworld-api.v1.yaml).
-## F060 only parses it (contract test, F060-AC-22); F061 fetches it during VersionCheck.
+## F060 only parses it (contract test, F060-AC-22); F061 fetches it during VersionCheck; F062 reads
+## `device_profiles` (QualityManager forces renderer/preset for known devices, F062-AC-15).
 
 var min_client_version: String = ""
 var latest_client_version: String = ""
@@ -13,6 +14,8 @@ var world_manifest_url: String = ""
 var realtime_url: String = ""
 var feature_flags: Dictionary = {}
 var supported_locales: PackedStringArray = []
+## `DeviceProfile` dictionaries as received (matched by QualityPolicy.match_device_profile).
+var device_profiles: Array[Dictionary] = []
 
 
 ## Parses a decoded JSON body; returns null when a required field is missing or has the wrong shape.
@@ -36,6 +39,11 @@ static func from_dict(data: Dictionary) -> ClientConfig:
 	if flags is Dictionary:
 		for key: Variant in (flags as Dictionary).keys():
 			config.feature_flags[String(key)] = bool((flags as Dictionary)[key])
+	var profiles: Variant = data.get("device_profiles", [])
+	if profiles is Array:
+		for profile: Variant in (profiles as Array):
+			if profile is Dictionary:
+				config.device_profiles.append(profile as Dictionary)
 	for locale: Variant in (data.get("supported_locales", []) as Array):
 		if L10n.is_supported(String(locale), false):
 			config.supported_locales.append(String(locale))

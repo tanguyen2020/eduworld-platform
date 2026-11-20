@@ -1,0 +1,155 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_root.gd" id="1_zone"]
+[ext_resource type="Environment" path="res://resources/art/generated/env_hub.tres" id="2_env"]
+[ext_resource type="Script" path="res://scripts/world/spawn_point.gd" id="3_spawn"]
+[ext_resource type="Script" path="res://scripts/world/interactable.gd" id="4_interactable"]
+[ext_resource type="PackedScene" path="res://scenes/character/Player.tscn" id="5_player"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_block"]
+size = Vector3(6, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_block"]
+size = Vector3(6, 4, 6)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fountain"]
+height = 1.0
+radius = 3.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fountain"]
+top_radius = 3.0
+bottom_radius = 3.2
+height = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_board"]
+size = Vector3(2.4, 2.4, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+size = Vector3(2.4, 2.4, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_board_area"]
+size = Vector3(4, 3, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(1, 5, 1)
+
+[node name="Zone" type="Node3D"]
+script = ExtResource("1_zone")
+player_scene = ExtResource("5_player")
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = ExtResource("2_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.8660254, -0.25, 0.4330127, 0, 0.8660254, 0.5, -0.5, -0.4330127, 0.75, 0, 12, 0)
+shadow_enabled = true
+directional_shadow_mode = 0
+directional_shadow_max_distance = 25.0
+
+[node name="Terrain" type="StaticBody3D" parent="."]
+
+[node name="Collision" type="CollisionShape3D" parent="Terrain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Plaza" type="MeshInstance3D" parent="Terrain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_ground")
+
+[node name="Static" type="StaticBody3D" parent="."]
+
+[node name="FountainCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CylinderShape3D_fountain")
+
+[node name="Fountain" type="MeshInstance3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CylinderMesh_fountain")
+
+[node name="HallCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
+shape = SubResource("BoxShape3D_block")
+
+[node name="Hall" type="MeshInstance3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
+mesh = SubResource("BoxMesh_block")
+
+[node name="LibraryCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2, -8)
+shape = SubResource("BoxShape3D_block")
+
+[node name="Library" type="MeshInstance3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2, -8)
+mesh = SubResource("BoxMesh_block")
+
+[node name="GateLeftCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, -6)
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateRightCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, 2)
+shape = SubResource("BoxShape3D_gate")
+
+[node name="Navigation" type="NavigationRegion3D" parent="."]
+
+[node name="Occluders" type="Node3D" parent="."]
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Default" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 9)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.default"
+radius = 1.5
+tags = PackedStringArray("default", "respawn")
+
+[node name="FromArena" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, -2)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_arena"
+radius = 1.0
+facing = -90.0
+tags = PackedStringArray("from_arena")
+
+[node name="Interactables" type="Node3D" parent="."]
+
+[node name="SchoolAssignmentsBoard" type="Area3D" parent="Interactables"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
+script = ExtResource("4_interactable")
+interactable_id = "board.school_assignments"
+kind = "quest_board"
+prompt_key = "ui.hub.action.read"
+
+[node name="Trigger" type="CollisionShape3D" parent="Interactables/SchoolAssignmentsBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_board_area")
+
+[node name="Board" type="StaticBody3D" parent="Interactables/SchoolAssignmentsBoard"]
+
+[node name="Collision" type="CollisionShape3D" parent="Interactables/SchoolAssignmentsBoard/Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
+shape = SubResource("BoxShape3D_board")
+
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/SchoolAssignmentsBoard/Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="Title" type="Label3D" parent="Interactables/SchoolAssignmentsBoard/Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -1.2)
+billboard = 1
+text = "ui.hub.board.school_assignments"
+pixel_size = 0.01
+
+[node name="Portals" type="Node3D" parent="."]
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="Ambient" type="Node3D" parent="."]

@@ -19,6 +19,7 @@ const KEY_OFFLINE: String = "ui.login.offline"
 const KEY_TICKET_EXPIRED: String = "ui.login.ticket_expired"
 const KEY_SESSION_EXPIRED: String = "ui.login.session_expired"
 const KEY_RELOGIN: String = "ui.login.relogin"
+const CODE_OUTSIDE_HOURS: String = "ACCESS_OUTSIDE_ALLOWED_HOURS"
 
 ## Codes with a dedicated S01 message; anything else uses `ui.error.<CODE>` (L10n.error_text).
 const CODE_KEYS: Dictionary = {
@@ -41,6 +42,8 @@ var remember_visible: bool = true
 var error_code: String = ""
 ## Info banner above the form (`code`, e.g. REFRESH_TOKEN_INVALID → "Phiên đăng nhập đã hết…").
 var banner_code: String = ""
+## Values of the banner message (F062-AC-23: `{window}` = the bootstrap `access_window`).
+var banner_args: Dictionary = {}
 var failed_attempts: int = 0
 var busy: bool = false
 ## Monotonic deadline of the `429 RATE_LIMITED` countdown (0 = none).
@@ -75,6 +78,7 @@ func begin_submit(user: String) -> void:
 	username = normalize_username(user)
 	error_code = ""
 	banner_code = ""
+	banner_args = {}
 	busy = true
 	changed.emit()
 
@@ -106,8 +110,9 @@ func rate_limit_left_sec(now_msec: int) -> int:
 	return maxi(0, int(ceilf(float(rate_limited_until_msec - now_msec) / 1000.0)))
 
 
-func show_banner(code: String) -> void:
+func show_banner(code: String, args: Dictionary = {}) -> void:
 	banner_code = code
+	banner_args = args
 	error_code = ""
 	busy = false
 	password_clear_count += 1
@@ -144,6 +149,15 @@ static func key_for(code: String) -> String:
 
 
 ## Translated message of a code in the current locale.
+## Banner text: `ACCESS_OUTSIDE_ALLOWED_HOURS` with a known access window uses `ui.common.outside_access_window`
+## (F062-AC-23); every other code uses `message_for`.
+func banner_text() -> String:
+	var window: String = String(banner_args.get("window", ""))
+	if banner_code == CODE_OUTSIDE_HOURS and not window.is_empty():
+		return TranslationServer.translate("ui.common.outside_access_window").format({"window": window})
+	return message_for(banner_code)
+
+
 static func message_for(code: String) -> String:
 	if code.is_empty():
 		return ""

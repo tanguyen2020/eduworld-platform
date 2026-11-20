@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "assignment_id": "0190f0a0-0000-7000-8000-000000000101",
+      "title": "Phép nhân bảng 3",
+      "subject_id": "0190f0a0-0000-7000-8000-000000000201",
+      "content_kind": "activity",
+      "content_ref": "0190f0a0-0000-7000-8000-000000000301",
+      "open_at": "2026-11-16T00:00:00Z",
+      "due_at": "2026-11-20T16:59:00Z",
+      "status": "not_started",
+      "attempts_left": 3,
+      "result_release": "immediate",
+      "late_policy": {
+        "allow_late": true,
+        "late_window_hours": 24
+      }
+    },
+    {
+      "assignment_id": "0190f0a0-0000-7000-8000-000000000102",
+      "title": "Kiểm tra 15 phút: Đo độ dài",
+      "subject_id": "0190f0a0-0000-7000-8000-000000000201",
+      "content_kind": "assessment",
+      "content_ref": "0190f0a0-0000-7000-8000-000000000302",
+      "exam_session_id": "0190f0a0-0000-7000-8000-000000000401",
+      "open_at": "2026-11-16T00:00:00Z",
+      "due_at": "2026-11-21T09:00:00Z",
+      "status": "in_progress",
+      "attempt_id": "0190f0a0-0000-7000-8000-000000000501",
+      "attempts_left": 0,
+      "result_release": "manual",
+      "late_policy": {
+        "allow_late": false,
+        "late_window_hours": 0
+      }
+    }
+  ],
+  "page": {
+    "has_more": false,
+    "limit": 50
+  }
+}

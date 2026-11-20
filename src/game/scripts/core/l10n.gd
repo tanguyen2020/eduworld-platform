@@ -40,6 +40,7 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.UNAVAILABLE",
 	"ui.error.MAINTENANCE",
 	"ui.error.VALIDATION_FAILED",
+	"ui.error.ASSIGNMENT_NOT_OPEN",
 ]
 
 

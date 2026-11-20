@@ -439,6 +439,29 @@ func handle_session_ended(reason: String, reopen_at: String = "") -> void:
 	_show_login("TENANT_MISMATCH", true)
 
 
+## A game API refused the session while playing (F062-AC-12, F062-AC-23): `403 GAME_ACCESS_STUDENT_ONLY`, account or
+## tenant codes → same path as a fatal refresh (erase, `EventBus.session_expired`, F061 screen);
+## `ACCESS_OUTSIDE_ALLOWED_HOURS` → the form with `ui.common.outside_access_window` and the bootstrap access window.
+func handle_access_denied(code: String) -> void:
+	if code != LoginFormModel.CODE_OUTSIDE_HOURS:
+		_expire_session(code)
+		return
+	var window: String = ""
+	var app_state: Node = _autoload("AppState")
+	if app_state != null:
+		var play_time: Variant = (app_state.get("school_policies") as Dictionary).get("play_time")
+		if play_time is Dictionary and (play_time as Dictionary).get("access_window") is String:
+			window = String((play_time as Dictionary)["access_window"])
+	sessions.clear()
+	_end_stored_session(code)
+	var bus: Node = _autoload("EventBus")
+	if bus != null:
+		bus.emit_signal("session_expired")
+	_load_form_memory()
+	form.show_banner(code, {"window": window})
+	_set_state(STATE.LOGIN)
+
+
 ## ForceUpdate "Cập nhật": opens the store page given by the server (never a login page).
 func open_store() -> void:
 	if store_url.begins_with("https://"):

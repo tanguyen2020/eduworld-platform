@@ -1,0 +1,81 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/quest/quest_journal.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/NoticeDialog.tscn" id="2_notice"]
+
+[node name="QuestJournal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Window" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 0.08
+anchor_right = 0.92
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Window"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Box/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.quest.title"
+
+[node name="Close" type="Button" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.common.close"
+
+[node name="Tabs" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="TabAssigned" type="Button" parent="Window/Box/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+text = "ui.quest.tab.assigned"
+
+[node name="StateLabel" type="Label" parent="Window/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Retry" type="Button" parent="Window/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+text = "ui.common.retry"
+
+[node name="List" type="ScrollContainer" parent="Window/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="Control" parent="Window/Box/List"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Notice" parent="." instance=ExtResource("2_notice")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1

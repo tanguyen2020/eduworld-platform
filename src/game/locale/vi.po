@@ -9,11 +9,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+msgid "ui.activity_player.update_required"
+msgstr "Bài này cần phiên bản trò chơi mới hơn. Em hãy nhờ thầy cô hoặc bố mẹ cập nhật trò chơi nhé."
+
 msgid "ui.boot.loading"
 msgstr "Đang tải…"
 
 msgid "ui.boot.title"
 msgstr "EduWorld"
+
+msgid "ui.common.break_reminder"
+msgstr "Em đã chơi {minutes} phút rồi. Mây nhắc em nghỉ mắt một chút, uống nước và vận động nhẹ nhé!"
+
+msgid "ui.common.break_reminder.ok"
+msgstr "Mình biết rồi"
+
+msgid "ui.common.break_reminder.title"
+msgstr "Mây nhắc nghỉ"
+
+msgid "ui.common.close"
+msgstr "Đóng"
+
+msgid "ui.common.ok"
+msgstr "Đã hiểu"
+
+msgid "ui.common.outside_access_window"
+msgstr "Bây giờ ngoài giờ chơi EduWorld. Em có thể vào trong khung giờ {window}."
+
+msgid "ui.common.retry"
+msgstr "Thử lại"
 
 msgid "ui.config_error.body"
 msgstr "Cấu hình của bản cài đặt này bị lỗi. Em hãy nhờ thầy cô hoặc bố mẹ cài lại trò chơi nhé."
@@ -44,6 +68,9 @@ msgstr "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hã
 
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
 msgstr "Tài khoản của em đang được dùng trên thiết bị khác."
+
+msgid "ui.error.ASSIGNMENT_NOT_OPEN"
+msgstr "Bài này chưa mở hoặc đã đóng."
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
 msgstr "Bài này đã được nộp rồi."
@@ -246,6 +273,51 @@ msgstr "Bộ thành phần giao diện"
 msgid "ui.gallery.toast.message"
 msgstr "Đã lưu cài đặt"
 
+msgid "ui.hub.action.interact"
+msgstr "Tương tác"
+
+msgid "ui.hub.action.read"
+msgstr "Xem bảng"
+
+msgid "ui.hub.assignments"
+msgstr "Nhà trường giao"
+
+msgid "ui.hub.assignments_count"
+msgstr "Nhà trường giao ({count})"
+
+msgid "ui.hub.board.school_assignments"
+msgstr "Bảng Nhà trường giao"
+
+msgid "ui.hub.grade_band.g1_3"
+msgstr "Lớp 1–3"
+
+msgid "ui.hub.grade_band.g4_5"
+msgstr "Lớp 4–5"
+
+msgid "ui.hub.grade_band.g6_7"
+msgstr "Lớp 6–7"
+
+msgid "ui.hub.grade_band.g8_9"
+msgstr "Lớp 8–9"
+
+msgid "ui.hub.home"
+msgstr "Về Quảng trường"
+
+msgid "ui.hub.home.tooltip"
+msgstr "Về điểm xuất phát của Quảng trường Tia Sáng"
+
+msgid "ui.hub.journal"
+msgstr "Nhiệm vụ (J)"
+
+msgid "ui.hub.journal.tooltip"
+msgstr "Mở Nhật ký nhiệm vụ"
+
+msgid "ui.hub.player_default"
+msgstr "Bạn nhỏ"
+
+msgid "ui.hub.settings"
+msgstr "Cài đặt"
+
 msgid "ui.login.button_sign_in"
 msgstr "Đăng nhập"
 
@@ -426,6 +498,90 @@ msgstr "Phiên bản {version}"
 msgid "ui.login.wait_hint"
 msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại."
 
+msgid "ui.quality.antialiasing"
+msgstr "Khử răng cưa"
+
+msgid "ui.quality.benchmark.body"
+msgstr "Chỉ mất vài giây để chọn mức đồ họa phù hợp."
+
+msgid "ui.quality.benchmark.choose"
+msgstr "Em chọn mức đồ họa:"
+
+msgid "ui.quality.benchmark.skip"
+msgstr "Bỏ qua"
+
+msgid "ui.quality.benchmark.title"
+msgstr "Đang chuẩn bị cho máy của em…"
+
+msgid "ui.quality.preset.high"
+msgstr "Cao"
+
+msgid "ui.quality.preset.low"
+msgstr "Thấp"
+
+msgid "ui.quality.preset.medium"
+msgstr "Trung bình"
+
+msgid "ui.quality.shadows"
+msgstr "Bóng đổ"
+
+msgid "ui.quality.suggest_lower"
+msgstr "Máy đang chạy hơi chậm. Em có thể chọn mức đồ họa thấp hơn cho mượt hơn."
+
+msgid "ui.quality.title"
+msgstr "Đồ họa"
+
+msgid "ui.quest.due"
+msgstr "Hạn: {date} {time}"
+
+msgid "ui.quest.empty"
+msgstr "Hiện chưa có bài nào nhà trường giao."
+
+msgid "ui.quest.late_allowed"
+msgstr "vẫn làm được nếu bài cho phép nộp muộn"
+
+msgid "ui.quest.load_failed"
+msgstr "Chưa tải được danh sách bài. Em thử lại nhé."
+
+msgid "ui.quest.loading"
+msgstr "Đang tải bài…"
+
+msgid "ui.quest.overdue"
+msgstr "Đã quá hạn"
+
+msgid "ui.quest.start"
+msgstr "Bắt đầu"
+
+msgid "ui.quest.status.excused"
+msgstr "Được miễn"
+
+msgid "ui.quest.status.graded"
+msgstr "Đã có kết quả"
+
+msgid "ui.quest.status.in_progress"
+msgstr "Đang làm"
+
+msgid "ui.quest.status.not_started"
+msgstr "Chưa làm"
+
+msgid "ui.quest.status.submitted"
+msgstr "Đã nộp"
+
+msgid "ui.quest.status.unsupported"
+msgstr "Chưa hỗ trợ"
+
+msgid "ui.quest.tab.assigned"
+msgstr "Nhà trường giao"
+
+msgid "ui.quest.title"
+msgstr "Nhật ký nhiệm vụ"
+
+msgid "ui.settings.account"
+msgstr "Tài khoản"
+
+msgid "ui.settings.language"
+msgstr "Ngôn ngữ"
+
 msgid "ui.settings.logout"
 msgstr "Đăng xuất"
 
@@ -435,5 +591,5 @@ msgstr "Ở lại"
 msgid "ui.settings.logout_confirm"
 msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
 
-msgid "ui.world.placeholder"
-msgstr "Em đã vào EduWorld. (Màn tạm — Quảng trường chính có ở bản sau.)"
+msgid "ui.settings.title"
+msgstr "Cài đặt"

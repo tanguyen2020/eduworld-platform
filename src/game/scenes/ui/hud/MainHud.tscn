@@ -1,0 +1,155 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/hud/main_hud.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/ContextActionButton.tscn" id="2_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/Joystick.tscn" id="3_joystick"]
+
+[node name="MainHud" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="HFlowContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="PlayerBadge" type="PanelContainer" parent="Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+
+[node name="Box" type="VBoxContainer" parent="Root/TopBar/PlayerBadge"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Nickname" type="Label" parent="Root/TopBar/PlayerBadge/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text_overrun_behavior = 3
+
+[node name="GradeBand" type="Label" parent="Root/TopBar/PlayerBadge/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text_overrun_behavior = 3
+
+[node name="XpBar" type="Control" parent="Root/TopBar"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Spacer" type="Control" parent="Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CurrencyChip" type="Control" parent="Root/TopBar"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="AssignmentsChip" type="Button" parent="Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.hub.assignments"
+
+[node name="JournalButton" type="Button" parent="Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "ui.hub.journal.tooltip"
+theme_type_variation = &"SecondaryButton"
+text = "ui.hub.journal"
+
+[node name="SettingsButton" type="Button" parent="Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.hub.settings"
+
+[node name="SystemBanner" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.12
+anchor_right = 0.75
+anchor_bottom = 0.12
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+
+[node name="BannerLabel" type="Label" parent="Root/SystemBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="QuestTracker" type="Control" parent="Root"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Minimap" type="Control" parent="Root"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+
+[node name="ChatDock" type="Control" parent="Root"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+
+[node name="PartyChip" type="Control" parent="Root"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+
+[node name="BottomRight" type="HFlowContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="ContextActionButton" parent="Root/BottomRight" instance=ExtResource("2_action")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HomeButton" type="Button" parent="Root/BottomRight"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.hub.home.tooltip"
+theme_type_variation = &"SecondaryButton"
+text = "ui.hub.home"
+
+[node name="Joystick" parent="Root" instance=ExtResource("3_joystick")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0

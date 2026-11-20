@@ -9,11 +9,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "ui.activity_player.update_required"
+msgstr "This activity needs a newer version of the game. Please ask a teacher or parent to update it."
+
 msgid "ui.boot.loading"
 msgstr "Loading…"
 
 msgid "ui.boot.title"
 msgstr "EduWorld"
+
+msgid "ui.common.break_reminder"
+msgstr "You have played for {minutes} minutes. Mây says: rest your eyes, drink some water and stretch a little!"
+
+msgid "ui.common.break_reminder.ok"
+msgstr "Got it"
+
+msgid "ui.common.break_reminder.title"
+msgstr "Break time"
+
+msgid "ui.common.close"
+msgstr "Close"
+
+msgid "ui.common.ok"
+msgstr "OK"
+
+msgid "ui.common.outside_access_window"
+msgstr "EduWorld is closed right now. You can play during {window}."
+
+msgid "ui.common.retry"
+msgstr "Try again"
 
 msgid "ui.config_error.body"
 msgstr "The configuration of this installation is broken. Please ask a teacher or a parent to reinstall the game."
@@ -44,6 +68,9 @@ msgstr "Your account is not activated in EduWorld yet. Please ask your school to
 
 msgid "ui.error.ACTIVE_SESSION_ON_OTHER_DEVICE"
 msgstr "Your account is being used on another device."
+
+msgid "ui.error.ASSIGNMENT_NOT_OPEN"
+msgstr "This assignment is not open right now."
 
 msgid "ui.error.ATTEMPT_ALREADY_SUBMITTED"
 msgstr "This work has already been submitted."
@@ -246,6 +273,51 @@ msgstr "UI component gallery"
 msgid "ui.gallery.toast.message"
 msgstr "Settings saved"
 
+msgid "ui.hub.action.interact"
+msgstr "Interact"
+
+msgid "ui.hub.action.read"
+msgstr "Read"
+
+msgid "ui.hub.assignments"
+msgstr "From school"
+
+msgid "ui.hub.assignments_count"
+msgstr "From school ({count})"
+
+msgid "ui.hub.board.school_assignments"
+msgstr "School Assignments Board"
+
+msgid "ui.hub.grade_band.g1_3"
+msgstr "Grades 1–3"
+
+msgid "ui.hub.grade_band.g4_5"
+msgstr "Grades 4–5"
+
+msgid "ui.hub.grade_band.g6_7"
+msgstr "Grades 6–7"
+
+msgid "ui.hub.grade_band.g8_9"
+msgstr "Grades 8–9"
+
+msgid "ui.hub.home"
+msgstr "Back to the Plaza"
+
+msgid "ui.hub.home.tooltip"
+msgstr "Return to the start of Sunbeam Plaza"
+
+msgid "ui.hub.journal"
+msgstr "Quests (J)"
+
+msgid "ui.hub.journal.tooltip"
+msgstr "Open the quest journal"
+
+msgid "ui.hub.player_default"
+msgstr "Explorer"
+
+msgid "ui.hub.settings"
+msgstr "Settings"
+
 msgid "ui.login.button_sign_in"
 msgstr "Sign in"
 
@@ -426,6 +498,90 @@ msgstr "Version {version}"
 msgid "ui.login.wait_hint"
 msgstr "If you got it wrong several times, wait a few minutes and try again."
 
+msgid "ui.quality.antialiasing"
+msgstr "Anti-aliasing"
+
+msgid "ui.quality.benchmark.body"
+msgstr "This takes a few seconds to pick the right graphics level."
+
+msgid "ui.quality.benchmark.choose"
+msgstr "Choose a graphics level:"
+
+msgid "ui.quality.benchmark.skip"
+msgstr "Skip"
+
+msgid "ui.quality.benchmark.title"
+msgstr "Getting ready for your device…"
+
+msgid "ui.quality.preset.high"
+msgstr "High"
+
+msgid "ui.quality.preset.low"
+msgstr "Low"
+
+msgid "ui.quality.preset.medium"
+msgstr "Medium"
+
+msgid "ui.quality.shadows"
+msgstr "Shadows"
+
+msgid "ui.quality.suggest_lower"
+msgstr "The game is running a bit slowly. A lower graphics level may feel smoother."
+
+msgid "ui.quality.title"
+msgstr "Graphics"
+
+msgid "ui.quest.due"
+msgstr "Due: {date} {time}"
+
+msgid "ui.quest.empty"
+msgstr "Your school has not assigned anything yet."
+
+msgid "ui.quest.late_allowed"
+msgstr "you can still do it if late work is allowed"
+
+msgid "ui.quest.load_failed"
+msgstr "The list could not be loaded. Please try again."
+
+msgid "ui.quest.loading"
+msgstr "Loading…"
+
+msgid "ui.quest.overdue"
+msgstr "Past due"
+
+msgid "ui.quest.start"
+msgstr "Start"
+
+msgid "ui.quest.status.excused"
+msgstr "Excused"
+
+msgid "ui.quest.status.graded"
+msgstr "Results ready"
+
+msgid "ui.quest.status.in_progress"
+msgstr "In progress"
+
+msgid "ui.quest.status.not_started"
+msgstr "Not started"
+
+msgid "ui.quest.status.submitted"
+msgstr "Submitted"
+
+msgid "ui.quest.status.unsupported"
+msgstr "Not supported"
+
+msgid "ui.quest.tab.assigned"
+msgstr "From school"
+
+msgid "ui.quest.title"
+msgstr "Quest journal"
+
+msgid "ui.settings.account"
+msgstr "Account"
+
+msgid "ui.settings.language"
+msgstr "Language"
+
 msgid "ui.settings.logout"
 msgstr "Sign out"
 
@@ -435,5 +591,5 @@ msgstr "Stay"
 msgid "ui.settings.logout_confirm"
 msgstr "Do you want to sign out? Next time you will need your password."
 
-msgid "ui.world.placeholder"
-msgstr "You are in EduWorld. (Temporary screen — the main hub comes in a later build.)"
+msgid "ui.settings.title"
+msgstr "Settings"

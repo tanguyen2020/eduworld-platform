@@ -18,12 +18,15 @@ const yaml = require(path.join(root, 'scripts', 'node_modules', 'js-yaml'));
 const SPEC = 'specs/openapi/eduworld-api.v1.yaml';
 const EXAMPLES_DIR = 'specs/examples';
 const OUT_DIR = path.join(root, 'src/game/tests/fixtures/contract');
-// Component schemas the client parses: F060 frame + F061 login, refresh, tenant choice, game session, takeover.
+// Component schemas the client parses: F060 frame + F061 login, refresh, tenant choice, game session, takeover;
+// F062 school assignments (MyAssignment) and telemetry batches.
 const SCHEMAS = [
   'ClientConfig', 'Problem',
   'GameLoginResponse', 'GameTokenRefreshResponse', 'GameLoginProblem', 'ClientVersionProblem', 'GameSession',
-  'ActiveSessionConflict',
+  'ActiveSessionConflict', 'MyAssignment', 'TelemetryBatch',
 ];
+// Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
+const RESPONSES = [['listMyAssignments', '200']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
@@ -87,6 +90,14 @@ function render() {
     const rel = `openapi/${name}.json`;
     files[rel] = JSON.stringify(sample({ $ref: `#/components/schemas/${name}` }), null, 2) + '\n';
     manifest[rel] = { source: `${SPEC}#/components/schemas/${name}` };
+  }
+  for (const [operationId, status] of RESPONSES) {
+    const op = Object.values(spec.paths ?? {}).flatMap((item) => Object.values(item)).find((o) => o?.operationId === operationId);
+    const example = op?.responses?.[status]?.content?.['application/json']?.example;
+    if (example === undefined) throw new Error(`no example for ${operationId} ${status} in ${SPEC}`);
+    const rel = `openapi/${operationId}.${status}.json`;
+    files[rel] = JSON.stringify(example, null, 2) + '\n';
+    manifest[rel] = { source: `${SPEC}#${operationId}/responses/${status}/example` };
   }
   for (const file of fs.readdirSync(path.join(root, EXAMPLES_DIR)).filter((f) => f.endsWith('.json') && !NOT_FOR_CLIENT.some((re) => re.test(f))).sort()) {
     const rel = `examples/${file}`;

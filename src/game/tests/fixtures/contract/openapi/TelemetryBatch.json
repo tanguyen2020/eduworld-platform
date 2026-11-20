@@ -1,0 +1,35 @@
+{
+  "platform": "sample",
+  "client_version": "sample",
+  "device_tier": "minimum",
+  "preset": "low",
+  "renderer": "mobile",
+  "locale": "vi-VN",
+  "events": [
+    {
+      "type": "screen_view",
+      "client_event_id": "00000000-0000-4000-8000-000000000001",
+      "occurred_at": "2026-11-15T07:30:00Z",
+      "screen_code": "sample",
+      "duration_ms": 0,
+      "step_code": "sample",
+      "result": "done",
+      "scene_code": "sample",
+      "fps_p50": 1.5,
+      "fps_p10": 1.5,
+      "frame_ms_p95": 1.5,
+      "render_scale": 0.3,
+      "mem_mb": 0,
+      "kind": "cold_start",
+      "ms": 0,
+      "error_code": "sample",
+      "fatal": false,
+      "crash_signature": "sample",
+      "rtt_p50_ms": 0,
+      "rtt_p95_ms": 0,
+      "reconnects": 0,
+      "reminder_no": 1,
+      "minutes_played": 0
+    }
+  ]
+}

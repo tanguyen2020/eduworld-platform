@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/bootstrap/quality_benchmark.gd" id="1_script"]
+
+[node name="QualityBenchmark" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Card" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.6
+anchor_right = 0.8
+anchor_bottom = 0.6
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"HudPanel"
+
+[node name="Box" type="VBoxContainer" parent="Card"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Card/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.quality.benchmark.title"
+autowrap_mode = 3
+
+[node name="Measuring" type="VBoxContainer" parent="Card/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Body" type="Label" parent="Card/Box/Measuring"]
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "ui.quality.benchmark.body"
+autowrap_mode = 3
+
+[node name="Progress" type="ProgressBar" parent="Card/Box/Measuring"]
+unique_name_in_owner = true
+layout_mode = 2
+show_percentage = false
+
+[node name="Skip" type="Button" parent="Card/Box/Measuring"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_type_variation = &"SecondaryButton"
+text = "ui.quality.benchmark.skip"
+
+[node name="Manual" type="VBoxContainer" parent="Card/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Choose" type="Label" parent="Card/Box/Manual"]
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "ui.quality.benchmark.choose"
+autowrap_mode = 3
+
+[node name="Presets" type="HBoxContainer" parent="Card/Box/Manual"]
+layout_mode = 2
+
+[node name="Preset_low" type="Button" parent="Card/Box/Manual/Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.quality.preset.low"
+
+[node name="Preset_medium" type="Button" parent="Card/Box/Manual/Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.quality.preset.medium"
+
+[node name="Preset_high" type="Button" parent="Card/Box/Manual/Presets"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.quality.preset.high"

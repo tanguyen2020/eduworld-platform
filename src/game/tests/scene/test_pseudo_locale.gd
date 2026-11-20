@@ -21,7 +21,7 @@ const SCENES: PackedStringArray = [
 	"res://scenes/auth/CurfewNotice.tscn",
 	"res://scenes/ui/dialogs/TakeoverConfirm.tscn",
 	"res://scenes/ui/dialogs/ReplacedNotice.tscn",
-	"res://scenes/world/WorldPlaceholder.tscn",
+	"res://scenes/ui/hud/MainHud.tscn",
 ]
 const LETTER_PATTERN: String = "[A-Za-z\\x{00C0}-\\x{024F}\\x{1E00}-\\x{1EFF}]"
 

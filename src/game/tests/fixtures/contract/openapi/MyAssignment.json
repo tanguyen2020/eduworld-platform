@@ -1,0 +1,18 @@
+{
+  "assignment_id": "00000000-0000-4000-8000-000000000001",
+  "title": "sample",
+  "subject_id": "00000000-0000-4000-8000-000000000001",
+  "content_kind": "activity",
+  "content_ref": "00000000-0000-4000-8000-000000000001",
+  "open_at": "2026-11-15T07:30:00Z",
+  "due_at": "2026-11-15T07:30:00Z",
+  "status": "not_started",
+  "attempt_id": "00000000-0000-4000-8000-000000000001",
+  "attempts_left": 1,
+  "exam_session_id": "00000000-0000-4000-8000-000000000001",
+  "result_release": "immediate",
+  "late_policy": {
+    "allow_late": false,
+    "late_window_hours": 0
+  }
+}

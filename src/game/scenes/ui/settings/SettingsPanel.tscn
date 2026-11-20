@@ -1,0 +1,85 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/settings/settings_panel.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings/QualitySettings.tscn" id="2_quality"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogs/LogoutConfirm.tscn" id="3_logout"]
+
+[node name="SettingsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Window" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.15
+anchor_top = 0.08
+anchor_right = 0.85
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Window"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Box" type="VBoxContainer" parent="Window/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Header" type="HBoxContainer" parent="Window/Scroll/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Scroll/Box/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.settings.title"
+
+[node name="Close" type="Button" parent="Window/Scroll/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.common.close"
+
+[node name="LanguageTitle" type="Label" parent="Window/Scroll/Box"]
+layout_mode = 2
+text = "ui.settings.language"
+
+[node name="Languages" type="HBoxContainer" parent="Window/Scroll/Box"]
+layout_mode = 2
+
+[node name="LangVi" type="Button" parent="Window/Scroll/Box/Languages"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.language_vi"
+
+[node name="LangEn" type="Button" parent="Window/Scroll/Box/Languages"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.language_en"
+
+[node name="QualitySettings" parent="Window/Scroll/Box" instance=ExtResource("2_quality")]
+layout_mode = 2
+
+[node name="AccountTitle" type="Label" parent="Window/Scroll/Box"]
+layout_mode = 2
+text = "ui.settings.account"
+
+[node name="Logout" type="Button" parent="Window/Scroll/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.logout"
+
+[node name="LogoutConfirm" parent="." instance=ExtResource("3_logout")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1

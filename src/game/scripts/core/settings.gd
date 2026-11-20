@@ -2,7 +2,9 @@ extends Node
 ## Autoload #11 `Settings` (GODOT_ARCHITECTURE §4, §10, F060-AC-09, F060-AC-14, F060-AC-15).
 ## Per-device user preferences in `user://settings.cfg`: language, font scale (3 levels), high contrast, reduced
 ## motion, volumes, and (F061) the remembered login username `last_username` (F061-AC-12, ADR-0086). Only the keys
-## in SCHEMA are ever written — never business data, tokens or passwords.
+## in SCHEMA are ever written — never business data, tokens or passwords. F062: the device quality profile
+## `[quality]` (preset, renderer, renderer boot marker, shadow/anti-aliasing overrides — PERFORMANCE_BUDGET §4–§6),
+## kept per device and never sent to the server.
 
 signal font_scale_changed(level: int)
 signal high_contrast_changed(enabled: bool)
@@ -13,6 +15,7 @@ const DEFAULT_PATH: String = "user://settings.cfg"
 const SECTION_UI: String = "ui"
 const SECTION_AUDIO: String = "audio"
 const SECTION_LOGIN: String = "login"
+const SECTION_QUALITY: String = "quality"
 ## `GameLoginRequest.username` maxLength (specs/openapi).
 const USERNAME_MAX_LENGTH: int = 128
 const FONT_SCALE_MAX: int = 2
@@ -22,6 +25,7 @@ const SCHEMA: Dictionary = {
 	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion"],
 	"audio": ["music", "sfx", "voice"],
 	"login": ["remember_username", "last_username"],
+	"quality": ["preset", "renderer", "renderer_boot_pending", "shadows", "antialiasing"],
 }
 
 var path: String = DEFAULT_PATH
@@ -33,6 +37,13 @@ var volumes: Dictionary = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 ## "Nhớ tên đăng nhập" (CONFIG_DEFAULTS `game_remember_username`: on; AuthService never stores it on a shared device).
 var remember_username: bool = true
 var last_username: String = ""
+## Quality profile (F062): preset "" = not chosen yet (first run → benchmark, F062-AC-14); renderer "" = platform
+## default; overrides -1 = follow the preset, 0 = off, 1 = on.
+var quality_preset: String = ""
+var quality_renderer: String = ""
+var renderer_boot_pending: bool = false
+var quality_shadows: int = -1
+var quality_antialiasing: int = -1
 
 
 func _ready() -> void:
@@ -80,6 +91,14 @@ func load_from(file_path: String) -> void:
 	var username: Variant = cfg.get_value(SECTION_LOGIN, "last_username", "")
 	if username is String and remember_username:
 		last_username = (username as String).strip_edges().left(USERNAME_MAX_LENGTH)
+	var preset: Variant = cfg.get_value(SECTION_QUALITY, "preset", "")
+	quality_preset = preset as String if preset is String and (preset as String) in QualityPolicy.PRESET_NAMES else ""
+	var renderer: Variant = cfg.get_value(SECTION_QUALITY, "renderer", "")
+	quality_renderer = renderer as String if renderer is String and QualityPolicy.RENDERER_KINDS.has(renderer) else ""
+	var pending: Variant = cfg.get_value(SECTION_QUALITY, "renderer_boot_pending", false)
+	renderer_boot_pending = pending is bool and (pending as bool)
+	quality_shadows = _tri_state(cfg.get_value(SECTION_QUALITY, "shadows", -1))
+	quality_antialiasing = _tri_state(cfg.get_value(SECTION_QUALITY, "antialiasing", -1))
 
 
 ## Writes only the SCHEMA keys (fresh ConfigFile, so stray keys never survive).
@@ -94,6 +113,13 @@ func save() -> Error:
 	cfg.set_value(SECTION_LOGIN, "remember_username", remember_username)
 	if remember_username and not last_username.is_empty():
 		cfg.set_value(SECTION_LOGIN, "last_username", last_username)
+	if not quality_preset.is_empty():
+		cfg.set_value(SECTION_QUALITY, "preset", quality_preset)
+	if not quality_renderer.is_empty():
+		cfg.set_value(SECTION_QUALITY, "renderer", quality_renderer)
+	cfg.set_value(SECTION_QUALITY, "renderer_boot_pending", renderer_boot_pending)
+	cfg.set_value(SECTION_QUALITY, "shadows", quality_shadows)
+	cfg.set_value(SECTION_QUALITY, "antialiasing", quality_antialiasing)
 	var err: Error = cfg.save(path)
 	if err != OK:
 		_log_warn("settings_save_failed", {"error": err})
@@ -173,6 +199,15 @@ func _reset() -> void:
 	volumes = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 	remember_username = true
 	last_username = ""
+	quality_preset = ""
+	quality_renderer = ""
+	renderer_boot_pending = false
+	quality_shadows = -1
+	quality_antialiasing = -1
+
+
+static func _tri_state(value: Variant) -> int:
+	return clampi(value as int, -1, 1) if value is int else -1
 
 
 func _log_warn(event: String, fields: Dictionary) -> void:

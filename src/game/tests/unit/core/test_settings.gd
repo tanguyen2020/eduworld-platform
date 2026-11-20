@@ -41,7 +41,7 @@ func test_only_schema_keys_are_written() -> void:
 	_settings.call("set_font_scale", 1)
 	var written: ConfigFile = ConfigFile.new()
 	written.load(TEST_PATH)
-	assert_array(Array(written.get_sections())).contains_exactly_in_any_order(["ui", "audio", "login"])
+	assert_array(Array(written.get_sections())).contains_exactly_in_any_order(["ui", "audio", "login", "quality"])
 	for section: String in written.get_sections():
 		for key: String in written.get_section_keys(section):
 			assert_bool(key in (SettingsScript.SCHEMA[section] as Array)).override_failure_message("%s/%s" % [section, key]).is_true()

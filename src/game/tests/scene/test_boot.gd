@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 const BootScript := preload("res://scenes/bootstrap/boot.gd")
 const EXPECTED_ORDER: PackedStringArray = [
 	"Config", "Log", "EventBus", "AppState", "AuthService", "ApiClient", "SceneRouter", "AudioDirector", "Settings",
+	"QualityManager",
 ]
 
 var _autostart: bool = true

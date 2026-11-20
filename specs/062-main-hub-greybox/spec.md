@@ -13,6 +13,22 @@
 - Q: Đo lời nhắc nghỉ thế nào khi server không biết lúc nhắc? → A: Không có domain event (Technical Architect 2026-11-17). Mỗi lần hiện hộp nhắc, client gửi telemetry `break_reminder_shown` (`reminder_no`, `minutes_played`) trong lô `postTelemetry` kế tiếp ([GAME_ANALYTICS §3.2](../../docs/11-operations/GAME_ANALYTICS.md)); F080 tổng hợp chỉ số chơi lành mạnh.
 - Q: Tab "Nhà trường giao" mở bài thế nào khi activity player (F063) và Exam (F064) chưa xong? → A: F062 phát intent `EventBus.ui_requested("activity_host" | "exam_lobby", args)`; khi chưa có màn đăng ký, hiển thị `ui.activity_player.update_required` (không crash).
 
+### Session 2026-11-20 (triển khai M-C2, [Proposed] — Tech Lead xác nhận khi review)
+
+- Q: `TelemetryEvent.type` không có `client_unsupported_assignment_kind`, `renderer_fallback`. Gửi thế nào? → A: [Proposed] Gửi `type = client_error` với `error_code` = tên sự kiện (`client_unsupported_assignment_kind`, `renderer_fallback`), `scene_code` (`quest_journal`, `boot`); không đổi contract.
+- Q: Ngưỡng chọn preset từ benchmark? → A: [Proposed] Đo FPS p10 ở preset Trung bình trong ≤ 5 s (bỏ 10 khung đầu): ≥ 1,5 × mục tiêu → Cao (chỉ PC), ≥ 0,9 × mục tiêu (p10 ≥ 27 ở mục tiêu 30, PERFORMANCE_BUDGET §3) → Trung bình, còn lại → Thấp (`QualityPolicy.choose_preset`). Lab thiết bị (SC-004) hiệu chỉnh lại.
+- Q: Áp renderer cho lần chạy sau thế nào? → A: [Proposed] `application/config/project_settings_override = user://renderer_override.cfg` do `QualityManager` ghi (chỉ `rendering/renderer/rendering_method`). Phát hiện lỗi: cờ `renderer_boot_pending` trong `settings.cfg` còn bật (lần trước chưa vẽ được khung đầu) hoặc engine đã tự chuyển Compatibility; bỏ qua khi headless, chạy script `-s` hoặc renderer ép bằng dòng lệnh.
+- Q: Spawn point "do server trả" lấy ở đâu khi bootstrap không có trường này? → A: `AreaEnterResult.spawn_point_id` (F092, `enterWorldArea`) ghi vào `AppState.spawn_point_id`; ở M-C2 chưa có lời gọi đó nên dùng `main_hub.default`.
+- Q: Bài `content_kind = assessment` chưa có `exam_session_id` (trước F042)? → A: Vẫn phát `ui_requested("exam_lobby", {exam_session_id: "", assignment_id})`; exam lobby (F064) xử lý. Trước F064, intent nào chưa có màn đăng ký (`UiScreenRegistry`) đều hiện `ui.activity_player.update_required`.
+- Q: Cờ "tắt telemetry sản phẩm" đọc từ đâu? → A: [Proposed] `PlayerBootstrap.feature_flags.product_telemetry_enabled` (CONFIG_DEFAULTS `analytics_product_telemetry_enabled`, mặc định bật); chỉ lọc `screen_view`/`tutorial_step`.
+- Q: "Màn đứng yên > 10 s → 15 FPS" áp khi nào? → A: [Proposed] Mọi lúc không có input > 10 s (Hub hoặc màn học tập), có input thì trả trần FPS của preset (`battery_target`).
+- Q: Làm mới danh sách khi "quay lại Hub" khi chưa có `SceneRouter.zone_entered`? → A: Signal toàn cục mới `EventBus.ui_closed(screen_id)` phát khi đóng panel; `ZoneRoot` làm mới khi vào zone và khi nhận `ui_closed`. Dịch vụ miền giữ trong `AppState.services` (`ServiceLocator`, GODOT_ARCHITECTURE §4); hàng đợi telemetry chưa gửi bị xóa khi hết phiên (không gửi sự kiện của học sinh trước bằng token học sinh sau).
+- Q: Màn tạm `WorldPlaceholder` của F061 có "Đăng xuất" và cảnh báo giờ giới nghiêm. → A: Đã xóa; `GameStateMachine.IN_WORLD_SCENE = WorldRoot.tscn` (Hub + HUD); "Đăng xuất" ở Cài đặt → Tài khoản (`LogoutConfirm`), cảnh báo giờ giới nghiêm là banner hệ thống của HUD.
+
+**Câu hỏi mở (chưa tự quyết, R34):**
+- F062-1: `MyAssignment` chỉ có `subject_id`, không có tên môn; AC-08 yêu cầu hiện "môn". Cần `subject_name` (`LocalizedText`) trong `MyAssignment` hoặc danh mục môn cho client (F041/F032 quyết). Tạm thời hàng bài giao **không** hiện môn.
+- F062-2: `content_kind = question_set` không có trong ánh xạ của F062-AC-09 nên hiện `update_required`; có mở bằng `activity_host` không (F063)?
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Vào Main Hub và điều khiển nhân vật (Priority: P1)

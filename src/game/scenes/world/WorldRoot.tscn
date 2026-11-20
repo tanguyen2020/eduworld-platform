@@ -1,0 +1,56 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scenes/world/world_root.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/zones/main_hub/Zone.tscn" id="2_zone"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/MainHud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/BreakReminderDialog.tscn" id="4_break"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/NoticeDialog.tscn" id="5_notice"]
+[ext_resource type="PackedScene" path="res://scenes/bootstrap/QualityBenchmark.tscn" id="6_benchmark"]
+
+[node name="WorldRoot" type="Node"]
+script = ExtResource("1_script")
+
+[node name="Zone" parent="." instance=ExtResource("2_zone")]
+unique_name_in_owner = true
+
+[node name="MainHud" parent="." instance=ExtResource("3_hud")]
+unique_name_in_owner = true
+
+[node name="Panels" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="PanelRoot" type="Control" parent="Panels"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dialogs" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DialogRoot" type="Control" parent="Dialogs"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="QualityBenchmark" parent="Dialogs/DialogRoot" instance=ExtResource("6_benchmark")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+mouse_filter = 2
+
+[node name="BreakReminderDialog" parent="Dialogs/DialogRoot" instance=ExtResource("4_break")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="Notice" parent="Dialogs/DialogRoot" instance=ExtResource("5_notice")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1

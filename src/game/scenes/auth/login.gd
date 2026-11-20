@@ -68,7 +68,7 @@ func _render() -> void:
 		if not form.busy and is_inside_tree():
 			_password.grab_focus.call_deferred()
 	_banner.visible = not form.banner_code.is_empty()
-	_banner.text = LoginFormModel.message_for(form.banner_code)
+	_banner.text = form.banner_text()
 	var message: String = LoginFormModel.message_for(form.error_code)
 	var left: int = form.rate_limit_left_sec(AuthService.clock.now_msec()) if AuthService.clock != null else 0
 	if form.error_code == "RATE_LIMITED":

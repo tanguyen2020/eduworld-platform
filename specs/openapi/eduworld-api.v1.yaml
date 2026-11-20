@@ -15761,7 +15761,35 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/MyAssignment' }
                   page: { $ref: '#/components/schemas/PageInfo' }
+              example:
+                data:
+                  - assignment_id: 0190f0a0-0000-7000-8000-000000000101
+                    title: 'Phép nhân bảng 3'
+                    subject_id: 0190f0a0-0000-7000-8000-000000000201
+                    content_kind: activity
+                    content_ref: 0190f0a0-0000-7000-8000-000000000301
+                    open_at: '2026-11-16T00:00:00Z'
+                    due_at: '2026-11-20T16:59:00Z'
+                    status: not_started
+                    attempts_left: 3
+                    result_release: immediate
+                    late_policy: { allow_late: true, late_window_hours: 24 }
+                  - assignment_id: 0190f0a0-0000-7000-8000-000000000102
+                    title: 'Kiểm tra 15 phút: Đo độ dài'
+                    subject_id: 0190f0a0-0000-7000-8000-000000000201
+                    content_kind: assessment
+                    content_ref: 0190f0a0-0000-7000-8000-000000000302
+                    exam_session_id: 0190f0a0-0000-7000-8000-000000000401
+                    open_at: '2026-11-16T00:00:00Z'
+                    due_at: '2026-11-21T09:00:00Z'
+                    status: in_progress
+                    attempt_id: 0190f0a0-0000-7000-8000-000000000501
+                    attempts_left: 0
+                    result_release: manual
+                    late_policy: { allow_late: false, late_window_hours: 0 }
+                page: { has_more: false, limit: 50 }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   # ================================================================ cms: activities, activity types, simulation templates
   /cms/learning/activities:
@@ -22777,6 +22805,16 @@ components:
         status: { type: string, enum: [not_started, in_progress, submitted, graded, overdue, excused] }
         attempt_id: { $ref: '#/components/schemas/Uuid' }
         attempts_left: { type: [integer, 'null'] }
+        exam_session_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Có khi content_kind = assessment và bài mode = graded đã tạo ExamSession (SCHOOL_LMS §4, F042); client mở exam lobby bằng id này (F062, F064)
+        result_release: { $ref: '#/components/schemas/ResultRelease' }
+        late_policy:
+          type: object
+          description: Cùng shape AssignmentCreate.late_policy; client chỉ dùng để hiện nhãn quá hạn, server quyết định có cho nộp muộn
+          properties:
+            allow_late: { type: boolean }
+            late_window_hours: { type: integer, minimum: 0, maximum: 168 }
     DeviceProfile:
       type: object
       required: [match, renderer, preset]

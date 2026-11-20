@@ -9,8 +9,8 @@ enum State {
 	REPLACED_NOTICE, IN_WORLD,
 }
 
-## In-world destination until the Main Hub / avatar creation exist (F062, F070): a labelled placeholder (R17).
-const IN_WORLD_SCENE: String = "res://scenes/world/WorldPlaceholder.tscn"
+## In-world destination: the Main Hub greybox with its HUD (F062). First-time avatar creation comes with F070.
+const IN_WORLD_SCENE: String = "res://scenes/world/WorldRoot.tscn"
 
 ## Scene per state; states without an entry keep the current scene (busy states of the same screen).
 const SCENES: Dictionary = {

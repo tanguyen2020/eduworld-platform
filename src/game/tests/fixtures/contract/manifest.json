@@ -33,6 +33,18 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ActiveSessionConflict",
       "sha256": "1c210916e4d4c76b7d6815a82873249dc6b86e8bfebfd4c5fe3cb7e6e91bcb5c"
     },
+    "openapi/MyAssignment.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/MyAssignment",
+      "sha256": "9d3e85e98ac8d19ecb3359fac284f0ba40ba5544afeb8f352127958bf27d798f"
+    },
+    "openapi/TelemetryBatch.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/TelemetryBatch",
+      "sha256": "ae571d131fe2f63c1ed8cc58c0240a6b618f8001d643a2dbf9f524c600e1792f"
+    },
+    "openapi/listMyAssignments.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
+      "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"
+    },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
       "sha256": "e6003dc883ec9c39ba5e6d0128b2b04f00c3ab45d63902dfef995b122d3aad9b"

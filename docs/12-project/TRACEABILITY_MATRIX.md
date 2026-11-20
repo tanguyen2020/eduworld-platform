@@ -14,17 +14,17 @@
 | Domain | Module sở hữu | FR | FR có tài liệu tường minh | FR có operation tường minh | Operation suy luận | FR có TC tường minh | TC suy luận | US | AC | FR / AC mở rộng ở tài liệu sở hữu |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `AUTH` Identity & Authentication | module identity | 32 | 32 | 10 | 16 | 1 | AUTH (79) | 3 | 36 | 0 / 56 |
-| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 44 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
-| `SIS` SIS Integration | module identity | 9 | 9 | 0 | 13 | 0 | SIS (7) | 2 | 0 | 0 / 0 |
-| `CUR` Curriculum | module learning | 12 | 12 | 0 | 6 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
-| `CNT` Learning Content | module learning | 21 | 21 | 0 | 13 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
-| `QB` Question Bank | module learning | 14 | 14 | 0 | 12 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
-| `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 29 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
+| `ORG` Organization & Multi-tenancy | module identity | 18 | 18 | 0 | 49 | 0 | ORG (9), TEN (24) | 0 | 7 | 0 / 21 |
+| `SIS` SIS Integration | module identity | 9 | 9 | 0 | 15 | 0 | SIS (7) | 2 | 0 | 0 / 0 |
+| `CUR` Curriculum | module learning | 12 | 12 | 0 | 7 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
+| `CNT` Learning Content | module learning | 21 | 21 | 0 | 17 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
+| `QB` Question Bank | module learning | 14 | 14 | 0 | 16 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
+| `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 30 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
 | `EXM` Exam & Practice | module learning | 10 | 10 | 0 | 8 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 22 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
 | `GAME` Game World & Character | module game | 18 | 18 | 2 | 21 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
-| `QST` Quest | module game | 9 | 9 | 0 | 30 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
+| `QST` Quest | module game | 9 | 9 | 0 | 35 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
 | `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 3 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
 | `PTY` Party | module competition | 14 | 14 | 1 | 17 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
@@ -42,11 +42,11 @@
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 13 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
 | `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 11 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
 | `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
-| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 79 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
+| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 121 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 43 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
-| `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 16 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 18 | 484 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 18 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
+| **Tổng** | | **346** | 345 | 18 | 542 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -103,24 +103,24 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 21 AC, 0 US — [MULTITENANCY](../
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
-| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 44 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là một trường độc lập (school), một đơn vị nhiều trường… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enroll… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-004 | Removed (ADR-0072) — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-006 | Mọi bảng nghiệp vụ có tenant_id; mọi truy vấn phải lọc theo tenant_id, enforcement ở app layer (TenantScope… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-007 | School settings: chính sách chat (gồm preset quick_message_emote_only cho cả trường — ADR-0078), giờ truy c… | P1–P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên một tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình c… | P1 (API) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-009 | Mỗi Tenant là một Keycloak Organization (platform.tenants.keycloak_org_id, keycloak_org_alias, login_code);… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-010 | Membership Keycloak Organization đồng bộ tự động: học sinh thuộc đúng một tenant; nhân sự thuộc các tenant… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-011 | Chỉ soft-delete: ứng dụng không hard-delete; "xóa" đặt deleted_at/deleted_by; mọi truy vấn mặc định không t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-012 | System Admin tạo dữ liệu dùng chung (platform) và gán cho các tenant muốn sử dụng; tenant được gán chỉ đọc… | P1 (model) / P3 (CMS) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-013 | System Admin clone dữ liệu (nội dung, cấu hình) từ tenant này sang tenant khác; bản sao có ID mới và nguồn… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nh… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-015 | Danh mục quốc gia (ISO 3166-1) và danh mục tỉnh/thành theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-016 | Danh mục trường: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-017 | Học sinh thuộc đúng một trường và một lớp tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
+| FR-ORG-018 | Đồng bộ SIS khi đăng nhập: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 49 op | _suy luận:_ TC-ORG, TC-TEN |
 
 ### 3.3. `SIS` SIS Integration
 
@@ -130,15 +130,15 @@ AC: — · US: US-SIS-001, US-SIS-002
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-SIS-001 | EduWorld sở hữu DTO/API contract SIS (EduWorld SIS Contract v1); mỗi trường cung cấp API theo contract; khô… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-002 | Đồng bộ School, Class, Student, Enrollment, Account Status; không đồng bộ giáo viên và phân công giảng dạy… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-003 | Hai cách nhận dữ liệu: contract_v1 (pull HTTP theo contract) và csv_import (cột CSV = tên trường DTO) cho t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-009 | Bộ conformance test + mock server sinh từ contract để trường tự kiểm tra facade trước khi kết nối | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-004 | Full sync định kỳ + delta sync + webhook (khi trường khai báo capability delta/webhook trong contract) | P1–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-005 | Reconciliation: phát hiện bản ghi trùng/thiếu/xung đột, tạo ReconciliationIssue cho người duyệt | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-006 | Sync error handling, retry có backoff, audit mọi lần chạy (SyncRun) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-007 | Godot không gọi SIS; SIS credential không lộ qua public gateway (/api/v1/sis chỉ gateway nội bộ) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
-| FR-SIS-008 | Account deactivation/lock từ SIS lan truyền tới EduWorld trong ≤ 1 chu kỳ sync | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-SIS |
+| FR-SIS-001 | EduWorld sở hữu DTO/API contract SIS (EduWorld SIS Contract v1); mỗi trường cung cấp API theo contract; khô… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-002 | Đồng bộ School, Class, Student, Enrollment, Account Status; không đồng bộ giáo viên và phân công giảng dạy… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-003 | Hai cách nhận dữ liệu: contract_v1 (pull HTTP theo contract) và csv_import (cột CSV = tên trường DTO) cho t… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-009 | Bộ conformance test + mock server sinh từ contract để trường tự kiểm tra facade trước khi kết nối | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-004 | Full sync định kỳ + delta sync + webhook (khi trường khai báo capability delta/webhook trong contract) | P1–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-005 | Reconciliation: phát hiện bản ghi trùng/thiếu/xung đột, tạo ReconciliationIssue cho người duyệt | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-006 | Sync error handling, retry có backoff, audit mọi lần chạy (SyncRun) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-007 | Godot không gọi SIS; SIS credential không lộ qua public gateway (/api/v1/sis chỉ gateway nội bộ) | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
+| FR-SIS-008 | Account deactivation/lock từ SIS lan truyền tới EduWorld trong ≤ 1 chu kỳ sync | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-SIS |
 
 ### 3.4. `CUR` Curriculum
 
@@ -146,18 +146,18 @@ Service: module learning · Tài liệu sở hữu: [CURRICULUM_MODEL](../02-lea
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CUR-001 | Cấu trúc Curriculum → Grade → Subject → Topic → Learning Objective → Learning Unit → Lesson → Learning Acti… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-002 | Hỗ trợ nhiều chương trình và phiên bản chương trình; không hardcode một chương trình | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-003 | Learning Objective có mã ổn định (vd. MATH.G3.NUM.MUL_TABLE) | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-004 | Seed khung GDPT 2018 môn Toán lớp 1–5 cho pilot | P2 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-005 | CMS quản lý cấu trúc chương trình (CRUD + workflow) | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-006 | API duyệt curriculum cho client: /api/v1/learning/curriculum | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-007 | Đồ thị LO tiên quyết (prerequisite_ids[], DAG) dùng cho gợi ý ôn tập và bài chẩn đoán; phát hiện chu trình… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-008 | Trường chọn curriculum version mặc định cho mỗi năm học (school.settings.curriculum_version_id); nhiều vers… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-009 | LO bám GDPT 2018: thêm yccd_ref (mã yêu cầu cần đạt, ≤ 64 ký tự) và competency_ids[] (năng lực/phẩm chất);… | P2 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-010 | Import/export curriculum dạng YAML/CSV qua use case CMS (có validate, Idempotency-Key, audit; seed cũng đi… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-011 | Khi publish CurriculumVersion mới: bảng mapping LO giữa hai version (same, split, merge, replaces, removed)… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
-| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và sắp lịch LM… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-LRN |
+| FR-CUR-001 | Cấu trúc Curriculum → Grade → Subject → Topic → Learning Objective → Learning Unit → Lesson → Learning Acti… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-002 | Hỗ trợ nhiều chương trình và phiên bản chương trình; không hardcode một chương trình | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-003 | Learning Objective có mã ổn định (vd. MATH.G3.NUM.MUL_TABLE) | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-004 | Seed khung GDPT 2018 môn Toán lớp 1–5 cho pilot | P2 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-005 | CMS quản lý cấu trúc chương trình (CRUD + workflow) | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-006 | API duyệt curriculum cho client: /api/v1/learning/curriculum | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-007 | Đồ thị LO tiên quyết (prerequisite_ids[], DAG) dùng cho gợi ý ôn tập và bài chẩn đoán; phát hiện chu trình… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-008 | Trường chọn curriculum version mặc định cho mỗi năm học (school.settings.curriculum_version_id); nhiều vers… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-009 | LO bám GDPT 2018: thêm yccd_ref (mã yêu cầu cần đạt, ≤ 64 ký tự) và competency_ids[] (năng lực/phẩm chất);… | P2 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-010 | Import/export curriculum dạng YAML/CSV qua use case CMS (có validate, Idempotency-Key, audit; seed cũng đi… | P2 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-011 | Khi publish CurriculumVersion mới: bảng mapping LO giữa hai version (same, split, merge, replaces, removed)… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
+| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và sắp lịch LM… | P3 | [CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-LRN |
 
 ### 3.5. `CNT` Learning Content
 
@@ -167,27 +167,27 @@ AC: AC-CNT-001, AC-CNT-002, AC-CNT-003, AC-CNT-004, AC-CNT-005, AC-CNT-006, AC-C
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CNT-001 | Loại nội dung: Lesson, Learning Material, Video, Image, Audio, Interactive Content, Question, Exercise, Que… | P2–P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-002 | Metadata bắt buộc: grade, subject, topic, LO, difficulty, version, status, author, reviewer, published_at | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-003 | Trạng thái Draft → Review → Approved → Published → Archived (+ Rejected → Draft) | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-004 | Published version bất biến; attempt tham chiếu content_version_id (ADR-0015) | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-005 | Nội dung thuộc platform (tenant_id NULL, tenant thấy khi được gán) hoặc thuộc một tenant; chia sẻ giữa tena… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-006 | Media lưu object storage S3-compatible + CDN (không lưu file trong DB); pipeline quét virus, kiểm tra magic… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-007 | Import nội dung hàng loạt (JSON/CSV theo specs/schemas) cho seed pilot trước khi có CMS UI | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-008 | Báo cáo "nội dung đang được dùng ở đâu" (quest, bài giao, đề, challenge tham chiếu) trước khi archive (CONT… | P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-009 | Draft/Publish cho mọi nội dung có version; release pointer; publish ngay hoặc hẹn giờ; rollback = dùng lại… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-010 | Xem nội dung từng version đã publish (chỉ đọc), so sánh hai version, preview trong game | P2–P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-011 | Version pinning: học sinh đang ở màn/quest/bài/attempt/trận giữ version cũ; lượt/màn mới nhận version mới n… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-012 | Publish đẩy snapshot bất biến lên Valkey/CDN; content manifest theo tenant (ETag/304); câu hỏi đề và answer… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-013 | Activity Registry: mọi loại hoạt động học tập trong Release (quiz, interactive_exercise, minigame, video_le… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-014 | Video bài học: chapter, phụ đề WebVTT vi/en, resume, câu hỏi chèn tại mốc thời gian, nhánh tương tác, hoàn… | P4 | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-015 | Bài nghe (audio_lesson): nghe hiểu có câu hỏi tự chấm (AUDIO_LANGUAGE_LEARNING). Bài nói (speaking) Removed… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-016 | Mô phỏng: template Godot đóng gói, CMS chỉ tham số hóa, server kiểm chứng xác định bằng checker Go (SIMULAT… | P4 | [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-017 | Công thức Toán/Lý/Hóa: soạn bằng MathLive, hiển thị MathJax 4 trên portal, SVG render sẵn trong game; game… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-018 | Ngôn ngữ nội dung (ADR-0056): nội dung game bắt buộc đủ vi + en; nội dung học tập có content_language + bản… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-019 | Nội dung cho nhóm g1_3 (lớp 1–3): lồng tiếng tiếng Việt bắt buộc cho đề bài và hướng dẫn quest, là điều kiệ… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-020 | Khối nội dung worked_example (lời giải mẫu từng bước) trong lesson/learning material, gợi ý xem lại sau khi… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
-| FR-CNT-021 | Tìm kiếm nội dung trong CMS theo metadata (khối, môn, chủ đề, LO, độ khó, trạng thái) và full-text tiếng Vi… | P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-CNT |
+| FR-CNT-001 | Loại nội dung: Lesson, Learning Material, Video, Image, Audio, Interactive Content, Question, Exercise, Que… | P2–P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-002 | Metadata bắt buộc: grade, subject, topic, LO, difficulty, version, status, author, reviewer, published_at | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-003 | Trạng thái Draft → Review → Approved → Published → Archived (+ Rejected → Draft) | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-004 | Published version bất biến; attempt tham chiếu content_version_id (ADR-0015) | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-005 | Nội dung thuộc platform (tenant_id NULL, tenant thấy khi được gán) hoặc thuộc một tenant; chia sẻ giữa tena… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-006 | Media lưu object storage S3-compatible + CDN (không lưu file trong DB); pipeline quét virus, kiểm tra magic… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-007 | Import nội dung hàng loạt (JSON/CSV theo specs/schemas) cho seed pilot trước khi có CMS UI | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-008 | Báo cáo "nội dung đang được dùng ở đâu" (quest, bài giao, đề, challenge tham chiếu) trước khi archive (CONT… | P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-009 | Draft/Publish cho mọi nội dung có version; release pointer; publish ngay hoặc hẹn giờ; rollback = dùng lại… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-010 | Xem nội dung từng version đã publish (chỉ đọc), so sánh hai version, preview trong game | P2–P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-011 | Version pinning: học sinh đang ở màn/quest/bài/attempt/trận giữ version cũ; lượt/màn mới nhận version mới n… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-012 | Publish đẩy snapshot bất biến lên Valkey/CDN; content manifest theo tenant (ETag/304); câu hỏi đề và answer… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-013 | Activity Registry: mọi loại hoạt động học tập trong Release (quiz, interactive_exercise, minigame, video_le… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-014 | Video bài học: chapter, phụ đề WebVTT vi/en, resume, câu hỏi chèn tại mốc thời gian, nhánh tương tác, hoàn… | P4 | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-015 | Bài nghe (audio_lesson): nghe hiểu có câu hỏi tự chấm (AUDIO_LANGUAGE_LEARNING). Bài nói (speaking) Removed… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-016 | Mô phỏng: template Godot đóng gói, CMS chỉ tham số hóa, server kiểm chứng xác định bằng checker Go (SIMULAT… | P4 | [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-017 | Công thức Toán/Lý/Hóa: soạn bằng MathLive, hiển thị MathJax 4 trên portal, SVG render sẵn trong game; game… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-018 | Ngôn ngữ nội dung (ADR-0056): nội dung game bắt buộc đủ vi + en; nội dung học tập có content_language + bản… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-019 | Nội dung cho nhóm g1_3 (lớp 1–3): lồng tiếng tiếng Việt bắt buộc cho đề bài và hướng dẫn quest, là điều kiệ… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-020 | Khối nội dung worked_example (lời giải mẫu từng bước) trong lesson/learning material, gợi ý xem lại sau khi… | P2 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
+| FR-CNT-021 | Tìm kiếm nội dung trong CMS theo metadata (khối, môn, chủ đề, LO, độ khó, trạng thái) và full-text tiếng Vi… | P3 | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CNT |
 
 ### 3.6. `QB` Question Bank
 
@@ -195,20 +195,20 @@ Service: module learning · Tài liệu sở hữu: [QUESTION_BANK](../02-learni
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-QB-001 | 11 loại: Single Choice, Multiple Choice, True/False, Fill in the Blank, Short Answer, Numeric Answer, Match… | P2 (6 loại đầu) – P3 (đủ) | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-002 | Thuộc tính: ID, stem, render data, options, answer key, explanation, difficulty, grade, subject, topic, LO,… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-003 | Answer key và scoring rule không bao giờ gửi về client (ADR-0016) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-004 | Random câu hỏi theo điều kiện (grade/topic/LO/difficulty/loại trừ câu đã làm gần đây) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-005 | Tạo đề từ Question Bank theo Assessment Blueprint | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-006 | Chấm Short Answer bằng so khớp chuẩn hóa (bỏ dấu cách thừa, không phân biệt hoa thường, danh sách đáp án ch… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-007 | Nội dung câu hỏi hỗ trợ tiếng Việt có dấu, công thức toán đơn giản, hình ảnh, audio (môn Tiếng Anh) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-008 | Câu hỏi tham số hóa: render_payload.params có ràng buộc, server sinh giá trị theo seed của attempt, lưu tro… | P3 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-009 | Interactive validator registry: mỗi widget câu interactive có validator Go thuần đăng ký trong registry, se… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-010 | Item analysis: worker tính p_value, discrimination, distractor_rate, thời gian, tỉ lệ rapid_guess/gợi ý từ… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-011 | Import câu hỏi hàng loạt từ Excel/CSV/QTI-lite có validate vào trạng thái Draft; import Word/MathType theo… | P3 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-013 | Phản hồi theo phương án nhiễu: options[].feedback (i18n) lưu phía đáp án, chỉ trả trong kết quả chấm (Activ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-014 | Hiệu chỉnh độ khó bán tự động: hệ thống đề xuất độ khó mới từ p_value khi đủ số lượt làm, người duyệt nội d… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
-| FR-QB-015 | Chấm partial credit cấu hình được theo scoring_rule (all_or_nothing hoặc partial với partial_method theo dạ… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-LRN |
+| FR-QB-001 | 11 loại: Single Choice, Multiple Choice, True/False, Fill in the Blank, Short Answer, Numeric Answer, Match… | P2 (6 loại đầu) – P3 (đủ) | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-002 | Thuộc tính: ID, stem, render data, options, answer key, explanation, difficulty, grade, subject, topic, LO,… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-003 | Answer key và scoring rule không bao giờ gửi về client (ADR-0016) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-004 | Random câu hỏi theo điều kiện (grade/topic/LO/difficulty/loại trừ câu đã làm gần đây) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-005 | Tạo đề từ Question Bank theo Assessment Blueprint | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-006 | Chấm Short Answer bằng so khớp chuẩn hóa (bỏ dấu cách thừa, không phân biệt hoa thường, danh sách đáp án ch… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-007 | Nội dung câu hỏi hỗ trợ tiếng Việt có dấu, công thức toán đơn giản, hình ảnh, audio (môn Tiếng Anh) | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-008 | Câu hỏi tham số hóa: render_payload.params có ràng buộc, server sinh giá trị theo seed của attempt, lưu tro… | P3 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-009 | Interactive validator registry: mỗi widget câu interactive có validator Go thuần đăng ký trong registry, se… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-010 | Item analysis: worker tính p_value, discrimination, distractor_rate, thời gian, tỉ lệ rapid_guess/gợi ý từ… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-011 | Import câu hỏi hàng loạt từ Excel/CSV/QTI-lite có validate vào trạng thái Draft; import Word/MathType theo… | P3 | [CONTENT_PRODUCTION_PLAN](../02-learning/CONTENT_PRODUCTION_PLAN.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-013 | Phản hồi theo phương án nhiễu: options[].feedback (i18n) lưu phía đáp án, chỉ trả trong kết quả chấm (Activ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-014 | Hiệu chỉnh độ khó bán tự động: hệ thống đề xuất độ khó mới từ p_value khi đủ số lượt làm, người duyệt nội d… | P3 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
+| FR-QB-015 | Chấm partial credit cấu hình được theo scoring_rule (all_or_nothing hoặc partial với partial_method theo dạ… | P2 | [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-LRN |
 
 ### 3.7. `EXR` Activity & Attempt Engine
 
@@ -220,22 +220,22 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 25 AC, 0 US — [ACTIVITY_ENGINE](
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, theo lớp, nhà trường giao (school_admin/academic_manager), tự… | P2 (nhà trường giao: P3) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-002 | Lưu Attempt, Answer, Correctness, Score, Duration, Submission Time, Content Version, LO | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-003 | Practice: phản hồi đúng/sai + giải thích ngay sau từng câu | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-004 | Resume attempt chưa hoàn thành theo chính sách (TTL, số lần) | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-005 | Submit idempotent (Idempotency-Key), một attempt chỉ submit một lần | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-006 | Thời gian tính theo server timestamp; client elapsed chỉ tham khảo | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, theo lớp, nhà trường giao (school_admin/academic_manager), tự… | P2 (nhà trường giao: P3) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-002 | Lưu Attempt, Answer, Correctness, Score, Duration, Submission Time, Content Version, LO | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-003 | Practice: phản hồi đúng/sai + giải thích ngay sau từng câu | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-004 | Resume attempt chưa hoàn thành theo chính sách (TTL, số lần) | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-005 | Submit idempotent (Idempotency-Key), một attempt chỉ submit một lần | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-006 | Thời gian tính theo server timestamp; client elapsed chỉ tham khảo | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 | FR-EXR-007 | Một họ API attempt /api/v1/learning/activity-attempts cho mọi loại hoạt động (start, responses, progress, s… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `listMyActivityAttempts` · `startAdHocAttempt` | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-008 | Evaluation tách khỏi Attempt: chiến lược chấm chỉ là tự động; đúng một evaluation có hiệu lực; re-evaluate… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-009 | Removed (ADR-0072) — tự luận chấm rubric, hàng đợi chấm, trả bài, chấm lại thủ công ngoài Release; ngoài ve… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-010 | Removed (ADR-0072) — activity project (dự án nhiều bước chấm tay) ngoài Release | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-011 | Removed (ADR-0072) — AI hỗ trợ chấm bài viết/nói phụ thuộc người duyệt chấm; mở lại cần ADR mới (ADR-0053 P… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-008 | Evaluation tách khỏi Attempt: chiến lược chấm chỉ là tự động; đúng một evaluation có hiệu lực; re-evaluate… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-009 | Removed (ADR-0072) — tự luận chấm rubric, hàng đợi chấm, trả bài, chấm lại thủ công ngoài Release; ngoài ve… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-010 | Removed (ADR-0072) — activity project (dự án nhiều bước chấm tay) ngoài Release | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-011 | Removed (ADR-0072) — AI hỗ trợ chấm bài viết/nói phụ thuộc người duyệt chấm; mở lại cần ADR mới (ADR-0053 P… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 | FR-EXR-012 | Gợi ý nhiều cấp: hints[] trong câu hỏi; POST /api/v1/learning/activity-attempts/{attempt_id}/items/{positio… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `revealNextHint` | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-013 | retry_wrong ưu tiên câu "anh em" (cùng LO, cùng loại/độ khó, khác question_id) thay vì lặp lại đúng câu đã… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-014 | Chế độ luyện trộn chủ đề (interleaving): bộ câu luyện tập trộn nhiều LO đã học theo tỷ lệ cấu hình (LEARNIN… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-015 | Content manifest mang min_client_version theo activity_type; client cũ không nhận activity có loại chưa hỗ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-016 | Attempt quá deadline_at chuyển expired; worker tự nộp (auto-submit) nếu đã có câu trả lời; phản hồi đến sau… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 29 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-013 | retry_wrong ưu tiên câu "anh em" (cùng LO, cùng loại/độ khó, khác question_id) thay vì lặp lại đúng câu đã… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-014 | Chế độ luyện trộn chủ đề (interleaving): bộ câu luyện tập trộn nhiều LO đã học theo tỷ lệ cấu hình (LEARNIN… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-015 | Content manifest mang min_client_version theo activity_type; client cũ không nhận activity có loại chưa hỗ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-016 | Attempt quá deadline_at chuyển expired; worker tự nộp (auto-submit) nếu đã có câu trả lời; phản hồi đến sau… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 
 ### 3.8. `EXM` Exam & Practice
 
@@ -347,15 +347,15 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 15 AC, 0 US — [QUEST_SYSTEM](../
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-QST-001 | Quest có: ID, tên, mô tả, loại, lớp, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, ph… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-002 | 12 loại quest: Main, Side, Daily, Weekly, Learning, Exploration, Social, Party, Challenge, Seasonal, Specia… | P2 (Party/Challenge/Boss: P3–P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-008 | Quest hỗ trợ narrative, NPC, level requirement, learning requirement, repeatability, cooldown, failure cond… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-003 | Quest liên kết nội dung học tập; bước activity tạo Attempt trong Activity & Attempt Engine | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-004 | Bước: talk_npc, go_to, activity, collect, minigame, party_activity | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-005 | Tiến độ quest lưu server, hoàn thành bước qua domain event (ADR-0019) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-006 | Quest lọc theo grade_level của học sinh; không giao nội dung sai khối | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-007 | Shared Quest Progress theo cấu hình shared_progress_policy; kết quả học tập vẫn riêng từng học sinh | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
-| FR-QST-009 | Bước quest kiểu interdependent có role: mỗi thành viên party giữ một phần dữ kiện, cả nhóm phải phối hợp mớ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 30 op | _suy luận:_ TC-GAM |
+| FR-QST-001 | Quest có: ID, tên, mô tả, loại, lớp, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, ph… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-002 | 12 loại quest: Main, Side, Daily, Weekly, Learning, Exploration, Social, Party, Challenge, Seasonal, Specia… | P2 (Party/Challenge/Boss: P3–P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-008 | Quest hỗ trợ narrative, NPC, level requirement, learning requirement, repeatability, cooldown, failure cond… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-003 | Quest liên kết nội dung học tập; bước activity tạo Attempt trong Activity & Attempt Engine | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-004 | Bước: talk_npc, go_to, activity, collect, minigame, party_activity | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-005 | Tiến độ quest lưu server, hoàn thành bước qua domain event (ADR-0019) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-006 | Quest lọc theo grade_level của học sinh; không giao nội dung sai khối | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-007 | Shared Quest Progress theo cấu hình shared_progress_policy; kết quả học tập vẫn riêng từng học sinh | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
+| FR-QST-009 | Bước quest kiểu interdependent có role: mỗi thành viên party giữ một phần dữ kiện, cả nhóm phải phối hợp mớ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-GAM |
 
 ### 3.13. `MG` Mini-game Engine
 
@@ -650,24 +650,24 @@ AC: AC-CMS-001, AC-CMS-002, AC-CMS-003, AC-CMS-004, AC-CMS-005 · US: US-CMS-001
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; 4 lớp chặn: gateway, azp+MFA, permiss… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
+| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; 4 lớp chặn: gateway, azp+MFA, permiss… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
 | FR-CMS-012 | Menu dựng từ GET /api/v1/me/permissions; permission catalog trong code, role tenant không có game.*/competi… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `getMyPermissions` | _suy luận:_ TC-CMS |
-| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
-| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 79 op | _suy luận:_ TC-CMS |
+| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
+| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 121 op | _suy luận:_ TC-CMS |
 
 ### 3.31. `LMS` LMS
 
@@ -707,11 +707,11 @@ Service: src/backend/pkg/ (platform kit) · mọi module · Tài liệu sở h�
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-OPS-001 | Health, readiness, liveness endpoint cho mọi binary | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-002 | Docker + Docker Compose local; environment example; migration; backup script; deployment docs | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-003 | Metrics: online players, active sessions, matchmaking queue, match duration, API latency, error rate, chat… | P1–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-004 | Không commit secrets; secret qua secret manager/Docker secrets | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
-| FR-OPS-005 | CI: lint, test, spec lint/breaking check, build Go/Godot/Web theo path | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-001 | Health, readiness, liveness endpoint cho mọi binary | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-002 | Docker + Docker Compose local; environment example; migration; backup script; deployment docs | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-003 | Metrics: online players, active sessions, matchmaking queue, match duration, API latency, error rate, chat… | P1–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-004 | Không commit secrets; secret qua secret manager/Docker secrets | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-SVC, TC-PERF |
+| FR-OPS-005 | CI: lint, test, spec lint/breaking check, build Go/Godot/Web theo path | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-SVC, TC-PERF |
 
 ## 4. Acceptance criteria → TC
 
