@@ -129,3 +129,4 @@ Submission: `not_started → in_progress → submitted|late`; `not_started|in_pr
 | `assignment.closed` | Worker đóng bài | Cần thêm (SCHOOL_LMS §12; chưa có ở EVENT_DESIGN) |
 | `assignment.submission_updated` | Submission đổi | Cần thêm (SCHOOL_LMS §12; chưa có ở EVENT_DESIGN) |
 | `assignment.reminded` | Nhắc | Cần thêm (consumer thông báo F123) |
+| `assignment.cancelled` | Hủy (`cancelAssignment`, OQ F041-1 chốt 2026-11-20) | `specs/events/payloads/learning/assignment.cancelled.v1.schema.json`; consumer lịch F040 `learning.lms_schedule` soft-delete mục `assignment_due` |

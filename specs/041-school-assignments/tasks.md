@@ -147,13 +147,15 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
 - [x] T046 **OQ chốt 2026-11-20** (OQ F062-1) `MyAssignment.subject_name` (contract + read model) — file: `specs/openapi/modules/learning.v1.yaml`, `src/backend/modules/learning/internal/infrastructure/persistence/lms/` — kiểm: `make specs-breaking`, integration — cỡ S — bằng chứng: `MyAssignment.subject_name` (`LearningName` từ `curriculum.subjects.name`) trong contract + read model; `TestAssignmentStudentFlow` PASS
+- [x] T048 **OQ chốt 2026-11-20** (OQ F041-1) Event `assignment.cancelled` (payload schema, EVENT_DESIGN §4.3, outbox trong `CancelAssignment`); consumer `learning.lms_schedule` (F040) soft-delete mục `assignment_due` của bài, phát `schedule_item.deleted`, idempotent — file: `specs/events/payloads/learning/assignment.cancelled.v1.schema.json`, `src/backend/modules/learning/internal/application/command/school_assignments.go`, `src/backend/modules/learning/internal/application/command/lms.go`, `src/backend/modules/learning/internal/presentation/consumer/lms.go` — kiểm: integration — cỡ S — bằng chứng: `TestAssignmentCancelRemovesSchedule` PASS (payload khớp schema, mục lịch soft-delete `delete_reason = cancelled`, một `schedule_item.deleted` khi giao hai lần)
+- [ ] T049 **OQ chốt 2026-11-20** (OQ F041-2, phụ thuộc) Consumer projection `ref.game_activities` — làm khi F071/F078 định nghĩa payload `content.published` khối `catalog`, `content.rolled_back`/`content.unpublished` (F078 T006, T034) và `tenant_data.assigned/unassigned` (F045); đến lúc đó `listGameActivities` trả rỗng — file: `src/backend/modules/learning/internal/presentation/consumer/` — kiểm: integration — cỡ S
 - [x] T047 **OQ chốt 2026-11-20** (OQ F062-2) `startAdHocAttempt` nhận `mode = assignment` cho bài `question_set` với kiểm tra F041-AC-13; test cửa sổ/số lần/không thuộc lớp — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go` — kiểm: `make test-integration MOD=learning` — cỡ S — bằng chứng: `startAdHocAttempt` mode `assignment` + `source.kind = question_set` + `context_type = assignment` (`startAssignmentSet`, version ghim); `TestAssignmentQuestionSet` PASS (ngoài đối tượng 404, thiếu context 422, hết lượt 409, quá hạn 403)
 
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2 → US3 → US4, US5 (song song) → US6 → Polish.
 - T014 cần F040 (`StudyGroupMemberReader`); khi chưa có, đối tượng `study_group` trả `422` theo Assumptions của spec. F041 không phụ thuộc F042: graded + blueprint trả `422` (F041-AC-09) cho tới khi F042 T052 thay adapter (thứ tự F040 → F041 → F042, CODE_PLAN §4.1).
-- T041 nhận dữ liệu thật khi F078 phát event; T042 cần interface `Rule` của F032.
+- T041 nhận dữ liệu thật khi F078 phát event (T049 chờ F078 T006/T034, OQ F041-2); T042 cần interface `Rule` của F032.
 
 ## Definition of Done
 

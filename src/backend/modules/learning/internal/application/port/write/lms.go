@@ -151,7 +151,9 @@ type LMSStore interface {
 	InsertSchedule(ctx context.Context, r ScheduleRow) (bool, error)
 	Schedule(ctx context.Context, id uuid.UUID) (*ScheduleRow, error)
 	UpdateSchedule(ctx context.Context, r ScheduleRow, ifVersion int64) (bool, error)
-	DeleteSchedule(ctx context.Context, id uuid.UUID, by uuid.UUID) (bool, error)
+	DeleteSchedule(ctx context.Context, id uuid.UUID, by uuid.UUID, reason string) (bool, error)
+	// ScheduleOfRef lists the live schedule items referencing a ref (assignment, exam session).
+	ScheduleOfRef(ctx context.Context, refType string, refID uuid.UUID) ([]ScheduleRow, error)
 
 	// Study groups.
 	InsertGroup(ctx context.Context, g StudyGroupRow) error

@@ -655,7 +655,7 @@ func (h LMS) DeleteSchedule(ctx context.Context, id uuid.UUID) (err error) {
 		if _, err := h.course(ctx, p, authz.PermLmsScheduleWrite, r.CourseID); err != nil {
 			return err
 		}
-		if _, err := h.Store.DeleteSchedule(ctx, id, p.UserID); err != nil {
+		if _, err := h.Store.DeleteSchedule(ctx, id, p.UserID, "user_request"); err != nil {
 			return err
 		}
 		if err := h.audit(ctx, "schedule_item.deleted", "schedule_item", id, r.SchoolID, "", nil); err != nil {
@@ -880,4 +880,26 @@ func (h LMS) DeleteStudyGroup(ctx context.Context, school, id uuid.UUID) (err er
 		}
 		return h.audit(ctx, "study_group.deleted", "study_group", id, school, "", nil)
 	})
+}
+
+// RemoveScheduleOfRef soft-deletes the schedule items of a cancelled assignment (F041-1, consumer learning.lms_schedule):
+// schedule_item.deleted per item with reason cancelled; nothing left → nothing (idempotent).
+func (h LMS) RemoveScheduleOfRef(ctx context.Context, refType string, refID, by uuid.UUID) (err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.RemoveScheduleOfRef")
+	defer func() { done(err) }()
+	items, err := h.Store.ScheduleOfRef(ctx, refType, refID)
+	if err != nil {
+		return err
+	}
+	for _, r := range items {
+		ok, err := h.Store.DeleteSchedule(ctx, r.ID, by, "cancelled")
+		if err != nil || !ok {
+			return err
+		}
+		if err := h.publish(ctx, EventScheduleItemDeleted, "schedule_item", r.ID, r.TenantID, map[string]any{"schedule_item_id": r.ID,
+			"course_id": r.CourseID, "school_id": r.SchoolID, "tenant_id": r.TenantID, "deleted_by": by, "reason": "cancelled"}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

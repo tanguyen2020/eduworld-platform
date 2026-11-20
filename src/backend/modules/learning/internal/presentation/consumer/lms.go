@@ -55,6 +55,7 @@ func (c LMSCourses) Handle(ctx context.Context, e outbox.Envelope) error {
 // ScheduleWriter adds a schedule item of an event (command.LMS).
 type ScheduleWriter interface {
 	UpsertScheduleFromEvent(ctx context.Context, e command.ScheduleFromEvent) error
+	RemoveScheduleOfRef(ctx context.Context, refType string, refID, by uuid.UUID) error
 }
 
 // LMSSchedule is the consumer learning.lms_schedule (F040-AC-15): assignment.published (payload assignment.created.v1,
@@ -78,9 +79,16 @@ func (c LMSSchedule) Handle(ctx context.Context, e outbox.Envelope) error {
 		CourseID      *uuid.UUID `json:"course_id"`
 		DueAt         *time.Time `json:"due_at"`
 		OpenAt        *time.Time `json:"open_at"`
+		CancelledBy   uuid.UUID  `json:"cancelled_by"`
 	}
 	if err := json.Unmarshal(e.Payload, &p); err != nil || e.TenantID == nil {
 		return invalid(e.EventType, "payload is not an assignment or an exam")
+	}
+	if e.EventType == "assignment.cancelled" {
+		if p.AssignmentID == uuid.Nil {
+			return invalid(e.EventType, "payload has no assignment")
+		}
+		return c.Schedule.RemoveScheduleOfRef(ctx, "assignment", p.AssignmentID, p.CancelledBy)
 	}
 	if p.CourseID == nil {
 		return nil

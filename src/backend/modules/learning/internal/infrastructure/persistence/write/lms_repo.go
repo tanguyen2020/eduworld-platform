@@ -588,15 +588,15 @@ func (LMSRepo) UpdateSchedule(ctx context.Context, r write.ScheduleRow, ifVersio
 }
 
 // DeleteSchedule implements write.LMSStore: soft-delete (ADR-0028).
-func (LMSRepo) DeleteSchedule(ctx context.Context, id uuid.UUID, by uuid.UUID) (bool, error) {
+func (LMSRepo) DeleteSchedule(ctx context.Context, id uuid.UUID, by uuid.UUID, reason string) (bool, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return false, err
 	}
 	// tenancyguard:ok soft-delete (R21) in the session tenant (RLS update policy + infra.current_tenant_id()), deleted_at IS NULL
-	return affected(tx.ExecContext(ctx, `UPDATE lms.schedule_items SET deleted_at = now(), deleted_by = $2, delete_reason = 'user_request',
+	return affected(tx.ExecContext(ctx, `UPDATE lms.schedule_items SET deleted_at = now(), deleted_by = $2, delete_reason = $3,
 		version = version + 1, updated_at = now() WHERE schedule_item_id = $1 AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`,
-		id, by))
+		id, by, reason))
 }
 
 // ---------- study groups
@@ -824,6 +824,30 @@ func (LMSRepo) UpcomingLessons(ctx context.Context, studentID uuid.UUID, from, t
 		}
 		_ = json.Unmarshal(los, &u.ObjectiveIDs)
 		out = append(out, u)
+	}
+	return out, rows.Err()
+}
+
+// ScheduleOfRef implements write.LMSStore.
+func (LMSRepo) ScheduleOfRef(ctx context.Context, refType string, refID uuid.UUID) ([]write.ScheduleRow, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL
+	rows, err := tx.QueryContext(ctx, `SELECT `+scheduleColumns+` FROM lms.schedule_items WHERE ref_type = $1 AND ref_id = $2
+		AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL ORDER BY schedule_item_id`, refType, refID)
+	if err != nil {
+		return nil, fmt.Errorf("schedule of ref: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []write.ScheduleRow
+	for rows.Next() {
+		r, err := scanSchedule(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
 	}
 	return out, rows.Err()
 }

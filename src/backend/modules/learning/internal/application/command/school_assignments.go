@@ -33,6 +33,7 @@ const (
 	EventAssignmentCompleted         = "assignment.completed"
 	EventAssignmentSubmissionUpdated = "assignment.submission_updated"
 	EventAssignmentReminded          = "assignment.reminded"
+	EventAssignmentCancelled         = "assignment.cancelled"
 )
 
 // AssignmentConfig are the parameters of the assignments (CONFIG_DEFAULTS): graded_assignment_release_default,
@@ -761,6 +762,10 @@ func (h Assignments) CancelAssignment(ctx context.Context, id uuid.UUID, reason 
 			}
 		}
 		a.Status = string(assignment.StatusCancelled)
+		if err := h.publish(ctx, EventAssignmentCancelled, *a, map[string]any{"assignment_id": a.ID, "school_id": a.SchoolID,
+			"course_id": a.CourseID, "exam_session_id": a.ExamSessionID, "cancelled_at": h.now(), "cancelled_by": p.UserID, "reason": reason}); err != nil {
+			return err
+		}
 		return h.audit(ctx, "assignment.cancelled", *a, reason, nil)
 	})
 }

@@ -110,6 +110,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - Setup → Foundational (T005 cần F045/F041 xác nhận; T009 cần F004) → US1 → US2 → US3 → US4, US5, US6 (song song) → Polish.
 - Phụ thuộc kernel và module loại của F071–F077; projection catalog phía learning (F041).
+- **OQ F041-2 (chốt 2026-11-20):** consumer projection `ref.game_activities` của learning (F041 T049) chờ payload catalog của T006/T034; khi hoàn thành T006/T034 phải báo F041 T049 để làm consumer (đến lúc đó `listGameActivities` trả rỗng).
 
 ## Definition of Done
 

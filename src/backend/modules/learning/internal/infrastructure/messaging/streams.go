@@ -101,7 +101,8 @@ const LMSScheduleName = "learning.lms_schedule"
 
 // LMSScheduleSubjects are the filter subjects of learning.lms_schedule (owner F041, F042).
 func LMSScheduleSubjects() []string {
-	return []string{natsx.EventSubject("learning", "assignment.published"), natsx.EventSubject("learning", "exam.opened")}
+	return []string{natsx.EventSubject("learning", "assignment.published"), natsx.EventSubject("learning", "assignment.cancelled"),
+		natsx.EventSubject("learning", "exam.opened")}
 }
 
 // AssignmentSubmissionsName is the durable consumer that keeps the submissions of the school assignments from the attempt

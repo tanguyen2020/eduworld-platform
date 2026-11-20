@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.cancelled.v1.schema.json",
+  "title": "Payload assignment.cancelled v1 (module learning, owner F041)",
+  "description": "Bài giao bị hủy (`cancelAssignment`, SCHOOL_LMS §4): consumer lịch LMS (F040) soft-delete mục `assignment_due`, thông báo (F123) gỡ thông báo bài. Envelope subject = {type: assignment, id: assignment_id}. Chỉ ID và lý do do nhân sự nhập (R14).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "school_id",
+    "cancelled_at",
+    "cancelled_by"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "course_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "exam_session_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelled_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "examples": [
+    {
+      "assignment_id": "0193a1f0-0000-7000-8000-000000000451",
+      "school_id": "0193a1f0-0000-7000-8000-000000000452",
+      "course_id": "0193a1f0-0000-7000-8000-000000000453",
+      "exam_session_id": null,
+      "cancelled_at": "2026-11-21T03:00:00Z",
+      "cancelled_by": "0193a1f0-0000-7000-8000-000000000454",
+      "reason": "Giao nhầm lớp"
+    }
+  ]
+}
