@@ -1,6 +1,6 @@
 # Child Safety — An toàn trẻ em
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-20 (§4.2 cưỡng chế giới hạn chơi/ngày: module game cưỡng chế chính, module identity chặn đăng nhập bằng projection từ `game_session.ended`, mã `DAILY_PLAY_LIMIT_REACHED` — owner chốt OQ-17, F013/F014/F015) · 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · OQ-09, OQ-12, OQ-17
 
 **Mục đích.** Nguồn duy nhất về **chính sách an toàn trẻ em** (cái gì được phép, mặc định ra sao) và **nơi hệ thống thực thi** chính sách đó (đã gộp tài liệu bảo vệ trẻ em cũ vào đây, 2026-11-15).
@@ -158,7 +158,7 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | XP cap ngày | Giảm động lực chơi dài (GAME_DESIGN §6) | Platform |
 | Giờ giới nghiêm platform | `platform_curfew` 21:30–06:30 cho game và chat (§4.1) | Platform; trường chỉ siết thêm |
 | Khung giờ truy cập | Trường cấu hình khung giờ được đăng nhập game, áp như nhau cho mọi học sinh của trường; luôn nằm ngoài giờ giới nghiêm platform (trường chỉ thu hẹp thêm) | School Admin |
-| Giới hạn cứng/ngày | Không áp mặc định (`daily_play_limit_minutes` tắt); `school_admin` có thể bật cho cả trường với số phút do trường đặt (ví dụ 120), áp như nhau mọi học sinh của trường; tính tổng thời gian game session active trong ngày (ICT); đạt giới hạn → cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc phiên như giờ giới nghiêm (§4.1), từ chối đăng nhập game/tạo game session kèm `reopen_at` tới 00:00 ICT hôm sau | School Admin [Confirmed — owner 2026-11-20, OQ-17] |
+| Giới hạn cứng/ngày | Không áp mặc định (`daily_play_limit_minutes` tắt); `school_admin` có thể bật cho cả trường với số phút do trường đặt (ví dụ 120), áp như nhau mọi học sinh của trường; tính tổng thời gian game session active trong ngày (ICT); đạt giới hạn → cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc phiên như giờ giới nghiêm (§4.1), từ chối đăng nhập game/tạo game session kèm `reopen_at` tới 00:00 ICT hôm sau; cưỡng chế ở §4.2 | School Admin [Confirmed — owner 2026-11-20, OQ-17] |
 
 ### 4.1. Giờ giới nghiêm cấp platform (ADR-0078)
 
@@ -172,6 +172,18 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | Platform | Chỉ System Admin đổi `platform_curfew`, có audit; đổi giá trị phải sửa tài liệu này và [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md) |
 | Thực thi | Ở server (module identity, module game, realtime, module chat) theo giờ server và múi giờ tenant; Godot chỉ hiển thị thông báo "giờ mở lại" |
 | Không áp | Portal nhân sự (không phải game); job nền |
+
+### 4.2. Cưỡng chế giới hạn chơi/ngày (OQ-17)
+
+[Confirmed — owner 2026-11-20, OQ-17; F013, F014, F015]: giới hạn cứng/ngày (`daily_play_limit_minutes`, §4) chỉ áp khi trường bật; trường không bật hoặc tenant `common` thì không áp. Cưỡng chế ở server, cùng cách xử lý với giờ giới nghiêm (§4.1); Godot chỉ hiển thị thông báo "giờ mở lại".
+
+| Mục | Quy tắc |
+|---|---|
+| Cấu hình | `school_admin` bật/sửa/tắt `daily_play_limit_minutes` cho cả trường qua `updateSchoolSettings` (`null` = tắt, mặc định), lưu theo `If-Match`, audit có lý do; module identity đưa giá trị vào `settings_subset` của event `school.updated` cho module game (F015-AC-30) |
+| Cách tính | Tổng thời gian game session active của học sinh trong ngày ICT (00:00–24:00 giờ Việt Nam), so với giới hạn của trường |
+| Module game — nơi cưỡng chế chính | Đọc giới hạn từ projection `ref.schools.settings_subset` (từ `school.updated`). Đã đạt giới hạn → `createGameSession` (kể cả `takeover`) trả `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau. Session đang chạy sắp đạt giới hạn → job đóng phiên cảnh báo trước `curfew_warning_minutes`, tới giới hạn thì lưu tiến độ và kết thúc session như giờ giới nghiêm, `game_session.ended` có `end_reason = daily_limit` (F014-AC-27) |
+| Module identity — chặn ở đăng nhập | Từ chối `gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume` bằng `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` (cùng shape `CURFEW_ACTIVE`), kiểm sau xác thực SSO, không thu hồi phiên game lưu trên thiết bị (F013-AC-33). Không gọi module game đồng bộ (R30, ADR-0045): identity dựng projection thời gian chơi trong ngày từ `game_session.ended` (`duration_ms`, [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md)) và đọc giới hạn trong cài đặt trường của chính module |
+| Mã lỗi | `403 DAILY_PLAY_LIMIT_REACHED` ([API_DESIGN §4.1](../07-backend/API_DESIGN.md)) |
 
 ## 5. Không dark pattern, không cơ chế cờ bạc
 

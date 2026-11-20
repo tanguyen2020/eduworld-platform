@@ -5567,7 +5567,7 @@ components:
         reopen_at:
           type: string
           format: date-time
-          description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)'
+          description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -5614,6 +5614,7 @@ components:
         - TENANT_ACCESS_DISABLED
         - ACCESS_OUTSIDE_ALLOWED_HOURS
         - CURFEW_ACTIVE
+        - DAILY_PLAY_LIMIT_REACHED
         - IDENTITY_CONFLICT
         - TENANT_NOT_SELECTED
         - TENANT_MISMATCH

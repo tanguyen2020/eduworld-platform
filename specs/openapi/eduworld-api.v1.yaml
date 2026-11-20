@@ -16824,6 +16824,7 @@ components:
         - TENANT_ACCESS_DISABLED
         - ACCESS_OUTSIDE_ALLOWED_HOURS
         - CURFEW_ACTIVE
+        - DAILY_PLAY_LIMIT_REACHED
         - IDENTITY_CONFLICT
         - TENANT_NOT_SELECTED
         - TENANT_MISMATCH
@@ -17213,7 +17214,7 @@ components:
         retryable: { type: boolean, description: 'Có khi lỗi tạm thời (vd. `503 UNAVAILABLE` khi module identity không trả Principal): client được phép thử lại với backoff (F002-AC-09)' }
         policy_reason: { type: string, maxLength: 1000 }
         feature_key: { type: string, maxLength: 128, description: 'Chỉ có khi `code = FEATURE_DISABLED`: khóa action hoặc menu cha đang tắt (ADR-0090)' }
-        reopen_at: { type: string, format: date-time, description: 'Chỉ có khi `code = CURFEW_ACTIVE`: thời điểm hết giờ giới nghiêm hiệu lực (giờ server, ADR-0078)' }
+        reopen_at: { type: string, format: date-time, description: 'Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)' }
     ValidationProblem:
       allOf:
         - $ref: '#/components/schemas/Problem'
@@ -17446,8 +17447,8 @@ components:
             other_device: { $ref: '#/components/schemas/OtherDevice' }
     LoginEndReason:
       type: string
-      enum: [logout, replaced_by_other_device, timeout, account_locked, access_revoked, cleanup, client_crash, curfew]
-      description: Lý do kết thúc game session; `curfew` = job đóng session khi vào giờ giới nghiêm (ADR-0078)
+      enum: [logout, replaced_by_other_device, timeout, account_locked, access_revoked, cleanup, client_crash, curfew, daily_limit]
+      description: Lý do kết thúc game session; `curfew` = job đóng session khi vào giờ giới nghiêm (ADR-0078); `daily_limit` = job đóng session khi học sinh đạt giới hạn chơi/ngày của trường (CHILD_SAFETY §4.2)
     LoginEvent:
       type: object
       description: Một lần đăng nhập game (append-only, ADR-0031). Không có IP thô.

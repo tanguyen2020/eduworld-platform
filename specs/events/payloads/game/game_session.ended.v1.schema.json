@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/game/game_session.ended.v1.schema.json",
   "title": "Payload game_session.ended v1 (module game, owner F014)",
-  "description": "Game session kết thúc (đăng xuất, takeover, timeout heartbeat, khóa/thu hồi, dọn, giới nghiêm — ADR-0078). Consumer: LA, ANA, AUD.",
+  "description": "Game session kết thúc (đăng xuất, takeover, timeout heartbeat, khóa/thu hồi, dọn, giới nghiêm — ADR-0078, đạt giới hạn chơi/ngày của trường — CHILD_SAFETY §4.2). Consumer: LA, ANA, AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": ["game_session_id", "student_id", "platform", "duration_ms", "end_reason", "ended_at"],
@@ -12,7 +12,7 @@
     "platform": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] },
     "client_version": { "type": "string", "maxLength": 32 },
     "duration_ms": { "type": "integer", "minimum": 0 },
-    "end_reason": { "type": "string", "enum": ["logout", "replaced_by_other_device", "timeout", "account_locked", "access_revoked", "cleanup", "client_crash", "curfew"] },
+    "end_reason": { "type": "string", "enum": ["logout", "replaced_by_other_device", "timeout", "account_locked", "access_revoked", "cleanup", "client_crash", "curfew", "daily_limit"] },
     "ended_at": { "type": "string", "format": "date-time" }
   },
   "examples": [

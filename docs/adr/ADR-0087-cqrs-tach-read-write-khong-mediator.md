@@ -15,6 +15,7 @@
 2. **Read context** (chỉ đọc):
    - Handler ở `internal/application/query/`, đọc read model/projection qua port ở `internal/application/port/read/`; hiện thực ở `internal/infrastructure/persistence/read/` (được dùng replica, cache).
    - Không ghi DB, không phát event, không dùng `UnitOfWork`.
+   - **Ngoại lệ — audit lần đọc (owner 2026-11-20):** query handler được gọi `audit.Recorder` (`pkg/audit`) để ghi audit của lần đọc, cùng cơ chế `cross_tenant.accessed` (ADR-0089 §3): chỉ ghi outbox audit trong transaction riêng, không ghi dữ liệu nghiệp vụ, không phát domain event, không dùng `UnitOfWork`. Ví dụ: `getStudentProfile` ghi `student_profile.viewed` (actor, `student_id`, `school_id`, không PII — [F010](../../specs/010-tenant-org-structure/spec.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) "xem hồ sơ học sinh ghi audit").
 3. **Presentation** gọi handler trực tiếp qua interface có kiểu; không có bus/mediator chung, không dispatch theo `any`.
 4. **Cross-cutting không qua mediator:**
    - HTTP middleware (`pkg/httpx`): xác thực, principal, tenant, idempotency (`Idempotency-Key`), Problem Details, recover, log, tracing.
@@ -36,3 +37,4 @@
 |---|---|---|
 | 2026-11-16 | Tạo ADR | Technical Architect |
 | 2026-11-16 | Chuẩn hóa chữ ký `authz.Require(ctx, p, perm, resource)` theo F002 | Technical Architect |
+| 2026-11-20 | Mục 2: ngoại lệ audit lần đọc qua `audit.Recorder` (`cross_tenant.accessed`, `student_profile.viewed` của `getStudentProfile`) — chỉ outbox audit, không ghi dữ liệu nghiệp vụ, không domain event | Owner ([F010](../../specs/010-tenant-org-structure/spec.md)) |

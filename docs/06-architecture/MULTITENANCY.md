@@ -193,7 +193,7 @@ Mỗi entity khai báo đúng một mixin; CI có test liệt kê mọi schema e
 | `efficacy_study` | Nghiên cứu hiệu quả học tập liên tenant (F035, ADR-0080) | `learning_platform` |
 | `platform_job` | Job platform khác: rollup liên tenant, đồng bộ SIS theo lịch | `<module>_platform` |
 
-Mỗi lần gọi ghi audit `cross_tenant.accessed` (trường `reason`, `tenant_ids`, `mode` = `read`/`write`) và tăng metric `eduworld_tenant_filter_bypass_total{module,reason}` ([MONITORING](../11-operations/MONITORING.md)).
+Mỗi lần gọi ghi audit `cross_tenant.accessed` (trường `reason`, `tenant_ids`, `mode` = `read`/`write`) và tăng metric `eduworld_tenant_filter_bypass_total{module,reason}` ([MONITORING](../11-operations/MONITORING.md)); ngoại lệ audit của `platform_job` theo [ADR-0089 §3](../adr/ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md#3-ba-loại-scope-và-một-cổng-bypass).
 
 **Đường đăng nhập:** trước khi biết tenant, module identity gọi hàm `identity.memberships_for_user(user_id)` (`SECURITY DEFINER`, owner là role `identity_membership_reader` `NOLOGIN` + `BYPASSRLS` chỉ có `SELECT` trên nguồn membership, chỉ trả cột membership của đúng user đó; `EXECUTE` cấp cho `identity_app`, [DATABASE_DESIGN §4](../07-backend/DATABASE_DESIGN.md#4-row-level-security)) bên trong `tenancy.Bypass(ctx, "auth_login")`. Chỉ route `/auth/session`, `/auth/game/*` và `login-credentials:verify` được gọi (test kiến trúc chặn nơi khác); không cần `BYPASSRLS`. Kết quả chỉ gồm danh sách tenant của chính user đó (thuật toán chọn tenant: §8.2).
 
@@ -379,7 +379,7 @@ flowchart LR
 | AC-ORG-015 | Tenant bị tắt → `TENANT_ACCESS_DISABLED` cho mọi thành viên | API |
 | AC-ORG-016 | Soft-delete một lớp → không xuất hiện ở mọi API đọc; tạo lại lớp cùng tên được (partial unique); Thùng rác thấy và khôi phục được | API + Integration |
 | AC-ORG-026 | Soft-delete (`UPDATE ... SET deleted_at`) bằng role `<module>_app` dưới RLS → thành công; dòng biến mất khỏi đọc qua interceptor và view `_live` (ADR-0089) | Integration — mọi bảng T của mọi database |
-| AC-ORG-027 | `tenancy.Bypass` với `reason` ngoài danh sách đóng → linter/test thất bại; mỗi lần gọi hợp lệ có audit `cross_tenant.accessed` (`reason`, `tenant_ids`, `mode`) + metric `eduworld_tenant_filter_bypass_total{module,reason}` | Lint + Unit |
+| AC-ORG-027 | `tenancy.Bypass` với `reason` ngoài danh sách đóng → linter/test thất bại; mỗi lần gọi hợp lệ có audit `cross_tenant.accessed` (`reason`, `tenant_ids`, `mode`) + metric `eduworld_tenant_filter_bypass_total{module,reason}`; `platform_job` chỉ audit khi lần chạy xử lý ≥ 1 dòng (ADR-0089 §3) | Lint + Unit |
 | AC-ORG-028 | Đường đăng nhập đọc membership qua `identity.memberships_for_user` bằng `identity_app` (không `BYPASSRLS`) → chỉ trả tenant của user đó; `identity_app` truy vấn `tenant_memberships_v` trực tiếp khi chưa set `app.tenant_id` → 0 dòng | Integration |
 | AC-ORG-017 | Role `<module>_app`/`<module>_platform` của mọi database chạy `DELETE` → lỗi quyền; role của module A không `CONNECT` được database module B (cùng cụm) | Integration |
 | AC-ORG-020 | ent query không có `TenantScope` trong context → `ErrMissingTenantScope`, không trả dữ liệu | Unit + Integration |

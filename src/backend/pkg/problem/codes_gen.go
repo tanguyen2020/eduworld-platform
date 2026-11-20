@@ -57,6 +57,7 @@ const (
 	CsrfTokenInvalid                 Code = "CSRF_TOKEN_INVALID"
 	CueAnswerRequired                Code = "CUE_ANSWER_REQUIRED"
 	CurfewActive                     Code = "CURFEW_ACTIVE"
+	DailyPlayLimitReached            Code = "DAILY_PLAY_LIMIT_REACHED"
 	DashboardBusy                    Code = "DASHBOARD_BUSY"
 	DashboardQueryTimeout            Code = "DASHBOARD_QUERY_TIMEOUT"
 	DashboardRangeTooLarge           Code = "DASHBOARD_RANGE_TOO_LARGE"
@@ -227,6 +228,7 @@ var statusByCode = map[Code]int{
 	CsrfTokenInvalid:                 403,
 	CueAnswerRequired:                422,
 	CurfewActive:                     403,
+	DailyPlayLimitReached:            403,
 	DashboardBusy:                    429,
 	DashboardQueryTimeout:            504,
 	DashboardRangeTooLarge:           422,
@@ -397,6 +399,7 @@ var allCodes = []Code{
 	CsrfTokenInvalid,
 	CueAnswerRequired,
 	CurfewActive,
+	DailyPlayLimitReached,
 	DashboardBusy,
 	DashboardQueryTimeout,
 	DashboardRangeTooLarge,
