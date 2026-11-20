@@ -58,6 +58,8 @@ const (
 	AttemptLifecycleInterval = time.Minute
 	// LearningPartitionsInterval: F031 T016 keeps the monthly partitions of the learning tables ahead once a day.
 	LearningPartitionsInterval = 24 * time.Hour
+	// RegradeRunnerInterval: F031 T038 picks the queued re-evaluations.
+	RegradeRunnerInterval = 30 * time.Second
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -152,6 +154,7 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 	}
 	parts := command.LearningPartitions{Maint: write.PartitionMaint{DB: partitionDB}, Metrics: observability.MasteryCounter{}}
+	r.Job(Name, "regrade-runner", RegradeRunnerInterval, w.regrades.RunOnce)
 	r.Job(Name, "learning-events-partitions", LearningPartitionsInterval, job.LearningEventsPartitions{Runner: parts}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
@@ -169,6 +172,7 @@ type wiring struct {
 	activities   *activity.Registry
 	mastery      command.Mastery
 	progress     command.Progress
+	regrades     command.Regrades
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -212,6 +216,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterRelease(reg)
 	observability.RegisterAttempts(reg)
 	observability.RegisterMastery(reg)
+	observability.RegisterRegrade(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -289,6 +294,8 @@ func build(r *module.Registry) (*wiring, error) {
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
 		Metrics: observability.MasteryCounter{}}
 	prg := command.Progress{Store: learningRecord, Evidence: learningRecord}
+	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}}
+	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}
@@ -302,5 +309,5 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
-		attempts: att, activities: activities, mastery: mst, progress: prg}, nil
+		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd}, nil
 }

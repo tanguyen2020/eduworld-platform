@@ -42,3 +42,17 @@ func (MasteryCounter) MonthsAhead(table string, months int) {
 
 // PartitionMonthsAhead exposes the gauge to the tests.
 func PartitionMonthsAhead() *prometheus.GaugeVec { return partitionMonthsAhead }
+
+var regradeAttempts = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "eduworld_regrade_attempts_total",
+	Help: "Attempts re-evaluated by the job regrade-runner by action (accept_all, use_new_key, drop_item).",
+}, []string{"action"})
+
+// RegisterRegrade adds the re-evaluation metric to r; already registered collectors are ignored.
+func RegisterRegrade(r prometheus.Registerer) { _ = r.Register(regradeAttempts) }
+
+// RegradeCounter adapts the re-evaluation metric to command.RegradeMetrics.
+type RegradeCounter struct{}
+
+// ReEvaluated counts one re-evaluated attempt.
+func (RegradeCounter) ReEvaluated(action string) { regradeAttempts.WithLabelValues(action).Inc() }

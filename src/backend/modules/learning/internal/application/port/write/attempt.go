@@ -40,6 +40,11 @@ type EvaluationRow struct {
 	Passed    *bool
 	Details   json.RawMessage
 	Effective bool
+	// Re-evaluation (F031 US4): the request, the evaluation it replaces, the staff user and the reason (≤ 500).
+	RegradeRequestID *uuid.UUID
+	SupersedesID     *uuid.UUID
+	TriggeredBy      *uuid.UUID
+	Reason           *string
 }
 
 // DueAttempt is an in-progress attempt the lifecycle job must look at (idle, resume window or deadline).

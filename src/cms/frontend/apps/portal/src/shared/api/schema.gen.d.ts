@@ -3352,10 +3352,35 @@ export interface paths {
         /**
          * Tạo RegradeRequest — hệ thống chấm lại (re-evaluate) các attempt bị ảnh hưởng bởi version câu hỏi/activity lỗi (learning_content.re_evaluate)
          * @description Không có chấm tay (ADR-0072). `content_admin` hoặc `academic_manager` (trong scope) kích hoạt, lý do bắt buộc, có audit.
-         *     Mỗi attempt bị ảnh hưởng nhận evaluation mới (`source = re_evaluation`), evaluation cũ `superseded`, phát `attempt.re_evaluated`.
+         *     Mỗi attempt `graded` (mode khác `exam`) bị ảnh hưởng nhận evaluation mới (`source = re_evaluation`), evaluation cũ `superseded`, attempt và câu trả lời gốc giữ nguyên, phát `attempt.re_evaluated` (learning event `actor.type = staff` + outbox) — job `regrade-runner` (F031).
+         *     `scope = question_version`: `question_version_id` bắt buộc, `action` ∈ {accept_all, use_new_key, drop_item}; `use_new_key` cần `corrected_version_id` là version `published` khác của cùng câu hỏi.
+         *     `scope = activity_version`: `activity_version_id` bắt buộc, chỉ `accept_all` [Proposed] (sửa đáp án từng câu dùng `scope = question_version`).
+         *     `content_admin` (không `X-Tenant-Id`): nội dung platform, mọi tenant (`tenancy.Bypass` `re_evaluation`, audit theo tenant); `academic_manager`: tenant phiên, môn trong scope (ngoài scope → `403`).
+         *     Cùng `Idempotency-Key` → yêu cầu cũ; đã có yêu cầu `queued`/`running` cho cùng version → `409 CONFLICT`.
          *     Với đề kiểm tra: `scope = exam_session` + `action` ∈ {accept_all, use_new_key, drop_item} (EXAM_ENGINE §9), phát thêm `exam.regraded`.
          */
         post: operations["createRegradeRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/regrade-requests/{regrade_request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trạng thái một RegradeRequest (learning_content.re_evaluate) — số attempt bị ảnh hưởng và đã chấm lại
+         * @description Người có `learning_content.re_evaluate` xem yêu cầu trong phạm vi của mình: yêu cầu platform (`content_admin`, không `X-Tenant-Id`)
+         *     hoặc yêu cầu của tenant phiên; yêu cầu ngoài phạm vi → `404` (F031).
+         */
+        get: operations["getRegradeRequest"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -12034,17 +12059,23 @@ export interface components {
         RegradeRequest: {
             /** @enum {string} */
             action: "accept_all" | "use_new_key" | "drop_item";
+            activity_version_id?: components["schemas"]["Uuid"];
             affected_attempts?: number;
+            corrected_version_id?: components["schemas"]["Uuid"];
             created_at: components["schemas"]["Timestamp"];
             finished_at?: components["schemas"]["Timestamp"];
+            question_version_id?: components["schemas"]["Uuid"];
             re_evaluated_attempts?: number;
             reason?: string;
             regrade_request_id: components["schemas"]["Uuid"];
             requested_by: components["schemas"]["Uuid"];
             /** @enum {string} */
             scope: "question_version" | "activity_version" | "exam_session";
+            started_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
             status: "queued" | "running" | "completed" | "failed";
+            /** @description Vắng với yêu cầu platform của content_admin (job chạy qua mọi tenant bị ảnh hưởng) */
+            tenant_id?: components["schemas"]["Uuid"];
         };
         /** @description Yêu cầu hệ thống chấm lại (re-evaluate) — không có chấm tay (ADR-0072) */
         RegradeRequestCreate: {
@@ -22817,8 +22848,41 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getRegradeRequest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                regrade_request_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegradeRequest"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listContentReviewTasks: {

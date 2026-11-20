@@ -240,7 +240,8 @@ func (MasteryRepo) AttemptObjectives(ctx context.Context, attemptID uuid.UUID) (
 // ObjectiveEvidence implements write.EvidenceReader: every evidence of (student, objective) in occurred_at order with
 // the difficulty of the question version, the options shown (presentation of the attempt item) and the repeat flag
 // (the same question answered by the student in the 24 hours before; question versions invisible to the tenant fall
-// back to the version id and difficulty 3 [Proposed]).
+// back to the version id and difficulty 3 [Proposed]). The effective re-evaluation of the attempt (F031-AC-21) replaces the
+// outcome of the item (score, max_score of evaluation details) and drops the evidence of a dropped item.
 func (MasteryRepo) ObjectiveEvidence(ctx context.Context, studentID, objectiveID uuid.UUID) ([]write.EvidenceRow, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
@@ -253,17 +254,24 @@ func (MasteryRepo) ObjectiveEvidence(ctx context.Context, studentID, objectiveID
 				(SELECT jsonb_array_length(i.presentation->'orders'->'options') FROM assessment.attempt_items i
 				  WHERE i.attempt_id = (le.payload->>'attempt_id')::uuid AND i.position = (le.payload->>'position')::int
 				    AND i.tenant_id = le.tenant_id AND i.deleted_at IS NULL) AS options
+				, ov.item AS override
 			FROM learning.learning_events le
 			LEFT JOIN content.question_versions q ON q.question_version_id = (le.payload->>'question_version_id')::uuid AND q.deleted_at IS NULL
+			LEFT JOIN LATERAL (SELECT it FROM assessment.evaluations e2, jsonb_array_elements(COALESCE(e2.details->'items', '[]'::jsonb)) it
+				WHERE e2.attempt_id = (le.payload->>'attempt_id')::uuid AND e2.effective AND e2.source = 're_evaluation'
+					AND e2.tenant_id = le.tenant_id AND e2.deleted_at IS NULL AND (it->>'position')::int = (le.payload->>'position')::int
+				LIMIT 1) ov(item) ON true
 			WHERE le.tenant_id = infra.current_tenant_id() AND le.student_id = $1 AND le.event_type = 'question.answered')
 		SELECT e.event_id, e.occurred_at, e.context, array_to_string(e.objective_ids, ','), e.payload->>'question_type',
-			COALESCE(e.difficulty, 0), COALESCE((e.payload->'score'->>'raw')::float8, 0), COALESCE((e.payload->'score'->>'max')::float8, 0),
+			COALESCE(e.difficulty, 0),
+			COALESCE((e.override->>'score')::float8, (e.payload->'score'->>'raw')::float8, 0),
+			COALESCE((e.override->>'max_score')::float8, (e.payload->'score'->>'max')::float8, 0),
 			COALESCE((e.payload->>'hints_used')::int, 0), COALESCE(e.options, 0),
 			EXISTS (SELECT 1 FROM ev p WHERE p.question_key = e.question_key AND p.occurred_at < e.occurred_at
 				AND p.occurred_at >= e.occurred_at - interval '24 hours')
 		FROM ev e
 		WHERE $2 = ANY(e.objective_ids) AND COALESCE((e.payload->>'is_scored')::boolean, true)
-			AND NOT COALESCE((e.payload->>'rapid_guess')::boolean, false)
+			AND NOT COALESCE((e.payload->>'rapid_guess')::boolean, false) AND NOT COALESCE((e.override->>'dropped')::boolean, false)
 		ORDER BY e.occurred_at, e.event_id`, studentID, objectiveID)
 	if err != nil {
 		return nil, fmt.Errorf("objective evidence: %w", err)

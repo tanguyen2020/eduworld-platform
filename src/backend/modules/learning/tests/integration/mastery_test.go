@@ -73,6 +73,11 @@ func (k *masteryKit) graded(ctx context.Context, t *testing.T, attemptID string)
 
 // deliver publishes an envelope and waits until both consumers recorded it.
 func (k *masteryKit) deliver(ctx context.Context, t *testing.T, raw []byte) uuid.UUID {
+	return k.deliverTo(ctx, t, raw, "learning.mastery_on_graded", "learning.progress_daily")
+}
+
+// deliverTo publishes an envelope and waits until the named consumers recorded it.
+func (k *masteryKit) deliverTo(ctx context.Context, t *testing.T, raw []byte, consumers ...string) uuid.UUID {
 	t.Helper()
 	var env outbox.Envelope
 	if err := json.Unmarshal(raw, &env); err != nil {
@@ -81,7 +86,7 @@ func (k *masteryKit) deliver(ctx context.Context, t *testing.T, raw []byte) uuid
 	if _, err := k.js.Publish(ctx, natsx.EventSubject("learning", env.EventType), raw); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"learning.mastery_on_graded", "learning.progress_daily"} {
+	for _, name := range consumers {
 		waitFor(t, 30*time.Second, name+" processed", func() bool {
 			return count(ctx, t, k.c.migrator, `SELECT count(*) FROM infra.processed_events WHERE consumer = $1 AND event_id = $2`,
 				name, env.EventID) == 1

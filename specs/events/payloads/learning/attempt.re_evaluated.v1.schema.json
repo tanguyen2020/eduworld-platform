@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/attempt.re_evaluated.v1.schema.json",
+  "title": "Payload attempt.re_evaluated v1 (module learning, owner F031)",
+  "description": "Event bù trừ khi hệ thống chấm lại một attempt do nội dung lỗi (ADR-0072, ACTIVITY_ENGINE §7.3): evaluation mới source = re_evaluation có hiệu lực, evaluation cũ superseded; attempt và câu trả lời gốc giữ nguyên. Khớp learning-event.schema.json#/$defs/payload_attempt_re_evaluated (+ student_id, regrade_request_id, action). Envelope subject = {type: attempt, id: attempt_id}. Chỉ ID, điểm, lý do do nhân sự nhập (không PII của học sinh). Consumer: LA (learning.mastery_on_graded tính lại mastery), LMS, NTF, GAM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt_id", "student_id", "previous_evaluation_id", "new_evaluation_id", "previous_score", "new_score", "max_score", "action", "regrade_request_id", "reason", "trigger"],
+  "properties": {
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "student_id": { "type": "string", "format": "uuid" },
+    "previous_evaluation_id": { "type": "string", "format": "uuid" },
+    "new_evaluation_id": { "type": "string", "format": "uuid" },
+    "previous_score": { "type": "number", "minimum": 0 },
+    "new_score": { "type": "number", "minimum": 0 },
+    "max_score": { "type": "number", "minimum": 0, "description": "max_score của evaluation mới (drop_item làm giảm)" },
+    "passed": { "type": ["boolean", "null"] },
+    "action": { "type": "string", "enum": ["accept_all", "use_new_key", "drop_item"] },
+    "regrade_request_id": { "type": "string", "format": "uuid" },
+    "question_version_ids": { "type": "array", "maxItems": 200, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "reason": { "type": "string", "minLength": 5, "maxLength": 1000 },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role_code"],
+      "properties": {
+        "role_code": { "type": "string", "enum": ["content_admin", "academic_manager"] },
+        "re_evaluation_id": { "type": "string", "format": "uuid" }
+      }
+    }
+  }
+}

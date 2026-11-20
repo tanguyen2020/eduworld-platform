@@ -2498,6 +2498,18 @@
     ]
   },
   {
+    "operation_id": "getRegradeRequest",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/regrade-requests/{regrade_request_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getRoom",
     "module": "competition",
     "method": "GET",

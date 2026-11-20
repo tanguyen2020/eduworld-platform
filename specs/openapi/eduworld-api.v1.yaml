@@ -6692,7 +6692,11 @@ paths:
       summary: Tạo RegradeRequest — hệ thống chấm lại (re-evaluate) các attempt bị ảnh hưởng bởi version câu hỏi/activity lỗi (learning_content.re_evaluate)
       description: |
         Không có chấm tay (ADR-0072). `content_admin` hoặc `academic_manager` (trong scope) kích hoạt, lý do bắt buộc, có audit.
-        Mỗi attempt bị ảnh hưởng nhận evaluation mới (`source = re_evaluation`), evaluation cũ `superseded`, phát `attempt.re_evaluated`.
+        Mỗi attempt `graded` (mode khác `exam`) bị ảnh hưởng nhận evaluation mới (`source = re_evaluation`), evaluation cũ `superseded`, attempt và câu trả lời gốc giữ nguyên, phát `attempt.re_evaluated` (learning event `actor.type = staff` + outbox) — job `regrade-runner` (F031).
+        `scope = question_version`: `question_version_id` bắt buộc, `action` ∈ {accept_all, use_new_key, drop_item}; `use_new_key` cần `corrected_version_id` là version `published` khác của cùng câu hỏi.
+        `scope = activity_version`: `activity_version_id` bắt buộc, chỉ `accept_all` [Proposed] (sửa đáp án từng câu dùng `scope = question_version`).
+        `content_admin` (không `X-Tenant-Id`): nội dung platform, mọi tenant (`tenancy.Bypass` `re_evaluation`, audit theo tenant); `academic_manager`: tenant phiên, môn trong scope (ngoài scope → `403`).
+        Cùng `Idempotency-Key` → yêu cầu cũ; đã có yêu cầu `queued`/`running` cho cùng version → `409 CONFLICT`.
         Với đề kiểm tra: `scope = exam_session` + `action` ∈ {accept_all, use_new_key, drop_item} (EXAM_ENGINE §9), phát thêm `exam.regraded`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -6713,8 +6717,34 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /cms/learning/regrade-requests/{regrade_request_id}:
+    get:
+      x-service: learning
+      tags: [cms]
+      operationId: getRegradeRequest
+      x-portal-action: action.content_studio.regrade.request
+      summary: Trạng thái một RegradeRequest (learning_content.re_evaluate) — số attempt bị ảnh hưởng và đã chấm lại
+      description: |
+        Người có `learning_content.re_evaluate` xem yêu cầu trong phạm vi của mình: yêu cầu platform (`content_admin`, không `X-Tenant-Id`)
+        hoặc yêu cầu của tenant phiên; yêu cầu ngoài phạm vi → `404` (F031).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - name: regrade_request_id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegradeRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /cms/learning/translations:export:
     post:
       x-service: learning
@@ -20539,6 +20569,11 @@ components:
         requested_by: { $ref: '#/components/schemas/Uuid' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         finished_at: { $ref: '#/components/schemas/Timestamp' }
+        started_at: { $ref: '#/components/schemas/Timestamp' }
+        question_version_id: { $ref: '#/components/schemas/Uuid' }
+        activity_version_id: { $ref: '#/components/schemas/Uuid' }
+        corrected_version_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_id: { $ref: '#/components/schemas/Uuid', description: Vắng với yêu cầu platform của content_admin (job chạy qua mọi tenant bị ảnh hưởng) }
     ExamSessionCreate:
       type: object
       required: [title, assessment_blueprint_version_id, targets, window_start, window_end]

@@ -19,8 +19,9 @@ type MasteryApplier interface {
 	ApplyGraded(ctx context.Context, in command.GradedAttempt) error
 }
 
-// MasteryOnGraded is the consumer learning.mastery_on_graded (F031-AC-08…AC-14): activity.graded of the tenant of the
-// event updates the mastery of the objectives answered in the attempt. Exactly-once per event_id is pkg/outbox.Consumer
+// MasteryOnGraded is the consumer learning.mastery_on_graded (F031-AC-08…AC-14, AC-21): activity.graded of the tenant of
+// the event updates the mastery of the objectives answered in the attempt; attempt.re_evaluated recomputes them with the
+// re-evaluated item results (the original learning events stay). Exactly-once per event_id is pkg/outbox.Consumer
 // (processed_events in the same transaction, F031-AC-02).
 type MasteryOnGraded struct {
 	Apply MasteryApplier
@@ -49,5 +50,10 @@ func (c MasteryOnGraded) Handle(ctx context.Context, e outbox.Envelope) error {
 	if err != nil {
 		return err
 	}
-	return c.Apply.ApplyGraded(ctx, command.GradedAttempt{EventID: e.EventID, TenantID: *e.TenantID, AttemptID: id, OccurredAt: e.OccurredAt})
+	kind := command.MasterySourceEvidence
+	if e.EventType == command.EventAttemptReEvaluated {
+		kind = command.MasterySourceReEvaluation
+	}
+	return c.Apply.ApplyGraded(ctx, command.GradedAttempt{EventID: e.EventID, TenantID: *e.TenantID, AttemptID: id, OccurredAt: e.OccurredAt,
+		Kind: kind})
 }

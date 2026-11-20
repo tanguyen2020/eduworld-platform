@@ -93,6 +93,7 @@ type curEnv struct {
 	att    command.Attempts // F030
 	attq   query.Attempts   // F030
 	clk    *testClock       // F030
+	rgd    command.Regrades // F031 US4
 }
 
 // envOpt configures newCurEnv.
@@ -215,6 +216,9 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
 	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Clock: clk.Now}
 	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
+	// F031 US4: re-evaluation with the test clock.
+	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now}
+	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {
@@ -223,7 +227,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk}
+		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

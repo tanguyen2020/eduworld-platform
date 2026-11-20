@@ -1,4 +1,4 @@
-h1:lMEKerIqAcQv07utCt0HHO7YR8Vjaf6PxAjM4eNUUu0=
+h1:7cZLeVtuk7kRKc//Nbn3e/juqsITnvqbNR0EECqGLO4=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -11,3 +11,4 @@ h1:lMEKerIqAcQv07utCt0HHO7YR8Vjaf6PxAjM4eNUUu0=
 20261129000001_f026_release.sql h1:boAP5+UcOUEWkQedtyxHn8HOeUGClxQ9AVxqFOA+75w=
 20261130000001_f030_activity_attempt.sql h1:J+jKeoGcBS1WpM/ROaSNOCk2m/esjEs5FUpg+xkZvks=
 20261201000001_f031_mastery.sql h1:mz1FiE/XFub1XR2qf1L/VZu+oj4gWa6vtsf1iXMMywE=
+20261202000001_f031_regrade.sql h1:VPdVN/IG3cDyw3MFrlMO+oe5YOauu2C0PmTdYL8gzNc=

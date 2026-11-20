@@ -189,7 +189,8 @@ func (AttemptRepo) InsertAnswer(ctx context.Context, r write.AnswerRow) error {
 // InsertEvaluation implements write.AttemptStore.
 func (AttemptRepo) InsertEvaluation(ctx context.Context, r write.EvaluationRow) error {
 	q := client(ctx).Evaluation.Create().SetID(r.ID).SetAttemptID(r.AttemptID).SetSource(r.Source).SetStatus(r.Status).SetScore(r.Score).
-		SetMaxScore(r.MaxScore).SetNillablePassed(r.Passed).SetEffective(r.Effective)
+		SetMaxScore(r.MaxScore).SetNillablePassed(r.Passed).SetEffective(r.Effective).SetNillableRegradeRequestID(r.RegradeRequestID).
+		SetNillableSupersedesEvaluationID(r.SupersedesID).SetNillableTriggeredBy(r.TriggeredBy).SetNillableReason(r.Reason)
 	if len(r.Details) > 0 {
 		q.SetDetails(r.Details)
 	}

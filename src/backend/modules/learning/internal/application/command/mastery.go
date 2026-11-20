@@ -59,6 +59,7 @@ type GradedAttempt struct {
 	TenantID   uuid.UUID
 	AttemptID  uuid.UUID
 	OccurredAt time.Time
+	Kind       string // MasterySourceEvidence (default) or MasterySourceReEvaluation
 }
 
 // Model returns the active model version with its parameters (defaults of LEARNING_ANALYTICS §3.1 under the stored ones).
@@ -103,7 +104,10 @@ func (h Mastery) ApplyGraded(ctx context.Context, in GradedAttempt) (err error) 
 		return err
 	}
 	src := Source{EventID: in.EventID, TenantID: in.TenantID, StudentID: facts.StudentID, SchoolID: facts.SchoolID, Mode: facts.Mode,
-		Kind: MasterySourceEvidence, OccurredAt: in.OccurredAt}
+		Kind: in.Kind, OccurredAt: in.OccurredAt}
+	if src.Kind == "" {
+		src.Kind = MasterySourceEvidence
+	}
 	for _, o := range objectives {
 		if err := h.Recompute(ctx, m, src, o); err != nil {
 			return err

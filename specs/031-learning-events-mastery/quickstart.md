@@ -76,3 +76,13 @@ make specs-lint
 SC-001: 100% dòng golden §3.3 khớp (sai số ≤ 0,0005). SC-002: metric `eduworld_mastery_update_lag_seconds` có, chưa đo p95 trên stack thật.
 
 Toàn bộ test tích hợp module learning (trước khi merge): `TESTCONTAINERS_RYUK_DISABLED=true GOMAXPROCS=2 go test -p 1 -tags integration -timeout 75m ./modules/learning/tests/integration/` → 78/78 pass (1169 s). Gate tĩnh: gofmt, `go vet -tags integration`, golangci-lint (default + arch) 0 issues, tenancyguard, ewlint, entlint, `archgen --check` 0 vi phạm, `routematrix check` 0 problems, facadegen/allowedcallers check, check-maxlength/enums/features/cross-features, validate-schemas, check-portal-catalog, check-problem-codes, `split-public --check`, portal `gen:check`; unit + contract learning và `cmd/internal/wiring` 36 gói ok.
+
+## 6. Bằng chứng US4 (2026-11-20, testcontainers)
+
+| Kịch bản | Test tự động | Kết quả |
+|---|---|---|
+| 16 (use_new_key, job) | `tests/integration/regrade_test.go` TestRegradeUseNewKey: 202 `queued` → job: 2 attempt, evaluation cũ `superseded`, mới `re_evaluation`, attempt/câu trả lời gốc không đổi, 2 `attempt.re_evaluated` (actor staff + outbox); TestRegradePlatformContent: `content_admin`, yêu cầu không tenant, Bypass `re_evaluation` + audit `cross_tenant.accessed`, accept_all | pass |
+| 17 (quyền) | TestRegradeUseNewKey: school_admin/không quyền/môn khác → 403; tenant B, content_admin trên câu tenant → 404 | pass |
+| 18 (mastery) | TestRegradeUseNewKey: `attempt.re_evaluated` → M giảm, history `re_evaluation`, event gốc giữ nguyên | pass |
+| 19 (idempotency, 409, superseded) | TestRegradeUseNewKey: cùng key → cùng yêu cầu; key khác → 409; `EVALUATION_NOT_EDITABLE` (use case + trigger) | pass |
+| Domain | `internal/domain/evaluation` TestRegradeActions, TestSupersede | pass |

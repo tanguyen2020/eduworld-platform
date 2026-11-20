@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.20.1"
+catalog_version: "2026.11.20.2"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -873,7 +873,7 @@ workspaces:
             label_key: portal.action.content_studio.regrade.request
             title: Yêu cầu hệ thống chấm lại
             required_permissions: [learning_content.re_evaluate]
-            operation_ids: [createRegradeRequest]
+            operation_ids: [createRegradeRequest, getRegradeRequest]
             can_disable: true
       - key: menu.content_studio.media
         label_key: portal.menu.content_studio.media
