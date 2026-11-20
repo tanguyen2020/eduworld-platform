@@ -31,6 +31,38 @@ func ActivityJSON(doc dto.Doc, v dto.DocVersion, current *int) map[string]any {
 	if v.TranslationStatus != nil {
 		out["translation_status"] = *v.TranslationStatus
 	}
+	// Authoring fields the Activity Builder edits again (F058): description, instructions, topic, timer, reward rule,
+	// stored formulas, author and the assigned flag of platform content.
+	if len(v.Summary) > 0 && string(v.Summary) != "null" {
+		out["description"] = v.Summary
+	}
+	if len(a.Instructions) > 0 && string(a.Instructions) != "null" {
+		out["instructions"] = a.Instructions
+	}
+	if len(v.TopicIDs) > 0 {
+		out["topic_id"] = v.TopicIDs[0]
+	}
+	if a.TimeLimitSeconds != nil {
+		out["time_limit_seconds"] = *a.TimeLimitSeconds
+	}
+	if a.RewardRuleID != nil {
+		out["reward_rule_id"] = *a.RewardRuleID
+	}
+	if len(a.MathAssets) > 0 && string(a.MathAssets) != "null" {
+		out["math_assets"] = a.MathAssets
+	}
+	if v.AuthorID != uuid.Nil {
+		out["author_id"] = v.AuthorID
+	}
+	out["assigned"] = false
+	return out
+}
+
+// ActivityJSONFor is ActivityJSON with the assigned flag of the session: platform content seen by a tenant session is
+// assigned (read only "Từ EduWorld", F058-AC-27).
+func ActivityJSONFor(doc dto.Doc, v dto.DocVersion, current *int, sessionTenant *uuid.UUID) map[string]any {
+	out := ActivityJSON(doc, v, current)
+	out["assigned"] = sessionTenant != nil && doc.Owner.TenantID == nil
 	return out
 }
 

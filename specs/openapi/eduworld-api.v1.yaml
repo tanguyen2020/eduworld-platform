@@ -6886,6 +6886,37 @@ paths:
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
   /cms/learning/regrade-requests:
+    get:
+      x-service: learning
+      tags: [cms]
+      operationId: listRegradeRequests
+      x-portal-action: action.content_studio.regrade.request
+      summary: Lịch sử RegradeRequest của một version câu hỏi/activity trong phạm vi (learning_content.re_evaluate, F058-AC-23)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - name: question_version_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: activity_version_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Mới nhất trước
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/RegradeRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
     post:
       x-service: learning
       tags: [cms]
@@ -6922,6 +6953,30 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /cms/learning/regrade-requests:preview:
+    post:
+      x-service: learning
+      tags: [cms]
+      operationId: previewRegradeRequest
+      x-portal-action: action.content_studio.regrade.request
+      summary: Số attempt sẽ bị chấm lại nếu tạo yêu cầu này (không ghi gì; learning_content.re_evaluate, F058-AC-22)
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegradeRequestCreate' }
+      responses:
+        '200':
+          description: Phạm vi ảnh hưởng
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegradeImpact' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /cms/learning/regrade-requests/{regrade_request_id}:
     get:
       x-service: learning
@@ -21350,6 +21405,11 @@ components:
         corrected_version_id: { $ref: '#/components/schemas/Uuid', description: Version đã sửa dùng làm đáp án mới (use_new_key) }
         action: { type: string, enum: [accept_all, use_new_key, drop_item], default: use_new_key }
         reason: { type: string, minLength: 10, maxLength: 1000 }
+    RegradeImpact:
+      type: object
+      required: [affected_attempts]
+      properties:
+        affected_attempts: { type: integer, minimum: 0, description: Attempt graded (mode khác exam) dùng version này trong phạm vi người gọi }
     RegradeRequest:
       type: object
       required: [regrade_request_id, scope, action, status, requested_by, created_at]
@@ -23068,6 +23128,26 @@ components:
         updated_at: { $ref: '#/components/schemas/Timestamp' }
         content_language: { $ref: '#/components/schemas/ContentLanguage' }
         translation_status: { $ref: '#/components/schemas/TranslationStatus', readOnly: true }
+        description: { $ref: '#/components/schemas/LearningText' }
+        instructions: { $ref: '#/components/schemas/LearningText' }
+        topic_id: { $ref: '#/components/schemas/Uuid' }
+        time_limit_seconds: { type: integer, minimum: 1 }
+        reward_rule_id: { $ref: '#/components/schemas/Uuid' }
+        math_assets:
+          type: array
+          maxItems: 200
+          description: Công thức đã lưu của version (Activity Builder F058 sửa lại không mất SVG)
+          items:
+            type: object
+            required: [math_id, latex, svg]
+            properties:
+              math_id: { type: string, maxLength: 64 }
+              latex: { type: string, maxLength: 2000 }
+              svg: { type: string, maxLength: 262144 }
+              speech_text: { type: string, maxLength: 1000 }
+              display: { type: string, enum: [inline, block] }
+        author_id: { $ref: '#/components/schemas/Uuid', description: Tác giả version (portal ẩn Duyệt với chính tác giả, F058-AC-12) }
+        assigned: { type: boolean, description: Nội dung platform được gán cho tenant phiên — chỉ đọc "Từ EduWorld" (F058-AC-27) }
     ActivityTypeInfo:
       type: object
       description: Mỗi loại đã đăng ký trong Activity Registry (F030); min_client_version bắt buộc (registry khai báo cho mọi loại)

@@ -58,8 +58,9 @@ var cmsActivityRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Req
 }
 
 // activityDefinition is ActivityDefinition (command.ActivityJSON, also the idempotent replay body).
-func activityDefinition(d query.DocView, current *int) map[string]any {
-	return command.ActivityJSON(d.Doc, d.Version, current)
+// activityDefinition is ActivityDefinition with the assigned flag of the session tenant (F058-AC-27).
+func activityDefinition(r *http.Request, d query.DocView, current *int) map[string]any {
+	return command.ActivityJSONFor(d.Doc, d.Version, current, sessionTenantOf(r))
 }
 
 func (h Handlers) createCmsActivity(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +75,7 @@ func (h Handlers) createCmsActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag(w, res.Version.RowVersion)
-	writeJSON(w, http.StatusCreated, activityDefinition(query.DocView{Doc: res.Doc, Version: res.Version}, nil))
+	writeJSON(w, http.StatusCreated, activityDefinition(r, query.DocView{Doc: res.Doc, Version: res.Version}, nil))
 }
 
 func (h Handlers) getCmsActivity(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +90,7 @@ func (h Handlers) getCmsActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag(w, v.Version.RowVersion)
-	writeJSON(w, http.StatusOK, activityDefinition(v.DocView, v.CurrentPublishedVersion))
+	writeJSON(w, http.StatusOK, activityDefinition(r, v.DocView, v.CurrentPublishedVersion))
 }
 
 func (h Handlers) listCmsActivities(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +106,7 @@ func (h Handlers) listCmsActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	list(w, p, func(v query.CmsActivityView) map[string]any {
-		return activityDefinition(v.DocView, v.CurrentPublishedVersion)
+		return activityDefinition(r, v.DocView, v.CurrentPublishedVersion)
 	})
 }
 
@@ -139,7 +140,7 @@ func (h Handlers) updateCmsActivityDraft(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	etag(w, res.Version.RowVersion)
-	writeJSON(w, http.StatusOK, activityDefinition(query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
+	writeJSON(w, http.StatusOK, activityDefinition(r, query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
 }
 
 // createCmsActivityVersion opens a new draft from a version of the activity (OQ F030 owner 2026-11-20, same pattern as
@@ -169,7 +170,7 @@ func (h Handlers) createCmsActivityVersion(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	etag(w, res.Version.RowVersion)
-	writeJSON(w, http.StatusCreated, activityDefinition(query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
+	writeJSON(w, http.StatusCreated, activityDefinition(r, query.DocView{Doc: res.Doc, Version: res.Version}, cur.CurrentPublishedVersion))
 }
 
 // activityTypeInfo is ActivityTypeInfo.

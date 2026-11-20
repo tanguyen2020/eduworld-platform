@@ -227,6 +227,71 @@ func (h Regrades) Create(ctx context.Context, in CreateRegradeInput) (out dto.Re
 	return out, err
 }
 
+// Preview is previewRegradeRequest (F058-AC-22): the same checks as Create, then the number of attempts the request
+// would re-evaluate — nothing is written. A platform request counts every tenant through tenancy.Bypass(re_evaluation)
+// (audited like the job); a tenant request counts the session tenant.
+func (h Regrades) Preview(ctx context.Context, in CreateRegradeInput) (out dto.RegradeImpactView, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.PreviewRegradeRequest")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return out, err
+	}
+	if !holdsPerm(p, authz.PermLearningContentReEvaluate) {
+		return out, authz.Require(ctx, p, authz.PermLearningContentReEvaluate, authz.Resource{TenantID: p.TenantID})
+	}
+	if err := in.validate(); err != nil {
+		return out, err
+	}
+	owner := contentmodel.OwnerPlatform
+	if p.TenantID != nil {
+		owner = contentmodel.OwnerTenant
+	}
+	sc, err := scope.ForWrite(p, owner, nil)
+	if err != nil {
+		return out, err
+	}
+	var r write.RegradeRequest
+	err = h.UoW.Do(tenancy.WithScope(ctx, sc), func(ctx context.Context) error {
+		var v *write.VersionInfo
+		if in.Scope == "question_version" {
+			v, err = h.Store.QuestionVersion(ctx, *in.QuestionVersionID)
+		} else {
+			v, err = h.Store.ActivityVersion(ctx, *in.ActivityVersionID)
+		}
+		if err != nil {
+			return err
+		}
+		if v == nil || (p.TenantID == nil && v.TenantID != nil) {
+			return problem.New(problem.NotFound, "")
+		}
+		if err := authz.Require(ctx, p, authz.PermLearningContentReEvaluate, authz.Resource{TenantID: p.TenantID, SubjectID: v.SubjectID}); err != nil {
+			return err
+		}
+		r = write.RegradeRequest{TenantID: p.TenantID, Scope: in.Scope, QuestionVersionID: in.QuestionVersionID, ActivityVersionID: in.ActivityVersionID,
+			Action: evaluation.Action(in.Action)}
+		if p.TenantID != nil {
+			list, err := h.Store.AffectedAttempts(ctx, r)
+			out.AffectedAttempts = len(list)
+			return err
+		}
+		return nil
+	})
+	if err != nil || p.TenantID != nil {
+		return out, err
+	}
+	bctx, err := tenancy.Bypass(tenancy.WithModule(ctx, module), tenancy.ReasonReEvaluation)
+	if err != nil {
+		return out, err
+	}
+	err = h.UoW.Do(bctx, func(ctx context.Context) error {
+		list, err := h.Store.AffectedAttempts(ctx, r)
+		out.AffectedAttempts = len(list)
+		return err
+	})
+	return out, err
+}
+
 // RunOnce is one run of the job regrade-runner (F031-AC-20): it claims the oldest queued request under
 // tenancy.Bypass(re_evaluation), re-evaluates every affected attempt in the scope of its tenant and its own transaction,
 // audits each tenant touched and records the counts. It returns the number of attempts re-evaluated.

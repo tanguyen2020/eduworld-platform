@@ -1,0 +1,81 @@
+//go:build integration
+
+package integration
+
+import (
+	"context"
+	"net/http"
+	"testing"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
+)
+
+// F058 T005-T006 contract deltas (owner F030): getCmsActivity returns the authoring fields the Activity Builder edits
+// again (description, instructions, topic, timer, author, assigned) so an autosave PATCH never drops them.
+func TestActivityDefinitionAuthoringFields(t *testing.T) {
+	ctx := context.Background()
+	c := newCurEnv(ctx, t)
+	s := c.attemptSetup(ctx, t, nil)
+	body := activityBody(s.qc, "quiz", quizConfig(s.questions...))
+	body["time_limit_seconds"] = 600
+	id := c.createActivity(t, qlcmA, body)
+	g := must(t, c.do(t, http.MethodGet, "/cms/learning/activities/"+id, qlcmA, nil, nil), http.StatusOK, "get")
+	if g.str("description", "vi") != "Ôn tập phép nhân" || g.str("instructions", "vi") != "Chọn đáp án đúng" || g.str("topic_id") != s.qc.topic ||
+		g.str("time_limit_seconds") != "600" || g.str("author_id") != c.users[qlcmA].UserID.String() || g.body["assigned"] != false {
+		t.Fatalf("authoring fields: %s", g.raw)
+	}
+}
+
+// F058-AC-22, AC-23 (T006, owner F031; TC-LRN-015): previewRegradeRequest counts the attempts a request would
+// re-evaluate without writing anything; listRegradeRequests returns the history of a version in the caller's scope,
+// newest first; both need learning_content.re_evaluate and a version visible in scope.
+func TestRegradePreviewAndHistory(t *testing.T) {
+	authztest.Cover(t, "previewRegradeRequest", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "listRegradeRequests", authztest.CrossTenant, authztest.RoleDenied)
+	ctx := context.Background()
+	c := newCurEnv(ctx, t)
+	s := c.attemptSetup(ctx, t, nil)
+	right, wrong := correctOption()
+	c.quizAnswers(t, hsAn, s.activityID, right, right, right)
+	c.quizAnswers(t, hsBinh, s.activityID, wrong, right, right)
+	_, corrected := c.correctedVersion(ctx, t, s.questions[0])
+	body := map[string]any{"scope": "question_version", "question_version_id": s.questions[0], "action": "use_new_key",
+		"corrected_version_id": corrected, "reason": "Đáp án câu 7 × 8 bị nhập sai, sửa theo version 2"}
+	requests := `SELECT count(*) FROM assessment.regrade_requests`
+
+	p := must(t, c.do(t, http.MethodPost, regradePath+":preview", qlcmA, nil, body), http.StatusOK, "preview")
+	if p.str("affected_attempts") != "2" || count(ctx, t, c.platform, requests) != 0 {
+		t.Fatalf("preview: %s", p.raw)
+	}
+	for _, tc := range []struct {
+		sub  string
+		want int
+	}{{adA, 403}, {qlcmB, 404}, {cmNoidung, 404}} {
+		if r := c.do(t, http.MethodPost, regradePath+":preview", tc.sub, nil, body); r.status != tc.want {
+			t.Errorf("preview as %s: %d, want %d (%s)", tc.sub, r.status, tc.want, r.raw)
+		}
+	}
+	short := map[string]any{"scope": "question_version", "question_version_id": s.questions[0], "action": "accept_all", "reason": "ngắn"}
+	if r := c.do(t, http.MethodPost, regradePath+":preview", qlcmA, nil, short); r.status != http.StatusUnprocessableEntity {
+		t.Fatalf("short reason: %d %s", r.status, r.raw)
+	}
+
+	history := regradePath + "?question_version_id=" + s.questions[0]
+	if r := must(t, c.do(t, http.MethodGet, history, qlcmA, nil, nil), http.StatusOK, "empty history"); len(r.items("data")) != 0 {
+		t.Fatalf("history before: %s", r.raw)
+	}
+	id := must(t, c.do(t, http.MethodPost, regradePath, qlcmA, idem(), body), http.StatusAccepted, "create").str("regrade_request_id")
+	h := must(t, c.do(t, http.MethodGet, history, qlcmA, nil, nil), http.StatusOK, "history")
+	if items := h.items("data"); len(items) != 1 || items[0]["regrade_request_id"] != id || items[0]["status"] != "queued" {
+		t.Fatalf("history: %s", h.raw)
+	}
+	if r := must(t, c.do(t, http.MethodGet, history, qlcmB, nil, nil), http.StatusOK, "tenant B"); len(r.items("data")) != 0 {
+		t.Fatalf("tenant B sees tenant A requests: %s", r.raw)
+	}
+	if r := c.do(t, http.MethodGet, regradePath, qlcmA, nil, nil); r.status != http.StatusUnprocessableEntity {
+		t.Fatalf("history without version: %d %s", r.status, r.raw)
+	}
+	if r := c.do(t, http.MethodGet, history, adA, nil, nil); r.status != http.StatusForbidden {
+		t.Fatalf("history as school admin: %d", r.status)
+	}
+}

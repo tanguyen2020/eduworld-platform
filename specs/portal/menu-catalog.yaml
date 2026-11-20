@@ -873,7 +873,7 @@ workspaces:
             label_key: portal.action.content_studio.regrade.request
             title: Yêu cầu hệ thống chấm lại
             required_permissions: [learning_content.re_evaluate]
-            operation_ids: [createRegradeRequest, getRegradeRequest]
+            operation_ids: [createRegradeRequest, getRegradeRequest, previewRegradeRequest, listRegradeRequests]
             can_disable: true
       - key: menu.content_studio.media
         label_key: portal.menu.content_studio.media

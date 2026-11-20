@@ -208,3 +208,8 @@ type SimulationRunResultView struct {
 	RunsUsed           int                `json:"runs_used"`
 	MaxRuns            *int               `json:"max_runs"`
 }
+
+// RegradeImpactView is RegradeImpact (previewRegradeRequest, F058-AC-22).
+type RegradeImpactView struct {
+	AffectedAttempts int `json:"affected_attempts"`
+}
