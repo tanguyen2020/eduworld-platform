@@ -114,6 +114,8 @@ const (
 	ModerationSwitchReasonRequired   Code = "MODERATION_SWITCH_REASON_REQUIRED"
 	ModerationSwitchSelfApproval     Code = "MODERATION_SWITCH_SELF_APPROVAL"
 	ModerationSwitchStepNotAllowed   Code = "MODERATION_SWITCH_STEP_NOT_ALLOWED"
+	NicknameChangeLimit              Code = "NICKNAME_CHANGE_LIMIT"
+	NicknameUnavailable              Code = "NICKNAME_UNAVAILABLE"
 	NotFound                         Code = "NOT_FOUND"
 	NoActiveEnrollment               Code = "NO_ACTIVE_ENROLLMENT"
 	PartyActivityNotEligible         Code = "PARTY_ACTIVITY_NOT_ELIGIBLE"
@@ -287,6 +289,8 @@ var statusByCode = map[Code]int{
 	ModerationSwitchReasonRequired:   422,
 	ModerationSwitchSelfApproval:     403,
 	ModerationSwitchStepNotAllowed:   422,
+	NicknameChangeLimit:              409,
+	NicknameUnavailable:              409,
 	NotFound:                         404,
 	NoActiveEnrollment:               403,
 	PartyActivityNotEligible:         409,
@@ -460,6 +464,8 @@ var allCodes = []Code{
 	ModerationSwitchReasonRequired,
 	ModerationSwitchSelfApproval,
 	ModerationSwitchStepNotAllowed,
+	NicknameChangeLimit,
+	NicknameUnavailable,
 	NotFound,
 	NoActiveEnrollment,
 	PartyActivityNotEligible,

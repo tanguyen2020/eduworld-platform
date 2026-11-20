@@ -846,8 +846,38 @@ paths:
                 $ref: '#/components/schemas/GameProfile'
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy — client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         default: { $ref: '#/components/responses/Problem' }
+  /game/character/catalog:
+    get:
+      x-service: game
+      tags: [game]
+      operationId: getCharacterCatalog
+      summary: Danh mục tạo nhân vật đang publish (preset, dáng, bảng màu, item và emote mặc định; tên vi/en) — F070
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema: { type: string, maxLength: 128 }
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CharacterCatalog' }
+        '304': { description: Not Modified (If-None-Match khớp ETag của version hiện hành) }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /game/profile/nickname-suggestions:
     get:
       x-service: game
@@ -17234,6 +17264,8 @@ components:
         - STEP_PRECONDITION_FAILED
         - ITEM_NOT_OWNED
         - EQUIP_SLOT_INVALID
+        - NICKNAME_UNAVAILABLE
+        - NICKNAME_CHANGE_LIMIT
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - AREA_LOCKED
@@ -17711,13 +17743,20 @@ components:
     # ---------- game
     GameProfile:
       type: object
-      required: [student_id, nickname, level, xp_total]
+      description: Hồ sơ game của chính học sinh (F070). Không họ tên, username, trường, lớp (R16, ADR-0054).
+      required: [student_id, nickname, level, xp_total, setup_required]
       properties:
         student_id: { $ref: '#/components/schemas/Uuid' }
-        nickname: { type: string, maxLength: 128 }
+        nickname: { type: [string, 'null'], maxLength: 32, description: 'null tới khi chọn từ gợi ý (suggestNicknames)' }
         level: { type: integer, minimum: 1 }
         xp_total: { type: integer, minimum: 0 }
-        avatar_config: { $ref: '#/components/schemas/AvatarConfig' }
+        setup_required: { type: boolean, description: 'true khi chưa có avatar hoặc nickname — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01)' }
+        avatar_created_at: { type: [string, 'null'], format: date-time }
+        avatar_config_hash: { type: [string, 'null'], maxLength: 128, description: SHA-256 hex của avatar_config chuẩn hóa }
+        avatar_config:
+          oneOf:
+            - $ref: '#/components/schemas/AvatarConfig'
+            - type: 'null'
         last_area_id: { type: string, maxLength: 64 }
         settings:
           type: object
@@ -17725,6 +17764,8 @@ components:
         preferred_language: { $ref: '#/components/schemas/Locale' }
     GameProfileUpdate:
       type: object
+      additionalProperties: false
+      description: Nickname chỉ đặt qua nickname_option_id của suggestNicknames; trường nickname tự do bị từ chối 422 (F070-AC-10, R16).
       properties:
         nickname_option_id:
           $ref: '#/components/schemas/Uuid'
@@ -17734,26 +17775,105 @@ components:
         preferred_language: { $ref: '#/components/schemas/Locale' }
     AvatarConfig:
       type: object
+      description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
+      additionalProperties: false
+      required: [schema_version, body_type, skin_tone, hair, outfit]
       properties:
-        body: { type: string, maxLength: 1000 }
-        skin_tone: { type: string, maxLength: 64 }
-        hair_item_id: { $ref: '#/components/schemas/Uuid' }
-        outfit_item_id: { $ref: '#/components/schemas/Uuid' }
-        accessory_item_ids:
+        schema_version: { type: integer, const: 1 }
+        body_type: { $ref: '#/components/schemas/CatalogCode' }
+        skin_tone: { $ref: '#/components/schemas/CatalogCode' }
+        hair:
+          type: object
+          additionalProperties: false
+          required: [item_id, color]
+          properties:
+            item_id: { $ref: '#/components/schemas/CatalogCode' }
+            color: { $ref: '#/components/schemas/CatalogCode' }
+        outfit:
+          type: object
+          additionalProperties: false
+          required: [item_id]
+          properties:
+            item_id: { $ref: '#/components/schemas/CatalogCode' }
+        accessories:
           type: array
           maxItems: 4
-          items: { $ref: '#/components/schemas/Uuid' }
-        emote_item_ids:
+          items:
+            type: object
+            additionalProperties: false
+            required: [slot, item_id]
+            properties:
+              slot: { type: string, enum: [head, face, back, hand] }
+              item_id: { $ref: '#/components/schemas/CatalogCode' }
+        emote_slots:
           type: array
-          maxItems: 8
-          items: { $ref: '#/components/schemas/Uuid' }
+          maxItems: 6
+          description: Tối đa emote_wheel_slots (CONFIG_DEFAULTS)
+          items: { $ref: '#/components/schemas/CatalogCode' }
+        pet: { $ref: '#/components/schemas/CatalogCode' }
+        title: { $ref: '#/components/schemas/CatalogCode' }
+        frame: { $ref: '#/components/schemas/CatalogCode' }
+        badge_showcase:
+          type: array
+          maxItems: 3
+          items: { $ref: '#/components/schemas/CatalogCode' }
+    CatalogCode:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: '^[a-z0-9_]+$'
+      description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
+    CharacterCatalog:
+      type: object
+      description: Danh mục tạo nhân vật đang publish (nội dung platform có version, ADR-0043) — bản JSON Schema specs/schemas/character-catalog.schema.json (F070-AC-02). Bộ từ nickname không gửi xuống client (gợi ý sinh ở server).
+      required: [catalog_version_id, version, presets, body_types, skin_tones, hair_colors, default_item_ids, default_emote_ids]
+      properties:
+        catalog_version_id: { $ref: '#/components/schemas/Uuid' }
+        version: { type: integer, minimum: 1 }
+        presets:
+          type: array
+          maxItems: 12
+          items:
+            type: object
+            required: [preset_code, name, avatar_config]
+            properties:
+              preset_code: { $ref: '#/components/schemas/CatalogCode' }
+              name: { $ref: '#/components/schemas/CatalogName' }
+              avatar_config: { $ref: '#/components/schemas/AvatarConfig' }
+              thumbnail_asset_id: { $ref: '#/components/schemas/Uuid' }
+        body_types: { $ref: '#/components/schemas/CatalogNamedCodes' }
+        skin_tones: { $ref: '#/components/schemas/CatalogNamedCodes' }
+        hair_colors: { $ref: '#/components/schemas/CatalogNamedCodes' }
+        default_item_ids:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/CatalogCode' }
+        default_emote_ids:
+          type: array
+          maxItems: 6
+          items: { $ref: '#/components/schemas/CatalogCode' }
+    CatalogName:
+      type: object
+      required: [vi, en]
+      properties:
+        vi: { type: string, maxLength: 64 }
+        en: { type: string, maxLength: 64 }
+    CatalogNamedCodes:
+      type: array
+      maxItems: 32
+      items:
+        type: object
+        required: [code, name]
+        properties:
+          code: { $ref: '#/components/schemas/CatalogCode' }
+          name: { $ref: '#/components/schemas/CatalogName' }
     PlayerCard:
       type: object
       description: Thông tin công khai tối thiểu của người chơi khác (không tên thật, không trường nếu liên trường)
       required: [user_id, nickname]
       properties:
         user_id: { $ref: '#/components/schemas/Uuid' }
-        nickname: { type: string, maxLength: 128 }
+        nickname: { type: string, maxLength: 32 }
         level: { type: integer }
         avatar_config: { $ref: '#/components/schemas/AvatarConfig' }
         presence: { type: string, enum: [online, in_activity, offline] }
@@ -18082,7 +18202,7 @@ components:
       required: [user_id, nickname, created_at]
       properties:
         user_id: { $ref: '#/components/schemas/Uuid' }
-        nickname: { type: string, maxLength: 64 }
+        nickname: { type: string, maxLength: 32 }
         avatar_thumbnail_url: { type: string, maxLength: 2048, format: uri }
         created_at: { $ref: '#/components/schemas/Timestamp' }
     FriendCode:
@@ -18145,7 +18265,7 @@ components:
       properties:
         club_id: { $ref: '#/components/schemas/Uuid' }
         user_id: { $ref: '#/components/schemas/Uuid' }
-        nickname: { type: string, maxLength: 64 }
+        nickname: { type: string, maxLength: 32 }
         avatar_thumbnail_url: { type: string, maxLength: 2048, format: uri }
         role: { $ref: '#/components/schemas/ClubRole' }
         joined_at: { $ref: '#/components/schemas/Timestamp' }
@@ -18156,7 +18276,7 @@ components:
         request_id: { $ref: '#/components/schemas/Uuid' }
         club_id: { $ref: '#/components/schemas/Uuid' }
         requester_id: { $ref: '#/components/schemas/Uuid' }
-        requester_nickname: { type: string, maxLength: 64 }
+        requester_nickname: { type: string, maxLength: 32 }
         status: { type: string, enum: [pending, accepted, rejected, expired, cancelled] }
         created_at: { $ref: '#/components/schemas/Timestamp' }
     ClubInvitation:
@@ -19229,7 +19349,7 @@ components:
       required: [student_id, nickname, role, joined_at]
       properties:
         student_id: { $ref: '#/components/schemas/Uuid' }
-        nickname: { type: string, maxLength: 128 }
+        nickname: { type: string, maxLength: 32 }
         avatar_config: { $ref: '#/components/schemas/AvatarConfig' }
         role: { type: string, enum: [leader, member] }
         ready: { type: boolean }
@@ -19472,7 +19592,7 @@ components:
       properties:
         message_id: { $ref: '#/components/schemas/Uuid' }
         channel_type: { $ref: '#/components/schemas/ChannelType' }
-        sender_nickname: { type: string, maxLength: 128 }
+        sender_nickname: { type: string, maxLength: 32 }
     MessageCreate:
       type: object
       required: [kind, client_message_id]
@@ -20866,7 +20986,7 @@ components:
             required: [student_id, nickname]
             properties:
               student_id: { $ref: '#/components/schemas/Uuid' }
-              nickname: { type: string, maxLength: 128 }
+              nickname: { type: string, maxLength: 32 }
               ready: { type: boolean }
               contribution_met: { type: boolean, description: Đạt min_contribution của phase hiện tại (không công bố xếp hạng trong nhóm) }
         started_at: { $ref: '#/components/schemas/Timestamp' }

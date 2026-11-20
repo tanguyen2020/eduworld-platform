@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/game_profile.updated.v1.schema.json",
+  "title": "Payload game_profile.updated v1 (module game, owner F070)",
+  "description": "Thông tin công khai của người chơi đổi (nickname, avatar, level). Consumer: module competition, chat (projection ref.player_profiles), analytics. Chỉ dữ liệu được phép hiện cho người chơi khác: student_id, nickname, avatar, level — không họ tên, username, trường, lớp (R16, ADR-0054, F070-AC-12). source_version tăng mỗi lần đổi để projection bỏ bản cũ.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "tenant_id",
+    "avatar_config_hash",
+    "level",
+    "source_version"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "nickname": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 32
+    },
+    "avatar_config_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "avatar_config": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "maxProperties": 12,
+      "description": "AvatarConfig (specs/schemas/avatar-config.schema.json), ≤ 4 KB cho hub (F091); null khi chưa tạo avatar"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "nickname": "MeoXanh27",
+      "avatar_config_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "avatar_config": null,
+      "level": 1,
+      "source_version": 2
+    }
+  ]
+}

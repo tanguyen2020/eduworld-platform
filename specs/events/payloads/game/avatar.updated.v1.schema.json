@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/avatar.updated.v1.schema.json",
+  "title": "Payload avatar.updated v1 (module game, owner F070)",
+  "description": "Avatar của học sinh thay đổi (Tủ đồ, preset). Phát cùng game_profile.updated trong một transaction outbox (F070-AC-15). Chỉ id và hash, không PII (F070-AC-12). Consumer: analytics; realtime fan-out appearance (F092).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "avatar_config_hash",
+    "updated_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "avatar_config_hash": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hex của avatar_config chuẩn hóa"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "avatar_config_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "updated_at": "2026-11-20T08:05:00Z"
+    }
+  ]
+}

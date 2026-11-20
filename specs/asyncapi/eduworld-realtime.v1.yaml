@@ -629,7 +629,7 @@ components:
           properties:
             message_id: { $ref: '#/components/schemas/Uuid' }
             channel_type: { $ref: '#/components/schemas/ChatChannelType' }
-            sender_nickname: { type: string, maxLength: 128 }
+            sender_nickname: { type: string, maxLength: 32 }
         mentions: { type: array, items: { $ref: '#/components/schemas/PublicPlayer' } }
         reactions:
           type: object
@@ -2566,7 +2566,7 @@ components:
                       required: [student_id, nickname]
                       properties:
                         student_id: { $ref: '#/components/schemas/Uuid' }
-                        nickname: { type: string, maxLength: 128 }
+                        nickname: { type: string, maxLength: 32 }
                         ready: { type: boolean }
                         connected: { type: boolean }
                         contribution_met: { type: boolean }

@@ -212,6 +212,8 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 409 | `STEP_PRECONDITION_FAILED` | Báo bước quest khi điều kiện chưa thỏa |
 | 422 | `ITEM_NOT_OWNED` | Avatar dùng item không có trong inventory |
 | 422 | `EQUIP_SLOT_INVALID` | Vật phẩm không hợp với slot trang bị |
+| 409 | `NICKNAME_UNAVAILABLE` | `nickname_option_id` hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy (F070) |
+| 409 | `NICKNAME_CHANGE_LIMIT` | Vượt `nickname_change_monthly_limit` trong tháng, kèm `retry_after` (F070) |
 | 409 | `QUEST_ALREADY_COMPLETED` | Nhận lại quest `once` đã hoàn thành |
 | 409 | `QUEST_COOLDOWN` | Nhận quest `repeatable` khi đang cooldown (kèm `retry_after`) |
 | 403 | `AREA_LOCKED` | Vào area chưa mở khóa (kèm điều kiện còn thiếu) |

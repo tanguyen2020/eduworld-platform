@@ -88,10 +88,51 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy — client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '422':
           $ref: '#/components/responses/ValidationFailed'
         default:
           $ref: '#/components/responses/Problem'
+  /game/character/catalog:
+    get:
+      x-service: game
+      tags:
+        - game
+      operationId: getCharacterCatalog
+      summary: Danh mục tạo nhân vật đang publish (preset, dáng, bảng màu, item và emote mặc định; tên vi/en) — F070
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema:
+                type: string
+                maxLength: 128
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterCatalog'
+        '304':
+          description: Not Modified (If-None-Match khớp ETag của version hiện hành)
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /game/profile/nickname-suggestions:
     get:
       x-service: game
@@ -4278,6 +4319,14 @@ components:
         examples:
           - vi-VN
           - en-US
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: ETag của manifest client đang có; trùng → 304
+      schema:
+        type: string
+        maxLength: 128
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -4303,14 +4352,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    IfNoneMatch:
-      name: If-None-Match
-      in: header
-      required: false
-      description: ETag của manifest client đang có; trùng → 304
-      schema:
-        type: string
-        maxLength: 128
     AreaId:
       name: area_id
       in: path
@@ -4507,25 +4548,46 @@ components:
       description: UUIDv7
     GameProfile:
       type: object
+      description: Hồ sơ game của chính học sinh (F070). Không họ tên, username, trường, lớp (R16, ADR-0054).
       required:
         - student_id
         - nickname
         - level
         - xp_total
+        - setup_required
       properties:
         student_id:
           $ref: '#/components/schemas/Uuid'
         nickname:
-          type: string
-          maxLength: 128
+          type:
+            - string
+            - 'null'
+          maxLength: 32
+          description: null tới khi chọn từ gợi ý (suggestNicknames)
         level:
           type: integer
           minimum: 1
         xp_total:
           type: integer
           minimum: 0
+        setup_required:
+          type: boolean
+          description: true khi chưa có avatar hoặc nickname — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01)
+        avatar_created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        avatar_config_hash:
+          type:
+            - string
+            - 'null'
+          maxLength: 128
+          description: SHA-256 hex của avatar_config chuẩn hóa
         avatar_config:
-          $ref: '#/components/schemas/AvatarConfig'
+          oneOf:
+            - $ref: '#/components/schemas/AvatarConfig'
+            - type: 'null'
         last_area_id:
           type: string
           maxLength: 64
@@ -4536,27 +4598,83 @@ components:
           $ref: '#/components/schemas/Locale'
     AvatarConfig:
       type: object
+      description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
+      additionalProperties: false
+      required:
+        - schema_version
+        - body_type
+        - skin_tone
+        - hair
+        - outfit
       properties:
-        body:
-          type: string
-          maxLength: 1000
+        schema_version:
+          type: integer
+          const: 1
+        body_type:
+          $ref: '#/components/schemas/CatalogCode'
         skin_tone:
-          type: string
-          maxLength: 64
-        hair_item_id:
-          $ref: '#/components/schemas/Uuid'
-        outfit_item_id:
-          $ref: '#/components/schemas/Uuid'
-        accessory_item_ids:
+          $ref: '#/components/schemas/CatalogCode'
+        hair:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+            - color
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+            color:
+              $ref: '#/components/schemas/CatalogCode'
+        outfit:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+        accessories:
           type: array
           maxItems: 4
           items:
-            $ref: '#/components/schemas/Uuid'
-        emote_item_ids:
+            type: object
+            additionalProperties: false
+            required:
+              - slot
+              - item_id
+            properties:
+              slot:
+                type: string
+                enum:
+                  - head
+                  - face
+                  - back
+                  - hand
+              item_id:
+                $ref: '#/components/schemas/CatalogCode'
+        emote_slots:
           type: array
-          maxItems: 8
+          maxItems: 6
+          description: Tối đa emote_wheel_slots (CONFIG_DEFAULTS)
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: '#/components/schemas/CatalogCode'
+        pet:
+          $ref: '#/components/schemas/CatalogCode'
+        title:
+          $ref: '#/components/schemas/CatalogCode'
+        frame:
+          $ref: '#/components/schemas/CatalogCode'
+        badge_showcase:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+    CatalogCode:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: ^[a-z0-9_]+$
+      description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
     Locale:
       type: string
       enum:
@@ -4711,6 +4829,8 @@ components:
         - STEP_PRECONDITION_FAILED
         - ITEM_NOT_OWNED
         - EQUIP_SLOT_INVALID
+        - NICKNAME_UNAVAILABLE
+        - NICKNAME_CHANGE_LIMIT
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - AREA_LOCKED
@@ -4785,6 +4905,8 @@ components:
         - FEATURE_NOT_DISABLEABLE
     GameProfileUpdate:
       type: object
+      additionalProperties: false
+      description: Nickname chỉ đặt qua nickname_option_id của suggestNicknames; trường nickname tự do bị từ chối 422 (F070-AC-10, R16).
       properties:
         nickname_option_id:
           $ref: '#/components/schemas/Uuid'
@@ -4815,6 +4937,83 @@ components:
                   message:
                     type: string
                     maxLength: 1000
+    CharacterCatalog:
+      type: object
+      description: Danh mục tạo nhân vật đang publish (nội dung platform có version, ADR-0043) — bản JSON Schema specs/schemas/character-catalog.schema.json (F070-AC-02). Bộ từ nickname không gửi xuống client (gợi ý sinh ở server).
+      required:
+        - catalog_version_id
+        - version
+        - presets
+        - body_types
+        - skin_tones
+        - hair_colors
+        - default_item_ids
+        - default_emote_ids
+      properties:
+        catalog_version_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        presets:
+          type: array
+          maxItems: 12
+          items:
+            type: object
+            required:
+              - preset_code
+              - name
+              - avatar_config
+            properties:
+              preset_code:
+                $ref: '#/components/schemas/CatalogCode'
+              name:
+                $ref: '#/components/schemas/CatalogName'
+              avatar_config:
+                $ref: '#/components/schemas/AvatarConfig'
+              thumbnail_asset_id:
+                $ref: '#/components/schemas/Uuid'
+        body_types:
+          $ref: '#/components/schemas/CatalogNamedCodes'
+        skin_tones:
+          $ref: '#/components/schemas/CatalogNamedCodes'
+        hair_colors:
+          $ref: '#/components/schemas/CatalogNamedCodes'
+        default_item_ids:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+        default_emote_ids:
+          type: array
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+    CatalogName:
+      type: object
+      required:
+        - vi
+        - en
+      properties:
+        vi:
+          type: string
+          maxLength: 64
+        en:
+          type: string
+          maxLength: 64
+    CatalogNamedCodes:
+      type: array
+      maxItems: 32
+      items:
+        type: object
+        required:
+          - code
+          - name
+        properties:
+          code:
+            $ref: '#/components/schemas/CatalogCode'
+          name:
+            $ref: '#/components/schemas/CatalogName'
     NicknameSuggestion:
       type: object
       required:
@@ -8108,7 +8307,7 @@ components:
                 $ref: '#/components/schemas/Uuid'
               nickname:
                 type: string
-                maxLength: 128
+                maxLength: 32
               ready:
                 type: boolean
               contribution_met:
@@ -9135,18 +9334,18 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
-    ValidationFailed:
-      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/ValidationProblem'
     Forbidden:
       description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
     PreconditionRequired:
       description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
       content:

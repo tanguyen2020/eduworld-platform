@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/avatar-config.schema.json",
+  "title": "AvatarConfig v1",
+  "description": "Cấu hình ngoại hình của nhân vật (F070). Nguồn duy nhất của cấu trúc: CHARACTER_SYSTEM §5.1; OpenAPI (GameProfile.avatar_config, updateAvatar, AvatarPreset, PlayerCard) và AsyncAPI dùng cùng cấu trúc. Vật phẩm tham chiếu bằng mã item_id (varchar(64), như item_ledger), không phải UUID. Server kiểm danh mục, sở hữu và slot (422 VALIDATION_FAILED, ITEM_NOT_OWNED, EQUIP_SLOT_INVALID); tổng kích thước ≤ 16 KB.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "body_type", "skin_tone", "hair", "outfit"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "body_type": { "$ref": "#/$defs/code", "description": "Mã dáng người trong danh mục miễn phí (CharacterCatalog.body_types)" },
+    "skin_tone": { "$ref": "#/$defs/code", "description": "Mã màu da trong danh mục (CharacterCatalog.skin_tones)" },
+    "hair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "color"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/itemId" },
+        "color": { "$ref": "#/$defs/code", "description": "Mã màu tóc (CharacterCatalog.hair_colors)" }
+      }
+    },
+    "outfit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id"],
+      "properties": { "item_id": { "$ref": "#/$defs/itemId" } }
+    },
+    "accessories": {
+      "type": "array",
+      "maxItems": 4,
+      "description": "Tối đa 1 item mỗi slot head/face/back/hand (INVENTORY_ECONOMY §2.1)",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slot", "item_id"],
+        "properties": {
+          "slot": { "type": "string", "enum": ["head", "face", "back", "hand"] },
+          "item_id": { "$ref": "#/$defs/itemId" }
+        }
+      }
+    },
+    "emote_slots": {
+      "type": "array",
+      "maxItems": 6,
+      "description": "Emote trên vòng chọn, tối đa emote_wheel_slots (CONFIG_DEFAULTS, 6)",
+      "items": { "$ref": "#/$defs/itemId" }
+    },
+    "pet": { "$ref": "#/$defs/itemId" },
+    "title": { "$ref": "#/$defs/itemId" },
+    "frame": { "$ref": "#/$defs/itemId" },
+    "badge_showcase": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/itemId" } }
+  },
+  "$defs": {
+    "code": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9_]+$" },
+    "itemId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9_]+$" }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "body_type": "kid_a",
+      "skin_tone": "tone_04",
+      "hair": { "item_id": "hair_ponytail_01", "color": "hair_col_03" },
+      "outfit": { "item_id": "outfit_explorer_01" },
+      "accessories": [{ "slot": "head", "item_id": "acc_cap_star" }, { "slot": "back", "item_id": "acc_backpack_owl" }],
+      "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]
+    }
+  ]
+}

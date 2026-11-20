@@ -4152,6 +4152,8 @@ components:
         - STEP_PRECONDITION_FAILED
         - ITEM_NOT_OWNED
         - EQUIP_SLOT_INVALID
+        - NICKNAME_UNAVAILABLE
+        - NICKNAME_CHANGE_LIMIT
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - AREA_LOCKED
@@ -4312,7 +4314,7 @@ components:
           $ref: '#/components/schemas/Uuid'
         nickname:
           type: string
-          maxLength: 128
+          maxLength: 32
         level:
           type: integer
         avatar_config:
@@ -4325,27 +4327,83 @@ components:
             - offline
     AvatarConfig:
       type: object
+      description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
+      additionalProperties: false
+      required:
+        - schema_version
+        - body_type
+        - skin_tone
+        - hair
+        - outfit
       properties:
-        body:
-          type: string
-          maxLength: 1000
+        schema_version:
+          type: integer
+          const: 1
+        body_type:
+          $ref: '#/components/schemas/CatalogCode'
         skin_tone:
-          type: string
-          maxLength: 64
-        hair_item_id:
-          $ref: '#/components/schemas/Uuid'
-        outfit_item_id:
-          $ref: '#/components/schemas/Uuid'
-        accessory_item_ids:
+          $ref: '#/components/schemas/CatalogCode'
+        hair:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+            - color
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+            color:
+              $ref: '#/components/schemas/CatalogCode'
+        outfit:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+        accessories:
           type: array
           maxItems: 4
           items:
-            $ref: '#/components/schemas/Uuid'
-        emote_item_ids:
+            type: object
+            additionalProperties: false
+            required:
+              - slot
+              - item_id
+            properties:
+              slot:
+                type: string
+                enum:
+                  - head
+                  - face
+                  - back
+                  - hand
+              item_id:
+                $ref: '#/components/schemas/CatalogCode'
+        emote_slots:
           type: array
-          maxItems: 8
+          maxItems: 6
+          description: Tối đa emote_wheel_slots (CONFIG_DEFAULTS)
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: '#/components/schemas/CatalogCode'
+        pet:
+          $ref: '#/components/schemas/CatalogCode'
+        title:
+          $ref: '#/components/schemas/CatalogCode'
+        frame:
+          $ref: '#/components/schemas/CatalogCode'
+        badge_showcase:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+    CatalogCode:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: ^[a-z0-9_]+$
+      description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
     QuoteRef:
       type: object
       required:
@@ -4374,7 +4432,7 @@ components:
           $ref: '#/components/schemas/ChannelType'
         sender_nickname:
           type: string
-          maxLength: 128
+          maxLength: 32
     ReactionSummary:
       type: object
       properties:
@@ -4743,7 +4801,7 @@ components:
           $ref: '#/components/schemas/Uuid'
         nickname:
           type: string
-          maxLength: 64
+          maxLength: 32
         avatar_thumbnail_url:
           type: string
           maxLength: 2048
@@ -4871,7 +4929,7 @@ components:
           $ref: '#/components/schemas/Uuid'
         nickname:
           type: string
-          maxLength: 64
+          maxLength: 32
         avatar_thumbnail_url:
           type: string
           maxLength: 2048
@@ -4897,7 +4955,7 @@ components:
           $ref: '#/components/schemas/Uuid'
         requester_nickname:
           type: string
-          maxLength: 64
+          maxLength: 32
         status:
           type: string
           enum:

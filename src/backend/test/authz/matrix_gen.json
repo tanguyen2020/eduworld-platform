@@ -1721,6 +1721,17 @@
     ]
   },
   {
+    "operation_id": "getCharacterCatalog",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/character/catalog",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getChatRetentionSettings",
     "module": "identity",
     "method": "GET",
