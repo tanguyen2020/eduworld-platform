@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/analytics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/examquality"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
@@ -107,6 +108,9 @@ type curEnv struct {
 	exams   command.Exams           // F042
 	examq   query.Exams             // F042
 	dashq   *query.Dashboards       // F043: the dashboard reads (role learning_dashboard)
+	reports *command.Reports        // F044: exports (worker run by the tests)
+	quality *command.Quality        // F044: item analysis, calibration, exam quality, reference levels
+	reportq *query.Reports          // F044 reads
 }
 
 // envOpt configures newCurEnv.
@@ -295,6 +299,11 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	dashq := &query.Dashboards{Session: dashRead, Model: read.DashboardModel{}, Config: analytics.DefaultConfig(), Cursors: codec,
 		Clock: clk.Now}
 	handlers.Dashboards = dashProxy{q: dashq}
+	// F044: exports on the dashboard session, quality use cases, the balancer of independent_draw (pointers: tests tune them).
+	reports, quality, reportq := f044Kit(e, dashRead, mk, qcmd, codec, clk)
+	handlers.Reports = learninghttp.ReportHandlers{Commands: reportsProxy{reports}, Calibration: qualityProxy{quality}, Queries: reportqProxy{reportq}}
+	exams.Balancer, exams.PValues = examquality.Balancer{}, write.QualityRepo{}
+	handlers.ExamCommands = exams
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
 	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
@@ -307,7 +316,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
-		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq}
+		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
+		reports: reports, quality: quality, reportq: reportq}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

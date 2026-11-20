@@ -24,6 +24,18 @@
     ]
   },
   {
+    "operation_id": "acceptCalibrationProposal",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/calibration-proposals/{proposal_id}:accept",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "acceptClubInvitation",
     "module": "chat",
     "method": "POST",
@@ -1518,6 +1530,18 @@
     ]
   },
   {
+    "operation_id": "dismissCalibrationProposal",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/calibration-proposals/{proposal_id}:dismiss",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "editMessage",
     "module": "chat",
     "method": "PATCH",
@@ -2056,6 +2080,18 @@
     ]
   },
   {
+    "operation_id": "getExamSessionReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/sessions/{exam_session_id}/report",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getGameChallenge",
     "module": "game",
     "method": "GET",
@@ -2544,10 +2580,34 @@
     ]
   },
   {
+    "operation_id": "getQuestionStats",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/questions/{question_id}/stats",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getRegradeRequest",
     "module": "learning",
     "method": "GET",
     "path": "/cms/learning/regrade-requests/{regrade_request_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getRegulationReferenceReport",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/reference-levels",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -3149,6 +3209,17 @@
     "module": "game",
     "method": "GET",
     "path": "/game/bosses",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listCalibrationProposals",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/calibration-proposals",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",

@@ -100,7 +100,7 @@ func ScanExamSession(r rowScanner) (write.ExamSessionRow, error) {
 }
 
 const ExamPaperColumns = `exam_paper_id, tenant_id, exam_session_id, variant_no, student_id, attempt_no, seed, items,
-	total_points::float8, expected_p::float8, generator_version`
+	total_points::float8, expected_p::float8, generator_version, balance_warning`
 
 func ScanExamPaper(r rowScanner) (write.ExamPaperRow, error) {
 	var p write.ExamPaperRow
@@ -108,7 +108,7 @@ func ScanExamPaper(r rowScanner) (write.ExamPaperRow, error) {
 	var attemptNo sql.NullInt64
 	var items []byte
 	if err := r.Scan(&p.ID, &p.TenantID, &p.SessionID, &p.VariantNo, &student, &attemptNo, &p.Seed, &items, &p.TotalPoints, &p.ExpectedP,
-		&p.GeneratorVersion); err != nil {
+		&p.GeneratorVersion, &p.BalanceWarning); err != nil {
 		return p, err
 	}
 	p.StudentID = nullUUID(student)

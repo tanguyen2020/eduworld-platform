@@ -22,10 +22,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/analytics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/examquality"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/reporting"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/export"
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
@@ -78,6 +81,12 @@ const (
 	// DashboardDayCloseInterval: F043 T015 checks every 15 minutes for days to close (a day closes once
 	// dashboard_day_close_time 02:30 ICT has passed) and for days marked by late events [Proposed].
 	DashboardDayCloseInterval = 15 * time.Minute
+	// F044: the export queue is polled every 10 seconds; item analysis and reference levels run nightly, the calibration
+	// proposals weekly (QUESTION_BANK §9, §9.1; ASSESSMENT_REGULATION_PROFILE §4) [Proposed intervals].
+	ReportJobsInterval      = 10 * time.Second
+	ItemAnalysisInterval    = 24 * time.Hour
+	CalibrationInterval     = 7 * 24 * time.Hour
+	ReferenceLevelsInterval = 24 * time.Hour
 )
 
 // DashboardPoolSize is dashboard_db_pool_per_api_replica (CONFIG_DEFAULTS, DASHBOARD_DATA §7).
@@ -206,6 +215,14 @@ func Register(r *module.Registry) (*Module, error) {
 	// F043: rollup day close and read-model refresh (school_dashboard_refresh).
 	r.Job(Name, "dashboard-day-close", DashboardDayCloseInterval, job.DashboardDayClose{Runner: w.dashboards}.RunOnce)
 	r.Job(Name, "read-model-refresh", w.dashboards.Config.Refresh, job.ReadModelRefresh{Runner: w.dashboards}.RunOnce)
+	// F044: export queue, item analysis, calibration proposals, reference levels; exam quality on exam.closed.
+	r.Job(Name, "report-jobs", ReportJobsInterval, job.ReportJobs{Runner: w.reports}.RunOnce)
+	r.Job(Name, "item-analysis-nightly", ItemAnalysisInterval, job.ItemAnalysisNightly{Runner: w.quality}.RunOnce)
+	r.Job(Name, "calibration-weekly", CalibrationInterval, job.CalibrationWeekly{Runner: w.quality}.RunOnce)
+	r.Job(Name, "reference-levels-nightly", ReferenceLevelsInterval, job.ReferenceLevelsNightly{Runner: w.quality}.RunOnce)
+	r.Consumer(messaging.ExamQualityName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ExamQualityOptions(consumer.ExamQuality{Runner: w.quality}, core.UoW, core.App, js)
+	})
 	return &Module{facade: w.facade}, nil
 }
 
@@ -232,6 +249,9 @@ type wiring struct {
 	exams       command.Exams
 	// F043: the dashboard rollup jobs.
 	dashboards command.Dashboards
+	// F044: exports and quality jobs.
+	reports command.Reports
+	quality command.Quality
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -284,6 +304,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterAssignments(reg)
 	observability.RegisterExams(reg)
 	observability.RegisterDashboards(reg)
+	observability.RegisterReporting(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -357,7 +378,8 @@ func build(r *module.Registry) (*wiring, error) {
 	asg := command.Assignments{UoW: core.UoW, Store: write.SchoolAssignmentRepo{}, Read: core.ReadSession,
 		Events: events, Audit: auditor, Metrics: observability.SchoolAssignmentCounter{}}
 	// F042: the exam engine; its adapter replaces the "unavailable" ExamSessionCreator of F041 (F042-AC-31).
-	exams := command.Exams{UoW: core.UoW, Store: write.ExamRepo{}, Events: events, Audit: auditor, Metrics: observability.ExamCounter{}}
+	exams := command.Exams{UoW: core.UoW, Store: write.ExamRepo{}, Events: events, Audit: auditor, Metrics: observability.ExamCounter{},
+		Balancer: examquality.Balancer{}, PValues: write.QualityRepo{}}
 	att.ExamRelease = exams.ReleaseOf
 	asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	att.Gate = asg
@@ -405,7 +427,7 @@ func build(r *module.Registry) (*wiring, error) {
 		LateWindow: dashCfg.LateWindow, Late: observability.DashboardCounter{}}
 	dashboards := command.Dashboards{UoW: core.UoW, Jobs: write.RollupRepo{}, Versions: cache.Dashboard{C: vk}, Config: dashCfg,
 		Metrics: observability.DashboardCounter{}}
-	dashSession, err := dashboardSession(r)
+	dashSession, err := dashboardSession(r, r.ServesHTTP() || r.RunsJobs())
 	if err != nil {
 		return nil, err
 	}
@@ -431,17 +453,31 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Merge:       command.MergeUserData{UoW: core.UoW, Store: write.MergeRepo{}, Audit: auditor},
 		Idempotency: core.Idempotency}
+	// F044: exports on the dashboard session (replica) in core-api and in the worker, quality jobs and reads.
+	reportCfg := reporting.DefaultConfig()
+	reports := command.Reports{UoW: core.UoW, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: core.ReadSession, Scope: read.QualityModel{},
+		Data: read.ReportModel{}, References: read.QualityModel{}, Files: files, Writers: export.Writers{}, Audit: auditor, Events: events,
+		Config: reportCfg, Metrics: observability.ReportingCounter{}}
+	if dashSession != nil {
+		reports.DataSession = dashSession
+	}
+	quality := command.Quality{UoW: core.UoW, Items: write.QualityRepo{}, Calibrations: write.QualityRepo{}, Exams: write.QualityRepo{},
+		References: write.QualityRepo{}, Tenants: write.RollupRepo{}, Questions: qcmd, Audit: auditor, Config: command.DefaultQualityConfig(),
+		Metrics: observability.ReportingCounter{}}
+	h.Reports = learninghttp.ReportHandlers{Commands: reports, Calibration: quality, Queries: query.Reports{Session: core.ReadSession,
+		Jobs: read.ReportModel{}, Files: files, Courses: read.QualityModel{}, References: read.QualityModel{}, Quality: read.QualityModel{},
+		Exams: read.QualityModel{}, Config: reportCfg, Cursors: cursors}}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards}, nil
+		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality}, nil
 }
 
 // dashboardSession opens the read session of the dashboards (F043-AC-18, F043-AC-21, DASHBOARD_DATA §7): the role
 // learning_dashboard (EW_DB_LEARNING_DASHBOARD_DSN) and, for the cross-tenant summary of System Admin, learning_platform
 // (EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN), both on the read replica in staging/production (local: the primary). Without them
 // the dashboard routes answer 503; they never fall back to the business pools.
-func dashboardSession(r *module.Registry) (*entx.ReadSession, error) {
-	if !r.ServesHTTP() {
+func dashboardSession(r *module.Registry, needed bool) (*entx.ReadSession, error) {
+	if !needed {
 		return nil, nil
 	}
 	dash, err := r.SQL(Name, "dashboard")

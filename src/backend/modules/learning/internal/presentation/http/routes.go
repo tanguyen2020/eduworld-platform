@@ -114,6 +114,8 @@ type Handlers struct {
 	ExamQueries  ExamQueries
 	// Dashboards serve the School Learning Dashboard and the learning summaries (F043).
 	Dashboards DashboardQueries
+	// Reports serve the exports, course results, reference report, item analysis, calibration and exam report (F044).
+	Reports ReportHandlers
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -236,6 +238,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	dashboardsWired := h.Dashboards != nil && h.ProfileAudit != nil
 	for id, fn := range dashboardRoutes {
 		routes[id] = wiredOr(dashboardsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	reportsWired := h.Reports.Commands != nil && h.Reports.Calibration != nil && h.Reports.Queries != nil
+	for id, fn := range reportRoutes {
+		routes[id] = wiredOr(reportsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

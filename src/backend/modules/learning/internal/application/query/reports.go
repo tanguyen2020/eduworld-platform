@@ -1,0 +1,297 @@
+package query
+
+import (
+	"context"
+	"math"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/regulation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/reporting"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
+)
+
+// Reports are the reads of F044 US1–US3, US4–US6: the export jobs (getLmsReport, getTenantReport, getPlatformReport), the
+// course results (getCourseResults), the reference report (getRegulationReferenceReport), the question statistics, the
+// calibration queue and the exam session report.
+type Reports struct {
+	Session    read.Session
+	Jobs       read.ReportJobReader
+	Files      port.ReportFiles
+	Courses    read.CourseResultsReader
+	References read.ReferenceReader
+	Quality    read.QualityReader
+	Exams      read.ExamQualityReader
+	Config     reporting.Config
+	Cursors    *page.Codec
+	Clock      func() time.Time
+}
+
+func (q Reports) now() time.Time {
+	if q.Clock != nil {
+		return q.Clock().UTC()
+	}
+	return time.Now().UTC()
+}
+
+func (q Reports) linkTTL() time.Duration {
+	if q.Config.LinkTTL > 0 {
+		return q.Config.LinkTTL
+	}
+	return reporting.DefaultConfig().LinkTTL
+}
+
+// GetReport returns a job of its creator (F044-AC-02, AC-05): report.export required (403); another user, another tenant,
+// another route → 404; a succeeded job carries a link presigned for dashboard_export_link_ttl_minutes.
+func (q Reports) GetReport(ctx context.Context, scope reporting.Scope, id uuid.UUID) (out dto.ReportJobView, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.GetReport")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return out, err
+	}
+	// Any grant holding report.export (school-limited grants included): the job itself is the scope (creator only).
+	if !holds(p, authz.PermReportExport) {
+		return out, authz.Require(ctx, p, authz.PermReportExport, authz.Resource{TenantID: p.TenantID})
+	}
+	rctx := ctx
+	if scope == reporting.ScopePlatform {
+		if p.TenantID != nil || !p.IsSystemAdmin {
+			return out, problem.New(problem.PermissionDenied, "")
+		}
+		if rctx, err = tenancy.Bypass(tenancy.WithModule(ctx, "learning"), tenancy.ReasonSystemAdminCrossTenant); err != nil {
+			return out, err
+		}
+	} else if p.TenantID == nil || p.UserType == authz.UserTypeStudent {
+		return out, problem.New(problem.PermissionDenied, "")
+	}
+	var key *string
+	var expires *time.Time
+	found := false
+	err = q.Session.Read(rctx, func(ctx context.Context) error {
+		j, ok, err := q.Jobs.ReportJob(ctx, id)
+		if err != nil || !ok {
+			return err
+		}
+		sameTenant := (j.TenantID == nil && p.TenantID == nil) || (j.TenantID != nil && p.TenantID != nil && *j.TenantID == *p.TenantID)
+		found = j.RequestedBy == p.UserID && j.Scope == string(scope) && sameTenant
+		out = dto.ReportJobView{ReportID: j.ID, Status: j.Status, ReportType: j.Type, Format: j.Format, RowCount: j.RowCount, Error: j.Error,
+			CreatedAt: j.CreatedAt, FinishedAt: j.FinishedAt}
+		key, expires = j.StorageKey, j.FileExpiresAt
+		return nil
+	})
+	if err != nil {
+		return out, err
+	}
+	if !found {
+		return dto.ReportJobView{}, problem.New(problem.NotFound, "")
+	}
+	at := q.now()
+	if reporting.Downloadable(out.Status, expires, at) && key != nil && q.Files != nil {
+		url, exp, err := q.Files.ReportURL(ctx, *key, at, q.linkTTL())
+		if err != nil {
+			return out, err
+		}
+		out.DownloadURL, out.DownloadExpiresAt = &url, &exp
+	}
+	return out, nil
+}
+
+// lmsScope applies a school/subject permission of the LMS (F044-AC-10, AC-15, AC-25): no permission → 403; school outside
+// every grant (or another tenant) → 404; subject outside a subject-limited grant → 403 PERMISSION_DENIED.
+func lmsScope(ctx context.Context, p authz.Principal, perm authz.Permission, school, subject uuid.UUID) error {
+	if p.TenantID == nil || p.UserType == authz.UserTypeStudent {
+		return problem.New(problem.PermissionDenied, "")
+	}
+	if !holds(p, perm) {
+		return authz.Require(ctx, p, perm, authz.Resource{TenantID: p.TenantID})
+	}
+	if !coversSchool(p, perm, school) {
+		_ = authz.Require(ctx, p, perm, authz.Resource{TenantID: p.TenantID, SchoolID: &school})
+		return problem.New(problem.NotFound, "")
+	}
+	return authz.Require(ctx, p, perm, authz.Resource{TenantID: p.TenantID, SchoolID: &school, SubjectID: &subject})
+}
+
+// CourseResultsInput is the request of getCourseResults.
+type CourseResultsInput struct {
+	CourseID uuid.UUID
+	Page     PageInput
+}
+
+// CourseResultsPage is the course results and the page of students.
+type CourseResultsPage struct {
+	dto.CourseResultsView
+	NextCursor *string
+	HasMore    bool
+	Limit      int
+}
+
+// GetCourseResults is getCourseResults (F044-AC-08…AC-10): lms.report.read in the school and subject of the course; one
+// column per graded assignment, the effective self-graded score (score policy of the assignment, re-evaluations applied)
+// on the 10-point scale (score_scale), the submission status and the "too fast" flag; never XP, rating, competition points
+// nor ranking (ADR-0018).
+func (q Reports) GetCourseResults(ctx context.Context, in CourseResultsInput) (out CourseResultsPage, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.GetCourseResults")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return out, err
+	}
+	if p.TenantID == nil || p.UserType == authz.UserTypeStudent {
+		return out, problem.New(problem.PermissionDenied, "")
+	}
+	limit := page.Limit(in.Page.Limit)
+	after := uuid.Nil
+	if cur, err := q.Cursors.Decode(in.Page.Cursor); err != nil {
+		return out, problem.New(problem.BadRequest, "invalid cursor")
+	} else if cur != nil {
+		after = cur.ID
+	}
+	err = q.Session.Read(ctx, func(ctx context.Context) error {
+		c, err := q.Courses.Course(ctx, in.CourseID)
+		if err != nil {
+			return err
+		}
+		if c == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		if err := lmsScope(ctx, p, authz.PermLmsReportRead, c.SchoolID, c.SubjectID); err != nil {
+			return err
+		}
+		cols, err := q.Courses.GradedAssignments(ctx, c.CourseID)
+		if err != nil {
+			return err
+		}
+		students, err := q.Courses.CourseStudents(ctx, c.ClassID, after, limit)
+		if err != nil {
+			return err
+		}
+		if len(students) > limit {
+			students, out.HasMore = students[:limit], true
+			s := q.Cursors.Encode(page.Cursor{ID: students[limit-1]})
+			out.NextCursor = &s
+		}
+		cells, err := q.Courses.ResultCells(ctx, c.CourseID, students)
+		if err != nil {
+			return err
+		}
+		out.CourseResultsView = CourseResults(c.CourseID, cols, students, cells)
+		return nil
+	})
+	out.Limit = limit
+	return out, err
+}
+
+// CourseResults builds the table (pure): missing submission → not_started without score.
+func CourseResults(course uuid.UUID, cols []read.GradedAssignment, students []uuid.UUID, cells []read.ResultCell) dto.CourseResultsView {
+	v := dto.CourseResultsView{CourseID: course, Columns: make([]dto.CourseResultColumn, 0, len(cols)), Rows: make([]dto.CourseResultRow, 0, len(students))}
+	for _, c := range cols {
+		v.Columns = append(v.Columns, dto.CourseResultColumn{AssignmentID: c.AssignmentID, Title: c.Title, DueAt: c.DueAt, ScorePolicy: c.ScorePolicy})
+	}
+	type key struct{ s, a uuid.UUID }
+	byKey := map[key]read.ResultCell{}
+	for _, c := range cells {
+		byKey[key{c.StudentID, c.AssignmentID}] = c
+	}
+	for _, s := range students {
+		row := dto.CourseResultRow{StudentID: s, Scores: make([]dto.CourseResultScore, 0, len(cols))}
+		for _, c := range cols {
+			sc := dto.CourseResultScore{AssignmentID: c.AssignmentID, Status: "not_started"}
+			if cell, ok := byKey[key{s, c.AssignmentID}]; ok {
+				sc.Status, sc.TooFast = cell.Status, cell.RapidGuessCount > 0
+				if cell.Score != nil && cell.MaxScore != nil && *cell.MaxScore > 0 {
+					x := math.Round(*cell.Score / *cell.MaxScore * 100) / 10
+					sc.Score10 = &x
+				}
+			}
+			row.Scores = append(row.Scores, sc)
+		}
+		v.Rows = append(v.Rows, row)
+	}
+	return v
+}
+
+// ReferenceInput is the request of getRegulationReferenceReport.
+type ReferenceInput struct {
+	SchoolID, SubjectID uuid.UUID
+	ClassID             *uuid.UUID
+	Period              string
+	AcademicYear        int
+	Page                PageInput
+}
+
+// ReferencePage is the reference report and its page.
+type ReferencePage struct {
+	dto.RegulationReferenceReportView
+	NextCursor *string
+	HasMore    bool
+	Limit      int
+}
+
+// GetReferenceReport is getRegulationReferenceReport (F044-AC-12, AC-15): analytics.school.read in the school and subject
+// (subject outside the scope of an academic_manager → 403); the disclaimer on every response; rapid-guess ratio and the
+// official exams with a low-reliability warning per student. Staff only: students never see a circular level (AC-13).
+func (q Reports) GetReferenceReport(ctx context.Context, in ReferenceInput) (out ReferencePage, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.GetRegulationReferenceReport")
+	defer func() { done(err) }()
+	p, err := staff(ctx)
+	if err != nil {
+		return out, err
+	}
+	if !regulation.ValidPeriod(in.Period) {
+		return out, problem.Invalid("period", problem.SubInvalid, "must be mid_term_1, end_term_1, mid_term_2 or end_term_2")
+	}
+	if _, err := schoolScope(ctx, p, in.SchoolID, &in.SubjectID, false); err != nil {
+		return out, err
+	}
+	year := in.AcademicYear
+	if year == 0 {
+		_, year = regulation.CurrentPeriod(q.now())
+	}
+	limit := page.Limit(in.Page.Limit)
+	after := uuid.Nil
+	if cur, err := q.Cursors.Decode(in.Page.Cursor); err != nil {
+		return out, problem.New(problem.BadRequest, "invalid cursor")
+	} else if cur != nil {
+		after = cur.ID
+	}
+	out.Disclaimer = regulation.DefaultDisclaimer()["vi"]
+	err = q.Session.Read(ctx, func(ctx context.Context) error {
+		ls, err := q.References.ReferenceLevels(ctx, in.SchoolID, in.SubjectID, year, in.Period, in.ClassID, after, limit)
+		if err != nil {
+			return err
+		}
+		if len(ls) > limit {
+			ls, out.HasMore = ls[:limit], true
+			s := q.Cursors.Encode(page.Cursor{ID: ls[limit-1].StudentID})
+			out.NextCursor = &s
+		}
+		out.Items = make([]dto.ReferenceItem, 0, len(ls))
+		for _, l := range ls {
+			low := l.LowReliabilityExamIDs
+			if low == nil {
+				low = []uuid.UUID{}
+			}
+			out.Items = append(out.Items, dto.ReferenceItem{StudentID: l.StudentID, ClassID: l.ClassID, LevelCode: l.LevelCode,
+				CoverageRatio: l.Coverage, ProficientRatio: l.Proficient, MasteredRatio: l.Mastered, OfficialScore: l.OfficialScore,
+				RapidGuessRatio: l.RapidGuessRatio, LowReliabilityExamIDs: low, ProfileVersion: l.ProfileVersion})
+		}
+		if len(ls) > 0 {
+			if d, err := q.References.ProfileDisclaimer(ctx, ls[0].ProfileCode, ls[0].ProfileVersion); err == nil && d["vi"] != "" {
+				out.Disclaimer = d["vi"]
+			}
+		}
+		return nil
+	})
+	out.SchoolID, out.SubjectID, out.Period, out.AcademicYear, out.Limit = in.SchoolID, in.SubjectID, in.Period, year, limit
+	return out, err
+}

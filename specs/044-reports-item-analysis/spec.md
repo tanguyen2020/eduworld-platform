@@ -15,6 +15,19 @@
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 
+### Session 2026-11-21 (triển khai)
+
+- Q: Bảng mới viết bằng ent schema (T006) hay SQL tay? → A: SQL tay trong migration `20261226000001_f044_reports_quality` và repository SQL tường minh, như F040–F043 (bảng lms/assessment/rollup không có entity ent); mọi chuỗi `varchar(n)`, jsonb có CHECK `octet_length` [Confirmed theo tiền lệ F041–F043].
+- Q: Work-queue `LEARNING_REPORT_JOBS` (NATS) hay bảng job? → A: Job `report-jobs` (worker profile `jobs`, 10 giây) lấy job `queued` bằng `FOR UPDATE SKIP LOCKED` trên `learning.report_jobs`, như `import-jobs`/`translation-jobs`; job `running` quá 30 phút được chạy lại; `report.completed` qua outbox [Proposed].
+- Q: Ai có `report.export`? → A: Theo catalog role hiện hành (school_admin, academic_manager, tenant_admin, system_admin); đọc job: người tạo, đúng route (`/lms`, `/tenant`, `/admin`), cùng tenant — khác → `404`; không có `report.export` → `403`.
+- Q: `report_type` `game_summary` (F080) và `efficacy_dataset` (F035) của `ReportRequest`? → A: Trả `422 VALIDATION_FAILED` (`report_type`) cho tới khi feature sở hữu giao; PDF chỉ cho báo cáo LMS [Proposed].
+- Q: Bảng ánh xạ cột/khối của item analysis? → A: Mỗi version ghi một dòng/khối (khối của học sinh trong `ref.students`) và một dòng gộp `grade_level = 0`; `p_value` cho bộ cân bằng lấy dòng gộp; đề xuất hiệu chỉnh dùng khối có nhiều lượt nhất (≥ 100 lượt trả lời đầu không gợi ý, đã loại `rapid_guess`); job đêm tính lại version có câu trả lời trong 48 giờ (toàn bộ lịch sử của version) [Proposed].
+- Q: Ngưỡng cờ "nên viết phản hồi cho phương án"? → A: Phương án sai được ≥ 25% lượt hợp lệ chọn; cờ "độ phân biệt thấp" khi discrimination < 0,1 (EXAM_ENGINE §8.1) [Proposed].
+- Q: Lịch kỳ đánh giá khi chưa có lịch LMS? → A: Năm học bắt đầu 1/9; giữa kỳ I tới 15/11, cuối kỳ I tới 15/1, giữa kỳ II tới 31/3, cuối kỳ II tới 31/8; phạm vi LO = 25/50/75/100% LO của khối × môn theo thứ tự curriculum (ASSESSMENT_REGULATION_PROFILE §4, trường hợp không có lịch LMS); phạm vi theo lịch LMS là việc tiếp theo [Proposed].
+- Q: Điểm đề trong báo cáo đề/độ tin cậy dùng lượt nào? → A: Lượt đã chấm cuối cùng của học sinh (`exam_participations.last_attempt_id`); tỉ lệ đạt = điểm thang 10 ≥ 5 [Proposed].
+- Q: Bộ cân bằng (F044-AC-22) — "seed cố định"? → A: Thuật toán tham lam xác định (thứ tự cố định theo version id, không ngẫu nhiên): hoán đổi cùng vị trí rule giữa biến thể dễ nhất/khó nhất hoặc rút lại vị trí đó từ pool trong rule; cùng đầu vào → cùng đề (tái lập). Kết quả trả ở `createExamSession.balance` và `ExamPaper.balance_warning`.
+- Q: Payload `report.completed`? → A: `report_id`, `scope_level`, `report_type`, `format`, `status` (`succeeded`/`failed`), `requested_by`, `row_count`; EVENT_DESIGN §4 đã đồng bộ.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Xuất báo cáo bất đồng bộ (Priority: P1)
@@ -210,4 +223,6 @@ Người tạo đề "Phép nhân" 4 biến thể nhận các biến thể tươ
 - Nội dung và tên mức TT27/TT22 cần pháp chế/EdTech xác nhận trước pilot (ASSESSMENT_REGULATION_PROFILE §6); ngưỡng mặc định [Confirmed], phần còn lại [Confirmed].
 - Ngưỡng ≥ 30 lượt và chu kỳ hằng đêm/hằng tuần của item analysis theo QUESTION_BANK §9 [Confirmed]; nên đăng ký vào CONFIG_DEFAULTS (ghi trong báo cáo).
 - PDF dùng thư viện render phía server trong worker [Confirmed]; bucket `ew-exports` theo ADR-0044.
-- Trọng số `exam_type` cho điểm tham khảo THCS do tenant cấu hình (ASSESSMENT_REGULATION_PROFILE §4.2); mặc định trung bình đều [Confirmed].
+- Trọng số `exam_type` cho điểm tham khảo THCS do tenant cấu hình (ASSESSMENT_REGULATION_PROFILE §4.2); mặc định trung bình đều [Confirmed] — bản này dùng trung bình đều (chưa có cấu hình tenant).
+- Tham số (CONFIG_DEFAULTS) đọc từ giá trị mặc định trong code (`reporting.DefaultConfig`, `command.DefaultQualityConfig`, `regulation.DefaultRules`) vì chưa có bộ đọc platform settings — như F043.
+- PDF dùng `github.com/go-pdf/fpdf` v0.9.0 với font Be Vietnam Pro (OFL) nhúng từ `design/fonts` [Confirmed thư viện server-side].

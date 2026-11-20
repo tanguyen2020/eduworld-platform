@@ -81,7 +81,9 @@ type Exams struct {
 	Clock    func() time.Time
 	Config   ExamConfig
 	Balancer paper.VariantBalancer
-	Metrics  ExamMetrics
+	// PValues reads the measured p_value of the pool for the balancer (F044 item analysis); nil = p̂ from the difficulty.
+	PValues write.QuestionPValues
+	Metrics ExamMetrics
 }
 
 func (h Exams) now() time.Time { return now(h.Clock).UTC() }
@@ -376,6 +378,7 @@ func (h Exams) sessionSchool(ctx context.Context, in ExamSessionInput) (uuid.UUI
 type newSession struct {
 	P        authz.Principal
 	Students []uuid.UUID
+	Balance  *dto.ExamBalanceView // filled with the balancer result when not nil (F044)
 }
 
 // createSession creates a session in the transaction of ctx (F042-AC-01…AC-08, AC-31): authorization on the school
@@ -439,8 +442,12 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 	if err := h.checkMatrix(b, s.FeedbackTiming, pool); err != nil {
 		return row, err
 	}
+	balancer, err := h.balancer(ctx, s.Strategy, pool)
+	if err != nil {
+		return row, err
+	}
 	seed := randomSeed()
-	ps, err := paper.SessionPapers(b.Def, pool, s.Strategy, s.VariantCount, seed, s.IsOfficial, h.Balancer)
+	ps, err := paper.SessionPapers(b.Def, pool, s.Strategy, s.VariantCount, seed, s.IsOfficial, balancer)
 	if err != nil {
 		var pe *paper.PoolError
 		if errors.As(err, &pe) {
@@ -478,7 +485,10 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 	rows := make([]write.ExamPaperRow, len(ps))
 	for i, pp := range ps {
 		rows[i] = write.ExamPaperRow{ID: ids.New(), TenantID: row.TenantID, SessionID: row.ID, VariantNo: pp.VariantNo, Seed: pp.Seed, Items: pp.Items,
-			TotalPoints: pp.TotalPoints, ExpectedP: pp.ExpectedP, GeneratorVersion: paper.GeneratorVersion}
+			TotalPoints: pp.TotalPoints, ExpectedP: pp.ExpectedP, BalanceWarning: pp.BalanceWarning, GeneratorVersion: paper.GeneratorVersion}
+	}
+	if ns.Balance != nil && len(ps) > 1 {
+		*ns.Balance = balanceView(b.Def, ps)
 	}
 	if err := h.Store.InsertPapers(ctx, rows); err != nil {
 		return row, err
@@ -570,11 +580,15 @@ func (h Exams) CreateExamSession(ctx context.Context, in ExamSessionInput) (out 
 		return out, problem.Invalid("/assignment_id", problem.SubInvalid, "the exam session of an assignment is created when the assignment is published")
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		row, err := h.createSession(ctx, in, newSession{P: p})
+		bal := &dto.ExamBalanceView{}
+		row, err := h.createSession(ctx, in, newSession{P: p, Balance: bal})
 		if err != nil {
 			return err
 		}
 		out = ExamSessionViewOf(row, h.now())
+		if len(bal.Variants) > 0 {
+			out.Balance = bal
+		}
 		return idempotency.SetResult(ctx, out)
 	})
 	return out, deniedOutside(ctx, err)

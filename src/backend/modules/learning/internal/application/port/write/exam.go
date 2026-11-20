@@ -67,6 +67,7 @@ type ExamPaperRow struct {
 	Items            []paper.Item
 	TotalPoints      float64
 	ExpectedP        *float64
+	BalanceWarning   bool // F044: the balancer could not reach max_mean_p_diff
 	GeneratorVersion string
 }
 

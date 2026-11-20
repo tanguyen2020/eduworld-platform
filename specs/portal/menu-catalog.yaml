@@ -313,7 +313,7 @@ workspaces:
             label_key: portal.action.school_lms.school_dashboard.view
             title: Xem dashboard trường → lớp → học sinh
             required_permissions: [analytics.school.read, analytics.class.read]
-            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile]
+            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile, getRegulationReferenceReport]
             can_disable: true
       - key: menu.school_lms.results
         label_key: portal.menu.school_lms.results
@@ -327,7 +327,7 @@ workspaces:
             label_key: portal.action.school_lms.results.view
             title: Xem bảng kết quả khóa học
             required_permissions: [lms.report.read]
-            operation_ids: [getCourseResults]
+            operation_ids: [getCourseResults, getExamSessionReport]
             can_disable: true
       - key: menu.school_lms.reports
         label_key: portal.menu.school_lms.reports
@@ -738,6 +738,7 @@ workspaces:
               - "getContentUsages[content_type=question]"
               - "diffContentVersions[content_type=question]"
               - "listContentReleases[content_type=question]"
+              - getQuestionStats
             can_disable: true
           - key: action.content_studio.question_bank.edit
             label_key: portal.action.content_studio.question_bank.edit
@@ -768,6 +769,12 @@ workspaces:
             title: Nhập câu hỏi hàng loạt
             required_permissions: [learning_content.import]
             operation_ids: [createContentImport, getContentImport]
+            can_disable: true
+          - key: action.content_studio.question_bank.calibration
+            label_key: portal.action.content_studio.question_bank.calibration
+            title: Duyệt đề xuất hiệu chỉnh độ khó
+            required_permissions: [learning_content.review]
+            operation_ids: [listCalibrationProposals, acceptCalibrationProposal, dismissCalibrationProposal]
             can_disable: true
       - key: menu.content_studio.question_sets
         label_key: portal.menu.content_studio.question_sets

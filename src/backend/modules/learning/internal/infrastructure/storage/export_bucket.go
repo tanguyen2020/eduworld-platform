@@ -45,3 +45,11 @@ func (b ExportBucket) Put(ctx context.Context, key string, data []byte, mime str
 func (b ExportBucket) DownloadURL(_ context.Context, key string, at time.Time) (string, time.Time, error) {
 	return b.S3.PresignGet(b.bucket(), key, at, ExportDownloadTTL), at.Add(ExportDownloadTTL).UTC(), nil
 }
+
+var _ port.ReportFiles = ExportBucket{}
+
+// ReportURL implements port.ReportFiles: a presigned GET of an export of F044 valid for ttl
+// (dashboard_export_link_ttl_minutes); past it, the object storage answers 403.
+func (b ExportBucket) ReportURL(_ context.Context, key string, at time.Time, ttl time.Duration) (string, time.Time, error) {
+	return b.S3.PresignGet(b.bucket(), key, at, ttl), at.Add(ttl).UTC(), nil
+}

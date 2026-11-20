@@ -242,7 +242,7 @@ func (q Exams) Papers(ctx context.Context, id uuid.UUID) (out []dto.ExamPaperVie
 		}
 		out = make([]dto.ExamPaperView, 0, len(ps))
 		for _, pp := range ps {
-			v := dto.ExamPaperView{ExamPaperID: pp.ID, VariantNo: pp.VariantNo, Seed: strconv.FormatInt(pp.Seed, 10), ExpectedP: pp.ExpectedP,
+			v := dto.ExamPaperView{ExamPaperID: pp.ID, VariantNo: pp.VariantNo, Seed: strconv.FormatInt(pp.Seed, 10), ExpectedP: pp.ExpectedP, BalanceWarning: pp.BalanceWarning,
 				TotalPoints: pp.TotalPoints, Sections: []dto.ExamPaperSectionView{}}
 			for _, it := range pp.Items {
 				n := len(v.Sections)

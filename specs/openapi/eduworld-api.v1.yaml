@@ -2056,6 +2056,29 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ---------------------------------------------------------------- multiplayer
+  /exams/sessions/{exam_session_id}/report:
+    get:
+      x-service: learning
+      tags: [exams]
+      operationId: getExamSessionReport
+      x-portal-action: action.school_lms.results.view
+      summary: Báo cáo đề — phổ điểm, trung vị, tỉ lệ đạt, p-value theo câu (loại rapid_guess), lựa chọn sai phổ biến, độ tin cậy KR-20/alpha, SEM (lms.report.read)
+      description: |
+        Tính khi session đóng (consumer `exam.closed`, F044-AC-23, EXAM_ENGINE §8.1); `computed = false` trước đó. Độ tin cậy chỉ tính cho biến
+        thể có ≥ 30 học sinh (`exam_reliability_warn`); dưới 0,7 → `reliability_warning`, không tự sửa điểm. Chỉ số gộp, không có đáp án của học
+        sinh theo tên. Trường/tenant khác → `404`; học sinh, thiếu quyền hoặc môn ngoài scope → `403` (F044-AC-24, AC-25).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/ExamSessionId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExamSessionReport' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /multiplayer/parties:
     post:
       x-service: competition
@@ -4906,6 +4929,109 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /cms/learning/questions/{question_id}/stats:
+    get:
+      x-service: learning
+      tags: [cms]
+      operationId: getQuestionStats
+      x-portal-action: action.content_studio.question_bank.view
+      summary: Thống kê chất lượng câu hỏi (item analysis hằng đêm) theo version × khối — learning_content.read
+      description: |
+        `p_value`, `discrimination` (point-biserial), tỉ lệ chọn từng phương án nhiễu, thời gian trung bình, tỉ lệ đoán bừa và dùng gợi ý,
+        chỉ từ lần trả lời đầu có tính điểm, loại `rapid_guess` (F044-AC-16, AC-17, QUESTION_BANK §9). `grade_level = 0` là gộp mọi khối.
+        Câu platform được gán cho tenant: chỉ đọc (`read_only`); câu tenant khác → `404` (F044-AC-18). Thống kê không đổi version đã publish.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/QuestionIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionStats' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /cms/learning/calibration-proposals:
+    get:
+      x-service: learning
+      tags: [cms]
+      operationId: listCalibrationProposals
+      x-portal-action: action.content_studio.question_bank.calibration
+      summary: Hàng đợi đề xuất hiệu chỉnh độ khó (job hằng tuần, QUESTION_BANK §9.1) — learning_content.review theo owner_scope
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, accepted, dismissed] }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/CalibrationProposal' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /cms/learning/calibration-proposals/{proposal_id}:accept:
+    post:
+      x-service: learning
+      tags: [cms]
+      operationId: acceptCalibrationProposal
+      x-portal-action: action.content_studio.question_bank.calibration
+      summary: Chấp nhận đề xuất — tạo version nháp mới chỉ đổi difficulty (change_note = difficulty_calibration), đi qua duyệt/publish thường; audit
+      description: |
+        `learning_content.review` đúng `owner_scope`; tác giả của version gốc không được chấp nhận (reviewer ≠ author); role tenant với câu
+        platform → `403 PERMISSION_DENIED` (F044-AC-20, AC-21). Không sửa version đã publish. Câu đang có bản nháp/chờ duyệt → `409`.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/ProposalIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã chấp nhận
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalibrationProposal' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /cms/learning/calibration-proposals/{proposal_id}:dismiss:
+    post:
+      x-service: learning
+      tags: [cms]
+      operationId: dismissCalibrationProposal
+      x-portal-action: action.content_studio.question_bank.calibration
+      summary: Bỏ qua đề xuất — bỏ qua 2 lần liên tiếp thì câu không được đề xuất lại trong 90 ngày; audit
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - $ref: '#/components/parameters/ProposalIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Đã bỏ qua
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalibrationProposal' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /cms/learning/questions/{question_id}/versions:
     post:
       x-service: learning
@@ -7719,6 +7845,46 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /lms/schools/{school_id}/reference-levels:
+    get:
+      x-service: learning
+      tags: [lms]
+      operationId: getRegulationReferenceReport
+      x-portal-action: action.school_lms.school_dashboard.view
+      summary: Mức tham khảo TT27/2020 – TT22/2021 học sinh × môn × kỳ (analytics.school.read) — chỉ tham khảo, luôn kèm disclaimer
+      description: |
+        Đọc read model hằng đêm `learning.rm_student_subject_reference_levels` (F044-AC-11…AC-15, ASSESSMENT_REGULATION_PROFILE §4): version hồ
+        sơ mới nhất đã tính cho mỗi học sinh, tỉ lệ "làm quá nhanh" và đề `is_official` có cảnh báo độ tin cậy thấp. Môn ngoài scope của
+        `academic_manager` → `403 PERMISSION_DENIED`; trường ngoài grant hoặc tenant khác → `404`. Không API học sinh nào trả nhãn mức thông tư.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/SchoolId'
+        - name: subject_id
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: period
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/AssessmentPeriod' }
+        - name: academic_year
+          in: query
+          schema: { type: integer, minimum: 2020, maximum: 2100, description: Năm bắt đầu của năm học (mặc định năm học hiện tại) }
+        - name: class_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegulationReferenceReport' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /lms/schedules:
     get:
       x-service: learning
@@ -17053,6 +17219,11 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^[A-Z]{2}$', maxLength: 2 }
+    ProposalIdPath:
+      name: proposal_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
     ReportIdPath:
       name: report_id
       in: path
@@ -19425,6 +19596,9 @@ components:
         effective_duration_seconds: { type: integer, description: Chỉ trả cho học sinh — thời lượng của mình sau gia hạn }
         server_time: { $ref: '#/components/schemas/Timestamp' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
+        balance:
+          allOf: [{ $ref: '#/components/schemas/ExamBalance' }]
+          description: Chỉ trong response createExamSession với independent_draw nhiều biến thể — expected_p từng biến thể và cảnh báo khi không cân bằng được (F044-AC-22)
         is_efficacy:
           type: boolean
           description: Chỉ trả cho nhân sự — true với ExamSession đo hiệu quả do F035 tạo (chỉ đọc, không công bố kết quả, không xuất đề/báo cáo). Không bao giờ có trong response cho học sinh; response không chứa study, arm, efficacy_wave_id
@@ -21607,7 +21781,8 @@ components:
         exam_paper_id: { $ref: '#/components/schemas/Uuid' }
         variant_no: { type: integer, minimum: 1 }
         seed: { type: string, maxLength: 32, description: Seed sinh đề (số nguyên dạng chuỗi) để tái lập }
-        expected_p: { type: [number, 'null'] }
+        expected_p: { type: [number, 'null'], description: "Tỉ lệ điểm kỳ vọng P_v của biến thể (bộ cân bằng F044, EXAM_ENGINE §4.1)" }
+        balance_warning: { type: boolean, description: Bộ cân bằng không đưa chênh expected_p về dưới max_mean_p_diff sau 200 lần lặp }
         total_points: { type: number }
         sections:
           type: array
@@ -21897,6 +22072,7 @@ components:
               assignment_id: { $ref: '#/components/schemas/Uuid' }
               title: { type: string, maxLength: 120 }
               due_at: { $ref: '#/components/schemas/Timestamp' }
+              score_policy: { type: string, enum: [best, last, first] }
         rows:
           type: array
           maxItems: 100
@@ -21914,8 +22090,9 @@ components:
                   required: [assignment_id]
                   properties:
                     assignment_id: { $ref: '#/components/schemas/Uuid' }
-                    score_10: { type: [number, 'null'], minimum: 0, maximum: 10 }
+                    score_10: { type: [number, 'null'], minimum: 0, maximum: 10, description: "Điểm tự chấm hiệu lực theo score_policy (sau re-evaluate), thang score_scale" }
                     status: { $ref: '#/components/schemas/AssignmentSubmissionStatus' }
+                    too_fast: { type: boolean, description: "Có lượt trả lời làm quá nhanh (rapid_guess)" }
         page: { $ref: '#/components/schemas/PageInfo' }
     ScheduleItemInput:
       type: object
@@ -21964,11 +22141,14 @@ components:
       properties:
         report_type: { type: string, enum: [assignment_results, course_results, regulation_reference, skill_map, school_monthly] }
         format: { type: string, enum: [csv, xlsx, pdf] }
-        assignment_id: { $ref: '#/components/schemas/Uuid' }
-        course_id: { $ref: '#/components/schemas/Uuid' }
-        school_id: { $ref: '#/components/schemas/Uuid' }
-        class_id: { $ref: '#/components/schemas/Uuid' }
-        from: { type: string, format: date }
+        assignment_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với assignment_results }
+        course_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với course_results }
+        school_id: { $ref: '#/components/schemas/Uuid', description: "Bắt buộc với regulation_reference, school_monthly" }
+        class_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với skill_map; lọc lớp với regulation_reference }
+        subject_id: { $ref: '#/components/schemas/Uuid', description: "Bắt buộc với regulation_reference, skill_map" }
+        period: { $ref: '#/components/schemas/AssessmentPeriod' }
+        academic_year: { type: integer, minimum: 2020, maximum: 2100, description: Năm bắt đầu năm học của period (mặc định năm học hiện tại) }
+        from: { type: string, format: date, description: Bắt buộc với school_monthly; khoảng ≤ dashboard_max_range_days }
         to: { type: string, format: date }
     # ---------- cms: curriculum, nội dung có version
     CurriculumInput:
@@ -25067,6 +25247,185 @@ components:
           description: Tham số riêng theo report_type
           properties:
             study_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc khi report_type = efficacy_dataset }
+    AssessmentPeriod:
+      type: string
+      enum: [mid_term_1, end_term_1, mid_term_2, end_term_2]
+      description: Kỳ đánh giá (giữa/cuối học kỳ I, II) của báo cáo tham khảo TT27/TT22
+    RegulationReferenceReport:
+      type: object
+      required: [school_id, subject_id, academic_year, period, disclaimer, items, page]
+      description: Mức tham khảo — chỉ tham khảo, không thay đánh giá chính thức (ADR-0072); disclaimer luôn có (F044-AC-12)
+      properties:
+        school_id: { $ref: '#/components/schemas/Uuid' }
+        subject_id: { $ref: '#/components/schemas/Uuid' }
+        academic_year: { type: integer }
+        period: { $ref: '#/components/schemas/AssessmentPeriod' }
+        disclaimer: { type: string, maxLength: 500 }
+        items:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [student_id, class_id, level_code, coverage_ratio, rapid_guess_ratio, profile_version]
+            properties:
+              student_id: { $ref: '#/components/schemas/Uuid' }
+              class_id: { $ref: '#/components/schemas/Uuid' }
+              level_code: { type: string, enum: [excellent, completed, not_completed, pass, not_pass, insufficient_data] }
+              coverage_ratio: { type: number, minimum: 0, maximum: 1 }
+              proficient_ratio: { type: number, minimum: 0, maximum: 1 }
+              mastered_ratio: { type: number, minimum: 0, maximum: 1 }
+              official_score: { type: [number, 'null'], minimum: 0, maximum: 10 }
+              rapid_guess_ratio: { type: number, minimum: 0, maximum: 1 }
+              low_reliability_exam_ids:
+                type: array
+                maxItems: 20
+                items: { $ref: '#/components/schemas/Uuid' }
+              profile_version: { type: integer, minimum: 1 }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    QuestionStats:
+      type: object
+      required: [question_id, read_only, items]
+      properties:
+        question_id: { $ref: '#/components/schemas/Uuid' }
+        read_only: { type: boolean, description: Câu platform được gán cho tenant — chỉ đọc }
+        items:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required: [question_version_id, version_no, grade_level, first_attempt_count, sufficient, flags]
+            properties:
+              question_version_id: { $ref: '#/components/schemas/Uuid' }
+              version_no: { type: integer, minimum: 1 }
+              grade_level: { type: integer, minimum: 0, maximum: 12, description: 0 = gộp mọi khối }
+              first_attempt_count: { type: integer, minimum: 0 }
+              excluded_rapid_guess_count: { type: integer, minimum: 0 }
+              with_hint_count: { type: integer, minimum: 0 }
+              sufficient: { type: boolean, description: Đủ item_analysis_min_responses lượt sau khi loại rapid_guess }
+              p_value: { type: [number, 'null'], minimum: 0, maximum: 1 }
+              p_value_with_hint: { type: [number, 'null'], minimum: 0, maximum: 1 }
+              discrimination: { type: [number, 'null'], minimum: -1, maximum: 1 }
+              distractor_rates:
+                type: object
+                maxProperties: 20
+                additionalProperties: { type: number, minimum: 0, maximum: 1 }
+              avg_time_ms: { type: integer, minimum: 0 }
+              rapid_guess_rate: { type: number, minimum: 0, maximum: 1 }
+              hint_usage_rate: { type: number, minimum: 0, maximum: 1 }
+              flags:
+                type: array
+                maxItems: 8
+                items: { type: string, enum: [needs_calibration, unused_option, suggest_option_feedback, low_discrimination] }
+              computed_at: { $ref: '#/components/schemas/Timestamp' }
+    CalibrationProposal:
+      type: object
+      required: [proposal_id, question_id, based_on_version_id, current_difficulty, proposed_difficulty, p_value, sample_size, status, created_at]
+      properties:
+        proposal_id: { $ref: '#/components/schemas/Uuid' }
+        question_id: { $ref: '#/components/schemas/Uuid' }
+        based_on_version_id: { $ref: '#/components/schemas/Uuid' }
+        current_difficulty: { type: integer, minimum: 1, maximum: 5 }
+        proposed_difficulty: { type: integer, minimum: 1, maximum: 5 }
+        p_value: { type: number, minimum: 0, maximum: 1 }
+        sample_size: { type: integer, minimum: 0 }
+        grade_level: { type: integer, minimum: 0, maximum: 12 }
+        grade_distribution:
+          type: object
+          maxProperties: 12
+          additionalProperties:
+            type: object
+            properties:
+              n: { type: integer, minimum: 0 }
+              p_value: { type: number, minimum: 0, maximum: 1 }
+        status: { type: string, enum: [pending, accepted, dismissed] }
+        decided_by: { $ref: '#/components/schemas/Uuid' }
+        decided_at: { $ref: '#/components/schemas/Timestamp' }
+        created_version_id: { $ref: '#/components/schemas/Uuid' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+    ExamSessionReport:
+      type: object
+      required: [exam_session_id, is_official, status, computed, score_distribution, reliability_warning, variant_gap, variants, items, problem_items]
+      description: Báo cáo chất lượng đề (EXAM_ENGINE §8.1, SCHOOL_LMS §8.6) — chỉ số gộp
+      properties:
+        exam_session_id: { $ref: '#/components/schemas/Uuid' }
+        is_official: { type: boolean }
+        status: { type: string, enum: [scheduled, open, closed, results_released, cancelled] }
+        computed: { type: boolean }
+        computed_at: { $ref: '#/components/schemas/Timestamp' }
+        student_count: { type: integer, minimum: 0 }
+        score_distribution:
+          type: array
+          maxItems: 21
+          description: Số học sinh theo khoảng 0,5 điểm (thang 10)
+          items: { type: integer, minimum: 0 }
+        mean: { type: [number, 'null'] }
+        median: { type: [number, 'null'] }
+        pass_rate: { type: [number, 'null'], minimum: 0, maximum: 1 }
+        reliability_warning: { type: boolean }
+        variant_gap: { type: boolean, description: Điểm trung bình giữa biến thể chênh ≥ 1 điểm }
+        variants:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/ExamVariantQuality' }
+        items:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/ExamItemQuality' }
+        problem_items:
+          type: array
+          maxItems: 200
+          items: { $ref: '#/components/schemas/ExamItemQuality' }
+    ExamVariantQuality:
+      type: object
+      required: [variant_no, n, mean, sd, enough_data, reliability_warning]
+      properties:
+        variant_no: { type: integer, minimum: 1 }
+        n: { type: integer, minimum: 0 }
+        mean: { type: number }
+        sd: { type: number }
+        enough_data: { type: boolean }
+        reliability: { type: [number, 'null'] }
+        method: { type: string, enum: [kr20, alpha] }
+        sem: { type: [number, 'null'] }
+        expected_p: { type: [number, 'null'] }
+        reliability_warning: { type: boolean }
+    ExamItemQuality:
+      type: object
+      required: [question_version_id, n, rapid_guess_rate, top_misconceptions, problem]
+      properties:
+        question_version_id: { $ref: '#/components/schemas/Uuid' }
+        n: { type: integer, minimum: 0 }
+        p_value: { type: [number, 'null'] }
+        discrimination: { type: [number, 'null'] }
+        avg_time_ms: { type: [integer, 'null'] }
+        rapid_guess_rate: { type: number, minimum: 0, maximum: 1 }
+        top_misconceptions:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [tag, count]
+            properties:
+              tag: { type: string, maxLength: 64 }
+              count: { type: integer, minimum: 0 }
+        problem: { type: boolean }
+        suggestion: { type: string, enum: [drop_item] }
+    ExamBalance:
+      type: object
+      required: [max_mean_p_diff, warning, variants]
+      description: Kết quả cân bằng biến thể independent_draw (EXAM_ENGINE §4.1, F044-AC-22) — warning kèm expected_p từng biến thể khi không đạt ngưỡng
+      properties:
+        max_mean_p_diff: { type: number, minimum: 0, maximum: 1 }
+        warning: { type: boolean }
+        variants:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [variant_no]
+            properties:
+              variant_no: { type: integer, minimum: 1 }
+              expected_p: { type: [number, 'null'] }
     ReportJob:
       type: object
       required: [report_id, status, report_type, format, created_at]
@@ -25074,9 +25433,10 @@ components:
         report_id: { $ref: '#/components/schemas/Uuid' }
         status: { type: string, enum: [queued, running, succeeded, failed, expired] }
         report_type: { type: string, maxLength: 64 }
-        format: { type: string, enum: [csv, xlsx] }
+        format: { type: string, enum: [csv, xlsx, pdf] }
         row_count: { type: integer, minimum: 0 }
-        download_url: { type: [string, 'null'], maxLength: 2048, format: uri, description: 'URL ký, hết hạn sau 15 phút' }
+        download_url: { type: [string, 'null'], maxLength: 2048, format: uri, description: 'URL ký chỉ cho người tạo khi succeeded, hết hạn sau dashboard_export_link_ttl_minutes (15 phút); quá hạn → 403 từ object storage' }
+        error: { type: string, maxLength: 1000, description: 'Mã lỗi khi failed (không PII): export_failed, too_many_rows, storage_unavailable, replica_unavailable, query_timeout' }
         download_expires_at: { $ref: '#/components/schemas/Timestamp' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         finished_at: { $ref: '#/components/schemas/Timestamp' }

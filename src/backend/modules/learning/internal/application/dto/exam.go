@@ -48,7 +48,9 @@ type ExamSessionView struct {
 	ServerTime              time.Time               `json:"server_time"`
 	CreatedAt               time.Time               `json:"created_at"`
 	IsEfficacy              *bool                   `json:"is_efficacy,omitempty"`
-	Version                 int64                   `json:"-"`
+	// Balance is the result of the variant balancer on createExamSession (F044-AC-22, staff only).
+	Balance *ExamBalanceView `json:"balance,omitempty"`
+	Version int64            `json:"-"`
 }
 
 // ExamPaperItemView is one item of ExamPaper.
@@ -67,12 +69,13 @@ type ExamPaperSectionView struct {
 
 // ExamPaperView is ExamPaper.
 type ExamPaperView struct {
-	ExamPaperID uuid.UUID              `json:"exam_paper_id"`
-	VariantNo   int                    `json:"variant_no"`
-	Seed        string                 `json:"seed"`
-	ExpectedP   *float64               `json:"expected_p"`
-	TotalPoints float64                `json:"total_points"`
-	Sections    []ExamPaperSectionView `json:"sections"`
+	ExamPaperID    uuid.UUID              `json:"exam_paper_id"`
+	VariantNo      int                    `json:"variant_no"`
+	Seed           string                 `json:"seed"`
+	ExpectedP      *float64               `json:"expected_p"`
+	BalanceWarning bool                   `json:"balance_warning"`
+	TotalPoints    float64                `json:"total_points"`
+	Sections       []ExamPaperSectionView `json:"sections"`
 }
 
 // ExamSectionScoreView is ExamSectionScore.
@@ -136,4 +139,18 @@ type ExamSubmitView struct {
 	CorrectCount      *int       `json:"correct_count,omitempty"`
 	DurationMS        int64      `json:"duration_ms"`
 	ResultAvailableAt *time.Time `json:"result_available_at,omitempty"`
+}
+
+// ExamBalanceView is the result of the variant balancer of independent_draw (F044-AC-22, EXAM_ENGINE §4.1): expected_p of
+// every variant and the warning when max − min stays above max_mean_p_diff.
+type ExamBalanceView struct {
+	MaxMeanPDiff float64                  `json:"max_mean_p_diff"`
+	Warning      bool                     `json:"warning"`
+	Variants     []ExamBalanceVariantView `json:"variants"`
+}
+
+// ExamBalanceVariantView is the expected proportion of points of one variant.
+type ExamBalanceVariantView struct {
+	VariantNo int      `json:"variant_no"`
+	ExpectedP *float64 `json:"expected_p"`
 }

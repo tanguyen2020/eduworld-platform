@@ -111,9 +111,9 @@ func (ExamRepo) InsertPapers(ctx context.Context, ps []write.ExamPaperRow) error
 		}
 		// tenancyguard:ok INSERT in the session tenant (RLS insert policy checks tenant_id = infra.current_tenant_id())
 		if _, err := tx.ExecContext(ctx, `INSERT INTO assessment.exam_papers (exam_paper_id, tenant_id, exam_session_id, variant_no,
-			student_id, attempt_no, seed, items, item_count, total_points, expected_p, generator_version)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, p.ID, p.TenantID, p.SessionID, p.VariantNo, p.StudentID, p.AttemptNo, p.Seed,
-			items, len(p.Items), p.TotalPoints, p.ExpectedP, p.GeneratorVersion); err != nil {
+			student_id, attempt_no, seed, items, item_count, total_points, expected_p, generator_version, balance_warning)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, p.ID, p.TenantID, p.SessionID, p.VariantNo, p.StudentID, p.AttemptNo, p.Seed,
+			items, len(p.Items), p.TotalPoints, p.ExpectedP, p.GeneratorVersion, p.BalanceWarning); err != nil {
 			return fmt.Errorf("insert exam paper: %w", err)
 		}
 	}

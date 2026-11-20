@@ -167,6 +167,7 @@ export type ActionKey =
   | "action.content_studio.question_bank.publish"
   | "action.content_studio.question_bank.rollback"
   | "action.content_studio.question_bank.import"
+  | "action.content_studio.question_bank.calibration"
   | "action.content_studio.question_sets.view"
   | "action.content_studio.question_sets.edit"
   | "action.content_studio.question_sets.workflow"
@@ -689,6 +690,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.content_studio.question_bank.publish", labelKey: "portal.action.content_studio.question_bank.publish", requiredPermissions: ["learning_content.publish"] },
           { key: "action.content_studio.question_bank.rollback", labelKey: "portal.action.content_studio.question_bank.rollback", requiredPermissions: ["content.release.rollback"] },
           { key: "action.content_studio.question_bank.import", labelKey: "portal.action.content_studio.question_bank.import", requiredPermissions: ["learning_content.import"] },
+          { key: "action.content_studio.question_bank.calibration", labelKey: "portal.action.content_studio.question_bank.calibration", requiredPermissions: ["learning_content.review"] },
         ],
       },
       {

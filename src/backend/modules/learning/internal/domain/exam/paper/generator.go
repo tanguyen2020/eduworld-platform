@@ -62,6 +62,8 @@ type Paper struct {
 	Items       []Item
 	TotalPoints float64
 	ExpectedP   *float64
+	// BalanceWarning: the balancer could not bring the variants within max_mean_p_diff (F044-AC-22).
+	BalanceWarning bool
 }
 
 // VariantBalancer balances the difficulty of the variants of independent_draw (EXAM_ENGINE §4.1, F044); it may swap
@@ -129,6 +131,9 @@ func matches(c selection.Candidate, r blueprint.Rule) bool {
 	}
 	return true
 }
+
+// RuleMatches reports whether a candidate satisfies a rule exactly (the balancer of F044 redraws within the rule).
+func RuleMatches(c selection.Candidate, r blueprint.Rule) bool { return matches(c, r) }
 
 func overlaps(a, b []uuid.UUID) bool {
 	for _, x := range a {

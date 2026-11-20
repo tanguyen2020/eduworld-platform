@@ -133,3 +133,9 @@ const ExamGradeName = "learning.exam_grade"
 
 // ExamGradeSubjects are the filter subjects of learning.exam_grade.
 func ExamGradeSubjects() []string { return []string{natsx.EventSubject("learning", "exam.submitted")} }
+
+// ExamQualityName is the durable consumer that computes the quality report of a closed exam session (F044-AC-23).
+const ExamQualityName = "learning.exam_quality"
+
+// ExamQualitySubjects are the filter subjects of learning.exam_quality.
+func ExamQualitySubjects() []string { return []string{natsx.EventSubject("learning", "exam.closed")} }

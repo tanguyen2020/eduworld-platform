@@ -2590,6 +2590,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/calibration-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hàng đợi đề xuất hiệu chỉnh độ khó (job hằng tuần, QUESTION_BANK §9.1) — learning_content.review theo owner_scope */
+        get: operations["listCalibrationProposals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/calibration-proposals/{proposal_id}:accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chấp nhận đề xuất — tạo version nháp mới chỉ đổi difficulty (change_note = difficulty_calibration), đi qua duyệt/publish thường; audit
+         * @description `learning_content.review` đúng `owner_scope`; tác giả của version gốc không được chấp nhận (reviewer ≠ author); role tenant với câu
+         *     platform → `403 PERMISSION_DENIED` (F044-AC-20, AC-21). Không sửa version đã publish. Câu đang có bản nháp/chờ duyệt → `409`.
+         */
+        post: operations["acceptCalibrationProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/calibration-proposals/{proposal_id}:dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bỏ qua đề xuất — bỏ qua 2 lần liên tiếp thì câu không được đề xuất lại trong 90 ngày; audit */
+        post: operations["dismissCalibrationProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/learning/competencies": {
         parameters: {
             query?: never;
@@ -3320,6 +3375,28 @@ export interface paths {
         post?: never;
         /** Xóa câu hỏi = soft-delete (ADR-0028); bài đã làm vẫn xem lại được, bản ghi vào Thùng rác */
         delete: operations["deleteQuestion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/questions/{question_id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thống kê chất lượng câu hỏi (item analysis hằng đêm) theo version × khối — learning_content.read
+         * @description `p_value`, `discrimination` (point-biserial), tỉ lệ chọn từng phương án nhiễu, thời gian trung bình, tỉ lệ đoán bừa và dùng gợi ý,
+         *     chỉ từ lần trả lời đầu có tính điểm, loại `rapid_guess` (F044-AC-16, AC-17, QUESTION_BANK §9). `grade_level = 0` là gộp mọi khối.
+         *     Câu platform được gán cho tenant: chỉ đọc (`read_only`); câu tenant khác → `404` (F044-AC-18). Thống kê không đổi version đã publish.
+         */
+        get: operations["getQuestionStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4109,6 +4186,28 @@ export interface paths {
         };
         /** Xem trước các biến thể đề đã khóa (câu, điểm) — người tạo đề trong phạm vi (lms.assignment.write); học sinh → 403 (F042-AC-04) */
         get: operations["listExamSessionPapers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exams/sessions/{exam_session_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Báo cáo đề — phổ điểm, trung vị, tỉ lệ đạt, p-value theo câu (loại rapid_guess), lựa chọn sai phổ biến, độ tin cậy KR-20/alpha, SEM (lms.report.read)
+         * @description Tính khi session đóng (consumer `exam.closed`, F044-AC-23, EXAM_ENGINE §8.1); `computed = false` trước đó. Độ tin cậy chỉ tính cho biến
+         *     thể có ≥ 30 học sinh (`exam_reliability_warn`); dưới 0,7 → `reliability_warning`, không tự sửa điểm. Chỉ số gộp, không có đáp án của học
+         *     sinh theo tên. Trường/tenant khác → `404`; học sinh, thiếu quyền hoặc môn ngoài scope → `403` (F044-AC-24, AC-25).
+         */
+        get: operations["getExamSessionReport"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6516,6 +6615,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lms/schools/{school_id}/reference-levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mức tham khảo TT27/2020 – TT22/2021 học sinh × môn × kỳ (analytics.school.read) — chỉ tham khảo, luôn kèm disclaimer
+         * @description Đọc read model hằng đêm `learning.rm_student_subject_reference_levels` (F044-AC-11…AC-15, ASSESSMENT_REGULATION_PROFILE §4): version hồ
+         *     sơ mới nhất đã tính cho mỗi học sinh, tỉ lệ "làm quá nhanh" và đề `is_official` có cảnh báo độ tin cậy thấp. Môn ngoài scope của
+         *     `academic_manager` → `403 PERMISSION_DENIED`; trường ngoài grant hoặc tenant khác → `404`. Không API học sinh nào trả nhãn mức thông tư.
+         */
+        get: operations["getRegulationReferenceReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lms/schools/{school_id}/study-groups": {
         parameters: {
             query?: never;
@@ -8772,6 +8893,11 @@ export interface components {
             title: components["schemas"]["LearningName"];
             topic_ids?: components["schemas"]["Uuid"][];
         };
+        /**
+         * @description Kỳ đánh giá (giữa/cuối học kỳ I, II) của báo cáo tham khảo TT27/TT22
+         * @enum {string}
+         */
+        AssessmentPeriod: "mid_term_1" | "end_term_1" | "mid_term_2" | "end_term_2";
         Assignment: components["schemas"]["AssignmentCreate"] & {
             assignment_id: components["schemas"]["Uuid"];
             completion?: {
@@ -9832,6 +9958,28 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LocalizedName"];
         };
+        CalibrationProposal: {
+            based_on_version_id: components["schemas"]["Uuid"];
+            created_at: components["schemas"]["Timestamp"];
+            created_version_id?: components["schemas"]["Uuid"];
+            current_difficulty: number;
+            decided_at?: components["schemas"]["Timestamp"];
+            decided_by?: components["schemas"]["Uuid"];
+            grade_distribution?: {
+                [key: string]: {
+                    n?: number;
+                    p_value?: number;
+                };
+            };
+            grade_level?: number;
+            p_value: number;
+            proposal_id: components["schemas"]["Uuid"];
+            proposed_difficulty: number;
+            question_id: components["schemas"]["Uuid"];
+            sample_size: number;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "dismissed";
+        };
         /** @description Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID */
         CatalogCode: string;
         CatalogName: {
@@ -10562,6 +10710,8 @@ export interface components {
             columns: {
                 assignment_id: components["schemas"]["Uuid"];
                 due_at?: components["schemas"]["Timestamp"];
+                /** @enum {string} */
+                score_policy?: "best" | "last" | "first";
                 title: string;
             }[];
             course_id: components["schemas"]["Uuid"];
@@ -10570,8 +10720,11 @@ export interface components {
                 display_name?: string;
                 scores: {
                     assignment_id: components["schemas"]["Uuid"];
+                    /** @description Điểm tự chấm hiệu lực theo score_policy (sau re-evaluate), thang score_scale */
                     score_10?: number | null;
                     status?: components["schemas"]["AssignmentSubmissionStatus"];
+                    /** @description Có lượt trả lời làm quá nhanh (rapid_guess) */
+                    too_fast?: boolean;
                 }[];
                 student_id: components["schemas"]["Uuid"];
             }[];
@@ -11134,13 +11287,40 @@ export interface components {
              */
             take_over: boolean;
         };
+        /** @description Kết quả cân bằng biến thể independent_draw (EXAM_ENGINE §4.1, F044-AC-22) — warning kèm expected_p từng biến thể khi không đạt ngưỡng */
+        ExamBalance: {
+            max_mean_p_diff: number;
+            variants: {
+                expected_p?: number | null;
+                variant_no: number;
+            }[];
+            warning: boolean;
+        };
+        ExamItemQuality: {
+            avg_time_ms?: number | null;
+            discrimination?: number | null;
+            n: number;
+            p_value?: number | null;
+            problem: boolean;
+            question_version_id: components["schemas"]["Uuid"];
+            rapid_guess_rate: number;
+            /** @enum {string} */
+            suggestion?: "drop_item";
+            top_misconceptions: {
+                count: number;
+                tag: string;
+            }[];
+        };
         /**
          * @description until_window_end (mặc định) — deadline_at = min(started_at + thời lượng hiệu lực, window_end); full_duration — đủ thời lượng (EXAM_ENGINE §5)
          * @enum {string}
          */
         ExamLateStartPolicy: "full_duration" | "until_window_end";
         ExamPaper: {
+            /** @description Bộ cân bằng không đưa chênh expected_p về dưới max_mean_p_diff sau 200 lần lặp */
+            balance_warning?: boolean;
             exam_paper_id: components["schemas"]["Uuid"];
+            /** @description Tỉ lệ điểm kỳ vọng P_v của biến thể (bộ cân bằng F044, EXAM_ENGINE §4.1) */
             expected_p?: number | null;
             sections: {
                 items: {
@@ -11170,6 +11350,8 @@ export interface components {
             attempts_used?: number;
             /** @enum {string} */
             audience?: "assigned" | "library";
+            /** @description Chỉ trong response createExamSession với independent_draw nhiều biến thể — expected_p từng biến thể và cảnh báo khi không cân bằng được (F044-AC-22) */
+            balance?: components["schemas"]["ExamBalance"];
             course_id?: components["schemas"]["Uuid"];
             created_at?: components["schemas"]["Timestamp"];
             duration_seconds: number;
@@ -11234,8 +11416,42 @@ export interface components {
             window_end: components["schemas"]["Timestamp"];
             window_start: components["schemas"]["Timestamp"];
         };
+        /** @description Báo cáo chất lượng đề (EXAM_ENGINE §8.1, SCHOOL_LMS §8.6) — chỉ số gộp */
+        ExamSessionReport: {
+            computed: boolean;
+            computed_at?: components["schemas"]["Timestamp"];
+            exam_session_id: components["schemas"]["Uuid"];
+            is_official: boolean;
+            items: components["schemas"]["ExamItemQuality"][];
+            mean?: number | null;
+            median?: number | null;
+            pass_rate?: number | null;
+            problem_items: components["schemas"]["ExamItemQuality"][];
+            reliability_warning: boolean;
+            /** @description Số học sinh theo khoảng 0,5 điểm (thang 10) */
+            score_distribution: number[];
+            /** @enum {string} */
+            status: "scheduled" | "open" | "closed" | "results_released" | "cancelled";
+            student_count?: number;
+            /** @description Điểm trung bình giữa biến thể chênh ≥ 1 điểm */
+            variant_gap: boolean;
+            variants: components["schemas"]["ExamVariantQuality"][];
+        };
         /** @enum {string} */
         ExamType: "practice_test" | "mock" | "chapter" | "semester" | "subject" | "custom";
+        ExamVariantQuality: {
+            enough_data: boolean;
+            expected_p?: number | null;
+            mean: number;
+            /** @enum {string} */
+            method?: "kr20" | "alpha";
+            n: number;
+            reliability?: number | null;
+            reliability_warning: boolean;
+            sd: number;
+            sem?: number | null;
+            variant_no: number;
+        };
         ExperimentArm: {
             allocation_pct: number;
             code: string;
@@ -12177,16 +12393,28 @@ export interface components {
             label: components["schemas"]["LocalizedName"];
         };
         LmsReportRequest: {
+            /** @description Năm bắt đầu năm học của period (mặc định năm học hiện tại) */
+            academic_year?: number;
+            /** @description Bắt buộc với assignment_results */
             assignment_id?: components["schemas"]["Uuid"];
+            /** @description Bắt buộc với skill_map; lọc lớp với regulation_reference */
             class_id?: components["schemas"]["Uuid"];
+            /** @description Bắt buộc với course_results */
             course_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
             format: "csv" | "xlsx" | "pdf";
-            /** Format: date */
+            /**
+             * Format: date
+             * @description Bắt buộc với school_monthly; khoảng ≤ dashboard_max_range_days
+             */
             from?: string;
+            period?: components["schemas"]["AssessmentPeriod"];
             /** @enum {string} */
             report_type: "assignment_results" | "course_results" | "regulation_reference" | "skill_map" | "school_monthly";
+            /** @description Bắt buộc với regulation_reference, school_monthly */
             school_id?: components["schemas"]["Uuid"];
+            /** @description Bắt buộc với regulation_reference, skill_map */
+            subject_id?: components["schemas"]["Uuid"];
             /** Format: date */
             to?: string;
         };
@@ -13372,6 +13600,33 @@ export interface components {
             title: components["schemas"]["LearningName"];
             topic_ids?: components["schemas"]["Uuid"][];
         };
+        QuestionStats: {
+            items: {
+                avg_time_ms?: number;
+                computed_at?: components["schemas"]["Timestamp"];
+                discrimination?: number | null;
+                distractor_rates?: {
+                    [key: string]: number;
+                };
+                excluded_rapid_guess_count?: number;
+                first_attempt_count: number;
+                flags: ("needs_calibration" | "unused_option" | "suggest_option_feedback" | "low_discrimination")[];
+                /** @description 0 = gộp mọi khối */
+                grade_level: number;
+                hint_usage_rate?: number;
+                p_value?: number | null;
+                p_value_with_hint?: number | null;
+                question_version_id: components["schemas"]["Uuid"];
+                rapid_guess_rate?: number;
+                /** @description Đủ item_analysis_min_responses lượt sau khi loại rapid_guess */
+                sufficient: boolean;
+                version_no: number;
+                with_hint_count?: number;
+            }[];
+            question_id: components["schemas"]["Uuid"];
+            /** @description Câu platform được gán cho tenant — chỉ đọc */
+            read_only: boolean;
+        };
         /** @enum {string} */
         QuestionType: "single_choice" | "multiple_choice" | "true_false" | "fill_in_blank" | "short_answer" | "numeric" | "matching" | "ordering" | "drag_drop" | "image_based" | "interactive";
         QuestionWidgetList: {
@@ -13533,6 +13788,28 @@ export interface components {
             /** @enum {string} */
             scope: "question_version" | "activity_version" | "exam_session";
         };
+        /** @description Mức tham khảo — chỉ tham khảo, không thay đánh giá chính thức (ADR-0072); disclaimer luôn có (F044-AC-12) */
+        RegulationReferenceReport: {
+            academic_year: number;
+            disclaimer: string;
+            items: {
+                class_id: components["schemas"]["Uuid"];
+                coverage_ratio: number;
+                /** @enum {string} */
+                level_code: "excellent" | "completed" | "not_completed" | "pass" | "not_pass" | "insufficient_data";
+                low_reliability_exam_ids?: components["schemas"]["Uuid"][];
+                mastered_ratio?: number;
+                official_score?: number | null;
+                proficient_ratio?: number;
+                profile_version: number;
+                rapid_guess_ratio: number;
+                student_id: components["schemas"]["Uuid"];
+            }[];
+            page: components["schemas"]["PageInfo"];
+            period: components["schemas"]["AssessmentPeriod"];
+            school_id: components["schemas"]["Uuid"];
+            subject_id: components["schemas"]["Uuid"];
+        };
         /** @enum {string} */
         RendererKind: "mobile" | "compatibility" | "forward_plus";
         ReportCreate: {
@@ -13548,12 +13825,14 @@ export interface components {
             download_expires_at?: components["schemas"]["Timestamp"];
             /**
              * Format: uri
-             * @description URL ký, hết hạn sau 15 phút
+             * @description URL ký chỉ cho người tạo khi succeeded, hết hạn sau dashboard_export_link_ttl_minutes (15 phút); quá hạn → 403 từ object storage
              */
             download_url?: string | null;
+            /** @description Mã lỗi khi failed (không PII): export_failed, too_many_rows, storage_unavailable, replica_unavailable, query_timeout */
+            error?: string;
             finished_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
-            format: "csv" | "xlsx";
+            format: "csv" | "xlsx" | "pdf";
             report_id: components["schemas"]["Uuid"];
             report_type: string;
             row_count?: number;
@@ -15416,6 +15695,7 @@ export interface components {
         PortalRefreshCookie: string;
         /** @description Refresh token của portal; vắng mặt khi phiên đã hết (đăng xuất vẫn `204`) */
         PortalRefreshCookieOptional: string;
+        ProposalIdPath: components["schemas"]["Uuid"];
         ProvinceIdPath: components["schemas"]["Uuid"];
         QuestId: components["schemas"]["Uuid"];
         QuestionIdPath: components["schemas"]["Uuid"];
@@ -21864,6 +22144,124 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listCalibrationProposals: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: "pending" | "accepted" | "dismissed";
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CalibrationProposal"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    acceptCalibrationProposal: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                proposal_id: components["parameters"]["ProposalIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã chấp nhận */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalibrationProposal"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    dismissCalibrationProposal: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                proposal_id: components["parameters"]["ProposalIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã bỏ qua */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalibrationProposal"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     listCmsCompetencies: {
         parameters: {
             query: {
@@ -24321,6 +24719,38 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    getQuestionStats: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                question_id: components["parameters"]["QuestionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionStats"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     createQuestionVersion: {
         parameters: {
             query?: never;
@@ -26387,6 +26817,38 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["ExamPaper"][];
                     };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getExamSessionReport: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                exam_session_id: components["parameters"]["ExamSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamSessionReport"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
@@ -32276,6 +32738,47 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getRegulationReferenceReport: {
+        parameters: {
+            query: {
+                academic_year?: number;
+                class_id?: components["schemas"]["Uuid"];
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                period: components["schemas"]["AssessmentPeriod"];
+                subject_id: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegulationReferenceReport"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listStudyGroups: {
