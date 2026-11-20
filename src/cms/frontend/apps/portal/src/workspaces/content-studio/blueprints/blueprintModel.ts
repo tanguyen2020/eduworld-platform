@@ -25,6 +25,8 @@ export interface BlueprintState {
   matrix: Matrix;
   otherSections: unknown[];
   rest: Record<string, unknown>;
+  /** F035: efficacy instrument (platform scope only); undefined = never touched, not sent. */
+  efficacy_instrument?: boolean;
 }
 
 export const EXAM_TYPES: ExamType[] = ['practice_test', 'mock', 'chapter', 'semester', 'subject', 'custom'];
@@ -79,6 +81,7 @@ export function fromBlueprint(d: BlueprintAuthoring): BlueprintState {
     matrix: fromRules(first?.rules ?? [], d.objective_ids ?? []),
     otherSections: secs.slice(1),
     rest: { ...rest, ...(first ? { __firstSectionExtra: Object.fromEntries(Object.entries(first).filter(([k]) => !['id', 'title', 'rules'].includes(k))) } : {}) },
+    ...((d as { efficacy_instrument?: boolean }).efficacy_instrument ? { efficacy_instrument: true } : {}),
   };
 }
 
@@ -94,6 +97,7 @@ export function toBlueprintBody(s: BlueprintState): Record<string, unknown> {
     topic_ids: s.topic_ids,
     objective_ids: [...new Set([...s.objective_ids, ...s.matrix.objectives])].slice(0, 50),
     result_release: s.result_release,
+    ...(s.efficacy_instrument === undefined ? {} : { efficacy_instrument: s.efficacy_instrument }),
     definition: {
       ...rest,
       duration_sec: s.duration_min * 60,

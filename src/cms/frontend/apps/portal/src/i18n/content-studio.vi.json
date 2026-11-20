@@ -1,5 +1,13 @@
 {
   "content_studio": {
+    "efficacy": {
+      "title": "Công cụ đo hiệu quả",
+      "label": "Đo hiệu quả",
+      "help": {
+        "question": "Chỉ ở phạm vi platform: câu phải \"chỉ dùng trong đề\", không tham số hóa; bị loại khỏi mọi lần chọn câu luyện tập/đề thường. Chỉ đổi cờ bằng version mới.",
+        "blueprint": "Chỉ ở phạm vi platform: đề cố định (variants.strategy = fixed), mọi rule dùng câu đo hiệu quả cố định; không dùng cho phiên thi thường, không gán cho tenant."
+      }
+    },
     "simulationTemplates": {
       "screenHelp": "Template mô phỏng đóng gói sẵn trong hệ thống (không tải script lên). Dùng template khi soạn hoạt động mô phỏng trong Learning Activity Builder.",
       "code": "Mã template",

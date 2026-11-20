@@ -7,6 +7,7 @@ import { useObjectives, useSubjects, useTopics } from '../curriculum/useCurricul
 import { LIMITS } from '../shared/config';
 import { needsSpokenStem } from '../shared/gates';
 import type { QuestionMeta } from './useQuestion';
+import { EfficacyInstrumentField } from './EfficacyInstrumentField';
 import { WorkedExampleRefPicker } from './WorkedExampleRefPicker';
 
 export interface QuestionMetaPanelProps {
@@ -82,6 +83,7 @@ export function QuestionMetaPanel({ value, onChange, readOnly, languageLocked, e
       <Form.Item label={t('content_studio.question.workedExample')} {...item(F.worked)}>
         <WorkedExampleRefPicker value={value.worked_example_ref} onChange={(v) => set({ worked_example_ref: v })} objectiveIds={value.objective_ids ?? []} subjectId={value.subject_id} disabled={readOnly} />
       </Form.Item>
+      <EfficacyInstrumentField kind="question" actionKey="action.content_studio.question_bank.edit" checked={!!value.efficacy_instrument} disabled={readOnly} onChange={(v) => set({ efficacy_instrument: v })} />
       <Form.Item label={t('content_studio.question.changeNote')} {...item(F.note)}>
         <Input.TextArea aria-label={t('content_studio.question.changeNote')} value={value.change_note ?? ''} maxLength={LIMITS.changeNote} showCount autoSize={{ minRows: 1, maxRows: 4 }} onChange={(e) => set({ change_note: e.target.value })} />
       </Form.Item>

@@ -15,6 +15,7 @@ import { DocMetaFields } from '../builders/DocMetaFields';
 import { DocumentEditorPage, type BuilderArgs } from '../builders/DocumentEditorPage';
 import { usePoolStats, type BlueprintAuthoring, type DocAuthoring } from '../builders/useDocument';
 import { useObjectives } from '../curriculum/useCurriculum';
+import { EfficacyInstrumentField } from '../questions/EfficacyInstrumentField';
 import type { PreviewSession } from '../preview/usePreview';
 import { cellPools } from './matrixModel';
 import { BlueprintMatrix } from './BlueprintMatrix';
@@ -85,6 +86,7 @@ function BlueprintBody({ state, onChange, readOnly, errors, server, id }: Builde
           </Form.Item>
         </Flex>
       </Form>
+      <EfficacyInstrumentField kind="blueprint" actionKey="action.content_studio.assessments.edit" checked={!!state.efficacy_instrument} disabled={readOnly} onChange={(v) => onChange({ ...state, efficacy_instrument: v })} />
       <BlueprintMatrix
         matrix={state.matrix}
         onChange={(matrix) => onChange({ ...state, matrix })}

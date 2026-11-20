@@ -1,5 +1,13 @@
 {
   "content_studio": {
+    "efficacy": {
+      "title": "Efficacy instrument",
+      "label": "Efficacy",
+      "help": {
+        "question": "Platform scope only: the question must be exam-only and not parameterised; it never appears in practice or regular tests. The flag changes with a new version only.",
+        "blueprint": "Platform scope only: fixed blueprint (variants.strategy = fixed) whose rules use fixed efficacy questions; never used by regular exam sessions nor assigned to tenants."
+      }
+    },
     "simulationTemplates": {
       "screenHelp": "Simulation templates packaged with the system (no script upload). Use them when authoring a simulation activity in the Learning Activity Builder.",
       "code": "Template code",

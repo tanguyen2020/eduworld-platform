@@ -39,6 +39,8 @@ export interface QuestionMeta {
   audio_exempt_reason?: string;
   worked_example_ref?: { content_item_id: string; block_id: string };
   change_note?: string;
+  /** F035: efficacy instrument (platform scope only); undefined = never touched, not sent. */
+  efficacy_instrument?: boolean;
 }
 
 /** Server copy → editor state. */
@@ -65,6 +67,7 @@ export function fromAuthoring(q: QuestionAuthoring): { draft: QuestionDraft; met
       audio_exempt_reason: q.audio_exempt_reason,
       worked_example_ref: q.worked_example_ref,
       change_note: q.change_note,
+      ...(q.efficacy_instrument ? { efficacy_instrument: true } : {}),
     },
   };
 }
@@ -94,6 +97,8 @@ export function toAuthoringBody(draft: QuestionDraft, meta: QuestionMeta, mathAs
     audio_exempt_reason: meta.audio_exempt_reason?.trim() ? meta.audio_exempt_reason.trim() : null,
     worked_example_ref: meta.worked_example_ref ?? null,
     change_note: meta.change_note?.trim() ? meta.change_note.trim() : null,
+    // F035-AC-01: an efficacy question is exam-only; the flag is sent only once the author touched it.
+    ...(meta.efficacy_instrument === undefined ? {} : { efficacy_instrument: meta.efficacy_instrument, ...(meta.efficacy_instrument ? { exam_only: true } : {}) }),
   };
 }
 

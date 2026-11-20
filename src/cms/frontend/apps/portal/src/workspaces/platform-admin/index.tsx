@@ -2,7 +2,7 @@
 // Menus, paths and permissions come from the generated catalog (ADR-0090); this file only attaches a screen to each
 // menu key. F057 provides Tenant, Gán/Clone, Danh mục, Cấu hình hệ thống and Thùng rác; the other menus belong to
 // F122/… and keep `placeholderScreen`. F059 attaches Người dùng & phân quyền, Nhật ký, Hoạt động đăng nhập game,
-// Feature flag and Tích hợp. The route of the chunk is reached only when getMyPermissions lists the
+// Feature flag and Tích hợp. F035 attaches Nghiên cứu hiệu quả and Thử nghiệm A/B (research/). The route of the chunk is reached only when getMyPermissions lists the
 // workspace (WorkspaceGate, F057-AC-18) — a display gate, the backend authorizes every call (AGENTS R20).
 import { useTranslation } from 'react-i18next';
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
@@ -13,6 +13,9 @@ import { FeatureFlagListPage } from './feature-flags/FeatureFlagListPage';
 import { registerPlatformI18n } from './i18n';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { LoginEventsPage } from './login-events/LoginEventsPage';
+import { EfficacyStudiesScreen } from './research/EfficacyStudiesScreen';
+import { registerResearchI18n } from './research/i18n';
+import { LearningExperimentsScreen } from './research/LearningExperimentsScreen';
 import { SystemSettingsPage } from './settings/SystemSettingsPage';
 import { TenantDataPage } from './tenantData/TenantDataPage';
 import { TenantListPage } from './tenants/TenantListPage';
@@ -31,8 +34,8 @@ export const screens = {
   'menu.platform_admin.feature_toggles': FeatureFlagListPage,
   'menu.platform_admin.student_activity': LoginEventsPage,
   'menu.platform_admin.reports': placeholderScreen,
-  'menu.platform_admin.efficacy_studies': placeholderScreen,
-  'menu.platform_admin.learning_experiments': placeholderScreen,
+  'menu.platform_admin.efficacy_studies': EfficacyStudiesScreen,
+  'menu.platform_admin.learning_experiments': LearningExperimentsScreen,
   'menu.platform_admin.data_requests': placeholderScreen,
   'menu.platform_admin.integrations': IntegrationsPage,
   'menu.platform_admin.trash': TrashPage,
@@ -42,5 +45,6 @@ export const screens = {
 export default function PlatformAdminWorkspace() {
   const { i18n } = useTranslation();
   registerPlatformI18n(i18n);
+  registerResearchI18n(i18n);
   return <WorkspaceRoutes workspace="platform_admin" screens={screens} />;
 }

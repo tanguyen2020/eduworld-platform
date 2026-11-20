@@ -6,7 +6,7 @@
 
 - [x] T001 Tạo package `domain/efficacy`, `domain/efficacy/stats`, `domain/experiment`, `application/{command,query}/{efficacy,experiment}`; wiring handler admin — file: `src/backend/modules/learning/cmd/api/main.go` — ✅ package `domain/{efficacy,efficacy/stats,experiment}`, command/query `efficacy*.go`; wiring `src/backend/modules/learning/module.go` (module learning không có `cmd/api/main.go`)
 - [x] T002 [P] Đăng ký job `efficacy-wave-monitor`, `experiment-guardrail`, `experiment-lifecycle`; handler `efficacy_dataset` trong report worker F044 — file: `src/backend/modules/learning/cmd/worker/main.go` — ✅ job `efficacy-wave-monitor`, `efficacy-reports` trong `module.go` + `cmd/internal/wiring/compose_test.go`; `report_type = efficacy_dataset` trong `command.Reports.produceEfficacy` (job `report-jobs` của F044)
-- [x] T003 [P] Secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (compose dev + `PseudonymKeyProvider`) — file: `deploy/compose/module learning.yaml`, `src/backend/modules/learning/internal/infrastructure/secret/pseudonym_key.go` — ✅ `infrastructure/secret/pseudonym_key.go` + test; compose dev chưa khai báo secret (biến mới `EW_EFFICACY_PSEUDONYM_KEY_FILE`, báo cáo) 
+- [x] T003 [P] Secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (compose dev + `PseudonymKeyProvider`) — file: `deploy/compose/module learning.yaml`, `src/backend/modules/learning/internal/infrastructure/secret/pseudonym_key.go` — ✅ `infrastructure/secret/pseudonym_key.go` + test; dev: `scripts/dev/gen-dev-secrets.sh` (`make dev-secrets`, chạy trong `make up-app`) sinh `deploy/compose/secrets/efficacy_pseudonym_key` (git bỏ qua), `docker-compose.app.yml` mount `/run/eduworld/secrets` + `EW_EFFICACY_PSEUDONYM_KEY_FILE`, `NATIVE_ENV` của Makefile; LOCAL_DEVELOPMENT §4, DEPLOYMENT §13 (`efficacy_pseudonym_key`)
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -133,21 +133,21 @@
 
 ### Tests cho User Story 8
 
-- [ ] T064 [P] [US8] Playwright luồng study/thử nghiệm của `sa.admin`, ẩn menu với `ad.truong.a`, axe + lint token (F035-AC-35) — file: `src/cms/frontend/apps/portal/e2e/platform/research.spec.ts` — phải FAIL trước khi code
-- [ ] T065 [P] [US8] Vitest ô `efficacy_instrument` chỉ hiện ở phạm vi platform (F035-AC-36) — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/__tests__/EfficacyInstrumentField.test.tsx`
+- [x] T064 [P] [US8] Playwright luồng study/thử nghiệm của `sa.admin`, ẩn menu với `ad.truong.a`, axe + lint token (F035-AC-35) — file: `src/cms/frontend/apps/portal/e2e/platform/research.spec.ts` — phải FAIL trước khi code — ✅ `apps/portal/tests/e2e/platform/research.spec.ts` + `tests/e2e/playwright.config.ts` (URL/mật khẩu từ env, R3); `playwright test --list` 4 test; chạy local: 4 skipped (chưa có stack thật — OQ F051-9); axe thay bằng kiểm nhãn/heading (gói axe không có trong portal); luồng tương đương chạy bằng Vitest `research/__tests__/Research.test.tsx` với MOCK
+- [x] T065 [P] [US8] Vitest ô `efficacy_instrument` chỉ hiện ở phạm vi platform (F035-AC-36) — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/__tests__/EfficacyInstrumentField.test.tsx` — ✅ `content-studio/questions/EfficacyInstrumentField.test.tsx` (phạm vi platform/tenant, quyền, action tắt, body `exam_only`) PASS
 
 ### Implementation cho User Story 8
 
-- [ ] T066 [P] [US8] Trang workspace D `research/*` + API client — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/`
-- [ ] T067 [P] [US8] `EfficacyInstrumentField` trong editor câu/blueprint — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/questions/EfficacyInstrumentField.tsx`
+- [x] T066 [P] [US8] Trang workspace D `research/*` + API client — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/` — ✅ `platform-admin/research/` (`api.ts`, `EfficacyStudiesScreen.tsx`, `StudyDetail.tsx`, `ReportView.tsx`, `LearningExperimentsScreen.tsx`, `ResearchForms.tsx`, `limits.ts`, `i18n/{vi,en}.json`); Vitest `Research.test.tsx` (luồng study/lớp/đợt/báo cáo/xuất/thỏa thuận/thử nghiệm) + `research.test.ts` (giới hạn = OpenAPI, i18n, `rule_params` = domain) PASS; MOCK `src/test/research-backend.ts`
+- [x] T067 [P] [US8] `EfficacyInstrumentField` trong editor câu/blueprint — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/questions/EfficacyInstrumentField.tsx` — ✅ `content-studio/questions/EfficacyInstrumentField.tsx` trong `QuestionMetaPanel` và `BlueprintEditorPage` (`efficacy_instrument`, câu kèm `exam_only`)
 
 ## Phase 11: Polish & Cross-Cutting
 
 - [x] T068 [P] Metric, span, alert `ExperimentGuardrailBreached` — file: `deploy/observability/alerts/learning.yaml` — ✅ metric `eduworld_efficacy_*`, `eduworld_experiment_*` (`observability/efficacy_metrics.go`), span qua `observability.UseCase` của mỗi use case, alert `ExperimentGuardrailBreached` ở `deploy/observability/prometheus/alerts/learning.yml` (file alert nằm cạnh `competition.yml`)
-- [ ] T069 [P] Cập nhật LEARNING_EFFICACY_PLAN (hiện thực §6, §10), LEARNING_ANALYTICS §3.4, CHANGELOG; trạng thái F035 trong CODE_PLAN — file: `docs/02-learning/LEARNING_EFFICACY_PLAN.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
+- [x] T069 [P] Cập nhật LEARNING_EFFICACY_PLAN (hiện thực §6, §10), LEARNING_ANALYTICS §3.4, CHANGELOG; trạng thái F035 trong CODE_PLAN — file: `docs/02-learning/LEARNING_EFFICACY_PLAN.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — ✅ LEARNING_EFFICACY_PLAN §6 (luật gợi ý, phạm vi hiển thị theo arm), §10 (link F035); LEARNING_ANALYTICS §3.4 (chỉ link); CHANGELOG; CODE_PLAN
 - [ ] T070 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/035-learning-efficacy-study/quickstart.md`
-- [ ] T071 [P] Test F035-AC-37: tắt `menu.platform_admin.efficacy_studies`/`menu.platform_admin.learning_experiments` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/e2e/platform/research-feature-toggle.spec.ts`
-- [ ] T072 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F035-AC-37) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/routes.tsx`
+- [x] T071 [P] Test F035-AC-37: tắt `menu.platform_admin.efficacy_studies`/`menu.platform_admin.learning_experiments` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/e2e/platform/research-feature-toggle.spec.ts` — ✅ Vitest `Research.test.tsx` "turned-off menus are hidden…" (menu tắt ẩn, action `edit` tắt ẩn nút) + shell `catalogMenus.test.tsx` (403 FEATURE_DISABLED → thông báo + tải lại quyền, F051) PASS; Playwright `research-feature-toggle.spec.ts` viết sẵn, skipped (OQ F051-9)
+- [x] T072 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F035-AC-37) — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/research/routes.tsx` — ✅ `platform-admin/index.tsx` gắn `EfficacyStudiesScreen`/`LearningExperimentsScreen` vào khóa menu (route con `:studyId`, `:experimentId`), mọi nút trong `<ActionGate>`; `check-portal-catalog` 0 lỗi
 
 ## Dependencies & Execution Order
 
