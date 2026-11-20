@@ -99,17 +99,17 @@
 
 ### Tests cho User Story 5
 
-- [ ] T032 [P] [US5] Scene test F063-AC-25, F063-AC-26 (registry thiếu loại, `min_client_version` cao, `422 ACTIVITY_TYPE_NOT_SUPPORTED`, item `type` lạ → màn cập nhật + telemetry) — file: `src/game/tests/scene/learning/test_update_required.gd` — phải FAIL trước khi code
+- [x] T032 [P] [US5] Scene test F063-AC-25, F063-AC-26 (registry thiếu loại, `min_client_version` cao, `422 ACTIVITY_TYPE_NOT_SUPPORTED`, item `type` lạ → màn cập nhật + telemetry) — file: `src/game/tests/scene/learning/test_update_required.gd` — phải FAIL trước khi code — ✅ `test_update_required.gd` 9/9 pass (loại không có renderer, `activity_type` của intent kiểm trước khi start — 0 lời gọi, `min_client_version` 9.0.0 > 1.2.3, map manifest, `422 ACTIVITY_TYPE_NOT_SUPPORTED` → màn cập nhật + nút + telemetry `activity_update_required` với `activity_type`; "Quay lại" đóng và resume world; item `type` lạ / widget lạ → thông báo trong item, thoát → pause)
 
 ### Implementation cho User Story 5
 
-- [ ] T033 [US5] `UpdateRequired` + kiểm phiên bản theo `ActivityRender.min_client_version` và manifest — file: `src/game/scenes/learning/UpdateRequired.tscn`, `src/game/scripts/learning/activity_renderer_registry.gd`
+- [x] T033 [US5] `UpdateRequired` + kiểm phiên bản theo `ActivityRender.min_client_version` và manifest — file: `src/game/scenes/learning/UpdateRequired.tscn`, `src/game/scripts/learning/activity_renderer_registry.gd` — ✅ `UpdateRequired.tscn` (+ `update_required.gd`, nút mở `store_url` qua `AuthService.open_store`), `ActivityRendererRegistry.check()` theo `ActivityRender.min_client_version` + `LearningService.activity_min_client_versions` (điểm nạp manifest, Clarifications 2026-11-20)
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T034 [P] Benchmark/đo activity player trên DEV-AND-MID1 (FPS, mở ≤ `load_time`, TC-PERF-020) — file: `src/game/tests/perf/activity_player_benchmark.gd`
-- [ ] T035 [P] Visual `vi`/`en`/`xx-PS` cho player, câu hỏi, kết quả (TC-I18N-006) — file: `src/game/tests/visual/learning_screens.gd`
-- [ ] T036 Chạy [quickstart.md](quickstart.md) trên backend thật (sau F030, F032 Done) và ghi bằng chứng — file: `specs/063-activity-player/quickstart.md`
+- [ ] T034 [P] Benchmark/đo activity player trên DEV-AND-MID1 (FPS, mở ≤ `load_time`, TC-PERF-020) — file: `src/game/tests/perf/activity_player_benchmark.gd` — **chưa làm**: cần thiết bị lab DEV-AND-MID1 (F133); bằng chứng hiện có: thế giới tạm dừng khi mở player (`test_activity_host.gd`), đồng hồ 1 lần/giây (P-6), telemetry `load_time` `activity_open`
+- [ ] T035 [P] Visual `vi`/`en`/`xx-PS` cho player, câu hỏi, kết quả (TC-I18N-006) — file: `src/game/tests/visual/learning_screens.gd` — **chưa làm**: cần chạy có renderer + duyệt ảnh baseline (`godot-screenshots`); khóa dịch vi/en/xx-PS đã có (`extract_pot --check`, `pseudo_locale --check` OK)
+- [ ] T036 Chạy [quickstart.md](quickstart.md) trên backend thật (sau F030, F032 Done) và ghi bằng chứng — file: `specs/063-activity-player/quickstart.md` — **chưa làm**: cần backend compose với F030/F032 thật + seed F041 (cùng lý do T016)
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 
@@ -125,8 +125,8 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F063-AC-* có test pass (ghi mã test/TC)
-- [ ] `make godot-test`, `make design-tokens-check` xanh; integration với F030/F032 thật pass
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F063-AC-* có test pass (ghi mã test/TC) — 26/26 với FakeHttp + fixture hợp đồng (2026-11-20): AC-01 `test_learning_service`/`test_activity_host`; AC-02, AC-03 `test_question_renderers`, `test_attempt_fixtures`; AC-04 `test_voice_over`; AC-05, AC-08 `test_learning_service`, `test_activity_host`; AC-06 `test_pending_writes`, `test_activity_host`; AC-07 `test_learning_service_resume`, `test_activity_host`; AC-09 `test_activity_host`; AC-10, AC-11 `test_learning_errors`, `test_activity_host`; AC-12, AC-13 `test_question_input_limits`; AC-14 `test_feedback_strip`; AC-15, AC-16 `test_hint_panel`; AC-17 `test_worked_example`; AC-18, AC-20 `test_math_svg_cache`; AC-19 `test_math_inline`; AC-21…24 `test_activity_result`; AC-25, AC-26 `test_update_required`
+- [ ] `make godot-test`, `make design-tokens-check` xanh; integration với F030/F032 thật pass — GdUnit4 435 test (429 pass, 6 integration skip) + export check + design-tokens-check xanh (2026-11-20); integration thật (T016, T036) chưa chạy
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — mock chỉ ở `tests/fakes/` (TEST-ONLY) và Prism MOCK có nhãn
+- [x] Tài liệu sở hữu, CHANGELOG cập nhật nếu có thay đổi — GODOT_ARCHITECTURE §4 (autoload #13), `src/game/README.md`, contracts §6, spec Clarifications 2026-11-20
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật — `In progress` (chờ backend thật, thiết bị lab)
