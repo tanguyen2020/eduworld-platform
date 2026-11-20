@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "session.session.ended",
+  "seq": 13,
+  "ts": 1763600006000,
+  "payload": {
+    "game_session_id": "3f2e1d0c-9b8a-4765-8432-10fedcba9876",
+    "reason": "account_locked",
+    "ended_at": 1763600006000
+  }
+}

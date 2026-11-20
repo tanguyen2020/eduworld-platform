@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "type": "system.session.welcome",
+  "seq": 1,
+  "ts": 1763600000000,
+  "payload": {
+    "conn_id": "c-01HZX4Q7",
+    "user_id": "0b9a8f7e-1c2d-4e3f-8a9b-0c1d2e3f4a5b",
+    "game_session_id": "3f2e1d0c-9b8a-4765-8432-10fedcba9876",
+    "server_time": 1763600000000,
+    "heartbeat_s": 15,
+    "timeout_s": 45,
+    "resume_token": "rt-example-opaque-0001",
+    "resume_window_s": 120,
+    "protocol_version": 1,
+    "limits": {
+      "max_frame_bytes": 16384,
+      "max_move_hz": 10
+    }
+  }
+}

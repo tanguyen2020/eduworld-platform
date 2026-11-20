@@ -522,6 +522,9 @@ msgstr "Interact"
 msgid "ui.hub.action.read"
 msgstr "Read"
 
+msgid "ui.hub.area_not_found"
+msgstr "This area isn't open yet. Stay here for now!"
+
 msgid "ui.hub.assignments"
 msgstr "From school"
 
@@ -530,6 +533,12 @@ msgstr "From school ({count})"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "School Assignments Board"
+
+msgid "ui.hub.emote_not_owned"
+msgstr "You don't have this emote yet."
+
+msgid "ui.hub.emote_rate_limited"
+msgstr "Slow down a little and try again in a few seconds!"
 
 msgid "ui.hub.grade_band.g1_3"
 msgstr "Grades 1–3"
@@ -549,6 +558,9 @@ msgstr "Back to the Plaza"
 msgid "ui.hub.home.tooltip"
 msgstr "Return to the start of Sunbeam Plaza"
 
+msgid "ui.hub.join_denied"
+msgstr "You can't go there right now. Stay here for now!"
+
 msgid "ui.hub.journal"
 msgstr "Quests (J)"
 
@@ -557,6 +569,9 @@ msgstr "Open the quest journal"
 
 msgid "ui.hub.player_default"
 msgstr "Explorer"
+
+msgid "ui.hub.room_full"
+msgstr "This area is full right now. Try again in a little while!"
 
 msgid "ui.hub.settings"
 msgstr "Settings"
@@ -875,6 +890,12 @@ msgstr "Enter a number"
 
 msgid "ui.question.use_widget"
 msgstr "Use the tool to answer"
+
+msgid "ui.realtime.degraded"
+msgstr "The connection is slow; some features may pause."
+
+msgid "ui.realtime.reconnecting"
+msgstr "Reconnecting…"
 
 msgid "ui.result.back_to_quest"
 msgstr "Back to quest"

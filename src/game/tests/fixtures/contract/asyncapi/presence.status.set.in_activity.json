@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "presence.status.set",
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abd2",
+  "ts": 1763600000000,
+  "payload": {
+    "status": "in_activity",
+    "activity": "learning"
+  }
+}

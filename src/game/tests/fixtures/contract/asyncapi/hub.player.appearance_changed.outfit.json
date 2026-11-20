@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "hub.player.appearance_changed",
+  "seq": 24,
+  "ts": 1763600001500,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "eid": 3,
+    "appearance": {
+      "outfit": "outfit_sport_01",
+      "hair": "hair_spiky_01"
+    }
+  }
+}

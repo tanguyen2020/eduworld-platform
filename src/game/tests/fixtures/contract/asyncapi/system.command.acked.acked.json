@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "system.command.acked",
+  "seq": 3,
+  "ts": 1763600000200,
+  "ref": "0192f3a4-5b6c-7d8e-9f01-23456789abcd",
+  "payload": {
+    "result": {}
+  }
+}

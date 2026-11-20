@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "system.heartbeat.pong",
+  "seq": 5,
+  "ts": 1763600015040,
+  "payload": {
+    "client_time": 1015000,
+    "server_time": 1763600015020
+  }
+}

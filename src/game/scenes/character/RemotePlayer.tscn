@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/remote_player.gd" id="1_remote"]
+[ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="2_anim"]
+[ext_resource type="PackedScene" path="res://scenes/character/AvatarRig.tscn" id="3_rig"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_impostor"]
+radius = 0.3
+height = 1.3
+radial_segments = 6
+rings = 1
+
+[node name="RemotePlayer" type="Node3D"]
+script = ExtResource("1_remote")
+
+[node name="AvatarRig" parent="." instance=ExtResource("3_rig")]
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+
+[node name="AnimDriver" type="Node" parent="." node_paths=PackedStringArray("animation_player", "animation_tree")]
+script = ExtResource("2_anim")
+animation_player = NodePath("../AvatarRig/AnimationPlayer")
+animation_tree = NodePath("../AnimationTree")
+
+[node name="Impostor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("CapsuleMesh_impostor")
+
+[node name="Nickname" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+billboard = 1
+no_depth_test = true
+pixel_size = 0.004

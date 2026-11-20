@@ -43,6 +43,7 @@ var banner_args: Dictionary = {}
 @onready var _banner_label: Label = %BannerLabel
 @onready var _context_action: Button = %ContextActionButton
 @onready var _joystick: Control = %Joystick
+@onready var _network: PanelContainer = %NetworkBanner
 
 
 func _ready() -> void:
@@ -93,6 +94,15 @@ func show_banner(key: String, args: Dictionary = {}) -> void:
 	banner_key = key
 	banner_args = args
 	_render()
+
+
+## F092: short hub notice (join refused, emote limits) under the network banner.
+func show_hub_notice(key: String) -> void:
+	_network.call("show_hub_notice", key)
+
+
+func network_banner() -> PanelContainer:
+	return _network
 
 
 func assignments_chip_text() -> String:

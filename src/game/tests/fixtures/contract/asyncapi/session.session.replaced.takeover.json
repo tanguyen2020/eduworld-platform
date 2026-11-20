@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "session.session.replaced",
+  "seq": 12,
+  "ts": 1763600005000,
+  "payload": {
+    "game_session_id": "3f2e1d0c-9b8a-4765-8432-10fedcba9876",
+    "replaced_at": 1763600005000,
+    "new_device_platform": "android"
+  }
+}

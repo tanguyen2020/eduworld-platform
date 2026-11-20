@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "system.session.resumed",
+  "seq": 43,
+  "ts": 1763600060000,
+  "payload": {
+    "replayed": 2,
+    "rejoined_rooms": [
+      "hub:main_hub:01"
+    ]
+  }
+}

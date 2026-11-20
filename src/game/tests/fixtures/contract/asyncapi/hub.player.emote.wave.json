@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "hub.player.emote",
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abd1",
+  "ts": 1763600000000,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "emote_id": "emote_wave"
+  }
+}

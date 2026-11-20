@@ -53,6 +53,8 @@ var sessions: GameSessionService = null
 ## starts from the profile already read.
 var profiles: ProfileService = null
 var version_check: VersionCheck = VersionCheck.new()
+## F092: the realtime connection of the game session (`RealtimeClient` autoload in the app, a test instance or null).
+var realtime: GameRealtimeClient = null
 var form: LoginFormModel = LoginFormModel.new()
 var curfew: CurfewWatcher = CurfewWatcher.new()
 var lifecycle: LifecycleWatcher = null
@@ -141,10 +143,25 @@ func _setup_defaults() -> void:
 	add_child(lifecycle)
 	lifecycle.close_requested.connect(close_game)
 	lifecycle.app_resumed.connect(on_app_resumed)
+	attach_realtime(get_node_or_null("/root/RealtimeClient") as GameRealtimeClient)
 	lifecycle.idle_limit_reached.connect(on_idle_limit_reached)
 	var router: Node = get_node_or_null("/root/SceneRouter")
 	if router != null:
 		router.connect("scene_changed", _on_scene_changed)
+
+
+## F092: wires the realtime client — Online → no REST heartbeat; takeover, server-ended session and refused tickets
+## follow the same paths as the REST signals (F092-AC-02, AC-04, AC-09).
+func attach_realtime(client: GameRealtimeClient) -> void:
+	realtime = client
+	if realtime == null:
+		return
+	if realtime.api == null:
+		realtime.configure(api, clock)
+	realtime.connection_state_changed.connect(_on_realtime_state_changed)
+	realtime.session_replaced_received.connect(_on_realtime_replaced)
+	realtime.session_ended_received.connect(_on_realtime_session_ended)
+	realtime.access_stopped.connect(_on_realtime_access_stopped)
 
 
 # ---------- start-up: VersionCheck → Resume / Login ----------
@@ -425,6 +442,8 @@ func on_app_resumed(paused_sec: float) -> void:
 		sessions.clear()
 		await _start_game_session(false)
 	else:
+		if realtime != null:
+			realtime.on_app_resumed(paused_sec)
 		await sessions.beat()
 
 
@@ -434,11 +453,15 @@ func on_idle_limit_reached() -> void:
 		await logout()
 
 
-## WebSocket `session.session.ended` (F092, AsyncAPI): `curfew` → CurfewNotice keeping the stored session;
-## other reasons (close 4403, access revoked) → erase and show the form.
+## WebSocket `session.session.ended` (F092, AsyncAPI): `curfew`/`daily_limit` (close 4410) → CurfewNotice keeping the
+## stored session; `account_locked` (close 4403) → erase, `EventBus.session_expired`, AccountBlocked; other reasons
+## (access revoked, cleanup, admin, password changed, or 4403 without the message) → erase and show the form.
 func handle_session_ended(reason: String, reopen_at: String = "") -> void:
 	sessions.clear()
-	if reason == "curfew":
+	if reason == "account_locked":
+		_expire_session("ACCOUNT_LOCKED")
+		return
+	if reason == "curfew" or reason == "daily_limit":
 		reopen_text = CurfewWatcher.reopen_text_of(reopen_at) if not reopen_at.is_empty() else curfew.reopen_text()
 		_clear_all(false)
 		_set_state(STATE.CURFEW)
@@ -550,6 +573,8 @@ func _start_game_session(takeover: bool) -> void:
 			lifecycle.idle_enabled = shared_device
 			lifecycle.touch()
 		sessions.start_heartbeat()
+		if realtime != null:
+			realtime.start(sessions.game_session_id)
 		await _enter_game()
 		session_started.emit(sessions.game_session_id)
 		return
@@ -705,6 +730,9 @@ func _clear_all(erase_store: bool) -> void:
 	signed_in = false
 	if sessions != null:
 		sessions.clear()
+		sessions.realtime_online = false
+	if realtime != null:
+		realtime.stop()
 	curfew.disable()
 	if lifecycle != null:
 		lifecycle.idle_enabled = false
@@ -739,6 +767,36 @@ func _on_session_replaced(_code: String) -> void:
 	_clear_all(true)
 	session_replaced.emit()
 	_set_state(STATE.REPLACED_NOTICE)
+
+
+func _on_realtime_state_changed(next: int) -> void:
+	sessions.realtime_online = next == GameRealtimeClient.State.ONLINE
+
+
+func _on_realtime_replaced() -> void:
+	sessions.notify_replaced("SESSION_REPLACED")
+
+
+func _on_realtime_session_ended(reason: String, reopen_at_ms: int) -> void:
+	var reopen: String = ""
+	if reopen_at_ms > 0:
+		reopen = Time.get_datetime_string_from_unix_time(reopen_at_ms / 1000) + "Z"
+	# Close 4403 (credential revoked): the session is over for good (F092-AC-04); account_locked emits it itself.
+	if not reason in ["curfew", "daily_limit", "account_locked"]:
+		var bus: Node = _autoload("EventBus")
+		if bus != null:
+			bus.emit_signal("session_expired")
+	handle_session_ended(reason, reopen)
+
+
+func _on_realtime_access_stopped(code: String) -> void:
+	match code:
+		"CURFEW_ACTIVE":
+			handle_session_ended("curfew")
+		"GAME_SESSION_ENDED":
+			sessions.notify_replaced(code)
+		_:
+			handle_access_denied(code)
 
 
 func _on_heartbeat_ticked() -> void:

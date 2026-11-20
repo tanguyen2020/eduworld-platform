@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "type": "system.session.resume_failed",
+  "seq": 2,
+  "ts": 1763600060000,
+  "payload": {
+    "reason": "expired"
+  }
+}

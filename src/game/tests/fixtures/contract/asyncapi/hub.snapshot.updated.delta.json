@@ -1,0 +1,24 @@
+{
+  "v": 1,
+  "type": "hub.snapshot.updated",
+  "seq": 20,
+  "ts": 1763600001100,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "tick": 1011,
+    "ack_client_seq": 42,
+    "entities": [
+      {
+        "eid": 3,
+        "p": [
+          2.75,
+          0,
+          1.25
+        ],
+        "r": 1.57,
+        "a": "walk"
+      }
+    ],
+    "removed": []
+  }
+}

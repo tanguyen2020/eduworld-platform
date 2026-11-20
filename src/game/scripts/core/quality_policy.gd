@@ -17,19 +17,23 @@ const RENDERER_KINDS: Dictionary = {
 	"mobile": "mobile", "gl_compatibility": "compatibility", "forward_plus": "forward_plus",
 }
 ## PERFORMANCE_BUDGET §5 (`quality_presets`): base/dynamic render scale range, FPS cap (mobile·web / PC),
-## shadows, anti-aliasing (none/fxaa/msaa2), visibility range (m), `mesh_lod_threshold`.
+## shadows, anti-aliasing (none/fxaa/msaa2), visibility range (m), `mesh_lod_threshold`, characters drawn in full (mobile·web
+## / PC; the rest use LOD/impostor — §5, F092-AC-21).
 const PRESETS: Dictionary = {
 	"low": {
 		"render_scale": 0.75, "scale_min": 0.6, "scale_max": 0.75, "fps_cap_mobile": 30, "fps_cap_pc": 30,
-		"shadows": false, "aa": "none", "view_distance": 40.0, "lod_threshold": 4.0,
+		"shadows": false, "aa": "none", "view_distance": 40.0, "lod_threshold": 4.0, "full_characters": 10,
+		"full_characters_pc": 10,
 	},
 	"medium": {
 		"render_scale": 0.9, "scale_min": 0.7, "scale_max": 1.0, "fps_cap_mobile": 30, "fps_cap_pc": 60,
-		"shadows": true, "aa": "fxaa", "view_distance": 70.0, "lod_threshold": 2.0,
+		"shadows": true, "aa": "fxaa", "view_distance": 70.0, "lod_threshold": 2.0, "full_characters": 20,
+		"full_characters_pc": 30,
 	},
 	"high": {
 		"render_scale": 1.0, "scale_min": 1.0, "scale_max": 1.0, "fps_cap_mobile": 30, "fps_cap_pc": 60,
-		"shadows": true, "aa": "msaa2", "view_distance": 120.0, "lod_threshold": 1.0,
+		"shadows": true, "aa": "msaa2", "view_distance": 120.0, "lod_threshold": 1.0, "full_characters": 40,
+		"full_characters_pc": 40,
 	},
 }
 ## `battery_target`: 3D renders at 15 FPS while the screen is idle for more than 10 s (§12).
@@ -55,6 +59,11 @@ static func device_info(platform: String) -> Dictionary:
 
 static func is_valid_preset(preset: String) -> bool:
 	return preset in PRESET_NAMES
+
+
+## Characters drawn in full at `preset` (`quality_presets`): 10 / 20 (PC 30) / 40.
+static func full_characters(preset: String, is_pc: bool) -> int:
+	return int(preset_value(preset, "full_characters_pc" if is_pc else "full_characters"))
 
 
 static func preset_value(preset: String, key: String) -> Variant:

@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "hub.player.corrected",
+  "seq": 25,
+  "ts": 1763600001600,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "client_seq": 57,
+    "p": [
+      1.2,
+      0,
+      3.4
+    ],
+    "reason": "speed"
+  }
+}

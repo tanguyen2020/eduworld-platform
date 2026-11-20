@@ -1,11 +1,11 @@
 extends GdUnitTestSuite
-## F060-AC-02 (GODOT_ARCHITECTURE §4, NFR-MAINT-007): autoload order (#13 ActivityRendererRegistry: F063) and headless
+## F060-AC-02 (GODOT_ARCHITECTURE §4, NFR-MAINT-007): autoload order (#7 RealtimeClient: F092, #13 ActivityRendererRegistry: F063) and headless
 ## Boot → Splash.
 
 const BootScript := preload("res://scenes/bootstrap/boot.gd")
 const EXPECTED_ORDER: PackedStringArray = [
-	"Config", "Log", "EventBus", "AppState", "AuthService", "ApiClient", "SceneRouter", "AudioDirector", "Settings",
-	"QualityManager", "ActivityRendererRegistry",
+	"Config", "Log", "EventBus", "AppState", "AuthService", "ApiClient", "RealtimeClient", "SceneRouter", "AudioDirector",
+	"Settings", "QualityManager", "ActivityRendererRegistry",
 ]
 
 var _autostart: bool = true

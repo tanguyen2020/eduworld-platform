@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "hub.instance.migrated",
+  "seq": 26,
+  "ts": 1763600001700,
+  "payload": {
+    "old_room_id": "hub:main_hub:01",
+    "room_id": "hub:main_hub:02",
+    "reason": "failover"
+  }
+}

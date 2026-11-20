@@ -112,6 +112,8 @@ stateDiagram-v2
 
 Gửi `system.heartbeat.ping` theo `heartbeat_s` (15 s); không nhận gì trong 2 × heartbeat → coi như mất kết nối, đóng và reconnect. RTT từ `system.heartbeat.pong` dùng cho `Clock` và hiển thị chất lượng mạng (icon 3 vạch).
 
+Heartbeat REST của game session (`POST /game/sessions/{id}:heartbeat`, F061) chỉ chạy khi `RealtimeClient` **chưa** ở trạng thái `Online`; khi `Online`, heartbeat đi qua WebSocket (gateway chuyển cho module game, F090-AC-12) và client bỏ lời gọi REST — nhịp kiểm giờ giới nghiêm phía client vẫn chạy (F092-AC-09).
+
 ### 4.4. Reconnect / resume
 
 ```mermaid

@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "type": "system.service.degraded",
+  "seq": 7,
+  "ts": 1763600001000,
+  "payload": {
+    "features": [
+      "chat",
+      "presence"
+    ],
+    "poll_interval_s": 10
+  }
+}

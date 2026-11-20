@@ -863,6 +863,9 @@ components:
                   client_time: { $ref: '#/components/schemas/EpochMs' }
     SystemSessionResume:
       name: system.session.resume
+      examples:
+        - name: resume
+          payload: {"v":1,"type":"system.session.resume","id":"0192f3a4-5b6c-7d8e-9f01-23456789abd3","ts":1763600000000,"payload":{"resume_token":"rt-example-opaque-0001","last_seq":42}}
       title: Khôi phục phiên sau reconnect
       payload:
         allOf:
@@ -878,6 +881,9 @@ components:
                   last_seq: { type: integer, minimum: 0 }
     SystemSessionWelcome:
       name: system.session.welcome
+      examples:
+        - name: new_connection
+          payload: {"v":1,"type":"system.session.welcome","seq":1,"ts":1763600000000,"payload":{"conn_id":"c-01HZX4Q7","user_id":"0b9a8f7e-1c2d-4e3f-8a9b-0c1d2e3f4a5b","game_session_id":"3f2e1d0c-9b8a-4765-8432-10fedcba9876","server_time":1763600000000,"heartbeat_s":15,"timeout_s":45,"resume_token":"rt-example-opaque-0001","resume_window_s":120,"protocol_version":1,"limits":{"max_frame_bytes":16384,"max_move_hz":10}}}
       title: Kết nối được chấp nhận
       payload:
         allOf:
@@ -905,6 +911,9 @@ components:
                       max_move_hz: { type: integer, default: 10 }
     SystemPong:
       name: system.heartbeat.pong
+      examples:
+        - name: pong
+          payload: {"v":1,"type":"system.heartbeat.pong","seq":5,"ts":1763600015040,"payload":{"client_time":1015000,"server_time":1763600015020}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -918,6 +927,9 @@ components:
                   server_time: { $ref: '#/components/schemas/EpochMs' }
     SystemAck:
       name: system.command.acked
+      examples:
+        - name: acked
+          payload: {"v":1,"type":"system.command.acked","seq":3,"ts":1763600000200,"ref":"0192f3a4-5b6c-7d8e-9f01-23456789abcd","payload":{"result":{}}}
       title: Xác nhận lệnh thành công
       summary: Type thực tế là `system.command.acked`; tài liệu gọi tắt là system.ack.
       payload:
@@ -933,6 +945,9 @@ components:
                   result: { type: object, description: Dữ liệu kết quả tùy lệnh (vd. message_id). }
     SystemError:
       name: system.command.failed
+      examples:
+        - name: room_full
+          payload: {"v":1,"type":"system.command.failed","seq":4,"ts":1763600000300,"ref":"0192f3a4-5b6c-7d8e-9f01-23456789abce","payload":{"code":"ROOM_FULL","message":"Khu này đang đông, em thử lại sau nhé."}}
       title: Lệnh thất bại / lỗi giao thức
       summary: Type thực tế là `system.command.failed`; tài liệu gọi tắt là system.error. `ref` có thể vắng nếu lỗi không gắn lệnh.
       payload:
@@ -951,6 +966,9 @@ components:
                   details: { type: object }
     SystemSessionResumed:
       name: system.session.resumed
+      examples:
+        - name: resumed
+          payload: {"v":1,"type":"system.session.resumed","seq":43,"ts":1763600060000,"payload":{"replayed":2,"rejoined_rooms":["hub:main_hub:01"]}}
       summary: Gửi sau khi replay xong các message seq > last_seq.
       payload:
         allOf:
@@ -965,6 +983,9 @@ components:
                   rejoined_rooms: { type: array, items: { type: string, maxLength: 64 } }
     SystemSessionResumeFailed:
       name: system.session.resume_failed
+      examples:
+        - name: expired
+          payload: {"v":1,"type":"system.session.resume_failed","seq":2,"ts":1763600060000,"payload":{"reason":"expired"}}
       summary: Buffer đã hết hạn — client resync qua REST (party, chat unread, quest, match).
       payload:
         allOf:
@@ -978,6 +999,9 @@ components:
                   reason: { type: string, enum: [expired, unknown_token, seq_gap] }
     SystemDegraded:
       name: system.service.degraded
+      examples:
+        - name: chat_presence
+          payload: {"v":1,"type":"system.service.degraded","seq":7,"ts":1763600001000,"payload":{"features":["chat","presence"],"poll_interval_s":10}}
       summary: Hạ tầng realtime suy giảm (vd. Valkey) — client chuyển sang poll REST.
       payload:
         allOf:
@@ -1010,6 +1034,9 @@ components:
 
     SystemServerDraining:
       name: system.server.draining
+      examples:
+        - name: deploy
+          payload: {"v":1,"type":"system.server.draining","seq":9,"ts":1763600002000,"payload":{"reconnect_after_ms":3500,"reason":"deploy"}}
       summary: Node gateway sắp tắt (deploy, bảo trì) — sau message này server đóng kết nối với close 1012 (F090-AC-27, RB-401).
       description: |
         Client chờ `reconnect_after_ms` (ngẫu nhiên theo kết nối để giãn tải) rồi xin ticket mới, kết nối lại (APISIX đưa tới
@@ -1029,6 +1056,9 @@ components:
 
     SessionReplaced:
       name: session.session.replaced
+      examples:
+        - name: takeover
+          payload: {"v":1,"type":"session.session.replaced","seq":12,"ts":1763600005000,"payload":{"game_session_id":"3f2e1d0c-9b8a-4765-8432-10fedcba9876","replaced_at":1763600005000,"new_device_platform":"android"}}
       summary: Tài khoản vừa đăng nhập trên thiết bị khác — phiên này bị kết thúc (ADR-0031).
       description: |
         Gửi ngay trước khi server đóng kết nối với close code 4409. Client hiển thị thông báo thân thiện
@@ -1050,6 +1080,11 @@ components:
 
     SessionEnded:
       name: session.session.ended
+      examples:
+        - name: curfew
+          payload: {"v":1,"type":"session.session.ended","seq":13,"ts":1763600006000,"payload":{"game_session_id":"3f2e1d0c-9b8a-4765-8432-10fedcba9876","reason":"curfew","reopen_at":1763632400000,"ended_at":1763600006000}}
+        - name: account_locked
+          payload: {"v":1,"type":"session.session.ended","seq":13,"ts":1763600006000,"payload":{"game_session_id":"3f2e1d0c-9b8a-4765-8432-10fedcba9876","reason":"account_locked","ended_at":1763600006000}}
       summary: Server kết thúc game session đang giữ kết nối (giờ giới nghiêm, khóa tài khoản, dọn học sinh, thu hồi quyền, quản trị, đặt lại mật khẩu) — owner F014.
       description: |
         Gửi ngay trước khi gateway (F090) đóng kết nối đang giữ đúng `game_session_id` (REALTIME_ARCHITECTURE §3.1):
@@ -1128,6 +1163,9 @@ components:
     # ======================= PRESENCE =======================
     PresenceStatusSet:
       name: presence.status.set
+      examples:
+        - name: in_activity
+          payload: {"v":1,"type":"presence.status.set","id":"0192f3a4-5b6c-7d8e-9f01-23456789abd2","ts":1763600000000,"payload":{"status":"in_activity","activity":"learning"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -2060,6 +2098,9 @@ components:
     # ======================= HUB =======================
     HubInstanceJoin:
       name: hub.instance.join
+      examples:
+        - name: join_main_hub
+          payload: {"v":1,"type":"hub.instance.join","id":"0192f3a4-5b6c-7d8e-9f01-23456789abcd","ts":1763600000000,"payload":{"area_id":"main_hub","spawn_point":"main_hub.default"}}
       summary: Yêu cầu vào một khu vực (area transition). Server chọn instance (ưu tiên bạn bè/party).
       payload:
         allOf:
@@ -2076,6 +2117,9 @@ components:
                   follow_user_id: { $ref: '#/components/schemas/Uuid', description: 'Tham gia bạn (SOCIAL_SYSTEM §4.2): vào instance của bạn này nếu là bạn bè, không chặn nhau, cùng partition và còn chỗ; nếu không ROOM_FULL/PERMISSION_DENIED, không lộ vị trí (F091-AC-05).' }
     HubPlayerMove:
       name: hub.player.move
+      examples:
+        - name: move
+          payload: {"v":1,"type":"hub.player.move","id":"0192f3a4-5b6c-7d8e-9f01-23456789abd0","ts":1763600000000,"payload":{"room_id":"hub:main_hub:01","client_seq":57,"p":[1.25,0,3.5],"r":0.79,"a":"run"}}
       summary: ≤10 Hz, chỉ khi thay đổi (+1 Hz khi đứng yên). Không ack. Server validate tốc độ/biên.
       payload:
         allOf:
@@ -2095,6 +2139,9 @@ components:
                   a: { type: string, maxLength: 255 }
     HubPlayerEmote:
       name: hub.player.emote
+      examples:
+        - name: wave
+          payload: {"v":1,"type":"hub.player.emote","id":"0192f3a4-5b6c-7d8e-9f01-23456789abd1","ts":1763600000000,"payload":{"room_id":"hub:main_hub:01","emote_id":"emote_wave"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -2109,6 +2156,9 @@ components:
                   emote_id: { type: string, maxLength: 64, description: Emote phải có trong inventory. }
     HubInstanceAssigned:
       name: hub.instance.assigned
+      examples:
+        - name: main_hub
+          payload: {"v":1,"type":"hub.instance.assigned","seq":2,"ts":1763600000100,"payload":{"room_id":"hub:main_hub:01","area_id":"main_hub","self_eid":7,"spawn":[0,0,4],"tick_rate_hz":10,"max_speed_mps":6,"players":[{"eid":3,"player":{"user_id":"7d1e2f3a-4b5c-4d6e-9f0a-1b2c3d4e5f60","nickname":"CuMeoChamChi12","avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_03","hair":{"item_id":"hair_bob_01","color":"hair_col_03"},"outfit":{"item_id":"outfit_casual_01"},"accessories":[{"slot":"face","item_id":"acc_glasses_round"}],"emote_slots":["emote_wave","emote_clap"]},"level":4},"state":{"eid":3,"p":[2.5,0,1.25],"r":1.57,"a":"idle"}}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2136,6 +2186,9 @@ components:
                         state: { $ref: '#/components/schemas/HubEntity' }
     HubSnapshotUpdated:
       name: hub.snapshot.updated
+      examples:
+        - name: delta
+          payload: {"v":1,"type":"hub.snapshot.updated","seq":20,"ts":1763600001100,"payload":{"room_id":"hub:main_hub:01","tick":1011,"ack_client_seq":42,"entities":[{"eid":3,"p":[2.75,0,1.25],"r":1.57,"a":"walk"}],"removed":[]}}
       summary: Delta snapshot 10 Hz, đã lọc theo interest grid. Droppable (chỉ giữ bản mới nhất khi queue đầy).
       payload:
         allOf:
@@ -2154,6 +2207,9 @@ components:
                   removed: { type: array, items: { type: integer } }
     HubPlayerJoined:
       name: hub.player.joined
+      examples:
+        - name: joined
+          payload: {"v":1,"type":"hub.player.joined","seq":21,"ts":1763600001200,"payload":{"room_id":"hub:main_hub:01","eid":9,"player":{"user_id":"7d1e2f3a-4b5c-4d6e-9f0a-1b2c3d4e5f60","nickname":"GauTrucVuiVe07","avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_03","hair":{"item_id":"hair_bob_01","color":"hair_col_03"},"outfit":{"item_id":"outfit_casual_01"},"accessories":[{"slot":"face","item_id":"acc_glasses_round"}],"emote_slots":["emote_wave","emote_clap"]},"level":2},"state":{"eid":9,"p":[0,0,6],"r":0,"a":"idle"}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2170,6 +2226,9 @@ components:
                   state: { $ref: '#/components/schemas/HubEntity' }
     HubPlayerLeft:
       name: hub.player.left
+      examples:
+        - name: left
+          payload: {"v":1,"type":"hub.player.left","seq":22,"ts":1763600001300,"payload":{"room_id":"hub:main_hub:01","eid":9}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2184,6 +2243,9 @@ components:
                   eid: { type: integer }
     HubPlayerEmoted:
       name: hub.player.emoted
+      examples:
+        - name: wave
+          payload: {"v":1,"type":"hub.player.emoted","seq":23,"ts":1763600001400,"payload":{"room_id":"hub:main_hub:01","eid":3,"emote_id":"emote_wave"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2199,6 +2261,9 @@ components:
                   emote_id: { type: string, maxLength: 64 }
     HubPlayerAppearanceChanged:
       name: hub.player.appearance_changed
+      examples:
+        - name: outfit
+          payload: {"v":1,"type":"hub.player.appearance_changed","seq":24,"ts":1763600001500,"payload":{"room_id":"hub:main_hub:01","eid":3,"appearance":{"outfit":"outfit_sport_01","hair":"hair_spiky_01"}}}
       summary: Người chơi trong cùng instance đổi trang phục/avatar (sau updateAvatar) — client tải lại appearance theo item_id.
       payload:
         allOf:
@@ -2219,6 +2284,9 @@ components:
                     additionalProperties: { type: string, maxLength: 64 }
     HubPlayerCorrected:
       name: hub.player.corrected
+      examples:
+        - name: speed
+          payload: {"v":1,"type":"hub.player.corrected","seq":25,"ts":1763600001600,"payload":{"room_id":"hub:main_hub:01","client_seq":57,"p":[1.2,0,3.4],"reason":"speed"}}
       summary: Server từ chối/clamp vị trí của chính người nhận — client snap/blend về vị trí này.
       payload:
         allOf:
@@ -2236,6 +2304,9 @@ components:
                   reason: { type: string, enum: [speed, out_of_bounds, teleport_denied] }
     HubInstanceMigrated:
       name: hub.instance.migrated
+      examples:
+        - name: failover
+          payload: {"v":1,"type":"hub.instance.migrated","seq":26,"ts":1763600001700,"payload":{"old_room_id":"hub:main_hub:01","room_id":"hub:main_hub:02","reason":"failover"}}
       summary: Room chuyển owner node (failover) hoặc party được dời sang instance khác.
       payload:
         allOf:

@@ -28,6 +28,8 @@ var current_zone: String = ""
 var spawn_point_id: String = ""
 ## Domain services (created on first use after bootstrap; tests assign their own).
 var services: ServiceLocator = null
+## Realtime network counters (RTT p50/p95, reconnects, resume results) for the batched telemetry of F080 (F092 T028).
+var net_stats: NetStats = null
 var mock_badge: CanvasLayer = null
 
 

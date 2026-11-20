@@ -15,11 +15,16 @@ var video_files: VideoFileCache = null
 ## Player profile, nickname, avatar and saved outfits (F070); character catalog cache + ownership view (F070/F075).
 var profile: ProfileService = null
 var inventory: InventoryService = null
+## Hub multiplayer and own presence over the realtime connection (F092).
+var realtime: GameRealtimeClient = null
+var hub: HubSync = null
+var presence: PresenceService = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
 
-func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientClock = null) -> void:
+func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientClock = null,
+		realtime_client: GameRealtimeClient = null) -> void:
 	telemetry = TelemetryService.new(rest, clock)
 	assignments = AssignmentService.new(rest, app_state, telemetry)
 	play_time = PlayTimeService.new()
@@ -35,6 +40,13 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	profile = ProfileService.new(rest, app_state)
 	profile.access_denied.connect(_on_access_denied)
 	inventory = InventoryService.new(rest)
+	realtime = realtime_client if realtime_client != null else _realtime_autoload()
+	hub = HubSync.new(realtime)
+	presence = PresenceService.new(realtime, clock)
+	if realtime != null:
+		realtime.resync_required.connect(resync)
+		if app_state != null:
+			app_state.set("net_stats", realtime.stats)
 
 
 ## Applies the bootstrap of a new session (policies, product telemetry switch) and drops the previous data.
@@ -57,6 +69,21 @@ func end_session() -> void:
 	profile.clear()
 	play_time.configure({})
 	telemetry.clear()
+	hub.leave_area()
+
+
+## F092-AC-05: the resume failed — read the profile again over REST, join the current area again, then Online.
+func resync() -> void:
+	await profile.fetch_profile()
+	if not hub.desired_area.is_empty():
+		await hub.join()
+	if realtime != null:
+		realtime.finish_resync()
+
+
+static func _realtime_autoload() -> GameRealtimeClient:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	return tree.root.get_node_or_null("RealtimeClient") as GameRealtimeClient if tree != null else null
 
 
 static func _cdn_base_url() -> String:

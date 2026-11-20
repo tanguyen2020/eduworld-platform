@@ -3,7 +3,7 @@ extends Control
 ## Emote wheel (CHARACTER_SYSTEM §6–§7, STUDENT_GAME_UX §3–§4; F070-AC-20): opened with the input action
 ## `emote_wheel` (T) or the touch button; shows only the equipped emotes (`AvatarConfig.emote_slots`, at most
 ## `emote_wheel_slots`) in a ring and plays the chosen one once on the character through `anim_driver.gd`, which then
-## returns to Locomotion. Local only in F070: sending `hub.player.emote` to the others comes with F091/F092.
+## returns to Locomotion. `emote_selected` lets the world send `hub.player.emote` to the others (F092).
 ## UI: generated Theme, touch targets from UiTokens density (`g1_3` ≥ 64 dp), strings `ui.emote.*`.
 
 signal emote_selected(emote_id: String)

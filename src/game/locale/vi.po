@@ -522,6 +522,9 @@ msgstr "Tương tác"
 msgid "ui.hub.action.read"
 msgstr "Xem bảng"
 
+msgid "ui.hub.area_not_found"
+msgstr "Khu này hiện chưa mở. Em ở lại đây nhé!"
+
 msgid "ui.hub.assignments"
 msgstr "Nhà trường giao"
 
@@ -530,6 +533,12 @@ msgstr "Nhà trường giao ({count})"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "Bảng Nhà trường giao"
+
+msgid "ui.hub.emote_not_owned"
+msgstr "Em chưa có biểu cảm này."
+
+msgid "ui.hub.emote_rate_limited"
+msgstr "Chậm lại một chút nhé, đợi vài giây rồi thử lại!"
 
 msgid "ui.hub.grade_band.g1_3"
 msgstr "Lớp 1–3"
@@ -549,6 +558,9 @@ msgstr "Về Quảng trường"
 msgid "ui.hub.home.tooltip"
 msgstr "Về điểm xuất phát của Quảng trường Tia Sáng"
 
+msgid "ui.hub.join_denied"
+msgstr "Em chưa vào được khu đó. Em ở lại đây nhé!"
+
 msgid "ui.hub.journal"
 msgstr "Nhiệm vụ (J)"
 
@@ -557,6 +569,9 @@ msgstr "Mở Nhật ký nhiệm vụ"
 
 msgid "ui.hub.player_default"
 msgstr "Bạn nhỏ"
+
+msgid "ui.hub.room_full"
+msgstr "Khu này đang đông quá. Em thử lại sau một chút nhé!"
 
 msgid "ui.hub.settings"
 msgstr "Cài đặt"
@@ -875,6 +890,12 @@ msgstr "Nhập số"
 
 msgid "ui.question.use_widget"
 msgstr "Dùng công cụ để trả lời"
+
+msgid "ui.realtime.degraded"
+msgstr "Kết nối đang chậm, một vài tính năng có thể tạm dừng."
+
+msgid "ui.realtime.reconnecting"
+msgstr "Đang kết nối lại…"
 
 msgid "ui.result.back_to_quest"
 msgstr "Về nhiệm vụ"

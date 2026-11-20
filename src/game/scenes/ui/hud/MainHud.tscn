@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud/main_hud.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/ContextActionButton.tscn" id="2_action"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/Joystick.tscn" id="3_joystick"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/NetworkBanner.tscn" id="4_network"]
 
 [node name="MainHud" type="CanvasLayer"]
 layer = 2
@@ -161,3 +162,7 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 grow_vertical = 0
+
+[node name="NetworkBanner" parent="Root" instance=ExtResource("4_network")]
+unique_name_in_owner = true
+layout_mode = 1

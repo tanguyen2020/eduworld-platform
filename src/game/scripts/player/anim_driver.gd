@@ -82,6 +82,22 @@ func update(velocity: Vector3, on_floor: bool) -> StringName:
 	return state
 
 
+## F092: a remote player's locomotion state as sent by the server (`idle`, `walk`, `run`, `jump`; anything else →
+## idle). An emote keeps playing until it ends or the player moves, as for the local player.
+func set_locomotion(anim_name: String) -> StringName:
+	var next: StringName = StringName(anim_name) if StringName(anim_name) in STATES else IDLE
+	if state == EMOTE:
+		if next != IDLE:
+			_end_emote(next)
+		return state
+	if next != state:
+		state = next
+		var machine_playback: AnimationNodeStateMachinePlayback = playback()
+		if machine_playback != null:
+			machine_playback.travel(next)
+	return state
+
+
 ## F070-AC-20: plays `clip` (or the placeholder) once for `id`, then Locomotion. False for an empty id.
 func play_emote(id: String, clip: Animation = null) -> bool:
 	if id.is_empty():

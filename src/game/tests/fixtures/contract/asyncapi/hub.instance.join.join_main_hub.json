@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "hub.instance.join",
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abcd",
+  "ts": 1763600000000,
+  "payload": {
+    "area_id": "main_hub",
+    "spawn_point": "main_hub.default"
+  }
+}

@@ -11,16 +11,18 @@ const REDACTED: String = "[REDACTED]"
 ## Field names (lower case, compared after removing `-`) whose value is always hidden.
 const SENSITIVE_KEYS: PackedStringArray = [
 	"password", "passwd", "pwd", "pin", "secret", "client_secret", "token", "access_token", "refresh_token",
-	"id_token", "authorization", "cookie", "set_cookie", "login_ticket", "otp",
+	"id_token", "authorization", "cookie", "set_cookie", "login_ticket", "otp", "ticket", "resume_token",
 	"full_name", "fullname", "first_name", "last_name", "given_name", "family_name", "real_name", "ho_ten",
 	"display_name", "name",
 ]
 ## Key fragments that hide the value wherever they appear in a field name.
-const SENSITIVE_FRAGMENTS: PackedStringArray = ["password", "token", "secret", "authorization", "cookie"]
-## Value patterns hidden even under a harmless key: bearer credentials and JWT-looking strings.
+const SENSITIVE_FRAGMENTS: PackedStringArray = ["password", "token", "secret", "authorization", "cookie", "ticket"]
+## Value patterns hidden even under a harmless key: bearer credentials, JWT-looking strings and a realtime ticket in a
+## URL query (F092-AC-07).
 const VALUE_PATTERNS: PackedStringArray = [
 	"(?i)bearer\\s+[A-Za-z0-9._~+/=-]+",
 	"eyJ[A-Za-z0-9_-]{6,}\\.[A-Za-z0-9_-]{6,}\\.[A-Za-z0-9_-]*",
+	"(?i)ticket=[^&\\s\"]+",
 ]
 
 var min_level: Level = Level.INFO

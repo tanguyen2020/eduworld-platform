@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "type": "hub.player.move",
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abd0",
+  "ts": 1763600000000,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "client_seq": 57,
+    "p": [
+      1.25,
+      0,
+      3.5
+    ],
+    "r": 0.79,
+    "a": "run"
+  }
+}

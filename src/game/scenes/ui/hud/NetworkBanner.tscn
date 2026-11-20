@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/hud/network_banner.gd" id="1_script"]
+
+[node name="NetworkBanner" type="PanelContainer"]
+visible = false
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.2
+anchor_right = 0.75
+anchor_bottom = 0.2
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+script = ExtResource("1_script")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NetworkStatus" type="Label" parent="Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="HubNotice" type="Label" parent="Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+autowrap_mode = 3

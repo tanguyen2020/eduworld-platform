@@ -521,6 +521,9 @@ msgstr "[!! Ïñţëŕáçţ ~~~~ !!]"
 msgid "ui.hub.action.read"
 msgstr "[!! Ŕëáđ ~~ !!]"
 
+msgid "ui.hub.area_not_found"
+msgstr "[!! Ţĥïš áŕëá ïšñ'ţ öþëñ ýëţ. Šţáý ĥëŕë ƒöŕ ñöŵ! ~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.hub.assignments"
 msgstr "[!! Fŕöɱ šçĥööĺ ~~~~~ !!]"
 
@@ -529,6 +532,12 @@ msgstr "[!! Fŕöɱ šçĥööĺ ({count}) ~~~~~~~~~ !!]"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "[!! Šçĥööĺ Åššïğñɱëñţš Ɓöáŕđ ~~~~~~~~~~ !!]"
+
+msgid "ui.hub.emote_not_owned"
+msgstr "[!! Ýöü đöñ'ţ ĥávë ţĥïš ëɱöţë ýëţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.hub.emote_rate_limited"
+msgstr "[!! Šĺöŵ đöŵñ á ĺïţţĺë áñđ ţŕý áğáïñ ïñ á ƒëŵ šëçöñđš! ~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.hub.grade_band.g1_3"
 msgstr "[!! Ğŕáđëš 1–3 ~~~~ !!]"
@@ -548,6 +557,9 @@ msgstr "[!! Ɓáçķ ţö ţĥë Pĺážá ~~~~~~~ !!]"
 msgid "ui.hub.home.tooltip"
 msgstr "[!! Ŕëţüŕñ ţö ţĥë šţáŕţ öƒ Šüñƀëáɱ Pĺážá ~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.hub.join_denied"
+msgstr "[!! Ýöü çáñ'ţ ğö ţĥëŕë ŕïğĥţ ñöŵ. Šţáý ĥëŕë ƒöŕ ñöŵ! ~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.hub.journal"
 msgstr "[!! Qüëšţš (Ĵ) ~~~~ !!]"
 
@@ -556,6 +568,9 @@ msgstr "[!! Öþëñ ţĥë qüëšţ ĵöüŕñáĺ ~~~~~~~~~ !!]"
 
 msgid "ui.hub.player_default"
 msgstr "[!! Ẹxþĺöŕëŕ ~~~~ !!]"
+
+msgid "ui.hub.room_full"
+msgstr "[!! Ţĥïš áŕëá ïš ƒüĺĺ ŕïğĥţ ñöŵ. Ţŕý áğáïñ ïñ á ĺïţţĺë ŵĥïĺë! ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.hub.settings"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
@@ -874,6 +889,12 @@ msgstr "[!! Ẹñţëŕ á ñüɱƀëŕ ~~~~~~ !!]"
 
 msgid "ui.question.use_widget"
 msgstr "[!! Üšë ţĥë ţööĺ ţö áñšŵëŕ ~~~~~~~~~ !!]"
+
+msgid "ui.realtime.degraded"
+msgstr "[!! Ţĥë çöññëçţïöñ ïš šĺöŵ; šöɱë ƒëáţüŕëš ɱáý þáüšë. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.realtime.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… ~~~~~~ !!]"
 
 msgid "ui.result.back_to_quest"
 msgstr "[!! Ɓáçķ ţö qüëšţ ~~~~~~ !!]"

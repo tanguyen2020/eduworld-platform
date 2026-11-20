@@ -3,6 +3,8 @@
 //   - openapi/<Schema>.json: the `example` of each component schema the client parses, or a deterministic
 //     sample built from the schema when the spec has no example (required + optional fields, first enum value);
 //   - examples/<file>.json: copies of specs/examples/*.json (content documents the client will load);
+//   - asyncapi/<type>.<name>.json: the `examples` of the realtime messages the client handles (F092 T005), each
+//     validated against its message payload schema (ajv) — a wrong example fails generation;
 //   - manifest.json: source file + sha256 of every fixture (generated marker, checked in CI).
 // Usage: node src/game/tools/gen_fixtures.mjs [--check]   (--check exits 1 when fixtures are stale)
 import fs from 'node:fs';
@@ -34,6 +36,11 @@ const RESPONSES = [['listMyAssignments', '200']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
+// Realtime messages of the game client (F092): system, session, hub, presence.
+const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
+const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.'];
+const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
+const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 
 const spec = yaml.load(fs.readFileSync(path.join(root, SPEC), 'utf8'));
 const components = spec.components?.schemas ?? {};
@@ -86,6 +93,39 @@ function sample(schemaIn, depth = 0, seen = new Set()) {
   }
 }
 
+// AsyncAPI message examples → [rel, text, source]; every example must validate against its message payload.
+function asyncExamples() {
+  const doc = yaml.load(fs.readFileSync(path.join(root, ASYNCAPI), 'utf8'));
+  const schemas = doc.components?.schemas ?? {};
+  const toDefs = (v) => {
+    if (Array.isArray(v)) return v.map(toDefs);
+    if (v && typeof v === 'object') {
+      const o = {};
+      for (const [k, val] of Object.entries(v)) {
+        if (k === 'examples' || k === 'example' || k.startsWith('x-')) continue;
+        o[k] = k === '$ref' ? val.replace('#/components/schemas/', '#/$defs/') : toDefs(val);
+      }
+      return o;
+    }
+    return v;
+  };
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  addFormats(ajv);
+  const out = [];
+  for (const [key, msg] of Object.entries(doc.components?.messages ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
+    if (!msg?.name || !ASYNC_PREFIXES.some((p) => msg.name.startsWith(p)) || !Array.isArray(msg.examples)) continue;
+    const validate = ajv.compile({ ...toDefs(msg.payload), $defs: toDefs(schemas) });
+    for (const ex of msg.examples) {
+      if (!validate(ex.payload)) {
+        throw new Error(`${ASYNCAPI} ${msg.name} example ${ex.name}: ${ajv.errorsText(validate.errors)}`);
+      }
+      out.push([`asyncapi/${msg.name}.${ex.name}.json`, JSON.stringify(ex.payload, null, 2) + '\n',
+        `${ASYNCAPI}#/components/messages/${key}/examples/${ex.name}`]);
+    }
+  }
+  return out;
+}
+
 function render() {
   const files = {};
   const manifest = {};
@@ -107,6 +147,10 @@ function render() {
     const rel = `examples/${file}`;
     files[rel] = fs.readFileSync(path.join(root, EXAMPLES_DIR, file), 'utf8');
     manifest[rel] = { source: `${EXAMPLES_DIR}/${file}` };
+  }
+  for (const [rel, text, source] of asyncExamples()) {
+    files[rel] = text;
+    manifest[rel] = { source };
   }
   for (const [rel, text] of Object.entries(files)) {
     manifest[rel].sha256 = crypto.createHash('sha256').update(text).digest('hex');

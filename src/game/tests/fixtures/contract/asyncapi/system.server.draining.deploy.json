@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "system.server.draining",
+  "seq": 9,
+  "ts": 1763600002000,
+  "payload": {
+    "reconnect_after_ms": 3500,
+    "reason": "deploy"
+  }
+}

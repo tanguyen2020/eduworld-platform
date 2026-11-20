@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "hub.player.emoted",
+  "seq": 23,
+  "ts": 1763600001400,
+  "payload": {
+    "room_id": "hub:main_hub:01",
+    "eid": 3,
+    "emote_id": "emote_wave"
+  }
+}

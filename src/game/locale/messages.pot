@@ -519,6 +519,9 @@ msgstr ""
 msgid "ui.hub.action.read"
 msgstr ""
 
+msgid "ui.hub.area_not_found"
+msgstr ""
+
 msgid "ui.hub.assignments"
 msgstr ""
 
@@ -526,6 +529,12 @@ msgid "ui.hub.assignments_count"
 msgstr ""
 
 msgid "ui.hub.board.school_assignments"
+msgstr ""
+
+msgid "ui.hub.emote_not_owned"
+msgstr ""
+
+msgid "ui.hub.emote_rate_limited"
 msgstr ""
 
 msgid "ui.hub.grade_band.g1_3"
@@ -546,6 +555,9 @@ msgstr ""
 msgid "ui.hub.home.tooltip"
 msgstr ""
 
+msgid "ui.hub.join_denied"
+msgstr ""
+
 msgid "ui.hub.journal"
 msgstr ""
 
@@ -553,6 +565,9 @@ msgid "ui.hub.journal.tooltip"
 msgstr ""
 
 msgid "ui.hub.player_default"
+msgstr ""
+
+msgid "ui.hub.room_full"
 msgstr ""
 
 msgid "ui.hub.settings"
@@ -871,6 +886,12 @@ msgid "ui.question.type_number"
 msgstr ""
 
 msgid "ui.question.use_widget"
+msgstr ""
+
+msgid "ui.realtime.degraded"
+msgstr ""
+
+msgid "ui.realtime.reconnecting"
 msgstr ""
 
 msgid "ui.result.back_to_quest"
