@@ -37,6 +37,14 @@ func TestSniffAndCompatible(t *testing.T) {
 		{[]byte("glTF\x02\x00"), "model/gltf-binary", "model/gltf-binary", true},
 		{[]byte(`<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"/>`), "image/svg+xml", "image/svg+xml", true},
 		{[]byte("a,b,c\n1,2,3\n"), "text/plain", "text/csv", true},
+		// F027 follow-up (F065 OQ): WebVTT subtitles, with or without BOM; text that is not WebVTT declared as text/vtt
+		// (an SRT, a header without its separator) is a type mismatch, and a VTT declared as CSV too.
+		{[]byte("WEBVTT\n\n00:00.000 --> 00:04.000\nXin chào!\n"), "text/vtt", "text/vtt", true},
+		{[]byte("\xef\xbb\xbfWEBVTT - phụ đề\r\n"), "text/vtt", "text/vtt", true},
+		{[]byte("WEBVTT"), "text/vtt", "text/vtt", true},
+		{[]byte("WEBVTTX\n"), "text/plain", "text/vtt", false},
+		{[]byte("1\n00:00:00,000 --> 00:00:04,000\nSRT\n"), "text/plain", "text/vtt", false},
+		{[]byte("WEBVTT\n"), "text/vtt", "text/csv", false},
 		{[]byte("PK\x03\x04"), "application/zip", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", true},
 		// A PDF renamed .png and the EICAR text declared as PNG are type mismatches (quickstart step 5).
 		{[]byte("%PDF-1.7"), "application/pdf", "image/png", false},

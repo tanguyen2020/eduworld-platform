@@ -18365,7 +18365,8 @@ components:
         ended_at: { $ref: '#/components/schemas/Timestamp' }
     MediaKind:
       type: string
-      enum: [image, audio, video, model3d, document]
+      description: subtitle = phụ đề WebVTT (text/vtt) của video_lesson (F058 Clarifications, F027 T040)
+      enum: [image, audio, video, model3d, document, subtitle]
     MediaStatus:
       type: string
       enum: [quarantined, processing, ready, rejected]

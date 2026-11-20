@@ -145,6 +145,46 @@ func TestMediaRejections(t *testing.T) {
 	}
 }
 
+// F027 follow-up (F065 OQ, T040): a WebVTT subtitle is MediaKind subtitle accepted as text/vtt, checked by its WEBVTT header
+// and stored once under media/<sha256>/vtt.vtt (variant "vtt", immutable); an SRT declared as text/vtt is rejected
+// type_mismatch; a VTT over the document limit is refused at presign.
+func TestMediaWebVTT(t *testing.T) {
+	ctx := context.Background()
+	c := newCurEnv(ctx, t, withMedia)
+	vtt := []byte("WEBVTT\n\n00:00.000 --> 00:04.000\nXin chào các em!\n")
+	id, done := c.upload(t, edA, "subtitle", "text/vtt", vtt, nil)
+	must(t, done, http.StatusOK, "complete vtt")
+	if err := c.process(ctx, t, id); err != nil {
+		t.Fatal(err)
+	}
+	got := must(t, c.do(t, http.MethodGet, "/cms/media/"+id, edA, nil, nil), http.StatusOK, "get vtt")
+	if got.str("status") != "ready" || variantKey(got, "vtt") != "media/"+sha(vtt)+"/vtt.vtt" {
+		t.Fatalf("vtt: %s", got.raw)
+	}
+	if b := c.object(ctx, t, pkgmedia.BucketPrivate, variantKey(got, "vtt")); !bytes.Equal(b, vtt) {
+		t.Fatalf("stored vtt %q", b)
+	}
+	h, err := c.media.s3.Stat(ctx, pkgmedia.BucketPrivate, variantKey(got, "vtt"))
+	if err != nil || h.Get("Cache-Control") != pkgmedia.ImmutableCacheControl {
+		t.Fatalf("headers %v %v", h, err)
+	}
+	srt, done := c.upload(t, edA, "subtitle", "text/vtt", []byte("1\n00:00:00,000 --> 00:00:04,000\nXin chào\n"), nil)
+	must(t, done, http.StatusOK, "complete srt")
+	if err := c.process(ctx, t, srt); err != nil {
+		t.Fatal(err)
+	}
+	if r := must(t, c.do(t, http.MethodGet, "/cms/media/"+srt, edA, nil, nil), http.StatusOK, "get srt"); r.str("reject_reason") != "type_mismatch" {
+		t.Fatalf("srt: %s", r.raw)
+	}
+	if r := c.presign(t, edA, "subtitle", "text/vtt", vtt, map[string]any{"size_bytes": 10*1024*1024 + 1}); r.status != 413 ||
+		r.str("code") != "MEDIA_TOO_LARGE" {
+		t.Fatalf("too large: %d %s", r.status, r.raw)
+	}
+	if r := c.presign(t, edA, "subtitle", "text/plain", vtt, nil); r.status != 415 || r.str("code") != "MEDIA_TYPE_NOT_ALLOWED" {
+		t.Fatalf("subtitle as text/plain: %d %s", r.status, r.raw)
+	}
+}
+
 // F027-AC-02: type, size and alt text rules of a presign.
 func TestMediaPresignRules(t *testing.T) {
 	ctx := context.Background()

@@ -13,7 +13,7 @@
 
 - [x] T005 Delta contract (owner F030): `createCmsActivityVersion` (đã có: F030 T054, 2026-11-20) — file: `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
 - [ ] T006 Delta contract (owner F031): `previewRegradeRequest` + `RegradeImpact`, `listRegradeRequests`, thêm trường version vào `RegradeRequest` (cùng `getRegradeRequest` của F031) — file: `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`
-- [ ] T007 Delta contract (owner F027): `MediaKind` thêm `subtitle` (`text/vtt`); cập nhật CONTENT_MODEL §7 — file: `specs/openapi/modules/learning.v1.yaml`, `docs/02-learning/CONTENT_MODEL.md` — kiểm: `make specs-lint`
+- [x] T007 Delta contract (owner F027): `MediaKind` thêm `subtitle` (`text/vtt`); cập nhật CONTENT_MODEL §7 — file: `specs/openapi/modules/learning.v1.yaml`, `docs/02-learning/CONTENT_MODEL.md` — kiểm: `make specs-lint` — ✅ làm ở F027 T040 (2026-11-20): `MediaKind.subtitle` (`text/vtt`), CONTENT_MODEL §7, migration `20261221000001`
 - [ ] T008 Sửa ADMIN_PORTAL §3.13 permission builder = `learning_content.activity.write`; ghi CHANGELOG — file: `docs/04-admin-portal/ADMIN_PORTAL.md`, `CHANGELOG.md` — kiểm: `make docs-check`
 - [ ] T009 Sinh lại client TS — file: `src/cms/frontend/apps/portal/src/api/generated/eduworld-api.d.ts` — kiểm: `pnpm gen:api` + CI diff
 - [ ] T010 [P] `SchemaForm` (ajv draft 2020-12, map lỗi JSON Pointer ↔ field, bộ đếm `maxLength`) + test — file: `src/cms/frontend/packages/ops-ui/src/activity-editor/SchemaForm.tsx`, `SchemaForm.test.tsx`

@@ -11948,8 +11948,11 @@ export interface components {
             }[];
             width?: number;
         };
-        /** @enum {string} */
-        MediaKind: "image" | "audio" | "video" | "model3d" | "document";
+        /**
+         * @description subtitle = phụ đề WebVTT (text/vtt) của video_lesson (F058 Clarifications, F027 T040)
+         * @enum {string}
+         */
+        MediaKind: "image" | "audio" | "video" | "model3d" | "document" | "subtitle";
         /** @description alt_text bắt buộc khi kind = image (422 VALIDATION_FAILED); is_exam_material buộc lưu ở ew-media-private (F027) */
         MediaPresignRequest: {
             alt_text?: string;

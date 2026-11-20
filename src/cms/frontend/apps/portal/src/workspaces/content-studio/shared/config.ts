@@ -52,6 +52,8 @@ export const MEDIA_RULES = {
   video: { maxBytes: 300 * 1024 * 1024, ext: ['mp4', 'webm'] },
   model3d: { maxBytes: 50 * 1024 * 1024, ext: ['glb', 'pck'] },
   document: { maxBytes: 20 * 1024 * 1024, ext: ['csv', 'xlsx', 'json', 'yaml', 'yml', 'xml', 'zip'] },
+  // WebVTT subtitles of video lessons (F027 T040): 10 MB [Proposed], the server limit of the kind.
+  subtitle: { maxBytes: 10 * 1024 * 1024, ext: ['vtt'] },
 } as const;
 
 /** Rows of one question import (importer `MaxImportRows`, F024). */

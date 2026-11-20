@@ -439,6 +439,10 @@ func (h Media) run(ctx context.Context, a media.Asset) (media.RejectReason, map[
 		}
 	case media.KindAudio, media.KindVideo:
 		return h.audioVideo(ctx, a, data)
+	case media.KindSubtitle:
+		// A WebVTT subtitle (magic bytes WEBVTT checked above) is served as variant "vtt", the one video lessons pick
+		// (F065), under the immutable media/<sha256>/ key (R31).
+		res.Outputs = []pkgmedia.Output{{Variant: "vtt", File: "vtt.vtt", MIME: "text/vtt", Data: data, Main: true}}
 	default: // model3d, document: stored as uploaded, with its checksum (CONTENT_MODEL §7)
 		res.Outputs = []pkgmedia.Output{{Variant: "original", File: "original" + extOf(a.MIME), MIME: a.MIME, Data: data, Main: true}}
 	}
@@ -529,6 +533,8 @@ func extOf(mime string) string {
 		return ".xlsx"
 	case "application/zip":
 		return ".zip"
+	case "text/vtt":
+		return ".vtt"
 	}
 	return ".bin"
 }

@@ -10,7 +10,7 @@ import (
 const SniffLen = 512
 
 // Sniff detects the type of a file from its first bytes (magic numbers; research F027 R1): images, audio, video,
-// glTF binary, Godot packs, PDF, ZIP containers (xlsx), SVG and UTF-8 text. It returns "" when nothing matches.
+// glTF binary, Godot packs, PDF, ZIP containers (xlsx), SVG, WebVTT and UTF-8 text. It returns "" when nothing matches.
 func Sniff(head []byte) string {
 	h := head
 	if len(h) > SniffLen {
@@ -45,6 +45,8 @@ func Sniff(head []byte) string {
 		return "application/zip"
 	case isSVG(h):
 		return "image/svg+xml"
+	case isWebVTT(h):
+		return "text/vtt"
 	case isText(h):
 		return "text/plain"
 	}
@@ -59,6 +61,17 @@ func isSVG(h []byte) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(s), "<svg")
+}
+
+// isWebVTT reports a UTF-8 text starting with the WebVTT signature: optional BOM, "WEBVTT", then end of file, a
+// space, a tab or a line break (W3C WebVTT §4.1).
+func isWebVTT(h []byte) bool {
+	s := bytes.TrimPrefix(h, []byte(bom))
+	if !bytes.HasPrefix(s, []byte("WEBVTT")) || !isText(h) {
+		return false
+	}
+	rest := s[len("WEBVTT"):]
+	return len(rest) == 0 || strings.IndexByte(" \t\r\n", rest[0]) >= 0
 }
 
 func isText(h []byte) bool {
@@ -88,6 +101,7 @@ var mimeFamily = map[string][]string{
 	"application/x-godot-pck":  {"application/x-godot-pck", "application/octet-stream"},
 	"application/pdf":          {"application/pdf"},
 	"application/zip":          {"application/zip", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+	"text/vtt":                 {"text/vtt"},
 	"text/plain":               {"text/plain", "text/csv", "application/json", "application/x-yaml", "application/yaml", "text/yaml", "application/xml", "text/xml"},
 	"application/octet-stream": {"application/octet-stream"},
 }

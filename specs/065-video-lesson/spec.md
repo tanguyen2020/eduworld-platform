@@ -17,7 +17,7 @@
 - `ActivityResponseSubmission.response` không còn `required` trong contract: `branch_choice` gửi `branch_point_id` + `option_id`; kind câu hỏi thiếu `response` vẫn là `422 INVALID_RESPONSE` (nới ràng buộc request, không phá vỡ).
 - Video nhánh: hoàn thành khi lựa chọn dẫn tới đoạn `is_ending` (+ cue bắt buộc), không xét `watched_ratio` của video chính.
 - `assessment.integrity_signals` tạo ở F065, append-only, chưa partition.
-- Biến thể: pipeline F027 thêm `ogv_480` (cạnh `ogv_720`); render chỉ trả biến thể `ogv_*` và phụ đề; phụ đề chọn biến thể `vtt`/`original`. Pipeline media chưa nhận MIME `text/vtt` (F027) — Câu hỏi mở cho owner F027.
+- Biến thể: pipeline F027 thêm `ogv_480` (cạnh `ogv_720`); render chỉ trả biến thể `ogv_*` và phụ đề; phụ đề chọn biến thể `vtt`/`original`. Pipeline media nhận `text/vtt` từ follow-up F027 T040 (2026-11-20: biến thể `vtt`).
 - `client_seq` client đặt bằng unix ms tăng dần (server giữ số lớn nhất, kể cả qua thiết bị/resume); heartbeat gửi toàn bộ `watched_ranges` nên mất một heartbeat không mất tiến độ (thay `PendingWrites` cho tiến độ).
 - Q: Tua vượt phần đã xem xử lý thế nào? → A: Server cắt phần `watched_ranges` tăng nhanh hơn thời gian thực × tốc độ phát tối đa (integrity signal); với `allow_seek = watched_only`, `position_ms` vượt mép đã xem được chấp nhận → `422 VIDEO_SEEK_NOT_ALLOWED`, trạng thái không đổi ([research.md](research.md) R2).
 

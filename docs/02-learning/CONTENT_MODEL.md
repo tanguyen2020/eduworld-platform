@@ -226,6 +226,7 @@ flowchart LR
 | Âm thanh | MP3, WAV, OGG | **Ogg Vorbis** (Godot) + MP3 (web) | ≤ 20 MB, ≤ 10 phút |
 | Video | MP4 (H.264), WebM | **Ogg Theora `.ogv`** (Godot 4 chỉ phát Theora) + HLS 360p/720p + MP4 (CMS/web) | ≤ 300 MB, ≤ 20 phút |
 | Mô hình 3D / scene | `.glb`, `.pck` | lưu nguyên + checksum, theo pipeline [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) | ≤ 50 MB, chỉ content admin platform |
+| Phụ đề (`kind = subtitle`) | WebVTT `text/vtt` — magic bytes: dòng đầu `WEBVTT` (có thể có BOM) rồi hết tệp, khoảng trắng hoặc xuống dòng | lưu nguyên, biến thể `vtt` (`media/<sha256>/vtt.vtt`) cho [VIDEO_LEARNING](VIDEO_LEARNING.md) | ≤ 10 MB (bằng giới hạn `document` = `csv_import_max`) [Proposed — F027 follow-up 2026-11-20] |
 
 - **Khóa content-addressed:** `media/<sha256>/<variant>.<ext>` → bất biến, CDN và client cache vĩnh viễn (`Cache-Control: immutable`).
 - **Bất biến theo version:** thay ảnh = upload asset mới; version nội dung cũ vẫn trỏ asset cũ, nên học sinh đang chơi version cũ thấy đúng media cũ. Asset còn được version nào tham chiếu thì không bị xóa (soft-delete, ADR-0028).

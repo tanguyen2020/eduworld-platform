@@ -33,6 +33,10 @@
 - OQ F027-13: Tham chiếu media trong nội dung (`media_refs` + `media_ref`/`audio_ref`/`background_media_ref`/`image_media_ref`) phải là asset có trong thư viện của phạm vi (tenant khác/không tồn tại → `422 /media_refs/<i>`); ghi `media_usages` mới làm cho câu hỏi — loại nội dung khác ghi khi feature của chúng dùng `command.MediaRefs`. `kind = document` (file import) được quét + kiểm magic bytes rồi lưu nguyên (`original`) ở `ew-media-private`; `storage.AssetReader` là adapter thật của OQ F021-4. → [Confirmed].
 - OQ F027-14: Test tích hợp đặt phẳng trong `tests/integration/{media_*,math,preview}_test.go` (dùng chung `TestMain`/cluster, như OQ F022-2). → [Confirmed].
 
+### Session 2026-11-20 (follow-up F065 — phụ đề WebVTT)
+
+- Q: Pipeline có nhận phụ đề `text/vtt` cho `video_lesson` (F065 Câu hỏi mở)? → A: Có: `MediaKind` `subtitle` (đã [Confirmed] ở Clarifications F058), MIME `text/vtt`; giới hạn [Proposed] 10 MB = giới hạn `document`/`csv_import_max` (CONFIG_DEFAULTS chưa có tham số riêng cho phụ đề); magic bytes là dòng đầu `WEBVTT`; lưu nguyên dưới `media/<sha256>/vtt.vtt` (biến thể `vtt`). Transcript văn bản thường (`text/plain`) của bài nghe F066 chưa nằm trong danh sách MIME — Câu hỏi mở cho owner.
+
 ### Session 2026-11-20 (owner chốt)
 
 - OQ F027-2 → **Chốt:** `media.upload` cho mọi role có `learning_content.write` (`tenant_admin`, `school_admin`, `academic_manager`, `content_admin`); task ở F002.

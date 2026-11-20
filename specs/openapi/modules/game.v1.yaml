@@ -7321,12 +7321,14 @@ components:
           $ref: '#/components/schemas/Uuid'
     MediaKind:
       type: string
+      description: subtitle = phụ đề WebVTT (text/vtt) của video_lesson (F058 Clarifications, F027 T040)
       enum:
         - image
         - audio
         - video
         - model3d
         - document
+        - subtitle
     MediaPresignResponse:
       type: object
       description: 'Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01)'

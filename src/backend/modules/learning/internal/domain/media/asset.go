@@ -24,6 +24,8 @@ const (
 	KindVideo    Kind = "video"
 	KindModel3D  Kind = "model3d"
 	KindDocument Kind = "document"
+	// KindSubtitle is a WebVTT subtitle of a video lesson (F058 Clarifications [Confirmed]; F027 follow-up of F065).
+	KindSubtitle Kind = "subtitle"
 )
 
 // Status is a MediaStatus.
@@ -69,6 +71,8 @@ var limits = map[Kind]Limits{
 	KindVideo:    {MaxBytes: 300 * mb, MaxDuration: 20 * time.Minute},
 	KindModel3D:  {MaxBytes: 50 * mb},
 	KindDocument: {MaxBytes: 10 * mb},
+	// No subtitle limit in CONFIG_DEFAULTS yet: the document limit (csv_import_max) [Proposed, F027 T040].
+	KindSubtitle: {MaxBytes: 10 * mb},
 }
 
 // allowed lists the MIME types accepted per kind (CONTENT_MODEL §7 inputs; documents are the import formats).
@@ -79,6 +83,7 @@ var allowed = map[Kind][]string{
 	KindModel3D: {"model/gltf-binary", "application/x-godot-pck"},
 	KindDocument: {"text/csv", "application/json", "application/x-yaml", "application/yaml", "text/yaml", "application/xml", "text/xml",
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip"},
+	KindSubtitle: {"text/vtt"},
 }
 
 // LimitsOf returns the limits of k.
