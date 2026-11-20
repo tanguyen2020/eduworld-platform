@@ -174,7 +174,7 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Đã làm 2026-11-20.
 
 - [x] T058 **OQ chốt 2026-11-20** (OQ F030) `startAdHocAttempt` với question set theo luật: chọn câu bằng `selection.Select`, ghim version từng câu; test đủ câu/thiếu câu — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go` — kiểm: `make test-integration MOD=learning` — cỡ S — ✅ `Attempts.questionSetItems` chọn câu theo từng `selection_rules` (`selection.Select`, seed attempt + chỉ số rule, loại câu đã chọn); thiếu → 422; TestSelfStudyQuestionSetRules
-- [x] T059 (F063-AC-24, contract b058746) `AttemptReview.recommendations[]` có `recommendation_id`: gợi ý đang active của học sinh (≤ 3, `target_type` lesson/question_set/quest) có LO giao với LO yếu của attempt [Proposed] — file: `src/backend/modules/learning/internal/application/query/attempts.go` — kiểm: `make test-integration MOD=learning` — bằng chứng: `TestRenderHintCountAndReviewRecommendations` PASS
+- [x] T059 (F063-AC-24, contract b058746) `AttemptReview.recommendations[]` có `recommendation_id`: gợi ý đang active của học sinh (≤ 3, `target_type` lesson/question_set/quest) có LO giao với LO yếu của attempt [Confirmed] — file: `src/backend/modules/learning/internal/application/query/attempts.go` — kiểm: `make test-integration MOD=learning` — bằng chứng: `TestRenderHintCountAndReviewRecommendations` PASS
 
 ## Dependencies & Execution Order
 
