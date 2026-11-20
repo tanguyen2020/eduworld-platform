@@ -8403,6 +8403,8 @@ export interface components {
             activity_version_id?: components["schemas"]["Uuid"];
             /** @description Nội dung platform được gán cho tenant phiên — chỉ đọc "Từ EduWorld" (F058-AC-27) */
             assigned?: boolean;
+            /** @description Miễn trừ audio hướng dẫn nhóm g1_3 (CONTENT_MODEL §8.1); người duyệt xác nhận khi duyệt */
+            audio_exempt_reason?: string;
             /** @description Tác giả version (portal ẩn Duyệt với chính tác giả */
             author_id?: components["schemas"]["Uuid"];
             config?: {
@@ -8414,6 +8416,8 @@ export interface components {
             difficulty?: number;
             grade_levels?: components["schemas"]["GradeLevel"][];
             instructions?: components["schemas"]["LearningText"];
+            /** @description Audio đọc hướng dẫn (bản content_language), bắt buộc khi grade_levels giao {1,2,3} trừ khi có audio_exempt_reason — 422 AUDIO_REQUIRED khi gửi duyệt (CONTENT_MODEL §8.1, F058-AC-09) */
+            instructions_audio_ref?: components["schemas"]["Uuid"];
             /** @description Công thức đã lưu của version (Activity Builder F058 sửa lại không mất SVG) */
             math_assets?: {
                 /** @enum {string} */
@@ -8439,6 +8443,8 @@ export interface components {
         };
         ActivityDefinitionInput: {
             activity_type: components["schemas"]["ActivityType"];
+            /** @description Miễn trừ audio hướng dẫn nhóm g1_3 (CONTENT_MODEL §8.1); chuỗi rỗng xóa */
+            audio_exempt_reason?: string;
             /** @description content/interaction/evaluation/feedback/scoring/completion_rule theo specs/schemas/activities/<type>.schema.json (ACTIVITY_CONFIG_INVALID) */
             config: {
                 [key: string]: unknown;
@@ -8448,6 +8454,8 @@ export interface components {
             difficulty?: number;
             grade_levels: components["schemas"]["GradeLevel"][];
             instructions?: components["schemas"]["LearningText"];
+            /** @description Audio đọc hướng dẫn (bản content_language), bắt buộc khi grade_levels giao {1,2,3} trừ khi có audio_exempt_reason — 422 AUDIO_REQUIRED khi gửi duyệt (CONTENT_MODEL §8.1, F058-AC-09) */
+            instructions_audio_ref?: components["schemas"]["Uuid"];
             /** @description SVG + speech text do portal render bằng MathJax 4 (ADR-0055); server sanitize, thiếu → MATH_RENDER_FAILED */
             math_assets?: {
                 /** @enum {string} */

@@ -14,6 +14,11 @@
       "metrics": "Metrics"
     },
     "activity": {
+      "instructionsAudio": "Instructions voice-over",
+      "instructionsAudioHelp": "Required for grades 1–3: a human recording of the instructions (original language).",
+      "audioExempt": "Audio exemption reason",
+      "audioExemptHelp": "Only when reading aloud reveals the answer (spelling, letter recognition); the reviewer must confirm.",
+      "audioRequired": "Grade 1–3 activity is missing the instructions voice-over (or an exemption reason).",
       "audio": {
         "title": "Audio and transcript",
         "duration": "Duration: {{s}} s (from the file, read only)",

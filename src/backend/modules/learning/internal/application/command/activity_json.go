@@ -32,7 +32,8 @@ func ActivityJSON(doc dto.Doc, v dto.DocVersion, current *int) map[string]any {
 		out["translation_status"] = *v.TranslationStatus
 	}
 	// Authoring fields the Activity Builder edits again (F058): description, instructions, topic, timer, reward rule,
-	// stored formulas, author and the assigned flag of platform content.
+	// stored formulas, the g1_3 voice-over of the instructions and its exemption, author and the assigned flag of platform
+	// content.
 	if len(v.Summary) > 0 && string(v.Summary) != "null" {
 		out["description"] = v.Summary
 	}
@@ -50,6 +51,12 @@ func ActivityJSON(doc dto.Doc, v dto.DocVersion, current *int) map[string]any {
 	}
 	if len(a.MathAssets) > 0 && string(a.MathAssets) != "null" {
 		out["math_assets"] = a.MathAssets
+	}
+	if a.InstructionsAudioRef != nil {
+		out["instructions_audio_ref"] = *a.InstructionsAudioRef
+	}
+	if v.AudioExemptReason != nil {
+		out["audio_exempt_reason"] = *v.AudioExemptReason
 	}
 	if v.AuthorID != uuid.Nil {
 		out["author_id"] = v.AuthorID

@@ -14,6 +14,11 @@
       "metrics": "Đại lượng"
     },
     "activity": {
+      "instructionsAudio": "Âm thanh đọc hướng dẫn",
+      "instructionsAudioHelp": "Bắt buộc với lớp 1–3: ghi âm giọng người đọc hướng dẫn (bản ngôn ngữ gốc).",
+      "audioExempt": "Lý do miễn âm thanh",
+      "audioExemptHelp": "Chỉ khi đọc to làm lộ đáp án (chính tả, nhận biết chữ); người duyệt phải xác nhận.",
+      "audioRequired": "Hoạt động lớp 1–3 thiếu âm thanh đọc hướng dẫn (hoặc lý do miễn).",
       "audio": {
         "title": "Âm thanh và transcript",
         "duration": "Thời lượng: {{s}} giây (lấy từ tệp, chỉ đọc)",

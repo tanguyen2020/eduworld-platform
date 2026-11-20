@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
@@ -78,4 +79,36 @@ func TestRegradePreviewAndHistory(t *testing.T) {
 	if r := c.do(t, http.MethodGet, history, adA, nil, nil); r.status != http.StatusForbidden {
 		t.Fatalf("history as school admin: %d", r.status)
 	}
+}
+
+// F058-AC-09 (T020, delta owner F030; CONTENT_MODEL §8.1, TC-CNT-010): an activity of grades 1–3 needs the voice-over of
+// its instructions (instructions_audio_ref) or an exemption before review; both are stored and returned by
+// getCmsActivity so the builder can edit them again.
+func TestActivityInstructionsAudio(t *testing.T) {
+	ctx := context.Background()
+	c := newCurEnv(ctx, t)
+	s := c.attemptSetup(ctx, t, nil)
+	body := activityBody(s.qc, "quiz", quizConfig(s.questions...))
+	body["grade_levels"] = []int{2}
+	id := c.createActivity(t, qlcmA, body)
+	r := c.act(ctx, t, qlcmA, "activity", id, 1, "submit_review", "")
+	if r.status != http.StatusUnprocessableEntity || r.str("code") != "AUDIO_REQUIRED" || !slices.Contains(r.errorCodes(), "/instructions_audio_ref:REQUIRED") {
+		t.Fatalf("no voice-over: %d %s", r.status, r.raw)
+	}
+	audio := c.mediaRow(ctx, t, &c.tenantA, "ready")
+	body["instructions_audio_ref"] = audio
+	must(t, c.do(t, http.MethodPatch, "/cms/learning/activities/"+id, qlcmA, merge(hdr{"Content-Type": "application/json"}, ifm(c.rowTag(ctx, t, "activity", id, 1))), body), http.StatusOK, "voice-over")
+	g := must(t, c.do(t, http.MethodGet, "/cms/learning/activities/"+id, qlcmA, nil, nil), http.StatusOK, "get")
+	if g.str("instructions_audio_ref") != audio {
+		t.Fatalf("voice-over not returned: %s", g.raw)
+	}
+	must(t, c.act(ctx, t, qlcmA, "activity", id, 1, "submit_review", ""), http.StatusOK, "submit with voice-over")
+
+	body2 := activityBody(s.qc, "quiz", quizConfig(s.questions...))
+	body2["grade_levels"], body2["audio_exempt_reason"] = []int{1}, "Bài nhận biết chữ: đọc to làm lộ đáp án"
+	id2 := c.createActivity(t, qlcmA, body2)
+	if g := must(t, c.do(t, http.MethodGet, "/cms/learning/activities/"+id2, qlcmA, nil, nil), http.StatusOK, "get exempt"); g.str("audio_exempt_reason") == "" {
+		t.Fatalf("exemption not returned: %s", g.raw)
+	}
+	must(t, c.act(ctx, t, qlcmA, "activity", id2, 1, "submit_review", ""), http.StatusOK, "submit with exemption")
 }

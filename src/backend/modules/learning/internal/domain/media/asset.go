@@ -259,4 +259,4 @@ func positive(n int) *int {
 }
 
 // RefKeys are the keys of rich content that reference a media asset (QUESTION_BANK §2, CONTENT_MODEL §9).
-var RefKeys = []string{"media_ref", "audio_ref", "background_media_ref", "image_media_ref"}
+var RefKeys = []string{"media_ref", "audio_ref", "background_media_ref", "image_media_ref", "instructions_audio_ref"}

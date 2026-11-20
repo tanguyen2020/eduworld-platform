@@ -41,9 +41,10 @@ var BodyKeys = map[contentmodel.ContentType][]string{
 	contentmodel.TypeLesson:              {"blocks", "completion_rule", "estimated_minutes", "math_assets"},
 	contentmodel.TypeLearningMaterial:    {"blocks", "material_kind"},
 	contentmodel.TypeAssessmentBlueprint: {"definition", "exam_type", "feedback_timing", "result_release", "efficacy_instrument"},
-	// F030: the activity fields of ActivityDefinitionInput that are not shared metadata columns.
+	// F030: the activity fields of ActivityDefinitionInput that are not shared metadata columns (F058: the g1_3 voice-over
+	// of the instructions, CONTENT_MODEL §8.1).
 	contentmodel.TypeActivity: {"activity_type", "instructions", "difficulty", "time_limit_seconds", "reward_rule_id", "config",
-		"math_assets"},
+		"math_assets", "instructions_audio_ref"},
 }
 
 // writePerm is the permission to author a content type: activities have their own (learning_content.activity.write).

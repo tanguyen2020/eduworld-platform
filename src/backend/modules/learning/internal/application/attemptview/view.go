@@ -25,6 +25,8 @@ type ActivityBody struct {
 	RewardRuleID     *uuid.UUID      `json:"reward_rule_id,omitempty"`
 	Config           json.RawMessage `json:"config,omitempty"`
 	MathAssets       json.RawMessage `json:"math_assets,omitempty"`
+	// InstructionsAudioRef is the voice-over of the instructions (g1_3, CONTENT_MODEL §8.1).
+	InstructionsAudioRef *uuid.UUID `json:"instructions_audio_ref,omitempty"`
 }
 
 // ParseBody decodes the body of an activity version.

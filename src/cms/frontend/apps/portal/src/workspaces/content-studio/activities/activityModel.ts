@@ -33,6 +33,9 @@ export interface ActivityState {
   time_limit_seconds?: number;
   config: Config;
   math_assets: NonNullable<ActivityDefinitionInput['math_assets']>;
+  /** Voice-over of the instructions, required for grades 1–3 unless exempted (CONTENT_MODEL §8.1, F058-AC-09). */
+  instructions_audio_ref?: string;
+  audio_exempt_reason?: string;
 }
 
 const SCHEMAS: Partial<Record<ActivityType, { $id: string }>> = {
@@ -75,6 +78,8 @@ export function fromDefinition(d: ActivityDefinition): ActivityState {
     time_limit_seconds: d.time_limit_seconds,
     config: (d.config as Config) ?? {},
     math_assets: (d.math_assets ?? []) as ActivityState['math_assets'],
+    instructions_audio_ref: d.instructions_audio_ref,
+    audio_exempt_reason: d.audio_exempt_reason,
   };
 }
 
@@ -95,6 +100,9 @@ export function toInput(s: ActivityState): ActivityDefinitionInput {
   if (s.topic_ids[0]) out.topic_id = s.topic_ids[0];
   if (s.difficulty) out.difficulty = s.difficulty;
   if (s.time_limit_seconds) out.time_limit_seconds = s.time_limit_seconds;
+  if (s.instructions_audio_ref) out.instructions_audio_ref = s.instructions_audio_ref;
+  // an empty exemption clears the stored one (merge semantics of the draft PATCH)
+  out.audio_exempt_reason = s.audio_exempt_reason?.trim() ?? '';
   return out as ActivityDefinitionInput;
 }
 

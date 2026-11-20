@@ -6,9 +6,22 @@
 // publish locked while the type is `preview` in the registry, release tabs (versions, releases, usages, preview "như học
 // sinh thấy"), system re-evaluation of a published version. Builders need ≥ 1024 px; smaller screens read only.
 // The page orchestrates only: rules and grading live in module learning (AGENTS R1, R5).
-import { BilingualField, ContentEditorShell, toLangMap, useAutosave, type EditorBlocker, type I18nTextValue, type WorkflowAction } from '@eduworld/ops-ui/content';
-import { Alert, Button, Card, Form, InputNumber, Result, Spin, Tag } from 'antd';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  BilingualField,
+  buildMathAssets,
+  collectMath,
+  ContentEditorShell,
+  MathInsertButton,
+  mathId,
+  toLangMap,
+  useAutosave,
+  type EditorBlocker,
+  type I18nTextValue,
+  type MathBuildResult,
+  type WorkflowAction,
+} from '@eduworld/ops-ui/content';
+import { Alert, Button, Card, Form, Input, InputNumber, Result, Spin, Tag } from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
@@ -21,6 +34,7 @@ import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { LargeScreenRequired } from '../../../shell/StatusPages';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { DocMetaFields } from '../builders/DocMetaFields';
+import { MediaPicker } from '../media/MediaPicker';
 import { useWorkflow } from '../questions/useWorkflow';
 import { ContentReleaseTabs } from '../release/ContentReleaseTabs';
 import { PublishDialog } from '../release/PublishDialog';
@@ -30,6 +44,7 @@ import { useContentAccess } from '../shared/access';
 import { AssignedBadge } from '../shared/AssignedBadge';
 import { CONTENT_AUTOSAVE_DEBOUNCE_MS, CONTENT_AUTOSAVE_INTERVAL_MS, EDITOR_MIN_WIDTH_QUERY, LIMITS } from '../shared/config';
 import { CONTENT_TYPES } from '../shared/contentTypes';
+import { needsSpokenStem } from '../shared/gates';
 import { OWNER_FIELD, ownerOf, OwnerScopeField } from '../shared/OwnerScopeField';
 import { RegradeEntryButton } from '../regrade/RegradeEntryButton';
 import { emptyActivity, fromDefinition, metaErrors, toInput, validateConfig, type ActivityDefinition, type ActivityState, type ActivityType } from './activityModel';
@@ -42,6 +57,31 @@ const isConflict = (e: unknown) => e instanceof ApiError && (e.status === 412 ||
 /** LearningText.maxLength (description, instructions). */
 const TEXT_MAX = 20000;
 const ACTIONS = CONTENT_TYPES.activity.actions;
+/** math_assets.maxItems of ActivityDefinitionInput; audio_exempt_reason.maxLength. */
+const MATH_MAX = 200;
+const EXEMPT_MAX = 255;
+const NO_MATH: MathBuildResult = { assets: [], assetPaths: [], errors: [] };
+
+/** Fields that may hold formulas (F058-AC-08): description, instructions and the texts of the config. */
+const mathPayload = (s: ActivityState) => ({ description: s.description, instructions: s.instructions, config: s.config });
+
+/** Dotted path of a formula → JSON Pointer of its field (`instructions.vi` → `/instructions`, `config.content.segments.0.title.vi` → `/config/content/segments/0/title`). */
+function mathPointer(path: string): string {
+  const parts = path.split('.');
+  if (parts[0] === 'description' || parts[0] === 'instructions') return `/${parts[0]}`;
+  const tail = parts.at(-1) === 'vi' || parts.at(-1) === 'en' ? parts.slice(0, -1) : parts;
+  return `/${tail.join('/')}`;
+}
+
+/** Renders the formulas of a state (MathJax in the browser, ADR-0055) into math_assets with their math_id. */
+async function renderMathAssets(s: ActivityState): Promise<{ built: MathBuildResult; assets: ActivityState['math_assets'] }> {
+  const built = await buildMathAssets(collectMath(mathPayload(s), s.content_language));
+  const assets = await Promise.all(built.assets.slice(0, MATH_MAX).map(async (a) => ({ math_id: await mathId(a.latex, false), latex: a.latex, svg: a.svg, speech_text: a.speech_text })));
+  return { built, assets };
+}
+
+/** Appends a formula to the text of one language (F058-AC-08, MathInsertButton). */
+const appendTo = (v: ActivityState['description'], lang: 'vi' | 'en', formula: string) => ({ ...v, [lang]: `${v[lang] ?? ''} ${formula}`.trim() });
 
 export function ActivityEditorPage({ id, type }: { id?: string; type?: ActivityType }) {
   const { t } = useTranslation();
@@ -99,22 +139,56 @@ function ActivityForm({ id, type, server, etag, reload }: { id?: string; type: A
     for (const e of validateConfig(type, state.config)) out[e.pointer] = t(`content_studio.validation.${['maxLength', 'minLength', 'maxItems', 'minItems', 'required', 'pattern', 'enum', 'type', 'minimum', 'maximum'].includes(e.keyword) ? e.keyword : 'invalid'}`, { limit: e.params.limit ?? '' });
     return out;
   }, [type, state.config, t]);
-  const errors = useMemo(() => ({ ...schemaErrors, ...serverErrors }), [schemaErrors, serverErrors]);
+  // F058-AC-08: formulas are rendered as the author types; a formula error is shown on its field and blocks saving.
+  const [math, setMath] = useState<MathBuildResult>(NO_MATH);
+  const lastBuilt = useRef<MathBuildResult>(NO_MATH);
+  useEffect(() => {
+    let live = true;
+    void buildMathAssets(collectMath(mathPayload(state), state.content_language)).then((r) => live && setMath(r));
+    return () => {
+      live = false;
+    };
+  }, [state]);
+  const mathErrors = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const e of math.errors) out[mathPointer(e.path)] ??= t('content_studio.gate.math', { latex: e.latex.slice(0, 40) });
+    return out;
+  }, [math.errors, t]);
+  const errors = useMemo(() => ({ ...schemaErrors, ...mathErrors, ...serverErrors }), [schemaErrors, mathErrors, serverErrors]);
   const onMediaStatus = useCallback((assetId: string, st: string) => setMediaStatus((m) => (m[assetId] === st ? m : { ...m, [assetId]: st })), []);
   const local = useMemo<EditorBlocker[]>(
     () => [
       ...metaErrors(state).map((f) => ({ field: f, message: t(`content_studio.activity.meta.${f.slice(1)}`) })),
       ...(def.blockers?.(state.config, { t, mediaStatus, flags }) ?? []),
       ...Object.entries(schemaErrors).map(([field, m]) => ({ field, message: `${field}: ${m}` })),
+      ...Object.entries(mathErrors).map(([field, message]) => ({ field, message })),
     ],
-    [state, def, t, mediaStatus, flags, schemaErrors],
+    [state, def, t, mediaStatus, flags, schemaErrors, mathErrors],
   );
+  // F058-AC-09 (CONTENT_MODEL §8.1): grades 1–3 need the voice-over of the instructions or an exemption. It blocks
+  // Gửi duyệt only: a draft can be saved before the recording exists.
+  const spoken = needsSpokenStem(state.grade_levels);
+  const submitGates = useMemo<EditorBlocker[]>(() => {
+    if (!spoken) return [];
+    const ref = state.instructions_audio_ref;
+    if (!ref && !state.audio_exempt_reason?.trim()) return [{ field: '/instructions_audio_ref', message: t('content_studio.activity.audioRequired') }];
+    if (ref && mediaStatus[ref] && mediaStatus[ref] !== 'ready') return [{ field: '/instructions_audio_ref', message: t('error.MEDIA_NOT_READY') }];
+    return [];
+  }, [spoken, state.instructions_audio_ref, state.audio_exempt_reason, mediaStatus, t]);
 
   const capture = (e: unknown) => {
     if (!(e instanceof ApiError)) return;
     if (e.code === 'CONTENT_NOT_EDITABLE') setNotEditable(true);
     const out: Record<string, string> = {};
-    for (const [f, fe] of Object.entries(e.fieldErrors)) out[f.startsWith('/') ? f : `/${f}`] = fe.message ?? t(`error.field.${fe.code}`, { defaultValue: t(e.i18nKey) });
+    for (const [f, fe] of Object.entries(e.fieldErrors)) {
+      const m = e.code === 'MATH_RENDER_FAILED' ? /^\/?math_assets\/(\d+)/.exec(f) : null;
+      if (m) {
+        // F058-AC-08: the server refused a formula → red on the fields holding it
+        for (const p of lastBuilt.current.assetPaths[Number(m[1])] ?? []) out[mathPointer(p)] = t('content_studio.problem.MATH_RENDER_FAILED');
+        continue;
+      }
+      out[f.startsWith('/') ? f : `/${f}`] = fe.message ?? t(`error.field.${fe.code}`, { defaultValue: t(e.i18nKey) });
+    }
     setServerErrors(out);
   };
 
@@ -125,7 +199,9 @@ function ActivityForm({ id, type, server, etag, reload }: { id?: string; type: A
     isConflict,
     save: async (v, currentEtag) => {
       try {
-        const r = await api.saveDraft(id!, toInput(v), currentEtag);
+        const { built, assets } = await renderMathAssets(v);
+        lastBuilt.current = built;
+        const r = await api.saveDraft(id!, toInput({ ...v, math_assets: assets }), currentEtag);
         setServerErrors({});
         return { etag: r.etag };
       } catch (e) {
@@ -157,7 +233,9 @@ function ActivityForm({ id, type, server, etag, reload }: { id?: string; type: A
           if (!v) return;
           owner = ownerOf(v[OWNER_FIELD]);
         }
-        const r = await create.mutateAsync({ body: { ...toInput(state), ...owner.body }, headers: owner.headers });
+        const { built, assets } = await renderMathAssets(state);
+        lastBuilt.current = built;
+        const r = await create.mutateAsync({ body: { ...toInput({ ...state, math_assets: assets }), ...owner.body }, headers: owner.headers });
         api.remember(r.data.activity_id, r);
         navigate(`../${r.data.activity_id}`, { replace: true });
         return;
@@ -227,7 +305,7 @@ function ActivityForm({ id, type, server, etag, reload }: { id?: string; type: A
           can: { write: access.activity.write, review: access.activity.review, publish: access.activity.publish && !preview },
           isAuthor: !!server?.author_id && server.author_id === me.data?.user_id,
           readOnly: !wide || assigned,
-          blockers: [...local, ...errorBlockers],
+          blockers: [...local, ...submitGates, ...errorBlockers],
           busy,
           onAction: (a) => void onAction(a),
           wrapAction: (a, b) => {
@@ -264,7 +342,23 @@ function ActivityForm({ id, type, server, etag, reload }: { id?: string; type: A
               <InputNumber aria-label={t('content_studio.activity.difficulty')} min={1} max={5} value={state.difficulty} onChange={(v) => set({ difficulty: v ?? undefined })} />
             </Form.Item>
             <BilingualField id="description" label={t('content_studio.activity.description')} value={state.description} onChange={(v) => set({ description: toLangMap(v as I18nTextValue, state.content_language) })} contentLanguage={state.content_language} maxLength={TEXT_MAX} readOnly={readOnly} error={err('/description')} />
+            <Form.Item>
+              <MathInsertButton language={state.content_language} disabled={readOnly} onInsert={(m) => set({ description: appendTo(state.description, state.content_language, m) })} />
+            </Form.Item>
             <BilingualField id="instructions" label={t('content_studio.activity.instructions')} value={state.instructions} onChange={(v) => set({ instructions: toLangMap(v as I18nTextValue, state.content_language) })} contentLanguage={state.content_language} maxLength={TEXT_MAX} readOnly={readOnly} error={err('/instructions')} />
+            <Form.Item>
+              <MathInsertButton language={state.content_language} disabled={readOnly} onInsert={(m) => set({ instructions: appendTo(state.instructions, state.content_language, m) })} />
+            </Form.Item>
+            {spoken && (
+              <>
+                <Form.Item label={t('content_studio.activity.instructionsAudio')} extra={t('content_studio.activity.instructionsAudioHelp')} validateStatus={err('/instructions_audio_ref') ? 'error' : undefined} help={err('/instructions_audio_ref')}>
+                  <MediaPicker id="instructions_audio_ref" kind="audio" value={state.instructions_audio_ref} disabled={readOnly} onChange={(v) => set({ instructions_audio_ref: v })} onStatus={onMediaStatus} />
+                </Form.Item>
+                <Form.Item label={t('content_studio.activity.audioExempt')} extra={t('content_studio.activity.audioExemptHelp')}>
+                  <Input id="audio_exempt_reason" aria-label={t('content_studio.activity.audioExempt')} maxLength={EXEMPT_MAX} showCount value={state.audio_exempt_reason ?? ''} onChange={(e) => set({ audio_exempt_reason: e.target.value })} />
+                </Form.Item>
+              </>
+            )}
             <Form.Item label={t('content_studio.activity.timeLimit')} extra={t('content_studio.activity.timeLimitHelp')}>
               <InputNumber aria-label={t('content_studio.activity.timeLimit')} min={1} value={state.time_limit_seconds} onChange={(v) => set({ time_limit_seconds: v ?? undefined })} />
             </Form.Item>
