@@ -293,7 +293,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Metrics: observability.QuestionCounter{}}
 	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
-		Metrics: observability.AttemptCounter{}}
+		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}}}
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		UoW: core.UoW, Metrics: observability.LessonCounter{}}
 	att.Lessons = lessons

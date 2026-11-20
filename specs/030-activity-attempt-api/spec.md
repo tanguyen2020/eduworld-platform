@@ -50,6 +50,7 @@
 - `suspicious_speed_flag` → **Chốt:** đánh giá lúc nộp (ACTIVITY_ENGINE: đúng 100 %, < 1,5 s/câu trên ≥ 10 câu), ghi cờ trên attempt + metric `eduworld_attempt_suspicious_speed_total`; không phạt, không đổi điểm; F132 dùng cờ cho quy trình ANTI_CHEAT.
 - `mergeUserData` của learning (OQ F016-2, F045-3) → **Chốt:** giữ attempt/learning record theo `student_id` gốc, ghi liên kết `student_id` gốc → user đích (IDENTITY_MAPPING §7), idempotent theo `merge_id`. Task bổ sung.
 - Facade test phía game → F072 (đã ghi ở T045).
+- Triển khai T053: giá trị `answer_rate` (60 câu/phút, ≥ 1 s giữa hai câu của một attempt, 10 lần nộp/phút) là `command.DefaultAnswerRate()` cho tới khi module learning đọc platform settings — cùng cách với `attempt_start_rate` [Proposed]; cửa sổ phút cố định theo đồng hồ server, `Retry-After` = số giây tới hết phút (hoặc phần còn lại của khoảng cách); lần bị từ chối vì khoảng cách không tính vào cửa sổ [Proposed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -69,6 +69,9 @@ type Attempts struct {
 	Lessons LessonPinner
 	// Self are the self-study stores of F032 (review list, recommendations, rapid_guess); nil = F030 behaviour.
 	Self *SelfStudy
+	// Rate counts answer_rate (T053); nil = not limited. AnswerRate zero = DefaultAnswerRate.
+	Rate       RateLimiter
+	AnswerRate AnswerRate
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).

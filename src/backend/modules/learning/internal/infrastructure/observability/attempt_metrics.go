@@ -16,11 +16,19 @@ var (
 		Name: "eduworld_attempt_expired_total",
 		Help: "Attempts closed by the attempt-lifecycle job (deadline, abandoned).",
 	}, []string{"kind"})
+	answerRateLimited = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_answer_rate_limited_total",
+		Help: "Answers and submits refused with 429 by answer_rate, by kind (answer, submit).",
+	}, []string{"kind"})
+	answerRateFailures = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_answer_rate_counter_failures_total",
+		Help: "answer_rate counter calls that failed on Valkey and let the call through, by kind.",
+	}, []string{"kind"})
 )
 
 // RegisterAttempts adds the attempt metrics to r; already registered collectors are ignored.
 func RegisterAttempts(r prometheus.Registerer) {
-	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, attemptExpired} {
+	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, attemptExpired, answerRateLimited, answerRateFailures} {
 		_ = r.Register(c)
 	}
 }
@@ -38,3 +46,12 @@ func (AttemptCounter) Submitted(result string) { attemptSubmitted.WithLabelValue
 
 // Expired counts one attempt closed by the job.
 func (AttemptCounter) Expired(kind string) { attemptExpired.WithLabelValues(kind).Inc() }
+
+// RateCounter adapts the answer_rate metrics to cache.RateMetrics.
+type RateCounter struct{}
+
+// RateLimited counts one call refused with 429.
+func (RateCounter) RateLimited(kind string) { answerRateLimited.WithLabelValues(kind).Inc() }
+
+// RateCounterFailed counts one counter call that failed (the call was let through).
+func (RateCounter) RateCounterFailed(kind string) { answerRateFailures.WithLabelValues(kind).Inc() }

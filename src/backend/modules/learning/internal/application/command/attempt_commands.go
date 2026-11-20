@@ -233,6 +233,9 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 	if len(in.Response) == 0 || string(in.Response) == "null" {
 		return out, problem.New(problem.InvalidResponse, "the response is missing")
 	}
+	if err := h.checkAnswerRate(ctx, RateAnswer, p.UserID, in.AttemptID); err != nil {
+		return out, err
+	}
 	key := idemKey(ctx)
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		a, err := h.loadOwn(ctx, p, in.AttemptID)
@@ -368,6 +371,9 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 	defer func() { done(err) }()
 	p, err := student(ctx)
 	if err != nil {
+		return out, err
+	}
+	if err := h.checkAnswerRate(ctx, RateSubmit, p.UserID, id); err != nil {
 		return out, err
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {

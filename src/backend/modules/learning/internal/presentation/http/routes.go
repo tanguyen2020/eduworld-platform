@@ -6,6 +6,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -341,7 +342,14 @@ func list[T, V any](w http.ResponseWriter, p query.Page[T], view func(T) V) {
 	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": pageJSON{NextCursor: p.NextCursor, HasMore: p.HasMore, Limit: p.Limit}})
 }
 
-func fail(w http.ResponseWriter, r *http.Request, err error) { httpx.WriteError(w, r, err) }
+// fail writes the problem; a 429 of answer_rate also carries Retry-After (F030 T053).
+func fail(w http.ResponseWriter, r *http.Request, err error) {
+	var ra *command.RetryAfter
+	if errors.As(err, &ra) {
+		w.Header().Set("Retry-After", ra.Seconds())
+	}
+	httpx.WriteError(w, r, err)
+}
 
 // patch is a decoded merge-patch body: fields present (null included) by name.
 type patch map[string]json.RawMessage

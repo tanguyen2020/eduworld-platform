@@ -102,7 +102,7 @@ Không có — ACTIVITY_ENGINE, QUESTION_BANK, ADR-0016/0043/0048/0059 đủ.
 
 ### Quan sát
 
-- Metric `eduworld_attempt_started_total{activity_type,mode}`, `eduworld_attempt_submitted_total{result}`, `eduworld_attempt_response_latency_seconds`, `eduworld_attempt_expired_total`, `eduworld_activity_registry_plugins`; span `attempt.start`, `attempt.respond`, `plugin.evaluate`.
+- Metric `eduworld_attempt_started_total{activity_type,mode}`, `eduworld_attempt_submitted_total{result}`, `eduworld_attempt_response_latency_seconds`, `eduworld_attempt_expired_total`, `eduworld_activity_registry_plugins`, `eduworld_answer_rate_limited_total{kind}`, `eduworld_answer_rate_counter_failures_total{kind}` (T053); span `attempt.start`, `attempt.respond`, `plugin.evaluate`.
 - Log không chứa `response`; chỉ `attempt_id`, `position`, `is_correct`.
 
 ## Complexity Tracking

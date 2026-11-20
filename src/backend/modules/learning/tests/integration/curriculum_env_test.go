@@ -104,10 +104,19 @@ type curEnv struct {
 // envOpt configures newCurEnv.
 type envOpt func(*envOpts)
 
-type envOpts struct{ media bool }
+type envOpts struct {
+	media      bool
+	rate       command.RateLimiter // F030 T053
+	answerRate command.AnswerRate
+}
 
 // withMedia adds the media pipeline and the preview sessions of F027 (floci, Valkey, clamd test double).
 func withMedia(o *envOpts) { o.media = true }
+
+// withAnswerRate limits answers and submits with r and the values cfg (F030 T053).
+func withAnswerRate(r command.RateLimiter, cfg command.AnswerRate) envOpt {
+	return func(o *envOpts) { o.rate, o.answerRate = r, cfg }
+}
 
 // Demo principals (quickstart §1): content admin, system admin, content reviewer (platform); academic manager and
 // school admin of tenants A and B; a staff member without role; a student of tenant A.
@@ -214,7 +223,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	delivery := query.Delivery{Session: e.read, Reader: read.Delivery{}, Registry: question.Full(), Schema: schema}
 	att := command.Attempts{UoW: e.uow, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: write.Publisher{W: e.writer},
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: registry,
-		Clock: clk.Now, Metrics: observability.AttemptCounter{}}
+		Clock: clk.Now, Metrics: observability.AttemptCounter{}, Rate: o.rate, AnswerRate: o.answerRate}
 	// F031 US6: lesson sessions pinned at the start of an attempt in the context of a lesson.
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{},
 		Events: write.Publisher{W: e.writer}, UoW: e.uow, Clock: clk.Now}
