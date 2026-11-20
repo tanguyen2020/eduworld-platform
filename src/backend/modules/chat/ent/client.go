@@ -16,6 +16,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
@@ -31,6 +34,12 @@ type Client struct {
 	Schema *migrate.Schema
 	// Block is the client for interacting with the Block builders.
 	Block *BlockClient
+	// Channel is the client for interacting with the Channel builders.
+	Channel *ChannelClient
+	// ChannelMember is the client for interacting with the ChannelMember builders.
+	ChannelMember *ChannelMemberClient
+	// ChatPolicy is the client for interacting with the ChatPolicy builders.
+	ChatPolicy *ChatPolicyClient
 	// FriendCode is the client for interacting with the FriendCode builders.
 	FriendCode *FriendCodeClient
 	// FriendRequest is the client for interacting with the FriendRequest builders.
@@ -51,6 +60,9 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Block = NewBlockClient(c.config)
+	c.Channel = NewChannelClient(c.config)
+	c.ChannelMember = NewChannelMemberClient(c.config)
+	c.ChatPolicy = NewChatPolicyClient(c.config)
 	c.FriendCode = NewFriendCodeClient(c.config)
 	c.FriendRequest = NewFriendRequestClient(c.config)
 	c.Friendship = NewFriendshipClient(c.config)
@@ -151,6 +163,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:           ctx,
 		config:        cfg,
 		Block:         NewBlockClient(cfg),
+		Channel:       NewChannelClient(cfg),
+		ChannelMember: NewChannelMemberClient(cfg),
+		ChatPolicy:    NewChatPolicyClient(cfg),
 		FriendCode:    NewFriendCodeClient(cfg),
 		FriendRequest: NewFriendRequestClient(cfg),
 		Friendship:    NewFriendshipClient(cfg),
@@ -175,6 +190,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:           ctx,
 		config:        cfg,
 		Block:         NewBlockClient(cfg),
+		Channel:       NewChannelClient(cfg),
+		ChannelMember: NewChannelMemberClient(cfg),
+		ChatPolicy:    NewChatPolicyClient(cfg),
 		FriendCode:    NewFriendCodeClient(cfg),
 		FriendRequest: NewFriendRequestClient(cfg),
 		Friendship:    NewFriendshipClient(cfg),
@@ -207,21 +225,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Block.Use(hooks...)
-	c.FriendCode.Use(hooks...)
-	c.FriendRequest.Use(hooks...)
-	c.Friendship.Use(hooks...)
-	c.Mute.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
+		c.FriendRequest, c.Friendship, c.Mute,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Block.Intercept(interceptors...)
-	c.FriendCode.Intercept(interceptors...)
-	c.FriendRequest.Intercept(interceptors...)
-	c.Friendship.Intercept(interceptors...)
-	c.Mute.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
+		c.FriendRequest, c.Friendship, c.Mute,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -229,6 +249,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *BlockMutation:
 		return c.Block.mutate(ctx, m)
+	case *ChannelMutation:
+		return c.Channel.mutate(ctx, m)
+	case *ChannelMemberMutation:
+		return c.ChannelMember.mutate(ctx, m)
+	case *ChatPolicyMutation:
+		return c.ChatPolicy.mutate(ctx, m)
 	case *FriendCodeMutation:
 		return c.FriendCode.mutate(ctx, m)
 	case *FriendRequestMutation:
@@ -374,6 +400,411 @@ func (c *BlockClient) mutate(ctx context.Context, m *BlockMutation) (Value, erro
 		return (&BlockDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Block mutation op: %q", m.Op())
+	}
+}
+
+// ChannelClient is a client for the Channel schema.
+type ChannelClient struct {
+	config
+}
+
+// NewChannelClient returns a client for the Channel from the given config.
+func NewChannelClient(c config) *ChannelClient {
+	return &ChannelClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `channel.Hooks(f(g(h())))`.
+func (c *ChannelClient) Use(hooks ...Hook) {
+	c.hooks.Channel = append(c.hooks.Channel, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `channel.Intercept(f(g(h())))`.
+func (c *ChannelClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Channel = append(c.inters.Channel, interceptors...)
+}
+
+// Create returns a builder for creating a Channel entity.
+func (c *ChannelClient) Create() *ChannelCreate {
+	mutation := newChannelMutation(c.config, OpCreate)
+	return &ChannelCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Channel entities.
+func (c *ChannelClient) CreateBulk(builders ...*ChannelCreate) *ChannelCreateBulk {
+	return &ChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChannelClient) MapCreateBulk(slice any, setFunc func(*ChannelCreate, int)) *ChannelCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChannelCreateBulk{err: fmt.Errorf("calling to ChannelClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChannelCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Channel.
+func (c *ChannelClient) Update() *ChannelUpdate {
+	mutation := newChannelMutation(c.config, OpUpdate)
+	return &ChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChannelClient) UpdateOne(_m *Channel) *ChannelUpdateOne {
+	mutation := newChannelMutation(c.config, OpUpdateOne, withChannel(_m))
+	return &ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChannelClient) UpdateOneID(id uuid.UUID) *ChannelUpdateOne {
+	mutation := newChannelMutation(c.config, OpUpdateOne, withChannelID(id))
+	return &ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Channel.
+func (c *ChannelClient) Delete() *ChannelDelete {
+	mutation := newChannelMutation(c.config, OpDelete)
+	return &ChannelDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChannelClient) DeleteOne(_m *Channel) *ChannelDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChannelClient) DeleteOneID(id uuid.UUID) *ChannelDeleteOne {
+	builder := c.Delete().Where(channel.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChannelDeleteOne{builder}
+}
+
+// Query returns a query builder for Channel.
+func (c *ChannelClient) Query() *ChannelQuery {
+	return &ChannelQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChannel},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Channel entity by its id.
+func (c *ChannelClient) Get(ctx context.Context, id uuid.UUID) (*Channel, error) {
+	return c.Query().Where(channel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChannelClient) GetX(ctx context.Context, id uuid.UUID) *Channel {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ChannelClient) Hooks() []Hook {
+	hooks := c.hooks.Channel
+	return append(hooks[:len(hooks):len(hooks)], channel.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChannelClient) Interceptors() []Interceptor {
+	inters := c.inters.Channel
+	return append(inters[:len(inters):len(inters)], channel.Interceptors[:]...)
+}
+
+func (c *ChannelClient) mutate(ctx context.Context, m *ChannelMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChannelCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChannelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Channel mutation op: %q", m.Op())
+	}
+}
+
+// ChannelMemberClient is a client for the ChannelMember schema.
+type ChannelMemberClient struct {
+	config
+}
+
+// NewChannelMemberClient returns a client for the ChannelMember from the given config.
+func NewChannelMemberClient(c config) *ChannelMemberClient {
+	return &ChannelMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `channelmember.Hooks(f(g(h())))`.
+func (c *ChannelMemberClient) Use(hooks ...Hook) {
+	c.hooks.ChannelMember = append(c.hooks.ChannelMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `channelmember.Intercept(f(g(h())))`.
+func (c *ChannelMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ChannelMember = append(c.inters.ChannelMember, interceptors...)
+}
+
+// Create returns a builder for creating a ChannelMember entity.
+func (c *ChannelMemberClient) Create() *ChannelMemberCreate {
+	mutation := newChannelMemberMutation(c.config, OpCreate)
+	return &ChannelMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ChannelMember entities.
+func (c *ChannelMemberClient) CreateBulk(builders ...*ChannelMemberCreate) *ChannelMemberCreateBulk {
+	return &ChannelMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChannelMemberClient) MapCreateBulk(slice any, setFunc func(*ChannelMemberCreate, int)) *ChannelMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChannelMemberCreateBulk{err: fmt.Errorf("calling to ChannelMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChannelMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChannelMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ChannelMember.
+func (c *ChannelMemberClient) Update() *ChannelMemberUpdate {
+	mutation := newChannelMemberMutation(c.config, OpUpdate)
+	return &ChannelMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChannelMemberClient) UpdateOne(_m *ChannelMember) *ChannelMemberUpdateOne {
+	mutation := newChannelMemberMutation(c.config, OpUpdateOne, withChannelMember(_m))
+	return &ChannelMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChannelMemberClient) UpdateOneID(id uuid.UUID) *ChannelMemberUpdateOne {
+	mutation := newChannelMemberMutation(c.config, OpUpdateOne, withChannelMemberID(id))
+	return &ChannelMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ChannelMember.
+func (c *ChannelMemberClient) Delete() *ChannelMemberDelete {
+	mutation := newChannelMemberMutation(c.config, OpDelete)
+	return &ChannelMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChannelMemberClient) DeleteOne(_m *ChannelMember) *ChannelMemberDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChannelMemberClient) DeleteOneID(id uuid.UUID) *ChannelMemberDeleteOne {
+	builder := c.Delete().Where(channelmember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChannelMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for ChannelMember.
+func (c *ChannelMemberClient) Query() *ChannelMemberQuery {
+	return &ChannelMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChannelMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ChannelMember entity by its id.
+func (c *ChannelMemberClient) Get(ctx context.Context, id uuid.UUID) (*ChannelMember, error) {
+	return c.Query().Where(channelmember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChannelMemberClient) GetX(ctx context.Context, id uuid.UUID) *ChannelMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ChannelMemberClient) Hooks() []Hook {
+	hooks := c.hooks.ChannelMember
+	return append(hooks[:len(hooks):len(hooks)], channelmember.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChannelMemberClient) Interceptors() []Interceptor {
+	inters := c.inters.ChannelMember
+	return append(inters[:len(inters):len(inters)], channelmember.Interceptors[:]...)
+}
+
+func (c *ChannelMemberClient) mutate(ctx context.Context, m *ChannelMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChannelMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChannelMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChannelMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChannelMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ChannelMember mutation op: %q", m.Op())
+	}
+}
+
+// ChatPolicyClient is a client for the ChatPolicy schema.
+type ChatPolicyClient struct {
+	config
+}
+
+// NewChatPolicyClient returns a client for the ChatPolicy from the given config.
+func NewChatPolicyClient(c config) *ChatPolicyClient {
+	return &ChatPolicyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `chatpolicy.Hooks(f(g(h())))`.
+func (c *ChatPolicyClient) Use(hooks ...Hook) {
+	c.hooks.ChatPolicy = append(c.hooks.ChatPolicy, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `chatpolicy.Intercept(f(g(h())))`.
+func (c *ChatPolicyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ChatPolicy = append(c.inters.ChatPolicy, interceptors...)
+}
+
+// Create returns a builder for creating a ChatPolicy entity.
+func (c *ChatPolicyClient) Create() *ChatPolicyCreate {
+	mutation := newChatPolicyMutation(c.config, OpCreate)
+	return &ChatPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ChatPolicy entities.
+func (c *ChatPolicyClient) CreateBulk(builders ...*ChatPolicyCreate) *ChatPolicyCreateBulk {
+	return &ChatPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChatPolicyClient) MapCreateBulk(slice any, setFunc func(*ChatPolicyCreate, int)) *ChatPolicyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChatPolicyCreateBulk{err: fmt.Errorf("calling to ChatPolicyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChatPolicyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChatPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ChatPolicy.
+func (c *ChatPolicyClient) Update() *ChatPolicyUpdate {
+	mutation := newChatPolicyMutation(c.config, OpUpdate)
+	return &ChatPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChatPolicyClient) UpdateOne(_m *ChatPolicy) *ChatPolicyUpdateOne {
+	mutation := newChatPolicyMutation(c.config, OpUpdateOne, withChatPolicy(_m))
+	return &ChatPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChatPolicyClient) UpdateOneID(id uuid.UUID) *ChatPolicyUpdateOne {
+	mutation := newChatPolicyMutation(c.config, OpUpdateOne, withChatPolicyID(id))
+	return &ChatPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ChatPolicy.
+func (c *ChatPolicyClient) Delete() *ChatPolicyDelete {
+	mutation := newChatPolicyMutation(c.config, OpDelete)
+	return &ChatPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChatPolicyClient) DeleteOne(_m *ChatPolicy) *ChatPolicyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChatPolicyClient) DeleteOneID(id uuid.UUID) *ChatPolicyDeleteOne {
+	builder := c.Delete().Where(chatpolicy.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChatPolicyDeleteOne{builder}
+}
+
+// Query returns a query builder for ChatPolicy.
+func (c *ChatPolicyClient) Query() *ChatPolicyQuery {
+	return &ChatPolicyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChatPolicy},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ChatPolicy entity by its id.
+func (c *ChatPolicyClient) Get(ctx context.Context, id uuid.UUID) (*ChatPolicy, error) {
+	return c.Query().Where(chatpolicy.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChatPolicyClient) GetX(ctx context.Context, id uuid.UUID) *ChatPolicy {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ChatPolicyClient) Hooks() []Hook {
+	hooks := c.hooks.ChatPolicy
+	return append(hooks[:len(hooks):len(hooks)], chatpolicy.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChatPolicyClient) Interceptors() []Interceptor {
+	inters := c.inters.ChatPolicy
+	return append(inters[:len(inters):len(inters)], chatpolicy.Interceptors[:]...)
+}
+
+func (c *ChatPolicyClient) mutate(ctx context.Context, m *ChatPolicyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChatPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChatPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChatPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChatPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ChatPolicy mutation op: %q", m.Op())
 	}
 }
 
@@ -920,23 +1351,28 @@ func (c *MuteClient) mutate(ctx context.Context, m *MuteMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Block, FriendCode, FriendRequest, Friendship, Mute []ent.Hook
+		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
+		Friendship, Mute []ent.Hook
 	}
 	inters struct {
-		Block, FriendCode, FriendRequest, Friendship, Mute []ent.Interceptor
+		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
+		Friendship, Mute []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		Block:         tableSchemas[0],
-		FriendCode:    tableSchemas[0],
-		FriendRequest: tableSchemas[0],
-		Friendship:    tableSchemas[0],
-		Mute:          tableSchemas[0],
+		Block:         tableSchemas[1],
+		Channel:       tableSchemas[0],
+		ChannelMember: tableSchemas[0],
+		ChatPolicy:    tableSchemas[0],
+		FriendCode:    tableSchemas[1],
+		FriendRequest: tableSchemas[1],
+		Friendship:    tableSchemas[1],
+		Mute:          tableSchemas[1],
 	}
-	tableSchemas = [...]string{"social"}
+	tableSchemas = [...]string{"chat", "social"}
 )
 
 // SchemaConfig represents alternative schema names for all tables

@@ -13,6 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
@@ -78,6 +81,9 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			block.Table:         block.ValidColumn,
+			channel.Table:       channel.ValidColumn,
+			channelmember.Table: channelmember.ValidColumn,
+			chatpolicy.Table:    chatpolicy.ValidColumn,
 			friendcode.Table:    friendcode.ValidColumn,
 			friendrequest.Table: friendrequest.ValidColumn,
 			friendship.Table:    friendship.ValidColumn,

@@ -30,7 +30,7 @@
 - [ ] T010 [P] [US1] Integration F117-AC-01, F117-AC-04: `party.*` → channel `party`, thêm/gỡ thành viên, `chat.channel_opened` (TC-CHAT-017) — file: `src/backend/modules/chat/tests/integration/gameplay_party_channel_test.go` — phải FAIL trước khi code
 - [ ] T011 [P] [US1] Integration F117-AC-02: `match.started` 1v1 và 2v2 → `match` + `team` mỗi đội; đội khác `404` — file: `src/backend/modules/chat/tests/integration/gameplay_match_channel_test.go`
 - [ ] T012 [P] [US1] Integration F117-AC-03: event trùng, lệch thứ tự → không trùng (TC-SVC-003) — file: `src/backend/modules/chat/tests/integration/gameplay_idempotency_test.go`
-- [ ] T013 [P] [US1] Integration F117-AC-05, F117-AC-06: channel đóng → `CHAT_CHANNEL_CLOSED`, lịch sử vẫn đọc; đổi thiết bị → `chat.sync` đủ (TC-CHAT-020) — file: `src/backend/modules/chat/tests/integration/gameplay_close_resume_test.go`
+- [ ] T013 [P] [US1] Integration F117-AC-05, F117-AC-06: channel đóng → `CHAT_CHANNEL_CLOSED`, lịch sử vẫn đọc; đổi thiết bị → `chat.channel.sync` đủ (TC-CHAT-020) — file: `src/backend/modules/chat/tests/integration/gameplay_close_resume_test.go`
 - [ ] T014 [P] [US1] Test tenant isolation + authorization F117-AC-07: tenant lệch/nhân sự trong `participants` bị bỏ qua; học sinh tenant khác không truy cập được channel (TC-TEN-012) — file: `src/backend/modules/chat/tests/integration/gameplay_tenant_test.go`
 
 ### Implementation cho User Story 1

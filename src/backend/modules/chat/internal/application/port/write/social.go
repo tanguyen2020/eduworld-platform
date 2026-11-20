@@ -129,4 +129,6 @@ type ProjectionWriter interface {
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
+	School(ctx context.Context, school, tenant uuid.UUID, status *string, settings []byte, version int64) (bool, error)
+	PlatformSetting(ctx context.Context, key string, value []byte, version int64) (bool, error)
 }

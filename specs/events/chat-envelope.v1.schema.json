@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/chat-envelope.v1.schema.json",
+  "title": "ChatEnvelope v1 — tin chat trên NATS JetStream (module chat, owner F115)",
+  "description": "Bản ghi tin mới trên subject ew.chat.<tenant_id>.msg.<channel_id> của stream CHAT_MESSAGES (ADR-0035, EVENT_DESIGN §4.10). KHÔNG đi qua outbox. Header Nats-Msg-Id = message_id (khử trùng lặp trong duplicate_window). body_display là nội dung đã kiểm duyệt (đã che khi mask); body_original chỉ có khi nội dung gốc khác body_display và chỉ consumer persister/moderation đọc (stream không mở cho client hay consumer khác — R25). Tin block không bao giờ có envelope. Không chứa tên thật, trường, lớp (R16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "kind", "message_id", "tenant_id", "channel_id", "channel_type", "is_gameplay", "seq", "revision", "sender_id", "msg_kind", "moderation", "created_at"],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "const": "msg" },
+    "message_id": { "type": "string", "format": "uuid", "description": "UUIDv7 cấp ở module chat = Nats-Msg-Id = khóa ON CONFLICT ở PostgreSQL" },
+    "tenant_id": { "type": "string", "format": "uuid", "description": "Tenant của channel; persister đối chiếu với chat.channels và bỏ envelope lệch tenant" },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "class", "study_group", "direct"] },
+    "is_gameplay": { "type": "boolean", "description": "true → chat.gameplay_messages (purge ADR-0033); false → chat.messages" },
+    "seq": { "type": "integer", "minimum": 1 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "sender_id": { "type": "string", "format": "uuid" },
+    "client_message_id": { "type": ["string", "null"], "format": "uuid" },
+    "msg_kind": { "enum": ["text", "emoji", "quick", "sticker", "gif"] },
+    "body_display": { "type": ["string", "null"], "maxLength": 1000, "description": "Nội dung hiển thị đã kiểm duyệt; với kind=emoji là mã emoji" },
+    "body_original": { "type": ["string", "null"], "maxLength": 1000, "description": "Nội dung gốc (bằng chứng) khi khác body_display; chỉ persister/moderation đọc" },
+    "quick_message_id": { "type": ["string", "null"], "maxLength": 64 },
+    "sticker_id": { "type": ["string", "null"], "format": "uuid" },
+    "gif_id": { "type": ["string", "null"], "format": "uuid" },
+    "reply_to_message_id": { "type": ["string", "null"], "format": "uuid" },
+    "mentions": { "type": "array", "maxItems": 5, "items": { "type": "string", "format": "uuid" } },
+    "moderation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "state"],
+      "properties": {
+        "decision": { "enum": ["allow", "unchecked", "mask", "hold_for_review", "block_and_alert"] },
+        "state": { "enum": ["allowed", "masked", "unchecked", "held"] },
+        "category_codes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+        "steps_skipped": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+        "catalog_version": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "trace_id": { "type": ["string", "null"], "maxLength": 64 }
+  },
+  "examples": [
+    { "v": 1, "kind": "msg", "message_id": "0193a6b2-0000-7000-8000-000000000010", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "channel_id": "0193a1aa-0000-7000-8000-000000000020", "channel_type": "party", "is_gameplay": true, "seq": 1842, "revision": 1, "sender_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "client_message_id": "0193a6b2-0000-7000-8000-000000000011", "msg_kind": "text", "body_display": "Mình làm câu 3 rồi nè", "body_original": null, "quick_message_id": null, "sticker_id": null, "gif_id": null, "reply_to_message_id": null, "mentions": [], "moderation": { "decision": "allow", "state": "allowed", "category_codes": [], "steps_skipped": [], "catalog_version": null }, "created_at": "2026-11-21T08:30:12.345Z", "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736" }
+  ]
+}

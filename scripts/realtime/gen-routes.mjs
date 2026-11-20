@@ -18,7 +18,7 @@ const SPEC = path.join(repo, 'specs/asyncapi/eduworld-realtime.v1.yaml');
 const ROUTES = path.join(repo, 'src/backend/modules/realtime/internal/router/routes_gen.go');
 const VALIDATE = path.join(repo, 'src/backend/modules/realtime/internal/protocol/validate_gen.go');
 const MODULES = new Set(['realtime', 'chat', 'competition', 'game', 'learning', 'identity']);
-const TYPE_RE = /^[a-z_]+([.][a-z_]+){1,2}$/; // chat.sync có 2 đoạn (OQ F090-1: lệch pattern của ClientEnvelope)
+const TYPE_RE = /^[a-z_]+([.][a-z_]+){2}$/; // <domain>.<entity>.<action> như ClientEnvelope (chat.sync đã đổi thành chat.channel.sync, OQ F090-1)
 
 const doc = yaml.load(fs.readFileSync(SPEC, 'utf8'));
 const errors = [];

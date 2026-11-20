@@ -21,7 +21,7 @@
 ### Tests cho User Story 1
 
 - [ ] T007 [P] [US1] Scene test F119-AC-01, F119-AC-02, F119-AC-03: panel có trong lobby/trận/boss, không có nút tắt, badge khi thu gọn, 2 tab trận đội, thu nhỏ khi `EventBus.question_shown` — file: `src/game/tests/scene/chat/test_chat_dock.gd` — phải FAIL trước khi code
-- [ ] T008 [P] [US1] Unit F119-AC-04: thứ tự `seq`, sent chỉ khi `acked`, gap → `chat.sync`, > buffer → REST, gap không bù được chỉ thử một lần — file: `src/game/tests/unit/chat/test_chat_store.gd`
+- [ ] T008 [P] [US1] Unit F119-AC-04: thứ tự `seq`, sent chỉ khi `acked`, gap → `chat.channel.sync`, > buffer → REST, gap không bù được chỉ thử một lần — file: `src/game/tests/unit/chat/test_chat_store.gd`
 - [ ] T009 [P] [US1] Unit F119-AC-05, F119-AC-06: mất mạng/`CHAT_TEMPORARILY_UNAVAILABLE` → pending + gửi lại cùng `client_message_id`; join `NOT_FOUND` → retry; `CHAT_CHANNEL_CLOSED` → khóa ô nhập — file: `src/game/tests/unit/chat/test_chat_service_retry.gd`
 - [ ] T010 [P] [US1] Scene test F119-AC-07: thông báo "giữ N ngày" lấy N từ dữ liệu server — file: `src/game/tests/scene/chat/test_retention_notice.gd`
 

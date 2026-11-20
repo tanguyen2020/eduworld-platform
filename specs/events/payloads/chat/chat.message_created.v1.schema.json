@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.message_created.v1.schema.json",
+  "title": "Payload chat.message_created v1 (module chat, owner F115)",
+  "description": "Tin chat đã được chat-persister ghi vào PostgreSQL (outbox cùng transaction, sau JetStream; F115-AC-15, EVENT_DESIGN §4.9). KHÔNG chứa nội dung tin (body, body_display) — consumer cần nội dung đọc JetStream CHAT_MESSAGES (§4.10). Consumer: AUD, LA (đếm).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "message_id", "channel_id", "channel_type", "seq", "sender_id", "kind", "moderation_state", "created_at"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "message_id": { "type": "string", "format": "uuid" },
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "class", "study_group", "direct"] },
+    "seq": { "type": "integer", "minimum": 1 },
+    "sender_id": { "type": "string", "format": "uuid" },
+    "kind": { "enum": ["text", "emoji", "quick", "sticker", "gif", "system"] },
+    "moderation_state": { "enum": ["allowed", "masked", "unchecked", "held"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "message_id": "0193a6b2-0000-7000-8000-000000000010", "channel_id": "0193a1aa-0000-7000-8000-000000000020", "channel_type": "party", "seq": 1842, "sender_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "kind": "text", "moderation_state": "allowed", "created_at": "2026-11-21T08:30:12.345Z" }
+  ]
+}

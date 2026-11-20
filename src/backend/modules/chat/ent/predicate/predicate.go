@@ -9,6 +9,15 @@ import (
 // Block is the predicate function for block builders.
 type Block func(*sql.Selector)
 
+// Channel is the predicate function for channel builders.
+type Channel func(*sql.Selector)
+
+// ChannelMember is the predicate function for channelmember builders.
+type ChannelMember func(*sql.Selector)
+
+// ChatPolicy is the predicate function for chatpolicy builders.
+type ChatPolicy func(*sql.Selector)
+
 // FriendCode is the predicate function for friendcode builders.
 type FriendCode func(*sql.Selector)
 

@@ -7,6 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
@@ -49,6 +52,149 @@ func init() {
 	blockDescID := blockMixinFields0[0].Descriptor()
 	// block.DefaultID holds the default value on creation for the id field.
 	block.DefaultID = blockDescID.Default.(func() uuid.UUID)
+	channelMixin := schema.Channel{}.Mixin()
+	channelMixinHooks0 := channelMixin[0].Hooks()
+	channel.Hooks[0] = channelMixinHooks0[0]
+	channelMixinInters0 := channelMixin[0].Interceptors()
+	channel.Interceptors[0] = channelMixinInters0[0]
+	channelMixinFields0 := channelMixin[0].Fields()
+	_ = channelMixinFields0
+	channelFields := schema.Channel{}.Fields()
+	_ = channelFields
+	// channelDescCreatedAt is the schema descriptor for created_at field.
+	channelDescCreatedAt := channelMixinFields0[2].Descriptor()
+	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
+	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
+	// channelDescUpdatedAt is the schema descriptor for updated_at field.
+	channelDescUpdatedAt := channelMixinFields0[4].Descriptor()
+	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(func() time.Time)
+	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// channelDescDeleteReason is the schema descriptor for delete_reason field.
+	channelDescDeleteReason := channelMixinFields0[8].Descriptor()
+	// channel.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	channel.DeleteReasonValidator = channelDescDeleteReason.Validators[0].(func(string) error)
+	// channelDescVersion is the schema descriptor for version field.
+	channelDescVersion := channelMixinFields0[9].Descriptor()
+	// channel.DefaultVersion holds the default value on creation for the version field.
+	channel.DefaultVersion = channelDescVersion.Default.(int64)
+	// channelDescChannelType is the schema descriptor for channel_type field.
+	channelDescChannelType := channelFields[1].Descriptor()
+	// channel.ChannelTypeValidator is a validator for the "channel_type" field. It is called by the builders before save.
+	channel.ChannelTypeValidator = channelDescChannelType.Validators[0].(func(string) error)
+	// channelDescIsGameplay is the schema descriptor for is_gameplay field.
+	channelDescIsGameplay := channelFields[2].Descriptor()
+	// channel.DefaultIsGameplay holds the default value on creation for the is_gameplay field.
+	channel.DefaultIsGameplay = channelDescIsGameplay.Default.(bool)
+	// channelDescLastSeq is the schema descriptor for last_seq field.
+	channelDescLastSeq := channelFields[6].Descriptor()
+	// channel.DefaultLastSeq holds the default value on creation for the last_seq field.
+	channel.DefaultLastSeq = channelDescLastSeq.Default.(int64)
+	// channelDescStatus is the schema descriptor for status field.
+	channelDescStatus := channelFields[7].Descriptor()
+	// channel.DefaultStatus holds the default value on creation for the status field.
+	channel.DefaultStatus = channelDescStatus.Default.(string)
+	// channel.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	channel.StatusValidator = channelDescStatus.Validators[0].(func(string) error)
+	// channelDescID is the schema descriptor for id field.
+	channelDescID := channelMixinFields0[0].Descriptor()
+	// channel.DefaultID holds the default value on creation for the id field.
+	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
+	channelmemberMixin := schema.ChannelMember{}.Mixin()
+	channelmemberMixinHooks0 := channelmemberMixin[0].Hooks()
+	channelmember.Hooks[0] = channelmemberMixinHooks0[0]
+	channelmemberMixinInters0 := channelmemberMixin[0].Interceptors()
+	channelmember.Interceptors[0] = channelmemberMixinInters0[0]
+	channelmemberMixinFields0 := channelmemberMixin[0].Fields()
+	_ = channelmemberMixinFields0
+	channelmemberFields := schema.ChannelMember{}.Fields()
+	_ = channelmemberFields
+	// channelmemberDescCreatedAt is the schema descriptor for created_at field.
+	channelmemberDescCreatedAt := channelmemberMixinFields0[2].Descriptor()
+	// channelmember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	channelmember.DefaultCreatedAt = channelmemberDescCreatedAt.Default.(func() time.Time)
+	// channelmemberDescUpdatedAt is the schema descriptor for updated_at field.
+	channelmemberDescUpdatedAt := channelmemberMixinFields0[4].Descriptor()
+	// channelmember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	channelmember.DefaultUpdatedAt = channelmemberDescUpdatedAt.Default.(func() time.Time)
+	// channelmember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	channelmember.UpdateDefaultUpdatedAt = channelmemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// channelmemberDescDeleteReason is the schema descriptor for delete_reason field.
+	channelmemberDescDeleteReason := channelmemberMixinFields0[8].Descriptor()
+	// channelmember.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	channelmember.DeleteReasonValidator = channelmemberDescDeleteReason.Validators[0].(func(string) error)
+	// channelmemberDescVersion is the schema descriptor for version field.
+	channelmemberDescVersion := channelmemberMixinFields0[9].Descriptor()
+	// channelmember.DefaultVersion holds the default value on creation for the version field.
+	channelmember.DefaultVersion = channelmemberDescVersion.Default.(int64)
+	// channelmemberDescRole is the schema descriptor for role field.
+	channelmemberDescRole := channelmemberFields[3].Descriptor()
+	// channelmember.DefaultRole holds the default value on creation for the role field.
+	channelmember.DefaultRole = channelmemberDescRole.Default.(string)
+	// channelmember.RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	channelmember.RoleValidator = channelmemberDescRole.Validators[0].(func(string) error)
+	// channelmemberDescLastDeliveredSeq is the schema descriptor for last_delivered_seq field.
+	channelmemberDescLastDeliveredSeq := channelmemberFields[7].Descriptor()
+	// channelmember.DefaultLastDeliveredSeq holds the default value on creation for the last_delivered_seq field.
+	channelmember.DefaultLastDeliveredSeq = channelmemberDescLastDeliveredSeq.Default.(int64)
+	// channelmemberDescLastReadSeq is the schema descriptor for last_read_seq field.
+	channelmemberDescLastReadSeq := channelmemberFields[8].Descriptor()
+	// channelmember.DefaultLastReadSeq holds the default value on creation for the last_read_seq field.
+	channelmember.DefaultLastReadSeq = channelmemberDescLastReadSeq.Default.(int64)
+	// channelmemberDescUnreadMentions is the schema descriptor for unread_mentions field.
+	channelmemberDescUnreadMentions := channelmemberFields[9].Descriptor()
+	// channelmember.DefaultUnreadMentions holds the default value on creation for the unread_mentions field.
+	channelmember.DefaultUnreadMentions = channelmemberDescUnreadMentions.Default.(int)
+	// channelmemberDescShowReadReceipts is the schema descriptor for show_read_receipts field.
+	channelmemberDescShowReadReceipts := channelmemberFields[10].Descriptor()
+	// channelmember.DefaultShowReadReceipts holds the default value on creation for the show_read_receipts field.
+	channelmember.DefaultShowReadReceipts = channelmemberDescShowReadReceipts.Default.(bool)
+	// channelmemberDescNotificationLevel is the schema descriptor for notification_level field.
+	channelmemberDescNotificationLevel := channelmemberFields[11].Descriptor()
+	// channelmember.DefaultNotificationLevel holds the default value on creation for the notification_level field.
+	channelmember.DefaultNotificationLevel = channelmemberDescNotificationLevel.Default.(string)
+	// channelmember.NotificationLevelValidator is a validator for the "notification_level" field. It is called by the builders before save.
+	channelmember.NotificationLevelValidator = channelmemberDescNotificationLevel.Validators[0].(func(string) error)
+	// channelmemberDescID is the schema descriptor for id field.
+	channelmemberDescID := channelmemberMixinFields0[0].Descriptor()
+	// channelmember.DefaultID holds the default value on creation for the id field.
+	channelmember.DefaultID = channelmemberDescID.Default.(func() uuid.UUID)
+	chatpolicyMixin := schema.ChatPolicy{}.Mixin()
+	chatpolicyMixinHooks0 := chatpolicyMixin[0].Hooks()
+	chatpolicy.Hooks[0] = chatpolicyMixinHooks0[0]
+	chatpolicyMixinInters0 := chatpolicyMixin[0].Interceptors()
+	chatpolicy.Interceptors[0] = chatpolicyMixinInters0[0]
+	chatpolicyMixinFields0 := chatpolicyMixin[0].Fields()
+	_ = chatpolicyMixinFields0
+	chatpolicyFields := schema.ChatPolicy{}.Fields()
+	_ = chatpolicyFields
+	// chatpolicyDescCreatedAt is the schema descriptor for created_at field.
+	chatpolicyDescCreatedAt := chatpolicyMixinFields0[2].Descriptor()
+	// chatpolicy.DefaultCreatedAt holds the default value on creation for the created_at field.
+	chatpolicy.DefaultCreatedAt = chatpolicyDescCreatedAt.Default.(func() time.Time)
+	// chatpolicyDescUpdatedAt is the schema descriptor for updated_at field.
+	chatpolicyDescUpdatedAt := chatpolicyMixinFields0[4].Descriptor()
+	// chatpolicy.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	chatpolicy.DefaultUpdatedAt = chatpolicyDescUpdatedAt.Default.(func() time.Time)
+	// chatpolicy.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	chatpolicy.UpdateDefaultUpdatedAt = chatpolicyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// chatpolicyDescDeleteReason is the schema descriptor for delete_reason field.
+	chatpolicyDescDeleteReason := chatpolicyMixinFields0[8].Descriptor()
+	// chatpolicy.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	chatpolicy.DeleteReasonValidator = chatpolicyDescDeleteReason.Validators[0].(func(string) error)
+	// chatpolicyDescVersion is the schema descriptor for version field.
+	chatpolicyDescVersion := chatpolicyMixinFields0[9].Descriptor()
+	// chatpolicy.DefaultVersion holds the default value on creation for the version field.
+	chatpolicy.DefaultVersion = chatpolicyDescVersion.Default.(int64)
+	// chatpolicyDescScopeType is the schema descriptor for scope_type field.
+	chatpolicyDescScopeType := chatpolicyFields[0].Descriptor()
+	// chatpolicy.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
+	chatpolicy.ScopeTypeValidator = chatpolicyDescScopeType.Validators[0].(func(string) error)
+	// chatpolicyDescID is the schema descriptor for id field.
+	chatpolicyDescID := chatpolicyMixinFields0[0].Descriptor()
+	// chatpolicy.DefaultID holds the default value on creation for the id field.
+	chatpolicy.DefaultID = chatpolicyDescID.Default.(func() uuid.UUID)
 	friendcodeMixin := schema.FriendCode{}.Mixin()
 	friendcodeMixinHooks0 := friendcodeMixin[0].Hooks()
 	friendcode.Hooks[0] = friendcodeMixinHooks0[0]

@@ -14,6 +14,12 @@ type Tx struct {
 	config
 	// Block is the client for interacting with the Block builders.
 	Block *BlockClient
+	// Channel is the client for interacting with the Channel builders.
+	Channel *ChannelClient
+	// ChannelMember is the client for interacting with the ChannelMember builders.
+	ChannelMember *ChannelMemberClient
+	// ChatPolicy is the client for interacting with the ChatPolicy builders.
+	ChatPolicy *ChatPolicyClient
 	// FriendCode is the client for interacting with the FriendCode builders.
 	FriendCode *FriendCodeClient
 	// FriendRequest is the client for interacting with the FriendRequest builders.
@@ -154,6 +160,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Block = NewBlockClient(tx.config)
+	tx.Channel = NewChannelClient(tx.config)
+	tx.ChannelMember = NewChannelMemberClient(tx.config)
+	tx.ChatPolicy = NewChatPolicyClient(tx.config)
 	tx.FriendCode = NewFriendCodeClient(tx.config)
 	tx.FriendRequest = NewFriendRequestClient(tx.config)
 	tx.Friendship = NewFriendshipClient(tx.config)

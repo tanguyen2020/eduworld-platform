@@ -17,14 +17,16 @@ import (
 var printDDL = flag.String("print", "", "print the entddl block of this migration file")
 
 // migrations lists, per migration file, the ent tables created in its entddl block (in order). Hand-written:
-// the ref.* projections (DATABASE_DESIGN §2.17 rule 5) only.
+// the ref.* projections (DATABASE_DESIGN §2.17 rule 5) and the partitioned message tables (F115: composite keys).
 var migrations = map[string][]string{
-	"20261228000001_f095_social.sql": {"friend_requests", "friendships", "friend_codes", "blocks", "mutes"},
+	"20261228000001_f095_social.sql":    {"friend_requests", "friendships", "friend_codes", "blocks", "mutes"},
+	"20261229000001_f115_chat_core.sql": {"channels", "channel_members", "chat_policies"},
 }
 
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
-	return map[string]string{"friend_requests": c.FriendRequest, "friendships": c.Friendship, "friend_codes": c.FriendCode, "blocks": c.Block, "mutes": c.Mute}
+	return map[string]string{"friend_requests": c.FriendRequest, "friendships": c.Friendship, "friend_codes": c.FriendCode, "blocks": c.Block, "mutes": c.Mute,
+		"channels": c.Channel, "channel_members": c.ChannelMember, "chat_policies": c.ChatPolicy}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

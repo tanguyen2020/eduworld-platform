@@ -51,7 +51,12 @@ func (fakeValkey) Close() {}
 
 func registry(t *testing.T, binary, profile string) *module.Registry {
 	t.Helper()
-	r := module.NewRegistry(binary, profile, health.NewRegistry(buildinfo.Get(binary, profile)), testEnv(t))
+	return registryWith(t, binary, profile, testEnv(t))
+}
+
+func registryWith(t *testing.T, binary, profile string, getenv func(string) string) *module.Registry {
+	t.Helper()
+	r := module.NewRegistry(binary, profile, health.NewRegistry(buildinfo.Get(binary, profile)), getenv)
 	t.Cleanup(r.Close)
 	r.SetValkey(fakeValkey{})
 	nc, err := nats.Connect("nats://127.0.0.1:1", nats.RetryOnFailedConnect(true), nats.MaxReconnects(-1))
@@ -286,15 +291,56 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 	}
 }
 
-// Profile chat loads module chat only: no identity, learning or game entry point is declared.
+// Profile chat loads module chat only: no identity, learning or game entry point is declared; it runs chat-persister
+// (F115 T003) and nothing else.
 func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 	r := registry(t, "worker", "chat")
 	if _, err := wiring.Compose(r); err != nil {
 		t.Fatal(err)
 	}
+	active := 0
 	for _, d := range r.Declarations() {
-		if d.Active {
+		if !d.Active {
+			continue
+		}
+		active++
+		if d.Module != "chat" || d.Kind != module.KindConsumer || d.Name != "chat.persister" {
 			t.Errorf("profile chat runs %s %s", d.Kind, d.Name)
+		}
+	}
+	if active != 1 || len(r.Workers()) != 1 {
+		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister only)", active, len(r.Workers()))
+	}
+}
+
+// F115-AC-06 (NFR-SAFE-001): outside EW_ENV=test core-api and worker-chat refuse to start while no real ContentValidator
+// is wired (F116); the labelled test double is accepted under EW_ENV=test only.
+func TestChatRefusesToStartWithoutRealValidator(t *testing.T) {
+	for _, c := range []struct{ binary, profile string }{{"core-api", ""}, {"worker", "chat"}, {"worker", "all"}} {
+		for _, env := range []string{"", "local", "staging", "production"} {
+			base := testEnv(t)
+			getenv := func(k string) string {
+				if k == "EW_ENV" {
+					return env
+				}
+				return base(k)
+			}
+			_, err := wiring.Compose(registryWith(t, c.binary, c.profile, getenv))
+			if err == nil || !strings.Contains(err.Error(), "ContentValidator") {
+				t.Errorf("%s %s with EW_ENV=%q: start-up error %v, want the ContentValidator refusal", c.binary, c.profile, env, err)
+			}
+		}
+	}
+	for _, c := range []struct{ binary, profile string }{{"worker", "events"}, {"worker", "jobs"}} {
+		base := testEnv(t)
+		getenv := func(k string) string {
+			if k == "EW_ENV" {
+				return "production"
+			}
+			return base(k)
+		}
+		if _, err := wiring.Compose(registryWith(t, c.binary, c.profile, getenv)); err != nil {
+			t.Errorf("%s %s: %v (no send path, no validator needed)", c.binary, c.profile, err)
 		}
 	}
 }

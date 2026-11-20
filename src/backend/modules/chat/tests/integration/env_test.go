@@ -91,6 +91,7 @@ type env struct {
 	tenantA, tenantB, tenantU  uuid.UUID
 	schoolA, schoolA2, schoolB uuid.UUID
 	schoolU1, schoolU2         uuid.UUID
+	chatHandlers               *chathttp.ChatHandlers // F115 routes (setupChat)
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -171,7 +172,7 @@ func (e *env) server(ctx context.Context) {
 	if err != nil {
 		e.t.Fatal(err)
 	}
-	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries}); err != nil {
+	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers}); err != nil {
 		e.t.Fatal(err)
 	}
 	e.srv = httptest.NewServer(s)

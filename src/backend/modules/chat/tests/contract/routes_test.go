@@ -24,9 +24,9 @@ func spec(t *testing.T) *openapi3.T {
 	return doc
 }
 
-// The F095 operations match the merged spec (x-service chat): method + path, never public, X-Tenant-Id mode from
-// TenantIdHeader, Idempotency-Key from IdempotencyKey, success status; every /social/ route carries the game_player
-// guard (ADR-0031, AGENTS R23, F095-AC-10).
+// The F095 and F115 operations match the merged spec (x-service chat): method + path, never public, X-Tenant-Id mode
+// from TenantIdHeader, Idempotency-Key from IdempotencyKey, success status; every /social/ and /chat/ route carries the
+// game_player guard (ADR-0031, AGENTS R23, F095-AC-10, F115-AC-13).
 func TestOperationsMatchSpec(t *testing.T) {
 	doc := spec(t)
 	found := map[string]bool{}
@@ -48,7 +48,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 			if public != o.Public {
 				t.Errorf("%s: public %v, spec %v", id, o.Public, public)
 			}
-			if strings.HasPrefix(path, "/social/") && !public && o.Guard&httpx.GuardGamePlayer == 0 {
+			if (strings.HasPrefix(path, "/social/") || strings.HasPrefix(path, "/chat/")) && !public && o.Guard&httpx.GuardGamePlayer == 0 {
 				t.Errorf("%s: a player route needs the game_player guard", id)
 			}
 			var params []string
@@ -85,10 +85,10 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(chathttp.Operations) || len(found) != 14 { // the 14 social operations of F095
-		t.Fatalf("F095 operations found in the spec: %v", found)
+	if len(found) != len(chathttp.Operations) || len(found) != 17 { // the 14 social operations of F095 + 3 chat operations of F115
+		t.Fatalf("F095/F115 operations found in the spec: %v", found)
 	}
-	for _, id := range chathttp.PlayerOperations {
+	for _, id := range append(append([]string{}, chathttp.PlayerOperations...), chathttp.ChatOperations...) {
 		if chathttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {
 			t.Errorf("%s: player operation without game_player", id)
 		}

@@ -8,6 +8,9 @@ import "context"
 // that can be passed at runtime.
 type SchemaConfig struct {
 	Block         string // Block table.
+	Channel       string // Channel table.
+	ChannelMember string // ChannelMember table.
+	ChatPolicy    string // ChatPolicy table.
 	FriendCode    string // FriendCode table.
 	FriendRequest string // FriendRequest table.
 	Friendship    string // Friendship table.

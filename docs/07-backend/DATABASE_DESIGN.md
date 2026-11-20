@@ -491,7 +491,7 @@ Nguồn: [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), ADR-0050, A
 | `gameplay_partition_channels` | G | `partition_day`, `channel_id`, `tenant_id`, `purged_at` | PK `(partition_day, channel_id)`; quyết định khi nào drop partition |
 | `gameplay_chat_daily_stats` | T | `tenant_id`, `day`, `channel_type`, `channels`, `messages`, `masked`, `blocked`, `reported` | PK `(tenant_id, day, channel_type)`; rollup **trước** khi purge, giữ lâu dài cho analytics |
 | `gameplay_purge_runs` | G (append-only) | `run_id`, `started_at`, `finished_at`, `tenant_id`, `kind` (`gameplay`/`ephemeral`), `channels_purged`, `messages_purged`, `partitions_dropped`, `deferred_open_case`, `evidence_copied`, `status` | Bản ghi tổng hợp, không chứa nội dung |
-| `channel_members` | T | `channel_id`, `user_id`, `school_id`, `role`, `muted_until`, `last_delivered_seq`, `last_read_seq`, `unread_mentions`, `show_read_receipts`, `notification_level` | PK `(channel_id, user_id)`; con trỏ chỉ tăng |
+| `channel_members` | T | `channel_member_id`, `channel_id`, `user_id`, `school_id`, `role`, `joined_at`, `left_at`, `muted_until`, `last_delivered_seq`, `last_read_seq`, `unread_mentions`, `show_read_receipts`, `notification_level` | PK `channel_member_id` (ent cần khóa một cột, F115) + UNIQUE `(channel_id, user_id) WHERE deleted_at IS NULL`; con trỏ chỉ tăng |
 | `messages` | **P** | xem DDL §3.8 — gồm `kind` (text/emoji/quick/sticker/gif/system), `body`/`body_display`, `reply_to_message_id`, `quote`, `forwarded_from`, `mentions`, `revision`, `edited_at`, `recalled_at`, `search_tsv` | UNIQUE `(channel_id, seq, created_at)`; GIN `search_tsv` |
 | `message_revisions` | T | `message_id`, `revision`, `body`, `body_display`, `decision`, `edited_at` | PK `(message_id, revision)`; bằng chứng khi sửa (ADR-0034) |
 | `message_reactions` | T | `channel_id`, `message_id`, `user_id`, `emoji_code` | PK `(message_id, user_id, emoji_code)`; ≤ 3/người/tin (use case) |
@@ -582,7 +582,7 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 | Bảng projection | Có trong database | Nguồn (module · event) | Cột (tối thiểu cần dùng) |
 |---|---|---|---|
 | `ref.tenants` | learning, game, competition, chat | identity · `tenant.created/updated`, `tenant.status_changed` | `tenant_id`, `code varchar(64)`, `tenant_type varchar(64)`, `status varchar(64)`, `is_qa boolean` (idx `WHERE is_qa`, dashboard/analytics loại bằng anti-join), `settings_subset jsonb` (chat đọc `cross_school_social_enabled` — ADR-0054 — và `common_social_enabled` [Proposed F095] — ADR-0078), `source_version bigint` |
-| `ref.schools` | learning, game, competition, chat | identity · `school.synced`, `school.updated` | `school_id`, `tenant_id`, `name varchar(255)`, `name_i18n jsonb`, `province_code varchar(64)`, `province_name_i18n jsonb` (phi chuẩn hóa để hiển thị), `school_level varchar(64)`, `is_virtual`, `status`, `settings_subset jsonb` (cài đặt trường cần cho module nhận, vd. competition: `access_hours`, `disabled_leaderboard_definitions`, `allow_cross_school_listing`; identity phát trong `school.updated`) |
+| `ref.schools` | learning, game, competition, chat | identity · `school.synced`, `school.updated` | `school_id`, `tenant_id`, `name varchar(255)`, `name_i18n jsonb`, `province_code varchar(64)`, `province_name_i18n jsonb` (phi chuẩn hóa để hiển thị), `school_level varchar(64)`, `is_virtual`, `status`, `settings_subset jsonb` (cài đặt trường cần cho module nhận, vd. competition: `access_hours`, `disabled_leaderboard_definitions`, `allow_cross_school_listing`; chat (F115): `curfew_window`; identity phát trong `school.updated`) |
 | `ref.classes` | learning, **game**, competition, chat | identity · `class.synced` | `class_id`, `tenant_id`, `school_id`, `grade_level`, `name varchar(128)`, `academic_year_id`, `is_virtual` |
 | `ref.provinces` | learning, game | identity · `province.updated` | `code varchar(64)`, `country_code varchar(2)`, `name_i18n jsonb`, `status varchar(64)` (báo cáo theo tỉnh) |
 | `ref.students` | learning, game, competition, chat | identity · `student.synced`, `student.cleaned_up`, `student.restored`, `user.status_changed` | `student_id`, `tenant_id`, `school_id`, `grade_level`, `status`, `deleted_at` |
@@ -595,7 +595,7 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 | `ref.friendships` | competition | chat · `friend.added`, `friend.removed` | `user_low_id`, `user_high_id` (chuẩn hóa thứ tự như `social.friendships`), `tenant_id`, `active boolean`, `source_version bigint`; PK `(user_low_id, user_high_id)` (ưu tiên bạn bè trong hub, mời party) — tạo ở F091, F100/F104 chỉ đọc |
 | `ref.blocks` | competition | chat · `user.blocked`, `user.unblocked` | `blocker_id`, `blocked_id`, `tenant_id`, `active boolean`, `source_version bigint`; PK `(blocker_id, blocked_id)` (chặn mời party, ghép trận, duel) — tạo ở F091, F100/F104 chỉ đọc |
 | `ref.login_activity` | learning | game · `student.game_logged_in/out` | `student_id`, `tenant_id`, `last_game_login_at`, `sessions_7d`, `minutes_7d` (read model dashboard) |
-| `ref.platform_settings` | game | identity · `platform_settings.changed` (`scope = platform`; hiện chỉ `key = platform_curfew`) | `key varchar(128)` (PK), `value jsonb` (≤ 16 KB; `platform_curfew` = `{start, end}` giờ ICT), `source_version bigint` (`occurred_at` µs), `updated_at`; dữ liệu platform, không `tenant_id`/RLS; chỉ consumer `game.platform_settings` (role `game_platform`) ghi, `game_app` chỉ đọc. Chưa có dòng → mặc định khởi động `EW_PLATFORM_CURFEW` (OQ F014-2) [Confirmed] |
+| `ref.platform_settings` | game, chat (F115: giới nghiêm khi gửi tin) | identity · `platform_settings.changed` (`scope = platform`; hiện chỉ `key = platform_curfew`) | `key varchar(128)` (PK), `value jsonb` (≤ 16 KB; `platform_curfew` = `{start, end}` giờ ICT), `source_version bigint` (`occurred_at` µs), `updated_at`; dữ liệu platform, không `tenant_id`/RLS; chỉ consumer `game.platform_settings` (role `game_platform`) ghi, `game_app` chỉ đọc; ở chat consumer `chat.projection_identity` (`chat_platform`) ghi, `chat_app` chỉ đọc. Chưa có dòng → mặc định khởi động `EW_PLATFORM_CURFEW` (OQ F014-2) [Confirmed] |
 
 Quy tắc projection:
 1. Mỗi dòng có `source_version bigint` (version của aggregate nguồn hoặc `occurred_at`); consumer chỉ áp bản mới hơn (chống event đến lệch thứ tự). `ref.schools`/`ref.classes` của learning (F020 T044): version aggregate luôn thay giá trị `occurred_at` (µs, > 10¹²), giá trị `occurred_at` không thay version aggregate [Confirmed].
@@ -1103,11 +1103,11 @@ Kiểm tra `max_members` thực hiện trong transaction với `SELECT ... FROM 
 ### 3.8. Chat messages (partitioned) — ghi bởi `chat-persister` từ NATS JetStream (ADR-0035)
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS unaccent;
+CREATE EXTENSION IF NOT EXISTS unaccent SCHEMA chat;   -- schema chat: role ứng dụng không có USAGE trên public (F115)
 -- unaccent không IMMUTABLE nên bọc lại để dùng trong cột generated / index
 CREATE FUNCTION chat.f_unaccent(text) RETURNS text
   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
-  AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
+  AS $$ SELECT chat.unaccent('chat.unaccent'::regdictionary, $1) $$;
 
 CREATE TABLE chat.messages (
   message_id          uuid NOT NULL,             -- UUIDv7, cấp ở realtime, = Nats-Msg-Id
@@ -1120,7 +1120,7 @@ CREATE TABLE chat.messages (
   kind                varchar(64) NOT NULL CHECK (kind IN ('text','emoji','quick','sticker','gif','system')),
   body                varchar(1000),                      -- nội dung gốc (bằng chứng; không trả cho API người dùng khi masked/recalled)
   body_display        varchar(1000),                      -- nội dung hiển thị (đã che)
-  quick_message_id    uuid,
+  quick_message_id    varchar(64),               -- mã quick message (string 64 ở REST/AsyncAPI, F115)
   sticker_id          uuid,
   gif_id              uuid,
   reply_to_message_id uuid,
@@ -1193,6 +1193,7 @@ ALTER TABLE chat.channel_members
 ```
 
 - Persister cập nhật con trỏ bằng `GREATEST(...)` (không lùi); `channels.last_seq = GREATEST(last_seq, $seq)`.
+- Khóa unique của bảng phân vùng buộc chứa cột phân vùng (`created_at`/`created_on`), nên `(channel_id, seq)` được bảo đảm bởi persister: `pg_advisory_xact_lock` theo channel + kiểm tra trước khi ghi; trùng `seq` → DLQ (F115).
 - Tin `block` không được publish nên không có dòng; tin `held` có dòng với `moderation_state = 'held'`.
 - Tin thu hồi giữ `body` làm bằng chứng đến hết retention; API người dùng trả placeholder.
 - `chat.messages` chỉ chứa tin của channel **bền vững** (class, study_group, team cố định, direct). Tin của channel gameplay nằm ở `chat.gameplay_messages`.

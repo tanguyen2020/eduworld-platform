@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"time"
 	"unicode/utf8"
@@ -113,9 +114,73 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 		}
 		ok, err := c.P.StudentDeleted(ctx, tenant, p.StudentID, e.EventType == "student.cleaned_up", e.OccurredAt)
 		return classify("students", e, ok, err)
+	case "school.synced", "school.updated":
+		ok, err := c.school(ctx, e)
+		return classify("schools", e, ok, err)
+	case "platform_settings.changed":
+		ok, err := c.platformSettings(ctx, e)
+		return classify("platform_settings", e, ok, err)
 	}
 	return nil
 }
+
+func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p struct {
+		SchoolID       uuid.UUID      `json:"school_id"`
+		TenantID       uuid.UUID      `json:"tenant_id"`
+		Status         *string        `json:"status"`
+		SettingsSubset map[string]any `json:"settings_subset"`
+		SourceVersion  *int64         `json:"source_version"`
+	}
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	var settings []byte
+	if p.SettingsSubset != nil {
+		settings, _ = json.Marshal(p.SettingsSubset)
+	}
+	tenant, err := envTenant(e)
+	switch {
+	case err != nil:
+		return false, err
+	case p.SchoolID == uuid.Nil || (p.TenantID != uuid.Nil && p.TenantID != tenant):
+		return false, invalid(e.EventType, "school_id/tenant_id")
+	case !maxLen(p.Status, 64) || len(settings) > 16384:
+		return false, invalid(e.EventType, "length")
+	}
+	return c.P.School(ctx, tenant, p.SchoolID, p.Status, settings, version(p.SourceVersion, e))
+}
+
+// platformSettings keeps platform_curfew (key platform_curfew, scope platform; other keys are not used by module chat).
+func (c IdentityProjection) platformSettings(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p struct {
+		Key          string `json:"key"`
+		Scope        string `json:"scope"`
+		CurfewWindow *struct {
+			Start string `json:"start"`
+			End   string `json:"end"`
+		} `json:"curfew_window"`
+	}
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	if p.Key != "platform_curfew" || p.Scope != "platform" {
+		return false, nil
+	}
+	w := p.CurfewWindow
+	switch {
+	case e.TenantID != nil:
+		return false, invalid(e.EventType, "platform_curfew is a platform setting")
+	case w == nil || !curfewBound(w.Start) || !curfewBound(w.End) || w.Start == w.End:
+		return false, invalid(e.EventType, "curfew_window {start, end} HH:MM is required")
+	}
+	value, _ := json.Marshal(map[string]string{"start": w.Start, "end": w.End})
+	return c.P.PlatformCurfew(ctx, value, e.OccurredAt.UTC().UnixMicro())
+}
+
+var curfewRe = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
+
+func curfewBound(s string) bool { return curfewRe.MatchString(s) }
 
 func (c IdentityProjection) tenant(ctx context.Context, e outbox.Envelope) (bool, error) {
 	var p struct {

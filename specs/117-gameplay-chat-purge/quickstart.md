@@ -16,7 +16,7 @@
 | 1 | An tạo party (F100), mời Bình; Chi vào sau | `party.state.snapshot.chat_channel_id` có ngay; cả ba chat được; Chi đọc từ lúc vào | F117-AC-01, F117-AC-04 |
 | 2 | Phát lại `party.created` + `party.member_joined` hai lần (nats-box) | Không channel/thành viên trùng | F117-AC-03 |
 | 3 | Team battle 2v2 (An+Bình vs Chi+bot học sinh) | 1 `match` + 2 `team`; Chi gọi lịch sử `team` của An → `404` | F117-AC-02 |
-| 4 | An đổi thiết bị giữa trận (takeover F014), gửi `chat.sync` | Vẫn member, nhận tin bỏ lỡ | F117-AC-06 |
+| 4 | An đổi thiết bị giữa trận (takeover F014), gửi `chat.channel.sync` | Vẫn member, nhận tin bỏ lỡ | F117-AC-06 |
 | 5 | `ad.truong.a` đặt rule cấp trường `party.enabled=false` (fixture repo/API F120) | `422 CHAT_POLICY_ALWAYS_ON`; chat party vẫn chạy | F117-AC-08, F117-AC-09 |
 | 6 | Áp sanction `mute` cho Bình (F116 auto-mute) | Bình vẫn nhận tin, gửi → `CHAT_MUTED` | F117-AC-11 |
 | 7 | An chặn Chi (`blockUser`) | An/Chi không thấy tin của nhau, cả hai vẫn trong trận | F117-AC-12 |

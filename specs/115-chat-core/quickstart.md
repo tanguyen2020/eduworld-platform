@@ -24,7 +24,7 @@
 | 9 | Xóa rule `party` platform trong DB test (fixture), gửi tin | `CHAT_NOT_ALLOWED` | F115-AC-08 |
 | 10 | `docker compose stop postgres` 10 phút, gửi 200 tin, bật lại | Chat vẫn chạy; sau đó lịch sử đủ 200 tin, không trùng `seq` | F115-AC-15, F115-AC-16 |
 | 11 | Xóa `ew:chat:seq:<channel_id>` trong Valkey, gửi tiếp | `seq` tiếp nối, không trùng | F115-AC-20 |
-| 12 | Client bỏ qua 3 `chat.message.created` rồi gửi `chat.sync` | Nhận đủ 3 tin qua `chat.history.loaded` | F115-AC-18, F115-AC-19 |
+| 12 | Client bỏ qua 3 `chat.message.created` rồi gửi `chat.channel.sync` | Nhận đủ 3 tin qua `chat.history.loaded` | F115-AC-18, F115-AC-19 |
 | 13 | Clock giả 21:31: An gửi tin `party` qua WS và `class` qua REST | `CURFEW_ACTIVE` (WS `system.command.failed`), không `seq` | F115-AC-22 |
 | 14 | Trường TH Demo A chọn preset `quick_message_emote_only`; An gửi `text`, `sticker`, rồi `quick`, `emoji` ở `party` | `text`/`sticker` → `CHAT_KIND_NOT_ALLOWED`; `quick`/`emoji` gửi được | F115-AC-23 |
 

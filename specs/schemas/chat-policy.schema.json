@@ -75,6 +75,14 @@
       "maxLength": 64,
       "description": "Bộ Quick Message áp dụng (dùng chung cho mọi lớp) — tham chiếu nội dung CMS"
     },
+    "chat_policy_preset": {
+      "enum": [
+        "standard",
+        "quick_message_emote_only"
+      ],
+      "default": "standard",
+      "description": "Preset cấp trường (ADR-0078, CHILD_SAFETY §3.5): quick_message_emote_only = mọi channel của trường, kể cả match/team/party, chỉ nhận quick + emoji; áp cho cả trường, không theo khối/lớp (R15). Chỉ có ở scope_type=school; F115 đọc, F120 ghi."
+    },
     "notes": {
       "type": "string",
       "maxLength": 2000
@@ -122,6 +130,42 @@
             "type": "string",
             "maxLength": 64
           }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "enum": [
+              "platform",
+              "tenant",
+              "class"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "chat_policy_preset": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "enum": [
+              "platform",
+              "tenant",
+              "class"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "chat_policy_preset": false
         }
       }
     }

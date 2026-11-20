@@ -42,10 +42,12 @@ type Queries interface {
 	ListFriendRequests(ctx context.Context, direction string) ([]query.Request, error)
 }
 
-// Handlers are the F095 use cases served over HTTP.
+// Handlers are the use cases served over HTTP: F095 (social) and F115 (chat core; nil leaves the chat routes unmounted,
+// e.g. the F095 test environments).
 type Handlers struct {
 	Commands Commands
 	Queries  Queries
+	Chat     *ChatHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -103,7 +105,10 @@ func Register(s *httpx.Server, h Handlers) error {
 			return err
 		}
 	}
-	return nil
+	if h.Chat == nil {
+		return nil
+	}
+	return registerChat(s, h.Chat)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

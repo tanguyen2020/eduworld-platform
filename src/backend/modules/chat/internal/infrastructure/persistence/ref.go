@@ -99,3 +99,27 @@ func changed(ctx context.Context, query string, args ...any) (bool, error) {
 	n, err := exec(ctx, query, args...)
 	return n > 0, err
 }
+
+// School upserts ref.schools from school.synced / school.updated (settings_subset: curfew_window read by the send path,
+// F115-AC-22).
+func (Refs) School(ctx context.Context, school, tenant uuid.UUID, status *string, settings []byte, version int64) (bool, error) {
+	var s any
+	if len(settings) > 0 {
+		s = string(settings)
+	}
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return changed(ctx, `INSERT INTO ref.schools AS sc (school_id, tenant_id, status, settings_subset, source_version)
+		VALUES ($1, $2, coalesce($3::varchar, 'active'), coalesce($4::jsonb, '{}'::jsonb), $5)
+		ON CONFLICT (school_id) DO UPDATE SET status = coalesce($3, sc.status), settings_subset = coalesce($4::jsonb, sc.settings_subset),
+			source_version = $5
+		WHERE sc.source_version < $5 AND sc.tenant_id = $2`, school, tenant, status, s, version)
+}
+
+// PlatformSetting upserts ref.platform_settings (platform consumer scope, G table): only a newer source_version wins.
+func (Refs) PlatformSetting(ctx context.Context, key string, value []byte, version int64) (bool, error) {
+	// tenancyguard:ok projection upsert of the platform settings registry ref.platform_settings (G, no tenant, no deleted_at)
+	return changed(ctx, `INSERT INTO ref.platform_settings AS ps (key, value, source_version, updated_at)
+		VALUES ($1, $2::jsonb, $3, now())
+		ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, source_version = $3, updated_at = now()
+		WHERE ps.source_version < $3`, key, string(value), version)
+}

@@ -216,5 +216,5 @@ Vận hành tăng/giảm replica theo lịch học, deploy không làm học sin
 
 ## Câu hỏi mở
 
-- **F090-1:** message `chat.sync` (owner F115) có `name` 2 đoạn, lệch pattern `type` 3 đoạn của `ClientEnvelope`, nên mọi frame `chat.sync` bị gateway trả `VALIDATION_FAILED`. Cần F115 đổi tên (vd. `chat.history.sync`) hoặc nới pattern. Bảng định tuyến vẫn có route `chat.sync` → module chat.
+- **F090-1:** ~~message `chat.sync` (owner F115) có `name` 2 đoạn, lệch pattern `type` 3 đoạn của `ClientEnvelope`~~ → **Đã xử lý (F115 T043, 2026-11-21):** đổi tên thành `chat.channel.sync`; bảng định tuyến sinh lại, `gen-routes.mjs` chỉ nhận `type` 3 đoạn.
 - **F090-2:** ACL Valkey user `realtime` và user NATS `realtime` (T002) chưa có file cấu hình nào trong `deploy/` cho mọi module (VALKEY_DESIGN: ACL theo module [Confirmed], một client mỗi binary). Gateway dùng client của binary; làm cùng lát cắt ACL chung.

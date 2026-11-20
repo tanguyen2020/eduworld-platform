@@ -33,7 +33,7 @@ Vào party lobby hay trận đấu, học sinh thấy ngay khung chat; có thể
 | F119-AC-01 | KHI vào party lobby, trận 1v1, trận đội hoặc boss co-op, game client PHẢI hiển thị panel chat của channel gameplay tương ứng; người chơi PHẢI thu gọn/ẩn được panel nhưng không có tùy chọn tắt chat, và tin mới khi thu gọn PHẢI hiện badge | FR-CHAT-010 · AC-CHAT-008 · [CHAT_SYSTEM §4.2](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-017 |
 | F119-AC-02 | KHI ở trận đội, game client PHẢI có hai tab "Đội" (channel `team` của mình) và "Cả trận" (channel `match`) với badge chưa đọc riêng | FR-CHAT-010 · [STUDENT_GAME_UX_SOCIAL §7](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md) | TC-CHAT-017 |
 | F119-AC-03 | TRONG KHI câu hỏi đang hiển thị ở Knowledge Battle hoặc boss, game client PHẢI tự thu nhỏ panel để không che vùng câu hỏi/đáp án (mobile: dải 2 dòng), vẫn nhận và lưu tin | FR-CHAT-010 · AC-UX-108 | — |
-| F119-AC-04 | game client PHẢI sắp tin theo `seq`, hiển thị trạng thái tin của mình chờ gửi → đã gửi (chỉ khi nhận `chat.message.acked`) → đã nhận/đã xem; KHI phát hiện khoảng trống `seq` PHẢI gửi `chat.sync`, quá `chat_recent_buffer` tin thì tải lịch sử REST, và khoảng trống không bù được PHẢI chỉ thử một lần | FR-CHAT-003 · [GODOT_ARCHITECTURE §6.1](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | TC-CHAT-028 |
+| F119-AC-04 | game client PHẢI sắp tin theo `seq`, hiển thị trạng thái tin của mình chờ gửi → đã gửi (chỉ khi nhận `chat.message.acked`) → đã nhận/đã xem; KHI phát hiện khoảng trống `seq` PHẢI gửi `chat.channel.sync`, quá `chat_recent_buffer` tin thì tải lịch sử REST, và khoảng trống không bù được PHẢI chỉ thử một lần | FR-CHAT-003 · [GODOT_ARCHITECTURE §6.1](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | TC-CHAT-028 |
 | F119-AC-05 | NẾU mất kết nối hoặc nhận `CHAT_TEMPORARILY_UNAVAILABLE`, THÌ game client PHẢI giữ tin ở trạng thái chờ (biểu tượng đồng hồ), hiện "Đang kết nối lại chat…", và gửi lại với cùng `client_message_id` theo `client_reconnect_backoff` mà không tạo tin trùng | FR-CHAT-003 · AC-CHAT-011 | TC-CHAT-026 |
 | F119-AC-06 | KHI channel gameplay chưa sẵn sàng ngay sau khi trận/party bắt đầu (`NOT_FOUND` khi join), game client PHẢI thử join lại theo `client_reconnect_backoff`; KHI channel đã đóng (`CHAT_CHANNEL_CLOSED`) PHẢI khóa ô nhập và hiện thông báo thời hạn lưu tính từ `purge_after` | FR-CHAT-003 · FR-CHAT-010 | TC-CHAT-020 |
 | F119-AC-07 | KHI xem lịch sử trận/party, game client PHẢI hiển thị "Tin nhắn trong trận được giữ {N} ngày" với N lấy từ dữ liệu server, không hardcode | FR-CHAT-010 · [CHAT_SYSTEM §4.2](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-021 |
@@ -116,7 +116,7 @@ Chat chạy mượt trên máy tầm trung, đủ tiếng Việt/Anh, không ch�
 
 ### Edge Cases
 
-- NẾU người chơi đổi thiết bị giữa trận (takeover), THÌ client mới join lại channel và `chat.sync` từ `last_seen_seq` = 0 tải lịch sử.
+- NẾU người chơi đổi thiết bị giữa trận (takeover), THÌ client mới join lại channel và `chat.channel.sync` từ `last_seen_seq` = 0 tải lịch sử.
 - NẾU tin của người bị chặn nằm trong reply/quote, THÌ hiển thị placeholder thay nội dung.
 - NẾU asset sticker/GIF tải lỗi, THÌ hiển thị `alt_text` theo locale.
 - NẾU bàn phím ảo mobile mở, THÌ panel đẩy lên, không che hàng quick message.
@@ -145,7 +145,7 @@ Chat chạy mượt trên máy tầm trung, đủ tiếng Việt/Anh, không ch�
 |---|---|
 | `client_reconnect_backoff` | Thử join/gửi lại khi mất kết nối |
 | `client_command_timeout` | Hết thời gian chờ phản hồi lệnh WS |
-| `chat_recent_buffer` | Số tin tối đa giữ trong bộ nhớ/bù qua `chat.sync` |
+| `chat_recent_buffer` | Số tin tối đa giữ trong bộ nhớ/bù qua `chat.channel.sync` |
 | `supported_locales` | Ngôn ngữ hiển thị quick message/tin hệ thống |
 | `chat_reactions_per_user` | Hiển thị lỗi khi vượt giới hạn reaction |
 

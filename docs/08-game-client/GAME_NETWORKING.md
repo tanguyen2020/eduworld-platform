@@ -234,7 +234,7 @@ Quy tắc client:
 
 - **Gửi:** tạo `client_message_id` (UUID) → hiển thị tin *pending* → `chat.message.send` → chờ `chat.message.acked` (Sent). Không có ack sau 5 s hoặc nhận `CHAT_TEMPORARILY_UNAVAILABLE` → giữ trong hàng đợi gửi lại (backoff 1/2/4/8 s, tối đa 5 lần), cùng `client_message_id` nên không trùng.
 - **Nhận:** `chat.message.created` áp vào `ChatStore` theo `seq`; gửi `chat.receipt.delivered` (gộp ≤ 1 lần/2 s); khi channel đang mở trên màn hình gửi `chat.receipt.read`.
-- **Seq gap:** khi `seq` nhận > `last_seq + 1` hoặc sau reconnect → `chat.sync {channel_id: last_seen_seq}`; phản hồi `chat.history.loaded` (≤ 200 tin), nhiều hơn → `GET /api/v1/chat/channels/{id}/messages?after_seq=`.
+- **Seq gap:** khi `seq` nhận > `last_seq + 1` hoặc sau reconnect → `chat.channel.sync {channel_id: last_seen_seq}`; phản hồi `chat.history.loaded` (≤ 200 tin), nhiều hơn → `GET /api/v1/chat/channels/{id}/messages?after_seq=`.
 - **Sự kiện thay đổi:** `chat.message.edited` (chỉ áp nếu `revision` mới hơn), `chat.message.recalled` (thay bằng placeholder, bỏ ghim, cập nhật khung reply/quote), `chat.reaction.updated`, `chat.pin.updated`, `chat.typing.updated` (tự xóa sau 5 s), `chat.receipt.updated`, `chat.mention.created`, `chat.unread.updated`.
 - **Lỗi:** `CHAT_EDIT_WINDOW_EXPIRED`, `CHAT_RECALL_WINDOW_EXPIRED`, `CHAT_FORWARD_NOT_ALLOWED`, `CHAT_PIN_LIMIT_REACHED`, `CHAT_MENTION_LIMIT`, `CHAT_FEATURE_DISABLED`, `CHAT_ASSET_NOT_AVAILABLE` → thông báo thân thiện, không retry; `CHAT_CONTENT_BLOCKED` → thông điệp theo SOCIAL_SYSTEM §8 (không lộ từ bị khớp).
 - Giao thức chi tiết: [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml); kiến trúc server: [CHAT_SYSTEM §5](../03-social-multiplayer/CHAT_SYSTEM.md).

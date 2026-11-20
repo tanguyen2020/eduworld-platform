@@ -144,7 +144,7 @@ func TestCommandDedupe(t *testing.T) {
 	c.next("system.session.welcome")
 	id := newID()
 	ch := newID()
-	body := map[string]any{"channel_id": ch, "client_msg_id": newID(), "kind": "text", "body": "xin chao"}
+	body := map[string]any{"channel_id": ch, "client_message_id": newID(), "kind": "text", "body": "xin chao"}
 	c.send("chat.message.send", id, body)
 	first := c.next("system.command.acked")
 	c.send("chat.message.send", id, body)

@@ -11,7 +11,7 @@
 
 ## R2. Ẩn tin theo block/mute khi fan-out
 
-- **Decision**: Khi publish `ew:chat:fanout:<channel_id>`, module chat đính `exclude_user_ids` = thành viên có quan hệ block hai chiều với người gửi ∪ thành viên đã mute người gửi (đọc `social.blocks`, `social.mutes` cùng database, cache Valkey theo user). `realtime` bỏ giao cho các user đó. Lịch sử (`listChannelMessages`, `chat.sync`) lọc cùng quy tắc ở query.
+- **Decision**: Khi publish `ew:chat:fanout:<channel_id>`, module chat đính `exclude_user_ids` = thành viên có quan hệ block hai chiều với người gửi ∪ thành viên đã mute người gửi (đọc `social.blocks`, `social.mutes` cùng database, cache Valkey theo user). `realtime` bỏ giao cho các user đó. Lịch sử (`listChannelMessages`, `chat.channel.sync`) lọc cùng quy tắc ở query.
 - **Rationale**: CHILD_SAFETY §6: kiểm soát an toàn thực thi ở server; gateway không có logic nghiệp vụ, chỉ áp danh sách đã tính.
 - **Alternatives**: client tự ẩn — loại (không phải lớp bảo vệ); fan-out riêng từng người — loại (tải Valkey tăng theo số thành viên).
 - **Phụ thuộc**: định dạng message fan-out nội bộ cần thống nhất với F090 (contracts §6).

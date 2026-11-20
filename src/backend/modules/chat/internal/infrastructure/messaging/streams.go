@@ -10,12 +10,13 @@ var (
 	GameStream     = natsx.EventStream("game")
 )
 
-// ProjectionIdentityName keeps ref.tenants and ref.students of eduworld_chat (F095 T007).
+// ProjectionIdentityName keeps ref.tenants and ref.students of eduworld_chat (F095 T007), ref.schools and
+// ref.platform_settings (platform_curfew) for the curfew of the send path (F115 T041).
 const ProjectionIdentityName = "chat.projection_identity"
 
 // ProjectionIdentityEvents are the identity events it projects.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored"}
+	"student.cleaned_up", "student.restored", "school.synced", "school.updated", "platform_settings.changed"}
 
 // ProjectionGameName keeps ref.player_profiles (nickname, avatar, level of PlayerCard, F095-AC-11).
 const ProjectionGameName = "chat.projection_game"

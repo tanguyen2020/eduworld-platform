@@ -86,6 +86,19 @@ func (p Projection) PlayerProfile(ctx context.Context, tenant, student uuid.UUID
 	return p.Refs.PlayerProfile(ctx, student, tenant, nickname, level, avatar, version)
 }
 
+// School applies school.synced/school.updated (curfew_window of the school, F115-AC-22).
+func (p Projection) School(ctx context.Context, tenant, school uuid.UUID, status *string, settings []byte, version int64) (bool, error) {
+	if err := p.owned(ctx, tenant, "schools", school); err != nil {
+		return false, err
+	}
+	return p.Refs.School(ctx, school, tenant, status, settings, version)
+}
+
+// PlatformCurfew applies platform_settings.changed key platform_curfew (scope platform): value {start, end}.
+func (p Projection) PlatformCurfew(ctx context.Context, value []byte, version int64) (bool, error) {
+	return p.Refs.PlatformSetting(ctx, "platform_curfew", value, version)
+}
+
 // Expiry is the job expire-friend-requests (F095-AC-07): pending requests past friend_request_ttl become expired
 // without any notification; expired friend codes are soft-deleted (never physically deleted, ADR-0028).
 type Expiry struct {

@@ -22,6 +22,23 @@
 
 - Facade vòng đời học sinh và gộp tài khoản của module chat → **Chốt:** F115 hiện thực `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData` (theo chính sách tin nhắn của CHAT_SYSTEM, không xóa vật lý — R21) và `mergeUserData` (cập nhật tham chiếu thành viên channel), idempotent theo `merge_id`.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định khi triển khai (đề xuất bảo thủ nhất, phù hợp ADR; owner đã duyệt trước các mặc định đề xuất):
+
+- Bảng tin phân vùng `chat.messages` / `chat.gameplay_messages` / `chat.gameplay_partition_channels` → **Chốt:** DDL viết tay theo DATABASE_DESIGN §3.8/§3.8b (khóa chính phức hợp của bảng phân vùng ent không biểu diễn được; tiền lệ `competition.integrity_signals`), partition `DEFAULT` cho tới khi có job partition của bảng nghiệp vụ; ent chỉ có `Channel`, `ChannelMember`, `ChatPolicy`. `chat.channel_members` dùng khóa đại diện `channel_member_id` + unique `(channel_id, user_id) WHERE deleted_at IS NULL` (ent cần khóa một cột).
+- Unique `(channel_id, seq)` (F115-AC-20) → **Chốt:** khóa unique của bảng phân vùng buộc chứa cột phân vùng nên persister giữ `pg_advisory_xact_lock` theo channel và kiểm `(channel_id, seq)` trước khi ghi; tin trùng `seq` (mất key Valkey) vào DLQ + metric, chưa gán lại `seq` (`chat.message.resequenced` chưa có tiêu chí — để sau).
+- `quick_message_id` → **Chốt:** `varchar(64)` ở DB, REST và AsyncAPI (contracts §6). Tin `kind = emoji` lưu mã emoji ở `body`/`body_display`.
+- `unaccent` → **Chốt:** cài trong schema `chat` (`chat.unaccent`), không trong `public` (role ứng dụng chỉ có USAGE trên `chat`, đặc quyền tối thiểu).
+- Chưa có bộ kiểm tra nội dung thật (F116) → **Chốt:** `core-api` và `worker` profile `chat`/`all` **từ chối khởi động** ngoài `EW_ENV=test` (kể cả `local`) cho tới khi F116 nối `pipeline.Validator`; `EW_ENV=test` dùng test double có nhãn (`TestDoubleValidator`, quyết định `unchecked`). Profile `events`/`jobs` không có đường gửi nên không bị chặn.
+- Giới nghiêm và preset → **Chốt:** module chat chiếu `ref.schools` (`settings_subset.curfew_window`) và `ref.platform_settings` (`platform_curfew`) qua consumer `chat.projection_identity` (`school.synced`, `school.updated`, `platform_settings.changed`); mặc định `EW_PLATFORM_CURFEW` cho tới khi có bản chiếu. `chat_policy_preset` nằm trong tài liệu policy cấp `school` (`chat.chat_policies.rules`; thêm thuộc tính tùy chọn vào `chat-policy.schema.json`, F120 ghi). Không có cờ "mặc định pilot" trong code.
+- Gửi khi PostgreSQL ngừng (F115-AC-16) → **Chốt:** facts của đường gửi (channel + thành viên + thẻ + block, effective policy, giới nghiêm) cache Valkey `ew:chat:facts:*` (tươi `chat_facts_cache` 30 s, policy `chat_policy_cache`, giới nghiêm 60 s) và phục vụ bản cũ tới `chat_facts_stale_ttl` (1 giờ) khi không đọc được PostgreSQL; không có giá trị nào → `CHAT_TEMPORARILY_UNAVAILABLE` (fail closed). Persister giữ lô (`InProgress`) khi PostgreSQL ngừng, không tốn lần giao, không đưa vào DLQ.
+- Phản hồi WS → **Chốt:** `chat.message.acked`, `chat.message.held`, `chat.history.loaded` đi qua `ew:rt:user:<id>` với `target.conn_id` (envelope Pub/Sub không mang `ref`, nên `ChatHistoryLoaded` bỏ `required: [ref]`); `system.command.acked` của lệnh gốc mang `result` (payload acked, hoặc `{channel_id, count, has_more}`). `ChatMessage.moderation_state` thêm `held` (chỉ trong lịch sử của chính người gửi).
+- Fan-out → **Chốt:** `target.user_ids` = thành viên đang hoạt động trừ người có block hai chiều với người gửi (thành viên đã bị gỡ không nhận tin dù gateway chưa hủy subscribe); mute để F117 (research R2). Lịch sử cũng ẩn tin của người có quan hệ block.
+- Giới hạn tốc độ → **Chốt:** `rate.messages_per_minute` theo channel + `min(global_rate, chat_rate_per_user)` theo người, cửa sổ trượt Valkey `ew:chat:rl:*` theo đồng hồ của use case; `burst` và `slow_mode_seconds` để TechnicalGate của F116.
+- `chat.sync` → **Chốt:** `chat.channel.sync` (T043, OQ F090-1); `client_message_id` bắt buộc trong `chat.message.send`.
+- Envelope JetStream → **Chốt:** schema ở `specs/events/chat-envelope.v1.schema.json` (không phải payload outbox, `check-cross-features` chỉ nhận `payloads/<module>/<event_type>`); DLQ dùng stream `DLQ_CHAT` subject `ew.dlq.chat.persister` (EVENT_DESIGN §4.10); `infra.dead_letters` chỉ giữ id, không nội dung (R14).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi và nhận tin realtime, bền vững trước khi "Sent" (Priority: P1)
@@ -76,7 +93,7 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 
 **Why this priority**: Không mất tin là cam kết ADR-0035; lịch sử là nền cho unread (F117) và bằng chứng (F121).
 
-**Independent Test**: Gửi 500 tin, dừng PostgreSQL 10 phút giữa chừng → sau khi DB trở lại, `chat.messages`/`chat.gameplay_messages` có đủ 500 dòng, không trùng `(channel_id, seq)`; drop gói fan-out → client gọi `chat.sync` nhận đủ.
+**Independent Test**: Gửi 500 tin, dừng PostgreSQL 10 phút giữa chừng → sau khi DB trở lại, `chat.messages`/`chat.gameplay_messages` có đủ 500 dòng, không trùng `(channel_id, seq)`; drop gói fan-out → client gọi `chat.channel.sync` nhận đủ.
 
 **Acceptance Criteria (EARS)**:
 
@@ -86,13 +103,13 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 | F115-AC-16 | TRONG KHI PostgreSQL không sẵn sàng, module chat PHẢI vẫn gửi/nhận realtime; khi DB trở lại, persister PHẢI ghi bù đủ, không trùng, đúng `seq` | FR-CHAT-017 · ADR-0035 | TC-CHAT-027 |
 | F115-AC-17 | NẾU một sự kiện lỗi quá số lần giao tối đa, THÌ persister PHẢI chuyển vào hàng DLQ, ghi `infra.dead_letters` và phát cảnh báo, không chặn các tin khác | FR-CHAT-017 · [EVENT_DESIGN §7](../../docs/07-backend/EVENT_DESIGN.md) | — |
 | F115-AC-18 | KHI member gọi `listChannelMessages` (`before_seq`/`after_seq`/`limit`) hoặc `chat.history.fetch`, module chat PHẢI trả tin sắp theo `seq`, hợp nhất PostgreSQL với bộ đệm tin gần nhất, chỉ nội dung đã che, lọc `tenant_id` và `deleted_at IS NULL`, chỉ tin từ `joined_at` của member | FR-CHAT-008 · [CHAT_SYSTEM §8.3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-004 |
-| F115-AC-19 | KHI client gửi `chat.sync` hoặc `chat.channel.join` có `since_seq`, module chat PHẢI trả tin thiếu qua `chat.history.loaded` (tối đa `chat_recent_buffer`), nhiều hơn thì báo `has_more` để client tải REST | FR-CHAT-008 · ADR-0035 | TC-CHAT-028 |
+| F115-AC-19 | KHI client gửi `chat.channel.sync` hoặc `chat.channel.join` có `since_seq`, module chat PHẢI trả tin thiếu qua `chat.history.loaded` (tối đa `chat_recent_buffer`), nhiều hơn thì báo `has_more` để client tải REST | FR-CHAT-008 · ADR-0035 | TC-CHAT-028 |
 | F115-AC-20 | NẾU key cấp `seq` trong Valkey bị mất, THÌ module chat PHẢI khởi tạo lại từ `GREATEST(channels.last_seq, seq lớn nhất trong bộ đệm)` bằng script nguyên tử; ràng buộc unique `(channel_id, seq)` ở PostgreSQL PHẢI chặn trùng | FR-CHAT-017 · [VALKEY_DESIGN §4.9](../../docs/07-backend/VALKEY_DESIGN.md) | TC-CHAT-028 |
 | F115-AC-21 | HỆ THỐNG PHẢI không để game client hay portal kết nối NATS/Valkey; mọi tin vào hệ thống qua `/realtime/v1` hoặc `/api/v1/chat/*`, và chỉ `chat-persister` ghi tin vào PostgreSQL | AGENTS R25 · ADR-0035 | — |
 
 ### Edge Cases
 
-- NẾU Valkey Pub/Sub mất gói, THÌ client thấy khoảng trống `seq` và gọi `chat.sync` (F115-AC-19); khoảng trống do gửi lỗi (seq đã cấp nhưng publish thất bại) là bình thường, không retry vô hạn.
+- NẾU Valkey Pub/Sub mất gói, THÌ client thấy khoảng trống `seq` và gọi `chat.channel.sync` (F115-AC-19); khoảng trống do gửi lỗi (seq đã cấp nhưng publish thất bại) là bình thường, không retry vô hạn.
 - NẾU không cấp được `seq` (Valkey lỗi), THÌ trả `CHAT_TEMPORARILY_UNAVAILABLE` (F115-AC-03).
 - NẾU member bị gỡ khỏi channel giữa chừng, THÌ lệnh gửi kế tiếp trả `NOT_FOUND`; gateway hủy subscribe `ew:chat:fanout:<channel_id>` của phiên đó.
 - NẾU tin `block`, THÌ không cấp `seq`, không publish, không lưu nội dung; client nhận `CHAT_CONTENT_BLOCKED` (quyết định do F116).
@@ -123,7 +140,7 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 |---|---|
 | `chat_max_length` | Trần độ dài text theo loại channel (giá trị hiệu lực lấy từ policy) |
 | `chat_rate_per_user` | Trần tổng tin/phút mỗi người trên mọi channel |
-| `chat_recent_buffer` | Bộ đệm tin gần nhất và số tin tối đa trả qua `chat.sync` |
+| `chat_recent_buffer` | Bộ đệm tin gần nhất và số tin tối đa trả qua `chat.channel.sync` |
 | `chat_policy_cache` | Thời gian cache effective policy |
 | `idempotency_record_ttl` | Giữ kết quả `sendChannelMessage` theo `Idempotency-Key` |
 

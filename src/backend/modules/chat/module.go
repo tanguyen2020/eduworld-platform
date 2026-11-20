@@ -10,8 +10,11 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
 	chatconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/moderation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
@@ -19,6 +22,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/consumer"
 	chathttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/job"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/natscmd"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/persister"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/subscriber"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/migrations"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
@@ -38,11 +43,11 @@ const Name = "chat"
 // consumes facade operations (specs/openapi/modules/*.internal.v1.yaml).
 type Module struct{}
 
-// Register wires the module into the running binary (F095): health checks everywhere; in core-api the social routes
-// (friends, friend requests and codes, blocks, mutes) and the presence fan-out subscriber of the gateway signals
-// (ew.rt.presence.*, queue group chat.presence_fanout); in worker events the outbox relay and the consumers
-// chat.projection_identity and chat.projection_game; in worker jobs the job expire-friend-requests. Profile chat (chat
-// persister, gameplay purge) gets its entry points with F115/F117.
+// Register wires the module into the running binary: health checks everywhere; in core-api the social routes (F095),
+// the chat routes and the NATS chat commands of the gateway (F115: one send use case, JetStream before "Sent") and the
+// presence fan-out subscriber (ew.rt.presence.*, queue group chat.presence_fanout); in worker events the outbox relay
+// and the consumers chat.projection_identity and chat.projection_game; in worker jobs the job expire-friend-requests;
+// in worker chat (and all) chat-persister (F115). Gameplay purge comes with F117.
 func Register(r *module.Registry) (*Module, error) {
 	db, err := r.Database(Name)
 	if err != nil {
@@ -50,7 +55,8 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
-	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
+	runsChat := r.Binary() == "worker" && (r.Profile() == "chat" || r.Profile() == "all")
+	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !runsChat {
 		// Outbox relay declared (inactive here): EVT_CHAT also carries the identity audit sink (OQ F010-2).
 		if err := r.Relay(Name); err != nil {
 			return nil, fmt.Errorf("chat: %w", err)
@@ -69,7 +75,26 @@ func Register(r *module.Registry) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
+	chatCfg, err := chatconfig.ChatFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
 	observability.Register(r.Metrics())
+	observability.RegisterChat(r.Metrics())
+	// NFR-SAFE-001, F115-AC-06: the send path (core-api) and worker-chat refuse to start without a real ContentValidator
+	// outside EW_ENV=test (F116 wires pipeline.Validator; EW_ENV=test gets the labelled test double).
+	validator := moderation.For(chatCfg.Env)
+	if r.ServesHTTP() || runsChat {
+		if err := command.RequireValidator(chatCfg.Env, validator); err != nil {
+			return nil, err
+		}
+	}
+	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
+	facts := service.Facts{Read: core.ReadSession, Reader: persistence.ChatReader{}, Recent: recent,
+		Cache: cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts},
+		Config: service.FactsConfig{FactsFresh: chatCfg.FactsFresh, PolicyCache: chatCfg.PolicyCache, CurfewFresh: chatCfg.CurfewFresh,
+			PlatformCurfew: chatCfg.PlatformCurfew, CurfewLocation: chatCfg.CurfewLocation}}
+	stream := natsstream.StreamOptions{MaxAge: chatCfg.StreamMaxAge, Replicas: chatCfg.StreamReplicas}
 	friends := cache.Friends{C: vk, TTL: cache.FriendsTTL}
 	presence := cache.Presence{C: vk, TTL: cfg.PresenceTTL}
 	social := command.Social{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Social{}, Directory: persistence.Directory{},
@@ -81,9 +106,31 @@ func Register(r *module.Registry) (*Module, error) {
 		if err != nil {
 			return nil, fmt.Errorf("chat: %w", err)
 		}
+		var js jetstream.JetStream
+		if r.NATS() != nil {
+			if js, err = r.JetStream(); err != nil {
+				return nil, fmt.Errorf("chat: %w", err)
+			}
+		}
+		fanout := realtime.ChatFanout{P: rt.Publisher{C: vk}}
+		send := command.Send{Facts: facts, Validator: validator, Seq: cache.Seq{C: vk}, Recent: recent, Rate: cache.Rate{C: vk},
+			Stream: natsstream.Publisher{JS: js, Timeout: chatCfg.PublishAckTimeout}, Fanout: fanout,
+			Dedupe: cache.Dedupe{C: vk, TTL: chatCfg.CmidTTL}, Metrics: observability.Chat{}, UoW: core.UoW,
+			Audit: persistence.Auditor{R: core.Recorder}, Config: command.SendConfig{RatePerUser: chatCfg.RatePerUser}}
+		reads := query.Chat{Read: core.ReadSession, Reader: persistence.ChatReader{}, Facts: facts, Recent: recent, Fanout: fanout,
+			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
-			Presence: presence, Cursors: cursors}}
+			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
+		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
+		if nc := r.NATS(); nc != nil {
+			r.Go("chat.commands", func(ctx context.Context) error {
+				if err := natsstream.EnsureStream(ctx, js, stream); err != nil {
+					return err
+				}
+				return natscmd.Serve(ctx, nc, send, reads)
+			})
+		}
 		// Presence fan-out (F095 US4): core-api, queue group chat.presence_fanout (one replica per signal).
 		if nc := r.NATS(); nc != nil {
 			fanout := command.PresenceFanout{Read: core.ReadSession, Relations: persistence.Reader{}, Store: presence, Cache: friends,
@@ -92,7 +139,32 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 	}
 
-	// Outbox relay (worker events): EVT_CHAT (friend.*, user.*, audit.recorded).
+	// chat-persister (worker-chat, also worker all): the only writer of chat messages into PostgreSQL (R25, F115 US3).
+	persist := command.Persist{UoW: core.UoW, Store: persistence.Messages{}, Events: persistence.Publisher{W: core.Writer}}
+	r.Background(Name, module.KindConsumer, persister.Name, runsChat, func(ctx context.Context) error {
+		js, err := r.JetStream()
+		if err != nil {
+			return err
+		}
+		if err := natsstream.EnsureStream(ctx, js, stream); err != nil {
+			return err
+		}
+		w, err := persister.New(ctx, persister.Options{JS: js, Persist: persist, DB: core.App, Batch: chatCfg.PersisterBatch,
+			Wait: chatCfg.PersisterWait, MaxDeliver: chatCfg.MaxDeliver, AckWait: chatCfg.AckWait, Stream: stream})
+		if err != nil {
+			return err
+		}
+		return w.Run(ctx)
+	})
+	if runsChat && !r.RunsEvents() && !r.RunsJobs() {
+		// Profile chat: the persister only; the outbox relay of EVT_CHAT runs in worker events.
+		if err := r.Relay(Name); err != nil {
+			return nil, fmt.Errorf("chat: %w", err)
+		}
+		return &Module{}, nil
+	}
+
+	// Outbox relay (worker events): EVT_CHAT (friend.*, user.*, audit.recorded, chat.message_created).
 	if err := r.Relay(Name); err != nil {
 		return nil, fmt.Errorf("chat: %w", err)
 	}

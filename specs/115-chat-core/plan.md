@@ -62,7 +62,7 @@ src/backend/modules/chat/
 ├── internal/infrastructure/persistence/  # ent repo channel/member/policy/message reader
 ├── internal/infrastructure/natsstream/ # jetstream_publisher.go, stream_bootstrap.go (CHAT_MESSAGES, CHAT_DLQ)
 ├── internal/infrastructure/valkey/     # seq_next.lua, seq_allocator.go, recent_buffer.go, fanout.go, rate_limiter.go, cmid_store.go, policy_cache.go
-├── internal/presentation/natscmd/      # handler ew.cmd.chat.message.send, chat.channel.join/leave, chat.history.fetch, chat.sync
+├── internal/presentation/natscmd/      # handler ew.cmd.chat.message.send, chat.channel.join/leave, chat.history.fetch, chat.channel.sync
 ├── internal/presentation/http/public/  # channels.go (listMyChannels), messages.go (listChannelMessages, sendChannelMessage)
 ├── internal/presentation/worker/persister/  # batch_consumer.go, writer.go, dlq.go
 └── tests/{unit,integration,contract,chaos,static}/
@@ -87,7 +87,7 @@ src/backend/modules/chat/
 | domain | `Channel` (Open, Close, IsMember), `ChannelMember`, `policy.Intersect(levels...)` → `EffectivePolicy` (deny khi thiếu rule), `Message.NewFromDecision` | Thuần Go, không `grade_*` |
 | application | Command `SendMessage` (idempotency `client_message_id`/`Idempotency-Key`), `OpenChannel`, `AddMember`, `RemoveMember` (nội bộ, gọi từ consumer F117/F120); Query `ListMyChannels`, `ListChannelMessages`, `SyncChannel` | Authorization: `game_player` + membership; không có permission catalog cho học sinh |
 | infrastructure | ent repo; JetStream publisher (PubAck timeout 2 s); Valkey seq/recent/fanout/rate/cmid; policy cache `ew:cache:policy:chat:<tenant_id>:<school_id>` | `ContentValidator` mặc định ở test là `labeled_test_double` (R17) |
-| presentation | `listMyChannels`, `listChannelMessages`, `sendChannelMessage`; NATS `ew.cmd.chat.message.send`, `ew.cmd.chat.channel.join`, `ew.cmd.chat.channel.leave`, `ew.cmd.chat.history.fetch`, `ew.cmd.chat.sync`; worker `persister` | |
+| presentation | `listMyChannels`, `listChannelMessages`, `sendChannelMessage`; NATS `ew.cmd.chat.message.send`, `ew.cmd.chat.channel.join`, `ew.cmd.chat.channel.leave`, `ew.cmd.chat.history.fetch`, `ew.cmd.chat.channel.sync`; worker `persister` | |
 
 ### Tích hợp và phụ thuộc
 

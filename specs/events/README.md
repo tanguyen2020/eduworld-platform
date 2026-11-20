@@ -11,6 +11,7 @@ Hợp đồng máy đọc cho **domain event giữa các service**. Catalog nghi
 |---|---|
 | `envelope.schema.json` | Envelope chuẩn của mọi domain event (EVENT_DESIGN §2): `event_id` (UUIDv7, cũng là `Nats-Msg-Id`), `event_type`, `schema_version`, `tenant_id`, `actor`, `subject`, `idempotency_key`, `payload` |
 | [`../schemas/learning-event.schema.json`](../schemas/learning-event.schema.json) | Learning event (xAPI-like), mở rộng envelope với trường học tập bắt buộc |
+| `chat-envelope.v1.schema.json` | Envelope tin chat trên NATS JetStream `CHAT_MESSAGES` (`ew.chat.<tenant_id>.msg.<channel_id>`, ADR-0035, EVENT_DESIGN §4.10) — **không** phải domain event outbox; owner F115 |
 
 Payload đã có schema:
 
@@ -18,6 +19,7 @@ Payload đã có schema:
 |---|---|
 | common | `audit.recorded.v1` (mọi module phát, owner F003) |
 | identity | `user_role.changed.v1`, `role.updated.v1`, `province.updated.v1`, `class.synced.v1`; F010: `tenant.created.v1`, `tenant.updated.v1`, `school.updated.v1`, `class.created.v1`, `class.updated.v1`, `enrollment.changed.v1`, `student.transferred.v1`, `tenant_membership.changed.v1`, `user.provisioned.v1`; F011: `school.synced.v1`, `student.synced.v1`, `student.provisioning_requested.v1`, `student.sis_link_created.v1`, `student.sis_link_superseded.v1`, `user.status_changed.v1`, `user.access_revoked.v1`, `sis.sync_completed.v1`, `sis.reconciliation_issue_raised.v1`; F013: `user.activated.v1`; F015: `platform_settings.changed.v1`; F016: `student.cleaned_up.v1`, `student.restored.v1` |
+| chat | F095: `friend_request.sent.v1`, `friend.added.v1`, `friend.removed.v1`, `user.blocked.v1`, `user.unblocked.v1`, `user.muted.v1`, `user.unmuted.v1`; F115: `chat.message_created.v1` (không nội dung) |
 | game | F014: `game_session.started.v1`, `game_session.ended.v1`, `game_session.replaced.v1`, `student.game_logged_in.v1`, `student.game_logged_out.v1` |
 | learning | `content.published.v1`, `activity.submitted.v1`, `activity.graded.v1`, `assignment.created.v1` (dùng chung cho `assignment.published`), `study_group.created.v1`, `study_group.updated.v1`, `study_group.member_changed.v1`, `study_group.deleted.v1` (ADR-0084), `lesson.completed.v1` (F031), `curriculum.version_published.v1` (F021), `media.uploaded.v1`, `media.processed.v1`, `media.rejected.v1` (F027), `learning.recommendation_generated.v1` (F032), `schedule_item.deleted.v1` (F040), `assignment.results_released.v1`, `assignment.completed.v1`, `assignment.closed.v1`, `assignment.submission_updated.v1`, `assignment.reminded.v1`, `assignment.cancelled.v1` (F041) |
 

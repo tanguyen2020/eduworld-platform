@@ -212,7 +212,7 @@ Kết nối nằm ngẫu nhiên trên gateway node bất kỳ (APISIX round-robi
 | `ew:rt:room:<room_id>:out` | module competition (room host trong `core-api`) | Snapshot/sự kiện room |
 | `ew:rt:broadcast` | module identity (admin) | Thông báo hệ thống (bảo trì) |
 
-Pub/Sub là best-effort. Message cần đảm bảo đã được ghi bền vững trước khi publish (party/lời mời ghi `eduworld_competition`; tin chat đã JetStream ack). Client bù bằng resync REST/`chat.sync` khi phát hiện seq gap hoặc resume thất bại.
+Pub/Sub là best-effort. Message cần đảm bảo đã được ghi bền vững trước khi publish (party/lời mời ghi `eduworld_competition`; tin chat đã JetStream ack). Client bù bằng resync REST/`chat.channel.sync` khi phát hiện seq gap hoặc resume thất bại.
 
 ### 5.0. Chat (ADR-0035 trong module chat)
 

@@ -12766,7 +12766,8 @@ export interface components {
             /** @enum {string} */
             kind: "text" | "emoji" | "quick" | "sticker" | "gif";
             mentions?: components["schemas"]["Uuid"][];
-            quick_message_id?: components["schemas"]["Uuid"];
+            /** @description Mã quick message (cùng kiểu với Message.quick_message_id và AsyncAPI) */
+            quick_message_id?: string;
             quote?: components["schemas"]["QuoteRef"];
             reply_to_message_id?: components["schemas"]["Uuid"];
             sticker_id?: components["schemas"]["Uuid"];
@@ -15551,7 +15552,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED) */
+        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -15659,7 +15660,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068) */
+        /** @description RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068), CHAT_RATE_LIMITED (giới hạn chat theo policy) */
         RateLimited: {
             headers: {
                 "RateLimit-Limit": components["headers"]["RateLimitLimit"];
@@ -21192,6 +21193,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listChannelMessages: {
@@ -21231,6 +21233,7 @@ export interface operations {
                     };
                 };
             };
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -21276,8 +21279,13 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
             429: components["responses"]["RateLimited"];
             451: components["responses"]["MessageBlocked"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getMessageReceipts: {

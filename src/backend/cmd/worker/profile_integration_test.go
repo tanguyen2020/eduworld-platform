@@ -25,7 +25,7 @@ func TestWorkerProfileChecks(t *testing.T) {
 
 	cases := map[string][]string{
 		"chat":   {"atlas:chat", "db:chat", "nats", "valkey"},
-		"events": {"atlas:chat", "atlas:competition", "atlas:game", "atlas:identity", "atlas:learning", "db:chat", "db:competition", "db:game", "db:identity", "db:learning", "nats", "valkey"},
+		"events": {"activity_registry:learning", "atlas:chat", "atlas:competition", "atlas:game", "atlas:identity", "atlas:learning", "db:chat", "db:competition", "db:game", "db:identity", "db:learning", "nats", "simulation_checkers:learning", "valkey"},
 	}
 	for profile, want := range cases {
 		t.Run(profile, func(t *testing.T) {

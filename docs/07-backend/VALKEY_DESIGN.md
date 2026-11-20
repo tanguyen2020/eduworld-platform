@@ -93,14 +93,16 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:game:level_session:<level_session_id>` | STRING (content_versions ghim) | 6 h | `game · level` | Cache — nguồn sự thật `game.level_sessions` |
 | `ew:learning:key:<question_version_id>` | STRING (answer key + scoring rule, mã hóa) | 1 h | `learning · question_bank` | Rebuildable — chỉ ACL user `learning`; không bao giờ trả client, không lên CDN |
 | `ew:cache:content:qv:key:<question_version_id>` | STRING (answer key mã hóa) | 1 h | `learning · question_bank` | Rebuildable — chỉ ACL user `learning` (chấm điểm chỉ ở module learning, kể cả cho trận đấu) |
-| `ew:cache:policy:chat:<tenant_id>:<school_id>` | STRING (ChatPolicy đã resolve) | 5 phút | `chat · chat` | Rebuildable |
+| `ew:cache:policy:chat:<tenant_id>:<school_id>` | STRING (ChatPolicy đã resolve) — hiện thực F115 dùng `ew:chat:facts:policy:*` (dưới) | 5 phút | `chat · chat` | Rebuildable |
 | `ew:cache:config:<name>:<version>` | STRING | 10 phút | module tương ứng | Rebuildable |
 | `ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` | ZSET student_id → score (điểm × 1e6 − thời điểm đạt, để phá hòa) | Theo kỳ + 7 ngày | `competition · leaderboard` | Rebuildable |
 | `ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>:meta` | HASH {rebuilt_at, source_version, checksum} | Như trên | `competition · leaderboard` | Rebuildable |
 | `ew:chat:unread:<user_id>` | HASH channel_id → count | 7 ngày | `chat · chat` | Rebuildable (từ `last_read_seq`) |
 | `ew:chat:seq:<channel_id>` | STRING counter — cấp `seq` cho mọi tin trước khi publish NATS (ADR-0035); script `seq_next.lua` (§4.9) | Không TTL; `EXPIRE` 30 ngày sau khi channel đóng | `chat · chat` | Rebuildable — khởi tạo lại từ `MAX(seq)` PG; unique `(channel_id, seq)` ở PG là chốt chặn |
-| `ew:chat:recent:<channel_id>` | LIST (envelope JSON đã kiểm duyệt, mới nhất trước), `LTRIM` 200 | 10 phút (gia hạn mỗi lần ghi) | `chat · chat` | Ephemeral — che độ trễ `chat-persister` cho lịch sử/`chat.sync` |
-| `ew:chat:cmid:<sender_id>:<client_message_id>` | STRING message_id (`SET NX`) | 10 phút | `chat · chat` | Ephemeral — idempotency lệnh gửi |
+| `ew:chat:recent:<channel_id>` | LIST (envelope JSON đã kiểm duyệt, mới nhất trước), `LTRIM` 200 | 10 phút (gia hạn mỗi lần ghi) | `chat · chat` | Ephemeral — che độ trễ `chat-persister` cho lịch sử/`chat.channel.sync` |
+| `ew:chat:cmid:<sender_id>:<client_message_id>` | STRING JSON `{done, envelope}` (`SET NX`; envelope đã cấp `seq` để gửi lại đúng `message_id`/`seq` khi chưa có ack — F115) | 10 phút | `chat · chat` | Ephemeral — idempotency lệnh gửi |
+| `ew:chat:rl:<user_id>:60s`, `ew:chat:rl:<user_id>:<channel_id>:60s` | ZSET cửa sổ trượt 60 s (§4.5): trần `chat_rate_per_user` và `rate` theo channel của effective policy | 61 s | `chat · chat` (F115) | Ephemeral |
+| `ew:chat:facts:<key>` | STRING `{at, v}` — facts của đường gửi: `chan:<tenant_id>:<channel_id>` (channel, thành viên, thẻ công khai, block giữa thành viên), `policy:<tenant_id>:<school_id>:<class_id>:<channel_type>` (effective policy — thay tên `ew:cache:policy:chat:*`), `curfew:<tenant_id>:<school_id>`; tươi theo `chat_facts_cache`/`chat_policy_cache`, giữ bản cũ tới `chat_facts_stale_ttl` để gửi được khi PostgreSQL ngừng (F115-AC-16) | `chat_facts_stale_ttl` (1 h) | `chat · chat` (F115) | Rebuildable từ `eduworld_chat`; không có giá trị → từ chối gửi (fail closed) |
 | `ew:chat:typing:<channel_id>` | HASH user_id → expires_at | 5 s | `chat · chat` | Ephemeral — không lưu PG |
 | `ew:chat:ntf:unread:<user_id>` | STRING counter thông báo chưa đọc (`social.notifications`) | 7 ngày | `chat · notification` | Rebuildable — mất thì đếm lại từ PG |
 | `ew:chat:mentions:<user_id>` | HASH channel_id → unread_mentions | 7 ngày | `chat · chat` | Rebuildable (từ `channel_members.unread_mentions`) |

@@ -36,7 +36,7 @@ Học sinh tạo party hoặc được ghép trận: khung chat đã sẵn, khô
 | F117-AC-03 | HỆ THỐNG PHẢI xử lý event party/trận idempotent và chịu được thứ tự lệch (thành viên đến trước `party.created`, event giao hai lần) mà không tạo channel/thành viên trùng | FR-CHAT-009 · [EVENT_DESIGN §7](../../docs/07-backend/EVENT_DESIGN.md) | TC-SVC-003 |
 | F117-AC-04 | KHI tạo hoặc đổi membership channel gameplay, module chat PHẢI phát `chat.channel_opened` (`channel_id`, `channel_type`, `scope_ref`, `member_ids`) để realtime tự đăng ký nhận tin cho thành viên đang online | FR-CHAT-009 · [EVENT_DESIGN §4.9](../../docs/07-backend/EVENT_DESIGN.md) | TC-CHAT-017 |
 | F117-AC-05 | KHI nhận `match.completed`/`match.aborted`/`party.disbanded`, module chat PHẢI đóng channel (read-only); NẾU gửi tin vào channel đã đóng, THÌ PHẢI trả `409 CHAT_CHANNEL_CLOSED`, còn lịch sử PHẢI xem được đến khi purge | FR-CHAT-009 · [CHAT_SYSTEM §4.1](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-020 |
-| F117-AC-06 | KHI người chơi reconnect hoặc đổi thiết bị giữa trận, module chat PHẢI giữ nguyên membership và trả các tin bỏ lỡ qua `chat.sync` | FR-CHAT-009 · ADR-0031 | TC-CHAT-020 |
+| F117-AC-06 | KHI người chơi reconnect hoặc đổi thiết bị giữa trận, module chat PHẢI giữ nguyên membership và trả các tin bỏ lỡ qua `chat.channel.sync` | FR-CHAT-009 · ADR-0031 | TC-CHAT-020 |
 | F117-AC-07 | NẾU event mang `tenant_id` khác tenant của người chơi trong projection, hoặc người tham gia không phải học sinh, THÌ module chat PHẢI bỏ qua người đó, ghi log/metric (không PII) và không bao giờ thêm nhân sự vào channel | AGENTS R8 · ADR-0072 · AC-CHAT-007 | TC-TEN-012 |
 
 ---

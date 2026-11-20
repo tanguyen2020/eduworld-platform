@@ -78,4 +78,4 @@ F115 chỉ đọc + seed cấp platform; ghi qua API ở F120.
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | `chat.message_created` | Persister commit tin (outbox, không nội dung) | `specs/events/payloads/chat/chat.message_created.v1.schema.json` (Mới) |
-| JetStream `ew.chat.<tenant_id>.msg.<channel_id>` | Gửi tin (không qua outbox) | `specs/events/payloads/chat/chat-envelope.v1.schema.json` (Mới) |
+| JetStream `ew.chat.<tenant_id>.msg.<channel_id>` | Gửi tin (không qua outbox) | `specs/events/chat-envelope.v1.schema.json` (Mới) |

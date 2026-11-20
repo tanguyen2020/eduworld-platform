@@ -27,7 +27,7 @@ Client gọi qua `ApiClient` (token game, `X-Tenant-Id` của phiên, `Accept-La
 
 | Message | Hướng | Trạng thái |
 |---|---|---|
-| `chat.channel.join/leave`, `chat.message.send/edit/recall/forward`, `chat.reaction.toggle`, `chat.pin.add/remove`, `chat.typing.start/stop`, `chat.receipt.delivered/read`, `chat.sync`, `chat.history.fetch` | client → server | Có sẵn |
+| `chat.channel.join/leave`, `chat.message.send/edit/recall/forward`, `chat.reaction.toggle`, `chat.pin.add/remove`, `chat.typing.start/stop`, `chat.receipt.delivered/read`, `chat.channel.sync`, `chat.history.fetch` | client → server | Có sẵn |
 | `chat.message.acked/created/edited/recalled/held/removed`, `chat.reaction.updated`, `chat.pin.updated`, `chat.typing.updated`, `chat.receipt.updated`, `chat.unread.updated`, `chat.mention.created`, `chat.sanction.applied`, `chat.history.loaded`, `system.command.failed` | server → client | Có sẵn |
 | `party.state.snapshot.chat_channel_id` | server → client | Có sẵn |
 | `chat_channel_ids` trong message trận | server → client | Cần thêm (F105, xem F117) |

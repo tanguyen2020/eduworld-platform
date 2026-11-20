@@ -45,6 +45,119 @@ var (
 			},
 		},
 	}
+	// ChannelsColumns holds the columns for the "channels" table.
+	ChannelsColumns = []*schema.Column{
+		{Name: "channel_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "channel_type", Type: field.TypeString, Size: 64},
+		{Name: "is_gameplay", Type: field.TypeBool, Default: false},
+		{Name: "scope_ref", Type: field.TypeJSON, Nullable: true},
+		{Name: "policy_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "retention_days", Type: field.TypeInt, Nullable: true},
+		{Name: "last_seq", Type: field.TypeInt64, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
+		{Name: "opened_at", Type: field.TypeTime},
+		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "purge_after", Type: field.TypeTime, Nullable: true},
+	}
+	// ChannelsTable holds the schema information for the "channels" table.
+	ChannelsTable = &schema.Table{
+		Name:       "channels",
+		Columns:    ChannelsColumns,
+		PrimaryKey: []*schema.Column{ChannelsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "channels_type_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChannelsColumns[1], ChannelsColumns[11], ChannelsColumns[17]},
+			},
+		},
+	}
+	// ChannelMembersColumns holds the columns for the "channel_members" table.
+	ChannelMembersColumns = []*schema.Column{
+		{Name: "channel_member_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "channel_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "role", Type: field.TypeString, Size: 64, Default: "member"},
+		{Name: "joined_at", Type: field.TypeTime},
+		{Name: "left_at", Type: field.TypeTime, Nullable: true},
+		{Name: "muted_until", Type: field.TypeTime, Nullable: true},
+		{Name: "last_delivered_seq", Type: field.TypeInt64, Default: 0},
+		{Name: "last_read_seq", Type: field.TypeInt64, Default: 0},
+		{Name: "unread_mentions", Type: field.TypeInt, Default: 0},
+		{Name: "show_read_receipts", Type: field.TypeBool, Default: true},
+		{Name: "notification_level", Type: field.TypeString, Size: 64, Default: "all"},
+	}
+	// ChannelMembersTable holds the schema information for the "channel_members" table.
+	ChannelMembersTable = &schema.Table{
+		Name:       "channel_members",
+		Columns:    ChannelMembersColumns,
+		PrimaryKey: []*schema.Column{ChannelMembersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "channel_members_pair_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ChannelMembersColumns[10], ChannelMembersColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "channel_members_user_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChannelMembersColumns[1], ChannelMembersColumns[11]},
+			},
+		},
+	}
+	// ChatPoliciesColumns holds the columns for the "chat_policies" table.
+	ChatPoliciesColumns = []*schema.Column{
+		{Name: "policy_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope_type", Type: field.TypeString, Size: 64},
+		{Name: "scope_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "rules", Type: field.TypeJSON},
+	}
+	// ChatPoliciesTable holds the schema information for the "chat_policies" table.
+	ChatPoliciesTable = &schema.Table{
+		Name:       "chat_policies",
+		Columns:    ChatPoliciesColumns,
+		PrimaryKey: []*schema.Column{ChatPoliciesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "chat_policies_tenant_scope_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChatPoliciesColumns[1], ChatPoliciesColumns[10]},
+			},
+		},
+	}
 	// FriendCodesColumns holds the columns for the "friend_codes" table.
 	FriendCodesColumns = []*schema.Column{
 		{Name: "friend_code_id", Type: field.TypeUUID},
@@ -218,6 +331,9 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BlocksTable,
+		ChannelsTable,
+		ChannelMembersTable,
+		ChatPoliciesTable,
 		FriendCodesTable,
 		FriendRequestsTable,
 		FriendshipsTable,
@@ -228,6 +344,15 @@ var (
 func init() {
 	BlocksTable.Annotation = &entsql.Annotation{
 		Table: "blocks",
+	}
+	ChannelsTable.Annotation = &entsql.Annotation{
+		Table: "channels",
+	}
+	ChannelMembersTable.Annotation = &entsql.Annotation{
+		Table: "channel_members",
+	}
+	ChatPoliciesTable.Annotation = &entsql.Annotation{
+		Table: "chat_policies",
 	}
 	FriendCodesTable.Annotation = &entsql.Annotation{
 		Table: "friend_codes",

@@ -2827,6 +2827,7 @@ paths:
         - $ref: '#/components/parameters/AcceptLanguage'
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '200':
           description: Channel + unread
           content:
@@ -2872,6 +2873,7 @@ paths:
                   page: { $ref: '#/components/schemas/PageInfo' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
       x-service: chat
@@ -2900,8 +2902,13 @@ paths:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
         '429': { $ref: '#/components/responses/RateLimited' }
         '451': { $ref: '#/components/responses/MessageBlocked' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /chat/quick-messages:
     get:
       x-service: chat
@@ -17437,7 +17444,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED)
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED)
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -17462,7 +17469,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/ValidationProblem' }
     RateLimited:
-      description: RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068)
+      description: RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068), CHAT_RATE_LIMITED (giới hạn chat theo policy)
       headers:
         RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
         RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
@@ -19997,7 +20004,7 @@ components:
         client_message_id: { $ref: '#/components/schemas/Uuid' }
         kind: { type: string, enum: [text, emoji, quick, sticker, gif] }
         body: { type: string, maxLength: 300 }
-        quick_message_id: { $ref: '#/components/schemas/Uuid' }
+        quick_message_id: { type: string, maxLength: 64, description: Mã quick message (cùng kiểu với Message.quick_message_id và AsyncAPI) }
         emoji: { type: string, maxLength: 16 }
         sticker_id: { $ref: '#/components/schemas/Uuid' }
         gif_id: { $ref: '#/components/schemas/Uuid' }

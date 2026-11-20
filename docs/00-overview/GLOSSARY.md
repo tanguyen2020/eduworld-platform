@@ -230,7 +230,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Fan-out | Phát một message tới mọi node/kết nối đang giữ thành viên của channel; chat dùng Valkey Pub/Sub `ew:chat:fanout:<channel_id>` |
 | Persister | Worker `chat-persister` đọc JetStream và ghi tin chat vào PostgreSQL theo lô, idempotent |
 | Receipt (Sent/Delivered/Read) | Trạng thái tin nhắn tính từ con trỏ `last_delivered_seq`/`last_read_seq` của từng thành viên (ADR-0034) |
-| Seq gap | Khoảng trống trong chuỗi `seq` client nhận được (do mất gói fan-out); client bù bằng `chat.sync`/lịch sử |
+| Seq gap | Khoảng trống trong chuỗi `seq` client nhận được (do mất gói fan-out); client bù bằng `chat.channel.sync`/lịch sử |
 | Idempotency Key | Khóa để một thao tác lặp lại chỉ có hiệu lực một lần |
 | RLS | Row-Level Security của PostgreSQL |
 | PKCE | Proof Key for Code Exchange — bảo vệ OIDC cho public client. Release 1.0 **không** client nào dùng: game (ADR-0068) và Admin Portal (ADR-0091) đều đăng nhập qua backend bằng client confidential |

@@ -337,7 +337,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-CHAT-025 | Gửi/nhận qua NATS (ADR-0035): người gửi chỉ nhận `chat.message.acked` sau JetStream ack; người nhận nhận đúng thứ tự `seq` | I (testcontainers NATS + Valkey + PG), E | Không tin nào tới người nhận khi publish thất bại |
 | TC-CHAT-026 | Mất NATS: dừng NATS khi đang chat | Chaos | Gửi trả `CHAT_TEMPORARILY_UNAVAILABLE`; đọc lịch sử vẫn chạy; sau khi NATS trở lại gửi bình thường, không trùng tin (`client_msg_id`) |
 | TC-CHAT-027 | Mất PostgreSQL 10 phút khi đang chat | Chaos | Gửi/nhận realtime vẫn chạy; sau khi DB trở lại, persister ghi bù đủ, không trùng, đúng `seq`; alert `ChatPersistLagHigh` bật rồi tắt |
-| TC-CHAT-028 | Mất Valkey Pub/Sub / seq gap: drop gói fan-out | Chaos, E | Client phát hiện gap, `chat.sync` bù đủ tin; khởi tạo lại `ew:chat:seq` từ PG không tạo trùng `seq` |
+| TC-CHAT-028 | Mất Valkey Pub/Sub / seq gap: drop gói fan-out | Chaos, E | Client phát hiện gap, `chat.channel.sync` bù đủ tin; khởi tạo lại `ew:chat:seq` từ PG không tạo trùng `seq` |
 | TC-CHAT-029 | Sửa tin: trong 15' OK + nhãn; sau 15' `CHAT_EDIT_WINDOW_EXPIRED`; bản sửa vi phạm bị chặn, bản cũ giữ; revision lưu cho moderator | U, I, A | |
 | TC-CHAT-030 | Thu hồi: trong 24 h OK, placeholder cho mọi người, bỏ ghim; nội dung gốc chỉ moderator xem trong case; báo cáo tin đã thu hồi tạo case | I, A | |
 | TC-CHAT-031 | Reply/Quote: excerpt cắt từ bản đã che (không lộ phần bị che); tin gốc thu hồi → "Tin nhắn gốc không còn" | U, A | |

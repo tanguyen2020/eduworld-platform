@@ -25,6 +25,7 @@ type Options struct {
 // Env returns the variables of LOCAL_DEVELOPMENT §4 needed by core-api and worker (admin/HTTP on random ports).
 func Env(o Options) map[string]string {
 	env := map[string]string{
+		"EW_ENV":                     "test", // module chat accepts its labelled ContentValidator test double only here (F115-AC-06)
 		"EW_ADMIN_ADDR":              "127.0.0.1:0",
 		"EW_HTTP_ADDR":               "127.0.0.1:0",
 		"EW_VALKEY_ADDR":             o.ValkeyAddr,

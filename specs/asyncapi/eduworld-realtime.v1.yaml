@@ -642,7 +642,7 @@ components:
         edited_at: { $ref: '#/components/schemas/EpochMs' }
         recalled: { type: boolean }
         pinned: { type: boolean }
-        moderation_state: { type: string, enum: [allowed, masked, unchecked] }
+        moderation_state: { type: string, enum: [allowed, masked, unchecked, held], description: "held chỉ xuất hiện trong lịch sử của chính người gửi (F115-AC-18)" }
         created_at: { $ref: '#/components/schemas/EpochMs' }
     PartyMemberState:
       type: object
@@ -1212,7 +1212,7 @@ components:
                 required: [channel_id]
                 properties:
                   channel_id: { $ref: '#/components/schemas/Uuid' }
-                  since_seq: { type: integer, description: Nhận bù tin nhắn sau seq này (tối đa 50). }
+                  since_seq: { type: integer, minimum: 0, description: "Nhận bù tin sau seq này qua chat.history.loaded (tối đa chat_recent_buffer = 200 tin, nhiều hơn → has_more, tải REST; F115-AC-19)." }
     ChatChannelLeave:
       name: chat.channel.leave
       payload:
@@ -1241,10 +1241,10 @@ components:
               type: { const: chat.message.send }
               payload:
                 type: object
-                required: [channel_id, kind]
+                required: [channel_id, kind, client_message_id]
                 properties:
                   channel_id: { $ref: '#/components/schemas/Uuid' }
-                  client_msg_id: { $ref: '#/components/schemas/Uuid' }
+                  client_message_id: { $ref: '#/components/schemas/Uuid' }
                   kind: { type: string, enum: [text, quick, emoji, sticker, gif] }
                   body: { type: string, maxLength: 300 }
                   quick_message_id: { type: string, maxLength: 64 }
@@ -1368,11 +1368,14 @@ components:
                     additionalProperties: { type: integer }
     ChatHistoryLoaded:
       name: chat.history.loaded
+      summary: |
+        Tin bù/lịch sử cho đúng kết nối đã gửi chat.history.fetch, chat.channel.sync hoặc chat.channel.join có since_seq (F115-AC-18, AC-19).
+        Module chat đẩy qua Valkey Pub/Sub ew:rt:user:<user_id> với target.conn_id nên không mang ref; system.command.acked của lệnh gốc có
+        result {channel_id | channels, count, has_more}. Chỉ nội dung đã che; tin held chỉ có cho người gửi.
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
           - type: object
-            required: [ref]
             properties:
               type: { const: chat.history.loaded }
               payload:
@@ -1514,14 +1517,14 @@ components:
                   channel_id: { $ref: '#/components/schemas/Uuid' }
                   seq: { type: integer, minimum: 0 }
     ChatSync:
-      name: chat.sync
-      summary: Bù tin khi reconnect hoặc phát hiện seq gap; server trả tối đa 200 tin qua chat.history.loaded, nhiều hơn → REST.
+      name: chat.channel.sync
+      summary: Bù tin khi reconnect hoặc phát hiện seq gap (đổi tên từ chat.sync, OQ F090-1); server trả tối đa chat_recent_buffer (200) tin mỗi channel qua chat.history.loaded, nhiều hơn → has_more, tải REST.
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
           - type: object
             properties:
-              type: { const: chat.sync }
+              type: { const: chat.channel.sync }
               payload:
                 type: object
                 required: [channels]
@@ -1532,7 +1535,7 @@ components:
                     additionalProperties: { type: integer, minimum: 0 }
     ChatMessageAcked:
       name: chat.message.acked
-      summary: Trạng thái "Sent" — chỉ gửi người gửi, sau khi NATS JetStream đã ack (ADR-0035).
+      summary: Trạng thái "Sent" — chỉ gửi đúng kết nối của người gửi (ew:rt:user:<id>, target.conn_id), sau khi NATS JetStream đã ack (ADR-0035); system.command.acked của chat.message.send mang cùng payload trong result.
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1541,9 +1544,9 @@ components:
               type: { const: chat.message.acked }
               payload:
                 type: object
-                required: [client_msg_id, message_id, channel_id, seq]
+                required: [client_message_id, message_id, channel_id, seq]
                 properties:
-                  client_msg_id: { $ref: '#/components/schemas/Uuid' }
+                  client_message_id: { $ref: '#/components/schemas/Uuid' }
                   message_id: { $ref: '#/components/schemas/Uuid' }
                   channel_id: { $ref: '#/components/schemas/Uuid' }
                   seq: { type: integer }

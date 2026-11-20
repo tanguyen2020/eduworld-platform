@@ -1,6 +1,6 @@
 # Chat System
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-17 (ADR-0078: PII/grooming luôn chạy, giờ giới nghiêm platform, preset quick message + emote, tenant `common`; 2026-11-16: channel `study_group` theo event module learning — ADR-0084)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-21 (F115: `chat.sync` → `chat.channel.sync`, facts đường gửi khi PostgreSQL ngừng §5.4); 2026-11-17 (ADR-0078: PII/grooming luôn chạy, giờ giới nghiêm platform, preset quick message + emote, tenant `common`; 2026-11-16: channel `study_group` theo event module learning — ADR-0084)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0033](../adr/ADR-0033-purge-nhom-chat-gameplay-ngoai-le-co-kiem-soat-cua-adr-0028.md) · [ADR-0034](../adr/ADR-0034-bo-tinh-nang-chat-day-du.md) · [ADR-0035](../adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) · [MODERATION](MODERATION.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 ## 1. Phạm vi & nguyên tắc
@@ -292,9 +292,9 @@ sequenceDiagram
 
 | Sự cố | Hành vi |
 |---|---|
-| Mất gói Valkey Pub/Sub (node restart, mạng chập chờn) | Client theo dõi `seq` từng channel; phát hiện **seq gap** → gọi `chat.sync` hoặc `GET /chat/channels/{id}/messages?after_seq=` để bù. Server trả từ `ew:chat:recent` (tin chưa kịp vào PG) hợp nhất với PostgreSQL |
+| Mất gói Valkey Pub/Sub (node restart, mạng chập chờn) | Client theo dõi `seq` từng channel; phát hiện **seq gap** → gọi `chat.channel.sync` hoặc `GET /chat/channels/{id}/messages?after_seq=` để bù. Server trả từ `ew:chat:recent` (tin chưa kịp vào PG) hợp nhất với PostgreSQL |
 | NATS không sẵn sàng | Realtime từ chối gửi `CHAT_TEMPORARILY_UNAVAILABLE` (retryable); UI hiển thị "Đang kết nối lại chat…". Đọc lịch sử vẫn hoạt động |
-| PostgreSQL không sẵn sàng | Gửi/nhận realtime vẫn chạy; JetStream giữ tối đa 72 h; persister ghi bù khi DB trở lại. Lịch sử phục vụ tạm từ `ew:chat:recent` |
+| PostgreSQL không sẵn sàng | Gửi/nhận realtime vẫn chạy: facts của đường gửi (channel, thành viên, effective policy, giới nghiêm) đọc từ cache Valkey, tươi `chat_facts_cache`, dùng bản cũ tới `chat_facts_stale_ttl` (hết → `CHAT_TEMPORARILY_UNAVAILABLE`, fail closed); JetStream giữ tối đa 72 h; persister giữ lô (không tốn lần giao) và ghi bù khi DB trở lại. Lịch sử phục vụ tạm từ `ew:chat:recent` |
 | Valkey mất key `seq` | Script Lua khởi tạo lại từ `MAX(seq)` trong PostgreSQL + số tin còn pending trong JetStream (đọc `channels.last_seq` sau khi persister bắt kịp); unique `(channel_id, seq)` chặn trùng — xung đột hiếm gặp được persister gán `seq` mới và phát `chat.message.resequenced` [Confirmed] |
 | Persister chậm | Alert khi consumer pending > 10.000 hoặc lag p95 > 5 s |
 
@@ -447,7 +447,7 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 | Danh sách channel | `GET /api/v1/chat/channels` — kèm `unread_count`, `unread_mentions`, `last_message` preview (đã lọc), `pinned_count` |
 | Lịch sử | `GET /api/v1/chat/channels/{id}/messages?before_seq=&after_seq=&limit=50` — hợp nhất PostgreSQL với `ew:chat:recent` để che độ trễ persister; tin thu hồi/gỡ trả placeholder |
 | Pins | `GET /api/v1/chat/channels/{id}/pins` |
-| Đồng bộ khi reconnect / seq gap | WS `chat.sync {channel_id: last_seen_seq}` → server trả tin thiếu (≤ 200), nhiều hơn → client tải lịch sử REST |
+| Đồng bộ khi reconnect / seq gap | WS `chat.channel.sync {channel_id: last_seen_seq}` → server trả tin thiếu (≤ 200), nhiều hơn → client tải lịch sử REST |
 | Quyền xem lịch sử | Member chỉ xem tin từ `joined_at` [Confirmed]; không có vai trò nhân sự nào xem lịch sử channel lớp ngoài moderation case |
 
 ### 8.4. Tìm kiếm
@@ -532,7 +532,7 @@ Mã `AC-CHAT-NNN` chỉ do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIRE
 | AC-CHS-028 | AC-CHAT-010 | Cấu hình `gameplay_chat_retention_days` < 3 bị từ chối |
 | AC-CHS-029 | AC-CHAT-011 | Người gửi chỉ nhận `chat.message.acked` sau khi JetStream ack; giả lập NATS lỗi → `CHAT_TEMPORARILY_UNAVAILABLE`, không người nhận nào thấy tin |
 | AC-CHS-030 | AC-CHAT-011 | PostgreSQL ngừng 10 phút: gửi/nhận realtime vẫn chạy; sau khi DB trở lại, mọi tin trong khoảng đó có trong lịch sử, không trùng, đúng `seq` |
-| AC-CHS-031 | AC-CHAT-002 | Bỏ một gói Valkey Pub/Sub: client phát hiện seq gap và bù đủ tin qua `chat.sync`/lịch sử |
+| AC-CHS-031 | AC-CHAT-002 | Bỏ một gói Valkey Pub/Sub: client phát hiện seq gap và bù đủ tin qua `chat.channel.sync`/lịch sử |
 | AC-CHS-032 | AC-CHAT-012 | Sửa tin trong 15': người khác thấy bản mới + nhãn "đã chỉnh sửa"; sau 15' → `CHAT_EDIT_WINDOW_EXPIRED`; bản sửa vi phạm bị chặn và bản cũ giữ nguyên |
 | AC-CHS-033 | AC-CHAT-012 | Thu hồi trong 24 h: mọi người thấy placeholder; `safety_moderator` vẫn xem được nội dung gốc trong case; tin đã thu hồi vẫn báo cáo được |
 | AC-CHS-034 | AC-CHAT-012 | Quote/reply hiển thị bản đã che; tin gốc thu hồi → "Tin nhắn gốc không còn" |

@@ -48,3 +48,31 @@ func TestValidator(t *testing.T) {
 		}
 	}
 }
+
+// F115 T043 (OQ F090-1): chat.sync became chat.channel.sync, a 3-segment type that passes the ClientEnvelope pattern and
+// is routed to module chat; the old name is unknown.
+func TestChatChannelSyncRouted(t *testing.T) {
+	v, err := protocol.NewValidator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := "01JCX4Z7Q2Z7N3M5V9W1A2B3C4"
+	frame := `{"v":1,"type":"chat.channel.sync","id":"` + id + `","payload":{"channels":{"0193a1aa-0000-7000-8000-000000000020":12}}}`
+	if env, rej := v.Parse([]byte(frame)); rej != nil || env.Type != "chat.channel.sync" {
+		t.Fatalf("chat.channel.sync rejected: %+v", rej)
+	}
+	if r, ok := router.Lookup("chat.channel.sync"); !ok || r.Module != "chat" || r.Kind != router.KindRequest {
+		t.Fatalf("route: %+v %v", r, ok)
+	}
+	if _, ok := router.Lookup("chat.sync"); ok {
+		t.Fatal("chat.sync still routed")
+	}
+	old := `{"v":1,"type":"chat.sync","id":"` + id + `","payload":{"channels":{}}}`
+	if _, rej := v.Parse([]byte(old)); rej == nil || rej.Code != protocol.CodeUnknownType {
+		t.Fatalf("chat.sync: %+v", rej)
+	}
+	send := `{"v":1,"type":"chat.message.send","id":"` + id + `","payload":{"channel_id":"0193a1aa-0000-7000-8000-000000000020","kind":"text","body":"x"}}`
+	if _, rej := v.Parse([]byte(send)); rej == nil || rej.Code != protocol.CodeValidationFailed {
+		t.Fatalf("chat.message.send without client_message_id: %+v", rej)
+	}
+}

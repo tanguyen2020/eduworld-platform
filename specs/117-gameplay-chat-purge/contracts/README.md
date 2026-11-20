@@ -23,7 +23,7 @@
 |---|---|---|
 | `chat.receipt.read` | client → server | Có sẵn |
 | `chat.unread.updated` | server → mọi thiết bị của người dùng | Có sẵn |
-| `chat.sync`, `chat.history.loaded` | client ↔ server (resume/đổi thiết bị) | Có sẵn |
+| `chat.channel.sync`, `chat.history.loaded` | client ↔ server (resume/đổi thiết bị) | Có sẵn |
 | `system.command.failed` `CHAT_CHANNEL_CLOSED`, `CHAT_MUTED` | server → client | Có sẵn |
 | `party.state.snapshot.chat_channel_id` | server → thành viên party (competition) | Có sẵn |
 | Payload trận (`battle.*`) mang `chat_channel_ids {match, team}` | server → người chơi (competition) | Cần thêm (F105) |

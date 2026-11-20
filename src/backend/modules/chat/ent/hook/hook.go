@@ -21,6 +21,42 @@ func (f BlockFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BlockMutation", m)
 }
 
+// The ChannelFunc type is an adapter to allow the use of ordinary
+// function as Channel mutator.
+type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChannelMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMutation", m)
+}
+
+// The ChannelMemberFunc type is an adapter to allow the use of ordinary
+// function as ChannelMember mutator.
+type ChannelMemberFunc func(context.Context, *ent.ChannelMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChannelMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChannelMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMemberMutation", m)
+}
+
+// The ChatPolicyFunc type is an adapter to allow the use of ordinary
+// function as ChatPolicy mutator.
+type ChatPolicyFunc func(context.Context, *ent.ChatPolicyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChatPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChatPolicyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChatPolicyMutation", m)
+}
+
 // The FriendCodeFunc type is an adapter to allow the use of ordinary
 // function as FriendCode mutator.
 type FriendCodeFunc func(context.Context, *ent.FriendCodeMutation) (ent.Value, error)
