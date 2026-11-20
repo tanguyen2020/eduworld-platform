@@ -375,7 +375,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			UoW: core.UoW, KC: kc, Accounts: write.SisSyncRepo{}, Sync: write.SisSyncRepo{}, Events: events, Audit: auditor,
 			LocalIssuer: localIssuer, Issuers: issuers}}.Handle},
 		consumer.KeycloakAccessName: {consumer.KeycloakAccessSubjects, consumer.KeycloakAccess{Access: command.KeycloakAccess{UoW: core.UoW,
-			Repo: write.LifecycleRepo{}, KC: kc, Anon: kc, Issuers: issuers}}.Handle},
+			Repo: write.LifecycleRepo{}, KC: kc, Anon: kc, Email: kc, Issuers: issuers}}.Handle},
 		consumer.GameAuthRevokeName:          {consumer.GameAuthRevokeSubjects, consumer.GameAuthRevoke{Revoker: gameAuth}.Handle},
 		consumer.RevokeOnSessionReplacedName: {consumer.RevokeOnSessionReplacedSubjects, consumer.RevokeOnSessionReplaced{Revoker: gameAuth}.Handle},
 		consumer.LastLoginName: {consumer.LastLoginSubjects, consumer.LastLoginOnGameLoggedIn{Users: command.RecordGameLogin{

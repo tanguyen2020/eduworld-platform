@@ -186,8 +186,11 @@ func orTaken(err error, taken bool, code problem.Code) error {
 
 var staffStatuses = map[string]bool{"active": true, "locked": true, "deactivated": true}
 
-// Update changes the display name, locale and status of a staff of the session tenant (If-Match). Username
-// and email changes need the Keycloak account to follow and are not supported yet [Proposed, OQ F012-1].
+// Update changes the display name, locale, status and email of a staff of the session tenant (If-Match). A new
+// email must be free on every account (lower-case, ADR-0067/0069); it is stored with the outbox event
+// user.email_changed in the same transaction and the worker identity.keycloak_access copies it to Keycloak with
+// emailVerified = false. The username never changes through the API (realm editUsernameAllowed = false): 422
+// (OQ F012-1).
 func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.StaffRow, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.UpdateTenantUser")
 	defer func() { done(err) }()
@@ -195,8 +198,15 @@ func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.Staff
 	if err != nil {
 		return out, err
 	}
-	if in.Username != nil || in.Email != nil {
-		return out, problem.Invalid("username", problem.SubInvalid, "username and email cannot be changed yet")
+	if in.Username != nil {
+		return out, problem.Invalid("username", problem.SubInvalid, "the username cannot be changed; create a new account (OQ F012-1)")
+	}
+	var email string
+	if in.Email != nil {
+		var ok bool
+		if email, ok = normalizeEmail(*in.Email); !ok {
+			return out, problem.Invalid("email", problem.SubInvalid, "a valid email is required for staff (ADR-0069)")
+		}
 	}
 	if in.Status != nil && !staffStatuses[*in.Status] {
 		return out, problem.Invalid("status", problem.SubInvalid, "active, locked or deactivated")
@@ -217,6 +227,14 @@ func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.Staff
 			return problem.New(problem.VersionMismatch, "")
 		}
 		from := row.Status
+		emailChanged := in.Email != nil && (row.Email == nil || *row.Email != email)
+		if emailChanged {
+			taken, err := h.Repo.EmailTaken(ctx, email, &row.UserID)
+			if err := orTaken(err, taken, problem.EmailTaken); err != nil {
+				return err
+			}
+			row.Email = &email
+		}
 		if in.DisplayName != nil {
 			row.DisplayName = *in.DisplayName
 		}
@@ -230,6 +248,13 @@ func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.Staff
 			return err
 		}
 		uid := row.UserID.String()
+		if emailChanged { // no address in the event (R14): the worker reads it from the account
+			t := tenant
+			if err := h.Events.Publish(ctx, write.Event{Type: "user.email_changed", SubjectType: "user", SubjectID: uid, TenantID: &t,
+				Payload: map[string]any{"user_id": uid, "email_verified": false}}); err != nil {
+				return err
+			}
+		}
 		if row.Status != from {
 			t := tenant
 			if err := h.Events.Publish(ctx, write.Event{Type: "user.status_changed", SubjectType: "user", SubjectID: uid, TenantID: &t,
@@ -246,7 +271,7 @@ func (h Staff) Update(ctx context.Context, in UpdateStaffInput) (out write.Staff
 		out = *row
 		return h.Audit.Record(ctx, audit.Event{Action: "user.updated", TargetType: "user", TargetID: uid, Result: audit.ResultSuccess,
 			Metadata: map[string]any{"status_from": from, "status_to": row.Status, "actor": p.UserID.String(),
-				"display_name_changed": in.DisplayName != nil, "locale_changed": in.Locale != nil}})
+				"display_name_changed": in.DisplayName != nil, "locale_changed": in.Locale != nil, "email_changed": emailChanged}})
 	})
 	return out, err
 }

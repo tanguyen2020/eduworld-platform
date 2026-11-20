@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/integration"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 )
@@ -31,6 +32,11 @@ func integrationConfig(cfg *config.Config, issuer string) (query.IntegrationConf
 			out.Clients = append(out.Clients, query.IntegrationClient{ClientID: id, Purpose: c.purpose})
 		}
 	}
+	groups, err := integration.RouteGroups() // generated from deploy/apisix/routes/routes.yaml (OQ F059-12)
+	if err != nil {
+		return out, err
+	}
+	out.RouteGroups = groups
 	out.PublicBaseURL, out.InternalBaseURL = cfg.String("EW_GATEWAY_PUBLIC_BASE_URL"), cfg.String("EW_GATEWAY_INTERNAL_BASE_URL")
 	for key, v := range map[string]string{"EW_GATEWAY_PUBLIC_BASE_URL": out.PublicBaseURL, "EW_GATEWAY_INTERNAL_BASE_URL": out.InternalBaseURL} {
 		if v == "" {

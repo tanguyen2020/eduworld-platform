@@ -115,6 +115,10 @@ func TestPortalSession(t *testing.T) {
 	if r = h.do(t, "GET", "/auth/me", tok, hdr(a.tenant), nil); r.status != 200 || r.body["display_name"] != "gv.sess" || r.body["user_type"] != "staff" {
 		t.Fatalf("getMe: %d %s", r.status, r.raw)
 	}
+	// OQ F051-3: getMe of a tenant user without X-Tenant-Id → 400 TENANT_HEADER_REQUIRED.
+	if r = h.do(t, "GET", "/auth/me", tok, nil, nil); r.status != 400 || !strings.Contains(r.raw, "TENANT_HEADER_REQUIRED") {
+		t.Fatalf("getMe of a tenant user without header: %d %s", r.status, r.raw)
+	}
 
 	// AC-05: a student on the portal, and staff without any portal role → PORTAL_ACCESS_STAFF_ONLY.
 	st := enrolled(ctx, t, e.platform, a, "hs.sess")
@@ -150,6 +154,10 @@ func TestPortalSession(t *testing.T) {
 	if r = h.do(t, "GET", "/me/permissions", saTok, nil, nil); r.status != 200 || r.body["tenant_id"] != nil ||
 		!slices.Contains(anyStrings(r.body["workspaces"]), "platform_admin") || !strings.Contains(r.raw, `"scope_type":"platform"`) {
 		t.Fatalf("system admin getMyPermissions: %d %s", r.status, r.raw)
+	}
+	// OQ F051-3: platform staff without X-Tenant-Id get their profile in the platform scope.
+	if r = h.do(t, "GET", "/auth/me", saTok, nil, nil); r.status != 200 || r.body["display_name"] != "sa.sess" || !strings.Contains(r.raw, `"scope_type":"platform"`) {
+		t.Fatalf("getMe of platform staff without header: %d %s", r.status, r.raw)
 	}
 }
 

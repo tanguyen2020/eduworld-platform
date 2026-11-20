@@ -541,8 +541,10 @@ paths:
       operationId: getMe
       x-portal-shell: true
       summary: Principal hiện tại (roles, scopes)
+      description: |
+        Nhân sự platform không gửi `X-Tenant-Id` nhận hồ sơ ở phạm vi platform; người dùng tenant thiếu header → `400 TENANT_HEADER_REQUIRED` (OQ F051-3, ADR-0065).
       parameters:
-        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - $ref: '#/components/parameters/AcceptLanguage'
       responses:
         '200':
@@ -9783,7 +9785,10 @@ paths:
       tags: [tenant]
       operationId: updateTenantUser
       x-portal-action: action.school_lms.access_control.edit_users
-      summary: Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi username/email kiểm tra trùng trên SSO)
+      summary: Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi email kiểm tra trùng, đồng bộ sang SSO)
+      description: |
+        Đổi `email`: kiểm trùng `lower(email)` mọi tài khoản (`409 EMAIL_TAKEN`), lưu cùng event `user.email_changed`; worker cập nhật email Keycloak với `emailVerified = false` (OQ F012-1).
+        `username` không đổi được qua API (realm `editUsernameAllowed = false`): gửi `username` → `422 VALIDATION_FAILED`; cần username khác thì tạo tài khoản mới.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/UserId'
@@ -23450,11 +23455,23 @@ components:
             platform_auth_max_age_seconds: { type: integer, minimum: 0, description: 'Tuổi tối đa của lần xác thực cho route platform (EW_OIDC_PLATFORM_MAX_AUTH_AGE)' }
         apisix:
           type: object
-          required: [public_base_url, internal_base_url]
+          required: [public_base_url, internal_base_url, route_groups]
           description: 'Định tuyến quản lý bằng route-as-code (deploy/apisix/routes/routes.yaml); URL lấy từ EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL, null = chưa cấu hình'
           properties:
             public_base_url: { type: [string, 'null'], format: uri, maxLength: 2048 }
             internal_base_url: { type: [string, 'null'], format: uri, maxLength: 2048 }
+            route_groups:
+              type: array
+              maxItems: 100
+              description: 'Nhóm prefix → service của gateway, sinh lúc build từ deploy/apisix/routes/routes.yaml (route-as-code, `make gen`; core-api không đọc file triển khai lúc chạy — OQ F059-12). Route `gateway: both` cho hai mục (public, internal)'
+              items:
+                type: object
+                additionalProperties: false
+                required: [prefix, gateway, service]
+                properties:
+                  prefix: { type: string, maxLength: 256, description: 'URI của route, bỏ ký tự đại diện cuối (*)' }
+                  gateway: { type: string, enum: [public, internal] }
+                  service: { type: string, maxLength: 64, description: 'Upstream nhận route (core-api, realtime)' }
         sis:
           type: object
           required: [connections_total, connections_by_status]
@@ -23494,7 +23511,7 @@ components:
       minProperties: 1
       additionalProperties: false
       properties:
-        username: { type: string, minLength: 3, maxLength: 128, pattern: '^[A-Za-z0-9._-]{3,128}$' }
+        username: { type: string, minLength: 3, maxLength: 128, pattern: '^[A-Za-z0-9._-]{3,128}$', description: 'Không đổi được — luôn `422 VALIDATION_FAILED` (OQ F012-1)' }
         email: { type: string, format: email, maxLength: 320 }
         display_name: { type: string, minLength: 1, maxLength: 128 }
         locale: { $ref: '#/components/schemas/Locale' }

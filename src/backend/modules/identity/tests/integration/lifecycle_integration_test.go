@@ -38,8 +38,23 @@ func (r *revokeRecorder) RevokeSessions(_ context.Context, f portwrite.SessionFi
 	return 1, nil
 }
 
-// kcAccess is a TEST DOUBLE of port.KeycloakAccessAdmin.
-type kcAccess struct{ disabled, enabled, logouts, anonymized map[string]int }
+// kcAccess is a TEST DOUBLE of port.KeycloakAccessAdmin (and of port.KeycloakEmailAdmin, OQ F012-1).
+type kcAccess struct {
+	disabled, enabled, logouts, anonymized map[string]int
+	emails                                 map[string]string
+	emailConflict                          bool
+}
+
+func (k *kcAccess) SetEmail(_ context.Context, id, email string) error {
+	if k.emailConflict {
+		return port.ErrKCConflict
+	}
+	if k.emails == nil {
+		k.emails = map[string]string{}
+	}
+	k.emails[id] = email
+	return nil
+}
 
 func (k *kcAccess) DisableUser(_ context.Context, id string) error { k.disabled[id]++; return nil }
 func (k *kcAccess) EnableUser(_ context.Context, id string) error  { k.enabled[id]++; return nil }

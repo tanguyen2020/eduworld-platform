@@ -131,13 +131,30 @@ func (q Me) GetMyPermissions(ctx context.Context) (out PermissionSet, err error)
 	return out, nil
 }
 
-// GetMe is getMe: the session user with its effective roles.
+// platformStaff reports a user holding a platform-scope role (System Admin, operations staff).
+func platformStaff(p authz.Principal) bool {
+	if p.IsSystemAdmin {
+		return true
+	}
+	for _, g := range p.Grants {
+		if g.ScopeKind == authz.RoleScopePlatform {
+			return true
+		}
+	}
+	return false
+}
+
+// GetMe is getMe: the session user with its effective roles (platform staff may omit X-Tenant-Id).
 func (q Me) GetMe(ctx context.Context) (out MeView, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.GetMe")
 	defer func() { done(err) }()
 	p, err := authenticated(ctx)
 	if err != nil {
 		return out, err
+	}
+	// OQ F051-3: without X-Tenant-Id only platform staff get the platform-scope profile (ADR-0065).
+	if p.TenantID == nil && !platformStaff(p) {
+		return out, problem.New(problem.TenantHeaderRequired, "")
 	}
 	name, err := q.Model.DisplayName(ctx, p.UserID)
 	if err != nil {

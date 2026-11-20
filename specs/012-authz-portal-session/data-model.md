@@ -107,5 +107,6 @@ Nội dung theo schema `Principal` của `identity.internal.v1.yaml`; TTL `princ
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | `role.updated` | Tạo/sửa/xóa role | `specs/events/payloads/identity/role.updated.v1.schema.json` (có sẵn) |
+| `user.email_changed` | Đổi email nhân sự qua `updateTenantUser` (OQ F012-1) | `specs/events/payloads/identity/user.email_changed.v1.schema.json` (mới) |
 | `user_role.changed` | Gán/thu hồi/hết hạn/sửa UserRole | `specs/events/payloads/identity/user_role.changed.v1.schema.json` (có sẵn) |
 | `audit.recorded` | Mọi thao tác ghi, đăng nhập portal (`auth.portal_login` ở `portalLogin`), đặt/đặt lại mật khẩu, `authz.denied`, `cross_tenant.accessed` | Schema chung `specs/events/payloads/common/audit.recorded.v1.schema.json` (owner F003) |

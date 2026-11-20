@@ -12,6 +12,7 @@ on:
       - "specs/events/**"
       - "specs/asyncapi/**"
       - "deploy/postgres/**"
+      - "deploy/apisix/routes/routes.yaml"
       - ".github/workflows/go.yml"
       - ".github/module-filters.yml"
   push:
@@ -24,6 +25,7 @@ on:
       - "specs/events/**"
       - "specs/asyncapi/**"
       - "deploy/postgres/**"
+      - "deploy/apisix/routes/routes.yaml"
       - ".github/workflows/go.yml"
       - ".github/module-filters.yml"
 

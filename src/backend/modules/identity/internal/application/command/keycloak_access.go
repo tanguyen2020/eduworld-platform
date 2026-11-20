@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -21,6 +22,7 @@ type KeycloakAccess struct {
 	Repo    write.LifecycleRepository
 	KC      port.KeycloakAccessAdmin
 	Anon    port.KeycloakAnonymizer // F016 US5 (nil = disable and logout only)
+	Email   port.KeycloakEmailAdmin // OQ F012-1 (nil = email changes are not copied: user.email_changed is retried)
 	Issuers []string                // the local realm issuer first (EW_OIDC_ISSUERS)
 }
 
@@ -96,4 +98,31 @@ func (h KeycloakAccess) Anonymized(ctx context.Context, userID uuid.UUID) (err e
 		return nil
 	}
 	return h.Anon.AnonymizeUser(ctx, sub)
+}
+
+// EmailChanged handles user.email_changed (OQ F012-1): the current email of the account (never carried by the
+// event) is set on the Keycloak user with emailVerified=false. An account without a Keycloak identity has nothing
+// to copy; a Keycloak conflict is returned as is (the consumer sends it to the DLQ for an operator).
+func (h KeycloakAccess) EmailChanged(ctx context.Context, userID uuid.UUID) (err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.KeycloakAccessEmailChanged")
+	defer func() { done(err) }()
+	if h.Email == nil {
+		return errors.New("keycloak access: email sync is not wired")
+	}
+	sub, err := h.subject(ctx, userID)
+	if err != nil || sub == "" {
+		return err
+	}
+	var email string
+	sc, err := authz.SystemPlatformScope("keycloak-access")
+	if err != nil {
+		return err
+	}
+	if err := h.UoW.Do(tenancy.WithScope(ctx, sc), func(ctx context.Context) error {
+		email, err = h.Repo.UserEmail(ctx, userID)
+		return err
+	}); err != nil || email == "" {
+		return err
+	}
+	return h.Email.SetEmail(ctx, sub, email)
 }

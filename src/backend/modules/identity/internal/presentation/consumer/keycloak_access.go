@@ -3,11 +3,13 @@ package consumer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 )
 
@@ -16,7 +18,7 @@ const KeycloakAccessName = "identity.keycloak_access"
 
 // KeycloakAccessSubjects are the events it handles.
 var KeycloakAccessSubjects = []string{"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.access_restored",
-	"ew.evt.identity.student.cleaned_up", "ew.evt.identity.user.anonymized"}
+	"ew.evt.identity.student.cleaned_up", "ew.evt.identity.user.anonymized", "ew.evt.identity.user.email_changed"}
 
 // KeycloakAccess dispatches the events to command.KeycloakAccess.
 type KeycloakAccess struct {
@@ -46,6 +48,13 @@ func (c KeycloakAccess) Handle(ctx context.Context, e outbox.Envelope) error {
 		return c.Access.CleanedUp(ctx, p.UserID)
 	case "user.anonymized":
 		return c.Access.Anonymized(ctx, p.UserID)
+	case "user.email_changed": // OQ F012-1; an email Keycloak gives to another user needs an operator (DLQ)
+		if err := c.Access.EmailChanged(ctx, p.UserID); errors.Is(err, port.ErrKCConflict) {
+			return outbox.Permanent(fmt.Errorf("%s: keycloak conflict: %w", e.EventType, err))
+		} else if err != nil {
+			return err
+		}
+		return nil
 	}
 	return outbox.Permanent(fmt.Errorf("unexpected event %s", e.EventType))
 }

@@ -17,6 +17,7 @@ shared:
 identity:
   - "src/backend/modules/identity/**"
   - "specs/openapi/modules/identity.*"
+  - "deploy/apisix/routes/routes.yaml" # embedded route groups (tools/routegroups, OQ F059-12)
 learning:
   - "src/backend/modules/learning/**"
   - "specs/openapi/modules/learning.*"

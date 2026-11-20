@@ -102,3 +102,21 @@ func (LifecycleRepo) RecordStatusChange(ctx context.Context, c write.StatusChang
 func (LifecycleRepo) KeycloakSubject(ctx context.Context, userID uuid.UUID, issuers []string) (string, error) {
 	return PortalAccountRepo{}.KeycloakSubject(ctx, userID, issuers)
 }
+
+// UserEmail implements write.LifecycleRepository.
+func (LifecycleRepo) UserEmail(ctx context.Context, userID uuid.UUID) (string, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return "", err
+	}
+	var email sql.NullString
+	// tenancyguard:ok identity.users is global (no tenant_id): one live account by id
+	err = tx.QueryRowContext(ctx, `SELECT email FROM identity.users WHERE user_id = $1 AND deleted_at IS NULL`, userID).Scan(&email)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("user email: %w", err)
+	}
+	return email.String, nil
+}

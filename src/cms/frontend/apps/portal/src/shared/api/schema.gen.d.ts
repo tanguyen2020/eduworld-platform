@@ -1931,7 +1931,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Principal hiện tại (roles, scopes) */
+        /**
+         * Principal hiện tại (roles, scopes)
+         * @description Nhân sự platform không gửi `X-Tenant-Id` nhận hồ sơ ở phạm vi platform; người dùng tenant thiếu header → `400 TENANT_HEADER_REQUIRED` (OQ F051-3, ADR-0065).
+         */
         get: operations["getMe"];
         put?: never;
         post?: never;
@@ -8091,7 +8094,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi username/email kiểm tra trùng trên SSO) */
+        /**
+         * Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi email kiểm tra trùng, đồng bộ sang SSO)
+         * @description Đổi `email`: kiểm trùng `lower(email)` mọi tài khoản (`409 EMAIL_TAKEN`), lưu cùng event `user.email_changed`; worker cập nhật email Keycloak với `emailVerified = false` (OQ F012-1).
+         *     `username` không đổi được qua API (realm `editUsernameAllowed = false`): gửi `username` → `422 VALIDATION_FAILED`; cần username khác thì tạo tài khoản mới.
+         */
         patch: operations["updateTenantUser"];
         trace?: never;
     };
@@ -10386,6 +10393,15 @@ export interface components {
                 internal_base_url: string | null;
                 /** Format: uri */
                 public_base_url: string | null;
+                /** @description Nhóm prefix → service của gateway, sinh lúc build từ deploy/apisix/routes/routes.yaml (route-as-code, `make gen`; core-api không đọc file triển khai lúc chạy — OQ F059-12). Route `gateway: both` cho hai mục (public, internal) */
+                route_groups: {
+                    /** @enum {string} */
+                    gateway: "public" | "internal";
+                    /** @description URI của route, bỏ ký tự đại diện cuối (*) */
+                    prefix: string;
+                    /** @description Upstream nhận route (core-api, realtime) */
+                    service: string;
+                }[];
             };
             generated_at: components["schemas"]["Timestamp"];
             keycloak: {
@@ -13331,6 +13347,7 @@ export interface components {
             locale?: components["schemas"]["Locale"];
             /** @enum {string} */
             status?: "active" | "locked" | "deactivated";
+            /** @description Không đổi được — luôn `422 VALIDATION_FAILED` (OQ F012-1) */
             username?: string;
         };
         Textbook: {
@@ -18838,11 +18855,11 @@ export interface operations {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
                 /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
                  */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
             };
             path?: never;
             cookie?: never;

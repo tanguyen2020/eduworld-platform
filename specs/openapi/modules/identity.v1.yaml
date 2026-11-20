@@ -588,8 +588,10 @@ paths:
       operationId: getMe
       x-portal-shell: true
       summary: Principal hiện tại (roles, scopes)
+      description: |
+        Nhân sự platform không gửi `X-Tenant-Id` nhận hồ sơ ở phạm vi platform; người dùng tenant thiếu header → `400 TENANT_HEADER_REQUIRED` (OQ F051-3, ADR-0065).
       parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/AcceptLanguage'
       responses:
         '200':
@@ -3493,7 +3495,10 @@ paths:
         - tenant
       operationId: updateTenantUser
       x-portal-action: action.school_lms.access_control.edit_users
-      summary: Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi username/email kiểm tra trùng trên SSO)
+      summary: Sửa thông tin nhân sự do tenant quản lý (tenant.user.write; đổi email kiểm tra trùng, đồng bộ sang SSO)
+      description: |
+        Đổi `email`: kiểm trùng `lower(email)` mọi tài khoản (`409 EMAIL_TAKEN`), lưu cùng event `user.email_changed`; worker cập nhật email Keycloak với `emailVerified = false` (OQ F012-1).
+        `username` không đổi được qua API (realm `editUsernameAllowed = false`): gửi `username` → `422 VALIDATION_FAILED`; cần username khác thì tạo tài khoản mới.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/UserId'
@@ -4897,6 +4902,16 @@ components:
       schema:
         type: string
         maxLength: 8192
+    TenantIdHeaderOptional:
+      name: X-Tenant-Id
+      in: header
+      required: false
+      description: |
+        Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+        vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+        Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+      schema:
+        $ref: '#/components/schemas/Uuid'
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -4909,16 +4924,6 @@ components:
         type: string
         format: uuid
         pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
-    TenantIdHeaderOptional:
-      name: X-Tenant-Id
-      in: header
-      required: false
-      description: |
-        Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
-        vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
-        Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
-      schema:
-        $ref: '#/components/schemas/Uuid'
     TenantIds:
       name: tenant_ids
       in: query
@@ -7812,6 +7817,7 @@ components:
           required:
             - public_base_url
             - internal_base_url
+            - route_groups
           description: Định tuyến quản lý bằng route-as-code (deploy/apisix/routes/routes.yaml); URL lấy từ EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL, null = chưa cấu hình
           properties:
             public_base_url:
@@ -7826,6 +7832,31 @@ components:
                 - 'null'
               format: uri
               maxLength: 2048
+            route_groups:
+              type: array
+              maxItems: 100
+              description: 'Nhóm prefix → service của gateway, sinh lúc build từ deploy/apisix/routes/routes.yaml (route-as-code, `make gen`; core-api không đọc file triển khai lúc chạy — OQ F059-12). Route `gateway: both` cho hai mục (public, internal)'
+              items:
+                type: object
+                additionalProperties: false
+                required:
+                  - prefix
+                  - gateway
+                  - service
+                properties:
+                  prefix:
+                    type: string
+                    maxLength: 256
+                    description: URI của route, bỏ ký tự đại diện cuối (*)
+                  gateway:
+                    type: string
+                    enum:
+                      - public
+                      - internal
+                  service:
+                    type: string
+                    maxLength: 64
+                    description: Upstream nhận route (core-api, realtime)
         sis:
           type: object
           required:
@@ -8428,6 +8459,7 @@ components:
           minLength: 3
           maxLength: 128
           pattern: ^[A-Za-z0-9._-]{3,128}$
+          description: Không đổi được — luôn `422 VALIDATION_FAILED` (OQ F012-1)
         email:
           type: string
           format: email

@@ -2,6 +2,7 @@
 routes:
   - id: internal-tenant-optional
     uris:
+      - /api/v1/auth/me
       - /api/v1/me/permissions
       - /api/v1/catalog/countries*
       - /api/v1/catalog/provinces*

@@ -1,0 +1,237 @@
+[
+  {
+    "prefix": "/api/v1/auth/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/game/login",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/game/logout",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/game/tenant:select",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/game/token:refresh",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/me",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/portal/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/session",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/countries",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/provinces",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/schools",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/chat/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/cms/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/competition/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/exams/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/game/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/game/client-config",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/leaderboards/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/learning/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/lms/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/me/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/me/permissions",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/me/tenants",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/multiplayer/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/notifications",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/notifications/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/schools/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/social/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/students/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/tenant/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/realtime/v1",
+    "gateway": "public",
+    "service": "realtime"
+  },
+  {
+    "prefix": "/api/v1/admin/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/auth/me",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/countries",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/provinces",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/catalog/schools",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/cms/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/game-admin/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/game-media",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/lms/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/me/permissions",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/schools/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/sis/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/tenant/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/internal/sis/webhooks/",
+    "gateway": "internal",
+    "service": "core-api"
+  }
+]

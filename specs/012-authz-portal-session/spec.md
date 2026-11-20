@@ -50,6 +50,7 @@
 - OQ F012-2 → đã [Confirmed] (F013/F014), không còn việc.
 - OQ F051-3 (`getMe` bắt buộc `X-Tenant-Id`) → **Chốt:** `getMe` dùng `TenantIdHeaderOptional`: nhân sự platform không gửi header nhận hồ sơ ở phạm vi platform; người dùng tenant thiếu header vẫn `400 TENANT_HEADER_REQUIRED` (ADR-0065).
 - OQ F059-12 (`route_groups[]` của màn Tích hợp) → **Chốt:** thêm `IntegrationOverview.apisix.route_groups[]` (`prefix` ≤ 256, `gateway` ∈ {`public`, `internal`}, `service` ≤ 64; maxItems 100). Danh mục **sinh lúc build** từ `deploy/apisix/routes/routes.yaml` (`make gen` → file nhúng `go:embed` trong module identity, `gen-check` chặn lệch) — vẫn một nguồn route-as-code, `core-api` không đọc file triển khai lúc chạy. F059-AC-22 yêu cầu nhóm prefix → service.
+- Triển khai T055–T057 (2026-11-20): email đổi được phát bằng event mới `user.email_changed` (chỉ `user_id`, `email_verified = false`; không chứa địa chỉ — R14) và do consumer sẵn có `identity.keycloak_access` (worker đồng bộ tài khoản sang Keycloak) chép sang Keycloak thay cho tên `keycloak-provisioner` ở trên (consumer đó chỉ tạo tài khoản học sinh SIS); Keycloak báo trùng email → DLQ cho vận hành. `route_groups`: một mục cho mỗi URI × gateway (`both` → public + internal), `service` = upstream (`core-api`, `realtime`), bỏ `*` cuối. Route APISIX `tenant-optional` nhận `/api/v1/auth/me` để khớp `getMe` header tùy chọn.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

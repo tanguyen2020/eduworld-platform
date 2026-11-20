@@ -38,4 +38,6 @@ type LifecycleRepository interface {
 	RecordStatusChange(ctx context.Context, c StatusChange) error
 	// KeycloakSubject returns the subject of the user's active identity at one of issuers ("" when none).
 	KeycloakSubject(ctx context.Context, userID uuid.UUID, issuers []string) (string, error)
+	// UserEmail returns the email of a live account ("" when none or unknown).
+	UserEmail(ctx context.Context, userID uuid.UUID) (string, error)
 }

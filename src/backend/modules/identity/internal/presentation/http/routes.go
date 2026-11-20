@@ -121,7 +121,7 @@ var Operations = map[string]httpx.Operation{
 	"listTenantUsers":        withGuard(op("listTenantUsers", http.MethodGet, "/tenant/users", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"createTenantUser":       withGuard(op("createTenantUser", http.MethodPost, "/tenant/users", httpx.TenantRequired, httpx.IdempotencyRequired, 201), httpx.GuardPortalStaff),
 	"updateTenantUser":       withGuard(op("updateTenantUser", http.MethodPatch, "/tenant/users/{user_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
-	"getMe":                  withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantRequired, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
+	"getMe":                  withGuard(op("getMe", http.MethodGet, "/auth/me", httpx.TenantOptional, httpx.IdempotencyNone, 200), httpx.GuardPortalStaff),
 	"listSisSyncRunErrors":   op("listSisSyncRunErrors", http.MethodGet, "/sis/runs/{run_id}/errors", httpx.TenantNone, httpx.IdempotencyNone, 200),
 }
 

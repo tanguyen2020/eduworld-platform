@@ -27,6 +27,16 @@ type IntegrationConfig struct {
 	PlatformMaxAuthAge time.Duration
 	PublicBaseURL      string // "" = not configured
 	InternalBaseURL    string // "" = not configured
+	// RouteGroups are the prefix → service groups of the gateway, generated at build time from the route-as-code
+	// file (OQ F059-12).
+	RouteGroups []RouteGroup
+}
+
+// RouteGroup is one IntegrationOverview.apisix.route_groups[] item.
+type RouteGroup struct {
+	Prefix  string `json:"prefix"`
+	Gateway string `json:"gateway"` // public | internal
+	Service string `json:"service"`
 }
 
 // IntegrationOverview is the IntegrationOverview schema.
@@ -48,8 +58,9 @@ type KeycloakOverview struct {
 
 // ApisixOverview is IntegrationOverview.apisix (null = not configured).
 type ApisixOverview struct {
-	PublicBaseURL   *string `json:"public_base_url"`
-	InternalBaseURL *string `json:"internal_base_url"`
+	PublicBaseURL   *string      `json:"public_base_url"`
+	InternalBaseURL *string      `json:"internal_base_url"`
+	RouteGroups     []RouteGroup `json:"route_groups"`
 }
 
 // SisOverview is IntegrationOverview.sis.
@@ -107,6 +118,10 @@ func (q Integrations) Overview(ctx context.Context) (out IntegrationOverview, er
 	if clients == nil {
 		clients = []IntegrationClient{}
 	}
+	groups := q.Config.RouteGroups
+	if groups == nil {
+		groups = []RouteGroup{}
+	}
 	now := time.Now
 	if q.Clock != nil {
 		now = q.Clock
@@ -114,7 +129,8 @@ func (q Integrations) Overview(ctx context.Context) (out IntegrationOverview, er
 	return IntegrationOverview{
 		Keycloak: KeycloakOverview{IssuerURL: q.Config.IssuerURL, Realm: q.Config.Realm, Clients: clients,
 			PlatformMFARequired: true, PlatformAuthMaxAgeSeconds: int64(q.Config.PlatformMaxAuthAge / time.Second)},
-		Apisix:      ApisixOverview{PublicBaseURL: optional(q.Config.PublicBaseURL), InternalBaseURL: optional(q.Config.InternalBaseURL)},
+		Apisix: ApisixOverview{PublicBaseURL: optional(q.Config.PublicBaseURL), InternalBaseURL: optional(q.Config.InternalBaseURL),
+			RouteGroups: groups},
 		Sis:         SisOverview{ConnectionsTotal: total, ConnectionsByStatus: counts},
 		GeneratedAt: now().UTC(),
 	}, nil

@@ -81,3 +81,16 @@ func (a *Admin) AnonymizeUser(ctx context.Context, userID string) error {
 	_, err := a.call(ctx, "anonymize_user", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
 	return err
 }
+
+// SetEmail sets a new email on the user with emailVerified=false (OQ F012-1, worker of user.email_changed): a
+// read-modify-write of the representation, idempotent; a Keycloak conflict (email held by another user) is
+// port.ErrKCConflict.
+func (a *Admin) SetEmail(ctx context.Context, userID, email string) error {
+	var cur map[string]any
+	if _, err := a.call(ctx, "get_user", http.MethodGet, "/users/"+url.PathEscape(userID), nil, &cur, true); err != nil {
+		return err
+	}
+	cur["email"], cur["emailVerified"] = email, false
+	_, err := a.call(ctx, "set_email", http.MethodPut, "/users/"+url.PathEscape(userID), cur, nil, true)
+	return err
+}

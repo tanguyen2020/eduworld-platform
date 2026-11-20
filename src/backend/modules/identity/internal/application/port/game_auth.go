@@ -130,6 +130,12 @@ type UserDataAnonymizer interface {
 	Anonymize(ctx context.Context, userID, erasureID uuid.UUID, reason string) (StudentDataResult, error)
 }
 
+// KeycloakEmailAdmin copies a changed email to the Keycloak user with emailVerified=false (OQ F012-1);
+// ErrKCConflict when Keycloak holds the email on another user.
+type KeycloakEmailAdmin interface {
+	SetEmail(ctx context.Context, userID, email string) error
+}
+
 // KeycloakAnonymizer disables a Keycloak user and clears its profile (email, first and last name,
 // attributes) after an anonymization; the username stays because the realm does not allow editing it
 // (editUsernameAllowed false, [Proposed] OQ F016-10).

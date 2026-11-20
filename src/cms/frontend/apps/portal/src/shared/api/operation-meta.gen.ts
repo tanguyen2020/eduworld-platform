@@ -134,7 +134,7 @@ export const operations: readonly OperationMeta[] = [
   { operationId: "selectGameLoginTenant", method: "POST", path: "/auth/game/tenant:select", service: "identity", gateway: "public", tenantHeader: "none", idempotency: false, ifMatch: false },
   { operationId: "refreshGameToken", method: "POST", path: "/auth/game/token:refresh", service: "identity", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
   { operationId: "logout", method: "POST", path: "/auth/logout", service: "identity", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
-  { operationId: "getMe", method: "GET", path: "/auth/me", service: "identity", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
+  { operationId: "getMe", method: "GET", path: "/auth/me", service: "identity", gateway: "public", tenantHeader: "optional", idempotency: false, ifMatch: false },
   { operationId: "portalLogin", method: "POST", path: "/auth/portal/login", service: "identity", gateway: "public", tenantHeader: "none", idempotency: false, ifMatch: false },
   { operationId: "portalLogout", method: "POST", path: "/auth/portal/logout", service: "identity", gateway: "public", tenantHeader: "none", idempotency: false, ifMatch: false },
   { operationId: "forgotPortalPassword", method: "POST", path: "/auth/portal/password:forgot", service: "identity", gateway: "public", tenantHeader: "none", idempotency: false, ifMatch: false },
