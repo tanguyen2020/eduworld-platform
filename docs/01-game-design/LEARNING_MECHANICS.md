@@ -126,7 +126,7 @@ Chọn 2–4 cơ chế cho pilot (phạm vi pilot theo [ADR-0073](../adr/ADR-007
 ## 8. Câu hỏi mở
 
 - Có thêm `minigame_type` mới (`number_line`) cho pilot hay dùng `interactive` với scene chung? Phụ thuộc năng lực Godot ở Phase pilot [TBD].
-- Ngân sách lồng tiếng tiếng Việt cho `LM-VIE-01` (ghi âm sẵn hay TTS phía server) [TBD — xem EDU_FIT_REVIEW A11Y-01].
+- Lồng tiếng tiếng Việt cho `LM-VIE-01`: **ghi âm sẵn giọng người**, không TTS phía server; ngân sách tính trong giờ audio của [CONTENT_PRODUCTION_PLAN §3.4](../02-learning/CONTENT_PRODUCTION_PLAN.md#34-ví-dụ-pilot-toán--tiếng-việt-lớp-15) [Confirmed — owner 2026-11-20, OQ-23].
 
 ## 9. Acceptance criteria
 

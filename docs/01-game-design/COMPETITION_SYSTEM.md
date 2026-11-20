@@ -342,7 +342,7 @@ stateDiagram-v2
 
 ### 10.6. Lịch thi đấu
 
-- Round liên tiếp cách nhau 5 phút trong cùng buổi (Class Tournament) hoặc theo ngày (School/tenant) [Confirmed]; tôn trọng khung giờ truy cập của trường (OQ-17) [TBD].
+- Round liên tiếp cách nhau 5 phút trong cùng buổi (Class Tournament) hoặc theo ngày (School/tenant) [Confirmed]; tôn trọng khung giờ truy cập của trường và giờ giới nghiêm platform ([CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17), OQ-17) [Confirmed — owner 2026-11-20].
 - Tới giờ và đủ hai entry: worker tạo trận qua proposal/ready check của [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) (không qua queue), `match.tournament_node_id` liên kết node.
 - Thông báo trận sắp đấu 10 phút và 1 phút trước giờ (event `tournament.match_scheduled`).
 

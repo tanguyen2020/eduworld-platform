@@ -327,7 +327,7 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
 |---|---|
 | 78 dòng endpoint trong API_DESIGN chưa có trong OpenAPI | Chủ yếu CRUD CMS/LMS/admin, moderation chat, tournament; trước đây không đánh dấu "spec: chưa" |
 | KEYCLOAK_SSO còn nhắc `svc-keycloak-authn`, `tenants:resolve` | Fork cập nhật tài liệu identity theo ADR-0069 xử lý |
-| OQ cũ còn mở: OQ-02, 04, 08, 12, 14, 16, 17, 18 (OQ-19, 20, 21 đã đóng, xem §9.5) | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
+| OQ cũ: đã đóng hết ngày 2026-11-20 (owner chốt); chỉ OQ-12, OQ-22, OQ-24 còn Hoãn theo ADR-0082 | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
 
 **Quyết định `[Confirmed]` đang chờ người duyệt:**
 

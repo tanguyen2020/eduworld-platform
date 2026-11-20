@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: EdTech Specialist + Product Owner · Cập nhật: 2026-11-15
 > Liên quan: [CURRICULUM_MODEL](CURRICULUM_MODEL.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-02, K2) · [OQ-08](../12-project/OPEN_QUESTIONS.md) · [RISKS](../12-project/RISKS.md) (RISK-06) · [ROADMAP](../12-project/ROADMAP.md)
 
-Mọi con số trong tài liệu là **[Confirmed]** — ước tính để lập kế hoạch, phải được EdTech Specialist hiệu chỉnh bằng dữ liệu thật sau 4 tuần sản xuất đầu tiên. Phạm vi môn/khối phụ thuộc **OQ-08** (chưa trả lời) [TBD].
+Mọi con số trong tài liệu là **[Confirmed]** — ước tính để lập kế hoạch, phải được EdTech Specialist hiệu chỉnh bằng dữ liệu thật sau 4 tuần sản xuất đầu tiên. Phạm vi môn/khối theo **OQ-08** (owner chốt 2026-11-20: phương án pilot tối thiểu §2, khối lượng theo §3.4) [Confirmed].
 
 ## 1. Mục đích và phạm vi
 
@@ -15,7 +15,7 @@ Engine học tập của EduWorld cần nhiều nội dung: selection rule cần
 | Mô hình năng suất, quy mô đội, quy trình | Sản xuất video bài giảng (ước tính riêng khi có phạm vi) |
 | Import Word/MathType, AI sinh nháp (đề xuất) | Bản quyền sách giáo khoa (OQ-08, RISK-06) |
 
-## 2. Phạm vi theo OQ-08 [TBD]
+## 2. Phạm vi theo OQ-08 [Confirmed]
 
 | Phương án | Môn × khối | Ghi chú |
 |---|---|---|
@@ -23,7 +23,7 @@ Engine học tập của EduWorld cần nhiều nội dung: selection rule cần
 | Mở rộng 1 | + Tiếng Anh lớp 3–5 | Cần audio `en` cho mọi câu nghe |
 | Release đầy đủ | 4 môn × 9 khối | Chỉ sau khi đạt throughput ổn định |
 
-Chốt OQ-08 quyết định bảng ở §3.3; tài liệu này dùng phương án pilot tối thiểu làm ví dụ.
+OQ-08 đã chốt (owner 2026-11-20): pilot dùng phương án **Pilot tối thiểu** (Toán + Tiếng Việt lớp 1–5); khối lượng nội dung pilot là mô hình §3.4 (≈ 550 LO × 30 câu tương đương, ≥ 40% câu luyện tập Toán dạng template, lồng tiếng giọng người cho `g1_3`); "Mở rộng 1" và "Release đầy đủ" theo giai đoạn của ADR-0073. Throughput không đạt thì cắt khối trước khi giảm chất lượng (§9). Số LO mỗi khối EdTech đếm lại theo chương trình và hiệu chỉnh sau 4 tuần sản xuất đầu tiên, không mở lại phạm vi.
 
 ## 3. Mô hình năng suất
 
@@ -119,9 +119,9 @@ flowchart LR
 | Lồng tiếng / biên tập audio | 0,5–1 | Giảm khi dùng TTS |
 | QA nội dung | 0,5 | Kiểm thử trên game, phát hiện lỗi hiển thị |
 
-## 7. AI sinh nháp có người duyệt — chưa quyết định
+## 7. AI sinh nháp có người duyệt — không dùng trong version này
 
-Dùng mô hình ngôn ngữ để sinh **nháp** câu hỏi, gợi ý, phản hồi phương án nhiễu có thể tăng năng suất đáng kể, nhưng **chưa được quyết định** và **cần ADR riêng** trước khi dùng. Nếu được xem xét, các ràng buộc tối thiểu đề xuất:
+[Confirmed — owner 2026-11-20, OQ-08] Version này **không** dùng mô hình ngôn ngữ để sinh nháp câu hỏi, gợi ý hay phản hồi phương án nhiễu; năng suất dựa vào câu tham số hóa (§4) và import (§8). Dùng AI sinh nháp sau này cần ADR riêng, với các ràng buộc tối thiểu:
 
 - Không gửi dữ liệu học sinh; chỉ gửi đặc tả LO và ví dụ nội dung của EduWorld.
 - Mọi nháp đi qua đúng quy trình §5, người duyệt chịu trách nhiệm như nội dung tự soạn; không auto-publish.

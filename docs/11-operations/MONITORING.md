@@ -268,7 +268,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 
 Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi alert có `runbook_url` trỏ tới runbook trong `docs/11-operations/runbooks/`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
 
-## 6. SLO — [Confirmed], phụ thuộc OQ-11
+## 6. SLO — [Confirmed] (OQ-11)
 
 | SLO | SLI | Mục tiêu | Cửa sổ |
 |---|---|---|---|

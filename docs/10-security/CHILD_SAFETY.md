@@ -158,7 +158,7 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | XP cap ngày | Giảm động lực chơi dài (GAME_DESIGN §6) | Platform |
 | Giờ giới nghiêm platform | `platform_curfew` 21:30–06:30 cho game và chat (§4.1) | Platform; trường chỉ siết thêm |
 | Khung giờ truy cập | Trường cấu hình khung giờ được đăng nhập game, áp như nhau cho mọi học sinh của trường; luôn nằm ngoài giờ giới nghiêm platform (trường chỉ thu hẹp thêm) | School Admin |
-| Giới hạn cứng/ngày | Không áp mặc định; trường có thể bật (vd. 120 phút/ngày) | School Admin [TBD] |
+| Giới hạn cứng/ngày | Không áp mặc định (`daily_play_limit_minutes` tắt); `school_admin` có thể bật cho cả trường với số phút do trường đặt (ví dụ 120), áp như nhau mọi học sinh của trường; tính tổng thời gian game session active trong ngày (ICT); đạt giới hạn → cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc phiên như giờ giới nghiêm (§4.1), từ chối đăng nhập game/tạo game session kèm `reopen_at` tới 00:00 ICT hôm sau | School Admin [Confirmed — owner 2026-11-20, OQ-17] |
 
 ### 4.1. Giờ giới nghiêm cấp platform (ADR-0078)
 
@@ -224,7 +224,7 @@ flowchart LR
 | EP-06 | Nickname & tên party | `game`, `party` | Nickname sinh tự động hoặc chọn từ danh sách duyệt; tên party qua pipeline lọc + danh sách gợi ý cho lớp 1–3 | Không gõ tự do lớp 1–5 |
 | EP-07 | Hồ sơ người chơi | `game` | Người khác chỉ thấy nickname, avatar, level, badge; không tên thật/trường/lớp với người khác trường | — |
 | EP-08 | Leaderboard | `competition/leaderboard` | Phạm vi hiển thị theo policy; người ngoài trường chỉ thấy nickname; trường có thể tắt global | Global hiển thị nickname |
-| EP-09 | Phiên chơi | `identity`, `game_session`, `realtime` | Giờ giới nghiêm platform (§4.1); giờ truy cập do trường cấu hình (chỉ siết thêm); nhắc nghỉ; giới hạn thời lượng/ngày [TBD OQ-17] | Giới nghiêm 21:30–06:30; nhắc sau 45 phút |
+| EP-09 | Phiên chơi | `identity`, `game_session`, `realtime` | Giờ giới nghiêm platform (§4.1); giờ truy cập do trường cấu hình (chỉ siết thêm); nhắc nghỉ; giới hạn thời lượng/ngày do trường bật (mặc định tắt, §4) | Giới nghiêm 21:30–06:30; nhắc sau 45 phút |
 | EP-10 | Phần thưởng | `gamification` | Không loot box trả tiền, không cơ chế FOMO gây áp lực (streak phạt), cap XP | — |
 | EP-11 | Nội dung học tập/NPC | `cms` | Workflow duyệt; reviewer kiểm tra phù hợp lứa tuổi | — |
 | EP-12 | Upload media | `cms`, `learning` | Chỉ vai trò nội dung (platform/tenant) upload media. Học sinh **không upload** trong version này (hoạt động nộp bài ngoài version này, ADR-0072, ADR-0082) | Không có upload của học sinh |

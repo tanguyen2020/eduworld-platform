@@ -388,7 +388,7 @@ Module gọi nhau **trong tiến trình** qua facade sinh từ `specs/openapi/mo
 
 | Secret | Nơi lưu | Ai đọc | Rotation |
 |---|---|---|---|
-| DB password theo role (mỗi database một bộ) | Secret manager (Vault/cloud KMS-backed) [TBD OQ-10]; local: `.env` không commit | chỉ module sở hữu database | 90 ngày |
+| DB password theo role (mỗi database một bộ) | Secret manager: OpenBao tự vận hành [Confirmed — owner 2026-11-20, OQ-10], phân phối bằng Docker secrets ([DEPLOYMENT §13](../11-operations/DEPLOYMENT.md#13-secret-management)); local: `.env` không commit | chỉ module sở hữu database | 90 ngày |
 | Keycloak client secret `svc-identity` (chỉ Keycloak Admin API, ADR-0074 mục 5) | Secret manager | Swarm service chạy module identity | 90 ngày |
 | NATS credentials (user theo Swarm service: `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`) | Secret manager | Swarm service tương ứng | 90 ngày |
 | Valkey ACL password (user theo module) | Secret manager | Swarm service nạp module đó | 90 ngày |

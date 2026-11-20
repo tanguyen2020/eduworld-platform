@@ -7,7 +7,7 @@
 
 Module `exam` (schema `assessment`) tổ chức **bài kiểm tra có cấu trúc đề, giới hạn thời gian và chính sách công bố kết quả**. Dùng chung `attempt`/`attempt_item`/`attempt_answer` và grader của question_bank. Mọi câu trong đề là loại server tự chấm; đề không có câu tự luận chấm tay ([ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) mục 3). Người tạo đề và ExamSession của trường là `school_admin` hoặc `academic_manager` (thường qua LMS Assignment); đề dùng chung của platform do `content_admin` soạn.
 
-**[Confirmed, OQ-18]** EduWorld hỗ trợ luyện đề, thi thử, kiểm tra do nhà trường giao. **Không** tổ chức kỳ thi có giá trị pháp lý trong Release 1.0 khi chưa có quyết định ở OQ-18; không có proctoring (camera/khóa màn hình). Cờ `is_official` chỉ có nghĩa "kết quả được nhà trường ghi nhận trong sổ điểm LMS để tham khảo"; không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)).
+**[Confirmed, OQ-18]** EduWorld hỗ trợ luyện đề, thi thử, kiểm tra do nhà trường giao. **Không** tổ chức kỳ thi có giá trị pháp lý trong Release 1.0 (OQ-18, owner 2026-11-20); không có proctoring (camera/khóa màn hình). Cờ `is_official` chỉ có nghĩa "kết quả được nhà trường ghi nhận trong sổ điểm LMS để tham khảo"; không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)).
 
 ## 2. Loại đề [Confirmed — Master Prompt §4.5]
 

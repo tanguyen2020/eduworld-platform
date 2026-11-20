@@ -9,11 +9,11 @@
 ## Quyết định
 
 1. Local và CI giữ floci (ADR-0044).
-2. Staging/production dùng một trong hai, chọn sau spike [TBD]:
-   - **Ưu tiên:** dịch vụ S3-compatible managed của nhà cung cấp cloud tại Việt Nam, có replication, SLA và dữ liệu lưu tại Việt Nam.
-   - **Tự host:** cụm Garage hoặc SeaweedFS tối thiểu 3 node, có replication và backup ngoài máy.
+2. Staging/production dùng một trong hai; owner chốt 2026-11-20 phương án **ưu tiên** [Confirmed]:
+   - **Ưu tiên (đã chọn):** dịch vụ S3-compatible managed của nhà cung cấp cloud tại Việt Nam, có replication, SLA và dữ liệu lưu tại Việt Nam. Nhà cung cấp chọn khi ký hợp đồng.
+   - **Tự host (không dùng):** cụm Garage hoặc SeaweedFS tối thiểu 3 node, có replication và backup ngoài máy — chỉ quay lại bằng ADR mới nếu không nhà cung cấp managed nào pass spike.
 3. Bucket chứa dữ liệu học sinh (`ew-student-submissions`, `ew-media-private`) có RPO bằng dữ liệu học tập (BACKUP_RECOVERY).
-4. Spike trước pilot: tương thích presigned URL, versioning, lifecycle, bucket policy; đo hiệu năng; diễn tập khôi phục.
+4. Spike trước pilot (nghiệm thu nhà cung cấp managed): tương thích presigned URL, versioning, lifecycle, bucket policy; đo hiệu năng; diễn tập khôi phục.
 
 ## Hệ quả
 
@@ -25,3 +25,4 @@
 |---|---|---|
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted | Technical Architect |
+| 2026-11-20 | Chọn phương án ưu tiên (S3 managed tại Việt Nam) theo cơ chế mục 2; spike thành nghiệm thu nhà cung cấp (OQ-21) | Owner |

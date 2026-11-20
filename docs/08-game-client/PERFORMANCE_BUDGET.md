@@ -214,7 +214,7 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 - Giới hạn bộ nhớ heap wasm khởi tạo 512 MB, tối đa 1 GB; không preload toàn bộ vùng.
 - Tải theo gói: lõi ≤ 40 MB (§11), vùng tải sau; dùng cache trình duyệt + Cache Storage theo hash.
 - Âm thanh khởi động sau tương tác đầu của người dùng (chính sách trình duyệt).
-- Kiểm thử trên DEV-WEB-MID với Chrome và Edge bản mới; Safari/Firefox [TBD].
+- Kiểm thử trên DEV-WEB-MID với Chrome và Edge bản mới (bắt buộc). Safari/Firefox không thuộc ma trận hỗ trợ bắt buộc: không chặn truy cập, chỉ smoke thử khi có thời gian, lỗi riêng của hai trình duyệt này không chặn release [Confirmed — owner 2026-11-20, OQ-04].
 
 ## 15. Quy trình kiểm soát
 

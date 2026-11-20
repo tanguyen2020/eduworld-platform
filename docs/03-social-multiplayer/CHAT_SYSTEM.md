@@ -103,7 +103,8 @@ Một bảng duy nhất theo channel, áp dụng cho mọi học sinh lớp 1–
 
 - Giới hạn tổng mỗi người (`chat_rate_per_user`): 30 tin/phút trên mọi channel **[Confirmed — Technical Architect 2026-11-16]**; cột `rate` ở bảng trên là giới hạn theo channel. module chat đếm ở Valkey xuyên node. Mục này là **nguồn duy nhất** của rate limit chat; [REALTIME_ARCHITECTURE §8.1](../06-architecture/REALTIME_ARCHITECTURE.md) và API_DESIGN chỉ tham chiếu.
 - Sticker/GIF tính chung `chat_sticker_gif_rate` (4/phút/channel, §7.5); typing theo `chat_typing_throttle` (§7.10).
-- Giờ chat: ngoài giờ giới nghiêm `platform_curfew` ([CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); `allowed_hours` của channel bền vững mặc định 06:30–21:30, trường có thể thu hẹp thêm.
+- Giờ chat (`chat_allowed_hours`, [Confirmed — owner 2026-11-20, OQ-09]): ngoài giờ giới nghiêm `platform_curfew` ([CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); `allowed_hours` của channel bền vững mặc định 06:30–21:30, trường có thể thu hẹp thêm; channel `match`/`team`/`party` không có khung giờ riêng.
+- Phạm vi World (`world_chat_scope`, [Confirmed — owner 2026-11-20, OQ-09]): mặc định trong trường; tenant `unit` có thể mở rộng toàn tenant; **không** có World chat toàn organization hay liên tenant (ADR-0054).
 - Link: chỉ cho phép link nội bộ EduWorld đã whitelist (ví dụ mời vào quest); link ngoài bị chặn. Ảnh/file do người dùng upload: **không** hỗ trợ; sticker/GIF chỉ từ thư viện nội bộ đã duyệt (§7.5).
 - `features` (§7.1) chỉ cấp platform được đổi; cấp dưới không nới.
 - Trường/lớp có thể tắt channel, thu hẹp giờ, bật slow mode, nâng strictness — áp dụng như nhau cho mọi học sinh trong phạm vi đó. **Trừ** `match`/`party`/`team`: không tắt, không thu hẹp giờ; chỉ siết rate/slow mode (≤ 10 s)/strictness.

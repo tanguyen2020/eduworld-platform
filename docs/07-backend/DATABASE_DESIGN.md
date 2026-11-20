@@ -1814,7 +1814,7 @@ REVOKE DELETE, TRUNCATE ON ALL TABLES IN SCHEMA assessment FROM learning_app, le
 - Phần ent không biểu diễn được viết tay trong cùng thư mục migration do Atlas quản lý và được `atlas migrate lint` kiểm tra, review trong MR như migration sinh tự động: RLS policy, trigger, `GRANT`/`REVOKE`, view `<table>_live`, hàm `SECURITY DEFINER`, DDL partition (`PARTITION BY`, tạo/`ATTACH`/`DETACH` partition — đặt trong thư mục con `partitions/`).
 - Partition của ngày/tháng tiếp theo do job `infra-partition-maintenance` tạo trước tối thiểu 7 ngày; thiếu partition là cảnh báo P2.
 
-## 8. Sizing ước tính [Confirmed — cần xác nhận OQ-03]
+## 8. Sizing ước tính [Confirmed — OQ-03]
 
 Giả định năm 1: 50.000 học sinh, 60% hoạt động hằng tuần, mỗi học sinh hoạt động trung bình 40 câu trả lời/ngày học, 200 ngày học/năm.
 

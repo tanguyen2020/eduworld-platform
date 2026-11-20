@@ -129,7 +129,7 @@
 | FR-CUR-009 | LO bám GDPT 2018: thêm `yccd_ref` (mã yêu cầu cần đạt, ≤ 64 ký tự) và `competency_ids[]` (năng lực/phẩm chất); seed được EdTech review theo văn bản chương trình ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P2 |
 | FR-CUR-010 | Import/export curriculum dạng YAML/CSV qua use case CMS (có validate, `Idempotency-Key`, audit; seed cũng đi qua import, không SQL thủ công) ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P2 |
 | FR-CUR-011 | Khi publish CurriculumVersion mới: bảng mapping LO giữa hai version (`same`, `split`, `merge`, `replaces`, `removed`) và chiếu mastery sang version mới; learning event gốc không bị sửa ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P3 |
-| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và sắp lịch LMS; không sao chép nguyên văn sách khi chưa có giấy phép ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] / [TBD] OQ-08 | P3 |
+| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và sắp lịch LMS; không sao chép nguyên văn sách khi chưa có giấy phép ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)); chỉ lưu metadata cho bộ sách trường pilot đang dùng | [Confirmed — owner 2026-11-20, OQ-08] | P3 |
 
 ### 2.5. Learning Content — `CNT` (§4.2)
 
@@ -207,7 +207,7 @@
 | FR-EXM-004 | Phân biệt luyện tập và kiểm tra chính thức (`is_official`) | [Confirmed] | P3 |
 | FR-EXM-005 | Chống nộp trùng, chống sửa điểm từ client, tự nộp khi hết `deadline_at` | [Confirmed] | P3 |
 | FR-EXM-006 | Kết quả thi lưu bền vững trong PostgreSQL, không phụ thuộc Valkey | [Confirmed] | P3 |
-| FR-EXM-007 | Thi chính thức có giá trị pháp lý/proctoring | [TBD] OQ-18 | Chỉ khi có quyết định |
+| FR-EXM-007 | Thi chính thức có giá trị pháp lý/proctoring | [Confirmed — owner 2026-11-20] OQ-18: không thuộc Release 1.0 | Ngoài Release |
 | FR-EXM-008 | Chấm lại đề (regrade) là re-evaluate do hệ thống khi câu hỏi lỗi (`RegradeRequest`, do `content_admin`/`academic_manager` kích hoạt, có lý do, audit): điểm mới, lịch sử điểm cũ truy xuất được, phát `exam.regraded`/`attempt.re_evaluated` ([EXAM_ENGINE](../02-learning/EXAM_ENGINE.md)) | [Confirmed] | P3 |
 | FR-EXM-009 | Gia hạn thời gian làm bài cho học sinh cụ thể (`accommodations[]` của ExamSession, vd. +25%) do `school_admin`/`academic_manager` cấu hình ([EXAM_ENGINE](../02-learning/EXAM_ENGINE.md)) | [Confirmed] | P3 |
 | FR-EXM-010 | Đề `is_official`: cân bằng độ khó giữa các biến thể đề theo `p_value`, báo cáo độ tin cậy (KR-20/alpha) sau kỳ kiểm tra ([EXAM_ENGINE](../02-learning/EXAM_ENGINE.md)) | [Confirmed] | P3 |
@@ -586,7 +586,7 @@ Giá trị số nhất quán với [SYSTEM_ARCHITECTURE §7](../06-architecture/
 | NFR-AVAIL-005 | (Đổi mã 2026-11-15, trước trùng NFR-AVAIL-003) Một module hoặc database module lỗi, một profile worker dừng hay một panic trong `core-api` không làm sập module khác: các chức năng không phụ thuộc vẫn hoạt động; chức năng phụ thuộc suy giảm có thông báo (ADR-0074) | Chaos test TC-SVC-010…013, 016, 017 và diễn tập khôi phục riêng một database TC-SVC-014 pass | [Confirmed] |
 | NFR-COMP-001 | **Chạy được trên máy tầm trung** (yêu cầu bắt buộc): mọi tính năng Release 1.0 đạt FPS mục tiêu ở hạng Tầm trung (PC iGPU UHD 630/Vega 8 + 8 GB RAM; Android 4 GB RAM Mali-G52/Adreno 610; iPhone 11; Web WebGL 2 trên PC tầm trung) và chơi được ở hạng Tối thiểu với preset Thấp; hạng, FPS, renderer, preset, ngân sách theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) | AC-PERF-001…011 | [Confirmed] yêu cầu ADR-0057 · thông số [Confirmed] OQ-04 |
 | NFR-COMP-003 | iOS 15+ (iPhone 11 / iPad thế hệ 8 trở lên là hạng Tầm trung) | Theo NFR-COMP-001 | [Confirmed] OQ-04 |
-| NFR-COMP-004 | Web: Chrome/Edge bản mới bắt buộc (Firefox/Safari [TBD]), WebGL 2, renderer Compatibility, preset tối đa Trung bình; tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11, §14 | Theo NFR-COMP-001 | [Confirmed] OQ-04 |
+| NFR-COMP-004 | Web: Chrome/Edge bản mới bắt buộc (Firefox/Safari không thuộc ma trận hỗ trợ bắt buộc: không chặn truy cập, kiểm thử không chặn release — owner 2026-11-20, OQ-04), WebGL 2, renderer Compatibility, preset tối đa Trung bình; tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11, §14 | Theo NFR-COMP-001 | [Confirmed] OQ-04 |
 | NFR-COMP-002 | Client cũ vẫn hoạt động ≥ 1 học kỳ sau khi ra API v mới | — | [Confirmed] |
 
 ## 4. User Stories chính
@@ -804,10 +804,10 @@ Mỗi AC phải được tự động hóa thành test (xem [TEST_STRATEGY](../1
 | Giả định | Nhãn | Nếu sai thì |
 |---|---|---|
 | Nhà trường cung cấp được danh sách học sinh/lớp (CSV hoặc API) | [Confirmed] | Không thể provisioning → chặn P1 pilot |
-| Trường có IdP hoặc chấp nhận tài khoản local Keycloak | [TBD] OQ-02 | Thay đổi login flow cho từng trường |
-| Danh sách thiết bị tham chiếu theo hạng (PERFORMANCE_BUDGET §2) khớp thiết bị thực tế ở trường | [TBD] OQ-04 | Hạ preset mặc định/ngân sách, không loại hạng Tầm trung (ADR-0057) |
-| Nội dung pilot (Toán 1–5) có nguồn và bản quyền hợp lệ | [TBD] OQ-08 | Chậm P2 |
-| Chính sách chat mặc định được trường chấp nhận (rà soát pháp lý: Deferred ADR-0082) | [TBD] OQ-09 | Điều chỉnh policy trước P5 |
+| Trường chấp nhận tài khoản local Keycloak do EduWorld cấp (Release 1.0 không brokering IdP trường, ADR-0063) | [Confirmed — owner 2026-11-20] OQ-02 | Thay đổi login flow cho từng trường |
+| Danh sách thiết bị tham chiếu theo hạng (PERFORMANCE_BUDGET §2) khớp thiết bị thực tế ở trường | [Confirmed — owner 2026-11-20] OQ-04 (khảo sát pilot chỉ cập nhật danh sách máy kiểm thử) | Hạ preset mặc định/ngân sách, không loại hạng Tầm trung (ADR-0057) |
+| Nội dung pilot (Toán + Tiếng Việt 1–5) do EduWorld tự biên soạn theo LO, không sao chép sách giáo khoa khi chưa có giấy phép | [Confirmed — owner 2026-11-20] OQ-08 | Chậm P2 |
+| Chính sách chat mặc định được trường chấp nhận (rà soát pháp lý: Deferred ADR-0082) | [Confirmed — owner 2026-11-20] OQ-09 | Điều chỉnh policy trước P5 |
 
 ## 7. Truy vết yêu cầu → tài liệu thiết kế
 

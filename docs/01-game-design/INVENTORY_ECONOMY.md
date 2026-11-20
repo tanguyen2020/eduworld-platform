@@ -10,7 +10,7 @@ Tài liệu là nguồn duy nhất cho: item catalog và danh sách slot trang b
 Module sở hữu: **module `game`** (DB `eduworld_game`). Sticker/GIF chat thuộc module `chat` nhưng có thể được mở khóa bằng phần thưởng (ADR-0034).
 
 Nguyên tắc bắt buộc:
-- **Không** mua bằng tiền thật, **không** loot box, **không** phần thưởng ngẫu nhiên trả phí [Confirmed: không pay-to-learn; Proposed: không tiền thật trong Release 1.0, OQ-14].
+- **Không** mua bằng tiền thật, **không** loot box, **không** phần thưởng ngẫu nhiên trả phí [Confirmed: không pay-to-learn; không tiền thật trong Release 1.0 — OQ-14, owner 2026-11-20].
 - Vật phẩm chỉ là **trang trí/biểu cảm**, không tăng điểm, không mở nội dung học tập bắt buộc, không tạo lợi thế thi đấu [Confirmed].
 - Mọi cấp/trừ vật phẩm và tiền tệ do server thực hiện, idempotent, ghi sổ cái (ADR-0049).
 
@@ -59,7 +59,7 @@ Vật phẩm là nội dung platform (Game Studio, ADR-0027); có thể gán cho
 | Tiền | Kiếm từ | Dùng cho | Nhãn |
 |---|---|---|---|
 | **Xu** | Quest, challenge, boss, achievement, lên cấp, sự kiện (theo reward rule) | Mua cosmetic trong Shop | [Confirmed] ADR-0049 |
-| "Ngọc" hoặc tiền thứ hai | — | — | [TBD] OQ-14; không tạo khi chưa có quyết định |
+| "Ngọc" hoặc tiền thứ hai | — | — | [Confirmed — owner 2026-11-20, OQ-14] Không có trong Release 1.0; thêm cần ADR mới |
 
 Xu **không** mua được bằng tiền thật và **không** đổi ra tiền thật.
 

@@ -227,7 +227,7 @@ Permission catalog và role mapping: [ADMIN_PORTAL §2](ADMIN_PORTAL.md#2-permis
 
 ## 10. Báo cáo kết quả
 
-- **Không có sổ điểm chấm tay.** Bảng kết quả course [Confirmed]: cột = bài `mode=graded`, giá trị là điểm **tự chấm** theo `score_policy`, thang 10; không có cột XP, rating, competition points; không đồng bộ ngược SIS trong Release 1.0 [TBD — OQ-01].
+- **Không có sổ điểm chấm tay.** Bảng kết quả course [Confirmed]: cột = bài `mode=graded`, giá trị là điểm **tự chấm** theo `score_policy`, thang 10; không có cột XP, rating, competition points; không đồng bộ ngược SIS trong Release 1.0 [Confirmed — owner 2026-11-20, OQ-01].
 - **Báo cáo tham khảo theo quy định đánh giá:** mức theo TT27/2020 (tiểu học) và TT22/2021 (THCS) suy ra từ kết quả tự chấm và mastery theo profile ở [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md); luôn ghi nhãn "Tham khảo — không thay đánh giá chính thức" [Confirmed].
 
 | Báo cáo | Định dạng | Nội dung |

@@ -15,7 +15,7 @@ Stakeholder hỏi nội dung có hình ảnh, media thì lưu ở đâu; sau đ�
 ## Quyết định
 
 1. **Không lưu file trong PostgreSQL.** File ở **object storage tương thích S3**; PostgreSQL chỉ lưu **metadata** (`media_assets`).
-   - **Staging/production:** dịch vụ S3-compatible của cloud tại Việt Nam hoặc cụm MinIO tự vận hành [TBD OQ-21].
+   - **Staging/production:** thay bởi [ADR-0075](ADR-0075-object-storage-production-khong-dung-floci.md) — dịch vụ S3-compatible managed của cloud tại Việt Nam (owner chốt 2026-11-20, OQ-21).
    - **Local dev, CI, test tự động:** [floci](https://github.com/floci-io/floci) (trình giả lập AWS, MIT; image `floci/floci`, cổng 4566, `FLOCI_STORAGE_MODE=persistent`, `FLOCI_SERVICES_S3_ENFORCE_AUTH=true`). floci **không** dùng cho staging/production (theo tài liệu của dự án: dành cho dev/test/CI, không cam kết HA, mặc định không kiểm tra credential). Lifecycle rule và bucket policy test trên staging.
    - Code chỉ dùng AWS SDK S3 chuẩn với endpoint cấu hình (`EW_S3_ENDPOINT`, `EW_S3_FORCE_PATH_STYLE`), đổi môi trường không sửa code.
 2. **Bucket:**
@@ -49,3 +49,4 @@ Stakeholder hỏi nội dung có hình ảnh, media thì lưu ở đâu; sau đ�
 | 2026-11-15 | floci cho local/dev/CI; production object storage chờ OQ-21 | Stakeholder |
 | 2026-11-15 | Ngoại lệ upload của học sinh, bucket `ew-student-submissions` | ADR-0048, ADR-0055 |
 | 2026-11-16 | Ghi chú phần không áp dụng theo ADR-0082 | Technical Architect |
+| 2026-11-20 | Cập nhật tham chiếu mục 1 (staging/production) theo ADR-0075 và OQ-21 đã trả lời; không đổi ý nghĩa quyết định | Owner |

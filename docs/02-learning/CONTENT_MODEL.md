@@ -284,7 +284,7 @@ Học sinh lớp 1–3 chưa đọc thạo, nên **lồng tiếng là điều ki
 | Hướng dẫn bước quest, thoại NPC giao nhiệm vụ (nội dung game, module game) | Audio `vi` theo cùng quy tắc publish | Trường dữ liệu do [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) định nghĩa |
 | Lựa chọn dạng chữ (`options[].content` không có hình) | Khuyến nghị (cảnh báo, không chặn) | |
 
-- **Nguồn audio:** ghi âm giọng người (ưu tiên) hoặc TTS tiếng Việt đã được người duyệt nghe lại trước khi approve; engine TTS chưa chọn [TBD]. Audio là media thường (Ogg Vorbis + MP3, §7), bất biến theo version.
+- **Nguồn audio:** **ghi âm giọng người** [Confirmed — owner 2026-11-20, OQ-23]; EduWorld không tích hợp engine TTS phía server trong Release 1.0. File do người soạn tự tạo ngoài hệ thống (kể cả bằng công cụ TTS) chỉ được dùng khi người duyệt nghe lại trước khi approve. Audio là media thường (Ogg Vorbis + MP3, §7), bất biến theo version. Đọc to bằng TTS của hệ điều hành trên thiết bị chỉ là dự phòng khi nội dung cũ thiếu file, không thay điều kiện publish dưới đây.
 - **Miễn trừ:** câu mà đọc to làm lộ đáp án (chính tả, nhận biết chữ, đánh vần) khai báo `audio_exempt_reason` (≤ 255 ký tự); reviewer phải duyệt rõ miễn trừ này.
 - **Kiểm tra:** thiếu audio bắt buộc → chặn `submit_review` và `publish` với `422 AUDIO_REQUIRED` (liệt kê field thiếu).
 - **Phụ đề và icon:** văn bản đề luôn hiển thị cùng audio (phụ đề); hướng dẫn có thể kèm `instruction_icons[]` (biểu tượng hành động: chạm, kéo, nghe) để học sinh làm được khi phòng máy không có tai nghe hoặc tắt tiếng. Cách hiển thị: [LEARNING_EXPERIENCE §5.1](LEARNING_EXPERIENCE.md#51-hỗ-trợ-đọc-cho-lớp-13-confirmed).

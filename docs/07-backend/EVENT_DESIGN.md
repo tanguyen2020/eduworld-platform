@@ -542,7 +542,7 @@ Actor xAPI dùng `account { homePage: "https://eduworld.vn", name: <pseudonymous
 | `infra.processed_events` | `outbox_retention` (30 ngày); partition theo ngày trên `event_occurred_at` của envelope (event giao lại luôn vào cùng partition), gỡ partition như outbox (ADR-0089 §4–5) | [Confirmed] |
 | `infra.dead_letters` | 90 ngày; partition theo ngày, job `infra-partition-maintenance` gỡ partition hết hạn và từ chối gỡ partition còn dead letter chưa xử lý (`resolved_at IS NULL`) (ADR-0089 §5) | [Confirmed] |
 | `learning.learning_events` | Suốt thời gian học tại trường + 1 năm; sau đó ẩn danh hóa/tổng hợp | [Confirmed] |
-| Event chat (`chat.*`) | Theo retention chat (180 ngày) | [TBD] OQ-09 |
+| Event chat (`chat.*`) | Theo retention chat (`persistent_chat_retention_days`, 180 ngày) | [Confirmed — owner 2026-11-20] OQ-09 |
 | Dữ liệu chat gameplay (channel `match`/`party`/`team` theo trận, tin ephemeral) | Purge vật lý sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) / 24 h — ngoại lệ ADR-0033; outbox event chỉ chứa ID nên không cần purge | [Confirmed] |
 
 Partition `learning.learning_events` theo tháng (`occurred_at`). Hết hạn: ứng dụng chỉ ẩn danh hóa; partition giữ lại; Release 1.0 không detach, archive hay gỡ partition (ADR-0028, ADR-0070).

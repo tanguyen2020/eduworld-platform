@@ -273,7 +273,7 @@ Release 1.0 là game hoàn chỉnh theo Master Prompt [Confirmed — stakeholder
 - Voice chat: không làm trong Release 1.0 (ADR-0051, ADR-0070).
 - Housing/đảo cá nhân; trading vật phẩm giữa người chơi (tắt mặc định, INVENTORY_ECONOMY §6.4) [Confirmed].
 - UGC (học sinh tự tạo màn chơi) [Confirmed].
-- Parent portal (OQ-13) [TBD].
+- Parent portal: không có trong Release 1.0; liên hệ phụ huynh qua nhà trường (OQ-13, owner 2026-11-20) [Confirmed].
 
 ## 16. Chỉ số thành công
 

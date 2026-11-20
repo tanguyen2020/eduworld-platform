@@ -72,7 +72,7 @@ M-C3 thay mốc "M3 School Loop" của bản trước; "M3" nay là Game Ops the
 
 Ước lượng [Confirmed]: pilot sẵn sàng ~tuần 36 (Phase 0: 3 sprint, Phase 1: 6 sprint, M-C2 + M-C3: 7 sprint; lát cắt gameplay pilot chạy song song từ giữa Phase 1 ở làn Godot/module game); vận hành pilot ≥ 8 tuần học + kiểm tra trước/sau (~12 tuần); Mở rộng ~10 sprint; Hoàn thiện ~12 sprint. Tổng tới M6 xấp xỉ bản trước (~80+ tuần) nhưng có sản phẩm tại trường sớm khoảng 1 năm. **Lịch pilot phải khớp năm học** (khai giảng đầu tháng 9): nếu M-P1 rơi vào hè, dùng thời gian còn lại cho UAT, đào tạo nhà trường và kiểm tra trước, pilot chạy học kỳ I [Confirmed — RISK-05].
 
-Song song từ M-C2: **dòng sản xuất nội dung** (EdTech + content team). Pilot: Toán + Tiếng Việt lớp 1–5, khối lượng do PO + EdTech chốt [TBD — OQ-08]. Mở rộng/Hoàn thiện: Tiếng Anh, Khoa học (Tự nhiên & Xã hội / Khoa học / KHTN theo khối) và lớp 6–9. Engine không giới hạn số môn.
+Song song từ M-C2: **dòng sản xuất nội dung** (EdTech + content team). Pilot: Toán + Tiếng Việt lớp 1–5, khối lượng theo [CONTENT_PRODUCTION_PLAN §3.4](../02-learning/CONTENT_PRODUCTION_PLAN.md#34-ví-dụ-pilot-toán--tiếng-việt-lớp-15) [Confirmed — owner 2026-11-20, OQ-08]. Mở rộng/Hoàn thiện: Tiếng Anh, Khoa học (Tự nhiên & Xã hội / Khoa học / KHTN theo khối) và lớp 6–9. Engine không giới hạn số môn.
 
 ```mermaid
 gantt
@@ -344,9 +344,9 @@ Báo cáo 1 học kỳ vận hành Release 1.0 — tần suất sử dụng, t�
 | Đăng nhập nhanh bằng QR lớp + PIN, thẻ QR cá nhân, mật khẩu hình ảnh | **Không làm** (ADR-0076 Rejected 2026-11-17) | Đăng nhập username/password + giữ phiên bằng refresh token (ADR-0086) |
 | Device Authorization Grant, SSO IdP trường | Không làm trong Release 1.0 (ADR-0063) | Chỉ bật bằng ADR mới ([KEYCLOAK_SSO §8.1](../09-identity/KEYCLOAK_SSO.md#81-mở-rộng-sau--ngoài-release-10-adr-0063)) |
 | Voice chat | Không làm trong Release 1.0 (ADR-0070) | Master Prompt §6.2 chỉ yêu cầu thiết kế mở rộng |
-| Parent portal | [TBD] OQ-13 | Không có trong Master Prompt |
-| Thi chính thức có giá trị pháp lý / proctoring | [TBD] OQ-18 | |
-| Thanh toán / in-app purchase | [TBD] OQ-14 | Không bao giờ pay-to-learn |
+| Parent portal | Không làm trong Release 1.0 (OQ-13, owner 2026-11-20); thêm vai trò `parent` cần ADR mới | Không có trong Master Prompt |
+| Thi chính thức có giá trị pháp lý / proctoring | Không làm trong Release 1.0 (OQ-18, owner 2026-11-20) | |
+| Thanh toán / in-app purchase | Không làm (OQ-14, owner 2026-11-20: B2B license theo trường) | Không bao giờ pay-to-learn |
 | Full LRS endpoint chuẩn xAPI | [TBD] | Master Prompt §16 không bắt buộc; dữ liệu đã thiết kế tương thích xAPI |
 | Mastery BKT/IRT | Cải tiến sau khi có dữ liệu thật (gồm dữ liệu pilot ADR-0080) | ADR-0017: model cắm được |
 | Onboard thêm trường kết nối API theo EduWorld SIS Contract | Vận hành liên tục | OQ-01, ADR-0021 |

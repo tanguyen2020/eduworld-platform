@@ -153,7 +153,7 @@ sequenceDiagram
 | Grade band | Mọi member trong cùng grade band, hoặc chênh tối đa 1 band liền kề nếu activity khai báo `allow_mixed_grade_band=true` (không bao giờ `g1_3` với `g8_9`) | [Confirmed] |
 | Activity grade | `activity.grade_levels` chứa `grade_level` của từng member | [Confirmed] (kiểm tra lớp học) |
 | Trạng thái tài khoản | `active`, không bị sanction `restrict_multiplayer` | [Confirmed] |
-| Giờ truy cập | Trong khung giờ trường cho phép (OQ-17) | [TBD] |
+| Giờ truy cập | Trong khung giờ trường cho phép, ngoài giờ giới nghiêm platform và chưa chạm giới hạn ngày của trường nếu trường bật ([CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17), OQ-17) | [Confirmed — owner 2026-11-20] |
 | Block | Không có cặp member nào block nhau (kiểm tra cả lúc invite/join) | [Confirmed] |
 | Prerequisite quest | Mỗi member đáp ứng prerequisite của quest | [Confirmed] |
 

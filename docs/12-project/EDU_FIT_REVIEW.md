@@ -185,7 +185,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | ID | Xử lý | Ghi chú |
 |---|---|---|
 | K1 | ADR Accepted (2026-11-17) — [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Cổng M-P2 ở ROADMAP §3.5, KPI ở PRODUCT_VISION §7; hạ tầng nghiên cứu là F035 (chưa viết spec); ngưỡng đạt [TBD] do PO + EdTech chốt trước pilot |
-| K2 | Còn mở | Chốt OQ-08 theo phạm vi pilot; mô hình throughput nội dung chưa có |
+| K2 | **Đã xử lý** — OQ-08 Answered (owner 2026-11-20) | Pilot Toán + Tiếng Việt lớp 1–5, khối lượng theo mô hình throughput [CONTENT_PRODUCTION_PLAN §3.4](../02-learning/CONTENT_PRODUCTION_PLAN.md#34-ví-dụ-pilot-toán--tiếng-việt-lớp-15); thiếu throughput thì cắt khối |
 | K3 | **Một phần** — ADR Accepted (2026-11-17) [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | ROADMAP §1–§3 và PRODUCT_VISION §8 viết lại theo Pilot → Mở rộng → Hoàn thiện, bỏ "không MVP"; còn lại: pilot vẫn làm đủ 4 nền tảng (ADR-0013, ADR-0079 Rejected) nên tải client chưa giảm (RISK-54); CODE_PLAN §5 cần ánh xạ feature theo lát cắt pilot |
 | K4 | Sửa tài liệu [Confirmed] — Bước 0 của [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md) (S1, S2) | Enum chung `specs/schemas/common`, response schema theo loại câu; TC-LRN-016…017 |
 | K5 | ADR-0072 + CLS-02 + CLS-03 | "Chế độ lớp do giáo viên điều khiển" không còn áp dụng; không làm đăng nhập QR/PIN (ADR-0076 Rejected), đăng nhập lớp 1–3 xử lý theo CLS-02; băng thông phòng máy ở CLS-03 |
@@ -196,7 +196,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | ID | Xử lý | Ghi chú |
 |---|---|---|
 | PED-01 | ADR Accepted — ADR-0080 | Cùng K1; RISK-47, RISK-53 |
-| PED-02 | Còn mở | OQ-08; RISK-06 |
+| PED-02 | **Đã xử lý** — OQ-08 Answered (owner 2026-11-20) | CONTENT_PRODUCTION_PLAN §2–§4; RISK-06 vẫn theo dõi (năng lực đội) |
 | PED-03 | **Đã có tài liệu** [Confirmed] — [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | Cơ chế học tập nội tại (hành động chính = khái niệm học); pilot yêu cầu ≥ 2 cơ chế "kỹ năng là cách chơi" (ADR-0073, ROADMAP §3.4); chờ Game Director + EdTech duyệt |
 | PED-04 | Sửa tài liệu [Confirmed] — ACTIVITY_ENGINE, QUESTION_BANK, LEARNING_ANALYTICS | `hints:next`, `hints_used`, `w_hint`, `options[].feedback` chỉ trong kết quả chấm, `worked_example`; TC-LRN-011…012 |
 | PED-05 | Sửa tài liệu [Confirmed] — ACTIVITY_ENGINE, LEARNING_ANALYTICS | `rapid_guess`, hệ số đoán trúng, câu "anh em" cho `retry_wrong`; báo cho nhà trường thay vì giáo viên; TC-LRN-013 |
@@ -211,7 +211,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | GD-03 | Sửa tài liệu [Confirmed] — COMPETITION_SYSTEM | Bảng lớp theo nỗ lực/tiến bộ hoặc mục tiêu tập thể; RISK-12 đã sửa (leaderboard chỉ platform cấu hình); không có bật/tắt theo giáo viên |
 | GD-04 | Sửa tài liệu [Confirmed] — COMPETITION_SYSTEM | Bỏ bonus tốc độ 1v1 cho lớp 1–5 |
 | GD-05 | Sửa tài liệu [Confirmed] — PROGRESSION_SYSTEM | Quy tắc chuyển năm học |
-| GD-06 | ADR-0072 (một phần) + còn mở | Liên hệ phụ huynh qua nhà trường khi có vụ việc (ADR-0072 mục 4, OQ-13); parent portal còn mở |
+| GD-06 | ADR-0072 + OQ-13 Answered (owner 2026-11-20) | Liên hệ phụ huynh qua nhà trường khi có vụ việc (ADR-0072 mục 4); không có parent portal trong Release 1.0 |
 | GD-07 | Sửa tài liệu [Confirmed] | KPI chỉ định nghĩa ở PRODUCT_VISION §7; RISK-02 đã sửa (chat gameplay từ Phase 4) |
 | GD-08 | Không còn áp dụng (ADR-0072) | Không có giáo viên tạo quest; quest template từ nhà trường không thuộc phạm vi |
 | SAF-01 | **Deferred (ADR-0082)** — ADR-0077 hoãn | Cơ sở pháp lý, vai trò dữ liệu, consent chuyển [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md); bỏ `consent_status` khỏi DATABASE_DESIGN; OQ-12 hoãn; rủi ro chấp nhận (RISK-03, RISK-50). Nguyên tắc kỹ thuật giữ ở DATA_PRIVACY |
@@ -222,7 +222,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | CLS-01 | Không còn áp dụng (ADR-0072) | Không có Class Session do giáo viên điều khiển; "chế độ trong giờ học" thay bằng khung giờ truy cập cấp trường do `school_admin` đặt |
 | CLS-02 | **Không làm QR** (ADR-0076 Rejected 2026-11-17); một phần đã xử lý — [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) | Không có thẻ QR/PIN/mật khẩu hình; thiết bị cá nhân vào lại bằng refresh token qua màn "Tiếp tục là <nickname>?"; Windows mặc định là máy dùng chung nên phòng máy vẫn nhập username/mật khẩu ngắn do trường in phát; rủi ro còn lại ở RISK-10 |
 | CLS-03 | Sửa tài liệu [Confirmed] — PERFORMANCE_BUDGET | Ngân sách băng thông phòng máy, cache LAN, gói cài sẵn, tải trước ngoài giờ |
-| A11Y-01 | Còn mở — OQ-23 | Phần lồng tiếng `g1_3` xử lý cùng PED-07; không phụ thuộc phần deferred (lồng tiếng là audio do người soạn cung cấp, không ghi âm học sinh) |
+| A11Y-01 | **Đã xử lý** — OQ-23 Answered (owner 2026-11-20): lồng tiếng giọng người bắt buộc cho `g1_3`, không TTS phía server, TTS thiết bị chỉ dự phòng ([CONTENT_MODEL §8.1](../02-learning/CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed)) | Phần lồng tiếng `g1_3` xử lý cùng PED-07; không phụ thuộc phần deferred (lồng tiếng là audio do người soạn cung cấp, không ghi âm học sinh) |
 | PRV-01 | **Deferred (ADR-0082)** | DPIA và thời hạn thông báo vi phạm theo luật chuyển LEGAL_COMPLIANCE §6–§7; bỏ khỏi exit criteria (ROADMAP, DEPLOYMENT, CHILD_SAFETY CS-07); ghi âm giọng nói thuộc SPEAKING_ASSESSMENT (deferred) |
 | SPC-01…04 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S1–S4) | TC-LRN-007, TC-LRN-016…017 |
 | SPC-05 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S5) | Giao `activity` cho video/âm thanh/mô phỏng; tự luận/nói Deferred (ADR-0082): schema `written-response`, `speaking`, `project`, `rubric` chuyển `specs/_deferred/`, `$defs outOfRelease*` bỏ khỏi `activity-base`, `check-enums` chặn giá trị deferred |
@@ -235,7 +235,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | Công nghệ — AGENTS R23 | Đã sửa | `azp = eduworld-game-backend` |
 | Công nghệ — microservice, floci, Godot Web | floci: **Đã xử lý** (ADR-0075 Accepted); Godot Web: giữ Web từ pilot ([ADR-0079](../adr/ADR-0079-nen-tang-ban-dau-windows-va-android.md) Rejected, ADR-0013); microservice: **Đã xử lý** (ADR-0074 Accepted) | RISK-52, RISK-54, RISK-55 |
 | Công nghệ — mediator CQRS (§4.5) | Đã xử lý — [ADR-0087](../adr/ADR-0087-cqrs-tach-read-write-khong-mediator.md) | Bỏ `src/backend/pkg/mediator`; CQRS tách write/read context, cross-cutting qua middleware `src/backend/pkg/httpx` + gọi tường minh; đã sửa AGENTS R26, constitution II, BACKEND_DESIGN, F003 |
-| Công nghệ — các mục còn lại (§4.5) | Còn mở | Atlas license, NATS/Valkey, APISIX, observability, import .docx, SIS Excel |
+| Công nghệ — các mục còn lại (§4.5) | **Đã chốt** (owner 2026-11-20) | Giữ quyết định hiện hành: APISIX (ADR-0009), observability (ADR-0023), NATS JetStream + Valkey Pub/Sub (ADR-0035, ADR-0042), ent + Atlas (ADR-0039) — đều Accepted; PostgreSQL/Valkey/NATS tự vận hành trên VM cloud tại VN, chỉ object storage dùng managed (OQ-10, OQ-21); import .docx theo [CONTENT_PRODUCTION_PLAN §8](../02-learning/CONTENT_PRODUCTION_PLAN.md#8-import-wordmathtype-confirmed). Kiểm tra license tính năng Atlas trên CI và nhập SIS bằng Excel là việc triển khai, không còn là quyết định mở |
 
 **Đề xuất ADR ở §5**
 

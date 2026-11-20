@@ -314,8 +314,9 @@ Nhóm F (Godot) viết sau khi nhóm sở hữu backend tương ứng (B, D, G, 
 ## 9. Câu hỏi mở liên quan
 
 - **OQ-07** (mô hình quản trị CMS): đã trả lời bởi ADR-0072, role theo A1.
-- **OQ-08** (chương trình, bộ sách): seed GDPT 2018 Toán lớp 1–5 [Confirmed].
+- **OQ-08** (chương trình, bộ sách): Answered (owner 2026-11-20) — GDPT 2018, seed Toán lớp 1–5; nội dung pilot Toán + Tiếng Việt lớp 1–5 theo CONTENT_PRODUCTION_PLAN §3.4 [Confirmed].
 - **OQ-18** (thi chính thức): chỉ luyện/thi thử + kiểm tra nhà trường giao [Confirmed].
-- **OQ-23** (nhu cầu đặc biệt, dân tộc thiểu số): lồng tiếng `g1_3` + phụ đề [Confirmed].
-- **OQ-01** (SIS API): giai đoạn này chỉ `csv_import`; `contract_v1` + `sis-mock` làm sau M-C3.
+- **OQ-23** (nhu cầu đặc biệt, dân tộc thiểu số): Answered (owner 2026-11-20) — lồng tiếng giọng người `g1_3` + phụ đề, không TTS phía server [Confirmed].
+- **OQ-01** (SIS API): Answered (owner 2026-11-20) — giai đoạn này chỉ `csv_import`; `contract_v1` + `sis-mock` làm sau M-C3; không đồng bộ ngược SIS.
+- **OQ-17** (giới hạn cứng/ngày): Answered (owner 2026-11-20) — trường tự bật `daily_play_limit_minutes`, mặc định tắt; cài đặt cùng khung giờ truy cập của trường (F015, UI F052), thực thi ở đăng nhập game/tạo game session (F013, F014) — các spec này cần bổ sung tiêu chí.
 - Quyết định đổi thứ tự roadmap (tài liệu này) cần PM + Architect duyệt trước khi bắt đầu sprint 1.

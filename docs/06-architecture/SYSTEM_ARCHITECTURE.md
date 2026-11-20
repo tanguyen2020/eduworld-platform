@@ -314,14 +314,14 @@ Mọi môi trường: 5 database của module chung **một cụm** PostgreSQL q
 | NFR-PERF-004 | Client FPS theo hạng thiết bị ([PERFORMANCE_BUDGET §3](../08-game-client/PERFORMANCE_BUDGET.md#3-mục-tiêu-khung-hình), ADR-0057) | Máy tầm trung, preset Trung bình: Hub ổn định 30 FPS trên mobile/web (FPS p10 ≥ 27); số theo từng nền tảng/hạng ở PERFORMANCE_BUDGET | Yêu cầu Accepted, thông số [Confirmed] (ADR-0057) |
 | NFR-PERF-011 | Lời gọi facade giữa module p95 (trong tiến trình, gồm truy vấn DB của module đích) | < 50 ms (không tính xử lý nghiệp vụ nặng) | [Confirmed] |
 | NFR-PERF-012 | Độ trễ event (outbox → consumer) p95 | < 1 s | [Confirmed] |
-| NFR-SCAL-001 | Pilot | 5 trường · 5.000 học sinh · 1.000 CCU | [Confirmed] (số trường/học sinh chờ OQ-03) |
+| NFR-SCAL-001 | Pilot · năm 1 | Pilot: 5 trường · 5.000 học sinh · 1.000 CCU; năm 1: 50.000 học sinh · 5.000 CCU (trong năng lực NFR-SCAL-002) | [Confirmed — owner 2026-11-20, OQ-03] |
 | NFR-SCAL-002 | **Mục tiêu năng lực Release 1.0** | **10.000 người chơi đồng thời (CCU)** trên game | **[Confirmed]** ADR-0045 |
 | NFR-SCAL-005 | Bão đăng nhập | 5.000 lượt đăng nhập trong 10 phút; đỉnh 100 đăng nhập mật khẩu/giây (giả định thận trọng của ADR-0064 mục 6, giữ dù ADR-0086 cho vào lại bằng refresh token); 500 refresh token/giây (gồm `resume` khi mở game) | [Confirmed] ADR-0045, ADR-0064, ADR-0086 |
 | NFR-PERF-013 | Đăng nhập mật khẩu → vào hub | p95 ≤ 3 s (Keycloak xác thực p95 ≤ 800 ms) | [Confirmed] ADR-0045 |
 | NFR-PERF-014 | Refresh token; `auth/session` + `game/sessions` | p95 ≤ 200 ms; p95 ≤ 300 ms | [Confirmed] ADR-0045 |
 | NFR-PERF-015 | Publish → học sinh nhận bản mới ở lượt chơi kế tiếp | ≤ 30 s | [Confirmed] ADR-0043 |
 | NFR-PERF-016 | Tải nội dung một màn (snapshot + media đã cache CDN) | p95 ≤ 2 s trên Wi-Fi trường học/4G | [Confirmed] |
-| NFR-AVAIL-001 | Availability trong giờ học (6:30–22:00 ICT) | 99.5%/tháng | [TBD] OQ-11 |
+| NFR-AVAIL-001 | Availability trong giờ học (6:30–22:00 ICT); bảo trì theo `maintenance_window` | 99.5%/tháng | [Confirmed — owner 2026-11-20, OQ-11] |
 | NFR-AVAIL-002 | RPO / RTO dữ liệu học tập | RPO ≤ 5 phút · RTO ≤ 4 giờ (theo từng database) | [Confirmed] |
 | NFR-SEC-001 | Mọi endpoint ngoài health có authN + authZ; facade giữa module áp `TenantScope` + quyền của Principal gốc và chỉ module trong `x-allowed-callers` được gọi | 100% | [Confirmed] |
 | NFR-PRIV-001 | Dữ liệu cá nhân học sinh lưu trữ tại Việt Nam | — | [Confirmed] (rà soát pháp lý ngoài version này, ADR-0082) |
