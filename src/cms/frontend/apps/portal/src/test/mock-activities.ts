@@ -2,7 +2,7 @@
 // (F031/F058) for the Activity Builder screens — activity types of the registry, activities stored as items of
 // MockPublishing (so the generic release / preview endpoints apply), create with Idempotency-Key replay, draft PATCH
 // with If-Match (428/412), CONTENT_NOT_EDITABLE on a published version, new version, a configurable ACTIVITY_CONFIG_INVALID
-// answer, regrade preview / list / create / get. NOT a backend: the rules live in module learning.
+// answer, regrade preview / list / create / get, simulation templates (F066). NOT a backend: the rules live in module learning.
 import { problem, type RecordedRequest } from './mock-backend';
 import { P, type MockPublishing, type PItem, type PVersion } from './mock-publishing';
 
@@ -13,9 +13,37 @@ export const ACTIVITY_TYPES = [
   { activity_type: 'interactive_exercise', label: 'Interactive exercise', schema_url: 'https://schemas.eduworld.vn/content/activities/interactive-exercise.schema.json', schema_version: 1, evaluation_strategies: ['auto'], min_client_version: '0.1.0', status: 'enabled' },
   { activity_type: 'quiz', label: 'Quiz', schema_url: 'https://schemas.eduworld.vn/content/activities/quiz.schema.json', schema_version: 1, evaluation_strategies: ['auto'], min_client_version: '0.1.0', status: 'enabled' },
   { activity_type: 'video_lesson', label: 'Video lesson', schema_url: 'https://schemas.eduworld.vn/content/activities/video-lesson.schema.json', schema_version: 1, evaluation_strategies: ['completion', 'auto'], min_client_version: '0.1.0', status: 'enabled' },
+  { activity_type: 'audio_lesson', label: 'Audio lesson', schema_url: 'https://schemas.eduworld.vn/content/activities/audio-lesson.schema.json', schema_version: 1, evaluation_strategies: ['completion', 'auto'], min_client_version: '0.1.0', status: 'enabled' },
+  { activity_type: 'simulation', label: 'Simulation', schema_url: 'https://schemas.eduworld.vn/content/activities/simulation.schema.json', schema_version: 1, evaluation_strategies: ['deterministic_check', 'auto'], min_client_version: '0.1.0', status: 'enabled' },
   { activity_type: 'speaking', label: 'Speaking', schema_url: 'https://schemas.eduworld.vn/content/activities/speaking.schema.json', schema_version: 1, evaluation_strategies: ['auto'], min_client_version: '9.9.9', status: 'enabled' },
   { activity_type: 'minigame', label: 'Minigame', schema_url: 'https://schemas.eduworld.vn/content/activities/minigame.schema.json', schema_version: 1, evaluation_strategies: ['auto'], min_client_version: '0.1.0', status: 'disabled' },
 ];
+
+/** MOCK copy of the physics.lever v1 descriptor (module learning owns the real one) for listSimulationTemplates. */
+export const LEVER_TEMPLATE = {
+  template_code: 'physics.lever',
+  template_version: 1,
+  title: 'Cân bằng đòn bẩy',
+  simulation_kind: 'physics',
+  status: 'active',
+  checker_available: true,
+  min_client_version: '0.1.0',
+  parameter_schema: {
+    type: 'object',
+    required: ['arm_length_m', 'slots_per_side', 'mass_1_kg', 'mass_2_kg'],
+    properties: {
+      arm_length_m: { type: 'number', minimum: 0.2, maximum: 5, title: 'Chiều dài mỗi cánh tay đòn (m)' },
+      slots_per_side: { type: 'integer', minimum: 1, maximum: 10, title: 'Số ô đặt vật mỗi bên' },
+      mass_1_kg: { type: 'number', minimum: 0.1, maximum: 50, title: 'Khối lượng vật 1 (kg)' },
+      mass_2_kg: { type: 'number', minimum: 0.1, maximum: 50, title: 'Khối lượng vật 2 (kg)' },
+    },
+  },
+  actions: [{ action: 'place_mass' }, { action: 'release' }],
+  metrics: [
+    { metric: 'torque_diff', unit: 'N·m' },
+    { metric: 'balanced', unit: '' },
+  ],
+};
 
 export interface MockRegrade {
   regrade_request_id: string;
@@ -40,6 +68,8 @@ export class MockActivities {
   /** Attempts affected by a regrade preview, by version id. */
   affected: Record<string, number> = {};
   regrades: MockRegrade[] = [];
+  /** Templates returned by listSimulationTemplates. */
+  simulationTemplates: Record<string, unknown>[] = [LEVER_TEMPLATE];
   /** Status the next getRegradeRequest moves a request to (queued → running → completed by default). */
   progress: string[] = ['running', 'completed'];
   private readonly idem = new Map<string, Response>();
@@ -90,6 +120,7 @@ export class MockActivities {
     const perms = this.perms(r);
     let m: RegExpMatchArray | null;
     if (p === '/cms/learning/activity-types' && r.method === 'GET') return json(200, { data: this.types });
+    if (p === '/cms/learning/simulation-templates' && r.method === 'GET') return json(200, { data: this.simulationTemplates });
     if (p === '/cms/learning/questions' && r.method === 'GET' && this.questions.length > 0) return json(200, { data: this.questions, page: { has_more: false, limit: 50 } });
     if (p === '/cms/learning/activities' && r.method === 'GET') {
       const q = new URLSearchParams(r.search);

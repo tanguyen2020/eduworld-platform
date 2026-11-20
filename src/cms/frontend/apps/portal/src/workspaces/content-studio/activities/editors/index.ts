@@ -1,5 +1,5 @@
-// Built-in editors of the Activity Builder (F058): quiz, interactive_exercise, video_lesson. Imported once by the
-// activities screen; F066 adds audio_lesson and simulation the same way (registerActivityEditor).
+// Built-in editors of the Activity Builder (F058): quiz, interactive_exercise, video_lesson; F066 adds audio_lesson and
+// simulation the same way (registerActivityEditor). Imported once by the activities screen.
 import type { EditorBlocker } from '@eduworld/ops-ui/content';
 import type { Config } from '../activityModel';
 import { registerActivityEditor, type BlockerContext } from '../editorRegistry';
@@ -7,6 +7,8 @@ import { allowedTypesOf } from '../activityModel';
 import { sourceIssues, type QuestionSource } from '../validators/questionSourceRules';
 import { QuestionActivityEditor, questionConfig } from './QuestionActivityEditor';
 import { VideoLessonEditor, videoBlockers, videoConfig } from './VideoLessonEditor';
+import { AudioLessonEditor, audioBlockers, audioConfig } from './audio_lesson/AudioLessonEditor';
+import { SimulationEditor, simulationBlockers, simulationConfig } from './simulation/SimulationEditor';
 
 const questionBlockers =
   (type: 'quiz' | 'interactive_exercise') =>
@@ -25,3 +27,5 @@ registerActivityEditor({
   blockers: questionBlockers('interactive_exercise'),
 });
 registerActivityEditor({ type: 'video_lesson', labelKey: 'content_studio.activity.types.video_lesson', empty: videoConfig, Editor: VideoLessonEditor, blockers: videoBlockers });
+registerActivityEditor({ type: 'audio_lesson', labelKey: 'content_studio.activity.types.audio_lesson', empty: audioConfig, Editor: AudioLessonEditor, blockers: audioBlockers });
+registerActivityEditor({ type: 'simulation', labelKey: 'content_studio.activity.types.simulation', empty: simulationConfig, Editor: SimulationEditor, blockers: simulationBlockers });

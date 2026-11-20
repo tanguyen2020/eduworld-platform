@@ -7,6 +7,7 @@ import { CurriculumTreePage } from './curriculum/CurriculumTreePage';
 import { MediaLibraryPage } from './media/MediaLibraryPage';
 import { QuestionBankScreen } from './questions/QuestionBankScreen';
 import { RegradeScreen } from './regrade/RegradeScreen';
+import { SimulationTemplatesScreen } from './simulations/SimulationTemplatesScreen';
 import { ReviewsScreen } from './review/ReviewQueuePage';
 import { AssessmentsScreen, LearningPathsScreen, LessonsScreen, QuestionSetsScreen } from './screens';
 
@@ -14,7 +15,7 @@ export const screens = {
   'menu.content_studio.curriculum': CurriculumTreePage, // F053 US4
   'menu.content_studio.lessons': LessonsScreen, // F054 US4
   'menu.content_studio.activities': ActivitiesScreen, // F058
-  'menu.content_studio.simulations': placeholderScreen,
+  'menu.content_studio.simulations': SimulationTemplatesScreen, // F066 US4
   'menu.content_studio.question_bank': QuestionBankScreen, // F053 US1–US3, US5; F054 list, import, release
   'menu.content_studio.question_sets': QuestionSetsScreen, // F054 US4
   'menu.content_studio.assessments': AssessmentsScreen, // F054 US4

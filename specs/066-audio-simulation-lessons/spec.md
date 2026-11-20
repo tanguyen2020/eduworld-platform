@@ -30,6 +30,13 @@
 - Q: AC-15 (`not_verifiable`) kiểm thế nào khi danh mục chỉ có template có checker? → A: [Confirmed] Đường `checker_available = false` có trong code (run `not_verifiable`, không evidence, hoàn thành khi có run); chưa có test tích hợp vì chưa có template quan sát — thêm cùng template đầu tiên loại này.
 - Q: Editor portal (US4) phụ thuộc F058 (editor registry của Activity Builder) đang `Ready`, chưa có mã? → A: Không làm US4 trong lần này (R34: không tự dựng Activity Builder); T044, T045, T052, T053 để mở, chờ F058.
 
+### Session 2026-11-21 (US4 — editor portal sau F058, mặc định [Proposed])
+
+- Q: Editor đặt ở đâu và cắm vào Activity Builder thế nào? → A: [Proposed] Theo F058 (Clarifications 2026-11-20): `apps/portal/src/workspaces/content-studio/activities/editors/audio_lesson/`, `…/editors/simulation/`, đăng ký bằng `registerActivityEditor` (bước 1 tự hiện "Bài nghe", "Mô phỏng" khi loại `enabled`); kiểm schema bằng ajv của F058 trên bản sinh `audio-lesson.schema.json`, `simulation.schema.json`.
+- Q: Transcript chọn từ thư viện media loại nào? → A: [Proposed] `MediaKind.subtitle` (`text/vtt`, F027 T040) — cùng loại phụ đề video; không thêm loại media mới.
+- Q: Màn `menu.content_studio.simulations` (plan: menu feature hiện thực) hiển thị gì? → A: [Proposed] Danh mục template đóng gói (`listSimulationTemplates`): mã, version, loại, trạng thái, bộ kiểm tra server, tham số, đại lượng — chỉ đọc (template đi cùng mã, ADR-0052, không tải script). Trong editor, danh sách template theo action `action.content_studio.simulations.view`; action/menu tắt → thông báo "Tính năng đang tắt", không gọi API.
+- Q: Thời lượng audio cho kiểm tra mốc thời gian? → A: [Proposed] Lấy `duration_ms` của asset (`getMediaAsset`) để hiện lỗi trong editor; khóa Gửi duyệt chỉ dùng quy tắc tương đối (thứ tự, chồng lấn, trùng mã, thiếu audio/transcript) vì trang chưa có thời lượng lúc tính — module learning vẫn kiểm đầy đủ (`ACTIVITY_CONFIG_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Server phục vụ và chấm bài nghe (Priority: P1) 🎯 MVP

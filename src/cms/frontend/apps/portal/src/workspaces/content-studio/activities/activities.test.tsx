@@ -87,7 +87,9 @@ describe('Activity Builder (F058)', () => {
       a.add(ID, [{ status: 'draft', content: { activity_type: 'quiz', ...meta, config: quizConfig([{ question_version_id: QV }]) } }], { tenant_id: TENANT });
     });
     const { backend } = await renderPublishing(`/content-studio/activities/${ID}`, { account: tenantUser(), setup: h.setup });
-    fireEvent.change(await screen.findByLabelText('Tiêu đề (Tiếng Việt)'), { target: { value: 'Luyện bảng nhân 3 (mới)' } });
+    // the draft must be in the form before typing, or loading it would reset the edit
+    await waitFor(() => expect(screen.getByLabelText('Tiêu đề (Tiếng Việt)')).toHaveValue('Luyện bảng nhân 3'), { timeout: 30_000 });
+    fireEvent.change(screen.getByLabelText('Tiêu đề (Tiếng Việt)'), { target: { value: 'Luyện bảng nhân 3 (mới)' } });
     await waitFor(() => expect(backend.calls('PATCH', `/cms/learning/activities/${ID}`)).toHaveLength(1), { timeout: 60_000 });
     const patch = backend.calls('PATCH', `/cms/learning/activities/${ID}`)[0]!;
     expect(patch.headers['if-match']).toBe('W/"1"');
