@@ -10,7 +10,7 @@ import { filtersToQuery } from '../list/useContentList';
 import { checkMediaFile, kindOfFile } from '../media/mediaRules';
 import { buildResponse, canTryOut, emptyAnswer, moveItem } from '../preview/tryOutResponse';
 import { emptyQuestionSet, fromQuestionSet, questionSetIssues, toQuestionSetBody } from '../question-sets/questionSetModel';
-import { bulkAllowed, composeReviewNote, isOverdue, noteFits } from '../review/reviewRules';
+import { bulkAllowed, isOverdue, toFieldComments } from '../review/reviewRules';
 import type { BlueprintAuthoring, LessonAuthoring, QuestionSetAuthoring } from './useDocument';
 
 const t = (k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k);
@@ -111,13 +111,16 @@ describe('review rules (F054-AC-12, AC-13, AC-14)', () => {
     expect(isOverdue({ submitted_at: '2026-11-18T00:00:00Z', due_at: '2026-11-19T00:00:00Z' }, now)).toBe(true);
     expect(isOverdue({ submitted_at: '2026-11-01T00:00:00Z', status: 'approved' }, now)).toBe(false);
   });
-  it('bulk cap content_review_bulk_max = 50; field notes composed into the note (≤ 2000)', () => {
+  it('bulk cap content_review_bulk_max = 50; field comments as JSON pointers (OQ F054-1)', () => {
     expect(bulkAllowed(50)).toBe(true);
     expect(bulkAllowed(51)).toBe(false);
     expect(bulkAllowed(0)).toBe(false);
-    expect(composeReviewNote(' Sai đáp án ', [{ path: 'stem', comment: 'Thiếu đơn vị' }, { path: '', comment: 'bỏ' }])).toBe('Sai đáp án\n[stem] Thiếu đơn vị');
-    expect(noteFits('x'.repeat(2000))).toBe(true);
-    expect(noteFits('x'.repeat(2001))).toBe(false);
+    expect(toFieldComments([{ path: ' stem/vi ', comment: ' Thiếu đơn vị ' }, { path: '/answer_key', comment: 'Sai' }, { path: '', comment: 'Cả câu' }, { path: '/hints', comment: '  ' }])).toEqual([
+      { path: '/stem/vi', comment: 'Thiếu đơn vị' },
+      { path: '/answer_key', comment: 'Sai' },
+      { path: '', comment: 'Cả câu' },
+    ]);
+    expect(toFieldComments([{ path: 'x'.repeat(256), comment: 'c' }])[0]!.path).toHaveLength(256);
   });
 });
 

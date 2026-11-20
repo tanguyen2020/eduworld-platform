@@ -346,14 +346,18 @@
       "rejectTitle": "Reject version v{{version}}",
       "reason": "Rejection reason",
       "field": "Field {{n}}",
-      "fieldPlaceholder": "Field (e.g. stem, answer, block 2)",
-      "fieldRequired": "Enter the field.",
+      "fieldPlaceholder": "Field, e.g. /stem/vi",
+      "fieldHelp": "JSON pointer to the field; leave empty for a note on the whole version.",
       "comment": "Note {{n}}",
       "commentPlaceholder": "Note on this field",
       "commentRequired": "Enter the note.",
       "addComment": "Add a field note",
       "removeComment": "Remove",
-      "noteTooLong": "The reason and notes exceed {{max}} characters."
+      "commentsMax": "At most {{max}} field notes.",
+      "fieldComments": {
+        "title": "Reviewer notes from the rejection of v{{version}}",
+        "whole": "Whole version"
+      }
     },
     "questionSet": {
       "newTitle": "New question set",

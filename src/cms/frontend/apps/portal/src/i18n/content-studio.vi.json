@@ -346,14 +346,18 @@
       "rejectTitle": "Từ chối phiên bản v{{version}}",
       "reason": "Lý do từ chối",
       "field": "Trường {{n}}",
-      "fieldPlaceholder": "Trường (vd. stem, đáp án, khối 2)",
-      "fieldRequired": "Nhập tên trường.",
+      "fieldPlaceholder": "Trường, vd. /stem/vi",
+      "fieldHelp": "Đường dẫn JSON pointer tới trường; để trống nếu nhận xét chung cho cả phiên bản.",
       "comment": "Ghi chú {{n}}",
       "commentPlaceholder": "Ghi chú cho trường này",
       "commentRequired": "Nhập ghi chú.",
       "addComment": "Thêm ghi chú theo trường",
       "removeComment": "Bỏ",
-      "noteTooLong": "Lý do và ghi chú vượt quá {{max}} ký tự."
+      "commentsMax": "Tối đa {{max}} ghi chú theo trường.",
+      "fieldComments": {
+        "title": "Ghi chú của người duyệt khi từ chối v{{version}}",
+        "whole": "Cả phiên bản"
+      }
     },
     "questionSet": {
       "newTitle": "Tạo bộ câu hỏi",

@@ -1,9 +1,9 @@
 // reviewRules (F054-AC-12, AC-13, AC-14, ADMIN_PORTAL §4 — pure display helpers): overdue warning of a review task
 // (`due_at`, else submitted + `content_review_sla_days`), the bulk approve cap (`content_review_bulk_max`) and the
-// rejection note with per-field comments. [Proposed] until `transitionContentVersion` has `field_comments[]` (Open
-// question F054-2), field comments are written into `note` as "[path] comment" lines (≤ 2000 characters).
+// per-field comments of a rejection (`field_comments[]` of transitionContentVersion, OQ F054-1 / F025 T046).
 import type { components } from '../../../shared/api/schema.gen';
-import { CONTENT_REVIEW_BULK_MAX, CONTENT_REVIEW_SLA_DAYS, LIMITS } from '../shared/config';
+import { CONTENT_REVIEW_BULK_MAX, CONTENT_REVIEW_SLA_DAYS } from '../shared/config';
+import { FIELDS } from '../shared/fieldSchemas';
 
 export type ReviewTask = components['schemas']['ContentReviewTask'];
 
@@ -22,17 +22,18 @@ export function bulkAllowed(count: number): boolean {
   return count > 0 && count <= CONTENT_REVIEW_BULK_MAX;
 }
 
-export interface FieldComment {
-  path: string;
-  comment: string;
-}
+export type FieldComment = components['schemas']['ReviewFieldComment'];
 
-/** Rejection note: the reason, then one "[path] comment" line per field note. */
-export function composeReviewNote(reason: string, comments: readonly FieldComment[]): string {
-  const lines = comments.filter((c) => c.path.trim() && c.comment.trim()).map((c) => `[${c.path.trim().slice(0, LIMITS.fieldPath)}] ${c.comment.trim()}`);
-  return [reason.trim(), ...lines].join('\n');
+/**
+ * Field comments sent with a rejection (JSON pointer `path`, empty = the whole version): trimmed, rows without a
+ * comment dropped, a path written without the leading "/" ("stem/vi") turned into a pointer. The server validates
+ * again (422 VALIDATION_FAILED).
+ */
+export function toFieldComments(rows: readonly { path?: string; comment?: string }[]): FieldComment[] {
+  return rows
+    .map((r) => ({ path: (r.path ?? '').trim(), comment: (r.comment ?? '').trim() }))
+    .filter((r) => r.comment)
+    .map((r) => ({ path: (r.path && !r.path.startsWith('/') ? `/${r.path}` : r.path).slice(0, FIELDS.reviewFieldPath.maxLength), comment: r.comment }));
 }
-
-export const noteFits = (note: string) => note.length <= LIMITS.transitionNote;
 
 export const taskKey = (t: Pick<ReviewTask, 'content_type' | 'content_id' | 'version'>) => `${t.content_type}:${t.content_id}:${t.version}`;

@@ -1,10 +1,11 @@
 // F054 T029–T032 (whole portal + MOCK backend; Playwright with the real backend pending — OQ F051-9): review queue.
 //   AC-12 tasks by lane / type / "giao cho tôi", submission time, overdue · AC-15 tenant reviewer: no tenant_ids, no
 //   platform lane · AC-13 task page: diff with the current version + preview, approve (If-Match), reject with reason +
-//   field notes · AC-14 bulk approval: one Idempotency-Key per item, result per item incl. the author's own version.
+//   field comments (`field_comments[]`, OQ F054-1) · AC-14 bulk approval: one Idempotency-Key per item, result per item
+//   incl. the author's own version · OQ F054-1 the author sees the comments of the latest rejection in the editor.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { P, renderPublishing, stopPortals, TENANTS, tenantUser, type MockPublishing } from '../../../test/publishing-harness';
+import { contentAccount, P, renderPublishing, stopPortals, TENANT_CONTENT_PERMS, TENANTS, tenantUser, type MockPublishing } from '../../../test/publishing-harness';
 
 afterEach(() => stopPortals());
 
@@ -39,7 +40,7 @@ describe('Hàng đợi duyệt (F054 US2)', () => {
     await waitFor(() => expect(backend.calls('GET', '/cms/learning/review-tasks').some((r) => r.search.includes('assigned_to_me=true'))).toBe(true));
   });
 
-  it('AC-13: task page shows the diff with the current version and the preview; approve with If-Match; reject needs a reason and keeps field notes', async () => {
+  it('AC-13: task page shows the diff with the current version and the preview; reject needs a reason and sends field_comments', async () => {
     const { backend } = await renderPublishing(`/content-studio/reviews/question/${P(101)}/2`, { account: tenantUser(), setup: (m) => seed(m) });
     expect(await screen.findByTestId('version-diff')).toHaveTextContent('So sánh v1 → v2');
     expect(screen.getByTestId('preview-panel')).toBeInTheDocument();
@@ -49,13 +50,27 @@ describe('Hàng đợi duyệt (F054 US2)', () => {
     expect(await within(dialog).findByText('Bắt buộc nhập lý do.')).toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText('Lý do từ chối'), { target: { value: 'Đáp án chưa đúng' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Thêm ghi chú theo trường' }));
-    fireEvent.change(await within(dialog).findByLabelText('Trường 1'), { target: { value: 'stem' } });
+    fireEvent.change(await within(dialog).findByRole('combobox', { name: 'Trường 1' }), { target: { value: 'stem/vi' } });
+    expect(within(dialog).getByRole('combobox', { name: 'Trường 1' })).toHaveAttribute('maxlength', '256');
+    expect(within(dialog).getByLabelText('Ghi chú 1')).toHaveAttribute('maxlength', '1000');
+    // a comment is required once the row exists; the path may stay empty (= the whole version)
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Thêm ghi chú theo trường' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    expect((await within(dialog).findAllByText('Nhập ghi chú.')).length).toBeGreaterThan(0);
     fireEvent.change(within(dialog).getByLabelText('Ghi chú 1'), { target: { value: 'Thiếu đơn vị' } });
+    fireEvent.change(within(dialog).getByLabelText('Ghi chú 2'), { target: { value: 'Trình bày lại' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
     const path = `/cms/learning/content/question/${P(101)}/versions/2:transition`;
     await waitFor(() => expect(backend.calls('POST', path)).toHaveLength(1));
     const call = backend.calls('POST', path)[0]!;
-    expect(call.body).toEqual({ action: 'reject', note: 'Đáp án chưa đúng\n[stem] Thiếu đơn vị' });
+    expect(call.body).toEqual({
+      action: 'reject',
+      note: 'Đáp án chưa đúng',
+      field_comments: [
+        { path: '/stem/vi', comment: 'Thiếu đơn vị' },
+        { path: '', comment: 'Trình bày lại' },
+      ],
+    });
     expect(call.headers['if-match']).toBe('W/"1"');
     expect(call.headers['idempotency-key']).toBeTruthy();
     expect(await screen.findByText('Câu 2')).toBeInTheDocument(); // back to the queue
@@ -101,6 +116,41 @@ describe('Hàng đợi duyệt (F054 US2)', () => {
     expect(within(dialog).getByText('Mỗi lần duyệt tối đa 50 nội dung.')).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Duyệt 51 nội dung' })).toBeDisabled();
     expect(backend.requests.filter((r) => r.path.endsWith(':transition'))).toHaveLength(0);
+  });
+
+  it('OQ F054-1: the author sees the field comments of the latest rejection in the editor (question set)', async () => {
+    const QS = P(150);
+    const AUTHOR = P(900);
+    const setup = (m: MockPublishing) => {
+      m.add({ id: QS, type: 'question_set', tenant_id: A, title: { vi: 'Luyện nhân' }, versions: [{ status: 'in_review', author_id: AUTHOR, content: { title: { vi: 'Luyện nhân' }, definition: { kind: 'static', purpose: 'exercise', items: [] } } }] });
+      m.reviewTasks.push({ content_type: 'question_set', content_id: QS, version: 1, title: 'Luyện nhân', lane: 'tenant', tenant_id: A, status: 'open', author_id: AUTHOR, submitted_at: '2026-11-20T01:00:00Z' });
+    };
+    // the reviewer rejects with one field comment
+    const { mock } = await renderPublishing(`/content-studio/reviews/question_set/${QS}/1`, { account: tenantUser(), setup });
+    fireEvent.click(await screen.findByRole('button', { name: 'Từ chối' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Từ chối phiên bản v1' });
+    fireEvent.change(within(dialog).getByLabelText('Lý do từ chối'), { target: { value: 'Chưa đủ câu' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Thêm ghi chú theo trường' }));
+    fireEvent.change(await within(dialog).findByRole('combobox', { name: 'Trường 1' }), { target: { value: '/definition/items' } });
+    fireEvent.change(within(dialog).getByLabelText('Ghi chú 1'), { target: { value: 'Cần ít nhất 5 câu' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await waitFor(() => expect(mock.items.get(QS)!.versions[0]!.status).toBe('rejected'));
+    const rejected = mock.items.get(QS)!.versions[0]!;
+    expect(rejected.field_comments).toEqual([{ path: '/definition/items', comment: 'Cần ít nhất 5 câu' }]);
+    stopPortals();
+    document.body.innerHTML = '';
+    // the author opens the rejected version in the editor
+    await renderPublishing(`/content-studio/question-sets/${QS}`, {
+      account: contentAccount('gv.tacgia.a', TENANTS.thDemoA, TENANT_CONTENT_PERMS, AUTHOR),
+      setup: (m) => {
+        setup(m);
+        m.items.get(QS)!.versions[0] = { ...rejected };
+      },
+    });
+    const box = await screen.findByTestId('review-field-comments');
+    expect(box).toHaveTextContent('Ghi chú của người duyệt khi từ chối v1');
+    expect(within(box).getByText('/definition/items')).toBeInTheDocument();
+    expect(box).toHaveTextContent('Cần ít nhất 5 câu');
   });
 
   it('AC-30: below 768 px the queue is a list of cards and a task can still be decided', async () => {

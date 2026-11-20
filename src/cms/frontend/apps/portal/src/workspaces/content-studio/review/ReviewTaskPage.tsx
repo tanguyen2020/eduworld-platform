@@ -1,10 +1,11 @@
 // ReviewTaskPage (F054-AC-13, AC-30, SC-001, CONTENT_MODEL §6): one review task — by default the diff against the
 // version students get now (or the previous version for a first publication) and the student preview of the version
 // under review; "Duyệt" (with the audio-exemption acknowledgement when the version has one) and "Từ chối" (reason
-// required + per-field notes, composed into `note` [Proposed]). The author of the version gets no decision buttons
-// (the server refuses anyway: reviewer ≠ author). Deciding works on every breakpoint; the diff needs ≥ 1024 px.
+// required + per-field comments sent as `field_comments[]` — JSON pointer path, ≤ 50, OQ F054-1). Comments of an
+// earlier rejection of the same version are shown above. The author of the version gets no decision buttons (the
+// server refuses anyway: reviewer ≠ author). Deciding works on every breakpoint; the diff needs ≥ 1024 px.
 import { DomainTag } from '@eduworld/ops-ui';
-import { Alert, App as AntApp, Button, Card, Checkbox, Flex, Form, Input, Modal, Result, Skeleton, Space, Typography } from 'antd';
+import { Alert, AutoComplete, App as AntApp, Button, Card, Checkbox, Flex, Form, Input, Modal, Result, Skeleton, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -16,14 +17,15 @@ import { PreviewPanel } from '../preview/PreviewPanel';
 import { useVersionDetail, useVersions, type ItemRef } from '../release/useRelease';
 import { VersionDiffView } from '../release/VersionDiffView';
 import { useContentAccess } from '../shared/access';
-import { LIMITS } from '../shared/config';
 import { CONTENT_TYPES } from '../shared/contentTypes';
-import { composeReviewNote, noteFits, type FieldComment } from './reviewRules';
+import { FIELDS, LIMITS } from '../shared/fieldSchemas';
+import { ReviewFieldComments } from './ReviewFieldComments';
+import { toFieldComments } from './reviewRules';
 import { useReviewDecision } from './useReviewTasks';
 
 interface RejectForm {
   reason: string;
-  comments?: FieldComment[];
+  comments?: { path?: string; comment?: string }[];
 }
 
 export function ReviewTaskPage({ item, version }: { item: ItemRef; version: number }) {
@@ -38,7 +40,6 @@ export function ReviewTaskPage({ item, version }: { item: ItemRef; version: numb
   const [ack, setAck] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [form] = Form.useForm<RejectForm>();
-  const [noteError, setNoteError] = useState<string | null>(null);
 
   if (detail.isPending || history.isPending) return <Skeleton active />;
   if (detail.error) return detail.error instanceof ApiError && detail.error.status === 404 ? <Result status="404" title={t('content_studio.review.notFound')} /> : <ProblemMessage error={detail.error} />;
@@ -50,6 +51,9 @@ export function ReviewTaskPage({ item, version }: { item: ItemRef; version: numb
   const canDecide = v.status === 'in_review' && access.question.review && !isAuthor;
   const back = () => navigate('../../../', { relative: 'path' });
   const lang = v.content_language === 'en' ? 'en' : 'vi';
+  // suggestions for the field pointer: the top-level fields of the version under review (free text stays allowed)
+  const pointers = Object.keys(v.content ?? {}).map((k) => ({ value: `/${k}` }));
+  const maxComments = LIMITS.reviewFieldComments.maxItems;
 
   const approve = () =>
     decision.mutate(
@@ -69,6 +73,7 @@ export function ReviewTaskPage({ item, version }: { item: ItemRef; version: numb
         <DomainTag kind="content_status" value={v.status} />
       </Flex>
       {isAuthor && <Alert type="info" showIcon message={t('content_studio.review.ownContent')} />}
+      <ReviewFieldComments item={item} version={version} />
       {decision.error ? <ProblemMessage error={decision.error} /> : null}
       {canDecide && (
         <Card size="small">
@@ -111,14 +116,9 @@ export function ReviewTaskPage({ item, version }: { item: ItemRef; version: numb
         onOk={async () => {
           const f = await form.validateFields().catch(() => null);
           if (!f) return;
-          const note = composeReviewNote(f.reason, f.comments ?? []);
-          if (!noteFits(note)) {
-            setNoteError(t('content_studio.review.noteTooLong', { max: LIMITS.transitionNote }));
-            return;
-          }
-          setNoteError(null);
+          const fieldComments = toFieldComments(f.comments ?? []);
           decision.mutate(
-            { ...item, version, action: 'reject', note },
+            { ...item, version, action: 'reject', note: f.reason.trim(), fieldComments },
             {
               onSuccess: () => {
                 message.success(t('content_studio.review.rejected', { version }));
@@ -130,29 +130,38 @@ export function ReviewTaskPage({ item, version }: { item: ItemRef; version: numb
         }}
       >
         <Form form={form} layout="vertical" preserve={false}>
-          <Form.Item name="reason" label={t('content_studio.review.reason')} rules={[{ required: true, whitespace: true, message: t('content_studio.release.reasonRequired') }, { max: LIMITS.transitionNote }]}>
-            <Input.TextArea aria-label={t('content_studio.review.reason')} maxLength={LIMITS.transitionNote} showCount autoSize={{ minRows: 2, maxRows: 6 }} />
+          <Form.Item name="reason" label={t('content_studio.review.reason')} rules={[{ required: true, whitespace: true, message: t('content_studio.release.reasonRequired') }, { max: FIELDS.transitionNote.maxLength }]}>
+            <Input.TextArea aria-label={t('content_studio.review.reason')} maxLength={FIELDS.transitionNote.maxLength} showCount autoSize={{ minRows: 2, maxRows: 6 }} />
           </Form.Item>
           <Form.List name="comments">
             {(fields, { add, remove }) => (
               <Flex vertical gap="small">
                 {fields.map((field, i) => (
                   <Space key={field.key} align="start" wrap>
-                    <Form.Item name={[field.name, 'path']} rules={[{ required: true, message: t('content_studio.review.fieldRequired') }]}>
-                      <Input aria-label={t('content_studio.review.field', { n: i + 1 })} placeholder={t('content_studio.review.fieldPlaceholder')} maxLength={LIMITS.fieldPath} />
+                    <Form.Item name={[field.name, 'path']} extra={i === 0 ? t('content_studio.review.fieldHelp') : undefined}>
+                      <AutoComplete
+                        aria-label={t('content_studio.review.field', { n: i + 1 })}
+                        placeholder={t('content_studio.review.fieldPlaceholder')}
+                        maxLength={FIELDS.reviewFieldPath.maxLength}
+                        options={pointers}
+                        filterOption={(input, o) => String(o?.value ?? '').toLowerCase().includes(input.toLowerCase())}
+                        style={{ minWidth: 200 }}
+                      />
                     </Form.Item>
-                    <Form.Item name={[field.name, 'comment']} rules={[{ required: true, message: t('content_studio.review.commentRequired') }]}>
-                      <Input.TextArea aria-label={t('content_studio.review.comment', { n: i + 1 })} placeholder={t('content_studio.review.commentPlaceholder')} maxLength={1000} autoSize />
+                    <Form.Item name={[field.name, 'comment']} rules={[{ required: true, whitespace: true, message: t('content_studio.review.commentRequired') }, { max: FIELDS.reviewFieldComment.maxLength }]}>
+                      <Input.TextArea aria-label={t('content_studio.review.comment', { n: i + 1 })} placeholder={t('content_studio.review.commentPlaceholder')} maxLength={FIELDS.reviewFieldComment.maxLength} autoSize />
                     </Form.Item>
                     <Button onClick={() => remove(field.name)}>{t('content_studio.review.removeComment')}</Button>
                   </Space>
                 ))}
-                <Button onClick={() => add({ path: '', comment: '' })}>{t('content_studio.review.addComment')}</Button>
+                <Button disabled={fields.length >= maxComments} onClick={() => add({ path: '', comment: '' })}>
+                  {t('content_studio.review.addComment')}
+                </Button>
+                {fields.length >= maxComments && <Typography.Text type="secondary">{t('content_studio.review.commentsMax', { max: maxComments })}</Typography.Text>}
               </Flex>
             )}
           </Form.List>
         </Form>
-        {noteError && <Alert type="error" showIcon message={noteError} />}
         {decision.error ? <ProblemMessage error={decision.error} /> : null}
       </Modal>
     </Flex>

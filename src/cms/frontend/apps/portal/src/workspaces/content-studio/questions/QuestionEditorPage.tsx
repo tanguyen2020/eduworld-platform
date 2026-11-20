@@ -32,6 +32,7 @@ import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { LargeScreenRequired } from '../../../shell/StatusPages';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { MediaPicker } from '../media/MediaPicker';
+import { ReviewFieldComments } from '../review/ReviewFieldComments';
 import { gateQuestionAction, useContentAccess } from '../shared/access';
 import { AssignedBadge } from '../shared/AssignedBadge';
 import { ASSETS_PER_VERSION_MAX, CONTENT_AUTOSAVE_DEBOUNCE_MS, CONTENT_AUTOSAVE_INTERVAL_MS, EDITOR_MIN_WIDTH_QUERY, LIMITS } from '../shared/config';
@@ -300,6 +301,7 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
           </Flex>
         )}
         {status === 'published' && <Alert type="info" showIcon message={t('content_studio.question.publishedReadOnly', { version: server?.version })} />}
+        {questionId && server && EDITABLE.has(status) && <ReviewFieldComments item={{ contentType: 'question', contentId: questionId }} version={server.version} />}
         <QuestionEditor
           value={state.draft}
           onChange={(draft) => change({ ...state, draft })}

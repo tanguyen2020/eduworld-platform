@@ -1,5 +1,6 @@
 // Parameters of the Content Studio editors (AGENTS R33): values come from CONFIG_DEFAULTS rows whose scope is
 // "code" (no runtime setting exists for them) or from contract `maxItems` / `maxLength`; named once here.
+import { FIELDS } from './fieldSchemas';
 
 /** CONFIG_DEFAULTS `content_autosave_interval` = 10 s (ADMIN_PORTAL §1.4, scope code). */
 export const CONTENT_AUTOSAVE_INTERVAL_MS = 10_000;
@@ -56,7 +57,7 @@ export const MEDIA_RULES = {
 /** Rows of one question import (importer `MaxImportRows`, F024). */
 export const IMPORT_MAX_ROWS = 5000;
 
-/** OpenAPI limits used by the forms (ADR-0041). */
+/** OpenAPI limits used by the forms (ADR-0041); new limits go to fieldSchemas.ts (checked against the spec). */
 export const LIMITS = {
   /** RollbackRequest.reason, ReasonRequest.reason, delete* reason. */
   releaseReason: 500,
@@ -67,10 +68,9 @@ export const LIMITS = {
   search: 200,
   /** LearningName (vi / en). */
   name: 255,
-  /** Field path of a review note (F054-AC-13). */
-  fieldPath: 256,
   changeNote: 500,
-  transitionNote: 2000,
+  /** transitionContentVersion note (mirrored and checked in fieldSchemas.ts). */
+  transitionNote: FIELDS.transitionNote.maxLength,
   audioExemptReason: 255,
   tag: 50,
   tags: 20,

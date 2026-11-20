@@ -1,7 +1,8 @@
 // useReviewTasks / useReviewDecision (F054-AC-12…AC-15, ADMIN_PORTAL §4): the review queue (listContentReviewTasks
 // by lane / content_type / "giao cho tôi"; `tenant_ids` only for the System Admin filter — a tenant reviewer never
 // sends it and only gets what the API returns) and the decision on one version (transitionContentVersion approve /
-// reject with If-Match + Idempotency-Key). Bulk approval sends one intent per item (its own Idempotency-Key).
+// reject with If-Match + Idempotency-Key; `field_comments[]` with reject only, OQ F054-1). Bulk approval sends one
+// intent per item (its own Idempotency-Key).
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
@@ -11,7 +12,7 @@ import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { versionEtag, type ItemRef } from '../release/useRelease';
 import type { ContentType } from '../shared/contentTypes';
-import type { ReviewTask } from './reviewRules';
+import type { FieldComment, ReviewTask } from './reviewRules';
 
 export interface ReviewFilters {
   lane?: 'tenant' | 'platform_learning';
@@ -45,6 +46,8 @@ export interface DecisionVars extends ItemRef {
   version: number;
   action: 'approve' | 'reject';
   note?: string;
+  /** Per-field comments, sent with `reject` only (OQ F054-1). */
+  fieldComments?: FieldComment[];
   audioExemptionAcknowledged?: boolean;
 }
 
@@ -54,7 +57,12 @@ export function decide(api: ApiClient, v: DecisionVars, intent: Record<string, s
     api.call(
       api.client.POST('/cms/learning/content/{content_type}/{content_id}/versions/{version}:transition', {
         params: { path: { content_type: v.contentType, content_id: v.contentId, version: v.version } },
-        body: { action: v.action, ...(v.note ? { note: v.note } : {}), ...(v.audioExemptionAcknowledged ? { audio_exemption_acknowledged: true } : {}) },
+        body: {
+          action: v.action,
+          ...(v.note ? { note: v.note } : {}),
+          ...(v.action === 'reject' && v.fieldComments?.length ? { field_comments: v.fieldComments } : {}),
+          ...(v.audioExemptionAcknowledged ? { audio_exemption_acknowledged: true } : {}),
+        },
         headers: { ...intent, ...(etag ? { 'If-Match': etag } : {}) } as never,
       }),
     ),

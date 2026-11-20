@@ -22,6 +22,7 @@ import { useWorkflow } from '../questions/useWorkflow';
 import { ContentReleaseTabs } from '../release/ContentReleaseTabs';
 import { PublishDialog } from '../release/PublishDialog';
 import { useRelease } from '../release/useRelease';
+import { ReviewFieldComments } from '../review/ReviewFieldComments';
 import { useContentAccess } from '../shared/access';
 import { AssignedBadge } from '../shared/AssignedBadge';
 import { CONTENT_AUTOSAVE_DEBOUNCE_MS, CONTENT_AUTOSAVE_INTERVAL_MS, EDITOR_MIN_WIDTH_QUERY, LIMITS } from '../shared/config';
@@ -231,6 +232,7 @@ function DocumentEditorForm<S>({ type, id, title, empty, fromServer, toBody, blo
             </Form>
           </Card>
         )}
+        {id && server && EDITABLE.has(status) && <ReviewFieldComments item={{ contentType: type, contentId: id }} version={server.version} />}
         {body(args)}
       </ContentEditorShell>
       {id && server && (

@@ -195,6 +195,23 @@ describe('QuestionEditorPage', () => {
     expect(await screen.findByText('Sẵn sàng', {}, { timeout: 30_000 })).toBeInTheDocument();
   });
 
+  it('OQ F054-1: a rejected version shows the reviewer field comments of its latest rejection to the author', async () => {
+    const { backend } = setup('cm.noidung', [{ status: 'rejected', body: body(), author_id: '0193a4d2-1111-7000-8000-000000000004' }]);
+    // MOCK (test only): listContentVersions answers the summary with field_comments (F025 T046)
+    backend.overrides.push((r) =>
+      r.method === 'GET' && r.path === `/cms/learning/content/question/${Q}/versions`
+        ? new Response(JSON.stringify({ item_id: Q, data: [{ version: 1, status: 'rejected', field_comments: [{ path: '/stem', comment: 'Thiếu đơn vị đo' }, { path: '', comment: 'Xem lại cả câu' }] }], page: { has_more: false } }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+        : undefined,
+    );
+    await renderPortal({ url: `/content-studio/question-bank/${Q}`, backend });
+    const box = await screen.findByTestId('review-field-comments');
+    expect(box).toHaveTextContent('Ghi chú của người duyệt khi từ chối v1');
+    expect(within(box).getByText('/stem')).toBeInTheDocument();
+    expect(box).toHaveTextContent('Thiếu đơn vị đo');
+    expect(within(box).getByText('Cả phiên bản')).toBeInTheDocument();
+    expect(await findBtn('Lưu')).toBeInTheDocument(); // still editable
+  });
+
   it('AC-25: export translations → job polled → download link', async () => {
     const { backend } = setup('cm.noidung', [{ status: 'draft', body: body() }]);
     await renderPortal({ url: `/content-studio/question-bank/${Q}`, backend });

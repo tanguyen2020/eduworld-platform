@@ -26,6 +26,8 @@ export interface PVersion {
   change_note?: string;
   pinned?: number;
   audio_exempt_reason?: string;
+  /** ReviewFieldComment[] of the latest rejection (OQ F054-1). */
+  field_comments?: { path: string; comment: string }[];
   content: Record<string, unknown>;
 }
 
@@ -116,7 +118,7 @@ export class MockPublishing {
   }
 
   private summary(it: PItem, v: PVersion) {
-    return { version: v.version, status: v.status, is_current: it.current === v.version, change_note: v.change_note, author_id: v.author_id, reviewer_id: v.reviewer_id, published_by: v.published_by, published_at: v.published_at, publish_at: v.publish_at, active_pinned_sessions: v.pinned ?? 0 };
+    return { version: v.version, status: v.status, is_current: it.current === v.version, change_note: v.change_note, author_id: v.author_id, reviewer_id: v.reviewer_id, published_by: v.published_by, published_at: v.published_at, publish_at: v.publish_at, active_pinned_sessions: v.pinned ?? 0, ...(v.field_comments ? { field_comments: v.field_comments } : {}) };
   }
 
   private detail(it: PItem, v: PVersion, canReview: boolean) {
@@ -212,12 +214,15 @@ export class MockPublishing {
           if ((a === 'approve' || a === 'reject') && !perms.includes('learning_content.review')) return problem(403, 'PERMISSION_DENIED');
           if ((a === 'approve' || a === 'reject') && v.author_id === this.backend.user?.sub) return problem(403, 'PERMISSION_DENIED');
           if (a === 'reject' && !body.note) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'note', code: 'REQUIRED' }] });
+          const fc = body.field_comments as { path: string; comment: string }[] | undefined;
+          if (fc !== undefined && (a !== 'reject' || fc.length > 50 || fc.some((c) => c.path.length > 256 || !c.comment || c.comment.length > 1000))) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'field_comments', code: 'INVALID' }] });
           if (a === 'approve' && v.audio_exempt_reason && body.audio_exemption_acknowledged !== true) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'audio_exemption_acknowledged', code: 'REQUIRED' }] });
           if (a === 'archive' && it.current === v.version) return problem(422, 'INVALID_STATE_TRANSITION');
           const next = ({ submit_review: 'in_review', approve: 'approved', reject: 'rejected', archive: 'archived' } as Record<string, Status>)[a];
           if (!next) return problem(422, 'INVALID_STATE_TRANSITION');
           v.status = next;
           if (a === 'approve' || a === 'reject') v.reviewer_id = this.backend.user?.sub;
+          if (a === 'reject') v.field_comments = fc ?? [];
           v.row++;
           this.reviewTasks = this.reviewTasks.filter((t) => !(t.content_id === it.id && t.version === v!.version) || a === 'archive');
           return json(200, this.detail(it, v, true), { ETag: `W/"${v.row}"` });
