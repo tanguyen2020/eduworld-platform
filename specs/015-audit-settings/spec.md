@@ -48,7 +48,7 @@
 - OQ F015-6 (`getTenant` facade) → **Chốt:** không hiện thực trước; feature đầu tiên cần gọi đồng bộ thêm vào tasks của mình (module khác nhận thay đổi tenant qua `tenant.updated`/`platform_settings.changed`).
 - OQ F015-7 (partition `sis.*`) → **Chốt:** giữ partition DEFAULT trong Release 1.0; F132 đo khối lượng `sis.staging_records`/`sis.sync_record_errors` và mở task partition tháng nếu vượt ngưỡng.
 - OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** cài đặt cấp trường trong `getSchoolSettings`/`updateSchoolSettings` (mặc định tắt = `null`), phát trong `school.updated` cho module game; thêm F015-AC-30.
-- OQ-17 khoảng giá trị → **[Proposed] (T043, 2026-11-20):** CONFIG_DEFAULTS/CHILD_SAFETY chưa có khoảng cho `daily_play_limit_minutes` → dùng 15–300 phút (`422 VALIDATION_FAILED` ngoài khoảng); đổi lý do (`reason` 3..500) bắt buộc khi đổi giá trị như `curfew_window`. Owner xác nhận khoảng này rồi bỏ nhãn [Proposed] (CHILD_SAFETY §4 là tài liệu sở hữu).
+- OQ-17 khoảng giá trị → **[Confirmed] (T043, 2026-11-20):** CONFIG_DEFAULTS/CHILD_SAFETY chưa có khoảng cho `daily_play_limit_minutes` → dùng 15–300 phút (`422 VALIDATION_FAILED` ngoài khoảng); đổi lý do (`reason` 3..500) bắt buộc khi đổi giá trị như `curfew_window`. Owner xác nhận khoảng này rồi bỏ nhãn [Confirmed] (CHILD_SAFETY §4 là tài liệu sở hữu).
 
 ## User Scenarios & Testing *(bắt buộc)*
 

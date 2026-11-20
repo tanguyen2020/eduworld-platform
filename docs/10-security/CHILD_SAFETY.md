@@ -158,7 +158,7 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | XP cap ngày | Giảm động lực chơi dài (GAME_DESIGN §6) | Platform |
 | Giờ giới nghiêm platform | `platform_curfew` 21:30–06:30 cho game và chat (§4.1) | Platform; trường chỉ siết thêm |
 | Khung giờ truy cập | Trường cấu hình khung giờ được đăng nhập game, áp như nhau cho mọi học sinh của trường; luôn nằm ngoài giờ giới nghiêm platform (trường chỉ thu hẹp thêm) | School Admin |
-| Giới hạn cứng/ngày | Không áp mặc định (`daily_play_limit_minutes` tắt); `school_admin` có thể bật cho cả trường với số phút do trường đặt (ví dụ 120), áp như nhau mọi học sinh của trường; tính tổng thời gian game session active trong ngày (ICT); đạt giới hạn → cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc phiên như giờ giới nghiêm (§4.1), từ chối đăng nhập game/tạo game session kèm `reopen_at` tới 00:00 ICT hôm sau; cưỡng chế ở §4.2 | School Admin [Confirmed — owner 2026-11-20, OQ-17] |
+| Giới hạn cứng/ngày | Không áp mặc định (`daily_play_limit_minutes` tắt); `school_admin` có thể bật cho cả trường với số phút do trường đặt (ví dụ 120; khoảng hợp lệ **15–300** phút, ngoài khoảng → `422 VALIDATION_FAILED`), áp như nhau mọi học sinh của trường; tính tổng thời gian game session active trong ngày (ICT); đạt giới hạn → cảnh báo trước `curfew_warning_minutes`, lưu tiến độ và kết thúc phiên như giờ giới nghiêm (§4.1), từ chối đăng nhập game/tạo game session kèm `reopen_at` tới 00:00 ICT hôm sau; cưỡng chế ở §4.2 | School Admin [Confirmed — owner 2026-11-20, OQ-17] |
 
 ### 4.1. Giờ giới nghiêm cấp platform (ADR-0078)
 

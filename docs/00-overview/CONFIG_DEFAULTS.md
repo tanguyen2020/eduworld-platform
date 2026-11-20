@@ -300,7 +300,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `evidence_context` | ±20 | tin | platform | [Confirmed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `chat_policy_cache` | 5 | phút | code | [Confirmed — Technical Architect 2026-11-16] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `platform_curfew` | 21:30–06:30 giờ Việt Nam (ICT) mỗi ngày: không đăng nhập game, không tạo game session, không gửi chat; trường chỉ được mở rộng khung giới nghiêm (siết thêm), không thu hẹp; áp như nhau cho mọi học sinh | — | platform (trường siết thêm) | [Confirmed — Technical Architect 2026-11-17] (ADR-0078) | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4.1 |
-| `daily_play_limit_minutes` | tắt (không áp mặc định); `school_admin` bật cho cả trường với số phút do trường đặt (ví dụ 120); đạt giới hạn xử lý như giờ giới nghiêm tới 00:00 ICT hôm sau; khoảng hợp lệ 15–300 phút [Proposed — F015 T043] | phút/ngày | tenant (cấp trường) | [Confirmed — owner 2026-11-20, OQ-17] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4 |
+| `daily_play_limit_minutes` | tắt (không áp mặc định); `school_admin` bật cho cả trường với số phút do trường đặt (ví dụ 120); đạt giới hạn xử lý như giờ giới nghiêm tới 00:00 ICT hôm sau; khoảng hợp lệ 15–300 phút (owner chốt 2026-11-20, F015 T043) | phút/ngày | tenant (cấp trường) | [Confirmed — owner 2026-11-20, OQ-17] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4 |
 | `curfew_warning_minutes` | 10 (cảnh báo trong game trước giờ giới nghiêm; tới giờ thì lưu tiến độ và kết thúc phiên) | phút | platform | [Confirmed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) §4.1 |
 
 ## 16. Identity, phiên, SIS, tài khoản
