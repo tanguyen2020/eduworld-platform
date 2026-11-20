@@ -11,11 +11,11 @@
     },
     "openapi/GameLoginResponse.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginResponse",
-      "sha256": "1d5a03e70918fbba2f46ab3ef3f4170ced31662a48f09515a8d716f045a1a394"
+      "sha256": "81d6001775f6d1ade9250fa8ee35c912f50274ddd2afd9184caf192251c2cbad"
     },
     "openapi/GameTokenRefreshResponse.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameTokenRefreshResponse",
-      "sha256": "d3be1bd9a10ef372393e87942d7f2df9da920998643b210412357885e15aeacb"
+      "sha256": "7e01209f846a0fda96513c43d7d80e4ee5265bc4aeedd068dbc025d153426ed7"
     },
     "openapi/GameLoginProblem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginProblem",
