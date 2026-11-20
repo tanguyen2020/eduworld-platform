@@ -23,6 +23,9 @@ type QuestionFilter struct {
 	Source       string // own, assigned, platform ("" = every visible)
 	Efficacy     *bool
 	Q            string // full-text, accent and case insensitive (F024-AC-17)
+	// ContentLanguage and TranslationStatus filter the newest version (F024 T041, OQ F054-2).
+	ContentLanguage   string
+	TranslationStatus string
 }
 
 // QuestionHit is a question with its latest version.

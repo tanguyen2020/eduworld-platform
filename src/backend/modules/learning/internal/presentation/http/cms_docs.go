@@ -220,7 +220,8 @@ func (h Handlers) getDoc(d docRoute, w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handlers) listDocs(d docRoute, w http.ResponseWriter, r *http.Request) {
-	f := read.DocFilter{Q: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), GradeLevel: queryInt(r, "grade_level")}
+	f := read.DocFilter{Q: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), GradeLevel: queryInt(r, "grade_level"),
+		ContentLanguage: r.URL.Query().Get("content_language"), TranslationStatus: r.URL.Query().Get("translation_status")}
 	var err error
 	if f.SubjectID, err = queryUUID(r, "subject_id"); err == nil {
 		if f.TopicID, err = queryUUID(r, "topic_id"); err == nil {

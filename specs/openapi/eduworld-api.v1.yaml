@@ -4183,6 +4183,8 @@ paths:
           in: query
           description: Lọc câu đo hiệu quả (F035; chỉ có ở dữ liệu platform)
           schema: { type: boolean }
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -5996,6 +5998,8 @@ paths:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/ContentStatus' }
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -6192,6 +6196,8 @@ paths:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/ContentStatus' }
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -6388,6 +6394,8 @@ paths:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/ContentStatus' }
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -6566,6 +6574,8 @@ paths:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/ContentStatus' }
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -16357,6 +16367,16 @@ components:
       name: grade_level
       in: query
       schema: { $ref: '#/components/schemas/GradeLevel' }
+    ContentLanguageFilter:
+      name: content_language
+      in: query
+      description: Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041)
+      schema: { $ref: '#/components/schemas/ContentLanguage' }
+    TranslationStatusFilter:
+      name: translation_status
+      in: query
+      description: Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041)
+      schema: { $ref: '#/components/schemas/TranslationStatus' }
     GameSessionId:
       name: game_session_id
       in: path

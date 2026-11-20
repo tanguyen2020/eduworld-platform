@@ -14028,6 +14028,8 @@ export interface components {
         ClubIdPath: components["schemas"]["Uuid"];
         ConnectionIdPath: components["schemas"]["Uuid"];
         ContentIdPath: components["schemas"]["Uuid"];
+        /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+        ContentLanguageFilter: components["schemas"]["ContentLanguage"];
         CountryCodePath: string;
         CourseIdPath: components["schemas"]["Uuid"];
         CurriculumIdPath: components["schemas"]["Uuid"];
@@ -14139,6 +14141,8 @@ export interface components {
         TicketId: components["schemas"]["Uuid"];
         TopicIdPath: components["schemas"]["Uuid"];
         TranslationJobIdPath: components["schemas"]["Uuid"];
+        /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+        TranslationStatusFilter: components["schemas"]["TranslationStatus"];
         UserId: components["schemas"]["Uuid"];
         UserRoleIdPath: components["schemas"]["Uuid"];
         Version: number;
@@ -20254,6 +20258,8 @@ export interface operations {
     listCmsAssessmentBlueprints: {
         parameters: {
             query?: {
+                /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+                content_language?: components["parameters"]["ContentLanguageFilter"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -20270,6 +20276,8 @@ export interface operations {
                 tenant_ids?: components["parameters"]["TenantIds"];
                 /** @description Nội dung gắn chủ đề này (F024) */
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+                translation_status?: components["parameters"]["TranslationStatusFilter"];
             };
             header?: {
                 /**
@@ -21745,6 +21753,8 @@ export interface operations {
     listCmsLearningMaterials: {
         parameters: {
             query?: {
+                /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+                content_language?: components["parameters"]["ContentLanguageFilter"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -21761,6 +21771,8 @@ export interface operations {
                 tenant_ids?: components["parameters"]["TenantIds"];
                 /** @description Nội dung gắn chủ đề này (F024) */
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+                translation_status?: components["parameters"]["TranslationStatusFilter"];
             };
             header?: {
                 /**
@@ -21998,6 +22010,8 @@ export interface operations {
     listCmsLessons: {
         parameters: {
             query?: {
+                /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+                content_language?: components["parameters"]["ContentLanguageFilter"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -22014,6 +22028,8 @@ export interface operations {
                 tenant_ids?: components["parameters"]["TenantIds"];
                 /** @description Nội dung gắn chủ đề này (F024) */
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+                translation_status?: components["parameters"]["TranslationStatusFilter"];
             };
             header?: {
                 /**
@@ -22498,6 +22514,8 @@ export interface operations {
     listCmsQuestionSets: {
         parameters: {
             query?: {
+                /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+                content_language?: components["parameters"]["ContentLanguageFilter"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -22514,6 +22532,8 @@ export interface operations {
                 tenant_ids?: components["parameters"]["TenantIds"];
                 /** @description Nội dung gắn chủ đề này (F024) */
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+                translation_status?: components["parameters"]["TranslationStatusFilter"];
             };
             header?: {
                 /**
@@ -22811,6 +22831,8 @@ export interface operations {
     searchQuestions: {
         parameters: {
             query?: {
+                /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
+                content_language?: components["parameters"]["ContentLanguageFilter"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 difficulty?: number[];
@@ -22831,6 +22853,8 @@ export interface operations {
                  */
                 tenant_ids?: components["parameters"]["TenantIds"];
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
+                translation_status?: components["parameters"]["TranslationStatusFilter"];
                 type?: components["schemas"]["QuestionType"];
             };
             header?: {

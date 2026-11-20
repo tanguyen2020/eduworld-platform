@@ -121,7 +121,8 @@ func sessionTenantOf(r *http.Request) *uuid.UUID {
 
 func (h Handlers) searchQuestions(w http.ResponseWriter, r *http.Request) {
 	f := read.QuestionFilter{GradeLevel: queryInt(r, "grade_level"), Status: r.URL.Query().Get("status"), Type: r.URL.Query().Get("type"),
-		Source: r.URL.Query().Get("source"), Q: r.URL.Query().Get("q")}
+		Source: r.URL.Query().Get("source"), Q: r.URL.Query().Get("q"), ContentLanguage: r.URL.Query().Get("content_language"),
+		TranslationStatus: r.URL.Query().Get("translation_status")}
 	var err error
 	for _, x := range []struct {
 		name string

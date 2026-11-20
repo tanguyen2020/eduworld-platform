@@ -20,8 +20,11 @@ type DocFilter struct {
 	Status      string
 	// ActivityType filters activity versions on their generated column activity_type (F030).
 	ActivityType string
-	After        *uuid.UUID
-	Limit        int
+	// ContentLanguage and TranslationStatus filter the newest version (F024 T041, OQ F054-2).
+	ContentLanguage   string
+	TranslationStatus string
+	After             *uuid.UUID
+	Limit             int
 }
 
 // DocHit is an item with its newest version.

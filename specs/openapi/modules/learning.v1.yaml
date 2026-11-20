@@ -683,6 +683,8 @@ paths:
           description: Lọc câu đo hiệu quả (F035; chỉ có ở dữ liệu platform)
           schema:
             type: boolean
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -3038,6 +3040,8 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -3294,6 +3298,8 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -3550,6 +3556,8 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -3785,6 +3793,8 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/ContentLanguageFilter'
+        - $ref: '#/components/parameters/TranslationStatusFilter'
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -7699,6 +7709,18 @@ components:
         Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
       schema:
         $ref: '#/components/schemas/Uuid'
+    ContentLanguageFilter:
+      name: content_language
+      in: query
+      description: Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041)
+      schema:
+        $ref: '#/components/schemas/ContentLanguage'
+    TranslationStatusFilter:
+      name: translation_status
+      in: query
+      description: Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041)
+      schema:
+        $ref: '#/components/schemas/TranslationStatus'
     TenantIds:
       name: tenant_ids
       in: query
@@ -9566,6 +9588,12 @@ components:
         - published
         - archived
         - rejected
+    TranslationStatus:
+      type: string
+      enum:
+        - complete
+        - partial
+        - outdated
     QuestionAuthoring:
       allOf:
         - $ref: '#/components/schemas/ContentVersion'
@@ -9665,12 +9693,6 @@ components:
         - learning_material
         - learning_path
         - activity
-    TranslationStatus:
-      type: string
-      enum:
-        - complete
-        - partial
-        - outdated
     QuestionAuthoringInput:
       type: object
       description: |

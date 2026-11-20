@@ -178,7 +178,9 @@ func matches(v dto.QuestionVersion, f read.QuestionFilter) bool {
 		len(f.Difficulties) > 0 && !slices.Contains(f.Difficulties, v.Difficulty),
 		f.Status != "" && string(v.Status) != f.Status,
 		f.Type != "" && v.Type != f.Type,
-		f.Efficacy != nil && v.EfficacyInstrument != *f.Efficacy:
+		f.Efficacy != nil && v.EfficacyInstrument != *f.Efficacy,
+		f.ContentLanguage != "" && v.ContentLanguage != f.ContentLanguage,
+		f.TranslationStatus != "" && (v.TranslationStatus == nil || *v.TranslationStatus != f.TranslationStatus):
 		return false
 	}
 	return true

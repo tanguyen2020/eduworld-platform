@@ -150,6 +150,14 @@ func docFilters[P ~func(*entsql.Selector)](f read.DocFilter) []P {
 		at := f.ActivityType
 		out = append(out, func(s *entsql.Selector) { s.Where(entsql.EQ(s.C("activity_type"), at)) })
 	}
+	if f.ContentLanguage != "" {
+		lang := f.ContentLanguage
+		out = append(out, func(s *entsql.Selector) { s.Where(entsql.EQ(s.C("content_language"), lang)) })
+	}
+	if f.TranslationStatus != "" {
+		ts := f.TranslationStatus
+		out = append(out, func(s *entsql.Selector) { s.Where(entsql.EQ(s.C("translation_status"), ts)) })
+	}
 	if f.Q != "" {
 		q := f.Q
 		out = append(out, func(s *entsql.Selector) {
