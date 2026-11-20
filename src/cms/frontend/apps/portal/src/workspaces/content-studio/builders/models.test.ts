@@ -155,4 +155,8 @@ describe('list filters (F054-AC-24)', () => {
     expect(filtersToQuery('question', f)).toEqual({ q: 'phan so', subject_id: U(10), grade_level: 3, status: 'published', type: 'numeric', difficulty: [1, 2], source: 'assigned' });
     expect(filtersToQuery('lesson', f)).toEqual({ q: 'phan so', subject_id: U(10), grade_level: 3, status: 'published' });
   });
+  it('content_language / translation_status go to every list type (OQ F054-2)', () => {
+    const f = { content_language: 'en' as const, translation_status: 'partial' as const };
+    for (const type of ['question', 'question_set', 'lesson', 'assessment_blueprint'] as const) expect(filtersToQuery(type, f)).toEqual({ content_language: 'en', translation_status: 'partial' });
+  });
 });

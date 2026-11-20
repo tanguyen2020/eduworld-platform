@@ -1,5 +1,6 @@
 // ContentFilters (F054-AC-24, AC-29): filters of a content list — keyword `q` (≤ 200, the server ignores diacritics),
-// subject, grade, topic, LO, status; for questions also type, difficulty and source (own / assigned / platform).
+// subject, grade, topic, LO, status, language and translation status (OQ F054-2); for questions also type, difficulty
+// and source (own / assigned / platform).
 // Values only; the query is built by filtersToQuery.
 import { Flex, Input, Select } from 'antd';
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useObjectives, useSubjects, useTopics } from '../curriculum/useCurriculum';
 import { LIMITS } from '../shared/config';
 import { CONTENT_STATUSES } from '../shared/contentTypes';
+import { CONTENT_LANGUAGES, TRANSLATION_STATUSES, type ContentLanguage, type TranslationStatus } from '../shared/fieldSchemas';
 import type { ContentFiltersValue, ListType } from './useContentList';
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -29,6 +31,8 @@ export function ContentFilters({ type, value, onChange, platform }: { type: List
       <Select {...sel} aria-label={t('content_studio.question.topic')} placeholder={t('content_studio.question.topic')} value={value.topic_id} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))} onChange={(v?: string) => set({ topic_id: v, objective_id: undefined })} />
       <Select {...sel} aria-label={t('content_studio.list.objective')} placeholder={t('content_studio.list.objective')} value={value.objective_id} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: o.code }))} onChange={(v?: string) => set({ objective_id: v })} />
       <Select {...sel} aria-label={t('content_studio.release.col.status')} placeholder={t('content_studio.release.col.status')} value={value.status} options={CONTENT_STATUSES.map((s) => ({ value: s, label: t(`content_studio.status.${s}`) }))} onChange={(v?: string) => set({ status: v })} />
+      <Select {...sel} aria-label={t('content_studio.list.language')} placeholder={t('content_studio.list.language')} value={value.content_language} options={CONTENT_LANGUAGES.map((l) => ({ value: l, label: t(`content_studio.preview.${l}`) }))} onChange={(v?: ContentLanguage) => set({ content_language: v })} />
+      <Select {...sel} aria-label={t('content_studio.list.translationStatus')} placeholder={t('content_studio.list.translationStatus')} value={value.translation_status} options={TRANSLATION_STATUSES.map((x) => ({ value: x, label: t(`content_studio.translation.${x}`) }))} onChange={(v?: TranslationStatus) => set({ translation_status: v })} />
       {type === 'question' && (
         <>
           <Select {...sel} aria-label={t('content_studio.list.type')} placeholder={t('content_studio.list.type')} value={value.type} options={Q_TYPES.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v?: string) => set({ type: v })} />

@@ -1,6 +1,6 @@
 // useContentList (F054-AC-24, AC-25, FR-CNT-021): the list of one content type — searchQuestions / listCmsQuestionSets
 // / listCmsLessons / listCmsAssessmentBlueprints — with the filters mapped to query parameters (`q` searched without
-// diacritics by the server), `tenant_ids[]` only from the System Admin filter, cursor pages; and the soft delete of an
+// diacritics by the server; `content_language` / `translation_status` of the latest version, OQ F054-2), `tenant_ids[]` only from the System Admin filter, cursor pages; and the soft delete of an
 // item (deleteQuestion / deleteCms*: If-Match = ETag of a fresh read, reason in the body). Lists never offer "show
 // deleted" (ADR-0028): deleted items live in the Thùng rác.
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope
 import { withEtag } from '../questions/useQuestion';
 import { idParamOf } from '../release/useRelease';
 import { CONTENT_TYPES } from '../shared/contentTypes';
+import type { ContentLanguage, TranslationStatus } from '../shared/fieldSchemas';
 
 export type ListType = 'question' | 'question_set' | 'lesson' | 'assessment_blueprint';
 
@@ -21,6 +22,10 @@ export interface ContentFiltersValue {
   topic_id?: string;
   objective_id?: string;
   status?: string;
+  /** Original language of the latest version (OQ F054-2). */
+  content_language?: ContentLanguage;
+  /** Translation status of the latest version (OQ F054-2). */
+  translation_status?: TranslationStatus;
   /** Questions only. */
   type?: string;
   difficulty?: number[];

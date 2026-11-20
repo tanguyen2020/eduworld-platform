@@ -460,6 +460,8 @@
       "search": "Search by keyword (diacritics optional)",
       "grade": "Grade",
       "objective": "Learning objective",
+      "language": "Language",
+      "translationStatus": "Translation status",
       "type": "Question type",
       "source": "Source",
       "sources": { "own": "Own", "assigned": "Assigned (EduWorld)", "platform": "EduWorld data" },

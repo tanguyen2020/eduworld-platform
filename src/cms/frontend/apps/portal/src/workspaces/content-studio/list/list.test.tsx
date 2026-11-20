@@ -2,7 +2,7 @@
 //   AC-24 list + search (`q` without diacritics by the server), filters → query, Tenant column + tenant_ids for the
 //   System Admin · AC-25 soft delete with If-Match, reason required once published, row disappears, no "show deleted" ·
 //   AC-26 tenant Thùng rác: filter by type, restore with reason, restorable = false / 409 · AC-28 Import / Thùng rác
-//   hidden without permission · AC-30 cards below 768 px.
+//   hidden without permission · AC-30 cards below 768 px · OQ F054-2 "Ngôn ngữ" / "Trạng thái dịch" filters.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { contentAccount, P, renderPublishing, stopPortals, TENANTS, tenantUser, TENANT_CONTENT_PERMS, type MockPublishing } from '../../../test/publishing-harness';
@@ -34,6 +34,44 @@ describe('Danh sách, tìm kiếm, xóa mềm (F054 US5)', () => {
     await waitFor(() => expect(backend.calls('GET', '/cms/learning/questions').some((r) => new URLSearchParams(r.search).get('status') === 'published' && new URLSearchParams(r.search).get('q') === 'phan so')).toBe(true));
     expect(backend.calls('GET', '/cms/learning/questions').every((r) => !r.search.includes('tenant_ids'))).toBe(true);
     expect(screen.queryByText(/đã xóa/i)).toBeNull();
+  });
+
+  it('AC-24 (OQ F054-2): "Ngôn ngữ" and "Trạng thái dịch" filters → content_language / translation_status', async () => {
+    const { backend } = await renderPublishing('/content-studio/question-bank', {
+      account: tenantUser(),
+      setup: (m) => {
+        seed(m);
+        m.add({ id: P(304), type: 'question', tenant_id: A, lang: 'en', title: { en: 'Fractions' }, versions: [{ status: 'draft', translation_status: 'partial' }] });
+        m.add({ id: P(305), type: 'question', tenant_id: A, lang: 'en', title: { en: 'Addition' }, versions: [{ status: 'draft', translation_status: 'complete' }] });
+      },
+    });
+    expect(await screen.findByText('Phân số bằng nhau')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Ngôn ngữ' }));
+    fireEvent.click(await screen.findByTitle('Tiếng Anh'));
+    await waitFor(() => expect(backend.calls('GET', '/cms/learning/questions').some((r) => new URLSearchParams(r.search).get('content_language') === 'en')).toBe(true));
+    await waitFor(() => expect(screen.queryByText('Phân số bằng nhau')).toBeNull());
+    expect(await screen.findByText('Addition')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Trạng thái dịch' }));
+    fireEvent.click(await screen.findByTitle('Thiếu bản dịch'));
+    await waitFor(() => expect(backend.calls('GET', '/cms/learning/questions').some((r) => new URLSearchParams(r.search).get('translation_status') === 'partial' && new URLSearchParams(r.search).get('content_language') === 'en')).toBe(true));
+    await waitFor(() => expect(screen.queryByText('Addition')).toBeNull());
+    expect(screen.getByText('Fractions')).toBeInTheDocument();
+  });
+
+  it('AC-24 (OQ F054-2): the same two filters on the lesson list', async () => {
+    const { backend } = await renderPublishing('/content-studio/lessons', {
+      account: tenantUser(),
+      setup: (m) => {
+        m.add({ id: P(311), type: 'lesson', tenant_id: A, title: { vi: 'Bài nhân 2' }, versions: [{ status: 'draft', translation_status: 'outdated' }] });
+        m.add({ id: P(312), type: 'lesson', tenant_id: A, title: { vi: 'Bài nhân 3' }, versions: [{ status: 'draft', translation_status: 'complete' }] });
+      },
+    });
+    expect(await screen.findByText('Bài nhân 3')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Trạng thái dịch' }));
+    fireEvent.click(await screen.findByTitle('Bản dịch lỗi thời'));
+    await waitFor(() => expect(backend.calls('GET', '/cms/learning/lessons').some((r) => new URLSearchParams(r.search).get('translation_status') === 'outdated')).toBe(true));
+    await waitFor(() => expect(screen.queryByText('Bài nhân 3')).toBeNull());
+    expect(screen.getByText('Bài nhân 2')).toBeInTheDocument();
   });
 
   it('AC-24 (TC-CMS-TEN-02): System Admin — Tenant column, tenant filter → tenant_ids[]', async () => {

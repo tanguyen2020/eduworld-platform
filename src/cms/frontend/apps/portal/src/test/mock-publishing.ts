@@ -28,6 +28,7 @@ export interface PVersion {
   audio_exempt_reason?: string;
   /** ReviewFieldComment[] of the latest rejection (OQ F054-1). */
   field_comments?: { path: string; comment: string }[];
+  translation_status?: 'complete' | 'partial' | 'outdated';
   content: Record<string, unknown>;
 }
 
@@ -37,6 +38,8 @@ export interface PItem {
   tenant_id: string | null;
   assigned?: boolean;
   title?: { vi?: string; en?: string };
+  /** content_language of the item (default vi). */
+  lang?: 'vi' | 'en';
   versions: PVersion[];
   current?: number;
   deleted?: boolean;
@@ -128,7 +131,7 @@ export class MockPublishing {
   }
 
   private doc(it: PItem, v: PVersion) {
-    return { content_type: it.type, content_id: it.id, version: v.version, status: v.status, tenant_id: it.tenant_id, assigned: !!it.assigned, author_id: v.author_id, content_language: 'vi', title: it.title, ...v.content };
+    return { content_type: it.type, content_id: it.id, version: v.version, status: v.status, tenant_id: it.tenant_id, assigned: !!it.assigned, author_id: v.author_id, content_language: it.lang ?? 'vi', translation_status: v.translation_status, title: it.title, ...v.content };
   }
 
   private release(it: PItem, action: string, extra: Record<string, unknown>) {
@@ -326,7 +329,7 @@ export class MockPublishing {
         const q = new URLSearchParams(r.search);
         const tenantIds = q.getAll('tenant_ids');
         const data = [...this.items.values()]
-          .filter((it) => it.type === type && this.visible(r, it) && (!tenantIds.length || tenantIds.includes(it.tenant_id ?? '')) && (!q.get('status') || it.versions.at(-1)!.status === q.get('status')) && (!q.get('q') || JSON.stringify(it.title ?? {}).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').includes(q.get('q')!.toLowerCase())))
+          .filter((it) => it.type === type && this.visible(r, it) && (!tenantIds.length || tenantIds.includes(it.tenant_id ?? '')) && (!q.get('status') || it.versions.at(-1)!.status === q.get('status')) && (!q.get('content_language') || (it.lang ?? 'vi') === q.get('content_language')) && (!q.get('translation_status') || it.versions.at(-1)!.translation_status === q.get('translation_status')) && (!q.get('q') || JSON.stringify(it.title ?? {}).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').includes(q.get('q')!.toLowerCase())))
           .map((it) => ({ ...this.doc(it, it.versions.at(-1)!), content_version_id: P(700 + it.versions.length) }));
         return json(200, { data, page: { has_more: false, limit: 50 } });
       }

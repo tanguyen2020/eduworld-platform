@@ -460,6 +460,8 @@
       "search": "Tìm theo từ khóa (không cần dấu)",
       "grade": "Khối",
       "objective": "Mục tiêu học tập",
+      "language": "Ngôn ngữ",
+      "translationStatus": "Trạng thái dịch",
       "type": "Dạng câu",
       "source": "Nguồn",
       "sources": { "own": "Của đơn vị", "assigned": "Được gán (EduWorld)", "platform": "Dữ liệu EduWorld" },
