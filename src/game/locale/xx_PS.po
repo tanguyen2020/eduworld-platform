@@ -95,6 +95,105 @@ msgstr "[!! Šþëëđ {rate} ~~~~~ !!]"
 msgid "ui.audio.transcript"
 msgstr "[!! Ţŕáñšçŕïþţ ~~~~ !!]"
 
+msgid "ui.avatar.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.avatar.body_type"
+msgstr "[!! Ɓöđý šĥáþë ~~~~ !!]"
+
+msgid "ui.avatar.choose_name"
+msgstr "[!! Çĥööšë ýöüŕ ñáɱë ~~~~~~~ !!]"
+
+msgid "ui.avatar.confirm"
+msgstr "[!! Çöñƒïŕɱ ~~~ !!]"
+
+msgid "ui.avatar.hair_color"
+msgstr "[!! Ĥáïŕ çöĺöüŕ ~~~~~ !!]"
+
+msgid "ui.avatar.hair_style"
+msgstr "[!! Ĥáïŕšţýĺë ~~~~ !!]"
+
+msgid "ui.avatar.loading"
+msgstr "[!! Ğëţţïñğ ýöüŕ çĥáŕáçţëŕ ŕëáđý… ~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.more_names"
+msgstr "[!! Möŕë ñáɱëš ~~~~ !!]"
+
+msgid "ui.avatar.name_hint"
+msgstr "[!! Ñáɱëš áŕë ɱáđë ƒöŕ ýöü ţö ķëëþ ýöü šáƒë. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.next"
+msgstr "[!! Ñëxţ ▶ ~~~ !!]"
+
+msgid "ui.avatar.next_option"
+msgstr "[!! Ñëxţ ~~ !!]"
+
+msgid "ui.avatar.nickname_taken"
+msgstr "[!! Šöɱëöñë ĵüšţ ţööķ ţĥáţ ñáɱë. Pĺëášë þïçķ áñöţĥëŕ öñë! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.option_n"
+msgstr "[!! Šţýĺë {n} ~~~~ !!]"
+
+msgid "ui.avatar.outfit"
+msgstr "[!! Öüţƒïţ ~~~ !!]"
+
+msgid "ui.avatar.presets"
+msgstr "[!! Çĥáŕáçţëŕš ~~~~ !!]"
+
+msgid "ui.avatar.preview_hint"
+msgstr "[!! Ĥëŕë ïš ýöüŕ çĥáŕáçţëŕ! Đŕáğ ţö ţüŕñ ïţ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.previous"
+msgstr "[!! Pŕëvïöüš ~~~~ !!]"
+
+msgid "ui.avatar.rotate_left"
+msgstr "[!! Ţüŕñ ĺëƒţ ~~~~ !!]"
+
+msgid "ui.avatar.rotate_right"
+msgstr "[!! Ţüŕñ ŕïğĥţ ~~~~ !!]"
+
+msgid "ui.avatar.saving"
+msgstr "[!! Šávïñğ… ~~~ !!]"
+
+msgid "ui.avatar.skin_tone"
+msgstr "[!! Šķïñ ţöñë ~~~~ !!]"
+
+msgid "ui.avatar.skip_customize"
+msgstr "[!! Šķïþ çüšţöɱïšïñğ ~~~~~~~ !!]"
+
+msgid "ui.avatar.step_customize"
+msgstr "[!! Çüšţöɱïšë ~~~~ !!]"
+
+msgid "ui.avatar.step_done"
+msgstr "[!! Đöñë ~~ !!]"
+
+msgid "ui.avatar.step_hair_color"
+msgstr "[!! Ĥáïŕ çöĺöüŕ ~~~~~ !!]"
+
+msgid "ui.avatar.step_name"
+msgstr "[!! Ñáɱë ~~ !!]"
+
+msgid "ui.avatar.step_preset"
+msgstr "[!! Pïçķ á ĺööķ ~~~~~ !!]"
+
+msgid "ui.avatar.title"
+msgstr "[!! Çŕëáţë ýöüŕ çĥáŕáçţëŕ ~~~~~~~~~ !!]"
+
+msgid "ui.avatar.voice.customize"
+msgstr "[!! Ýöü çáñ çĥáñğë ţĥë ƀöđý šĥáþë, šķïñ ţöñë, ĥáïŕ áñđ öüţƒïţ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.voice.hair_color"
+msgstr "[!! Pïçķ á ĥáïŕ çöĺöüŕ. ~~~~~~~~ !!]"
+
+msgid "ui.avatar.voice.name"
+msgstr "[!! Pïçķ á ñáɱë. Pŕëšš Möŕë ñáɱëš ţö šëë ñëŵ öñëš. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.voice.preset"
+msgstr "[!! Pïçķ á çĥáŕáçţëŕ ýöü ĺïķë. ~~~~~~~~~~~ !!]"
+
+msgid "ui.avatar.voice.preview"
+msgstr "[!! Ĥëŕë ïš ýöüŕ çĥáŕáçţëŕ! Pŕëšš Çöñƒïŕɱ ţö ëñţëŕ ţĥë ŵöŕĺđ. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.boot.loading"
 msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
 
@@ -137,6 +236,18 @@ msgstr "[!! Ţĥë ğáɱë çöüĺđ ñöţ šţáŕţ ~~~~~~~~~~ !!]"
 msgid "ui.debug.mock_badge"
 msgstr "[!! MÖÇĶ · šïɱüĺáţëđ đáţá, ñöţ ţĥë ŕëáĺ šëŕvëŕ ~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.emote.close.tooltip"
+msgstr "[!! Çĺöšë ţĥë ëɱöţë ŵĥëëĺ ~~~~~~~~~ !!]"
+
+msgid "ui.emote.open"
+msgstr "[!! Ẹɱöţë ~~ !!]"
+
+msgid "ui.emote.open.tooltip"
+msgstr "[!! Ẹɱöţë ŵĥëëĺ (Ţ) ~~~~~~ !!]"
+
+msgid "ui.emote.slot"
+msgstr "[!! Ẹɱöţë {n} ~~~~ !!]"
+
 msgid "ui.error.ACCESS_OUTSIDE_ALLOWED_HOURS"
 msgstr "[!! Ïţ ïš ñöţ ẸđüŴöŕĺđ ţïɱë ýëţ. ~~~~~~~~~~~~ !!]"
 
@@ -176,6 +287,9 @@ msgstr "[!! Ţĥë ğáɱë ñëëđš ţö ƀë üþđáţëđ ţö á ñëŵ v
 msgid "ui.error.CURFEW_ACTIVE"
 msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. ẸđüŴöŕĺđ ŵïĺĺ öþëñ áğáïñ đüŕïñğ ţĥë áĺĺöŵëđ ĥöüŕš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.EQUIP_SLOT_INVALID"
+msgstr "[!! Ţĥïš ïţëɱ çáñ'ţ ğö ţĥëŕë. Pĺëášë ţŕý áñöţĥëŕ ŵáý. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "[!! Ţĥïš áççöüñţ ïš ƒöŕ šçĥööĺ šţáƒƒ áñđ çáññöţ ƀë üšëđ ţö þĺáý. Pĺëášë üšë ţĥë ẸđüŴöŕĺđ áđɱïñ þöŕţáĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -194,6 +308,9 @@ msgstr "[!! Ţĥë üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕë
 msgid "ui.error.INVALID_RESPONSE"
 msgstr "[!! Ţĥáţ áñšŵëŕ çöüĺđñ'ţ ƀë ŕëáđ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.ITEM_NOT_OWNED"
+msgstr "[!! Ýöü đöñ'ţ ĥávë ţĥïš ïţëɱ ýëţ. Pĺëášë þïçķ áñöţĥëŕ öñë. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr "[!! Ĵöïñïñğ ţĥë çĺášš… ~~~~~~~~ !!]"
 
@@ -202,6 +319,12 @@ msgstr "[!! Ţĥë šçĥööĺ çĥöïçë ĥáš ëxþïŕëđ, þĺëášë 
 
 msgid "ui.error.MAINTENANCE"
 msgstr "[!! ẸđüŴöŕĺđ ïš üñđëŕ ɱáïñţëñáñçë. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.NICKNAME_CHANGE_LIMIT"
+msgstr "[!! Ýöü ĥávë áĺŕëáđý çĥáñğëđ ýöüŕ ñáɱë ţĥïš ɱöñţĥ. Ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.NICKNAME_UNAVAILABLE"
+msgstr "[!! Ţĥáţ ñáɱë ïš ñö ĺöñğëŕ áváïĺáƀĺë. Pĺëášë þïçķ áñöţĥëŕ öñë. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.NOT_FOUND"
 msgstr "[!! Ţĥïš áçţïvïţý çöüĺđñ'ţ ƀë ƒöüñđ. ~~~~~~~~~~~~~ !!]"
@@ -436,6 +559,12 @@ msgstr "[!! Ẹxþĺöŕëŕ ~~~~ !!]"
 
 msgid "ui.hub.settings"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.hub.wardrobe"
+msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
+
+msgid "ui.hub.wardrobe.tooltip"
+msgstr "[!! Ŵáŕđŕöƀë (Ï) ~~~~~ !!]"
 
 msgid "ui.learning.no_translation"
 msgstr "[!! Ẹñğĺïšĥ vëŕšïöñ ñöţ áváïĺáƀĺë ~~~~~~~~~~~~ !!]"
@@ -856,3 +985,57 @@ msgstr "[!! Ŵáţçĥ ţĥïš þáŕţ ƒïŕšţ. ~~~~~~~~~ !!]"
 
 msgid "ui.video.subtitles"
 msgstr "[!! Šüƀţïţĺëš ~~~~ !!]"
+
+msgid "ui.wardrobe.emotes_full"
+msgstr "[!! Ţĥë ëɱöţë ŵĥëëĺ ïš ƒüĺĺ (6). Ŕëɱövë öñë ƒïŕšţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.wardrobe.item_n"
+msgstr "[!! Ïţëɱ {n} ~~~~ !!]"
+
+msgid "ui.wardrobe.loading"
+msgstr "[!! Öþëñïñğ ţĥë ŵáŕđŕöƀë… ~~~~~~~~~ !!]"
+
+msgid "ui.wardrobe.preset_saved"
+msgstr "[!! Öüţƒïţ šávëđ ţö ţĥë šĺöţ! ~~~~~~~~~~ !!]"
+
+msgid "ui.wardrobe.presets"
+msgstr "[!! Šávëđ öüţƒïţš ~~~~~~ !!]"
+
+msgid "ui.wardrobe.revert"
+msgstr "[!! Üñđö ~~ !!]"
+
+msgid "ui.wardrobe.save"
+msgstr "[!! Šávë ~~ !!]"
+
+msgid "ui.wardrobe.save_preset"
+msgstr "[!! Šávë áš öüţƒïţ {n} ~~~~~~~~ !!]"
+
+msgid "ui.wardrobe.saved"
+msgstr "[!! Öüţƒïţ šávëđ! ~~~~~~ !!]"
+
+msgid "ui.wardrobe.saving"
+msgstr "[!! Šávïñğ… ~~~ !!]"
+
+msgid "ui.wardrobe.tab.accessory"
+msgstr "[!! Åççëššöŕïëš ~~~~~ !!]"
+
+msgid "ui.wardrobe.tab.clothes"
+msgstr "[!! Çĺöţĥëš ~~~ !!]"
+
+msgid "ui.wardrobe.tab.emote"
+msgstr "[!! Ẹɱöţëš ~~~ !!]"
+
+msgid "ui.wardrobe.tab.hair"
+msgstr "[!! Ĥáïŕ ~~ !!]"
+
+msgid "ui.wardrobe.tab.look"
+msgstr "[!! Ĺööķ ~~ !!]"
+
+msgid "ui.wardrobe.tab.outfit"
+msgstr "[!! Öüţƒïţš ~~~ !!]"
+
+msgid "ui.wardrobe.title"
+msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
+
+msgid "ui.wardrobe.wear_preset"
+msgstr "[!! Ŵëáŕ öüţƒïţ {n} ~~~~~~ !!]"

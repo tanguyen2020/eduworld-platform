@@ -1,23 +1,14 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_controller"]
 [ext_resource type="Script" path="res://scripts/player/camera_rig.gd" id="2_camera"]
 [ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="3_anim"]
 [ext_resource type="Script" path="res://scripts/player/tap_to_move.gd" id="4_tap"]
+[ext_resource type="PackedScene" path="res://scenes/character/AvatarRig.tscn" id="5_rig"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
 height = 1.4
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.35
-height = 1.0
-
-[sub_resource type="SphereMesh" id="SphereMesh_head"]
-radius = 0.28
-height = 0.56
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_empty"]
 
 [node name="Player" type="CharacterBody3D" node_paths=PackedStringArray("camera_rig", "anim_driver", "tap_to_move", "avatar")]
 script = ExtResource("1_controller")
@@ -30,22 +21,7 @@ avatar = NodePath("AvatarRig")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 shape = SubResource("CapsuleShape3D_body")
 
-[node name="AvatarRig" type="Node3D" parent="."]
-
-[node name="Bob" type="Node3D" parent="AvatarRig"]
-
-[node name="Body" type="MeshInstance3D" parent="AvatarRig/Bob"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
-mesh = SubResource("CapsuleMesh_body")
-
-[node name="Head" type="MeshInstance3D" parent="AvatarRig/Bob"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.05)
-mesh = SubResource("SphereMesh_head")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="AvatarRig"]
-libraries = {
-&"": SubResource("AnimationLibrary_empty")
-}
+[node name="AvatarRig" parent="." instance=ExtResource("5_rig")]
 
 [node name="AnimationTree" type="AnimationTree" parent="."]
 

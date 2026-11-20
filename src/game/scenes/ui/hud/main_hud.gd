@@ -10,6 +10,8 @@ extends CanvasLayer
 signal context_action_pressed()
 signal journal_pressed()
 signal settings_pressed()
+## F070: Tủ đồ (CustomizationStudio).
+signal wardrobe_pressed()
 signal home_pressed()
 signal joystick_moved(vector: Vector2)
 
@@ -35,6 +37,7 @@ var banner_args: Dictionary = {}
 @onready var _assignments_chip: Button = %AssignmentsChip
 @onready var _journal: Button = %JournalButton
 @onready var _settings: Button = %SettingsButton
+@onready var _wardrobe: Button = %WardrobeButton
 @onready var _home: Button = %HomeButton
 @onready var _banner: PanelContainer = %SystemBanner
 @onready var _banner_label: Label = %BannerLabel
@@ -49,6 +52,7 @@ func _ready() -> void:
 	_assignments_chip.pressed.connect(journal_pressed.emit)
 	_journal.pressed.connect(journal_pressed.emit)
 	_settings.pressed.connect(settings_pressed.emit)
+	_wardrobe.pressed.connect(wardrobe_pressed.emit)
 	_home.pressed.connect(home_pressed.emit)
 	_context_action.pressed.connect(context_action_pressed.emit)
 	_joystick.connect("moved", joystick_moved.emit)
@@ -73,7 +77,7 @@ func apply_band(value: String) -> void:
 	band = value if ThemeService.is_valid_band(value) else ThemeService.default_band()
 	minimap_allowed = not band in NO_MINIMAP_BANDS
 	var target: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
-	for button: Button in [_assignments_chip, _journal, _settings, _home, _context_action]:
+	for button: Button in [_assignments_chip, _journal, _settings, _wardrobe, _home, _context_action]:
 		button.custom_minimum_size = Vector2(target, target)
 	_badge.custom_minimum_size = Vector2(target * BADGE_WIDTH_FACTOR, target)
 	_render()

@@ -96,6 +96,105 @@ msgstr "Speed {rate}"
 msgid "ui.audio.transcript"
 msgstr "Transcript"
 
+msgid "ui.avatar.back"
+msgstr "Back"
+
+msgid "ui.avatar.body_type"
+msgstr "Body shape"
+
+msgid "ui.avatar.choose_name"
+msgstr "Choose your name"
+
+msgid "ui.avatar.confirm"
+msgstr "Confirm"
+
+msgid "ui.avatar.hair_color"
+msgstr "Hair colour"
+
+msgid "ui.avatar.hair_style"
+msgstr "Hairstyle"
+
+msgid "ui.avatar.loading"
+msgstr "Getting your character ready…"
+
+msgid "ui.avatar.more_names"
+msgstr "More names"
+
+msgid "ui.avatar.name_hint"
+msgstr "Names are made for you to keep you safe."
+
+msgid "ui.avatar.next"
+msgstr "Next ▶"
+
+msgid "ui.avatar.next_option"
+msgstr "Next"
+
+msgid "ui.avatar.nickname_taken"
+msgstr "Someone just took that name. Please pick another one!"
+
+msgid "ui.avatar.option_n"
+msgstr "Style {n}"
+
+msgid "ui.avatar.outfit"
+msgstr "Outfit"
+
+msgid "ui.avatar.presets"
+msgstr "Characters"
+
+msgid "ui.avatar.preview_hint"
+msgstr "Here is your character! Drag to turn it."
+
+msgid "ui.avatar.previous"
+msgstr "Previous"
+
+msgid "ui.avatar.rotate_left"
+msgstr "Turn left"
+
+msgid "ui.avatar.rotate_right"
+msgstr "Turn right"
+
+msgid "ui.avatar.saving"
+msgstr "Saving…"
+
+msgid "ui.avatar.skin_tone"
+msgstr "Skin tone"
+
+msgid "ui.avatar.skip_customize"
+msgstr "Skip customising"
+
+msgid "ui.avatar.step_customize"
+msgstr "Customise"
+
+msgid "ui.avatar.step_done"
+msgstr "Done"
+
+msgid "ui.avatar.step_hair_color"
+msgstr "Hair colour"
+
+msgid "ui.avatar.step_name"
+msgstr "Name"
+
+msgid "ui.avatar.step_preset"
+msgstr "Pick a look"
+
+msgid "ui.avatar.title"
+msgstr "Create your character"
+
+msgid "ui.avatar.voice.customize"
+msgstr "You can change the body shape, skin tone, hair and outfit."
+
+msgid "ui.avatar.voice.hair_color"
+msgstr "Pick a hair colour."
+
+msgid "ui.avatar.voice.name"
+msgstr "Pick a name. Press More names to see new ones."
+
+msgid "ui.avatar.voice.preset"
+msgstr "Pick a character you like."
+
+msgid "ui.avatar.voice.preview"
+msgstr "Here is your character! Press Confirm to enter the world."
+
 msgid "ui.boot.loading"
 msgstr "Loading…"
 
@@ -138,6 +237,18 @@ msgstr "The game could not start"
 msgid "ui.debug.mock_badge"
 msgstr "MOCK · simulated data, not the real server"
 
+msgid "ui.emote.close.tooltip"
+msgstr "Close the emote wheel"
+
+msgid "ui.emote.open"
+msgstr "Emote"
+
+msgid "ui.emote.open.tooltip"
+msgstr "Emote wheel (T)"
+
+msgid "ui.emote.slot"
+msgstr "Emote {n}"
+
 msgid "ui.error.ACCESS_OUTSIDE_ALLOWED_HOURS"
 msgstr "It is not EduWorld time yet."
 
@@ -177,6 +288,9 @@ msgstr "The game needs to be updated to a new version."
 msgid "ui.error.CURFEW_ACTIVE"
 msgstr "It is rest time. EduWorld will open again during the allowed hours."
 
+msgid "ui.error.EQUIP_SLOT_INVALID"
+msgstr "This item can't go there. Please try another way."
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "This account is for school staff and cannot be used to play. Please use the EduWorld admin portal."
 
@@ -195,6 +309,9 @@ msgstr "The username or password is not correct."
 msgid "ui.error.INVALID_RESPONSE"
 msgstr "That answer couldn't be read. Please try again."
 
+msgid "ui.error.ITEM_NOT_OWNED"
+msgstr "You don't have this item yet. Please pick another one."
+
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr "Joining the class…"
 
@@ -203,6 +320,12 @@ msgstr "The school choice has expired, please sign in again."
 
 msgid "ui.error.MAINTENANCE"
 msgstr "EduWorld is under maintenance. Please come back later."
+
+msgid "ui.error.NICKNAME_CHANGE_LIMIT"
+msgstr "You have already changed your name this month. Try again later."
+
+msgid "ui.error.NICKNAME_UNAVAILABLE"
+msgstr "That name is no longer available. Please pick another one."
 
 msgid "ui.error.NOT_FOUND"
 msgstr "This activity couldn't be found."
@@ -437,6 +560,12 @@ msgstr "Explorer"
 
 msgid "ui.hub.settings"
 msgstr "Settings"
+
+msgid "ui.hub.wardrobe"
+msgstr "Wardrobe"
+
+msgid "ui.hub.wardrobe.tooltip"
+msgstr "Wardrobe (I)"
 
 msgid "ui.learning.no_translation"
 msgstr "English version not available"
@@ -857,3 +986,57 @@ msgstr "Watch this part first."
 
 msgid "ui.video.subtitles"
 msgstr "Subtitles"
+
+msgid "ui.wardrobe.emotes_full"
+msgstr "The emote wheel is full (6). Remove one first."
+
+msgid "ui.wardrobe.item_n"
+msgstr "Item {n}"
+
+msgid "ui.wardrobe.loading"
+msgstr "Opening the wardrobe…"
+
+msgid "ui.wardrobe.preset_saved"
+msgstr "Outfit saved to the slot!"
+
+msgid "ui.wardrobe.presets"
+msgstr "Saved outfits"
+
+msgid "ui.wardrobe.revert"
+msgstr "Undo"
+
+msgid "ui.wardrobe.save"
+msgstr "Save"
+
+msgid "ui.wardrobe.save_preset"
+msgstr "Save as outfit {n}"
+
+msgid "ui.wardrobe.saved"
+msgstr "Outfit saved!"
+
+msgid "ui.wardrobe.saving"
+msgstr "Saving…"
+
+msgid "ui.wardrobe.tab.accessory"
+msgstr "Accessories"
+
+msgid "ui.wardrobe.tab.clothes"
+msgstr "Clothes"
+
+msgid "ui.wardrobe.tab.emote"
+msgstr "Emotes"
+
+msgid "ui.wardrobe.tab.hair"
+msgstr "Hair"
+
+msgid "ui.wardrobe.tab.look"
+msgstr "Look"
+
+msgid "ui.wardrobe.tab.outfit"
+msgstr "Outfits"
+
+msgid "ui.wardrobe.title"
+msgstr "Wardrobe"
+
+msgid "ui.wardrobe.wear_preset"
+msgstr "Wear outfit {n}"

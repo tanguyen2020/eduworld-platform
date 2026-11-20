@@ -55,6 +55,9 @@ func _build(shared_device: bool, persistent: bool) -> void:
 	auth.sessions.heartbeat_interval_sec = FakeClock.HOLD_THRESHOLD_SEC
 	auth.navigator = _on_navigate
 	auth.quitter = _on_quit
+	# F070-AC-01: after the game session the client reads `getGameProfile`; by default the student already has an
+	# avatar and a nickname (straight to the hub). First-time tests call ProfileFixtures.script_first_time().
+	http.reply(ProfileFixtures.ROUTE_PROFILE, 200, ProfileFixtures.profile_ready())
 	Log.clear()
 	AppState.pending_telemetry.clear()
 

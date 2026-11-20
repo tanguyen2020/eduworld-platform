@@ -53,6 +53,34 @@ func test_game_login_fixtures_parse() -> void:
 	assert_bool(Uuid.is_valid(String(session["game_session_id"]))).is_true()
 
 
+## F070: GameProfile, CharacterCatalog, NicknameSuggestion and AvatarPreset samples parse into the client models and
+## an AvatarConfig survives a round trip through the request body unchanged.
+func test_player_profile_fixtures_parse() -> void:
+	var profile_data: Dictionary = _json(FIXTURES.path_join("openapi/GameProfile.json")) as Dictionary
+	var profile: GameProfileModel = GameProfileModel.from_dict(profile_data)
+	assert_object(profile).is_not_null()
+	assert_object(profile.avatar_config).is_not_null()
+	var round_trip: Dictionary = JSON.parse_string(JSON.stringify(profile.avatar_config.to_dict())) as Dictionary
+	assert_dict(round_trip).is_equal(profile_data["avatar_config"] as Dictionary)
+	var no_avatar: Dictionary = profile_data.duplicate(true)
+	no_avatar["avatar_config"] = null
+	no_avatar["nickname"] = null
+	no_avatar["setup_required"] = true
+	assert_object(GameProfileModel.from_dict(no_avatar).avatar_config).is_null()
+	var catalog: CharacterCatalogModel = CharacterCatalogModel.from_dict(
+			_json(FIXTURES.path_join("openapi/CharacterCatalog.json")))
+	assert_object(catalog).is_not_null()
+	assert_int(catalog.presets.size()).is_equal(1)
+	assert_int(catalog.body_types.size()).is_equal(1)
+	assert_int(catalog.default_emote_ids.size()).is_equal(1)
+	var names: Array[NicknameOption] = NicknameOption.list_from([_json(FIXTURES.path_join("openapi/NicknameSuggestion.json"))])
+	assert_int(names.size()).is_equal(1)
+	assert_bool(Uuid.is_valid(names[0].option_id)).is_true()
+	var presets: Array[AvatarPresetModel] = AvatarPresetModel.list_from([_json(FIXTURES.path_join("openapi/AvatarPreset.json"))])
+	assert_int(presets.size()).is_equal(1)
+	assert_int(presets[0].slot).is_between(1, 3)
+
+
 func test_every_example_document_parses_and_localized_text_is_pickable() -> void:
 	var manifest: Dictionary = (_json(FIXTURES.path_join("manifest.json")) as Dictionary)["fixtures"] as Dictionary
 	var examples: int = 0

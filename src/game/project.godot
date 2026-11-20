@@ -78,6 +78,7 @@ theme/custom="res://resources/ui/theme/eduworld_theme_g1_3.tres"
 
 ; F062 (STUDENT_GAME_UX §4): WASD/arrows move, Space jump, E interact, J journal, right mouse drag rotates the
 ; camera, wheel zooms. Touch: joystick + swipe (scenes/ui/hud), tap-to-move for g1_3 (scripts/player/tap_to_move.gd).
+; F070: T emote wheel (+ touch button, scenes/character/EmoteWheel.tscn), I wardrobe (STUDENT_GAME_UX §4.1).
 move_forward={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":87,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null), Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194320,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)]
@@ -101,6 +102,14 @@ jump={
 interact={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)]
+}
+emote_wheel={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":84,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)]
+}
+open_wardrobe={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":73,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)]
 }
 open_journal={
 "deadzone": 0.2,

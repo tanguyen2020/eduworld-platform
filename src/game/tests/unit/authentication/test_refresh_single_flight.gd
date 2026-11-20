@@ -18,12 +18,12 @@ func after_test() -> void:
 func test_five_parallel_401_share_one_refresh() -> void:
 	await h.sign_in()
 	for i: int in 5:
-		h.http.reply("GET /game/profile", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
-	h.http.reply("GET /game/profile", 200, {"nickname": "x"})
+		h.http.reply("GET /game/quests", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
+	h.http.reply("GET /game/quests", 200, {"nickname": "x"})
 	h.http.reply("POST /auth/game/token:refresh", 200, AuthHarness.refresh_ok(AuthHarness.ACCESS_2, AuthHarness.REFRESH_2, false))
 	var results: Array[ApiResult] = []
 	var run: Callable = func() -> void:
-		results.append(await h.api.send(ApiRequest.make_get("/game/profile")))
+		results.append(await h.api.send(ApiRequest.make_get("/game/quests")))
 	for i: int in 5:
 		run.call()
 	for i: int in 60:
@@ -40,8 +40,8 @@ func test_five_parallel_401_share_one_refresh() -> void:
 	assert_str(String(refresh.body["mode"])).is_equal("renew")
 	assert_str(String(refresh.headers["x-tenant-id"])).is_equal(AuthHarness.TENANT_ID)
 	assert_bool(refresh.headers.has("authorization")).is_false()
-	assert_int(h.http.count("GET /game/profile")).is_equal(10)
-	for rec: FakeHttp.Recorded in h.http.find("GET /game/profile").slice(5):
+	assert_int(h.http.count("GET /game/quests")).is_equal(10)
+	for rec: FakeHttp.Recorded in h.http.find("GET /game/quests").slice(5):
 		assert_str(String(rec.headers["authorization"])).is_equal("Bearer %s" % AuthHarness.ACCESS_2)
 	assert_str(h.auth.tokens.refresh_token).is_equal(AuthHarness.REFRESH_2)
 	assert_str(String(h.stored_record()["refresh_token"])).is_equal(AuthHarness.REFRESH_2)
@@ -66,9 +66,9 @@ func test_refresh_failure_expires_the_session() -> void:
 		var expired: Array[int] = [0]
 		var on_expired: Callable = func() -> void: expired[0] += 1
 		EventBus.session_expired.connect(on_expired)
-		h.http.reply("GET /game/profile", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
+		h.http.reply("GET /game/quests", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
 		h.http.reply("POST /auth/game/token:refresh", 401, AuthHarness.problem(401, code))
-		var result: ApiResult = await h.api.send(ApiRequest.make_get("/game/profile"))
+		var result: ApiResult = await h.api.send(ApiRequest.make_get("/game/quests"))
 		EventBus.session_expired.disconnect(on_expired)
 		assert_int(result.status).is_equal(401)
 		assert_int(expired[0]).override_failure_message(code).is_equal(1)
@@ -77,14 +77,14 @@ func test_refresh_failure_expires_the_session() -> void:
 		assert_dict(h.stored_record()).override_failure_message(code).is_empty()
 		assert_int(h.last_state()).is_equal(GameStateMachine.State.LOGIN)
 		assert_str(LoginFormModel.message_for(h.auth.form.banner_code)).is_equal(tr("ui.login.session_expired"))
-		assert_int(h.http.count("GET /game/profile")).is_equal(1)
+		assert_int(h.http.count("GET /game/quests")).is_equal(1)
 
 
 func test_transient_refresh_failure_keeps_the_session() -> void:
 	await h.sign_in()
-	h.http.reply("GET /game/profile", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
+	h.http.reply("GET /game/quests", 401, AuthHarness.problem(401, "UNAUTHENTICATED"))
 	h.http.reply("POST /auth/game/token:refresh", 503, AuthHarness.problem(503, "UNAVAILABLE"))
-	await h.api.send(ApiRequest.make_get("/game/profile"))
+	await h.api.send(ApiRequest.make_get("/game/quests"))
 	assert_str(h.auth.tokens.refresh_token).is_equal(AuthHarness.REFRESH_1)
 	assert_str(String(h.stored_record()["refresh_token"])).is_equal(AuthHarness.REFRESH_1)
 	assert_int(h.last_state()).is_equal(GameStateMachine.State.IN_WORLD)

@@ -9,6 +9,10 @@ var path: String = ""
 var query: Dictionary = {}
 ## JSON body (Dictionary) or null. Never logged.
 var body: Variant = null
+## Media type of `body` (`application/merge-patch+json` for `updateGameProfile`, F070).
+var content_type: String = "application/json"
+## Extra request headers (e.g. `If-None-Match` of an ETag cache, F070). Never logged.
+var headers: Dictionary = {}
 ## Caller-provided UUIDv7 for important writes; kept unchanged on every automatic retry (AGENTS R10).
 var idempotency_key: String = ""
 var authenticated: bool = true
@@ -32,6 +36,20 @@ static func make_post(request_path: String, request_body: Variant = null) -> Api
 	r.method = "POST"
 	r.path = request_path
 	r.body = request_body
+	return r
+
+
+static func make_put(request_path: String, request_body: Variant = null) -> ApiRequest:
+	var r: ApiRequest = make_post(request_path, request_body)
+	r.method = "PUT"
+	return r
+
+
+## JSON Merge Patch write (RFC 7396), e.g. `updateGameProfile`.
+static func make_patch(request_path: String, request_body: Variant = null) -> ApiRequest:
+	var r: ApiRequest = make_post(request_path, request_body)
+	r.method = "PATCH"
+	r.content_type = "application/merge-patch+json"
 	return r
 
 

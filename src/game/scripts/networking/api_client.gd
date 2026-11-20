@@ -130,7 +130,9 @@ func build_headers(req: ApiRequest, traceparent: String) -> PackedStringArray:
 	if not device_id.is_empty():
 		headers.append("X-Device-Id: %s" % device_id)
 	if req.body != null:
-		headers.append("Content-Type: application/json")
+		headers.append("Content-Type: %s" % req.content_type)
+	for key: Variant in req.headers.keys():
+		headers.append("%s: %s" % [key, req.headers[key]])
 	if req.authenticated and tokens.has_access():
 		headers.append("Authorization: Bearer %s" % tokens.access_token)
 	if req.send_tenant and not tokens.tenant_id.is_empty():

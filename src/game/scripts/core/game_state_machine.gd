@@ -6,11 +6,13 @@ extends RefCounted
 enum State {
 	BOOT, VERSION_CHECK, FORCE_UPDATE, MAINTENANCE, RESUMING, RESUME_CONFIRM, LOGIN, SIGNING_IN, LOGIN_WAITING,
 	TENANT_CHOICE, CREATING_SESSION, TAKEOVER_CONFIRM, NOT_STUDENT, NOT_PROVISIONED, ACCOUNT_BLOCKED, CURFEW,
-	REPLACED_NOTICE, IN_WORLD,
+	REPLACED_NOTICE, IN_WORLD, CHARACTER_CREATION,
 }
 
-## In-world destination: the Main Hub greybox with its HUD (F062). First-time avatar creation comes with F070.
+## In-world destination: the Main Hub greybox with its HUD (F062).
 const IN_WORLD_SCENE: String = "res://scenes/world/WorldRoot.tscn"
+## S02 first-time Character Creation, opened before the hub while `GameProfile.setup_required` (F070-AC-01).
+const CHARACTER_CREATION_SCENE: String = "res://scenes/character/CharacterCreation.tscn"
 
 ## Scene per state; states without an entry keep the current scene (busy states of the same screen).
 const SCENES: Dictionary = {
@@ -29,6 +31,7 @@ const SCENES: Dictionary = {
 	State.CURFEW: "res://scenes/auth/CurfewNotice.tscn",
 	State.REPLACED_NOTICE: "res://scenes/ui/dialogs/ReplacedNotice.tscn",
 	State.IN_WORLD: IN_WORLD_SCENE,
+	State.CHARACTER_CREATION: CHARACTER_CREATION_SCENE,
 }
 
 ## 403 codes of a blocked account/tenant (GODOT_ARCHITECTURE §9) shown on AccountBlocked.

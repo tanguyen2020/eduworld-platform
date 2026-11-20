@@ -1,0 +1,292 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/character/character_creation_screen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/character/AvatarRig.tscn" id="2_rig"]
+[ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="3_anim"]
+[ext_resource type="PackedScene" path="res://scenes/learning/VoiceOverPlayer.tscn" id="4_voice"]
+
+[node name="CharacterCreation" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Window" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Window"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Box/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.avatar.title"
+
+[node name="StepIndicator" type="HBoxContainer" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PreviewBox" type="VBoxContainer" parent="Window/Box/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Preview" type="SubViewportContainer" parent="Window/Box/Body/PreviewBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="Window/Box/Body/PreviewBox/Preview"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+transform = Transform3D(1, 0, 0, 0, 0.990268, -0.139173, 0, 0.139173, 0.990268, 0, 1.2, 3)
+current = true
+
+[node name="Light" type="DirectionalLight3D" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 3, 3)
+
+[node name="AvatarRig" parent="Window/Box/Body/PreviewBox/Preview/Viewport" instance=ExtResource("2_rig")]
+unique_name_in_owner = true
+
+[node name="AnimationTree" type="AnimationTree" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+
+[node name="AnimDriver" type="Node" parent="Window/Box/Body/PreviewBox/Preview/Viewport" node_paths=PackedStringArray("animation_player", "animation_tree")]
+unique_name_in_owner = true
+script = ExtResource("3_anim")
+animation_player = NodePath("../AvatarRig/AnimationPlayer")
+animation_tree = NodePath("../AnimationTree")
+
+[node name="PreviewTools" type="HBoxContainer" parent="Window/Box/Body/PreviewBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="RotateLeft" type="Button" parent="Window/Box/Body/PreviewBox/PreviewTools"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.rotate_left"
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.rotate_left"
+
+[node name="RotateRight" type="Button" parent="Window/Box/Body/PreviewBox/PreviewTools"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.rotate_right"
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.rotate_right"
+
+[node name="Options" type="ScrollContainer" parent="Window/Box/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="OptionsBox" type="VBoxContainer" parent="Window/Box/Body/Options"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PresetSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PresetLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/PresetSection"]
+layout_mode = 2
+text = "ui.avatar.presets"
+
+[node name="PresetGrid" type="GridContainer" parent="Window/Box/Body/Options/OptionsBox/PresetSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 3
+
+[node name="CustomizeSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="BodyTypeLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+text = "ui.avatar.body_type"
+
+[node name="BodyTypes" type="HFlowContainer" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SkinToneLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+text = "ui.avatar.skin_tone"
+
+[node name="SkinTones" type="HFlowContainer" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HairStyleLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+text = "ui.avatar.hair_style"
+
+[node name="HairRow" type="HBoxContainer" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+
+[node name="HairPrev" type="Button" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/HairRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.previous"
+theme_type_variation = &"SecondaryButton"
+text = "◀"
+
+[node name="HairName" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/HairRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+
+[node name="HairNext" type="Button" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/HairRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.next_option"
+theme_type_variation = &"SecondaryButton"
+text = "▶"
+
+[node name="OutfitLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+text = "ui.avatar.outfit"
+
+[node name="OutfitRow" type="HBoxContainer" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
+layout_mode = 2
+
+[node name="OutfitPrev" type="Button" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/OutfitRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.previous"
+theme_type_variation = &"SecondaryButton"
+text = "◀"
+
+[node name="OutfitName" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/OutfitRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+
+[node name="OutfitNext" type="Button" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/OutfitRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.next_option"
+theme_type_variation = &"SecondaryButton"
+text = "▶"
+
+[node name="HairColorSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="HairColorLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/HairColorSection"]
+layout_mode = 2
+text = "ui.avatar.hair_color"
+
+[node name="HairColors" type="HFlowContainer" parent="Window/Box/Body/Options/OptionsBox/HairColorSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="NameSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/NameSection"]
+layout_mode = 2
+text = "ui.avatar.choose_name"
+
+[node name="NicknameChoiceChips" type="HFlowContainer" parent="Window/Box/Body/Options/OptionsBox/NameSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MoreNames" type="Button" parent="Window/Box/Body/Options/OptionsBox/NameSection"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.more_names"
+
+[node name="NameHint" type="Label" parent="Window/Box/Body/Options/OptionsBox/NameSection"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.avatar.name_hint"
+autowrap_mode = 3
+
+[node name="PreviewSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="PreviewHint" type="Label" parent="Window/Box/Body/Options/OptionsBox/PreviewSection"]
+layout_mode = 2
+text = "ui.avatar.preview_hint"
+autowrap_mode = 3
+
+[node name="VoiceOver" parent="Window/Box" instance=ExtResource("4_voice")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Status" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Window/Box/Status"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+autowrap_mode = 3
+
+[node name="Retry" type="Button" parent="Window/Box/Status"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.common.retry"
+
+[node name="Footer" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.back"
+
+[node name="Spacer" type="Control" parent="Window/Box/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="SkipCustomize" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.skip_customize"
+
+[node name="Next" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.avatar.next"
+
+[node name="Confirm" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.avatar.confirm"

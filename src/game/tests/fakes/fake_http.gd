@@ -114,6 +114,12 @@ func all_text() -> String:
 	return "\n".join(parts)
 
 
+## Drops the queued replies of `route` (exact route text) so the next `reply()` is served first.
+func clear(route: String) -> FakeHttp:
+	_route(route).clear()
+	return self
+
+
 func _queue(route: String, spec: Dictionary) -> void:
 	var replies: Array = _route(route)
 	if replies.size() == 1 and bool((replies[0] as Dictionary).get("served", false)):

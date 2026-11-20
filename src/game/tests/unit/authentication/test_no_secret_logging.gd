@@ -77,4 +77,5 @@ func test_request_logs_keep_only_method_path_status_code_trace() -> void:
 		seen += 1
 		assert_array((entry["fields"] as Dictionary).keys()).contains_exactly_in_any_order(
 				["method", "path", "status", "code", "trace_id", "elapsed_ms"])
-	assert_int(seen).is_equal(2)
+	# gameLogin, createGameSession and (F070-AC-01) getGameProfile.
+	assert_int(seen).is_equal(3)

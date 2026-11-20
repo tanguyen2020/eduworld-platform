@@ -1,0 +1,42 @@
+{
+  "catalog_version_id": "07000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "presets": [
+    {"preset_code": "preset_explorer", "name": {"vi": "Nhà thám hiểm", "en": "Explorer"}, "avatar_config": {"schema_version": 1, "body_type": "kid_a", "skin_tone": "tone_02", "hair": {"item_id": "hair_short_01", "color": "hair_col_01"}, "outfit": {"item_id": "outfit_explorer_01"}, "accessories": [{"slot": "back", "item_id": "acc_backpack_owl"}], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}},
+    {"preset_code": "preset_artist", "name": {"vi": "Họa sĩ", "en": "Artist"}, "avatar_config": {"schema_version": 1, "body_type": "kid_b", "skin_tone": "tone_04", "hair": {"item_id": "hair_bob_01", "color": "hair_col_03"}, "outfit": {"item_id": "outfit_casual_01"}, "accessories": [{"slot": "face", "item_id": "acc_glasses_round"}], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}},
+    {"preset_code": "preset_sporty", "name": {"vi": "Vận động viên", "en": "Sporty"}, "avatar_config": {"schema_version": 1, "body_type": "kid_c", "skin_tone": "tone_05", "hair": {"item_id": "hair_spiky_01", "color": "hair_col_02"}, "outfit": {"item_id": "outfit_sport_01"}, "accessories": [{"slot": "head", "item_id": "acc_cap_star"}], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}},
+    {"preset_code": "preset_scientist", "name": {"vi": "Nhà khoa học", "en": "Scientist"}, "avatar_config": {"schema_version": 1, "body_type": "kid_d", "skin_tone": "tone_01", "hair": {"item_id": "hair_curly_01", "color": "hair_col_05"}, "outfit": {"item_id": "outfit_school_01"}, "accessories": [], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}},
+    {"preset_code": "preset_musician", "name": {"vi": "Nhạc sĩ", "en": "Musician"}, "avatar_config": {"schema_version": 1, "body_type": "kid_a", "skin_tone": "tone_06", "hair": {"item_id": "hair_braids_01", "color": "hair_col_07"}, "outfit": {"item_id": "outfit_star_01"}, "accessories": [{"slot": "hand", "item_id": "acc_flag_small"}], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}},
+    {"preset_code": "preset_gardener", "name": {"vi": "Người làm vườn", "en": "Gardener"}, "avatar_config": {"schema_version": 1, "body_type": "kid_b", "skin_tone": "tone_03", "hair": {"item_id": "hair_ponytail_01", "color": "hair_col_04"}, "outfit": {"item_id": "outfit_rain_01"}, "accessories": [], "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]}}
+  ],
+  "body_types": [
+    {"code": "kid_a", "name": {"vi": "Dáng 1", "en": "Shape 1"}},
+    {"code": "kid_b", "name": {"vi": "Dáng 2", "en": "Shape 2"}},
+    {"code": "kid_c", "name": {"vi": "Dáng 3", "en": "Shape 3"}},
+    {"code": "kid_d", "name": {"vi": "Dáng 4", "en": "Shape 4"}}
+  ],
+  "skin_tones": [
+    {"code": "tone_01", "name": {"vi": "Da sáng", "en": "Light"}},
+    {"code": "tone_02", "name": {"vi": "Da sáng vừa", "en": "Light medium"}},
+    {"code": "tone_03", "name": {"vi": "Da vừa", "en": "Medium"}},
+    {"code": "tone_04", "name": {"vi": "Da ngăm vừa", "en": "Tan"}},
+    {"code": "tone_05", "name": {"vi": "Da ngăm", "en": "Brown"}},
+    {"code": "tone_06", "name": {"vi": "Da sẫm", "en": "Dark"}}
+  ],
+  "hair_colors": [
+    {"code": "hair_col_01", "name": {"vi": "Đen", "en": "Black"}},
+    {"code": "hair_col_02", "name": {"vi": "Nâu sẫm", "en": "Dark brown"}},
+    {"code": "hair_col_03", "name": {"vi": "Nâu", "en": "Brown"}},
+    {"code": "hair_col_04", "name": {"vi": "Nâu vàng", "en": "Light brown"}},
+    {"code": "hair_col_05", "name": {"vi": "Vàng", "en": "Blond"}},
+    {"code": "hair_col_06", "name": {"vi": "Đỏ", "en": "Red"}},
+    {"code": "hair_col_07", "name": {"vi": "Xanh dương", "en": "Blue"}},
+    {"code": "hair_col_08", "name": {"vi": "Tím", "en": "Purple"}}
+  ],
+  "default_item_ids": [
+    "hair_short_01", "hair_ponytail_01", "hair_curly_01", "hair_bob_01", "hair_spiky_01", "hair_braids_01",
+    "outfit_explorer_01", "outfit_sport_01", "outfit_school_01", "outfit_casual_01", "outfit_rain_01", "outfit_star_01",
+    "acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"
+  ],
+  "default_emote_ids": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"]
+}

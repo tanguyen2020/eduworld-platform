@@ -1,0 +1,74 @@
+{
+  "catalog_version_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "presets": [
+    {
+      "preset_code": "SAMPLE1",
+      "name": {
+        "vi": "sample",
+        "en": "sample"
+      },
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "SAMPLE1",
+        "skin_tone": "SAMPLE1",
+        "hair": {
+          "item_id": "SAMPLE1",
+          "color": "SAMPLE1"
+        },
+        "outfit": {
+          "item_id": "SAMPLE1"
+        },
+        "accessories": [
+          {
+            "slot": "head",
+            "item_id": "SAMPLE1"
+          }
+        ],
+        "emote_slots": [
+          "SAMPLE1"
+        ],
+        "pet": "SAMPLE1",
+        "title": "SAMPLE1",
+        "frame": "SAMPLE1",
+        "badge_showcase": [
+          "SAMPLE1"
+        ]
+      },
+      "thumbnail_asset_id": "00000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "body_types": [
+    {
+      "code": "SAMPLE1",
+      "name": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ],
+  "skin_tones": [
+    {
+      "code": "SAMPLE1",
+      "name": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ],
+  "hair_colors": [
+    {
+      "code": "SAMPLE1",
+      "name": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ],
+  "default_item_ids": [
+    "SAMPLE1"
+  ],
+  "default_emote_ids": [
+    "SAMPLE1"
+  ]
+}

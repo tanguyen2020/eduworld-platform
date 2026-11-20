@@ -93,6 +93,105 @@ msgstr ""
 msgid "ui.audio.transcript"
 msgstr ""
 
+msgid "ui.avatar.back"
+msgstr ""
+
+msgid "ui.avatar.body_type"
+msgstr ""
+
+msgid "ui.avatar.choose_name"
+msgstr ""
+
+msgid "ui.avatar.confirm"
+msgstr ""
+
+msgid "ui.avatar.hair_color"
+msgstr ""
+
+msgid "ui.avatar.hair_style"
+msgstr ""
+
+msgid "ui.avatar.loading"
+msgstr ""
+
+msgid "ui.avatar.more_names"
+msgstr ""
+
+msgid "ui.avatar.name_hint"
+msgstr ""
+
+msgid "ui.avatar.next"
+msgstr ""
+
+msgid "ui.avatar.next_option"
+msgstr ""
+
+msgid "ui.avatar.nickname_taken"
+msgstr ""
+
+msgid "ui.avatar.option_n"
+msgstr ""
+
+msgid "ui.avatar.outfit"
+msgstr ""
+
+msgid "ui.avatar.presets"
+msgstr ""
+
+msgid "ui.avatar.preview_hint"
+msgstr ""
+
+msgid "ui.avatar.previous"
+msgstr ""
+
+msgid "ui.avatar.rotate_left"
+msgstr ""
+
+msgid "ui.avatar.rotate_right"
+msgstr ""
+
+msgid "ui.avatar.saving"
+msgstr ""
+
+msgid "ui.avatar.skin_tone"
+msgstr ""
+
+msgid "ui.avatar.skip_customize"
+msgstr ""
+
+msgid "ui.avatar.step_customize"
+msgstr ""
+
+msgid "ui.avatar.step_done"
+msgstr ""
+
+msgid "ui.avatar.step_hair_color"
+msgstr ""
+
+msgid "ui.avatar.step_name"
+msgstr ""
+
+msgid "ui.avatar.step_preset"
+msgstr ""
+
+msgid "ui.avatar.title"
+msgstr ""
+
+msgid "ui.avatar.voice.customize"
+msgstr ""
+
+msgid "ui.avatar.voice.hair_color"
+msgstr ""
+
+msgid "ui.avatar.voice.name"
+msgstr ""
+
+msgid "ui.avatar.voice.preset"
+msgstr ""
+
+msgid "ui.avatar.voice.preview"
+msgstr ""
+
 msgid "ui.boot.loading"
 msgstr ""
 
@@ -135,6 +234,18 @@ msgstr ""
 msgid "ui.debug.mock_badge"
 msgstr ""
 
+msgid "ui.emote.close.tooltip"
+msgstr ""
+
+msgid "ui.emote.open"
+msgstr ""
+
+msgid "ui.emote.open.tooltip"
+msgstr ""
+
+msgid "ui.emote.slot"
+msgstr ""
+
 msgid "ui.error.ACCESS_OUTSIDE_ALLOWED_HOURS"
 msgstr ""
 
@@ -174,6 +285,9 @@ msgstr ""
 msgid "ui.error.CURFEW_ACTIVE"
 msgstr ""
 
+msgid "ui.error.EQUIP_SLOT_INVALID"
+msgstr ""
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr ""
 
@@ -192,6 +306,9 @@ msgstr ""
 msgid "ui.error.INVALID_RESPONSE"
 msgstr ""
 
+msgid "ui.error.ITEM_NOT_OWNED"
+msgstr ""
+
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr ""
 
@@ -199,6 +316,12 @@ msgid "ui.error.LOGIN_TICKET_INVALID"
 msgstr ""
 
 msgid "ui.error.MAINTENANCE"
+msgstr ""
+
+msgid "ui.error.NICKNAME_CHANGE_LIMIT"
+msgstr ""
+
+msgid "ui.error.NICKNAME_UNAVAILABLE"
 msgstr ""
 
 msgid "ui.error.NOT_FOUND"
@@ -433,6 +556,12 @@ msgid "ui.hub.player_default"
 msgstr ""
 
 msgid "ui.hub.settings"
+msgstr ""
+
+msgid "ui.hub.wardrobe"
+msgstr ""
+
+msgid "ui.hub.wardrobe.tooltip"
 msgstr ""
 
 msgid "ui.learning.no_translation"
@@ -841,4 +970,58 @@ msgid "ui.video.seek_locked"
 msgstr ""
 
 msgid "ui.video.subtitles"
+msgstr ""
+
+msgid "ui.wardrobe.emotes_full"
+msgstr ""
+
+msgid "ui.wardrobe.item_n"
+msgstr ""
+
+msgid "ui.wardrobe.loading"
+msgstr ""
+
+msgid "ui.wardrobe.preset_saved"
+msgstr ""
+
+msgid "ui.wardrobe.presets"
+msgstr ""
+
+msgid "ui.wardrobe.revert"
+msgstr ""
+
+msgid "ui.wardrobe.save"
+msgstr ""
+
+msgid "ui.wardrobe.save_preset"
+msgstr ""
+
+msgid "ui.wardrobe.saved"
+msgstr ""
+
+msgid "ui.wardrobe.saving"
+msgstr ""
+
+msgid "ui.wardrobe.tab.accessory"
+msgstr ""
+
+msgid "ui.wardrobe.tab.clothes"
+msgstr ""
+
+msgid "ui.wardrobe.tab.emote"
+msgstr ""
+
+msgid "ui.wardrobe.tab.hair"
+msgstr ""
+
+msgid "ui.wardrobe.tab.look"
+msgstr ""
+
+msgid "ui.wardrobe.tab.outfit"
+msgstr ""
+
+msgid "ui.wardrobe.title"
+msgstr ""
+
+msgid "ui.wardrobe.wear_preset"
 msgstr ""

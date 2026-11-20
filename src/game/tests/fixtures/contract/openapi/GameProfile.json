@@ -1,0 +1,39 @@
+{
+  "student_id": "00000000-0000-4000-8000-000000000001",
+  "nickname": "sample",
+  "level": 1,
+  "xp_total": 0,
+  "setup_required": false,
+  "avatar_created_at": "2026-11-15T07:30:00Z",
+  "avatar_config_hash": "sample",
+  "avatar_config": {
+    "schema_version": 1,
+    "body_type": "SAMPLE1",
+    "skin_tone": "SAMPLE1",
+    "hair": {
+      "item_id": "SAMPLE1",
+      "color": "SAMPLE1"
+    },
+    "outfit": {
+      "item_id": "SAMPLE1"
+    },
+    "accessories": [
+      {
+        "slot": "head",
+        "item_id": "SAMPLE1"
+      }
+    ],
+    "emote_slots": [
+      "SAMPLE1"
+    ],
+    "pet": "SAMPLE1",
+    "title": "SAMPLE1",
+    "frame": "SAMPLE1",
+    "badge_showcase": [
+      "SAMPLE1"
+    ]
+  },
+  "last_area_id": "sample",
+  "settings": {},
+  "preferred_language": "vi-VN"
+}

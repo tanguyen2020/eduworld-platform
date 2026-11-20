@@ -49,6 +49,10 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.HINTS_EXHAUSTED",
 	"ui.error.ACTIVITY_TYPE_NOT_SUPPORTED",
 	"ui.error.NOT_FOUND",
+	"ui.error.ITEM_NOT_OWNED",
+	"ui.error.EQUIP_SLOT_INVALID",
+	"ui.error.NICKNAME_UNAVAILABLE",
+	"ui.error.NICKNAME_CHANGE_LIMIT",
 ]
 
 

@@ -1,0 +1,156 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/character/customization_studio.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/character/AvatarRig.tscn" id="2_rig"]
+[ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="3_anim"]
+
+[node name="CustomizationStudio" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Window" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Window"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Box/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.wardrobe.title"
+
+[node name="Close" type="Button" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.common.close"
+
+[node name="Body" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PreviewBox" type="VBoxContainer" parent="Window/Box/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Preview" type="SubViewportContainer" parent="Window/Box/Body/PreviewBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="Window/Box/Body/PreviewBox/Preview"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+transform = Transform3D(1, 0, 0, 0, 0.990268, -0.139173, 0, 0.139173, 0.990268, 0, 1.2, 3)
+current = true
+
+[node name="Light" type="DirectionalLight3D" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 3, 3)
+
+[node name="AvatarRig" parent="Window/Box/Body/PreviewBox/Preview/Viewport" instance=ExtResource("2_rig")]
+unique_name_in_owner = true
+
+[node name="AnimationTree" type="AnimationTree" parent="Window/Box/Body/PreviewBox/Preview/Viewport"]
+
+[node name="AnimDriver" type="Node" parent="Window/Box/Body/PreviewBox/Preview/Viewport" node_paths=PackedStringArray("animation_player", "animation_tree")]
+script = ExtResource("3_anim")
+animation_player = NodePath("../AvatarRig/AnimationPlayer")
+animation_tree = NodePath("../AnimationTree")
+
+[node name="PreviewTools" type="HBoxContainer" parent="Window/Box/Body/PreviewBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="RotateLeft" type="Button" parent="Window/Box/Body/PreviewBox/PreviewTools"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.rotate_left"
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.rotate_left"
+
+[node name="RotateRight" type="Button" parent="Window/Box/Body/PreviewBox/PreviewTools"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "ui.avatar.rotate_right"
+theme_type_variation = &"SecondaryButton"
+text = "ui.avatar.rotate_right"
+
+[node name="Side" type="VBoxContainer" parent="Window/Box/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Tabs" type="HBoxContainer" parent="Window/Box/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ItemScroll" type="ScrollContainer" parent="Window/Box/Body/Side"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Items" type="HFlowContainer" parent="Window/Box/Body/Side/ItemScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PresetLabel" type="Label" parent="Window/Box/Body/Side"]
+layout_mode = 2
+text = "ui.wardrobe.presets"
+
+[node name="PresetSlots" type="GridContainer" parent="Window/Box/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+
+[node name="Status" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Window/Box/Status"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+autowrap_mode = 3
+
+[node name="Retry" type="Button" parent="Window/Box/Status"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.common.retry"
+
+[node name="Footer" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+alignment = 2
+
+[node name="Revert" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.wardrobe.revert"
+
+[node name="Save" type="Button" parent="Window/Box/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.wardrobe.save"

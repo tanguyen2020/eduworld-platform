@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemVisual" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/item_visual.gd" id="1_visual"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_part"]
+radius = 0.37
+height = 0.8
+
+[resource]
+script = ExtResource("1_visual")
+code = "outfit_sport_01"
+slot = "outfit"
+tint = Color(0.2, 0.45, 0.85, 1)
+mesh = SubResource("CapsuleMesh_part")
+placeholder = true

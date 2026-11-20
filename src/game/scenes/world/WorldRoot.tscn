@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/world/world_root.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/zones/main_hub/Zone.tscn" id="2_zone"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/BreakReminderDialog.tscn" id="4_break"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NoticeDialog.tscn" id="5_notice"]
 [ext_resource type="PackedScene" path="res://scenes/bootstrap/QualityBenchmark.tscn" id="6_benchmark"]
+[ext_resource type="PackedScene" path="res://scenes/character/EmoteWheel.tscn" id="7_emotes"]
 
 [node name="WorldRoot" type="Node"]
 script = ExtResource("1_script")
@@ -14,6 +15,12 @@ script = ExtResource("1_script")
 unique_name_in_owner = true
 
 [node name="MainHud" parent="." instance=ExtResource("3_hud")]
+unique_name_in_owner = true
+
+[node name="Emotes" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="EmoteWheel" parent="Emotes" instance=ExtResource("7_emotes")]
 unique_name_in_owner = true
 
 [node name="Panels" type="CanvasLayer" parent="."]

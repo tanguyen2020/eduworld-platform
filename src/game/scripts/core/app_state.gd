@@ -73,6 +73,17 @@ func set_grade_band(band: String) -> void:
 		theme_service.set_band(grade_band)
 
 
+## F070: the profile read after the game session (nickname chosen in S02, level) replaces the display fields of
+## `player.game_profile` so the HUD shows the current nickname. No session restart, no network.
+func set_game_profile(display: Dictionary) -> void:
+	if player.is_empty():
+		return
+	var current: Dictionary = player.get("game_profile") as Dictionary if player.get("game_profile") is Dictionary else {}
+	current.merge(display, true)
+	player["game_profile"] = current
+	player_changed.emit(player)
+
+
 func clear_player() -> void:
 	player = {}
 	school_policies = {}

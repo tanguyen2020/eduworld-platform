@@ -12,6 +12,9 @@ var learning: LearningService = null
 var math_svg: MathSvgCache = null
 var media: MediaLoader = null
 var video_files: VideoFileCache = null
+## Player profile, nickname, avatar and saved outfits (F070); character catalog cache + ownership view (F070/F075).
+var profile: ProfileService = null
+var inventory: InventoryService = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -29,6 +32,9 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	math_svg.failure_handler = func(_reason: String) -> void: learning.report_math_failed()
 	media = MediaLoader.new(transport)
 	video_files = VideoFileCache.new(rest)
+	profile = ProfileService.new(rest, app_state)
+	profile.access_denied.connect(_on_access_denied)
+	inventory = InventoryService.new(rest)
 
 
 ## Applies the bootstrap of a new session (policies, product telemetry switch) and drops the previous data.
@@ -48,6 +54,7 @@ func end_session() -> void:
 	assignments.clear()
 	learning.clear()
 	media.clear()
+	profile.clear()
 	play_time.configure({})
 	telemetry.clear()
 

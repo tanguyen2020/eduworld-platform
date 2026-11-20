@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemVisual" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/item_visual.gd" id="1_visual"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_part"]
+radius = 0.34
+height = 0.4
+
+[resource]
+script = ExtResource("1_visual")
+code = "hair_curly_01"
+slot = "hair"
+offset = Vector3(0, 0, 0)
+mesh = SubResource("SphereMesh_part")
+placeholder = true

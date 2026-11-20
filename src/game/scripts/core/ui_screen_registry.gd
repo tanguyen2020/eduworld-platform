@@ -9,6 +9,7 @@ const SCREENS: Dictionary = {
 	&"activity_host": "res://scenes/learning/ActivityHost.tscn",
 	&"quest_journal": "res://scenes/quest/QuestJournal.tscn",
 	&"settings": "res://scenes/ui/settings/SettingsPanel.tscn",
+	&"wardrobe": "res://scenes/character/CustomizationStudio.tscn",
 }
 
 

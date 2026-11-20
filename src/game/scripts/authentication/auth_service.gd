@@ -48,6 +48,10 @@ var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var tokens: TokenStore = TokenStore.new()
 var session_store: SessionStore = null
 var sessions: GameSessionService = null
+## F070-AC-01: `getGameProfile` after the game session decides S02 vs. the hub. `configure()` creates one on the
+## given ApiClient (tests); the running app uses the session ServiceLocator's ProfileService (same ApiClient) so S02
+## starts from the profile already read.
+var profiles: ProfileService = null
 var version_check: VersionCheck = VersionCheck.new()
 var form: LoginFormModel = LoginFormModel.new()
 var curfew: CurfewWatcher = CurfewWatcher.new()
@@ -108,6 +112,8 @@ func configure(rest: RestApiClient, time_source: ClientClock, storage: SecureSto
 	sessions = GameSessionService.new(rest, time_source, version, client_platform)
 	sessions.session_replaced.connect(_on_session_replaced)
 	sessions.heartbeat_ticked.connect(_on_heartbeat_ticked)
+	profiles = ProfileService.new(rest, _autoload("AppState"))
+	profiles.access_denied.connect(handle_access_denied)
 	_load_form_memory()
 
 
@@ -128,6 +134,8 @@ func _setup_defaults() -> void:
 	rest.platform = client_platform
 	configure(rest, rest.clock, SecureStorageFactory.create_default(), get_node("/root/Settings"), id, version,
 			client_platform, bool(config.get("shared_device")))
+	# The app shares the ServiceLocator's ProfileService (resolved after bootstrap, see _profile_service()).
+	profiles = null
 	lifecycle = LifecycleWatcher.new()
 	lifecycle.name = "LifecycleWatcher"
 	add_child(lifecycle)
@@ -542,7 +550,7 @@ func _start_game_session(takeover: bool) -> void:
 			lifecycle.idle_enabled = shared_device
 			lifecycle.touch()
 		sessions.start_heartbeat()
-		_set_state(STATE.IN_WORLD)
+		await _enter_game()
 		session_started.emit(sessions.game_session_id)
 		return
 	if result.status == 409 and result.code == GameSessionService.CODE_ACTIVE_SESSION:
@@ -560,6 +568,36 @@ func _start_game_session(takeover: bool) -> void:
 		_enter_force_update(result)
 		return
 	_show_login(result.code)
+
+
+## F070-AC-01: reads `getGameProfile` once the game session exists (the profile is created in that transaction);
+## `setup_required` → S02 Character Creation before the hub, otherwise the hub. When the profile cannot be read the
+## student also goes to S02, which retries and moves on to the hub if nothing is missing [Proposed] — never the hub
+## with an unknown profile.
+func _enter_game() -> void:
+	var service: ProfileService = _profile_service()
+	var next: int = STATE.CHARACTER_CREATION
+	if service != null:
+		var result: ApiResult = await service.fetch_profile()
+		if not signed_in or state != STATE.CREATING_SESSION:
+			return
+		if result.ok and not service.needs_setup():
+			next = STATE.IN_WORLD
+	_set_state(next)
+
+
+## S02 confirmed (avatar + nickname saved): enter the hub. Ignored outside Character Creation.
+func complete_character_creation() -> void:
+	if state == STATE.CHARACTER_CREATION:
+		_set_state(STATE.IN_WORLD)
+
+
+func _profile_service() -> ProfileService:
+	if profiles != null:
+		return profiles
+	var app_state: Node = _autoload("AppState")
+	var locator: ServiceLocator = app_state.call("get_services") as ServiceLocator if app_state != null else null
+	return locator.profile if locator != null else null
 
 
 func _handle_login_failure(result: ApiResult) -> void:

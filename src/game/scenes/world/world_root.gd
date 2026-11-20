@@ -3,8 +3,9 @@ extends Node
 ## Main Hub zone, the HUD, the panel host and the dialogs, and wires them: Zone ↔ HUD signals, `EventBus.ui_requested`
 ## → registered screen or `ui.activity_player.update_required` (F062-AC-09/10), the first-run quality benchmark
 ## (F062-AC-14) and device profiles (F062-AC-15), the break reminder (F062-AC-21/22), the curfew warning banner
-## (F061-AC-36) and the periodic telemetry flush (F062-AC-24). Glue only: no business rule, no network call
-## (services do the work, AGENTS R1).
+## (F061-AC-36) and the periodic telemetry flush (F062-AC-24); F070: the local avatar drawn from the profile, the
+## emote wheel with the equipped emotes and the wardrobe (HUD button / I). Glue only: no business rule, no network
+## call (services do the work, AGENTS R1).
 
 ## Screens that hold the break reminder while open (F062-AC-22): a panel sets `blocks_break_reminder = true`.
 const HOLD_PROPERTY: StringName = &"blocks_break_reminder"
@@ -20,6 +21,7 @@ var open_screen: StringName = &""
 @onready var _break_dialog: PanelContainer = %BreakReminderDialog
 @onready var _notice: PanelContainer = %Notice
 @onready var _benchmark: Control = %QualityBenchmark
+@onready var _emotes: EmoteWheel = %EmoteWheel
 
 
 func _ready() -> void:
@@ -27,6 +29,7 @@ func _ready() -> void:
 	_hud.connect("context_action_pressed", _on_context_action_pressed)
 	_hud.connect("journal_pressed", _on_journal_pressed)
 	_hud.connect("settings_pressed", _on_settings_pressed)
+	_hud.connect("wardrobe_pressed", _on_wardrobe_pressed)
 	_hud.connect("home_pressed", zone.return_home)
 	_hud.connect("joystick_moved", _on_joystick_moved)
 	zone.interaction_focus_changed.connect(_on_focus_changed)
@@ -34,11 +37,19 @@ func _ready() -> void:
 	AuthService.curfew_warning_raised.connect(_on_curfew_warning_raised)
 	var services: ServiceLocator = AppState.get_services()
 	services.play_time.break_reminder_shown.connect(_on_break_reminder_shown)
+	services.profile.avatar_saved.connect(_on_avatar_saved)
+	var local: PlayerController = zone.player as PlayerController
+	# Emotes play locally in F070; sending `hub.player.emote` to the others comes with F091/F092.
+	_emotes.anim_driver = local.anim_driver if local != null else null
+	_apply_avatar(services.profile.avatar_config())
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
 
 
 func _exit_tree() -> void:
+	var locator: ServiceLocator = AppState.services
+	if locator != null and locator.profile.avatar_saved.is_connected(_on_avatar_saved):
+		locator.profile.avatar_saved.disconnect(_on_avatar_saved)
 	if EventBus.ui_requested.is_connected(_on_ui_requested):
 		EventBus.ui_requested.disconnect(_on_ui_requested)
 	if AuthService.curfew_warning_raised.is_connected(_on_curfew_warning_raised):
@@ -130,6 +141,32 @@ func _on_journal_pressed() -> void:
 
 func _on_settings_pressed() -> void:
 	EventBus.ui_requested.emit(&"settings", {})
+
+
+## F070 Tủ đồ: HUD button or `open_wardrobe` (I).
+func _on_wardrobe_pressed() -> void:
+	EventBus.ui_requested.emit(&"wardrobe", {})
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if open_screen.is_empty() and event.is_action_pressed("open_wardrobe"):
+		_on_wardrobe_pressed()
+		get_viewport().set_input_as_handled()
+
+
+## Draws the local avatar from the profile (fallback visuals for missing items, F070-AC-18) and fills the emote
+## wheel with the equipped emotes (F070-AC-20).
+func _apply_avatar(config: AvatarConfigModel) -> void:
+	var local: PlayerController = zone.player as PlayerController if zone != null else null
+	var rig: AvatarBuilder = local.avatar as AvatarBuilder if local != null else null
+	if rig != null and config != null:
+		rig.apply(config, AppState.get_services().inventory.catalog)
+	_emotes.set_emotes(config.emote_slots if config != null else PackedStringArray())
+
+
+func _on_avatar_saved(config: AvatarConfigModel) -> void:
+	_apply_avatar(config)
+
 
 
 func _on_joystick_moved(vector: Vector2) -> void:

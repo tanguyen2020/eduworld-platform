@@ -96,6 +96,105 @@ msgstr "Tốc độ {rate}"
 msgid "ui.audio.transcript"
 msgstr "Lời thoại"
 
+msgid "ui.avatar.back"
+msgstr "Quay lại"
+
+msgid "ui.avatar.body_type"
+msgstr "Dáng người"
+
+msgid "ui.avatar.choose_name"
+msgstr "Chọn tên của em"
+
+msgid "ui.avatar.confirm"
+msgstr "Xác nhận"
+
+msgid "ui.avatar.hair_color"
+msgstr "Màu tóc"
+
+msgid "ui.avatar.hair_style"
+msgstr "Kiểu tóc"
+
+msgid "ui.avatar.loading"
+msgstr "Đang chuẩn bị nhân vật…"
+
+msgid "ui.avatar.more_names"
+msgstr "Gợi ý khác"
+
+msgid "ui.avatar.name_hint"
+msgstr "Tên được tạo sẵn để giữ an toàn cho em."
+
+msgid "ui.avatar.next"
+msgstr "Tiếp ▶"
+
+msgid "ui.avatar.next_option"
+msgstr "Mẫu sau"
+
+msgid "ui.avatar.nickname_taken"
+msgstr "Tên này vừa có bạn chọn rồi. Em chọn tên khác nhé!"
+
+msgid "ui.avatar.option_n"
+msgstr "Mẫu {n}"
+
+msgid "ui.avatar.outfit"
+msgstr "Trang phục"
+
+msgid "ui.avatar.presets"
+msgstr "Nhân vật mẫu"
+
+msgid "ui.avatar.preview_hint"
+msgstr "Xem nhân vật của em! Kéo để xoay."
+
+msgid "ui.avatar.previous"
+msgstr "Mẫu trước"
+
+msgid "ui.avatar.rotate_left"
+msgstr "Xoay trái"
+
+msgid "ui.avatar.rotate_right"
+msgstr "Xoay phải"
+
+msgid "ui.avatar.saving"
+msgstr "Đang lưu…"
+
+msgid "ui.avatar.skin_tone"
+msgstr "Màu da"
+
+msgid "ui.avatar.skip_customize"
+msgstr "Bỏ qua tùy chỉnh"
+
+msgid "ui.avatar.step_customize"
+msgstr "Tùy chỉnh"
+
+msgid "ui.avatar.step_done"
+msgstr "Xong"
+
+msgid "ui.avatar.step_hair_color"
+msgstr "Màu tóc"
+
+msgid "ui.avatar.step_name"
+msgstr "Tên"
+
+msgid "ui.avatar.step_preset"
+msgstr "Chọn mẫu"
+
+msgid "ui.avatar.title"
+msgstr "Tạo nhân vật của em"
+
+msgid "ui.avatar.voice.customize"
+msgstr "Em có thể đổi dáng người, màu da, kiểu tóc và trang phục."
+
+msgid "ui.avatar.voice.hair_color"
+msgstr "Em hãy chọn màu tóc."
+
+msgid "ui.avatar.voice.name"
+msgstr "Em hãy chọn một cái tên. Bấm Gợi ý khác để xem tên mới."
+
+msgid "ui.avatar.voice.preset"
+msgstr "Em hãy chọn một nhân vật mà em thích."
+
+msgid "ui.avatar.voice.preview"
+msgstr "Nhân vật của em đây! Bấm Xác nhận để vào thế giới."
+
 msgid "ui.boot.loading"
 msgstr "Đang tải…"
 
@@ -138,6 +237,18 @@ msgstr "Không khởi động được trò chơi"
 msgid "ui.debug.mock_badge"
 msgstr "MOCK · dữ liệu giả lập, không phải máy chủ thật"
 
+msgid "ui.emote.close.tooltip"
+msgstr "Đóng vòng emote"
+
+msgid "ui.emote.open"
+msgstr "Emote"
+
+msgid "ui.emote.open.tooltip"
+msgstr "Vòng emote (T)"
+
+msgid "ui.emote.slot"
+msgstr "Emote {n}"
+
 msgid "ui.error.ACCESS_OUTSIDE_ALLOWED_HOURS"
 msgstr "Bây giờ chưa đến giờ chơi EduWorld."
 
@@ -177,6 +288,9 @@ msgstr "Trò chơi cần được cập nhật lên phiên bản mới."
 msgid "ui.error.CURFEW_ACTIVE"
 msgstr "Đã đến giờ nghỉ. EduWorld sẽ mở lại vào giờ cho phép."
 
+msgid "ui.error.EQUIP_SLOT_INVALID"
+msgstr "Món đồ này không mặc vào chỗ đó được. Em thử cách khác nhé."
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "Tài khoản này dùng cho cán bộ quản lý, không dùng để vào game. Vui lòng dùng trang quản trị EduWorld."
 
@@ -195,6 +309,9 @@ msgstr "Tên đăng nhập hoặc mật khẩu chưa đúng."
 msgid "ui.error.INVALID_RESPONSE"
 msgstr "Câu trả lời chưa đúng cách, em thử lại nhé."
 
+msgid "ui.error.ITEM_NOT_OWNED"
+msgstr "Em chưa có món đồ này. Em chọn món khác nhé."
+
 msgid "ui.error.LOGIN_QUEUE_BUSY"
 msgstr "Đang vào lớp…"
 
@@ -203,6 +320,12 @@ msgstr "Phiên chọn trường đã hết, em đăng nhập lại nhé."
 
 msgid "ui.error.MAINTENANCE"
 msgstr "EduWorld đang bảo trì, em quay lại sau nhé."
+
+msgid "ui.error.NICKNAME_CHANGE_LIMIT"
+msgstr "Tháng này em đã đổi tên rồi. Em đổi lại sau nhé."
+
+msgid "ui.error.NICKNAME_UNAVAILABLE"
+msgstr "Tên này không dùng được nữa. Em chọn tên khác nhé."
 
 msgid "ui.error.NOT_FOUND"
 msgstr "Không tìm thấy bài này."
@@ -437,6 +560,12 @@ msgstr "Bạn nhỏ"
 
 msgid "ui.hub.settings"
 msgstr "Cài đặt"
+
+msgid "ui.hub.wardrobe"
+msgstr "Tủ đồ"
+
+msgid "ui.hub.wardrobe.tooltip"
+msgstr "Tủ đồ (I)"
 
 msgid "ui.learning.no_translation"
 msgstr "Chưa có bản tiếng Anh"
@@ -857,3 +986,57 @@ msgstr "Em xem hết phần này trước nhé."
 
 msgid "ui.video.subtitles"
 msgstr "Phụ đề"
+
+msgid "ui.wardrobe.emotes_full"
+msgstr "Vòng emote đã đủ 6 ô. Em bỏ bớt một emote nhé."
+
+msgid "ui.wardrobe.item_n"
+msgstr "Món {n}"
+
+msgid "ui.wardrobe.loading"
+msgstr "Đang mở tủ đồ…"
+
+msgid "ui.wardrobe.preset_saved"
+msgstr "Đã lưu bộ phối đồ!"
+
+msgid "ui.wardrobe.presets"
+msgstr "Bộ phối đồ"
+
+msgid "ui.wardrobe.revert"
+msgstr "Hoàn tác"
+
+msgid "ui.wardrobe.save"
+msgstr "Lưu"
+
+msgid "ui.wardrobe.save_preset"
+msgstr "Lưu vào bộ {n}"
+
+msgid "ui.wardrobe.saved"
+msgstr "Đã lưu trang phục!"
+
+msgid "ui.wardrobe.saving"
+msgstr "Đang lưu…"
+
+msgid "ui.wardrobe.tab.accessory"
+msgstr "Phụ kiện"
+
+msgid "ui.wardrobe.tab.clothes"
+msgstr "Trang phục"
+
+msgid "ui.wardrobe.tab.emote"
+msgstr "Emote"
+
+msgid "ui.wardrobe.tab.hair"
+msgstr "Kiểu tóc"
+
+msgid "ui.wardrobe.tab.look"
+msgstr "Ngoại hình"
+
+msgid "ui.wardrobe.tab.outfit"
+msgstr "Quần áo"
+
+msgid "ui.wardrobe.title"
+msgstr "Tủ đồ"
+
+msgid "ui.wardrobe.wear_preset"
+msgstr "Mặc bộ {n}"
