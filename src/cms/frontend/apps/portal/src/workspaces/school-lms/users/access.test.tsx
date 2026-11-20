@@ -172,13 +172,24 @@ describe('Người dùng & phân quyền', () => {
     expect(backend.calls('DELETE', `/tenant/user-roles/${IDS.userRole1}`)[0]!.search).toContain('reason=');
   });
 
-  it('permission log lists user_role.* with actor, reason, before/after, trace id (F052-AC-18)', async () => {
+  it('permission log: one query action_prefix=role&action_prefix=user_role, optional action narrows (F052-AC-18, OQ F052-2)', async () => {
     const { backend } = await renderSchoolLms('/school-lms/access-control', { account: unitAdmin() });
     fireEvent.click(await screen.findByRole('tab', { name: 'Nhật ký phân quyền' }));
     expect(await screen.findByText('Phân công tổ Toán')).toBeInTheDocument();
+    expect(screen.getByText('Tạo role tổ trưởng')).toBeInTheDocument(); // role.* and user_role.* together
+    expect(screen.queryByText('Đổi địa chỉ')).toBeNull(); // other actions are not in the log
     expect(screen.getByText('trace-audit-1')).toBeInTheDocument();
     expect(screen.getByTestId('audit-changes')).toHaveTextContent('academic_manager');
-    expect(backend.calls('GET', '/tenant/audit-logs')[0]!.search).toContain('action=user_role.granted');
+    const first = new URLSearchParams(backend.calls('GET', '/tenant/audit-logs')[0]!.search);
+    expect(first.getAll('action_prefix')).toEqual(['role', 'user_role']);
+    expect(first.get('action')).toBeNull();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Hành động' }));
+    fireEvent.click(await screen.findByTitle('role.created'));
+    await waitFor(() => expect(screen.queryByText('Phân công tổ Toán')).toBeNull());
+    const narrowed = new URLSearchParams(backend.calls('GET', '/tenant/audit-logs').at(-1)!.search);
+    expect(narrowed.get('action')).toBe('role.created');
+    expect(narrowed.getAll('action_prefix')).toEqual(['role', 'user_role']);
+    expect(await screen.findByText('Tạo role tổ trưởng')).toBeInTheDocument();
   });
 
   it('a read-only user has no write button (F052-AC-25, TC-CMS-RBAC-03)', async () => {

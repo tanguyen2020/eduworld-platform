@@ -318,6 +318,7 @@
     "actorTypes": { "student": "Student", "staff": "Staff", "service": "Service", "system": "System" },
     "action": "Action",
     "actionHint": "e.g. user_role.granted",
+    "allPermissionActions": "All role and permission changes",
     "target": "Target",
     "result": "Result",
     "results": { "success": "Success", "denied": "Denied", "error": "Error" },

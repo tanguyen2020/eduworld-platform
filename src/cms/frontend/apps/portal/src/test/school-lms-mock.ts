@@ -241,14 +241,21 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
     if (m === 'DELETE' && /^\/tenant\/user-roles\/[^/]+$/.test(p)) return new Response(null, { status: 204 });
     if (m === 'GET' && p === '/learning/subjects') return json(200, { items: [{ subject_id: IDS.subjectMath, code: 'math', name: { vi: 'Toán' } }] });
     if (m === 'GET' && p === '/tenant/audit-logs') {
+      // MOCK of the server filters: action_prefix[] (dotted group, OR) AND action (exact), F059-3 / OQ F052-2
+      const q = new URLSearchParams(r.search);
+      const prefixes = q.getAll('action_prefix');
+      const action = q.get('action');
+      const rows: (Record<string, unknown> & { action: string })[] = [
+        { audit_id: '0193a4d2-b000-7000-8000-000000000001', tenant_id: tenantOf(r), actor_id: IDS.userQlcm, actor_type: 'staff', action: 'user_role.granted', target_type: 'user', target_id: IDS.userQlcm, result: 'success', reason: 'Phân công tổ Toán', changes: { role_code: 'academic_manager' }, trace_id: 'trace-audit-1', occurred_at: '2026-11-18T08:00:00Z' },
+        { audit_id: '0193a4d2-b000-7000-8000-000000000003', tenant_id: tenantOf(r), actor_id: IDS.userQlcm, actor_type: 'staff', action: 'role.created', target_type: 'role', target_id: IDS.roleSchoolAdmin, result: 'success', reason: 'Tạo role tổ trưởng', trace_id: 'trace-audit-3', occurred_at: '2026-11-18T09:00:00Z' },
+        { audit_id: '0193a4d2-b000-7000-8000-000000000004', tenant_id: tenantOf(r), actor_id: IDS.userQlcm, actor_type: 'staff', action: 'school.updated', target_type: 'school', target_id: IDS.schoolA, result: 'success', reason: 'Đổi địa chỉ', trace_id: 'trace-audit-4', occurred_at: '2026-11-18T10:00:00Z' },
+        // MOCK: a moderation row the server must not return — the client drops it too (R16)
+        { audit_id: '0193a4d2-b000-7000-8000-000000000002', tenant_id: tenantOf(r), actor_type: 'staff', action: 'moderation.case.opened', target_type: 'moderation_case', target_id: 'x', result: 'success', occurred_at: '2026-11-18T08:00:00Z' },
+      ];
       return json(
         200,
         page(
-          [
-            { audit_id: '0193a4d2-b000-7000-8000-000000000001', tenant_id: tenantOf(r), actor_id: IDS.userQlcm, actor_type: 'staff', action: 'user_role.granted', target_type: 'user', target_id: IDS.userQlcm, result: 'success', reason: 'Phân công tổ Toán', changes: { role_code: 'academic_manager' }, trace_id: 'trace-audit-1', occurred_at: '2026-11-18T08:00:00Z' },
-            // MOCK: a moderation row the server must not return — the client drops it too (R16)
-            { audit_id: '0193a4d2-b000-7000-8000-000000000002', tenant_id: tenantOf(r), actor_type: 'staff', action: 'moderation.case.opened', target_type: 'moderation_case', target_id: 'x', result: 'success', occurred_at: '2026-11-18T08:00:00Z' },
-          ],
+          rows.filter((e) => (!prefixes.length || prefixes.some((x) => e.action === x || e.action.startsWith(`${x}.`))) && (!action || e.action === action)),
           'data',
         ),
       );

@@ -318,6 +318,7 @@
     "actorTypes": { "student": "Học sinh", "staff": "Nhân sự", "service": "Dịch vụ", "system": "Hệ thống" },
     "action": "Hành động",
     "actionHint": "Ví dụ user_role.granted",
+    "allPermissionActions": "Mọi thay đổi role và phân quyền",
     "target": "Đối tượng",
     "result": "Kết quả",
     "results": { "success": "Thành công", "denied": "Bị từ chối", "error": "Lỗi" },
