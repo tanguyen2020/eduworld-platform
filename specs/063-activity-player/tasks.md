@@ -84,12 +84,12 @@
 
 ### Tests cho User Story 4
 
-- [ ] T029 [P] [US4] Scene test F063-AC-21, F063-AC-22 (2 vùng; rewards rỗng → ẩn; `g1_3` không thang 10; không có so sánh/nhận xét) — file: `src/game/tests/scene/learning/test_activity_result.gd` — phải FAIL trước khi code
-- [ ] T030 [P] [US4] Scene test F063-AC-23, F063-AC-24 (`results_later`; gợi ý → `startAdHocAttempt` có `recommendation_id`) — file: `src/game/tests/scene/learning/test_activity_result.gd`
+- [x] T029 [P] [US4] Scene test F063-AC-21, F063-AC-22 (2 vùng; rewards rỗng → ẩn; `g1_3` không thang 10; không có so sánh/nhận xét) — file: `src/game/tests/scene/learning/test_activity_result.gd` — phải FAIL trước khi code — ✅ `test_activity_result.gd` (AC-21/22: 2 vùng, phần thưởng chỉ từ server và ẩn khi rỗng, `g1_3` "⭐ Đúng x/y câu" không thang 10, không chữ so sánh/nhận xét giáo viên kể cả khi payload có trường lạ) — 9/9 pass cùng T030
+- [x] T030 [P] [US4] Scene test F063-AC-23, F063-AC-24 (`results_later`; gợi ý → `startAdHocAttempt` có `recommendation_id`) — file: `src/game/tests/scene/learning/test_activity_result.gd` — ✅ `test_activity_result.gd` (AC-23: `result_release = manual` → `results_later`, 0 lần gọi review ngay sau nộp; mở lại attempt chưa công bố → review đúng 1 lần; AC-24: nút gợi ý → `startAdHocAttempt` có `recommendation_id`, `source.question_set_id`, key v7)
 
 ### Implementation cho User Story 4
 
-- [ ] T031 [US4] `ActivityResult` + `LearningService.review()` — file: `src/game/scenes/learning/ActivityResult.tscn`, `src/game/scenes/learning/activity_result.gd`
+- [x] T031 [US4] `ActivityResult` + `LearningService.review()` — file: `src/game/scenes/learning/ActivityResult.tscn`, `src/game/scenes/learning/activity_result.gd` — ✅ `ActivityResult.tscn` (+ `activity_result.gd`), `LearningService.review()`/`practice_args()`/`last_rewards`; luồng `_show_results` trong `ActivityHost`
 
 ## Phase 7: User Story 5 — Phiên bản client và loại chưa hỗ trợ (Priority: P2)
 
