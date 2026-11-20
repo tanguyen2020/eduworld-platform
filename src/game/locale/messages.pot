@@ -75,6 +75,24 @@ msgstr ""
 msgid "ui.activity_player.waiting"
 msgstr ""
 
+msgid "ui.audio.not_ready"
+msgstr ""
+
+msgid "ui.audio.play"
+msgstr ""
+
+msgid "ui.audio.plays_exhausted"
+msgstr ""
+
+msgid "ui.audio.plays_left"
+msgstr ""
+
+msgid "ui.audio.speed"
+msgstr ""
+
+msgid "ui.audio.transcript"
+msgstr ""
+
 msgid "ui.boot.loading"
 msgstr ""
 
@@ -775,6 +793,33 @@ msgid "ui.settings.logout_confirm"
 msgstr ""
 
 msgid "ui.settings.title"
+msgstr ""
+
+msgid "ui.simulation.checking"
+msgstr ""
+
+msgid "ui.simulation.goal_not_reached"
+msgstr ""
+
+msgid "ui.simulation.goal_reached"
+msgstr ""
+
+msgid "ui.simulation.log_invalid"
+msgstr ""
+
+msgid "ui.simulation.mass"
+msgstr ""
+
+msgid "ui.simulation.questions"
+msgstr ""
+
+msgid "ui.simulation.release"
+msgstr ""
+
+msgid "ui.simulation.retry"
+msgstr ""
+
+msgid "ui.simulation.runs_exhausted"
 msgstr ""
 
 msgid "ui.video.not_ready"

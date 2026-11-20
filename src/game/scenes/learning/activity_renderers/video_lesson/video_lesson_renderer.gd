@@ -417,8 +417,10 @@ func apply_progress(state: Dictionary) -> void:
 		segment_id = state["segment_id"] as String
 
 
-## VIDEO_SEEK_NOT_ALLOWED (AC-22): back to the watched frontier.
-func progress_refused(_code: String) -> void:
+## VIDEO_SEEK_NOT_ALLOWED (AC-22): back to the watched frontier; other failures (network) change nothing.
+func progress_refused(code: String) -> void:
+	if code != LearningService.CODE_SEEK_NOT_ALLOWED:
+		return
 	var edge: int = reporter.ranges.frontier()
 	playback.seek(edge)
 	reporter.started(edge)

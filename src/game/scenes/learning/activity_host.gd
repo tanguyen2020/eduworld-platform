@@ -14,6 +14,8 @@ enum State { IDLE, LOADING, PRESENTING, AWAITING_RESULT, FEEDBACK, SUBMITTING, R
 	UPDATE_REQUIRED, TIME_UP }
 
 const SUSPEND_REASON: StringName = &"activity"
+## Media and simulation activities may have no question item (a video without cue, a simulation without question).
+const ITEMLESS_TYPES: PackedStringArray = ["video_lesson", "audio_lesson", "simulation"]
 const RESULT_SCENE: PackedScene = preload("res://scenes/learning/ActivityResult.tscn")
 const UPDATE_SCENE: PackedScene = preload("res://scenes/learning/UpdateRequired.tscn")
 ## STUDENT_GAME_UX_LEARNING §3.5: loading longer than this shows "Thử lại".
@@ -149,7 +151,7 @@ func present(attempt: AttemptModel) -> void:
 	if attempt.is_finished():
 		await _show_results(false)
 		return
-	if attempt.items.is_empty():
+	if attempt.items.is_empty() and not attempt.activity_type in ITEMLESS_TYPES:
 		_show_error(ApiResult.CODE_INVALID_RESPONSE, start.bind(args))
 		return
 	renderer = ActivityRendererRegistry.instantiate(attempt.activity_type)
@@ -160,6 +162,9 @@ func present(attempt: AttemptModel) -> void:
 	renderer.item_shown.connect(_on_item_shown)
 	renderer.progress_reported.connect(_on_progress_reported)
 	renderer.finish_requested.connect(_on_finish_requested)
+	renderer.run_submitted.connect(_on_run_submitted)
+	if renderer.has_signal("template_load_failed"):
+		renderer.connect("template_load_failed", _on_template_load_failed.bind(attempt.activity_type))
 	_set_state(State.PRESENTING)
 	renderer.setup(attempt, context)
 	service.report_open_time(Time.get_ticks_msec() - _opened_msec)
@@ -336,6 +341,8 @@ func _on_start_failed(known_type: String) -> void:
 	var code: String = service.last_error_code
 	if code == LearningService.CODE_VIDEO_NOT_READY:
 		_show_error(code, start.bind(args), "ui.video.not_ready")
+	elif code == LearningService.CODE_MEDIA_NOT_READY:
+		_show_error(code, start.bind(args), "ui.audio.not_ready")
 	elif code == LearningService.CODE_NOT_SUPPORTED:
 		_show_update_required(known_type if not known_type.is_empty() else String(args.get("activity_type", "")))
 	elif code in LearningService.ACCESS_DENIED_CODES:
@@ -441,8 +448,28 @@ func _on_progress_reported(report: Dictionary) -> void:
 		return
 	if not st.is_empty():
 		renderer.apply_progress(st)
-	elif service.last_error_code == LearningService.CODE_SEEK_NOT_ALLOWED:
+	else:
 		renderer.progress_refused(service.last_error_code)
+
+
+## The simulation template cannot run in this client (F066-AC-21): telemetry + the update screen, no crash.
+func _on_template_load_failed(_reason: String, activity_type: String) -> void:
+	if service != null:
+		service.report_update_required(activity_type)
+	_show_update_required.call_deferred(activity_type)
+
+
+## A simulation run (F066-AC-22, AC-23): sent with its key; the renderer shows only what the server verified.
+func _on_run_submitted(run: Dictionary) -> void:
+	if service == null or service.attempt == null:
+		return
+	var result: Dictionary = await service.submit_simulation_run(run)
+	if renderer == null or not visible:
+		return
+	if not result.is_empty():
+		renderer.show_run_result(result)
+	else:
+		renderer.run_refused(service.last_error_code)
 
 
 ## The media renderer reached the end with nothing pending (F065-AC-21): submit.

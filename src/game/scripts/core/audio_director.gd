@@ -37,3 +37,28 @@ func bus_volume(key: String) -> float:
 	if index < 0:
 		return -1.0
 	return db_to_linear(AudioServer.get_bus_volume_db(index))
+
+
+## Mutes the Music bus while any reason holds it (a listening lesson plays, F066-AC-18); releasing the last reason
+## restores the volume of Settings.
+var _duck_reasons: Dictionary = {}
+
+
+func duck_music(reason: StringName, on: bool) -> void:
+	if on:
+		_duck_reasons[reason] = true
+	else:
+		_duck_reasons.erase(reason)
+	var index: int = AudioServer.get_bus_index(String(BUS_BY_KEY["music"]))
+	if index < 0:
+		return
+	if not _duck_reasons.is_empty():
+		AudioServer.set_bus_mute(index, true)
+		return
+	var settings: Node = get_node_or_null("/root/Settings")
+	var volume: float = float(settings.call("get_volume", "music")) if settings != null else 1.0
+	apply_volume("music", volume)
+
+
+func music_ducked() -> bool:
+	return not _duck_reasons.is_empty()

@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/activity_renderers/audio_lesson/audio_lesson_renderer.gd" id="1_script"]
+
+[node name="AudioLessonRenderer" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Plays" type="Label" parent="Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+auto_translate_mode = 2
+text = "ui.audio.plays_left"
+
+[node name="Exhausted" type="Label" parent="Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.audio.plays_exhausted"
+
+[node name="Stage" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TranscriptPanel" type="PanelContainer" parent="Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Stage/TranscriptPanel"]
+layout_mode = 2
+
+[node name="TranscriptText" type="Label" parent="Stage/TranscriptPanel/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Overlay" type="PanelContainer" parent="Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Stage/Overlay"]
+layout_mode = 2
+
+[node name="OverlayContent" type="VBoxContainer" parent="Stage/Overlay/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Toast" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Play" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.audio.play"
+
+[node name="Seek" type="HSlider" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+
+[node name="Time" type="Label" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Speed" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+auto_translate_mode = 2
+text = "ui.audio.speed"
+
+[node name="Transcript" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.audio.transcript"

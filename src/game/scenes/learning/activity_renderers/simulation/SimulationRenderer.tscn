@@ -1,0 +1,115 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/activity_renderers/simulation/simulation_renderer.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/learning/simulation/SimulationHost.tscn" id="2_host"]
+
+[node name="SimulationRenderer" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Main" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="Stage" type="Control" parent="Main"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Host" parent="Main/Stage" instance=ExtResource("2_host")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Missing" type="Label" parent="Main/Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.activity_player.update_required"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Overlay" type="PanelContainer" parent="Main/Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Main/Stage/Overlay"]
+layout_mode = 2
+
+[node name="OverlayContent" type="VBoxContainer" parent="Main/Stage/Overlay/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Status" type="Label" parent="Main"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="Main"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="Retry" type="Button" parent="Main/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.simulation.retry"
+
+[node name="Release" type="Button" parent="Main/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.simulation.release"
+
+[node name="Runs" type="Label" parent="Main/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+auto_translate_mode = 2
+
+[node name="Questions" type="Button" parent="Main/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.simulation.questions"
+
+[node name="Side" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Goals" type="VBoxContainer" parent="Side"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Steps" type="VBoxContainer" parent="Side"]
+unique_name_in_owner = true
+layout_mode = 2

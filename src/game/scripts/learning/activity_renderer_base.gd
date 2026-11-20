@@ -15,6 +15,9 @@ signal response_submitted(submission: Dictionary)
 signal progress_reported(report: Dictionary)
 @warning_ignore("unused_signal")
 signal hint_requested(position: int)
+## A `SimulationRunInput` ready to send (simulation renderer, F066).
+@warning_ignore("unused_signal")
+signal run_submitted(run: Dictionary)
 @warning_ignore("unused_signal")
 signal finish_requested()
 @warning_ignore("unused_signal")
@@ -112,3 +115,13 @@ func progress_refused(_code: String) -> void:
 ## The last `ActivityProgressReport` to send before the player closes or pauses ({} when none).
 func final_report() -> Dictionary:
 	return {}
+
+
+## The server's `SimulationRunResult` of the last run (F066-AC-23): goals are ticked from it only.
+func show_run_result(_result: Dictionary) -> void:
+	pass
+
+
+## A run refused by the server (`SIMULATION_LOG_INVALID`, `SIMULATION_RUN_LIMIT_REACHED`) or not sent (network).
+func run_refused(_code: String) -> void:
+	pass

@@ -103,8 +103,8 @@ src/game/
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
 │   ├── learning/        learning_service.gd, question_renderer_registry.gd, activity_renderer_registry.gd,
-│   │                    answer_models/*.gd, video_progress_reporter.gd, vtt_parser.gd, recording_uploader.gd,
-│   │                    simulation_action_log.gd, math_svg_cache.gd
+│   │                    answer_models/*.gd, video_progress_reporter.gd, vtt_parser.gd, audio_play_tracker.gd,
+│   │                    simulation_action_log.gd, simulation_template_loader.gd, math_svg_cache.gd (không có ghi âm — ADR-0072)
 │   ├── quest/           quest_service.gd (QuestService: quest.* từ REST và realtime), quest_tracker.gd, coop_quest_service.gd
 │   ├── progression/     progression_service.gd, progression_store.gd, level_up_queue.gd
 │   ├── achievement/     achievement_service.gd

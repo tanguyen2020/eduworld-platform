@@ -77,6 +77,24 @@ msgstr "[!! Ţĥïš áçţïvïţý ñëëđš á ñëŵëŕ vëŕšïöñ öƒ
 msgid "ui.activity_player.waiting"
 msgstr "[!! Šëñđïñğ… ~~~~ !!]"
 
+msgid "ui.audio.not_ready"
+msgstr "[!! Ţĥë ĺïšţëñïñğ ĺëššöñ ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.audio.play"
+msgstr "[!! ▶ / ❚❚ Ĺïšţëñ ~~~~~~ !!]"
+
+msgid "ui.audio.plays_exhausted"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ þĺáýš. Ýöü çáñ šţïĺĺ áñšŵëŕ ţĥë qüëšţïöñš. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.audio.plays_left"
+msgstr "[!! Pĺáýš: {used}/{max} ~~~~~~~~ !!]"
+
+msgid "ui.audio.speed"
+msgstr "[!! Šþëëđ {rate} ~~~~~ !!]"
+
+msgid "ui.audio.transcript"
+msgstr "[!! Ţŕáñšçŕïþţ ~~~~ !!]"
+
 msgid "ui.boot.loading"
 msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
 
@@ -778,6 +796,45 @@ msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ? Ñëxţ ţïɱë ýöü �
 
 msgid "ui.settings.title"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.simulation.checking"
+msgstr "[!! Çĥëçķïñğ ţĥë ŕëšüĺţ… ~~~~~~~~ !!]"
+
+msgid "ui.simulation.goal_not_reached"
+msgstr "[!! Ñöţ ýëţ — ţŕý áğáïñ. ~~~~~~~~ !!]"
+
+msgid "ui.simulation.goal_reached"
+msgstr "[!! Ğöáĺ ŕëáçĥëđ! ~~~~~~ !!]"
+
+msgid "ui.simulation.left"
+msgstr "[!! Ĺëƒţ ~~ !!]"
+
+msgid "ui.simulation.loading"
+msgstr "[!! Öþëñïñğ ţĥë ëxþëŕïɱëñţ… ~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.log_invalid"
+msgstr "[!! Ţĥë ëxþëŕïɱëñţ ŵáš ñöţ ŕëçöŕđëđ çöŕŕëçţĺý. Pĺëášë đö ïţ áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.mass"
+msgstr "[!! {mass} ķğ ~~~~ !!]"
+
+msgid "ui.simulation.questions"
+msgstr "[!! Çöñçĺüšïöñ qüëšţïöñš ~~~~~~~~ !!]"
+
+msgid "ui.simulation.release"
+msgstr "[!! Ŕëĺëášë ~~~ !!]"
+
+msgid "ui.simulation.reset_camera"
+msgstr "[!! Ŕëšëţ vïëŵ ~~~~ !!]"
+
+msgid "ui.simulation.retry"
+msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
+
+msgid "ui.simulation.right"
+msgstr "[!! Ŕïğĥţ ~~ !!]"
+
+msgid "ui.simulation.runs_exhausted"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ŕüñš. Åñšŵëŕ ţĥë çöñçĺüšïöñ qüëšţïöñš. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.video.not_ready"
 msgstr "[!! Ţĥë vïđëö ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"

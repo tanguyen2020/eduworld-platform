@@ -78,6 +78,24 @@ msgstr "Bài này cần phiên bản trò chơi mới hơn. Em hãy nhờ thầy
 msgid "ui.activity_player.waiting"
 msgstr "Đang gửi…"
 
+msgid "ui.audio.not_ready"
+msgstr "Bài nghe đang được chuẩn bị, em quay lại sau nhé."
+
+msgid "ui.audio.play"
+msgstr "▶ / ❚❚ Nghe"
+
+msgid "ui.audio.plays_exhausted"
+msgstr "Em đã nghe đủ số lượt. Em vẫn trả lời được câu hỏi."
+
+msgid "ui.audio.plays_left"
+msgstr "Lượt nghe: {used}/{max}"
+
+msgid "ui.audio.speed"
+msgstr "Tốc độ {rate}"
+
+msgid "ui.audio.transcript"
+msgstr "Lời thoại"
+
 msgid "ui.boot.loading"
 msgstr "Đang tải…"
 
@@ -779,6 +797,45 @@ msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
 
 msgid "ui.settings.title"
 msgstr "Cài đặt"
+
+msgid "ui.simulation.checking"
+msgstr "Đang kiểm tra kết quả…"
+
+msgid "ui.simulation.goal_not_reached"
+msgstr "Chưa đạt mục tiêu, em thử lại nhé."
+
+msgid "ui.simulation.goal_reached"
+msgstr "Đạt mục tiêu!"
+
+msgid "ui.simulation.left"
+msgstr "Trái"
+
+msgid "ui.simulation.loading"
+msgstr "Đang mở thí nghiệm…"
+
+msgid "ui.simulation.log_invalid"
+msgstr "Thí nghiệm chưa ghi đúng, em làm lại nhé."
+
+msgid "ui.simulation.mass"
+msgstr "{mass} kg"
+
+msgid "ui.simulation.questions"
+msgstr "Câu hỏi kết luận"
+
+msgid "ui.simulation.release"
+msgstr "Thả"
+
+msgid "ui.simulation.reset_camera"
+msgstr "Đặt lại góc nhìn"
+
+msgid "ui.simulation.retry"
+msgstr "Làm lại"
+
+msgid "ui.simulation.right"
+msgstr "Phải"
+
+msgid "ui.simulation.runs_exhausted"
+msgstr "Em đã dùng hết số lần chạy. Hãy trả lời câu hỏi kết luận."
 
 msgid "ui.video.not_ready"
 msgstr "Video đang được chuẩn bị, em quay lại sau nhé."

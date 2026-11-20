@@ -27,6 +27,10 @@ const CODE_HINTS_NOT_ALLOWED: String = "HINTS_NOT_ALLOWED"
 const CODE_NOT_FOUND: String = "NOT_FOUND"
 const CODE_VIDEO_NOT_READY: String = "VIDEO_NOT_READY"
 const CODE_SEEK_NOT_ALLOWED: String = "VIDEO_SEEK_NOT_ALLOWED"
+const CODE_PLAY_LIMIT: String = "AUDIO_PLAY_LIMIT_REACHED"
+const CODE_MEDIA_NOT_READY: String = "MEDIA_NOT_READY"
+const CODE_LOG_INVALID: String = "SIMULATION_LOG_INVALID"
+const CODE_RUN_LIMIT: String = "SIMULATION_RUN_LIMIT_REACHED"
 ## `ActivityAttemptStart` / `AdHocAttemptStart` enums (specs/openapi): other values are not sent.
 const ACTIVITY_MODES: PackedStringArray = ["practice", "assignment", "minigame", "retry_wrong", "diagnostic"]
 const ACTIVITY_CONTEXTS: PackedStringArray = ["free_play", "assignment", "lesson", "learning_path", "recommendation"]
@@ -250,6 +254,31 @@ func report_progress(report: Dictionary) -> Dictionary:
 		return {}
 	last_error_code = ""
 	attempt.progress = result.body()
+	return result.body()
+
+
+## Coroutine: one run of a simulation (F066-AC-22): `SimulationRunInput` → `SimulationRunResult`. The same run keeps
+## its `Idempotency-Key` until the server answered (a retry after a network loss is the same run, never a new one).
+## Returns the result, or {} with `last_error_code` (`SIMULATION_LOG_INVALID`, `SIMULATION_RUN_LIMIT_REACHED`, network).
+func submit_simulation_run(run: Dictionary) -> Dictionary:
+	if attempt == null or run.is_empty():
+		return {}
+	var signature: String = "simrun|%s|%s" % [attempt.attempt_id, JSON.stringify(run)]
+	var req: ApiRequest = ApiRequest.make_post("%s/%s/simulation-runs" % [PATH_ATTEMPTS, attempt.attempt_id], run)
+	req.idempotency_key = _key(signature)
+	var result: ApiResult = await _send(req)
+	if result.is_transient():
+		last_error_code = result.code
+		_set_offline(true)
+		return {}
+	_forget(signature)
+	_set_offline(false)
+	if not result.ok:
+		last_error_code = result.code if not result.code.is_empty() else ApiResult.CODE_INVALID_RESPONSE
+		if result.status == 404 or (result.status == 403 and last_error_code in ACCESS_DENIED_CODES):
+			_failed(result)
+		return {}
+	last_error_code = ""
 	return result.body()
 
 

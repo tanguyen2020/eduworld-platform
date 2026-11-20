@@ -78,6 +78,24 @@ msgstr "This activity needs a newer version of the game. Please ask a teacher or
 msgid "ui.activity_player.waiting"
 msgstr "Sending…"
 
+msgid "ui.audio.not_ready"
+msgstr "The listening lesson is still being prepared. Please come back later."
+
+msgid "ui.audio.play"
+msgstr "▶ / ❚❚ Listen"
+
+msgid "ui.audio.plays_exhausted"
+msgstr "You have used all your plays. You can still answer the questions."
+
+msgid "ui.audio.plays_left"
+msgstr "Plays: {used}/{max}"
+
+msgid "ui.audio.speed"
+msgstr "Speed {rate}"
+
+msgid "ui.audio.transcript"
+msgstr "Transcript"
+
 msgid "ui.boot.loading"
 msgstr "Loading…"
 
@@ -779,6 +797,45 @@ msgstr "Do you want to sign out? Next time you will need your password."
 
 msgid "ui.settings.title"
 msgstr "Settings"
+
+msgid "ui.simulation.checking"
+msgstr "Checking the result…"
+
+msgid "ui.simulation.goal_not_reached"
+msgstr "Not yet — try again."
+
+msgid "ui.simulation.goal_reached"
+msgstr "Goal reached!"
+
+msgid "ui.simulation.left"
+msgstr "Left"
+
+msgid "ui.simulation.loading"
+msgstr "Opening the experiment…"
+
+msgid "ui.simulation.log_invalid"
+msgstr "The experiment was not recorded correctly. Please do it again."
+
+msgid "ui.simulation.mass"
+msgstr "{mass} kg"
+
+msgid "ui.simulation.questions"
+msgstr "Conclusion questions"
+
+msgid "ui.simulation.release"
+msgstr "Release"
+
+msgid "ui.simulation.reset_camera"
+msgstr "Reset view"
+
+msgid "ui.simulation.retry"
+msgstr "Try again"
+
+msgid "ui.simulation.right"
+msgstr "Right"
+
+msgid "ui.simulation.runs_exhausted"
+msgstr "You have used all your runs. Answer the conclusion questions."
 
 msgid "ui.video.not_ready"
 msgstr "The video is still being prepared. Please come back later."

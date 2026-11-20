@@ -1,0 +1,43 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/learning/simulation/templates/physics_lever/v1/lever_template.gd" id="1_script"]
+
+[node name="LeverTemplate" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Masses" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="Stage" type="CenterContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Beam" type="PanelContainer" parent="Stage"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="Stage/Beam"]
+layout_mode = 2
+
+[node name="LeftSlots" type="HBoxContainer" parent="Stage/Beam/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Pivot" type="Label" parent="Stage/Beam/Row"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+auto_translate_mode = 2
+text = "▲"
+
+[node name="RightSlots" type="HBoxContainer" parent="Stage/Beam/Row"]
+unique_name_in_owner = true
+layout_mode = 2
