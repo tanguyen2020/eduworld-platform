@@ -61,7 +61,7 @@ jobs:
             COMMIT=${{ steps.v.outputs.sha }}
             BUILD_TIME=${{ steps.v.outputs.time }}
       - name: trivy image (block Critical/High with a fix)
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ steps.v.outputs.sha }}
           severity: CRITICAL,HIGH
@@ -83,7 +83,7 @@ jobs:
             VERSION=${{ steps.v.outputs.version }}
             COMMIT=${{ steps.v.outputs.sha }}
             BUILD_TIME=${{ steps.v.outputs.time }}
-      - uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9 # v0.20.1
+      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
           format: spdx-json
