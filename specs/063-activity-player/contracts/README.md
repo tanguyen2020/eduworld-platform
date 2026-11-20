@@ -52,5 +52,5 @@ Schema dùng: `Attempt`, `QuestionRender`, `ActivityRender`, `MathAssetRef`, `Ac
 
 - **Đã thêm (T004, 2026-11-20)** `QuestionRender.hint_count` (`integer`, 0–5): số cấp gợi ý của item, không lộ nội dung (GODOT_ARCHITECTURE §6.2). Task T004.
 - **Đã thêm (T004, 2026-11-20)** `ContentManifest.activity_min_client_versions` (object, key = `ActivityType`, value `string maxLength 32`, SemVer) cho FR-EXR-015. Task T004.
-- **Đã thêm (T004, 2026-11-20) [Proposed]** `AttemptReview.recommendations[].recommendation_id` (tùy chọn) cho F063-AC-24 (spec Clarifications 2026-11-20), cùng `example` cho `Attempt` (11 loại câu), `ActivityResponseResult`, `HintResult`, `AttemptReview` (Prism MOCK + fixture game).
+- **Đã thêm (T004, 2026-11-20) [Confirmed]** `AttemptReview.recommendations[].recommendation_id` (tùy chọn) cho F063-AC-24 (spec Clarifications 2026-11-20), cùng `example` cho `Attempt` (11 loại câu), `ActivityResponseResult`, `HintResult`, `AttemptReview` (Prism MOCK + fixture game).
 - Phụ thuộc Bước 0 (không làm ở đây): S1 response schema theo loại câu, S3 hints API/`hints_used`, S4 đóng chặt `render_payload`.

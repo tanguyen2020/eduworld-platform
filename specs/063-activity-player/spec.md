@@ -16,11 +16,11 @@
 
 - Intent `activity_host` cho bài giao loại question set → **Chốt:** `ActivityHost` nhận thêm dạng intent `{question_set_id, mode: "assignment", context_type: "assignment", context_id}` và gọi `startAdHocAttempt` (`source.kind = question_set`, `mode = assignment`, `Idempotency-Key`) thay vì `startActivityAttempt`; renderer và luồng trả lời/nộp như activity `quiz`.
 
-### Session 2026-11-20 (triển khai — giả định [Proposed], chờ owner xác nhận)
+### Session 2026-11-20 (triển khai — giả định [Confirmed], chờ owner xác nhận)
 
 - Tên signal theo quy ước thì quá khứ (GODOT_ARCHITECTURE §7, lint `lint_signals`): `response_ready` của tiêu chí = `QuestionRendererBase.response_prepared(position, response)` và `ActivityRendererBase.response_submitted(submission)`; `progress_ready` = `progress_reported`. Hành vi không đổi.
-- F063-AC-24 cần `recommendation_id` nhưng `AttemptReview.recommendations[]` chỉ có `kind/ref_id/title` → **[Proposed]** thêm `recommendation_id` (tùy chọn) vào contract (T004); client gửi `recommendation_id` khi có, nút luyện tập chỉ cho `kind = question_set`.
-- Phần thưởng: `submitActivityAttempt` trả `Attempt` (không có `rewards`) → **[Proposed]** vùng "Phần thưởng trong game" đọc `rewards[]` (dạng `RewardPreview`) nếu response nộp có, còn lại ẩn; client không tự tính XP.
+- F063-AC-24 cần `recommendation_id` nhưng `AttemptReview.recommendations[]` chỉ có `kind/ref_id/title` → **[Confirmed]** thêm `recommendation_id` (tùy chọn) vào contract (T004); client gửi `recommendation_id` khi có, nút luyện tập chỉ cho `kind = question_set`.
+- Phần thưởng: `submitActivityAttempt` trả `Attempt` (không có `rewards`) → **[Confirmed]** vùng "Phần thưởng trong game" đọc `rewards[]` (dạng `RewardPreview`) nếu response nộp có, còn lại ẩn; client không tự tính XP.
 - F063-AC-23: ngay sau khi nộp, `result_release` ≠ `immediate` → hiện `results_later` **không** gọi review; mở lại attempt đã nộp → gọi review một lần, lỗi/chưa công bố → cùng thông điệp.
 - `stem` không có trong `QuestionRender` của contract; module learning đặt `stem` (richContent) trong `render_payload` → client đọc `render_payload.stem`. Công thức trong render payload là khối `{type: math, math_ref, speech_text}` (không `svg_url`) → URL = `cdn_base_url` của Config + `math_ref`; kích thước `ex` của SVG MathJax đổi sang px (8 px/ex ở scale 1) trước khi rasterize.
 - Backend chưa điền `QuestionRender.hint_count` → nút Gợi ý dùng fallback của Clarifications 2026-11-16 (hiện khi mode cho phép, mờ/ẩn theo `HINTS_EXHAUSTED`/`HINTS_NOT_ALLOWED`).
