@@ -10,7 +10,7 @@
 - Q: Câu trả lời câu chèn lưu ở bảng nào? VIDEO_LEARNING §8/DATABASE_DESIGN §2.6a nêu `activity_attempt_responses` (part `cue_id`), nhưng gợi ý (`hints:next` theo `position`), `hints_used`, `rapid_guess` chỉ có ở `attempt_items`/`attempt_answers`. → A: Mỗi câu chèn là một item (`attempt_items.position` theo thứ tự `at_ms`); câu trả lời ghi `assessment.attempt_answers` như câu hỏi thường (chung scorer F030). Lý do và phương án loại: [research.md](research.md) R1.
 - Q: "Sau 2 lần sai được đi tiếp" lấy số ở đâu? → A: Theo `attempts_per_question` ([LEARNING_EXPERIENCE §4.2](../../docs/02-learning/LEARNING_EXPERIENCE.md) là nguồn duy nhất số lượt thử mỗi câu).
 
-### Session 2026-11-20 (triển khai — giả định [Proposed], chờ owner xác nhận)
+### Session 2026-11-20 (triển khai — giả định [Confirmed], chờ owner xác nhận)
 
 - Cue "đã xử lý" lưu trong `assessment.video_progress.processed_cue_ids` khi chấm câu trả lời: đúng, hoặc sai đủ `attempts_per_question` với `allow_skip_after_wrong` (lượt thử lại không chấm điểm của engine không ghi đúng/sai vào item). Cue `allow_skip_after_wrong = false` sai đủ số lượt → không trả lời thêm được (`ANSWER_LIMIT_REACHED`) và chặn hoàn thành.
 - Video không có câu chèn: điểm theo chiến lược `completion` — `max_score` của version (≥ 1) khi đạt quy tắc hoàn thành, 0 khi không (learning event yêu cầu `score.max > 0`).
