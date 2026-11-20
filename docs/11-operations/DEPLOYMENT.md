@@ -118,7 +118,7 @@ flowchart TB
   rt <--> nats
   app --> pg[(data-pg x3\n1 cụm PostgreSQL + Patroni\n5 database module)]
   app & rt --> vk[(data-cache x3\nValkey + Sentinel)]
-  app --> obj[(object storage\nSeaweedFS x3, ADR-0093\n(chuyển S3 managed bằng cấu hình))]
+  app --> obj[(object storage\nSeaweedFS x3, ADR-0093\nchuyển S3 managed bằng cấu hình)]
   mgr[manager x3\nSwarm manager, không chạy workload] -.điều phối.- edge & rt & app & idp
   ops[ops x2\nobservability · APISIX internal · scheduler] -.-> app
 ```
