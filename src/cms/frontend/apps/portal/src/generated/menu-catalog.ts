@@ -661,7 +661,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         actions: [
           { key: "action.content_studio.activities.view", labelKey: "portal.action.content_studio.activities.view", requiredPermissions: ["learning_content.read"] },
           { key: "action.content_studio.activities.edit", labelKey: "portal.action.content_studio.activities.edit", requiredPermissions: ["learning_content.activity.write"] },
-          { key: "action.content_studio.activities.workflow", labelKey: "portal.action.content_studio.activities.workflow", requiredPermissions: ["learning_content.activity.write", "learning_content.review"] },
+          { key: "action.content_studio.activities.workflow", labelKey: "portal.action.content_studio.activities.workflow", requiredPermissions: ["learning_content.activity.write", "learning_content.activity.review"] },
           { key: "action.content_studio.activities.publish", labelKey: "portal.action.content_studio.activities.publish", requiredPermissions: ["learning_content.publish"] },
           { key: "action.content_studio.activities.rollback", labelKey: "portal.action.content_studio.activities.rollback", requiredPermissions: ["content.release.rollback"] },
         ],

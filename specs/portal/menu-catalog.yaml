@@ -687,7 +687,7 @@ workspaces:
           - key: action.content_studio.activities.workflow
             label_key: portal.action.content_studio.activities.workflow
             title: Gửi duyệt / duyệt / từ chối
-            required_permissions: [learning_content.activity.write, learning_content.review]
+            required_permissions: [learning_content.activity.write, learning_content.activity.review]
             operation_ids: ["transitionContentVersion[content_type=activity]"]
             can_disable: true
           - key: action.content_studio.activities.publish
