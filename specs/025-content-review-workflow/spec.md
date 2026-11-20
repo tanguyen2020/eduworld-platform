@@ -27,7 +27,7 @@
 
 - Engine TTS ([TBD] Assumptions) → **Chốt (OQ-23):** lồng tiếng **giọng người ghi âm** bắt buộc cho đề bài/hướng dẫn nhóm `g1_3` (điều kiện publish, luật readiness hiện có); không tích hợp engine TTS phía server; audio do đội nội dung ghi âm rồi tải lên như media thường, người duyệt nghe lại; TTS của hệ điều hành trên thiết bị chỉ là dự phòng khi thiếu file lồng tiếng ở nội dung không bắt buộc.
 - OQ F054-1 (`field_comments[]`) → **Chốt:** body `transitionContentVersion` thêm `field_comments[]` tùy chọn (`path` JSON pointer ≤ 256, `comment` ≤ 1000; maxItems 50; chỉ nhận ở `reject`/`request_changes`), lưu cùng review task/transition, trả trong `ContentReviewTask` và lịch sử transition để tác giả thấy theo trường; portal F054 bỏ cách ghép vào `note`. Task bổ sung.
-- Triển khai T046: action của workflow không có `request_changes` nên `field_comments` chỉ nhận với `reject`; lịch sử trả nhận xét của lần từ chối gần nhất mỗi version (`ContentVersionSummary.field_comments`); review task lưu trong cột `comments` có sẵn [Proposed].
+- Triển khai T046: action của workflow không có `request_changes` nên `field_comments` chỉ nhận với `reject`; lịch sử trả nhận xét của lần từ chối gần nhất mỗi version (`ContentVersionSummary.field_comments`); review task lưu trong cột `comments` có sẵn [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
