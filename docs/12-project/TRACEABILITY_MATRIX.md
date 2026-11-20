@@ -20,7 +20,7 @@
 | `CNT` Learning Content | module learning | 21 | 21 | 0 | 17 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
 | `QB` Question Bank | module learning | 14 | 14 | 0 | 17 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
 | `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 34 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
-| `EXM` Exam & Practice | module learning | 10 | 10 | 0 | 12 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
+| `EXM` Exam & Practice | module learning | 10 | 10 | 1 | 13 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 23 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
 | `GAME` Game World & Character | module game | 18 | 18 | 2 | 21 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 47 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 19 | 561 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 20 | 562 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -247,16 +247,16 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 8 AC, 0 US — [EXAM_ENGINE](../02
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-EXM-001 | Hình thức: Practice Test, Mock Exam, Chapter Test, Semester Test, Subject Test, Custom Assessment, Timed Exam | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-002 | Tạo đề, random đề, random câu, xáo trộn đáp án, cấu hình thời gian & thang điểm | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-003 | Nộp bài, chấm điểm, hiển thị kết quả theo result_visibility, phân tích câu sai, đề xuất nội dung ôn tập | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-004 | Phân biệt luyện tập và kiểm tra chính thức (is_official) | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-005 | Chống nộp trùng, chống sửa điểm từ client, tự nộp khi hết deadline_at | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-006 | Kết quả thi lưu bền vững trong PostgreSQL, không phụ thuộc Valkey | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-007 | Thi chính thức có giá trị pháp lý/proctoring | Ngoài Release | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-008 | Chấm lại đề (regrade) là re-evaluate do hệ thống khi câu hỏi lỗi (RegradeRequest, do content_admin/academic… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-009 | Gia hạn thời gian làm bài cho học sinh cụ thể (accommodations[] của ExamSession, vd. +25%) do school_admin/… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
-| FR-EXM-010 | Đề is_official: cân bằng độ khó giữa các biến thể đề theo p_value, báo cáo độ tin cậy (KR-20/alpha) sau kỳ… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-EXM |
+| FR-EXM-001 | Hình thức: Practice Test, Mock Exam, Chapter Test, Semester Test, Subject Test, Custom Assessment, Timed Exam | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-002 | Tạo đề, random đề, random câu, xáo trộn đáp án, cấu hình thời gian & thang điểm | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-003 | Nộp bài, chấm điểm, hiển thị kết quả theo result_visibility, phân tích câu sai, đề xuất nội dung ôn tập | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-004 | Phân biệt luyện tập và kiểm tra chính thức (is_official) | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-005 | Chống nộp trùng, chống sửa điểm từ client, tự nộp khi hết deadline_at | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-006 | Kết quả thi lưu bền vững trong PostgreSQL, không phụ thuộc Valkey | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-007 | Thi chính thức có giá trị pháp lý/proctoring | Ngoài Release | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-008 | Chấm lại đề (regrade) là re-evaluate do hệ thống khi câu hỏi lỗi (RegradeRequest, do content_admin/academic… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
+| FR-EXM-009 | Gia hạn thời gian làm bài cho học sinh cụ thể (accommodations[] của ExamSession, vd. +25%) do school_admin/… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `putExamAccommodations` | _suy luận:_ TC-EXM |
+| FR-EXM-010 | Đề is_official: cân bằng độ khó giữa các biến thể đề theo p_value, báo cáo độ tin cậy (KR-20/alpha) sau kỳ… | P3 | [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-EXM |
 
 ### 3.9. `PRG` Learning Progress & Mastery
 
@@ -837,7 +837,7 @@ Tính trên 334 FR thuộc Release 1.0 (phase P1–P6).
 | Kiểm tra | Không có liên kết tường minh | Không có cả suy luận (mồ côi thật) |
 |---|---|---|
 | FR không có tài liệu thiết kế | 1 | 0 |
-| FR không có operation OpenAPI | 315 | 0 |
+| FR không có operation OpenAPI | 314 | 0 |
 | FR không có TC | 333 | 0 |
 | AC không thuộc domain FR nào | — | 0 |
 | US không thuộc domain FR nào | — | 0 |

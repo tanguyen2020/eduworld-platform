@@ -286,6 +286,7 @@
       "doneLabel": "Re-evaluated",
       "failed": "The re-evaluation failed; it is not sent again automatically.",
       "noHistory": "No re-evaluation yet.",
+      "question": "Question of the exam to re-evaluate",
       "counts": "{{done}}/{{total}} attempts",
       "createdAt": "Created",
       "screenHelp": "Enter a question or activity version id to see its re-evaluations; create one from the version page.",

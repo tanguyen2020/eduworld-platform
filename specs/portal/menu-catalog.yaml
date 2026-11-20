@@ -167,7 +167,7 @@ workspaces:
             label_key: portal.action.school_lms.assignments.manage_students
             title: Nhắc, gia hạn, miễn cho học sinh
             required_permissions: [lms.assignment.write]
-            operation_ids: [remindAssignment, extendAssignmentForStudent, excuseAssignmentForStudent]
+            operation_ids: [remindAssignment, extendAssignmentForStudent, excuseAssignmentForStudent, putExamAccommodations]
             can_disable: true
           - key: action.school_lms.assignments.release_results
             label_key: portal.action.school_lms.assignments.release_results

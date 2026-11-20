@@ -17,6 +17,13 @@
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 - Q: Dialog chấm lại đề thi trên portal thuộc feature nào? → A: F055 (RB-222): nút "Chấm lại đề" ở bài giao có `exam_session_id`, dùng `RegradeDialog` của F058 với `createRegradeRequest` `scope = exam_session` (F055-AC-23). Thư mục workspace C là `school-lms` (RB-619).
 
+### Session 2026-11-21 (triển khai)
+
+- Q: `updateCourse`/`updateScheduleItem` bắt buộc `If-Match` nhưng không có `getCourse`/`getScheduleItem` và danh sách không trả version — Portal lấy ETag ở đâu? → A: [Proposed] Delta **D1**: thêm `version` (readOnly) vào `Course` và `ScheduleItem`; Portal gửi `If-Match: W/"<version>"` từ dòng danh sách. Backend learning chỉ đổi JSON tag của view (không đổi bảng); test `lms_test.go`, `lms_group_test.go`.
+- Q: Delta accommodations (T004) có hình dạng nào? → A: [Proposed] Delta **D2**: `PUT /exams/sessions/{exam_session_id}/accommodations` (`putExamAccommodations`, `x-portal-action: action.school_lms.assignments.manage_students`), body `ExamAccommodationsUpdate {accommodations[] ≤ 200, reason 3–500}` (thay cả danh sách; lý do chung cho lần lưu, không lý do từng học sinh vì `ExamAccommodation` có `additionalProperties: false`), `If-Match` + `Idempotency-Key`, chỉ khi session `scheduled`/`open` (409), học sinh ngoài đối tượng → 422; lượt đang làm giữ `deadline_at`. Hiện thực ở module learning (`PutExamAccommodations`, test `exam_accommodations_test.go`).
+- Q: Chấm lại đề (`scope = exam_session`) cần gì thêm? → A: Backend (F042-AC-28) bắt buộc `question_version_id` của một câu trong đề đã khóa; dialog chọn câu từ `listExamSessionPapers`. [Proposed] Với `scope = exam_session` dialog chỉ đưa `accept_all`/`drop_item`: `use_new_key` cần danh sách version đã sửa của câu mà API hiện chỉ tra được theo `content_id` (câu hỏi mở F055-1).
+- Q: System Admin xem danh sách LMS thế nào? → A: [Proposed] Mọi màn LMS của F055 làm việc trên **một** tenant đích chọn ở bộ lọc topbar (`SingleTenantGate`, như F052) cho cả đọc lẫn ghi; không gửi `tenant_ids[]`, không cột Tenant.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Wizard giao bài (Priority: P1) 🎯 MVP

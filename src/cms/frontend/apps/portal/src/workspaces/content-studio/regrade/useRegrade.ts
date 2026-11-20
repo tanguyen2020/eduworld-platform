@@ -10,7 +10,7 @@ import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation
 
 export type RegradeRequest = components['schemas']['RegradeRequest'];
 export type RegradeCreate = components['schemas']['RegradeRequestCreate'];
-export type RegradeScope = 'question_version' | 'activity_version';
+export type RegradeScope = 'question_version' | 'activity_version' | 'exam_session';
 
 /** Poll period of a queued / running request [Proposed], like the media pipeline (MEDIA_POLL_MS). */
 export const REGRADE_POLL_MS = 2_000;

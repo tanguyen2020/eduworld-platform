@@ -4154,6 +4154,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exams/sessions/{exam_session_id}/accommodations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Thay danh sách gia hạn thời gian cá nhân của exam session (FR-EXM-009, F055 delta D2) — lms.assignment.write trong trường/môn; lý do bắt buộc, audit
+         * @description Chỉ khi session `scheduled`/`open` (ngược lại 409 CONFLICT). Học sinh phải thuộc đối tượng của session (422 VALIDATION_FAILED
+         *     `/accommodations/{i}/student_id`). Thời lượng hiệu lực mới áp cho lượt làm bắt đầu sau khi lưu; lượt đang làm giữ deadline_at
+         *     đã tính (EXAM_ENGINE §5). Ghi audit `exam_session.accommodations_updated` (lý do, số học sinh).
+         */
+        put: operations["putExamAccommodations"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/exams/sessions/{exam_session_id}/attempts": {
         parameters: {
             query?: never;
@@ -10776,6 +10798,8 @@ export interface components {
             subject_name?: components["schemas"]["LearningName"];
             tenant_id?: components["schemas"]["Uuid"];
             textbook_series_id?: components["schemas"]["Uuid"];
+            /** @description Phiên bản hàng — If-Match (W/"n") của updateCourse từ danh sách, không cần GET từng course (F055 delta D1) */
+            readonly version?: number;
         };
         /** @description Bảng kết quả course — điểm tự chấm các bài graded (thang 10); không có XP/rating; không đồng bộ ngược SIS */
         CourseResults: {
@@ -11312,6 +11336,11 @@ export interface components {
         ExamAccommodation: {
             extra_time_percent: number;
             student_id: components["schemas"]["Uuid"];
+        };
+        ExamAccommodationsUpdate: {
+            /** @description Danh sách đầy đủ sau khi lưu (thay thế); rỗng = bỏ mọi gia hạn */
+            accommodations: components["schemas"]["ExamAccommodation"][];
+            reason: string;
         };
         ExamAttemptAnalysis: {
             attempt_id: components["schemas"]["Uuid"];
@@ -14095,6 +14124,8 @@ export interface components {
         };
         ScheduleItem: components["schemas"]["ScheduleItemInput"] & {
             schedule_item_id: components["schemas"]["Uuid"];
+            /** @description Phiên bản hàng — If-Match (W/"n") của updateScheduleItem từ danh sách (F055 delta D1) */
+            readonly version?: number;
         };
         ScheduleItemInput: {
             course_id: components["schemas"]["Uuid"];
@@ -17666,7 +17697,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EfficacyStudyUpdate"];
+                "application/merge-patch+json": components["schemas"]["EfficacyStudyUpdate"];
             };
         };
         responses: {
@@ -18160,7 +18191,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LearningExperimentUpdate"];
+                "application/merge-patch+json": components["schemas"]["LearningExperimentUpdate"];
             };
         };
         responses: {
@@ -26819,6 +26850,55 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    putExamAccommodations: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                exam_session_id: components["parameters"]["ExamSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExamAccommodationsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Đã lưu */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamSession"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     startExamAttempt: {

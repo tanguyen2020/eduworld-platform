@@ -120,6 +120,11 @@ type ExamStore interface {
 	InsertParticipations(ctx context.Context, ps []ExamParticipationRow) error
 	Participation(ctx context.Context, sessionID, studentID uuid.UUID, lock bool) (*ExamParticipationRow, error)
 	UpdateParticipation(ctx context.Context, p ExamParticipationRow) error
+	// SetAccommodations replaces the personal extra times of a session when its version is prev (putExamAccommodations).
+	SetAccommodations(ctx context.Context, sessionID uuid.UUID, acc json.RawMessage, prev int64) (bool, error)
+	// SetParticipationTime stores the extra time and effective duration of one student of a session; false when the
+	// student is not in the session's audience.
+	SetParticipationTime(ctx context.Context, sessionID, studentID uuid.UUID, extraPercent, effectiveSec int) (bool, error)
 	// MarkAbsent sets absent on the participations not started of a session; returns how many.
 	MarkAbsent(ctx context.Context, sessionID uuid.UUID) (int, error)
 	// SetAttemptExam stores the paper and the active device (hash) of an exam attempt.

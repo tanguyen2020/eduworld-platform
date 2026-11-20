@@ -26,9 +26,9 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi k
 | `listCmsActivities` · `listActivityTypes` · `listCmsQuestionSets` · `listCmsAssessmentBlueprints` · `listCmsLessons` · `listCmsObjectives` | `GET /api/v1/cms/learning/…` | eduworld-api | `learning_content.read` | Có sẵn |
 | `listClasses` | `GET /api/v1/schools/{school_id}/classes` | eduworld-api (identity) | `lms.class.read` | Có sẵn |
 | `getExamSession` | `GET /api/v1/exams/sessions/{exam_session_id}` | eduworld-api | `lms.assignment.read` | Có sẵn |
-| `putExamAccommodations` | `PUT /api/v1/exams/sessions/{exam_session_id}/accommodations` | eduworld-api | `lms.assignment.write` [Confirmed] | Cần thêm |
+| `putExamAccommodations` | `PUT /api/v1/exams/sessions/{exam_session_id}/accommodations` | eduworld-api | `lms.assignment.write` [Confirmed] | Có sẵn (delta D2, F055 2026-11-21) |
 | `createRegradeRequest` | `POST /api/v1/cms/learning/regrade-requests` (`scope = exam_session`) | eduworld-api | `learning_content.re_evaluate` · `Idempotency-Key` | Có sẵn |
-| `previewRegradeRequest` · `getRegradeRequest` | `POST …/regrade-requests:preview` · `GET …/regrade-requests/{regrade_request_id}` | eduworld-api | `learning_content.re_evaluate` | Cần thêm (owner F031, ghi ở F058 §6) |
+| `previewRegradeRequest` · `getRegradeRequest` | `POST …/regrade-requests:preview` · `GET …/regrade-requests/{regrade_request_id}` | eduworld-api | `learning_content.re_evaluate` | Có sẵn (F031/F058) |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api (identity) | đã đăng nhập portal | Có sẵn |
 
 ## 2. Internal API
@@ -58,4 +58,5 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi k
 ## 6. Delta cần thực hiện
 
 - **Cần thêm** (owner F042, Phase 2 task T004): schema `ExamAccommodation` `{student_id: Uuid, extra_time_percent: integer (min 1, max theo EXAM_ENGINE §5), reason: string maxLength 500}`; trường `accommodations[]` (maxItems 200) trong `ExamSession`; operation `putExamAccommodations` `PUT /exams/sessions/{exam_session_id}/accommodations` (`Idempotency-Key`, `If-Match`, 403/404/409/422). Cập nhật [EXAM_ENGINE §11](../../../docs/02-learning/EXAM_ENGINE.md) cùng PR.
-- Không có delta khác; mọi operation LMS khác đã có.
+- **Đã làm (2026-11-21):** D2 như trên với body `ExamAccommodationsUpdate {accommodations[], reason}` (lý do chung, `ExamAccommodation` giữ `additionalProperties: false`), 200 `ExamSession` + `ETag`, 409 khi session đã đóng.
+- **D1 (2026-11-21, [Proposed]):** `Course.version`, `ScheduleItem.version` (readOnly) — `If-Match` của `updateCourse`/`updateScheduleItem` từ danh sách (không có GET đơn lẻ).

@@ -4871,6 +4871,18 @@
     ]
   },
   {
+    "operation_id": "putExamAccommodations",
+    "module": "learning",
+    "method": "PUT",
+    "path": "/exams/sessions/{exam_session_id}/accommodations",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "putFeatureFlag",
     "module": "identity",
     "method": "PUT",

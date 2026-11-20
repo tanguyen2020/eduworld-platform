@@ -94,7 +94,9 @@ func TestLMSScheduleAndStudyGroups(t *testing.T) {
 		t.Fatalf("other school: %d", r.status)
 	}
 	rng := "?from=" + day(0) + "&to=" + day(30)
-	if l := must(t, c.do(t, http.MethodGet, "/lms/schedules"+rng, adA, nil, nil), 200, "list").items("data"); len(l) != 1 || l[0]["schedule_item_id"] != id {
+	// F055 delta D1: the row version is the If-Match of updateScheduleItem from the list.
+	if l := must(t, c.do(t, http.MethodGet, "/lms/schedules"+rng, adA, nil, nil), 200, "list").items("data"); len(l) != 1 || l[0]["schedule_item_id"] != id ||
+		l[0]["version"] != float64(1) {
 		t.Fatalf("list: %v", l)
 	}
 	if l := must(t, c.do(t, http.MethodGet, "/lms/schedules"+rng, adA2, nil, nil), 200, "list other school").items("data"); len(l) != 0 {

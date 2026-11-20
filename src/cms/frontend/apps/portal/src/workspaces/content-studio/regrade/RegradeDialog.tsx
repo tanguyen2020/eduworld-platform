@@ -1,7 +1,8 @@
 // RegradeDialog (F058 T048, F058-AC-22…AC-25): "Chấm lại hệ thống" of a published (or replaced) question / activity
 // version — action (accept_all / use_new_key / drop_item; an activity version supports accept_all only), corrected
 // published version for use_new_key, reason 10–1000 characters, number of affected attempts from the server before
-// confirming, then the request followed to completed / failed. States plainly that original answers and old
+// confirming, then the request followed to completed / failed. Scope exam_session (F055-AC-23): `versionId` is the
+// exam session and one question of its locked papers is picked from `questionOptions`. States plainly that original answers and old
 // evaluations are kept and the new score is computed by the system with an audit record; no score field anywhere.
 import { Alert, Descriptions, Flex, Input, Modal, Radio, Select, Typography } from 'antd';
 import { useState } from 'react';
@@ -19,21 +20,25 @@ export interface RegradeDialogProps {
   versionId: string;
   /** Other published versions of the same question (use_new_key). */
   correctedOptions?: { value: string; label: string }[];
+  /** scope exam_session: question versions of the session's papers (listExamSessionPapers). */
+  questionOptions?: { value: string; label: string }[];
   onClose: () => void;
 }
 
-export function RegradeDialog({ open, scope, versionId, correctedOptions = [], onClose }: RegradeDialogProps) {
+export function RegradeDialog({ open, scope, versionId, correctedOptions = [], questionOptions = [], onClose }: RegradeDialogProps) {
   const { t } = useTranslation();
-  const actions: string[] = scope === 'activity_version' ? ['accept_all'] : ['use_new_key', 'accept_all', 'drop_item'];
+  const exam = scope === 'exam_session';
+  const actions: string[] = scope === 'activity_version' ? ['accept_all'] : exam && !correctedOptions.length ? ['accept_all', 'drop_item'] : ['use_new_key', 'accept_all', 'drop_item'];
+  const [question, setQuestion] = useState<string | undefined>();
   const [action, setAction] = useState<string>(actions[0]!);
   const [corrected, setCorrected] = useState<string | undefined>();
   const [reason, setReason] = useState('');
   const [created, setCreated] = useState<string | undefined>();
-  const valid = reason.trim().length >= REASON_MIN && reason.length <= REASON_MAX && (action !== 'use_new_key' || !!corrected);
+  const valid = reason.trim().length >= REASON_MIN && reason.length <= REASON_MAX && (action !== 'use_new_key' || !!corrected) && (!exam || !!question);
   const body = valid
     ? ({
         scope,
-        ...(scope === 'question_version' ? { question_version_id: versionId } : { activity_version_id: versionId }),
+        ...(exam ? { exam_session_id: versionId, question_version_id: question } : scope === 'question_version' ? { question_version_id: versionId } : { activity_version_id: versionId }),
         action,
         ...(action === 'use_new_key' ? { corrected_version_id: corrected } : {}),
         reason: reason.trim(),
@@ -61,6 +66,7 @@ export function RegradeDialog({ open, scope, versionId, correctedOptions = [], o
         <Alert type="info" showIcon message={t('content_studio.regrade.keeps')} />
         {!created && (
           <>
+            {exam && <Select aria-label={t('content_studio.regrade.question')} placeholder={t('content_studio.regrade.question')} value={question} options={questionOptions} onChange={(v: string) => setQuestion(v)} />}
             <Radio.Group aria-label={t('content_studio.regrade.action')} value={action} onChange={(e) => setAction(e.target.value as string)}>
               {actions.map((a) => (
                 <Radio key={a} value={a}>

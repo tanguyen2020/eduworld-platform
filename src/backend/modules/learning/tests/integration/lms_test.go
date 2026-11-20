@@ -45,8 +45,9 @@ func TestLMSCoursesAndSettings(t *testing.T) {
 	list := func(sub string) []map[string]any {
 		return must(t, c.do(t, http.MethodGet, "/lms/courses", sub, nil, nil), http.StatusOK, "list "+sub).items("data")
 	}
+	// F055 delta D1: the row version is the If-Match of updateCourse from the list.
 	if cs := list(adA); len(cs) != 1 || cs[0]["course_id"] != courseID || cs[0]["class_name"] != "3A" || cs[0]["student_count"] != float64(2) ||
-		cs[0]["curriculum_version_id"] != k.s.qc.version {
+		cs[0]["curriculum_version_id"] != k.s.qc.version || cs[0]["version"] == nil || cs[0]["version"].(float64) < 1 {
 		t.Fatalf("school admin: %v", cs)
 	}
 	for _, sub := range []string{adA2, adB, qlcmOther} {

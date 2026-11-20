@@ -197,11 +197,19 @@ func (s Settings) Validate() []Violation {
 	if s.VariantCount < 1 || s.VariantCount > MaxVariants {
 		add("/variants", "must be 1–20 variants")
 	}
-	if len(s.Accommodations) > MaxAccommodations {
+	return append(vs, ValidateAccommodations(s.Accommodations)...)
+}
+
+// ValidateAccommodations checks a list of personal extra times (createExamSession, putExamAccommodations — FR-EXM-009):
+// at most MaxAccommodations, percent 1–MaxExtraPercent, one entry per student.
+func ValidateAccommodations(acc []Accommodation) []Violation {
+	var vs []Violation
+	add := func(f, r string) { vs = append(vs, Violation{Field: f, Reason: r}) }
+	if len(acc) > MaxAccommodations {
 		add("/accommodations", "at most 200")
 	}
 	seen := map[uuid.UUID]bool{}
-	for i, a := range s.Accommodations {
+	for i, a := range acc {
 		p := "/accommodations/" + strconv.Itoa(i)
 		if a.ExtraTimePercent < 1 || a.ExtraTimePercent > MaxExtraPercent {
 			add(p+"/extra_time_percent", "must be 1–100")
@@ -212,6 +220,11 @@ func (s Settings) Validate() []Violation {
 		seen[a.StudentID] = true
 	}
 	return vs
+}
+
+// CanChangeAccommodations: personal extra times change only before the session closes (scheduled, open).
+func CanChangeAccommodations(st Status) bool {
+	return st == StatusScheduled || st == StatusOpen
 }
 
 // InitialStatus is open when the window has started, scheduled otherwise.

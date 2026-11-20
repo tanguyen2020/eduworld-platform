@@ -20,6 +20,7 @@ import (
 type ExamCommands interface {
 	CreateExamSession(ctx context.Context, in command.ExamSessionInput) (dto.ExamSessionView, error)
 	ReleaseExamResults(ctx context.Context, id uuid.UUID) (dto.ExamSessionView, error)
+	PutExamAccommodations(ctx context.Context, id uuid.UUID, ifMatch int64, in command.AccommodationsInput) (dto.ExamSessionView, error)
 	StartExamAttempt(ctx context.Context, in command.StartExamInput) (dto.AttemptView, error)
 	SaveExamAnswer(ctx context.Context, in command.SaveExamInput) error
 	SubmitExamAttempt(ctx context.Context, in command.SubmitExamInput) (dto.ExamSubmitView, error)
@@ -47,6 +48,7 @@ func init() {
 		"getExamSession":         lmsOp("getExamSession", http.MethodGet, session, httpx.IdempotencyNone, 200),
 		"releaseExamResults":     lmsOp("releaseExamResults", http.MethodPost, session+":release-results", httpx.IdempotencyRequired, 200),
 		"listExamSessionPapers":  lmsOp("listExamSessionPapers", http.MethodGet, session+"/papers", httpx.IdempotencyNone, 200),
+		"putExamAccommodations":  lmsOp("putExamAccommodations", http.MethodPut, session+"/accommodations", httpx.IdempotencyRequired, 200),
 		"getExamResult":          lmsOp("getExamResult", http.MethodGet, att+"/result", httpx.IdempotencyNone, 200),
 		"getExamAttemptAnalysis": lmsOp("getExamAttemptAnalysis", http.MethodGet, att+"/analysis", httpx.IdempotencyNone, 200),
 		"startExamAttempt":       player("startExamAttempt", http.MethodPost, session+"/attempts", httpx.IdempotencyRequired, 201),
@@ -61,7 +63,8 @@ func init() {
 var examRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request){
 	"listExamSessions": Handlers.listExamSessions, "createExamSession": Handlers.createExamSession, "getExamSession": Handlers.getExamSession,
 	"releaseExamResults": Handlers.releaseExamResults, "listExamSessionPapers": Handlers.listExamSessionPapers,
-	"getExamResult": Handlers.getExamResult, "getExamAttemptAnalysis": Handlers.getExamAttemptAnalysis,
+	"putExamAccommodations": Handlers.putExamAccommodations,
+	"getExamResult":         Handlers.getExamResult, "getExamAttemptAnalysis": Handlers.getExamAttemptAnalysis,
 	"startExamAttempt": Handlers.startExamAttempt, "saveExamAnswer": Handlers.saveExamAnswer, "submitExamAttempt": Handlers.submitExamAttempt,
 	"listExamLibrary": Handlers.listExamLibrary,
 }
@@ -169,6 +172,27 @@ func (h Handlers) releaseExamResults(w http.ResponseWriter, r *http.Request) {
 	}
 	v, err := h.ExamCommands.ReleaseExamResults(r.Context(), id)
 	examSessionResult(w, r, http.StatusOK, v, err)
+}
+
+// putExamAccommodations replaces the personal extra times of a session (If-Match, Idempotency-Key — F055 delta D2).
+func (h Handlers) putExamAccommodations(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "exam_session_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	v, err := ifMatch(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var in command.AccommodationsInput
+	if err := decode(r, &in); err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.ExamCommands.PutExamAccommodations(r.Context(), id, v, in)
+	examSessionResult(w, r, http.StatusOK, out, err)
 }
 
 func (h Handlers) listExamSessionPapers(w http.ResponseWriter, r *http.Request) {

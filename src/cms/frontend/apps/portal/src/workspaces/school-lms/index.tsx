@@ -2,10 +2,15 @@
 // generated catalog (ADR-0090); this file only attaches a screen to each menu key. Later features replace
 // `placeholderScreen` with their screen; a menu added to the catalog without a screen fails to compile (F051-AC-34).
 // F052 (school administration): schools, classes, sis_sync, student_activity, access_control, settings, audit_logs;
-// F054: trash (Thùng rác of the tenant).
+// F054: trash (Thùng rác of the tenant); F055 (LMS): courses, assignments, game_activities, schedules, study_groups.
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
 import { ClassesScreen } from './classes/ClassesScreen';
+import { AssignmentsScreen } from './lms/assignments/AssignmentsScreen';
+import { CoursesScreen } from './lms/courses/CoursesScreen';
+import { GameActivitiesScreen } from './lms/game-activities/GameActivitiesScreen';
+import { SchedulesScreen } from './lms/schedule/SchedulesScreen';
+import { StudyGroupsScreen } from './lms/study-groups/StudyGroupsScreen';
 import { SchoolsScreen } from './schools/SchoolsScreen';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { SisScreen } from './sis/SisScreen';
@@ -18,11 +23,11 @@ export const screens = {
   'menu.school_lms.schools': SchoolsScreen,
   'menu.school_lms.classes': ClassesScreen,
   'menu.school_lms.sis_sync': SisScreen,
-  'menu.school_lms.courses': placeholderScreen,
-  'menu.school_lms.assignments': placeholderScreen,
-  'menu.school_lms.game_activities': placeholderScreen,
-  'menu.school_lms.schedules': placeholderScreen,
-  'menu.school_lms.study_groups': placeholderScreen,
+  'menu.school_lms.courses': CoursesScreen, // F055 US3
+  'menu.school_lms.assignments': AssignmentsScreen, // F055 US1, US2, US5
+  'menu.school_lms.game_activities': GameActivitiesScreen, // F055-AC-22
+  'menu.school_lms.schedules': SchedulesScreen, // F055 US4
+  'menu.school_lms.study_groups': StudyGroupsScreen, // F055 US4
   'menu.school_lms.challenges': placeholderScreen,
   'menu.school_lms.clubs': placeholderScreen,
   'menu.school_lms.school_events': placeholderScreen,

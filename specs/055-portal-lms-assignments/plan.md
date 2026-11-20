@@ -136,7 +136,7 @@ Menu và nút của feature lấy từ [`specs/portal/menu-catalog.yaml`](../por
 
 Khoảng trống catalog/contract (không sửa trong feature này; báo owner `specs/portal/menu-catalog.yaml` + OpenAPI):
 
-- `putExamAccommodations`, `previewRegradeRequest`, `getRegradeRequest` (Cần thêm) → cần `x-portal-action` (đề xuất `action.school_lms.assignments.manage_students`, `action.content_studio.regrade.request`)
+- ~~`putExamAccommodations`, `previewRegradeRequest`, `getRegradeRequest` cần `x-portal-action`~~ — đã đóng 2026-11-21: `putExamAccommodations` → `action.school_lms.assignments.manage_students` (delta D2); `previewRegradeRequest`/`getRegradeRequest` → `action.content_studio.regrade.request`
 - ~~`getExamSession` thiếu `x-portal-action`~~ — đã đóng: `getExamSession`, `listExamSessions` → `action.school_lms.assignments.view`, `createExamSession` → `action.school_lms.assignments.edit`, `releaseExamResults` → `action.school_lms.assignments.release_results`
 
 ## Complexity Tracking

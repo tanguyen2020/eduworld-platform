@@ -286,6 +286,7 @@
       "doneLabel": "Đã chấm lại",
       "failed": "Yêu cầu chấm lại bị lỗi; không tự gửi lại.",
       "noHistory": "Chưa có yêu cầu chấm lại.",
+      "question": "Câu hỏi của đề cần chấm lại",
       "counts": "{{done}}/{{total}} bài",
       "createdAt": "Thời điểm",
       "screenHelp": "Nhập mã phiên bản câu hỏi/hoạt động để xem các yêu cầu chấm lại; tạo yêu cầu từ trang phiên bản.",

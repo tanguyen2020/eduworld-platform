@@ -1,7 +1,8 @@
 // i18n of the portal (F050-AC-04, F051-AC-16, AGENTS §7): `vi-VN` default, `en-US`; namespaces `portal` and
 // `ops-ui`. Shell strings live under `shell.*`; labels of the menu catalog (`label_key` = `portal.workspace.*`,
 // `portal.menu.*` of specs/portal/menu-catalog.yaml, ADR-0090) come from catalog.{vi,en}.json under the key `portal`;
-// workspace screens add their own file under locales/<lang>/portal.<workspace>.json (F052: `portal.school_lms.*`).
+// workspace screens add their own file under locales/<lang>/portal.<workspace>.json (F052: `portal.school_lms.*`);
+// the LMS screens of workspace C (F055) use lms.{vi,en}.json under `lms.*`.
 import i18next, { type i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { OPS_UI_NS, opsUiResources } from '@eduworld/ops-ui';
@@ -11,6 +12,8 @@ import catalogVi from './catalog.vi.json';
 import catalogEn from './catalog.en.json';
 import contentStudioVi from './content-studio.vi.json';
 import contentStudioEn from './content-studio.en.json';
+import lmsVi from './lms.vi.json';
+import lmsEn from './lms.en.json';
 import schoolLmsVi from './locales/vi/portal.school_lms.json';
 import schoolLmsEn from './locales/en/portal.school_lms.json';
 
@@ -20,8 +23,8 @@ export const DEFAULT_LOCALE: Locale = 'vi-VN';
 export const PORTAL_NS = 'portal';
 
 export const resources = {
-  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
-  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
+  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, ...lmsVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
+  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, ...lmsEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
 } as const;
 
 export function isLocale(v: unknown): v is Locale {

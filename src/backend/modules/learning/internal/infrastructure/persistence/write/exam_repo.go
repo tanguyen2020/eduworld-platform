@@ -230,6 +230,29 @@ func (ExamRepo) UpdateParticipation(ctx context.Context, p write.ExamParticipati
 	return nil
 }
 
+// SetAccommodations implements write.ExamStore.
+func (ExamRepo) SetAccommodations(ctx context.Context, sessionID uuid.UUID, acc json.RawMessage, prev int64) (bool, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return false, err
+	}
+	// tenancyguard:ok UPDATE in the session tenant (RLS update policy + infra.current_tenant_id()), deleted_at IS NULL
+	return affected(tx.ExecContext(ctx, `UPDATE assessment.exam_sessions SET accommodations = $3, version = version + 1, updated_at = now()
+		WHERE exam_session_id = $1 AND version = $2 AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`, sessionID, prev, acc))
+}
+
+// SetParticipationTime implements write.ExamStore.
+func (ExamRepo) SetParticipationTime(ctx context.Context, sessionID, studentID uuid.UUID, extraPercent, effectiveSec int) (bool, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return false, err
+	}
+	// tenancyguard:ok UPDATE in the session tenant (RLS update policy + infra.current_tenant_id()), deleted_at IS NULL
+	return affected(tx.ExecContext(ctx, `UPDATE assessment.exam_participations SET extra_time_percent = $3, effective_duration_sec = $4,
+		version = version + 1, updated_at = now() WHERE exam_session_id = $1 AND student_id = $2
+		AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`, sessionID, studentID, extraPercent, effectiveSec))
+}
+
 // MarkAbsent implements write.ExamStore.
 func (ExamRepo) MarkAbsent(ctx context.Context, sessionID uuid.UUID) (int, error) {
 	tx, err := txOf(ctx)

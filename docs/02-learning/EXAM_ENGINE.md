@@ -112,7 +112,7 @@ Với `independent_draw`, các biến thể phải tương đương để học 
 | `window_start`, `window_end` | khoảng được phép bắt đầu |
 | `duration_sec` | thời gian làm bài cho mỗi học sinh (giây; cột `duration_sec`) |
 | `late_start_policy` | `full_duration` / `until_window_end` (mặc định: `deadline = min(start + duration, window_end)`) |
-| `accommodations[]` | gia hạn thời gian cho học sinh cụ thể (vd. +25%) — `school_admin`/`academic_manager` cấu hình |
+| `accommodations[]` | gia hạn thời gian cho học sinh cụ thể (vd. +25%) — `school_admin`/`academic_manager` cấu hình khi tạo session hoặc thay cả danh sách bằng `putExamAccommodations` khi session còn `scheduled`/`open` (If-Match, lý do, audit `exam_session.accommodations_updated`); thời lượng mới áp cho lượt bắt đầu sau khi lưu, lượt đang làm giữ `deadline_at` đã tính |
 | `status` | `scheduled → open → closed → results_released` |
 
 Worker chuyển trạng thái theo thời gian; event `exam.opened`, `exam.closed`, `exam.results_released`.
@@ -207,6 +207,7 @@ Quy tắc đề xuất (chi tiết [LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.m
 | GET | `/api/v1/exams/attempts/{id}/result` | Học sinh (theo release), `school_admin`/`academic_manager` |
 | GET | `/api/v1/exams/attempts/{id}/analysis` | Học sinh, `school_admin`/`academic_manager` |
 | POST | `/api/v1/exams/sessions/{id}:release-results` | `school_admin`/`academic_manager` (`result_release = manual`) |
+| PUT | `/api/v1/exams/sessions/{id}/accommodations` | `school_admin`/`academic_manager` (`lms.assignment.write`; If-Match, Idempotency-Key, lý do — F055) |
 | POST | `/api/v1/cms/learning/regrade-requests` (`scope = exam_session`) | `content_admin` / `academic_manager` |
 | GET | `/api/v1/exams/sessions/{id}/report` | `school_admin`/`academic_manager`: phổ điểm, item analysis, độ tin cậy, chênh lệch biến thể (§8.1) |
 

@@ -21,7 +21,7 @@ type CourseView struct {
 	TextbookSeriesID    *uuid.UUID `json:"textbook_series_id,omitempty"`
 	Status              string     `json:"status"`
 	StudentCount        int        `json:"student_count"`
-	Version             int64      `json:"-"`
+	Version             int64      `json:"version"` // If-Match of updateCourse from the list (F055 delta D1)
 }
 
 // ContentRefView is PathNode.content_ref.
@@ -66,7 +66,7 @@ type ScheduleItemView struct {
 	RefType        *string    `json:"-"`
 	RefID          *uuid.UUID `json:"ref_id,omitempty"`
 	Note           *string    `json:"note,omitempty"`
-	Version        int64      `json:"-"`
+	Version        int64      `json:"version"` // If-Match of updateScheduleItem from the list (F055 delta D1)
 }
 
 // StudyGroupView is StudyGroup.

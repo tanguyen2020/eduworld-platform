@@ -155,3 +155,28 @@ func TestResultsVisible(t *testing.T) {
 		t.Fatal("scaled")
 	}
 }
+
+// F055-AC-18 (delta D2): the accommodation list of putExamAccommodations — percent 1–100, one entry per student, at
+// most MaxAccommodations; changes only while the session is scheduled or open.
+func TestValidateAccommodations(t *testing.T) {
+	a, b := uuid.New(), uuid.New()
+	if vs := ValidateAccommodations([]Accommodation{{StudentID: a, ExtraTimePercent: 25}, {StudentID: b, ExtraTimePercent: 100}}); len(vs) != 0 {
+		t.Fatalf("valid list: %v", vs)
+	}
+	vs := ValidateAccommodations([]Accommodation{{StudentID: a, ExtraTimePercent: 0}, {StudentID: a, ExtraTimePercent: 101}})
+	if len(vs) != 3 || vs[0].Field != "/accommodations/0/extra_time_percent" || vs[2].Field != "/accommodations/1/student_id" {
+		t.Fatalf("violations: %v", vs)
+	}
+	many := make([]Accommodation, MaxAccommodations+1)
+	for i := range many {
+		many[i] = Accommodation{StudentID: uuid.New(), ExtraTimePercent: 10}
+	}
+	if vs := ValidateAccommodations(many); len(vs) != 1 || vs[0].Field != "/accommodations" {
+		t.Fatalf("too many: %v", vs)
+	}
+	for st, want := range map[Status]bool{StatusScheduled: true, StatusOpen: true, StatusClosed: false, StatusReleased: false, StatusCancelled: false} {
+		if CanChangeAccommodations(st) != want {
+			t.Fatalf("%s: %v", st, !want)
+		}
+	}
+}

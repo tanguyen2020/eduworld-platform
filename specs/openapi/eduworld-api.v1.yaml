@@ -2028,6 +2028,43 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /exams/sessions/{exam_session_id}/accommodations:
+    put:
+      x-service: learning
+      tags: [exams]
+      operationId: putExamAccommodations
+      x-portal-action: action.school_lms.assignments.manage_students
+      summary: Thay danh sách gia hạn thời gian cá nhân của exam session (FR-EXM-009, F055 delta D2) — lms.assignment.write trong trường/môn; lý do bắt buộc, audit
+      description: |
+        Chỉ khi session `scheduled`/`open` (ngược lại 409 CONFLICT). Học sinh phải thuộc đối tượng của session (422 VALIDATION_FAILED
+        `/accommodations/{i}/student_id`). Thời lượng hiệu lực mới áp cho lượt làm bắt đầu sau khi lưu; lượt đang làm giữ deadline_at
+        đã tính (EXAM_ENGINE §5). Ghi audit `exam_session.accommodations_updated` (lý do, số học sinh).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/ExamSessionId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExamAccommodationsUpdate' }
+      responses:
+        '200':
+          description: Đã lưu
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExamSession' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /exams/sessions/{exam_session_id}/papers:
     get:
       x-service: learning
@@ -21841,6 +21878,17 @@ components:
       type: string
       enum: [full_duration, until_window_end]
       description: until_window_end (mặc định) — deadline_at = min(started_at + thời lượng hiệu lực, window_end); full_duration — đủ thời lượng (EXAM_ENGINE §5)
+    ExamAccommodationsUpdate:
+      type: object
+      required: [accommodations, reason]
+      additionalProperties: false
+      properties:
+        accommodations:
+          type: array
+          maxItems: 200
+          description: Danh sách đầy đủ sau khi lưu (thay thế); rỗng = bỏ mọi gia hạn
+          items: { $ref: '#/components/schemas/ExamAccommodation' }
+        reason: { type: string, minLength: 3, maxLength: 500 }
     ExamAccommodation:
       type: object
       required: [student_id, extra_time_percent]
@@ -22094,6 +22142,7 @@ components:
         textbook_series_id: { $ref: '#/components/schemas/Uuid' }
         status: { type: string, enum: [active, hidden, archived] }
         student_count: { type: integer, minimum: 0 }
+        version: { type: integer, minimum: 1, readOnly: true, description: 'Phiên bản hàng — If-Match (W/"n") của updateCourse từ danh sách, không cần GET từng course (F055 delta D1)' }
     PathNode:
       type: object
       required: [position, content_ref]
@@ -22190,6 +22239,7 @@ components:
           required: [schedule_item_id]
           properties:
             schedule_item_id: { $ref: '#/components/schemas/Uuid' }
+            version: { type: integer, minimum: 1, readOnly: true, description: 'Phiên bản hàng — If-Match (W/"n") của updateScheduleItem từ danh sách (F055 delta D1)' }
     StudyGroupInput:
       type: object
       required: [name, member_ids]
