@@ -107,6 +107,8 @@ type Snapshot struct {
 	Assignments []PendingAssignment
 	// ExamResults are the objective results of the student's recent exams whose results are released (filled by F042 for R5).
 	ExamResults []ExamObjectiveResult
+	// Params are the parameters of a live recommendation_rule experiment arm of the student (F035-AC-24); zero = default.
+	Params Params
 }
 
 // ExamObjectiveResult is the share of correct items of one objective in a released exam attempt.

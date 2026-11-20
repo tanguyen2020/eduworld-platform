@@ -129,23 +129,13 @@ func (q Progress) MyMastery(ctx context.Context, subjectID *uuid.UUID, grade *in
 		if err != nil {
 			return err
 		}
-		if q.Arms != nil && p.TenantID != nil {
-			// F035-AC-24: a student of a live arm sees the mastery of the arm model; school reports keep the active model.
-			arm, err := q.Arms.LiveArm(ctx, *p.TenantID, p.UserID)
-			if err != nil {
-				return err
-			}
-			if arm != nil {
-				params := mastery.DefaultParams()
-				if len(arm.Params) > 0 {
-					_ = json.Unmarshal(arm.Params, &params)
-				}
-				m = mastery.WeightedEvidence{ModelVersion: arm.ModelVersion, P: params}
-				for i := range ds {
-					if st, ok := arm.States[ds[i].ObjectiveID]; ok {
-						ds[i].State = st
-					}
-				}
+		m, states, err := q.liveArm(ctx, p, m)
+		if err != nil {
+			return err
+		}
+		for i := range ds {
+			if st, ok := states[ds[i].ObjectiveID]; ok {
+				ds[i].State = st
 			}
 		}
 		now := q.now()

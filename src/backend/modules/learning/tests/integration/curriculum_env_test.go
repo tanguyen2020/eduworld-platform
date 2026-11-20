@@ -270,6 +270,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	exps := &command.Experiments{UoW: e.uow, Store: write.ExperimentRepo{}, Efficacy: write.EfficacyRepo{}, Mastery: write.MasteryRepo{},
 		Evidence: write.MasteryRepo{}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Config: command.DefaultExperimentConfig()}
 	att.Arms = exps.ArmsOf
+	att.Experience, recs.Experience = exps, exps // F035-AC-24
 	if !o.noExams {
 		asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	}
@@ -296,7 +297,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	examq := query.Exams{Session: e.read, Model: read.ExamModel{}, Attempts: attq, Cursors: codec, Clock: clk.Now}
 	handlers.ExamCommands, handlers.ExamQueries = exams, examq
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
-	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
+	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now,
+		Arms: read.ExperimentModel{}}
 	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
 	// F043: dashboards on their own session (role learning_dashboard; learning_platform for System Admin cross-tenant reads).
 	dashRead, err := entx.NewReadSession("learning", entx.DBs{App: open(t, e.cl.ModuleDSN("learning", "dashboard")),

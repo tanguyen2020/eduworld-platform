@@ -29,8 +29,16 @@ const (
 	lowPrior = 0.40
 )
 
-func weak(o Objective) bool {
-	return (o.Level == levelBeginning || o.Level == levelDeveloping) && o.EvidenceCount >= WeakMinEvidence
+// weak: level beginning or developing (or, with the review_threshold of an experiment arm, M_eff under it) with at least
+// WeakMinEvidence evidence.
+func (s Snapshot) weak(o Objective) bool {
+	if o.EvidenceCount < WeakMinEvidence {
+		return false
+	}
+	if t := s.Params.ReviewThreshold; t != nil {
+		return o.Value < *t
+	}
+	return o.Level == levelBeginning || o.Level == levelDeveloping
 }
 
 func strong(o Objective) bool { return o.Level == levelProficient || o.Level == levelMastered }
@@ -64,7 +72,7 @@ func (R2) Code() string { return "R2" }
 func (R2) Evaluate(s Snapshot) []Candidate {
 	var out []Candidate
 	for _, o := range s.Objectives {
-		if !weak(o) || !o.Available || !prerequisitesStrong(s, o) {
+		if !s.weak(o) || !o.Available || !prerequisitesStrong(s, o) {
 			continue
 		}
 		out = append(out, objectiveCandidate("R2", KindObjectiveReview, "weak_objective", o, 2))
@@ -91,18 +99,42 @@ func (R3) Code() string { return "R3" }
 func (R3) Evaluate(s Snapshot) []Candidate {
 	var out []Candidate
 	for _, o := range s.Objectives {
-		if !weak(o) {
+		if !s.weak(o) {
 			continue
 		}
-		for _, id := range o.Prerequisites {
-			p, ok := s.objective(id)
-			if !ok || !p.Available || !weakPrerequisite(p) {
+		for _, p := range s.prerequisites(o) {
+			if !p.Available || !weakPrerequisite(p) {
 				continue
 			}
 			c := objectiveCandidate("R3", KindPrerequisiteReview, "prerequisite_weak", p, 2, o.ID)
 			c.Params["for"] = o.Name
 			out = append(out, c)
 		}
+	}
+	return out
+}
+
+// prerequisites walks the prerequisites of o known to the snapshot breadth first, to the prerequisite_depth of the
+// arm (1 = direct prerequisites, the default).
+func (s Snapshot) prerequisites(o Objective) []Objective {
+	seen := map[uuid.UUID]bool{o.ID: true}
+	level := o.Prerequisites
+	var out []Objective
+	for d := 0; d < s.Params.depth() && len(level) > 0; d++ {
+		var next []uuid.UUID
+		for _, id := range level {
+			if seen[id] {
+				continue
+			}
+			seen[id] = true
+			p, ok := s.objective(id)
+			if !ok {
+				continue
+			}
+			out = append(out, p)
+			next = append(next, p.Prerequisites...)
+		}
+		level = next
 	}
 	return out
 }
@@ -118,7 +150,7 @@ func (R4) Evaluate(s Snapshot) []Candidate {
 	var out []Candidate
 	for _, o := range s.Objectives {
 		if o.EvidenceCount == 0 || !o.Available || (o.StoredLevel != levelProficient && o.StoredLevel != levelMastered) ||
-			o.StoredValue-o.Value < DecayDrop {
+			o.StoredValue-o.Value < DecayDrop || (o.LastEvidenceAt != nil && s.Now.Sub(*o.LastEvidenceAt) < s.Params.spacing()) {
 			continue
 		}
 		out = append(out, objectiveCandidate("R4", KindObjectiveReview, "decay_review", o, 3))
@@ -189,7 +221,7 @@ func (R7) Evaluate(s Snapshot) []Candidate {
 		}
 		without := 0
 		for _, o := range topic {
-			if o.EvidenceCount == 0 {
+			if s.Params.notStarted(o) {
 				without++
 			}
 		}

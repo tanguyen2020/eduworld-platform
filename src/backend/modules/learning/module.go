@@ -405,6 +405,8 @@ func build(r *module.Registry) (*wiring, error) {
 	exps := command.Experiments{UoW: core.UoW, Store: write.ExperimentRepo{}, Efficacy: write.EfficacyRepo{}, Mastery: write.MasteryRepo{},
 		Evidence: write.MasteryRepo{}, Audit: auditor, Config: command.DefaultExperimentConfig(), Metrics: observability.EfficacyCounter{}}
 	att.Arms = exps.ArmsOf
+	// F035-AC-24: a live arm drives the practice difficulty and the recommendations of its students.
+	att.Experience, recs.Experience = exps, exps
 	asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	att.Gate = asg
 	exams.Asg, exams.Att = asg, att
@@ -433,7 +435,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors},
 		CmsActivities: query.CmsActivities{Docs: docQueries}, ActivityTypes: query.ActivityTypes{Registry: activities},
 		Attempts: att, AttemptQueries: attq,
-		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}},
+		Progress: query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{},
+			Arms: read.ExperimentModel{}},
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
 	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{},
 		Arms: read.ExperimentModel{}}

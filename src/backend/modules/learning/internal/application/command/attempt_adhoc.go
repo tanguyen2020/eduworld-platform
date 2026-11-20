@@ -288,11 +288,19 @@ func (h Attempts) plan(ctx context.Context, p authz.Principal, mode attempt.Mode
 	if src.Difficulty != nil {
 		f.Difficulty = &selection.Range{Min: *src.Difficulty, Max: *src.Difficulty}
 	} else if h.Self != nil {
-		level, err := h.currentLevel(ctx, p, src)
+		var arm ExperienceArm
+		if h.Experience != nil && p.TenantID != nil {
+			// F035-AC-24: a live experiment arm sets the level (arm model) and shifts the difficulty (practice_difficulty).
+			var err error
+			if arm, err = h.Experience.Experience(ctx, *p.TenantID, p.UserID); err != nil {
+				return adHocPlan{}, err
+			}
+		}
+		level, err := h.currentLevel(ctx, p, src, arm)
 		if err != nil {
 			return adHocPlan{}, err
 		}
-		r := selection.DifficultyForLevel(level)
+		r := selection.DifficultyForLevel(level).Shift(arm.Rules.DifficultyShift())
 		f.Difficulty = &r
 	}
 	cs, err := h.Delivery.Select(ctx, selection.Request{Rule: selection.Rule{Filters: f, Count: count}, Seed: uint64(seed), Recent: recent})
@@ -319,7 +327,7 @@ func poolInsufficient(err error, msg string) error {
 
 // currentLevel is the mastery level a selection adapts to (F032-AC-05): the level of the objective after decay, or for a
 // topic or subject the level of the mean value after decay of its objectives with evidence; beginning without evidence.
-func (h Attempts) currentLevel(ctx context.Context, p authz.Principal, src AdHocSource) (string, error) {
+func (h Attempts) currentLevel(ctx context.Context, p authz.Principal, src AdHocSource, arm ExperienceArm) (string, error) {
 	cfg, err := h.Self.Masteries.ActiveModel(ctx)
 	if err != nil {
 		return "", err
@@ -350,11 +358,15 @@ func (h Attempts) currentLevel(ctx context.Context, p authz.Principal, src AdHoc
 	}
 	now := h.now()
 	sum, n := 0.0, 0
+	if arm.Model != nil {
+		m = *arm.Model
+	}
 	for _, r := range rows {
-		if !in[r.ObjectiveID] || r.State.EvidenceCount == 0 {
+		_, st := arm.Mastery(m, r.ObjectiveID, r.State)
+		if !in[r.ObjectiveID] || st.EvidenceCount == 0 {
 			continue
 		}
-		v, level := m.Effective(r.State, now)
+		v, level := m.Effective(st, now)
 		if src.ObjectiveID != nil {
 			return string(level), nil
 		}

@@ -48,6 +48,8 @@ type Recommendations struct {
 	Metrics   SelfStudyMetrics
 	// Sources fill the snapshot with the data of the rules of other features (F040 R6, F041 R1, F042 R5).
 	Sources []SnapshotSource
+	// Experience resolves the live experiment arms of the student (F035-AC-24); nil = no experiment.
+	Experience ExperienceResolver
 }
 
 func (h Recommendations) now() time.Time { return now(h.Clock).UTC() }
@@ -106,6 +108,11 @@ func (h Recommendations) Recompute(ctx context.Context, studentID uuid.UUID, tri
 		return err
 	}
 	cands := h.Engine.Run(snap.Snapshot, func(c recommendation.Candidate) bool { return slices.Contains(blockedKeys, c.Key()) })
+	// F035-AC-24: max_recommendations of a live recommendation_rule arm keeps the first candidates only.
+	stored := snap.Params.Limit(cfg.Stored)
+	if len(cands) > stored {
+		cands = cands[:stored]
+	}
 	active, err := h.Store.ActiveRecommendations(ctx, studentID)
 	if err != nil {
 		return err
@@ -149,7 +156,7 @@ func (h Recommendations) Recompute(ctx context.Context, studentID uuid.UUID, tri
 		}
 	}
 	for i, c := range cands {
-		if kept[i] || len(list) >= cfg.Stored {
+		if kept[i] || len(list) >= stored {
 			continue
 		}
 		r := write.RecommendationRow{ID: ids.New(), TenantID: snap.TenantID, SchoolID: *school, StudentID: studentID, RuleCode: c.RuleCode,
@@ -246,6 +253,14 @@ func (h Recommendations) snapshot(ctx context.Context, studentID uuid.UUID, grad
 	if err != nil {
 		return out, err
 	}
+	var arm ExperienceArm
+	if h.Experience != nil && out.TenantID != uuid.Nil {
+		// F035-AC-24: the recommendations of a student of a live arm follow the arm model and rule_params.
+		if arm, err = h.Experience.Experience(ctx, out.TenantID, studentID); err != nil {
+			return out, err
+		}
+		out.Params = arm.Rules
+	}
 	rows, err := h.Reader.StudentMasteries(ctx, studentID)
 	if err != nil {
 		return out, err
@@ -291,10 +306,15 @@ func (h Recommendations) snapshot(ctx context.Context, studentID uuid.UUID, grad
 		ob := recommendation.Objective{ID: o.ID, Code: o.Code, Name: o.Name, TopicID: o.TopicID, SubjectID: o.SubjectID, Grade: o.Grade,
 			Prerequisites: o.Prerequisites, Level: "not_started", StoredLevel: "not_started", Available: available[o.ID]}
 		if r, ok := byObjective[o.ID]; ok {
-			v, level := m.Effective(r.State, out.Now)
-			ob.Level, ob.Value, ob.StoredLevel, ob.StoredValue = string(level), v, string(r.Level), r.State.Value
-			ob.EvidenceCount, ob.LastEvidenceAt, ob.PriorSource, ob.PriorValue = r.State.EvidenceCount, r.State.LastEvidenceAt, r.State.PriorSource,
-				r.State.PriorValue
+			mm, st := arm.Mastery(m, o.ID, r.State)
+			v, level := mm.Effective(st, out.Now)
+			stored := r.Level
+			if arm.Model != nil && st.LastEvidenceAt != nil {
+				_, stored = mm.Effective(st, *st.LastEvidenceAt)
+			}
+			ob.Level, ob.Value, ob.StoredLevel, ob.StoredValue = string(level), v, string(stored), st.Value
+			ob.EvidenceCount, ob.LastEvidenceAt, ob.PriorSource, ob.PriorValue = st.EvidenceCount, st.LastEvidenceAt, st.PriorSource,
+				st.PriorValue
 		}
 		out.Objectives = append(out.Objectives, ob)
 		if !topics[o.TopicID] {

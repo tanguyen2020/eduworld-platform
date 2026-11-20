@@ -146,3 +146,16 @@ func TestDiagnosticSelection(t *testing.T) {
 		t.Fatalf("nothing: %v", err)
 	}
 }
+
+// F035-AC-24 (T051): practice difficulty of an experiment arm.
+func TestRangeShift(t *testing.T) {
+	if got := DifficultyForLevel("developing").Shift(1); got != (Range{Min: 3, Max: 4}) {
+		t.Fatalf("+1: %+v", got)
+	}
+	if got := DifficultyForLevel("beginning").Shift(-1); got != (Range{Min: 1, Max: 1}) {
+		t.Fatalf("-1 clamped: %+v", got)
+	}
+	if got := DifficultyForLevel("mastered").Shift(1); got != (Range{Min: 5, Max: 5}) {
+		t.Fatalf("+1 clamped: %+v", got)
+	}
+}

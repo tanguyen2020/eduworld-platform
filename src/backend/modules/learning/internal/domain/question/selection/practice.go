@@ -234,3 +234,10 @@ func Diagnostic(pool []Candidate, objectives []uuid.UUID, perMax, maxTotal int, 
 	}
 	return out, nil
 }
+
+// Shift moves a difficulty range by d steps, kept within 1–5 (practice_difficulty of a live recommendation_rule
+// experiment arm, F035-AC-24).
+func (r Range) Shift(d int) Range {
+	clamp := func(v int) int { return min(5, max(1, v)) }
+	return Range{Min: clamp(r.Min + d), Max: clamp(r.Max + d)}
+}

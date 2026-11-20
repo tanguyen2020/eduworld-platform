@@ -9,10 +9,13 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"sort"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 )
 
 // Kinds, units and statuses.
@@ -124,9 +127,23 @@ func (d Definition) Validate() []Violation {
 			if len(a.RuleParams) > 0 && json.Unmarshal(a.RuleParams, &params) != nil {
 				vs = append(vs, Violation{p + "/rule_params", "must be an object"})
 			}
+			known := true
 			for k := range params {
 				if !AllowedRuleParams[k] {
+					known = false
 					vs = append(vs, Violation{p + "/rule_params/" + k, "is not a parameter of the recommendation engine"})
+				}
+			}
+			if a.IsControl && len(params) > 0 {
+				vs = append(vs, Violation{p + "/rule_params", "the control arm keeps the default parameters"})
+			}
+			if known && len(params) > 0 {
+				rp, err := recommendation.ParseParams(a.RuleParams)
+				if err != nil {
+					vs = append(vs, Violation{p + "/rule_params", "has a value of the wrong type"})
+				}
+				for _, k := range sortedKeys(rp.Violations()) {
+					vs = append(vs, Violation{p + "/rule_params/" + k, rp.Violations()[k]})
 				}
 			}
 		}
@@ -204,3 +221,12 @@ func Breach(control, arm float64, dropPP float64) bool { return (control-arm)*10
 
 // ArmLabel is the "<code>:<arm>" of a learning event (≤ 97 characters).
 func ArmLabel(code, arm string) string { return code + ":" + arm }
+
+func sortedKeys(m map[string]string) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}

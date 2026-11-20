@@ -4,7 +4,9 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -126,6 +128,9 @@ func TestEfficacyExperiments(t *testing.T) {
 		t.Fatalf("arm model not faster: arm %v, active %v", arm, active)
 	}
 	shadow := must(t, c.do(t, http.MethodGet, "/learning/mastery/me", hsAn, nil, nil), http.StatusOK, "my mastery (shadow)")
+	progressShadow := must(t, c.do(t, http.MethodGet, "/learning/progress/me", hsAn, nil, nil), http.StatusOK, "my progress (shadow)")
+	studentPath := "/students/" + c.users[hsAn].UserID.String() + "/progress"
+	schoolShadow := must(t, c.do(t, http.MethodGet, studentPath, adA, nil, nil), http.StatusOK, "school view (shadow)")
 	// AC-24: live — the student sees the arm model; the school keeps the active model.
 	must(t, c.do(t, http.MethodPost, experimentsAPI+"/"+id.String()+":start", saAdmin, idem(), map[string]any{"exposure": "live"}), http.StatusOK,
 		"live")
@@ -138,9 +143,17 @@ func TestEfficacyExperiments(t *testing.T) {
 			t.Fatalf("arm in a student response: %s", r.raw)
 		}
 	}
-	school := must(t, c.do(t, http.MethodGet, "/students/"+c.users[hsAn].UserID.String()+"/progress", adA, nil, nil), http.StatusOK, "school view")
-	if strings.Contains(school.raw, "we11") {
-		t.Fatal("arm in the school view")
+	school := must(t, c.do(t, http.MethodGet, studentPath, adA, nil, nil), http.StatusOK, "school view")
+	if strings.Contains(school.raw, "we11") || school.raw != schoolShadow.raw {
+		t.Fatalf("the school view changed with the live arm: %s / %s", schoolShadow.raw, school.raw)
+	}
+	// T051: getMyProgress follows the arm model too; the levels differ from the school view of the same student.
+	progressLive := must(t, c.do(t, http.MethodGet, "/learning/progress/me", hsAn, nil, nil), http.StatusOK, "my progress (live)")
+	if progressLive.raw == progressShadow.raw || strings.Contains(progressLive.raw, "we11") {
+		t.Fatalf("my progress not on the arm model: %s", progressLive.raw)
+	}
+	if levels(progressShadow) != levels(school) || levels(progressLive) == levels(school) {
+		t.Fatalf("levels: shadow %s, live %s, school %s", levels(progressShadow), levels(progressLive), levels(school))
 	}
 	// AC-27: results by arm, small cells hidden; tenant roles 403.
 	if _, err := c.exps.RunGuardrail(ctx); err != nil {
@@ -166,6 +179,9 @@ func TestEfficacyExperiments(t *testing.T) {
 	if back.raw != shadow.raw {
 		t.Fatalf("not back on the active model: %s", back.raw)
 	}
+	if p := must(t, c.do(t, http.MethodGet, "/learning/progress/me", hsAn, nil, nil), http.StatusOK, "my progress (control)"); p.raw != progressShadow.raw {
+		t.Fatalf("progress not back on the active model: %s", p.raw)
+	}
 	// AC-26: stop by hand (reason 10–1000), then nothing runs.
 	if x := c.do(t, http.MethodPost, experimentsAPI+"/"+id.String()+":stop", saAdmin, idem(), map[string]any{"reason": "ngắn"}); x.status !=
 		http.StatusUnprocessableEntity {
@@ -180,4 +196,14 @@ func TestEfficacyExperiments(t *testing.T) {
 		http.StatusUnprocessableEntity {
 		t.Fatalf("restart a stopped experiment: %d", x.status)
 	}
+}
+
+// levels lists objective_id=level of a LearningProgressView.
+func levels(r resp) string {
+	var out []string
+	for _, o := range r.items("objectives") {
+		out = append(out, fmt.Sprint(o["objective_id"], "=", o["level"]))
+	}
+	sort.Strings(out)
+	return strings.Join(out, ",")
 }

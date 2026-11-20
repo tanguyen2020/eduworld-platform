@@ -43,6 +43,18 @@ func TestValidate(t *testing.T) {
 			d.Kind = KindRecommendation
 			d.Arms[1].RuleParams = json.RawMessage(`{"xp_x2":true}`)
 		},
+		"/arms/1/rule_params/max_recommendations": func(d *Definition) {
+			d.Kind = KindRecommendation
+			d.Arms[1].RuleParams = json.RawMessage(`{"max_recommendations":5}`)
+		},
+		"/arms/1/rule_params/practice_difficulty": func(d *Definition) {
+			d.Kind = KindRecommendation
+			d.Arms[1].RuleParams = json.RawMessage(`{"practice_difficulty":2}`)
+		},
+		"/arms/0/rule_params": func(d *Definition) {
+			d.Kind = KindRecommendation
+			d.Arms[0].RuleParams = json.RawMessage(`{"review_threshold":0.5}`)
+		},
 	}
 	for want, mutate := range cases {
 		d := def()
@@ -59,7 +71,7 @@ func TestValidate(t *testing.T) {
 	}
 	rec := def()
 	rec.Kind = KindRecommendation
-	rec.Arms = []Arm{{Code: "control", AllocationPct: 50, IsControl: true}, {Code: "more", AllocationPct: 50, RuleParams: json.RawMessage(`{"max_recommendations":5}`)}}
+	rec.Arms = []Arm{{Code: "control", AllocationPct: 50, IsControl: true}, {Code: "more", AllocationPct: 50, RuleParams: json.RawMessage(`{"max_recommendations":2}`)}}
 	if vs := rec.Validate(); len(vs) != 0 {
 		t.Fatalf("recommendation: %v", vs)
 	}

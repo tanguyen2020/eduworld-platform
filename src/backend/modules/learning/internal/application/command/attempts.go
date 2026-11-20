@@ -89,6 +89,9 @@ type Attempts struct {
 	EfficacyWave func(ctx context.Context, sessionID uuid.UUID) (*uuid.UUID, error)
 	// Arms lists the experiment arms ("<code>:<arm>") of a student for the learning events (F035-AC-25); nil = none.
 	Arms func(ctx context.Context, tenant, student uuid.UUID) ([]string, error)
+	// Experience resolves the live experiment arms of a student for the adaptive practice difficulty (F035-AC-24); nil =
+	// no experiment.
+	Experience ExperienceResolver
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).

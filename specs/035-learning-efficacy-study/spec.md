@@ -31,6 +31,12 @@
 - Cột LO trong bộ dữ liệu xuất mang `objective_id` (dữ liệu chương trình, không định danh cá nhân): `pre_correct_lo_<id>`, `pre_total_lo_<id>`, `post_…`, `m_eff_lo_<id>`, `level_lo_<id>`.
 - `updateEfficacyStudy`, `updateLearningExperiment` nhận `application/merge-patch+json` như mọi PATCH khác của API (sửa contract).
 
+### Session 2026-11-21 (b) — hoàn tất T051, US8 ([Confirmed], owner chốt 2026-11-20)
+
+- Danh mục `rule_params` của arm `recommendation_rule` (F035-AC-21, AC-24) và cách rule engine F032 áp dụng — mỗi tham số có miền giá trị, ngoài miền → `422 VALIDATION_FAILED`; arm control **không** mang `rule_params` (giữ engine mặc định): `review_threshold` 0,10–0,95 (LO yếu cho R2/R3/R8 = `M_eff` < ngưỡng thay cho mức `beginning`/`developing`, vẫn cần ≥ 3 evidence); `max_recommendations` 1–3 (số gợi ý giữ cho học sinh — chỉ giảm, không tăng áp lực, R19); `prerequisite_depth` 1–3 (độ sâu duyệt tiên quyết của R3, mặc định 1); `spaced_review_days` 0–60 (R4 chỉ gợi ý ôn khi evidence cuối đủ cũ); `practice_difficulty` −1/0/+1 (dịch khoảng độ khó của luyện tập thích ứng khi học sinh không tự chọn độ khó; bộ chọn câu F032 vẫn nới ±1 khi thiếu câu); `diagnostic_threshold` 1–10 (R7 coi LO có ít evidence hơn ngưỡng là chưa bắt đầu).
+- Trải nghiệm theo arm `live` (F035-AC-24): `getMyMastery`, `getMyProgress` đọc mô hình/trạng thái của arm `mastery_model` ngay ở request; gợi ý (`getMyRecommendations`) được **tính và lưu** theo arm (mô hình arm + `rule_params`) ở lần tính lại kế tiếp (sau mỗi attempt được chấm, job `recommendation-nightly`); khi thử nghiệm dừng/thu hồi, danh sách gợi ý trở về engine mặc định ở lần tính lại kế tiếp (≤ 24 giờ), còn mastery/tiến độ hiển thị trở về control từ request kế tiếp. Học sinh ở nhiều thử nghiệm `live` cùng lúc: mô hình mastery lấy từ thử nghiệm bắt đầu sớm nhất; mỗi `rule_params` lấy giá trị của thử nghiệm bắt đầu sớm nhất có đặt tham số đó. Attempt `mode = exam`, ExamSession và `getStudentProgress`/dashboard không đọc arm.
+- Portal US8: đường dẫn màn chi tiết là route con của menu (`/platform-admin/efficacy-studies/:studyId`, `/platform-admin/learning-experiments/:experimentId`) thay cho `/portal/platform-admin/research/*` trong plan (đường dẫn menu do catalog F051 sở hữu); bản dịch `platform.research.*` nằm trong `research/i18n/{vi,en}.json` của chunk workspace D.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu và đề đo hiệu quả độc lập với luyện tập (Priority: P1)

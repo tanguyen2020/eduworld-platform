@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math"
 	"time"
 
@@ -44,10 +45,31 @@ func (q Progress) Mine(ctx context.Context, subjectID *uuid.UUID) (out dto.Learn
 		return out, err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		out, err = q.view(ctx, p.UserID, subjectID)
+		out, err = q.view(ctx, p.UserID, subjectID, &p)
 		return err
 	})
 	return out, err
+}
+
+// liveArm is the live mastery_model arm of the student of the session (F035-AC-24): its model and the states computed
+// with it; m and no state otherwise (no experiment, control arm, shadow). Only the student experience reads it; school
+// reports keep the active model.
+func (q Progress) liveArm(ctx context.Context, p authz.Principal, m mastery.WeightedEvidence) (mastery.WeightedEvidence,
+	map[uuid.UUID]mastery.State, error) {
+	if q.Arms == nil || p.TenantID == nil {
+		return m, nil, nil
+	}
+	arm, err := q.Arms.LiveArm(ctx, *p.TenantID, p.UserID)
+	if err != nil || arm == nil {
+		return m, nil, err
+	}
+	params := mastery.DefaultParams()
+	if len(arm.Params) > 0 {
+		if err := json.Unmarshal(arm.Params, &params); err != nil {
+			return m, nil, fmt.Errorf("arm model %s: %w", arm.ModelVersion, err)
+		}
+	}
+	return mastery.WeightedEvidence{ModelVersion: arm.ModelVersion, P: params}, arm.States, nil
 }
 
 // Student is getStudentProgress (F031-AC-16): analytics.class.read in the school of the student (a grant limited to
@@ -84,7 +106,7 @@ func (q Progress) Student(ctx context.Context, studentID uuid.UUID, subjectID *u
 			SubjectID: subjectID}); err != nil {
 			return err
 		}
-		out, err = q.view(ctx, studentID, subjectID)
+		out, err = q.view(ctx, studentID, subjectID, nil)
 		out.SchoolID = school
 		return err
 	})
@@ -129,11 +151,19 @@ func (q Progress) model(ctx context.Context) (mastery.WeightedEvidence, error) {
 	return mastery.WeightedEvidence{ModelVersion: cfg.ModelVersion, P: p}, nil
 }
 
-func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID) (dto.LearningProgressView, error) {
+// view builds the progress of a student; self is the student of the session for getMyProgress (a live experiment arm
+// applies, F035-AC-24), nil for getStudentProgress (always the active model).
+func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID, self *authz.Principal) (dto.LearningProgressView, error) {
 	out := dto.LearningProgressView{StudentID: studentID, Objectives: []dto.ObjectiveProgressView{}}
 	m, err := q.model(ctx)
 	if err != nil {
 		return out, err
+	}
+	var states map[uuid.UUID]mastery.State
+	if self != nil {
+		if m, states, err = q.liveArm(ctx, *self, m); err != nil {
+			return out, err
+		}
 	}
 	band, err := q.band(ctx, studentID)
 	if err != nil {
@@ -145,6 +175,9 @@ func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid
 	}
 	now := q.now()
 	for _, o := range ms {
+		if st, ok := states[o.ObjectiveID]; ok {
+			o.State = st
+		}
 		_, level := m.Effective(o.State, now)
 		v := dto.ObjectiveProgressView{ObjectiveID: o.ObjectiveID, Level: string(level), IconCode: mastery.IconCode(band, level),
 			EvidenceCount: o.State.EvidenceCount}
