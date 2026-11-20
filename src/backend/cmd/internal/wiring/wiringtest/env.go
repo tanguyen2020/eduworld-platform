@@ -64,5 +64,7 @@ func Env(o Options) map[string]string {
 	}
 	env["EW_DB_IDENTITY_PARTITION_ADMIN_DSN"] = o.DSN("identity", "partition_admin")
 	env["EW_DB_LEARNING_PARTITION_ADMIN_DSN"] = o.DSN("learning", "partition_admin")
+	env["EW_DB_LEARNING_DASHBOARD_DSN"] = o.DSN("learning", "dashboard")
+	env["EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN"] = o.DSN("learning", "platform")
 	return env
 }

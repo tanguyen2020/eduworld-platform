@@ -19,12 +19,17 @@ var _ write.PartitionMaintenance = PartitionMaint{}
 
 // EnsurePartitions implements write.PartitionMaintenance.
 func (m PartitionMaint) EnsurePartitions(ctx context.Context, from time.Time, months int) (int, error) {
-	var n int
+	var n, r int
 	if err := m.DB.QueryRowContext(ctx, `SELECT learning.ensure_monthly_partitions($1::date, $2)`, from.UTC().Format(time.DateOnly), months).
 		Scan(&n); err != nil {
 		return 0, fmt.Errorf("ensure learning partitions: %w", err)
 	}
-	return n, nil
+	// F043: monthly partitions of the daily rollups, yearly ones of the weekly rollups (DASHBOARD_DATA §6).
+	if err := m.DB.QueryRowContext(ctx, `SELECT learning.ensure_rollup_partitions($1::date, $2)`, from.UTC().Format(time.DateOnly), months).
+		Scan(&r); err != nil {
+		return n, fmt.Errorf("ensure rollup partitions: %w", err)
+	}
+	return n + r, nil
 }
 
 // MonthsAhead implements write.PartitionMaintenance.

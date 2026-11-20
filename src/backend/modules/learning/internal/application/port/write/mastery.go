@@ -82,6 +82,8 @@ type AttemptFacts struct {
 // ItemCounts are the first scored answers of an attempt (accuracy counts on the first answer, LEARNING_ANALYTICS §4).
 type ItemCounts struct {
 	Answered, Correct, RapidGuess, WithHint int
+	// CorrectRapid are the correct answers that were rapid guesses (accuracy excludes them, F043-AC-05).
+	CorrectRapid int
 }
 
 // MasteryStore persists mastery in the TenantScope of ctx (RLS T): masteries with optimistic row versions, the history.

@@ -8,10 +8,10 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `getSchoolDashboard` | `GET /api/v1/lms/dashboards/school` | `learning.v1.yaml` (`SchoolDashboard`) | `analytics.school.read` (scope trường/môn) | Cần sửa (thêm khối `self_study`) |
+| `getSchoolDashboard` | `GET /api/v1/lms/dashboards/school` | `learning.v1.yaml` (`SchoolDashboard`) | `analytics.school.read` (scope trường/môn) | Đã sửa 2026-11-21 (`self_study`, `assignments`, `reasons[]`, 404/503) |
 | `getClassDashboard` | `GET /api/v1/lms/classes/{class_id}/dashboard` | `learning.v1.yaml` | `analytics.school.read` | Có sẵn |
 | `getSchoolAnalyticsSeries` | `GET /api/v1/lms/schools/{school_id}/analytics/series` | `learning.v1.yaml` | `analytics.school.read` | Có sẵn |
-| `getStudentLearningProfile` | `GET /api/v1/lms/students/{student_id}/analytics` | — | `analytics.school.read` (trong phạm vi) · audit `learning.profile_viewed` | Cần thêm |
+| `getStudentLearningProfile` | `GET /api/v1/lms/students/{student_id}/analytics` | `learning.v1.yaml` (`StudentLearningProfile`) | `analytics.school.read` (trong phạm vi) · audit `learning.profile_viewed` | Đã thêm 2026-11-21 |
 | `getTenantLearningSummary` | `GET /api/v1/tenant/analytics/learning/summary` | `learning.v1.yaml` | `analytics.tenant.read` (TA); `analytics.school.read` (SA, trường mình) | Có sẵn |
 | `getPlatformLearningSummary` | `GET /api/v1/admin/analytics/learning/summary` | `learning.v1.yaml` | `platform.cross_tenant.read` (System Admin, gateway nội bộ, MFA) | Có sẵn |
 

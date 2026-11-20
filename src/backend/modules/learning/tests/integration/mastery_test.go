@@ -476,7 +476,9 @@ func TestLearningPartitionsJob(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if n != 8 { // 2028-01, 2028-02 of four tables
+	// 2028-01, 2028-02 of four tables (8) + F043 rollups: months 2027-11…2028-02 of the three daily rollups (12) and years
+	// 2027, 2028 of the five weekly rollups (10).
+	if n != 30 {
 		t.Fatalf("created %d partitions", n)
 	}
 	for _, table := range portwrite.PartitionedTables {

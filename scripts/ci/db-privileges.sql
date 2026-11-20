@@ -4,7 +4,7 @@
 SELECT 'delete_or_truncate' AS violation, grantee AS role, table_schema || '.' || table_name AS object, privilege_type
 FROM information_schema.role_table_grants
 WHERE privilege_type IN ('DELETE', 'TRUNCATE')
-  AND grantee ~ '^(identity|learning|game|competition|chat)_(app|platform|readonly|relay)$'
+  AND grantee ~ '^((identity|learning|game|competition|chat)_(app|platform|readonly|relay)|learning_dashboard)$'
 UNION ALL
 SELECT 'purger_outside_gameplay_chat', grantee, table_schema || '.' || table_name, privilege_type
 FROM information_schema.role_table_grants
@@ -18,7 +18,7 @@ UNION ALL
 SELECT 'cross_database_connect', r.rolname, d.datname, 'CONNECT'
 FROM pg_roles r
 CROSS JOIN pg_database d
-WHERE r.rolname ~ '^((identity|learning|game|competition|chat)_(app|platform|migrator|readonly|relay|partition_admin)|chat_purger)$'
+WHERE r.rolname ~ '^((identity|learning|game|competition|chat)_(app|platform|migrator|readonly|relay|partition_admin)|chat_purger|learning_dashboard)$'
   AND d.datname IN ('eduworld_identity', 'eduworld_learning', 'eduworld_game', 'eduworld_competition', 'eduworld_chat', 'keycloak')
   AND d.datname <> 'eduworld_' || CASE WHEN r.rolname = 'chat_purger' THEN 'chat' ELSE split_part(r.rolname, '_', 1) END
   AND has_database_privilege(r.rolname, d.datname, 'CONNECT');

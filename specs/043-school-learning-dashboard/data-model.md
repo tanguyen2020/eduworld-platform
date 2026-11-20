@@ -81,3 +81,18 @@ Không có cột `xp`, `rating`, nội dung chat trong mọi bảng trên (F043-
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | — (chỉ tiêu thụ) | `question.answered`, `activity.*`, `exam.graded`, `attempt.re_evaluated`, `assignment.*`, `learning_objective.*`, `student.game_logged_in/out` | `specs/schemas/learning-event.schema.json`, `specs/events/payloads/learning/*.v1.schema.json` (một số Cần thêm — contracts §4) |
+
+## 5. Ghi chú triển khai (2026-11-21)
+
+Migration `src/backend/modules/learning/migrations/20261223000001_f043_dashboard_rollups.sql` (viết tay như `progress_daily` của F031, không entity ent). Khác biệt so với §1 [Proposed, spec Session 2026-11-21]:
+
+| Bảng | Thay đổi |
+|---|---|
+| `progress_daily` | Thêm `items_correct_rapid_guess` (accuracy = (đúng − đúng do đoán nhanh) / (trả lời − đoán nhanh)); index `(tenant_id, class_id\|student_id\|school_id, bucket_date)`, BRIN, partial index ngày chưa chốt |
+| `rollup_class/school/tenant_*` | Thêm `active_students_all` (distinct mọi môn của lớp/khối trong bucket — cộng qua khối không đếm trùng); bài giao lưu `assignments_due`, `assignments_completed`, `assignments_on_time` thay cặp `assignments_on_time_num/den`; `grade_level = 0` = chưa rõ khối; chưa có `time_hist` |
+| `rollup_days` (Mới) | `(tenant_id, bucket_date)` → `is_final`, `needs_reclose`, `closed_at` — trạng thái chốt ngày, cờ chốt lại khi event muộn |
+| `rm_class_objective_stats` | Thêm `grade_level`, `topic_id`, `objective_code`, `yccd_ref` (role dashboard không phải join curriculum cho heatmap) |
+| `rm_class_subject_summary` | Thêm `grade_level`, `active_students_7d` |
+| `rm_school_grade_summary` | Thêm `student_count` (k-anonymity, dòng `subject_id` = UUID 0 mang sĩ số khối), `recommendation_started_num/den`, `objectives_improved` |
+| `rm_student_attention` | Thêm bộ đếm `missed_assignments`, `beginning_objectives`, `rapid_guess_num/den` |
+| Role `learning_dashboard` | Ngoài bảng trên: SELECT `progress_daily`, `objective_masteries`, `rm_student_recommendations`, `lms.assignments`, `lms.assignment_submissions`, `ref.tenants/schools/classes/students/enrollments`, `curriculum.topics/learning_objectives`, `infra.tenant_resource_assignments` |

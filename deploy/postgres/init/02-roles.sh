@@ -10,6 +10,8 @@
 #   <module>_relay           outbox relay (granted by F003)
 #   <module>_partition_admin partition maintenance of infra.* (granted by F003)
 #   chat_purger              gameplay chat purge only (privileges granted by F117, ADR-0033)
+#   learning_dashboard       School Learning Dashboard reads on the replica: SELECT on rollups/read models only (F043,
+#                            ADR-0062, DASHBOARD_DATA §7); statement_timeout 5 s, idle in transaction 10 s, work_mem 32 MB
 #
 # Each role may CONNECT only to its own module database (03-revoke.sql removes PUBLIC CONNECT).
 set -euo pipefail
@@ -49,6 +51,17 @@ done
 create_role chat_purger "NOBYPASSRLS"
 psql_su <<SQL
 GRANT CONNECT ON DATABASE eduworld_chat TO chat_purger;
+SQL
+
+# Dashboard role of module learning (DASHBOARD_DATA §7): read-only, subject to RLS; the timeouts protect the replica
+# (dashboard_statement_timeout = 5 s; the query also sets it per transaction from the configuration).
+create_role learning_dashboard "NOBYPASSRLS"
+psql_su <<SQL
+GRANT CONNECT ON DATABASE eduworld_learning TO learning_dashboard;
+ALTER ROLE learning_dashboard SET statement_timeout = '5s';
+ALTER ROLE learning_dashboard SET idle_in_transaction_session_timeout = '10s';
+ALTER ROLE learning_dashboard SET work_mem = '32MB';
+ALTER ROLE learning_dashboard SET default_transaction_read_only = on;
 SQL
 
 # identity_membership_reader: NOLOGIN, BYPASSRLS, owner of the SECURITY DEFINER function

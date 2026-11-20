@@ -112,6 +112,8 @@ type Handlers struct {
 	// ExamCommands and ExamQueries serve the exam engine (F042).
 	ExamCommands ExamCommands
 	ExamQueries  ExamQueries
+	// Dashboards serve the School Learning Dashboard and the learning summaries (F043).
+	Dashboards DashboardQueries
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -230,6 +232,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	examsWired := h.ExamCommands != nil && h.ExamQueries != nil
 	for id, fn := range examRoutes {
 		routes[id] = wiredOr(examsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	dashboardsWired := h.Dashboards != nil && h.ProfileAudit != nil
+	for id, fn := range dashboardRoutes {
+		routes[id] = wiredOr(dashboardsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }
@@ -361,6 +367,10 @@ func fail(w http.ResponseWriter, r *http.Request, err error) {
 	var ra *command.RetryAfter
 	if errors.As(err, &ra) {
 		w.Header().Set("Retry-After", ra.Seconds())
+	}
+	var busy *query.BusyError // F043-AC-19: 429 DASHBOARD_BUSY with Retry-After
+	if errors.As(err, &busy) {
+		w.Header().Set("Retry-After", busy.Seconds())
 	}
 	httpx.WriteError(w, r, err)
 }

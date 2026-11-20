@@ -326,11 +326,12 @@ func (MasteryRepo) FirstAnswers(ctx context.Context, attemptID uuid.UUID) (write
 	// tenancyguard:ok append-only learning_events without deleted_at, tenant of the session (RLS + infra.current_tenant_id())
 	err = tx.QueryRowContext(ctx, `SELECT count(*), count(*) FILTER (WHERE (le.payload->>'is_correct')::boolean),
 			count(*) FILTER (WHERE COALESCE((le.payload->>'rapid_guess')::boolean, false)),
-			count(*) FILTER (WHERE COALESCE((le.payload->>'hints_used')::int, 0) > 0)
+			count(*) FILTER (WHERE COALESCE((le.payload->>'hints_used')::int, 0) > 0),
+			count(*) FILTER (WHERE (le.payload->>'is_correct')::boolean AND COALESCE((le.payload->>'rapid_guess')::boolean, false))
 		FROM learning.learning_events le
 		WHERE le.tenant_id = infra.current_tenant_id() AND le.event_type = 'question.answered' AND le.payload->>'attempt_id' = $1::text
 			AND COALESCE((le.payload->>'attempt_no')::int, 1) = 1 AND COALESCE((le.payload->>'is_scored')::boolean, true)`, attemptID).
-		Scan(&c.Answered, &c.Correct, &c.RapidGuess, &c.WithHint)
+		Scan(&c.Answered, &c.Correct, &c.RapidGuess, &c.WithHint, &c.CorrectRapid)
 	if err != nil {
 		return c, fmt.Errorf("first answers: %w", err)
 	}
@@ -345,12 +346,14 @@ func (MasteryRepo) AddDaily(ctx context.Context, d write.ProgressDelta) error {
 	}
 	// tenancyguard:ok derived progress_daily has no deleted_at (DATABASE_DESIGN §2.7); insert/update of the session tenant (RLS)
 	_, err = tx.ExecContext(ctx, `INSERT INTO learning.progress_daily (tenant_id, student_id, subject_id, bucket_date, metric_version, school_id,
-			class_id, activities_completed, items_answered, items_correct, items_rapid_guess, items_with_hint, active_seconds, lessons_completed)
+			class_id, activities_completed, items_answered, items_correct, items_rapid_guess, items_with_hint, active_seconds, lessons_completed,
+			items_correct_rapid_guess)
 		VALUES ($1, $2, $3, $4::date, 1, $5,
 			COALESCE($6::uuid, (SELECT en.class_id FROM ref.enrollments en WHERE en.student_id = $2 AND en.tenant_id = $1
 				AND en.status = 'active' ORDER BY en.start_date DESC LIMIT 1)),
-			$7, $8, $9, $10, $11, $12, $13)
+			$7, $8, $9, $10, $11, $12, $13, $14)
 		ON CONFLICT (tenant_id, student_id, subject_id, bucket_date, metric_version) DO UPDATE SET
+			items_correct_rapid_guess = progress_daily.items_correct_rapid_guess + EXCLUDED.items_correct_rapid_guess,
 			activities_completed = progress_daily.activities_completed + EXCLUDED.activities_completed,
 			items_answered = progress_daily.items_answered + EXCLUDED.items_answered,
 			items_correct = progress_daily.items_correct + EXCLUDED.items_correct,
@@ -360,7 +363,7 @@ func (MasteryRepo) AddDaily(ctx context.Context, d write.ProgressDelta) error {
 			lessons_completed = progress_daily.lessons_completed + EXCLUDED.lessons_completed,
 			computed_at = now()`,
 		d.TenantID, d.StudentID, d.SubjectID, d.Day.Format(time.DateOnly), d.SchoolID, d.ClassID, d.ActivitiesCompleted, d.Items.Answered,
-		d.Items.Correct, d.Items.RapidGuess, d.Items.WithHint, d.ActiveSeconds, d.LessonsCompleted)
+		d.Items.Correct, d.Items.RapidGuess, d.Items.WithHint, d.ActiveSeconds, d.LessonsCompleted, d.Items.CorrectRapid)
 	if err != nil {
 		return fmt.Errorf("progress daily: %w", err)
 	}

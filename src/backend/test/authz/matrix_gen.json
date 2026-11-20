@@ -2681,6 +2681,18 @@
     ]
   },
   {
+    "operation_id": "getStudentLearningProfile",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/students/{student_id}/analytics",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getStudentProfile",
     "module": "identity",
     "method": "GET",

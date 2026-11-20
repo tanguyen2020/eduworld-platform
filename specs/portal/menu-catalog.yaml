@@ -313,7 +313,7 @@ workspaces:
             label_key: portal.action.school_lms.school_dashboard.view
             title: Xem dashboard trường → lớp → học sinh
             required_permissions: [analytics.school.read, analytics.class.read]
-            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries]
+            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile]
             can_disable: true
       - key: menu.school_lms.results
         label_key: portal.menu.school_lms.results

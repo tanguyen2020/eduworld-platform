@@ -4,7 +4,9 @@ package learning
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -19,6 +21,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/analytics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
@@ -39,6 +42,7 @@ import (
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/job"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/migrations"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
@@ -71,7 +75,13 @@ const (
 	// exam_autosubmit_interval (15 s [Confirmed], EXAM_ENGINE §7.2).
 	ExamWindowInterval     = 15 * time.Second
 	ExamAutoSubmitInterval = 15 * time.Second
+	// DashboardDayCloseInterval: F043 T015 checks every 15 minutes for days to close (a day closes once
+	// dashboard_day_close_time 02:30 ICT has passed) and for days marked by late events [Proposed].
+	DashboardDayCloseInterval = 15 * time.Minute
 )
+
+// DashboardPoolSize is dashboard_db_pool_per_api_replica (CONFIG_DEFAULTS, DASHBOARD_DATA §7).
+const DashboardPoolSize = 10
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
 // implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
@@ -193,6 +203,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, "assignment-scheduler", AssignmentSchedulerInterval, job.AssignmentScheduler{Runner: w.assignments}.RunOnce)
 	r.Job(Name, "exam-window", ExamWindowInterval, job.ExamWindow{Runner: w.exams}.RunOnce)
 	r.Job(Name, "exam-autosubmit", ExamAutoSubmitInterval, job.ExamAutoSubmit{Runner: w.exams}.RunOnce)
+	// F043: rollup day close and read-model refresh (school_dashboard_refresh).
+	r.Job(Name, "dashboard-day-close", DashboardDayCloseInterval, job.DashboardDayClose{Runner: w.dashboards}.RunOnce)
+	r.Job(Name, "read-model-refresh", w.dashboards.Config.Refresh, job.ReadModelRefresh{Runner: w.dashboards}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -217,6 +230,8 @@ type wiring struct {
 	lms         command.LMS
 	assignments command.Assignments
 	exams       command.Exams
+	// F043: the dashboard rollup jobs.
+	dashboards command.Dashboards
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -268,6 +283,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterLMS(reg)
 	observability.RegisterAssignments(reg)
 	observability.RegisterExams(reg)
+	observability.RegisterDashboards(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -383,7 +399,22 @@ func build(r *module.Registry) (*wiring, error) {
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
 		Metrics: observability.MasteryCounter{}, Diagnostic: &command.DiagnosticPriors{Reader: selfRepo, Prior: practice.Diagnostic},
 		Recommend: recs}
-	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}}
+	// F043: the progress consumer also keeps the class/school/tenant daily rollups (late events: dashboard_late_window_hours).
+	dashCfg := analytics.DefaultConfig()
+	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}, Rollups: write.RollupRepo{},
+		LateWindow: dashCfg.LateWindow, Late: observability.DashboardCounter{}}
+	dashboards := command.Dashboards{UoW: core.UoW, Jobs: write.RollupRepo{}, Versions: cache.Dashboard{C: vk}, Config: dashCfg,
+		Metrics: observability.DashboardCounter{}}
+	dashSession, err := dashboardSession(r)
+	if err != nil {
+		return nil, err
+	}
+	dq := query.Dashboards{Model: read.DashboardModel{}, Cache: cache.Dashboard{C: vk}, Limiter: cache.NewLimiter(vk),
+		Metrics: observability.DashboardCounter{}, Config: dashCfg, Cursors: cursors}
+	if dashSession != nil {
+		dq.Session = dashSession
+	}
+	h.Dashboards = dq
 	h.Lessons, h.LessonQueries = lessons, query.Lessons{Session: core.ReadSession, Model: read.LessonModel{}}
 	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}, Exams: exams}
 	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}}
@@ -402,5 +433,34 @@ func build(r *module.Registry) (*wiring, error) {
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd, assignments: asg, exams: exams}, nil
+		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards}, nil
+}
+
+// dashboardSession opens the read session of the dashboards (F043-AC-18, F043-AC-21, DASHBOARD_DATA §7): the role
+// learning_dashboard (EW_DB_LEARNING_DASHBOARD_DSN) and, for the cross-tenant summary of System Admin, learning_platform
+// (EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN), both on the read replica in staging/production (local: the primary). Without them
+// the dashboard routes answer 503; they never fall back to the business pools.
+func dashboardSession(r *module.Registry) (*entx.ReadSession, error) {
+	if !r.ServesHTTP() {
+		return nil, nil
+	}
+	dash, err := r.SQL(Name, "dashboard")
+	if errors.Is(err, module.ErrDatabaseNotConfigured) {
+		slog.Warn("learning dashboards disabled: EW_DB_LEARNING_DASHBOARD_DSN is not set (503)")
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	plat, err := r.SQL(Name, "dashboard_platform")
+	if errors.Is(err, module.ErrDatabaseNotConfigured) {
+		slog.Warn("learning dashboards disabled: EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN is not set (503)")
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	dash.SetMaxOpenConns(DashboardPoolSize)
+	plat.SetMaxOpenConns(DashboardPoolSize)
+	return entx.NewReadSession(Name, entx.DBs{App: dash, Platform: plat})
 }

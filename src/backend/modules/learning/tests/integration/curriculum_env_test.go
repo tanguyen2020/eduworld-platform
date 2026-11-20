@@ -22,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/analytics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
@@ -36,6 +37,7 @@ import (
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
@@ -104,6 +106,7 @@ type curEnv struct {
 	asgq    query.SchoolAssignments // F041
 	exams   command.Exams           // F042
 	examq   query.Exams             // F042
+	dashq   *query.Dashboards       // F043: the dashboard reads (role learning_dashboard)
 }
 
 // envOpt configures newCurEnv.
@@ -283,6 +286,15 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
 	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
+	// F043: dashboards on their own session (role learning_dashboard; learning_platform for System Admin cross-tenant reads).
+	dashRead, err := entx.NewReadSession("learning", entx.DBs{App: open(t, e.cl.ModuleDSN("learning", "dashboard")),
+		Platform: open(t, e.cl.ModuleDSN("learning", "platform"))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dashq := &query.Dashboards{Session: dashRead, Model: read.DashboardModel{}, Config: analytics.DefaultConfig(), Cursors: codec,
+		Clock: clk.Now}
+	handlers.Dashboards = dashProxy{q: dashq}
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
 	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
@@ -295,7 +307,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
-		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq}
+		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)
