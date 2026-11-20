@@ -218,6 +218,8 @@ type Answer struct {
 	AttemptNo  int
 	IsScored   bool
 	ResponseMS int64
+	// HintsUsed is the number of hint levels open before this answer (ACTIVITY_ENGINE §8.3, F032-AC-14).
+	HintsUsed int
 }
 
 // Respond admits a response to the item at position (§8.1, LEARNING_EXPERIENCE §4.2): with immediate feedback the
@@ -240,11 +242,13 @@ func (a *Attempt) Respond(position int, now time.Time, p Policy, limit int, allo
 	if it.AnswerCount >= limit {
 		return Answer{}, ErrAnswerLimit
 	}
-	since := a.LastActivityAt
-	if a.PausedAt != nil {
-		since = now
+	// server_interval_ms (ACTIVITY_ENGINE §11.1): from the last activity (start, previous answer or resume) to now; the
+	// tail of a pause still open is excluded (paused_at − last_activity_at, F032).
+	end := now
+	if a.PausedAt != nil && a.PausedAt.Before(now) {
+		end = *a.PausedAt
 	}
-	server := now.Sub(since).Milliseconds()
+	server := end.Sub(a.LastActivityAt).Milliseconds()
 	if server < 0 {
 		server = 0
 	}
@@ -252,7 +256,7 @@ func (a *Attempt) Respond(position int, now time.Time, p Policy, limit int, allo
 		server = *clientElapsedMS
 	}
 	a.touch(now)
-	ans := Answer{Position: position, AttemptNo: it.AnswerCount + 1, ResponseMS: server}
+	ans := Answer{Position: position, AttemptNo: it.AnswerCount + 1, ResponseMS: server, HintsUsed: it.HintsRevealed}
 	ans.IsScored = a.Feedback != FeedbackImmediate || it.AnswerCount == 0
 	return ans, nil
 }

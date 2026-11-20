@@ -51,6 +51,21 @@ type Mastery struct {
 	Events   write.EventPublisher
 	Clock    func() time.Time
 	Metrics  MasteryMetrics
+	// Diagnostic sets the prior M0 of a graded diagnostic (F032 US5); nil = diagnostics are ignored.
+	Diagnostic *DiagnosticPriors
+	// Recommend recomputes the recommendations of the student once the mastery is updated (F032 US6); nil = none.
+	Recommend RecommendationTrigger
+}
+
+// RecommendationTrigger is command.Recommendations.OnAttempt.
+type RecommendationTrigger interface {
+	OnAttempt(ctx context.Context, t AttemptTrigger) error
+}
+
+// DiagnosticPriors are the dependencies of the diagnostic prior (LEARNING_ANALYTICS §3.5).
+type DiagnosticPriors struct {
+	Reader write.SelfStudyReader
+	Prior  mastery.DiagnosticPrior
 }
 
 // GradedAttempt is the activity.graded event the consumer received.
@@ -95,10 +110,6 @@ func (h Mastery) ApplyGraded(ctx context.Context, in GradedAttempt) (err error) 
 	if err != nil {
 		return err
 	}
-	objectives, err := h.Evidence.AttemptObjectives(ctx, in.AttemptID)
-	if err != nil || len(objectives) == 0 {
-		return err
-	}
 	m, err := h.Model(ctx)
 	if err != nil {
 		return err
@@ -108,15 +119,109 @@ func (h Mastery) ApplyGraded(ctx context.Context, in GradedAttempt) (err error) 
 	if src.Kind == "" {
 		src.Kind = MasterySourceEvidence
 	}
-	for _, o := range objectives {
-		if err := h.Recompute(ctx, m, src, o); err != nil {
+	if facts.Mode == "diagnostic" {
+		// A diagnostic sets the prior M0 and is no evidence (LEARNING_ANALYTICS §3.5, F032-AC-26).
+		if h.Diagnostic != nil && src.Kind == MasterySourceEvidence {
+			if err := h.Diagnostic.apply(ctx, h.Store, m, src, in.AttemptID); err != nil {
+				return err
+			}
+		}
+	} else {
+		objectives, err := h.Evidence.AttemptObjectives(ctx, in.AttemptID)
+		if err != nil {
 			return err
+		}
+		for _, o := range objectives {
+			if err := h.Recompute(ctx, m, src, o); err != nil {
+				return err
+			}
 		}
 	}
 	if h.Metrics != nil && !in.OccurredAt.IsZero() {
 		h.Metrics.Lag(h.now().Sub(in.OccurredAt).Seconds())
 	}
+	if h.Recommend == nil {
+		return nil
+	}
+	return h.Recommend.OnAttempt(ctx, AttemptTrigger{StudentID: facts.StudentID, AttemptID: in.AttemptID, RecommendationID: facts.RecommendationID,
+		StartedAt: facts.StartedAt, Graded: src.Kind == MasterySourceEvidence})
+}
+
+// apply sets the prior of a graded diagnostic (F032-AC-26, AC-28): the objectives with at least two scored answers
+// (rapid guesses left out) and their direct prerequisites, only where the student has no evidence yet; n, the days
+// and the level (not_started) do not change. Repeating a diagnostic keeps the history and sets a new prior on the
+// objectives still without evidence.
+func (d *DiagnosticPriors) apply(ctx context.Context, store write.MasteryStore, m mastery.WeightedEvidence, src Source, attemptID uuid.UUID) error {
+	outcomes, err := d.Reader.DiagnosticOutcomes(ctx, attemptID)
+	if err != nil || len(outcomes) == 0 {
+		return err
+	}
+	diagnosed := make([]uuid.UUID, 0, len(outcomes))
+	for lo := range outcomes {
+		diagnosed = append(diagnosed, lo)
+	}
+	infos, err := d.Reader.Objectives(ctx, write.ObjectiveFilter{ObjectiveIDs: diagnosed})
+	if err != nil {
+		return err
+	}
+	pre := map[uuid.UUID][]uuid.UUID{}
+	for _, o := range infos {
+		pre[o.ID] = o.Prerequisites
+	}
+	rows := map[uuid.UUID]*write.MasteryRow{}
+	lookup := func(lo uuid.UUID) (*write.MasteryRow, error) {
+		if r, ok := rows[lo]; ok {
+			return r, nil
+		}
+		r, err := store.Mastery(ctx, src.StudentID, lo)
+		rows[lo] = r
+		return r, err
+	}
+	var lookupErr error
+	priors := d.Prior.Priors(mastery.PriorInput{Outcomes: outcomes, Prerequisites: pre, HasEvidence: func(lo uuid.UUID) bool {
+		r, err := lookup(lo)
+		if err != nil {
+			lookupErr = err
+		}
+		return r != nil && r.State.EvidenceCount > 0
+	}})
+	if lookupErr != nil {
+		return lookupErr
+	}
+	for _, p := range priors {
+		if err := setPrior(ctx, store, m, src, attemptID, p); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// setPrior writes one prior on an objective without evidence (optimistic retries like Recompute).
+func setPrior(ctx context.Context, store write.MasteryStore, m mastery.WeightedEvidence, src Source, attemptID uuid.UUID, p mastery.Prior) error {
+	for range masteryRetries {
+		row, err := store.Mastery(ctx, src.StudentID, p.ObjectiveID)
+		if err != nil {
+			return err
+		}
+		if row != nil && row.State.EvidenceCount > 0 {
+			return nil
+		}
+		v, attempt := p.Value, attemptID
+		next := write.MasteryRow{ID: ids.New(), TenantID: src.TenantID, SchoolID: src.SchoolID, StudentID: src.StudentID, ObjectiveID: p.ObjectiveID,
+			State: mastery.State{Value: v, PriorSource: p.Source, PriorValue: &v}, Level: mastery.NotStarted, ModelVersion: m.Version(),
+			PriorAttemptID: &attempt}
+		var ok bool
+		if row == nil {
+			ok, err = store.InsertMastery(ctx, next)
+		} else {
+			next.ID, next.Version, next.State.FirstMasteredAt = row.ID, row.Version, row.State.FirstMasteredAt
+			ok, err = store.UpdateMastery(ctx, next)
+		}
+		if err != nil || ok {
+			return err
+		}
+	}
+	return ErrMasteryContended
 }
 
 // Source is what caused a mastery change (a graded attempt, a re-evaluation or a recompute).
@@ -183,7 +288,7 @@ func (h Mastery) Recompute(ctx context.Context, m mastery.WeightedEvidence, src 
 				h.count("unchanged")
 				return nil
 			}
-			next.ID, next.Version = row.ID, row.Version
+			next.ID, next.Version, next.PriorAttemptID = row.ID, row.Version, row.PriorAttemptID
 			ok, err = h.Store.UpdateMastery(ctx, next)
 		}
 		if err != nil {

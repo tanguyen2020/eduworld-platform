@@ -26,6 +26,7 @@ type ProgressTotalsView struct {
 type ObjectiveProgressView struct {
 	ObjectiveID    uuid.UUID  `json:"objective_id"`
 	Level          string     `json:"level"`
+	IconCode       string     `json:"icon_code,omitempty"` // <grade_band>.<level> (F032-AC-34)
 	EvidenceCount  int        `json:"evidence_count"`
 	LastEvidenceAt *time.Time `json:"last_evidence_at,omitempty"`
 }

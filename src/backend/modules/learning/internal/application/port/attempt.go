@@ -15,6 +15,8 @@ import (
 // grading. Every call reads in the tenant scope of the student.
 type QuestionDelivery interface {
 	Select(ctx context.Context, req selection.Request) ([]selection.Candidate, error)
+	// Pool lists the current published releases visible to the tenant, of one subject or of every subject (nil).
+	Pool(ctx context.Context, subjectID *uuid.UUID) ([]selection.Candidate, error)
 	Render(ctx context.Context, versionIDs []uuid.UUID, seed uint64) ([]question.Rendered, []question.Presentation, error)
 	Grade(ctx context.Context, versionID uuid.UUID, pres question.Presentation, response json.RawMessage) (question.GradeResult, error)
 	Explanation(ctx context.Context, versionID uuid.UUID) (json.RawMessage, error)

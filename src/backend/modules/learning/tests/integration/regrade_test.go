@@ -42,6 +42,7 @@ func (c *curEnv) quizAnswers(t *testing.T, sub, activityID string, options ...st
 	t.Helper()
 	id := must(t, c.start(t, sub, activityID, nil, nil), http.StatusCreated, "start").str("attempt_id")
 	for i, o := range options {
+		c.clk.Advance(answerTime) // read the question: not a rapid guess (F032-AC-16)
 		must(t, c.answer(t, sub, id, i+1, map[string]any{"option_id": o}, nil), http.StatusOK, "answer")
 	}
 	must(t, c.do(t, http.MethodPost, "/learning/activity-attempts/"+id+":submit", sub, idem(), nil), http.StatusOK, "submit")

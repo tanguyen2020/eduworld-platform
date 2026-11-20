@@ -21,6 +21,8 @@ import (
 type Progress struct {
 	Session read.Session
 	Model   read.ProgressReadModel
+	// Details reads the masteries with their curriculum metadata (getMyMastery, F032 US7).
+	Details read.SelfStudyReadModel
 	Clock   func() time.Time
 }
 
@@ -110,19 +112,31 @@ func coversSchool(p authz.Principal, perm authz.Permission, school uuid.UUID) bo
 	return false
 }
 
-func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID) (dto.LearningProgressView, error) {
-	out := dto.LearningProgressView{StudentID: studentID, Objectives: []dto.ObjectiveProgressView{}}
+// model is the active mastery model (its decay gives the levels at read time).
+func (q Progress) model(ctx context.Context) (mastery.WeightedEvidence, error) {
 	cfg, err := q.Model.ActiveModel(ctx)
 	if err != nil {
-		return out, err
+		return mastery.WeightedEvidence{}, err
 	}
 	p := mastery.DefaultParams()
 	if len(cfg.Params) > 0 {
 		if err := json.Unmarshal(cfg.Params, &p); err != nil {
-			return out, err
+			return mastery.WeightedEvidence{}, err
 		}
 	}
-	m := mastery.WeightedEvidence{ModelVersion: cfg.ModelVersion, P: p}
+	return mastery.WeightedEvidence{ModelVersion: cfg.ModelVersion, P: p}, nil
+}
+
+func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID) (dto.LearningProgressView, error) {
+	out := dto.LearningProgressView{StudentID: studentID, Objectives: []dto.ObjectiveProgressView{}}
+	m, err := q.model(ctx)
+	if err != nil {
+		return out, err
+	}
+	band, err := q.band(ctx, studentID)
+	if err != nil {
+		return out, err
+	}
 	ms, err := q.Model.Masteries(ctx, studentID, subjectID)
 	if err != nil {
 		return out, err
@@ -130,7 +144,8 @@ func (q Progress) view(ctx context.Context, studentID uuid.UUID, subjectID *uuid
 	now := q.now()
 	for _, o := range ms {
 		_, level := m.Effective(o.State, now)
-		v := dto.ObjectiveProgressView{ObjectiveID: o.ObjectiveID, Level: string(level), EvidenceCount: o.State.EvidenceCount}
+		v := dto.ObjectiveProgressView{ObjectiveID: o.ObjectiveID, Level: string(level), IconCode: mastery.IconCode(band, level),
+			EvidenceCount: o.State.EvidenceCount}
 		if o.State.LastEvidenceAt != nil {
 			t := o.State.LastEvidenceAt.UTC()
 			v.LastEvidenceAt = &t

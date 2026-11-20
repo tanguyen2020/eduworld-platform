@@ -26,10 +26,12 @@ const (
 	Mastered   Level = "mastered"
 )
 
-// Prior sources of a state (F032 writes diagnostic).
+// Prior sources of a state (F032 writes diagnostic and propagated, LEARNING_ANALYTICS §3.5).
 const (
 	PriorDefault    = "default"
 	PriorDiagnostic = "diagnostic"
+	// PriorPropagated is the prior of a prerequisite raised to the prior of a diagnosed objective depending on it.
+	PriorPropagated = "propagated"
 )
 
 // State is the stored mastery of one (student, objective): Value is the raw value before decay.
@@ -41,6 +43,21 @@ type State struct {
 	LastEvidenceDate string // YYYY-MM-DD in the day location of the parameters
 	FirstMasteredAt  *time.Time
 	PriorSource      string
+	// PriorValue is M0 of a diagnostic (prior_value); nil = the default M0 of the model.
+	PriorValue *float64
+}
+
+// hasPrior reports whether the state starts from a diagnostic prior instead of M0.
+func (s State) hasPrior() bool {
+	return (s.PriorSource == PriorDiagnostic || s.PriorSource == PriorPropagated) && s.PriorValue != nil
+}
+
+// start is the value the first evidence updates: the diagnostic prior or M0.
+func (m WeightedEvidence) start(s State) float64 {
+	if s.hasPrior() {
+		return *s.PriorValue
+	}
+	return m.P.M0
 }
 
 // Evidence is one scored answer bound to the objective (question.answered with is_scored and not rapid_guess).
@@ -210,8 +227,8 @@ func (m WeightedEvidence) Alpha(n int, ev Evidence) float64 {
 // no evidence starts from its value (the prior: M0, or a diagnostic prior written by F032).
 func (m WeightedEvidence) Apply(s State, ev Evidence) State {
 	o := math.Max(0, math.Min(1, ev.Outcome))
-	if s.EvidenceCount == 0 && s.PriorSource != PriorDiagnostic {
-		s.Value = m.P.M0
+	if s.EvidenceCount == 0 {
+		s.Value = m.start(s)
 	}
 	s.Value = clamp01(s.Value + m.Alpha(s.EvidenceCount, ev)*(o-s.Value))
 	s.EvidenceCount++
@@ -244,8 +261,8 @@ func (m WeightedEvidence) Day(t time.Time) string {
 func (m WeightedEvidence) Effective(s State, now time.Time) (float64, Level) {
 	if s.EvidenceCount == 0 || s.LastEvidenceAt == nil {
 		v := s.Value
-		if s.EvidenceCount == 0 && s.PriorSource != PriorDiagnostic {
-			v = m.P.M0
+		if s.EvidenceCount == 0 {
+			v = m.start(s)
 		}
 		return v, NotStarted
 	}
@@ -299,9 +316,9 @@ func Step(m Model, s State, ev Evidence) Change {
 // evidence or a new model version). FirstMasteredAt of the prior is kept: a replay never re-emits mastered for an
 // objective that was mastered before.
 func Replay(m Model, prior State, evidence []Evidence) State {
-	s := State{PriorSource: prior.PriorSource, FirstMasteredAt: prior.FirstMasteredAt}
-	if prior.PriorSource == PriorDiagnostic {
-		s.Value = prior.Value
+	s := State{PriorSource: prior.PriorSource, PriorValue: prior.PriorValue, FirstMasteredAt: prior.FirstMasteredAt}
+	if s.hasPrior() {
+		s.Value = *s.PriorValue
 	}
 	ordered := slices.Clone(evidence)
 	slices.SortStableFunc(ordered, func(a, b Evidence) int {

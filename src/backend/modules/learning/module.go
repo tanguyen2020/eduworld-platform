@@ -20,8 +20,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/mediaproc"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/messaging"
@@ -60,6 +62,8 @@ const (
 	LearningPartitionsInterval = 24 * time.Hour
 	// RegradeRunnerInterval: F031 T038 picks the queued re-evaluations.
 	RegradeRunnerInterval = 30 * time.Second
+	// RecommendationNightlyInterval: F032 T051 recomputes the recommendations once a day (decay R4, warm-up R7).
+	RecommendationNightlyInterval = 24 * time.Hour
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -159,6 +163,7 @@ func Register(r *module.Registry) (*Module, error) {
 	parts := command.LearningPartitions{Maint: write.PartitionMaint{DB: partitionDB}, Metrics: observability.MasteryCounter{}}
 	r.Job(Name, "regrade-runner", RegradeRunnerInterval, w.regrades.RunOnce)
 	r.Job(Name, "learning-events-partitions", LearningPartitionsInterval, job.LearningEventsPartitions{Runner: parts}.RunOnce)
+	r.Job(Name, "recommendation-nightly", RecommendationNightlyInterval, job.RecommendationNightly{Runner: w.recommendations}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -177,6 +182,8 @@ type wiring struct {
 	progress     command.Progress
 	regrades     command.Regrades
 	lessons      command.Lessons
+	// F032: the rule engine of the recommendations (R1/R5/R6 are registered here by F041/F042/F040).
+	recommendations command.Recommendations
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -222,6 +229,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterMastery(reg)
 	observability.RegisterRegrade(reg)
 	observability.RegisterLessons(reg)
+	observability.RegisterSelfStudy(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -280,6 +288,13 @@ func build(r *module.Registry) (*wiring, error) {
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		UoW: core.UoW, Metrics: observability.LessonCounter{}}
 	att.Lessons = lessons
+	// F032: review list, rapid_guess, adaptive selection, diagnostics and recommendations.
+	selfRepo, practice := write.SelfStudyRepo{}, command.DefaultPracticeConfig()
+	att.Self = &command.SelfStudy{Wrong: selfRepo, Recommendations: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{}, Config: practice,
+		Metrics: observability.SelfStudyCounter{}}
+	recs := command.Recommendations{UoW: core.UoW, Store: selfRepo, Wrong: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{},
+		Delivery: delivery, Students: read.SchoolSettings{}, Events: events, Engine: recommendation.Default(), Config: practice,
+		Metrics: observability.SelfStudyCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
 		Registry: activities, Cursors: cursors}
 
@@ -296,11 +311,14 @@ func build(r *module.Registry) (*wiring, error) {
 		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors},
 		CmsActivities: query.CmsActivities{Docs: docQueries}, ActivityTypes: query.ActivityTypes{Registry: activities},
 		Attempts: att, AttemptQueries: attq,
-		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}},
+		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}},
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
+	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}}
+	h.SelfStudy = query.SelfStudy{Session: core.ReadSession, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: cursors}
 	learningRecord := write.MasteryRepo{}
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
-		Metrics: observability.MasteryCounter{}}
+		Metrics: observability.MasteryCounter{}, Diagnostic: &command.DiagnosticPriors{Reader: selfRepo, Prior: practice.Diagnostic},
+		Recommend: recs}
 	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}}
 	h.Lessons, h.LessonQueries = lessons, query.Lessons{Session: core.ReadSession, Model: read.LessonModel{}}
 	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}}
@@ -318,5 +336,5 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
-		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons}, nil
+		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs}, nil
 }

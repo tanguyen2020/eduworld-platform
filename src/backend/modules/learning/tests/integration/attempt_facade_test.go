@@ -132,7 +132,8 @@ func TestAttemptAdHoc(t *testing.T) {
 		r.str("attempt_id")); n != 1 {
 		t.Fatal("seed stored")
 	}
-	if r := adhoc(hsAn, map[string]any{"kind": "selection", "topic_id": s.qc.topic, "question_count": 10}); r.status != 422 ||
+	// Another source (the open attempt of the topic is resumed, F032-AC-08): the objective has 3 questions only.
+	if r := adhoc(hsAn, map[string]any{"kind": "selection", "objective_id": s.qc.lo, "question_count": 10}); r.status != 422 ||
 		r.str("code") != "QUESTION_POOL_INSUFFICIENT" {
 		t.Fatalf("pool too small: %d %s", r.status, r.raw)
 	}
@@ -155,8 +156,8 @@ func TestAttemptAdHoc(t *testing.T) {
 		t.Fatalf("tenant B set: %d %s", r.status, r.raw)
 	}
 	if r := c.do(t, http.MethodPost, "/learning/activity-attempts", hsAn, idem(), map[string]any{"mode": "retry_wrong",
-		"source": map[string]any{"kind": "retry_wrong"}}); r.status != 422 {
-		t.Fatalf("retry_wrong (F032): %d", r.status)
+		"source": map[string]any{"kind": "retry_wrong"}}); r.status != 422 || r.str("code") != "QUESTION_POOL_INSUFFICIENT" {
+		t.Fatalf("retry_wrong without wrong question (F032): %d %s", r.status, r.raw)
 	}
 	if r := adhoc(qlcmA, map[string]any{"kind": "selection", "topic_id": s.qc.topic}); r.status != http.StatusForbidden {
 		t.Fatalf("staff: %d", r.status)

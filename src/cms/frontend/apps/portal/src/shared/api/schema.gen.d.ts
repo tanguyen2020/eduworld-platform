@@ -5634,6 +5634,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learning/mastery/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mastery của mình theo LO, dạng thân thiện theo khối lớp (F032)
+         * @description Học sinh (game_player) xem mastery của chính mình trong tenant phiên (LEARNING_EXPERIENCE §7). Mỗi LO có level sau decay tại thời điểm đọc và `icon_code` theo grade band; `value` (số) chỉ có cho khối 6–9, khối 1–5 nhận `null`. Không có nhãn mức TT27/TT22, không so sánh với học sinh khác.
+         */
+        get: operations["getMyMastery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/learning/my-assignments": {
         parameters: {
             query?: never;
@@ -5712,7 +5732,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gợi ý ôn tập theo LO yếu, câu sai đến hạn ôn, bài được giao sắp hết hạn */
+        /**
+         * Gợi ý ôn tập theo LO yếu, câu sai đến hạn ôn, bài được giao sắp hết hạn
+         * @description Tối đa 3 gợi ý `active` của chính học sinh, sắp theo ưu tiên rule (LEARNING_ANALYTICS §6), kèm `recommendation_id`, `rule_code`, `reason_code` và lý do theo `Accept-Language` (vi/en). Worker tính lại khi có `activity.graded`, `attempt.re_evaluated`, `learning_objective.progressed` và job hằng đêm (F032).
+         */
         get: operations["getMyRecommendations"];
         put?: never;
         post?: never;
@@ -8304,8 +8327,9 @@ export interface components {
             recommendation_id?: components["schemas"]["Uuid"];
             source: {
                 difficulty?: number;
+                grade_level?: components["schemas"]["GradeLevel"];
                 /**
-                 * @description Luyện trộn chủ đề (selection)
+                 * @description Luyện trộn chủ đề (chỉ selection): `topic_ids` 2–4 topic, hoặc chỉ `subject_id` để server chọn các topic đã học (F032)
                  * @default false
                  */
                 interleave: boolean;
@@ -8316,6 +8340,8 @@ export interface components {
                 question_set_id?: components["schemas"]["Uuid"];
                 subject_id?: components["schemas"]["Uuid"];
                 topic_id?: components["schemas"]["Uuid"];
+                /** @description Các topic của một lượt luyện trộn (`interleave = true`, F032) */
+                topic_ids?: components["schemas"]["Uuid"][];
             };
         };
         /** @description Trường mới trong tenant đích (System Admin). `province_code` chỉ đơn vị `active` (F010-AC-07). */
@@ -10680,6 +10706,8 @@ export interface components {
         LearningProgress: {
             objectives: {
                 evidence_count?: number;
+                /** @description Mã biểu tượng theo grade band, dạng `<grade_band>.<level>` (F032, LEARNING_EXPERIENCE §7) */
+                icon_code?: string;
                 last_evidence_at?: components["schemas"]["Timestamp"];
                 level: components["schemas"]["MasteryLevel"];
                 objective_id: components["schemas"]["Uuid"];
@@ -11246,6 +11274,23 @@ export interface components {
             status: "not_started" | "in_progress" | "submitted" | "graded" | "overdue" | "excused";
             subject_id?: components["schemas"]["Uuid"];
             title: string;
+        };
+        /** @description Mastery của học sinh theo LO (getMyMastery, F032); `value` chỉ cho khối 6–9. */
+        MyMasteryList: {
+            grade_band: components["schemas"]["GradeBand"];
+            items: {
+                evidence_count: number;
+                icon_code: string;
+                last_evidence_at?: components["schemas"]["Timestamp"];
+                level: components["schemas"]["MasteryLevel"];
+                objective_code?: string;
+                objective_id: components["schemas"]["Uuid"];
+                objective_name?: string;
+                subject_id?: components["schemas"]["Uuid"];
+                topic_id?: components["schemas"]["Uuid"];
+                /** @description Mastery sau decay (chỉ khối 6–9; khối 1–5 là null) */
+                value?: number | null;
+            }[];
         };
         MyTenant: components["schemas"]["TenantSummary"] & {
             /** Format: uri */
@@ -12056,12 +12101,28 @@ export interface components {
         RecommendationList: {
             generated_at: components["schemas"]["Timestamp"];
             items: {
+                grade_level?: components["schemas"]["GradeLevel"];
                 /** @enum {string} */
-                kind: "retry_wrong" | "lesson" | "activity" | "objective_review";
+                kind: "retry_wrong" | "lesson" | "activity" | "objective_review" | "assignment" | "prerequisite_review" | "diagnostic" | "interleave_practice" | "quest";
                 objective_id?: components["schemas"]["Uuid"];
+                objective_ids?: components["schemas"]["Uuid"][];
+                priority: number;
                 /** @enum {string} */
-                reason: "weak_objective" | "due_review" | "not_started" | "assignment_soon";
+                reason: "weak_objective" | "due_review" | "not_started" | "assignment_soon" | "prerequisite_weak" | "decay_review" | "diagnostic_due" | "interleave_ready" | "exam_followup" | "next_topic";
+                /** @description Khóa bản dịch lý do (song ngữ vi/en, ADR-0056) */
+                reason_code: string;
+                /** @description Lý do dễ hiểu theo Accept-Language */
+                reason_text: string;
+                recommendation_id: components["schemas"]["Uuid"];
+                /** @enum {string} */
+                rule_code: "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9";
+                subject_id?: components["schemas"]["Uuid"];
                 target_id: components["schemas"]["Uuid"];
+                /**
+                 * @description `selection`: bắt đầu bằng `startAdHocAttempt`; `target_id` là LO (`objective_review`, `prerequisite_review`), môn (`retry_wrong`, `interleave_practice`, `diagnostic` đầu năm) hoặc topic (`diagnostic` đầu chủ đề)
+                 * @enum {string}
+                 */
+                target_type: "activity" | "lesson" | "question_set" | "assignment" | "selection" | "quest";
                 title?: components["schemas"]["LearningName"];
             }[];
         };
@@ -28305,6 +28366,41 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    getMyMastery: {
+        parameters: {
+            query?: {
+                grade_level?: components["parameters"]["GradeLevelQuery"];
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mastery theo LO */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyMasteryList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     listMyAssignments: {
         parameters: {
             query?: {
@@ -28519,6 +28615,7 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -28526,6 +28623,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listSubjects: {

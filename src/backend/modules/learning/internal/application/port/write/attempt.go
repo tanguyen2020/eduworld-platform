@@ -27,6 +27,9 @@ type AnswerRow struct {
 	AttemptNo         int
 	IsScored          bool
 	IdempotencyKey    string
+	// HintsUsed and RapidGuess (F032): hint levels open before the answer; the answer was too fast to read the stem.
+	HintsUsed  int
+	RapidGuess bool
 }
 
 // EvaluationRow is one row of assessment.evaluations.
@@ -64,6 +67,8 @@ type AttemptStore interface {
 	AttemptByKey(ctx context.Context, studentID uuid.UUID, key string) (*attempt.Attempt, error)
 	// OpenPractice finds the in-progress practice attempt of a student on a source version (nil when none).
 	OpenPractice(ctx context.Context, studentID, sourceVersionID uuid.UUID) (*attempt.Attempt, error)
+	// OpenAdHoc finds the latest in-progress ad-hoc attempt (no activity) of a student with this mode and context (F032-AC-08).
+	OpenAdHoc(ctx context.Context, studentID uuid.UUID, mode attempt.Mode, contextType string, contextID uuid.UUID) (*attempt.Attempt, error)
 	// UpdateAttempt writes the mutable columns when the row version still is ifRow (problem VERSION_MISMATCH otherwise).
 	UpdateAttempt(ctx context.Context, a attempt.Attempt, ifRow int64) error
 	// UpdateItem writes answer_count, final_* and hints_revealed of an item (optimistic on its row version).

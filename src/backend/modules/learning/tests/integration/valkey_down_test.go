@@ -45,6 +45,7 @@ func TestLearningRecordWithoutValkey(t *testing.T) {
 	}
 	right, _ := correctOption()
 	for pos := 1; pos <= 3; pos++ {
+		c.clk.Advance(answerTime) // not a rapid guess (F032-AC-16)
 		if _, err := att.Respond(sctx, command.RespondInput{AttemptID: v.AttemptID, Position: pos,
 			Response: json.RawMessage(`{"option_id":"` + right + `"}`)}); err != nil {
 			t.Fatalf("respond with Valkey down: %v", err)

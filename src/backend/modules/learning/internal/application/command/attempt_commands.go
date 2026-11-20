@@ -122,9 +122,13 @@ func (h Attempts) StartActivity(ctx context.Context, in StartActivityInput) (out
 		if err != nil {
 			return err
 		}
+		rec, err := h.followedRecommendation(ctx, p, in.RecommendationID)
+		if err != nil {
+			return err
+		}
 		if ctxType == "lesson" && h.Lessons != nil {
 			if err := h.Lessons.Pin(ctx, PinInput{StudentID: p.UserID, TenantID: *p.TenantID, SchoolID: school, LessonID: ctxID,
-				ActivityID: in.ActivityID, Mode: string(mode), RecommendationID: in.RecommendationID}); err != nil {
+				ActivityID: in.ActivityID, Mode: string(mode), RecommendationID: recommendationID(rec)}); err != nil {
 				return err
 			}
 		}
@@ -148,8 +152,11 @@ func (h Attempts) StartActivity(ctx context.Context, in StartActivityInput) (out
 		if err := h.checkStartRate(ctx, p.UserID); err != nil {
 			return err
 		}
-		a, rendered, err := h.newActivityAttempt(ctx, p, school, src, mode, ctxType, ctxID, in.RecommendationID, in.AcceptLanguage, key, now)
+		a, rendered, err := h.newActivityAttempt(ctx, p, school, src, mode, ctxType, ctxID, recommendationID(rec), in.AcceptLanguage, key, now)
 		if err != nil {
+			return err
+		}
+		if err := h.startRecommendation(ctx, rec, a.ID); err != nil {
 			return err
 		}
 		if out, err = h.view(ctx, a, rendered, &src, nil, nil); err != nil {
@@ -254,6 +261,14 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 			return err
 		}
 		score := min(max(g.Score, 0), it.MaxScore)
+		// F032: min_response_ms and the review metadata come from the pinned version (rapid_guess, review list).
+		var qv dto.QuestionVersion
+		if h.Self != nil {
+			if qv, err = h.Questions.QuestionVersionByID(ctx, it.QuestionVersionID); err != nil {
+				return err
+			}
+		}
+		rapid := h.Self.rapidGuess(a, *it, qv, ans, grade)
 		a.Record(ans, g.IsCorrect, score)
 		it, _ = a.Item(in.Position)
 		if err := h.Store.UpdateItem(ctx, *it); err != nil {
@@ -265,16 +280,20 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		if err := h.Store.InsertAnswer(ctx, write.AnswerRow{ID: ids.New(), TenantID: a.TenantID, SchoolID: a.SchoolID, AttemptID: a.ID,
 			Position: in.Position, QuestionVersionID: it.QuestionVersionID, Response: in.Response, IsCorrect: g.IsCorrect, Score: score,
 			AnsweredAt: now, ClientElapsedMS: in.ClientElapsedMS, ResponseMS: ans.ResponseMS, AttemptNo: ans.AttemptNo, IsScored: ans.IsScored,
-			IdempotencyKey: key}); err != nil {
+			IdempotencyKey: key, HintsUsed: ans.HintsUsed, RapidGuess: rapid}); err != nil {
+			return err
+		}
+		if err := h.Self.recordAnswer(ctx, a, *it, qv, ans, g.IsCorrect, rapid, now); err != nil {
 			return err
 		}
 		if err := h.learningEvent(ctx, a, EventQuestionAnswered, "qa:"+a.ID.String()+":"+itoa(in.Position)+":"+itoa(ans.AttemptNo), now,
 			it.ObjectiveIDs, "student", map[string]any{"attempt_id": a.ID, "position": in.Position, "question_version_id": it.QuestionVersionID,
 				"question_type": it.QuestionType, "is_correct": g.IsCorrect, "is_scored": ans.IsScored, "score": learningScore(score, it.MaxScore), "response_ms": ans.ResponseMS,
-				"attempt_no": ans.AttemptNo, "hints_used": 0, "rapid_guess": false}); err != nil {
+				"attempt_no": ans.AttemptNo, "hints_used": ans.HintsUsed, "rapid_guess": rapid}); err != nil {
 			return err
 		}
-		out = dto.ResponseResultView{Accepted: true, Position: in.Position}
+		// rapid_guess is never returned to the student (F032-AC-20, R19).
+		out = dto.ResponseResultView{Accepted: true, Position: in.Position, HintsUsed: ans.HintsUsed}
 		if a.ShowsItemFeedback() {
 			c, s := g.IsCorrect, score
 			out.IsCorrect, out.Score = &c, &s

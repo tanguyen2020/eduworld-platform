@@ -1,0 +1,12 @@
+{
+  "rec.weak_objective": "Mình cùng luyện thêm \"{objective}\" nhé, em đang tiến bộ dần ở phần này.",
+  "rec.prerequisite_weak": "Ôn lại \"{objective}\" trước sẽ giúp em học \"{for}\" dễ hơn.",
+  "rec.decay_review": "Đã lâu em chưa ôn \"{objective}\", mình ôn lại một chút cho nhớ nhé.",
+  "rec.diagnostic_due.subject": "Làm bài khởi động ngắn để Mây biết nên bắt đầu từ đâu cùng em.",
+  "rec.diagnostic_due.topic": "Làm bài khởi động ngắn trước khi học chủ đề \"{topic}\" nhé.",
+  "rec.interleave_ready": "Em đã vững vài chủ đề rồi, thử thách tổng hợp xen kẽ các chủ đề nhé!",
+  "rec.due_review": "Có {count} câu đến lúc ôn lại, mình làm câu tương tự để nhớ lâu hơn nhé.",
+  "rec.assignment_soon": "Bài nhà trường giao sắp đến hạn, mình hoàn thành nhé.",
+  "rec.exam_followup": "Ôn lại \"{objective}\" sau bài kiểm tra để vững hơn nhé.",
+  "rec.next_topic": "Chủ đề tiếp theo của lớp em là \"{topic}\", mình học trước nhé."
+}

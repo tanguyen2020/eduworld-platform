@@ -261,6 +261,33 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /learning/mastery/me:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: getMyMastery
+      summary: Mastery của mình theo LO, dạng thân thiện theo khối lớp (F032)
+      description: Học sinh (game_player) xem mastery của chính mình trong tenant phiên (LEARNING_EXPERIENCE §7). Mỗi LO có level sau decay tại thời điểm đọc và `icon_code` theo grade band; `value` (số) chỉ có cho khối 6–9, khối 1–5 nhận `null`. Không có nhãn mức TT27/TT22, không so sánh với học sinh khác.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+      responses:
+        '200':
+          description: Mastery theo LO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyMasteryList'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /learning/lessons/{lesson_id}:
     get:
       x-service: learning
@@ -324,6 +351,7 @@ paths:
         - learning
       operationId: getMyRecommendations
       summary: Gợi ý ôn tập theo LO yếu, câu sai đến hạn ôn, bài được giao sắp hết hạn
+      description: Tối đa 3 gợi ý `active` của chính học sinh, sắp theo ưu tiên rule (LEARNING_ANALYTICS §6), kèm `recommendation_id`, `rule_code`, `reason_code` và lý do theo `Accept-Language` (vi/en). Worker tính lại khi có `activity.graded`, `attempt.re_evaluated`, `learning_objective.progressed` và job hằng đêm (F032).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/SubjectIdQuery'
@@ -335,8 +363,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecommendationList'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /exams/sessions:
     get:
       x-service: learning
@@ -7744,6 +7777,10 @@ components:
                 $ref: '#/components/schemas/Uuid'
               level:
                 $ref: '#/components/schemas/MasteryLevel'
+              icon_code:
+                type: string
+                maxLength: 64
+                description: Mã biểu tượng theo grade band, dạng `<grade_band>.<level>` (F032, LEARNING_EXPERIENCE §7)
               evidence_count:
                 type: integer
               last_evidence_at:
@@ -8151,6 +8188,62 @@ components:
           type: boolean
         limit:
           type: integer
+    MyMasteryList:
+      type: object
+      description: Mastery của học sinh theo LO (getMyMastery, F032); `value` chỉ cho khối 6–9.
+      required:
+        - grade_band
+        - items
+      properties:
+        grade_band:
+          $ref: '#/components/schemas/GradeBand'
+        items:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            required:
+              - objective_id
+              - level
+              - icon_code
+              - evidence_count
+            properties:
+              objective_id:
+                $ref: '#/components/schemas/Uuid'
+              objective_code:
+                type: string
+                maxLength: 64
+              objective_name:
+                type: string
+                maxLength: 255
+              subject_id:
+                $ref: '#/components/schemas/Uuid'
+              topic_id:
+                $ref: '#/components/schemas/Uuid'
+              level:
+                $ref: '#/components/schemas/MasteryLevel'
+              icon_code:
+                type: string
+                maxLength: 64
+              value:
+                type:
+                  - number
+                  - 'null'
+                minimum: 0
+                maximum: 1
+                description: Mastery sau decay (chỉ khối 6–9; khối 1–5 là null)
+              evidence_count:
+                type: integer
+                minimum: 0
+              last_evidence_at:
+                $ref: '#/components/schemas/Timestamp'
+    GradeBand:
+      type: string
+      enum:
+        - g1_3
+        - g4_5
+        - g6_7
+        - g8_9
     Lesson:
       type: object
       required:
@@ -8271,10 +8364,30 @@ components:
           items:
             type: object
             required:
+              - recommendation_id
+              - rule_code
               - kind
+              - target_type
               - target_id
               - reason
+              - reason_code
+              - reason_text
+              - priority
             properties:
+              recommendation_id:
+                $ref: '#/components/schemas/Uuid'
+              rule_code:
+                type: string
+                enum:
+                  - R1
+                  - R2
+                  - R3
+                  - R4
+                  - R5
+                  - R6
+                  - R7
+                  - R8
+                  - R9
               kind:
                 type: string
                 enum:
@@ -8282,12 +8395,36 @@ components:
                   - lesson
                   - activity
                   - objective_review
+                  - assignment
+                  - prerequisite_review
+                  - diagnostic
+                  - interleave_practice
+                  - quest
+              target_type:
+                type: string
+                enum:
+                  - activity
+                  - lesson
+                  - question_set
+                  - assignment
+                  - selection
+                  - quest
+                description: '`selection`: bắt đầu bằng `startAdHocAttempt`; `target_id` là LO (`objective_review`, `prerequisite_review`), môn (`retry_wrong`, `interleave_practice`, `diagnostic` đầu năm) hoặc topic (`diagnostic` đầu chủ đề)'
               target_id:
                 $ref: '#/components/schemas/Uuid'
               title:
                 $ref: '#/components/schemas/LearningName'
               objective_id:
                 $ref: '#/components/schemas/Uuid'
+              objective_ids:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: '#/components/schemas/Uuid'
+              subject_id:
+                $ref: '#/components/schemas/Uuid'
+              grade_level:
+                $ref: '#/components/schemas/GradeLevel'
               reason:
                 type: string
                 enum:
@@ -8295,6 +8432,24 @@ components:
                   - due_review
                   - not_started
                   - assignment_soon
+                  - prerequisite_weak
+                  - decay_review
+                  - diagnostic_due
+                  - interleave_ready
+                  - exam_followup
+                  - next_topic
+              reason_code:
+                type: string
+                maxLength: 64
+                description: Khóa bản dịch lý do (song ngữ vi/en, ADR-0056)
+              reason_text:
+                type: string
+                maxLength: 300
+                description: Lý do dễ hiểu theo Accept-Language
+              priority:
+                type: integer
+                minimum: 1
+                maximum: 9
         generated_at:
           $ref: '#/components/schemas/Timestamp'
     ExamType:
@@ -13693,13 +13848,23 @@ components:
             interleave:
               type: boolean
               default: false
-              description: Luyện trộn chủ đề (selection)
+              description: 'Luyện trộn chủ đề (chỉ selection): `topic_ids` 2–4 topic, hoặc chỉ `subject_id` để server chọn các topic đã học (F032)'
             question_set_id:
               $ref: '#/components/schemas/Uuid'
             subject_id:
               $ref: '#/components/schemas/Uuid'
+            grade_level:
+              $ref: '#/components/schemas/GradeLevel'
             topic_id:
               $ref: '#/components/schemas/Uuid'
+            topic_ids:
+              type: array
+              minItems: 2
+              maxItems: 4
+              uniqueItems: true
+              description: Các topic của một lượt luyện trộn (`interleave = true`, F032)
+              items:
+                $ref: '#/components/schemas/Uuid'
             objective_id:
               $ref: '#/components/schemas/Uuid'
             difficulty:

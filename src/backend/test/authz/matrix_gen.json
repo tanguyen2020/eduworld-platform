@@ -2333,6 +2333,17 @@
     ]
   },
   {
+    "operation_id": "getMyMastery",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/mastery/me",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getMyParty",
     "module": "competition",
     "method": "GET",

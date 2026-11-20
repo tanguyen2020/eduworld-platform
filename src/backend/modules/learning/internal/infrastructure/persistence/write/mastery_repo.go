@@ -59,7 +59,8 @@ func (MasteryRepo) ActiveModel(ctx context.Context) (write.ModelConfig, error) {
 }
 
 const masteryColumns = `objective_mastery_id, tenant_id, school_id, student_id, objective_id, value::float8, level, evidence_count,
-	distinct_days, last_evidence_at, to_char(last_evidence_date, 'YYYY-MM-DD'), first_mastered_at, model_version, prior_source, version`
+	distinct_days, last_evidence_at, to_char(last_evidence_date, 'YYYY-MM-DD'), first_mastered_at, model_version, prior_source, version,
+	prior_value::float8, prior_diagnostic_attempt_id`
 
 func scanMastery(row interface{ Scan(...any) error }) (write.MasteryRow, error) {
 	var r write.MasteryRow
@@ -67,7 +68,7 @@ func scanMastery(row interface{ Scan(...any) error }) (write.MasteryRow, error) 
 	var lastDate sql.NullString
 	err := row.Scan(&r.ID, &r.TenantID, &r.SchoolID, &r.StudentID, &r.ObjectiveID, &r.State.Value, &level, &r.State.EvidenceCount,
 		&r.State.DistinctDays, &r.State.LastEvidenceAt, &lastDate, &r.State.FirstMasteredAt, &r.ModelVersion, &r.State.PriorSource,
-		&r.Version)
+		&r.Version, &r.State.PriorValue, &r.PriorAttemptID)
 	r.Level = mastery.Level(level)
 	r.State.LastEvidenceDate = lastDate.String
 	return r, err
@@ -114,15 +115,23 @@ func (MasteryRepo) InsertMastery(ctx context.Context, r write.MasteryRow) (bool,
 	// tenancyguard:ok insert of the session tenant (RLS insert policy); conflict on the live unique (tenant, student, objective)
 	res, err := tx.ExecContext(ctx, `INSERT INTO learning.objective_masteries (objective_mastery_id, tenant_id, school_id, student_id,
 		objective_id, value, level, evidence_count, distinct_days, last_evidence_at, last_evidence_date, first_mastered_at, model_version,
-		prior_source, version) VALUES ($1, $2, $3, $4, $5, round($6::numeric, 3), $7, $8, $9, $10, $11::date, $12, $13, $14, 1)
+		prior_source, version, prior_value, prior_diagnostic_attempt_id) VALUES ($1, $2, $3, $4, $5, round($6::numeric, 3), $7, $8, $9, $10,
+		$11::date, $12, $13, $14, 1, round($15::numeric, 3), $16)
 		ON CONFLICT (tenant_id, student_id, objective_id) WHERE deleted_at IS NULL DO NOTHING`,
 		r.ID, r.TenantID, r.SchoolID, r.StudentID, r.ObjectiveID, s.Value, string(r.Level), s.EvidenceCount, s.DistinctDays,
-		s.LastEvidenceAt, lastDate(s), s.FirstMasteredAt, r.ModelVersion, prior)
+		s.LastEvidenceAt, lastDate(s), s.FirstMasteredAt, r.ModelVersion, prior, s.PriorValue, r.PriorAttemptID)
 	if err != nil {
 		return false, fmt.Errorf("insert mastery: %w", err)
 	}
 	n, _ := res.RowsAffected()
 	return n == 1, nil
+}
+
+func priorSource(s mastery.State) string {
+	if s.PriorSource == "" {
+		return mastery.PriorDefault
+	}
+	return s.PriorSource
 }
 
 // UpdateMastery implements write.MasteryStore (optimistic: WHERE version = r.Version, F031-AC-14).
@@ -135,10 +144,11 @@ func (MasteryRepo) UpdateMastery(ctx context.Context, r write.MasteryRow) (bool,
 	// tenancyguard:ok tenant of the session (RLS update policy + infra.current_tenant_id()) and deleted_at IS NULL
 	res, err := tx.ExecContext(ctx, `UPDATE learning.objective_masteries SET value = round($2::numeric, 3), level = $3, evidence_count = $4,
 		distinct_days = $5, last_evidence_at = $6, last_evidence_date = $7::date, first_mastered_at = $8, model_version = $9,
-		school_id = $10, version = version + 1, updated_at = now()
+		school_id = $10, prior_source = $12, prior_value = round($13::numeric, 3), prior_diagnostic_attempt_id = $14, version = version + 1,
+		updated_at = now()
 		WHERE objective_mastery_id = $1 AND version = $11 AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`,
 		r.ID, s.Value, string(r.Level), s.EvidenceCount, s.DistinctDays, s.LastEvidenceAt, lastDate(s), s.FirstMasteredAt, r.ModelVersion,
-		r.SchoolID, r.Version)
+		r.SchoolID, r.Version, priorSource(s), s.PriorValue, r.PriorAttemptID)
 	if err != nil {
 		return false, fmt.Errorf("update mastery: %w", err)
 	}
@@ -182,15 +192,21 @@ func (MasteryRepo) Attempt(ctx context.Context, attemptID uuid.UUID) (write.Atte
 	var subject uuid.NullUUID
 	var graded sql.NullTime
 	var duration sql.NullInt64
+	var rec uuid.NullUUID
 	// tenancyguard:ok tenant of the session on every table (infra.current_tenant_id() / RLS) and deleted_at IS NULL
-	err = tx.QueryRowContext(ctx, `SELECT a.attempt_id, a.student_id, a.school_id, a.mode, a.graded_at, a.duration_ms,
+	err = tx.QueryRowContext(ctx, `SELECT a.attempt_id, a.student_id, a.school_id, a.mode, a.graded_at, a.duration_ms, a.started_at,
+			a.recommendation_id,
 			COALESCE(
 				(SELECT v.subject_id FROM content.activity_versions v WHERE v.activity_version_id = a.source_version_id AND v.deleted_at IS NULL),
 				(SELECT q.subject_id FROM assessment.attempt_items i JOIN content.question_versions q ON q.question_version_id = i.question_version_id
 				  WHERE i.attempt_id = a.attempt_id AND i.tenant_id = a.tenant_id AND i.deleted_at IS NULL AND q.deleted_at IS NULL
 				  ORDER BY i.position LIMIT 1))
 		FROM assessment.attempts a WHERE a.attempt_id = $1 AND a.tenant_id = infra.current_tenant_id() AND a.deleted_at IS NULL`, attemptID).
-		Scan(&f.AttemptID, &f.StudentID, &f.SchoolID, &f.Mode, &graded, &duration, &subject)
+		Scan(&f.AttemptID, &f.StudentID, &f.SchoolID, &f.Mode, &graded, &duration, &f.StartedAt, &rec, &subject)
+	if rec.Valid {
+		id := rec.UUID
+		f.RecommendationID = &id
+	}
 	if errors.Is(err, sql.ErrNoRows) {
 		return f, problem.New(problem.NotFound, "attempt not found")
 	}
@@ -208,9 +224,10 @@ func (MasteryRepo) Attempt(ctx context.Context, attemptID uuid.UUID) (write.Atte
 }
 
 // evidenceFilter keeps the question.answered events that are mastery evidence (is_scored and not rapid_guess,
-// LEARNING_ANALYTICS §3.1; is_scored defaults to true in the schema) and not part of an efficacy wave (F035).
+// LEARNING_ANALYTICS §3.1; is_scored defaults to true in the schema) and not part of an efficacy wave (F035). The answers
+// of a diagnostic set the prior M0 instead (LEARNING_ANALYTICS §3.5, F032) and are no evidence.
 const evidenceFilter = `le.event_type = 'question.answered' AND COALESCE((le.payload->>'is_scored')::boolean, true)
-	AND NOT COALESCE((le.payload->>'rapid_guess')::boolean, false)`
+	AND NOT COALESCE((le.payload->>'rapid_guess')::boolean, false) AND le.context <> 'diagnostic'`
 
 // AttemptObjectives implements write.EvidenceReader.
 func (MasteryRepo) AttemptObjectives(ctx context.Context, attemptID uuid.UUID) ([]uuid.UUID, error) {
@@ -270,7 +287,7 @@ func (MasteryRepo) ObjectiveEvidence(ctx context.Context, studentID, objectiveID
 			EXISTS (SELECT 1 FROM ev p WHERE p.question_key = e.question_key AND p.occurred_at < e.occurred_at
 				AND p.occurred_at >= e.occurred_at - interval '24 hours')
 		FROM ev e
-		WHERE $2 = ANY(e.objective_ids) AND COALESCE((e.payload->>'is_scored')::boolean, true)
+		WHERE $2 = ANY(e.objective_ids) AND COALESCE((e.payload->>'is_scored')::boolean, true) AND e.context <> 'diagnostic'
 			AND NOT COALESCE((e.payload->>'rapid_guess')::boolean, false) AND NOT COALESCE((e.override->>'dropped')::boolean, false)
 		ORDER BY e.occurred_at, e.event_id`, studentID, objectiveID)
 	if err != nil {

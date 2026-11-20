@@ -30,6 +30,8 @@ type MasteryRow struct {
 	Level        mastery.Level
 	ModelVersion string
 	Version      int64
+	// PriorAttemptID is prior_diagnostic_attempt_id: the diagnostic that set the prior (F032).
+	PriorAttemptID *uuid.UUID
 }
 
 // HistoryRow is a row of learning.mastery_history (append-only).
@@ -72,6 +74,9 @@ type AttemptFacts struct {
 	SubjectID  uuid.UUID // uuid.Nil = no subject
 	GradedAt   time.Time
 	DurationMS int64
+	// StartedAt and RecommendationID (F032): the start of the attempt and the recommendation it followed.
+	StartedAt        time.Time
+	RecommendationID *uuid.UUID
 }
 
 // ItemCounts are the first scored answers of an attempt (accuracy counts on the first answer, LEARNING_ANALYTICS §4).

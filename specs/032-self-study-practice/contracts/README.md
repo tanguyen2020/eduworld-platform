@@ -12,9 +12,9 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `startActivityAttempt` | `POST /api/v1/learning/activities/{activity_id}/attempts` | `learning.v1.yaml` | học sinh (self) | Có sẵn (dùng `context.recommendation_id`) |
 | `revealNextHint` | `POST /api/v1/learning/activity-attempts/{attempt_id}/items/{position}/hints:next` | `learning.v1.yaml` (`HintResult`) | học sinh (self) · `Idempotency-Key` | Có sẵn |
 | `listMyWrongQuestions` | `GET /api/v1/learning/wrong-questions` | `learning.v1.yaml` (`WrongQuestion`) | học sinh (self) | Có sẵn (kiểm thêm `next_due_at`) |
-| `getMyRecommendations` | `GET /api/v1/learning/recommendations/me` | `learning.v1.yaml` (`RecommendationList`) | học sinh (self) | Cần sửa |
+| `getMyRecommendations` | `GET /api/v1/learning/recommendations/me` | `learning.v1.yaml` (`RecommendationList`) | học sinh (self) | Có (F032) |
 | `getMyProgress` | `GET /api/v1/learning/progress/me` | `learning.v1.yaml` (`LearningProgress`) | học sinh (self) | Có sẵn |
-| `getMyMastery` | `GET /api/v1/learning/mastery/me?subject_id=&grade_level=` | — | học sinh (self) | Cần thêm |
+| `getMyMastery` | `GET /api/v1/learning/mastery/me?subject_id=&grade_level=` | `learning.v1.yaml` (`MyMasteryList`) | học sinh (self) | Có (F032) |
 
 ## 2. Internal API
 

@@ -41,3 +41,22 @@ make migrate-lint MOD=learning
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail theo package (`practice`, `recommendation`, `mastery`), kết quả golden test mastery, trace_id của kịch bản 5 và 10, log không chứa `response`/nội dung gợi ý.
+
+## 5. Bằng chứng (2026-11-20, local, testcontainers PostgreSQL + NATS JetStream thật)
+
+| Kịch bản | Test tự động | Kết quả |
+|---|---|---|
+| 1, 4 (start, không đáp án, không `deadline_at`, idempotent/resume, 422) | `tests/integration/self_study_test.go` TestSelfStudyPracticeHintsRapidGuess | pass |
+| 2, 3 (phản hồi ngay, lượt thử) | TestSelfStudyPracticeHintsRapidGuess (feedback phương án sai, 2 lần thử `is_scored=false`, lần 4 `409 ANSWER_LIMIT_REACHED`) | pass |
+| 5, 6 (gợi ý) | TestSelfStudyPracticeHintsRapidGuess (cấp 1, replay cùng key, cấp 2, `409 HINTS_EXHAUSTED`, `hints_used = 2` trong `attempt_answers` + `question.answered`, học sinh khác/tenant B 404, nhân sự 403, vị trí sai 422); domain `attempt` TestRevealHint | pass |
+| 7 (`rapid_guess`) | TestSelfStudyPracticeHintsRapidGuess (800 ms → `rapid_guess`, điểm 2/3 giữ nguyên, evidence 2 thay vì 3, response không có cờ); domain TestRapidGuess, TestAnswerTimingAndHints | pass |
+| 8 (ôn câu sai, câu anh em) | `self_study_review_test.go` TestSelfStudyReviewInterleaveDiagnostic (entry hạn 1 ngày; ôn nhận câu anh em; đúng cùng ngày tính một lần; ngày khác → `cleared`; hết câu → 422); domain TestEntryLifecycle, TestSiblings | pass |
+| 9 (luyện trộn) | TestSelfStudyReviewInterleaveDiagnostic (4 câu 2 topic, không 3 câu liên tiếp; 1 topic đã học → 422); domain TestInterleave | pass |
+| 10 (chẩn đoán) | TestSelfStudyReviewInterleaveDiagnostic (5 câu LO + tiên quyết, `after_submit`, gợi ý `403 HINTS_NOT_ALLOWED`, `activity.graded` mode diagnostic, M0 0,75 + lan `propagated`, level `not_started`, evidence đầu bắt đầu từ prior 0,833, làm lại chỉ đổi LO chưa có evidence); domain TestDiagnosticPriors, TestDiagnosticSelection | pass |
+| 11, 12 (gợi ý tự động) | `self_study_recommendation_test.go` TestSelfStudyRecommendations (R2 lý do vi/en, payload `learning.recommendation_generated` hợp lệ schema và không có lý do dạng văn bản, job hằng đêm thêm R9, theo R9 → `started`/`completed` + `activity.started.recommendation_id`, id lạ bỏ qua, bỏ qua 3 lần → `dismissed` không gợi ý lại); domain TestRules, TestEngine | pass |
+| 13 (tiến độ thân thiện) | TestSelfStudyPracticeHintsRapidGuess (`g1_3` không có `value`, `g6_7` có `value = 0.64`, `icon_code`, không TT27/TT22, `getMyProgress.icon_code`) | pass |
+| 14 (nhân sự, tenant khác) | TestSelfStudyPracticeHintsRapidGuess (`403`, `403 TENANT_MISMATCH` cho 3 route GET mới, `authztest.Cover` 4 operation) | pass |
+| T058 (question set theo luật) | TestSelfStudyQuestionSetRules (rule_based 2 luật → 3 câu khác nhau ghim version; luật thiếu câu → 422) | pass |
+| Không hồi quy F030/F031 | TestAttemptAdHoc (nguồn khác để kiểm 422 vì nguồn cùng topic nay resume, F032-AC-08), toàn bộ integration learning | xem dòng dưới |
+
+Chạy tay trên stack compose: chưa làm (đăng nhập game bằng mật khẩu demo bị chặn ở phiên agent).

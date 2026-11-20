@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/selection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/questionset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -66,6 +67,8 @@ type Attempts struct {
 	Metrics   AttemptMetrics
 	// Lessons pins the lesson session of an attempt started with context_type lesson (F031 US6); nil = no session.
 	Lessons LessonPinner
+	// Self are the self-study stores of F032 (review list, recommendations, rapid_guess); nil = F030 behaviour.
+	Self *SelfStudy
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -110,6 +113,10 @@ func attemptProblem(err error) error {
 		return problem.Invalid("/position", problem.SubInvalid, "no item at this position")
 	case errors.Is(err, attempt.ErrAnswerLimit):
 		return problem.New(problem.AnswerLimitReached, "")
+	case errors.Is(err, attempt.ErrHintsNotAllowed):
+		return problem.New(problem.HintsNotAllowed, "")
+	case errors.Is(err, attempt.ErrHintsExhausted):
+		return problem.New(problem.HintsExhausted, "")
 	}
 	return err
 }
@@ -262,7 +269,7 @@ func (h Attempts) sourceQuestions(ctx context.Context, src activity.QuestionSour
 		if src.QuestionSetID == nil {
 			return nil, problem.New(problem.ActivityConfigInvalid, "question_set_id is missing")
 		}
-		_, ids, err := h.questionSetItems(ctx, *src.QuestionSetID)
+		_, ids, err := h.questionSetItems(ctx, *src.QuestionSetID, seed)
 		return ids, err
 	case activity.SourceSelection:
 		if src.Selection == nil {
@@ -301,9 +308,11 @@ func (h Attempts) selectQuestions(ctx context.Context, f selection.Filters, coun
 	return out, nil
 }
 
-// questionSetItems returns the current release of a question set and its fixed question versions (static sets; a set
-// drawn by rules is not served by F030 [Proposed]).
-func (h Attempts) questionSetItems(ctx context.Context, setID uuid.UUID) (uuid.UUID, []uuid.UUID, error) {
+// questionSetItems returns the current release of a question set and the question versions of a start: the fixed items
+// of the release, then the questions drawn by each selection rule of the release with selection.Select and the seed of
+// the attempt (rule_based and mixed sets, OQ F030 owner 2026-11-20); every version is pinned by the attempt (R31) and a
+// rule the pool cannot satisfy is 422 QUESTION_POOL_INSUFFICIENT (the pool of the F024 pool stats).
+func (h Attempts) questionSetItems(ctx context.Context, setID uuid.UUID, seed int64) (uuid.UUID, []uuid.UUID, error) {
 	d, err := h.Docs.Doc(ctx, contentmodel.TypeQuestionSet, setID)
 	if err != nil {
 		return uuid.Nil, nil, err
@@ -320,24 +329,33 @@ func (h Attempts) questionSetItems(ctx context.Context, setID uuid.UUID) (uuid.U
 			continue
 		}
 		var body struct {
-			Definition struct {
-				Items []struct {
-					QuestionVersionID uuid.UUID `json:"question_version_id"`
-				} `json:"items"`
-			} `json:"definition"`
+			Definition questionset.Definition `json:"definition"`
 		}
 		_ = json.Unmarshal(v.Body, &body)
 		var out []uuid.UUID
 		for _, it := range body.Definition.Items {
 			out = append(out, it.QuestionVersionID)
 		}
-		if len(out) == 0 {
+		if len(out) == 0 && len(body.Definition.SelectionRules) == 0 {
 			for _, it := range v.Items {
 				out = append(out, it.QuestionVersionID)
 			}
 		}
+		var drawn []uuid.UUID
+		for i, r := range body.Definition.SelectionRules {
+			rule := r.Selection()
+			rule.Filters.ExcludeQuestionIDs = append(rule.Filters.ExcludeQuestionIDs, drawn...)
+			cs, err := h.Delivery.Select(ctx, selection.Request{Rule: rule, Seed: uint64(seed) + uint64(i)})
+			if err != nil {
+				return v.ID, nil, err
+			}
+			for _, c := range cs {
+				out = append(out, c.VersionID)
+				drawn = append(drawn, c.QuestionID)
+			}
+		}
 		if len(out) == 0 {
-			return v.ID, nil, problem.New(problem.QuestionPoolInsufficient, "the question set has no fixed question")
+			return v.ID, nil, problem.New(problem.QuestionPoolInsufficient, "the question set has no question")
 		}
 		return v.ID, out, nil
 	}

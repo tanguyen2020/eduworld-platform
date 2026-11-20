@@ -130,6 +130,13 @@ func (s AttemptRepo) OpenPractice(ctx context.Context, studentID, sourceVersionI
 		entatt.Status(string(attempt.StatusInProgress)), entatt.Mode(string(attempt.ModePractice))))
 }
 
+// OpenAdHoc implements write.AttemptStore.
+func (s AttemptRepo) OpenAdHoc(ctx context.Context, studentID uuid.UUID, mode attempt.Mode, contextType string, contextID uuid.UUID) (*attempt.Attempt, error) {
+	return s.first(ctx, client(ctx).Attempt.Query().Where(entatt.StudentID(studentID), entatt.Mode(string(mode)), entatt.ContextType(contextType),
+		entatt.ContextID(contextID), entatt.ActivityIDIsNil(), entatt.Status(string(attempt.StatusInProgress))).
+		Order(ent.Desc(entatt.FieldStartedAt)))
+}
+
 // UpdateAttempt implements write.AttemptStore: the conditional update of ACTIVITY_ENGINE §11 (row version).
 func (AttemptRepo) UpdateAttempt(ctx context.Context, a attempt.Attempt, ifRow int64) error {
 	u := client(ctx).Attempt.Update().Where(entatt.ID(a.ID), entatt.Version(ifRow)).SetStatus(string(a.Status)).
@@ -177,9 +184,9 @@ func (AttemptRepo) InsertAnswer(ctx context.Context, r write.AnswerRow) error {
 	}
 	_, err := tx.ExecContext(ctx, `INSERT INTO assessment.attempt_answers (attempt_answer_id, tenant_id, created_at, attempt_id, position,
 		school_id, question_version_id, response, is_correct, score, answered_at, client_elapsed_ms, response_ms, attempt_no, is_scored,
-		idempotency_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $3, $11, $12, $13, $14, $15)`,
+		idempotency_key, hints_used, rapid_guess) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $3, $11, $12, $13, $14, $15, $16, $17)`,
 		r.ID, r.TenantID, r.AnsweredAt.UTC(), r.AttemptID, r.Position, r.SchoolID, r.QuestionVersionID, []byte(r.Response), r.IsCorrect, r.Score,
-		client, min(r.ResponseMS, int64(1<<31-1)), r.AttemptNo, r.IsScored, r.IdempotencyKey)
+		client, min(r.ResponseMS, int64(1<<31-1)), r.AttemptNo, r.IsScored, r.IdempotencyKey, r.HintsUsed, r.RapidGuess)
 	if err != nil {
 		return fmt.Errorf("attempt answer: %w", MapCurriculumErr(err))
 	}

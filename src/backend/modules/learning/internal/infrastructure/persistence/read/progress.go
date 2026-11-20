@@ -47,7 +47,7 @@ func (ProgressModel) Masteries(ctx context.Context, studentID uuid.UUID, subject
 	// The subject of an objective is the subject of its topic (curriculum.topics, H: visible to the tenant through RLS).
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL on every table
 	rows, err := q.QueryContext(ctx, `SELECT m.objective_id, m.value::float8, m.evidence_count, m.distinct_days, m.last_evidence_at,
-			COALESCE(to_char(m.last_evidence_date, 'YYYY-MM-DD'), ''), m.first_mastered_at, m.prior_source
+			COALESCE(to_char(m.last_evidence_date, 'YYYY-MM-DD'), ''), m.first_mastered_at, m.prior_source, m.prior_value::float8
 		FROM learning.objective_masteries m
 		WHERE m.tenant_id = infra.current_tenant_id() AND m.student_id = $1 AND m.deleted_at IS NULL
 			AND ($2::uuid IS NULL OR EXISTS (SELECT 1 FROM curriculum.learning_objectives lo
@@ -63,7 +63,7 @@ func (ProgressModel) Masteries(ctx context.Context, studentID uuid.UUID, subject
 		var m read.ObjectiveMastery
 		s := &m.State
 		if err := rows.Scan(&m.ObjectiveID, &s.Value, &s.EvidenceCount, &s.DistinctDays, &s.LastEvidenceAt, &s.LastEvidenceDate,
-			&s.FirstMasteredAt, &s.PriorSource); err != nil {
+			&s.FirstMasteredAt, &s.PriorSource, &s.PriorValue); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

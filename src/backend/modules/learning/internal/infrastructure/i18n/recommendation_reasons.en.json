@@ -1,0 +1,12 @@
+{
+  "rec.weak_objective": "Let's practise \"{objective}\" a bit more, you are getting better at it.",
+  "rec.prerequisite_weak": "Reviewing \"{objective}\" first will make \"{for}\" easier.",
+  "rec.decay_review": "It has been a while since you practised \"{objective}\", a quick review helps you remember.",
+  "rec.diagnostic_due.subject": "Take a short warm-up so Mây knows where to start with you.",
+  "rec.diagnostic_due.topic": "Take a short warm-up before the topic \"{topic}\".",
+  "rec.interleave_ready": "You know several topics well, try a mixed challenge!",
+  "rec.due_review": "{count} questions are ready for review, similar questions help you remember.",
+  "rec.assignment_soon": "Your school assignment is due soon, let's finish it.",
+  "rec.exam_followup": "Review \"{objective}\" after the test to make it stronger.",
+  "rec.next_topic": "The next topic of your class is \"{topic}\", let's start it."
+}

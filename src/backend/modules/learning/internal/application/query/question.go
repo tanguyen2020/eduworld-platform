@@ -178,35 +178,47 @@ func poolKey(f read.PoolFilter) string {
 	return hex.EncodeToString(h[:8])
 }
 
-// Select picks questions by rule for the tenant of ctx (F022-AC-26, AC-27): only current releases visible to the
-// tenant (own or assigned), reproducible by seed; QUESTION_POOL_INSUFFICIENT when the relaxed rule cannot be met.
-func (d Delivery) Select(ctx context.Context, req selection.Request) (out []selection.Candidate, err error) {
-	ctx, done := observability.UseCase(ctx, "learning.qb.select")
-	defer func() { done(err) }()
+// Pool returns the current releases visible to the tenant of ctx (own or assigned), of one subject or of every subject
+// (cached in Valkey ew:learning:qb:pool:<tenant_id>:<filter_hash>, QUESTION_BANK §6); used by the selections of F032
+// (siblings, interleaving, diagnostic) that pick from the pool themselves.
+func (d Delivery) Pool(ctx context.Context, subjectID *uuid.UUID) (pool []selection.Candidate, err error) {
 	tenant, err := sessionTenant(ctx)
 	if err != nil {
 		return nil, err
 	}
-	f := read.PoolFilter{SubjectID: req.Rule.Filters.SubjectID}
+	f := read.PoolFilter{SubjectID: subjectID}
 	key := poolKey(f)
-	pool, hit := []selection.Candidate(nil), false
+	hit := false
 	if d.Cache != nil {
 		pool, hit = d.Cache.Get(ctx, tenant, key)
 	}
 	if d.Metrics != nil {
 		d.Metrics.PoolCache(hit)
 	}
-	if !hit {
-		if err := d.Session.Read(ctx, func(ctx context.Context) error {
-			var err error
-			pool, err = d.Reader.Pool(ctx, f)
-			return err
-		}); err != nil {
-			return nil, err
-		}
-		if d.Cache != nil {
-			d.Cache.Put(ctx, tenant, key, pool)
-		}
+	if hit {
+		return pool, nil
+	}
+	if err := d.Session.Read(ctx, func(ctx context.Context) error {
+		var err error
+		pool, err = d.Reader.Pool(ctx, f)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	if d.Cache != nil {
+		d.Cache.Put(ctx, tenant, key, pool)
+	}
+	return pool, nil
+}
+
+// Select picks questions by rule for the tenant of ctx (F022-AC-26, AC-27): only current releases visible to the
+// tenant (own or assigned), reproducible by seed; QUESTION_POOL_INSUFFICIENT when the relaxed rule cannot be met.
+func (d Delivery) Select(ctx context.Context, req selection.Request) (out []selection.Candidate, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.qb.select")
+	defer func() { done(err) }()
+	pool, err := d.Pool(ctx, req.Rule.Filters.SubjectID)
+	if err != nil {
+		return nil, err
 	}
 	out, err = selection.Select(pool, req)
 	if errors.Is(err, selection.ErrPoolInsufficient) {

@@ -23,6 +23,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
@@ -89,12 +91,13 @@ type curEnv struct {
 	assets  *memAssets
 	users   map[string]authz.PrincipalData
 	tokens  map[string]string
-	media   *mediaKit        // F027 (newCurEnv(..., withMedia))
-	att     command.Attempts // F030
-	attq    query.Attempts   // F030
-	clk     *testClock       // F030
-	lessons command.Lessons  // F031 US6
-	rgd     command.Regrades // F031 US4
+	media   *mediaKit               // F027 (newCurEnv(..., withMedia))
+	att     command.Attempts        // F030
+	attq    query.Attempts          // F030
+	clk     *testClock              // F030
+	lessons command.Lessons         // F031 US6
+	rgd     command.Regrades        // F031 US4
+	recs    command.Recommendations // F032 US6
 }
 
 // envOpt configures newCurEnv.
@@ -215,12 +218,22 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{},
 		Events: write.Publisher{W: e.writer}, UoW: e.uow, Clock: clk.Now}
 	att.Lessons = lessons
+	// F032: review list, rapid_guess, adaptive selection, diagnostics and recommendations with the test clock.
+	self, practice := write.SelfStudyRepo{}, command.DefaultPracticeConfig()
+	att.Self = &command.SelfStudy{Wrong: self, Recommendations: self, Reader: self, Masteries: write.MasteryRepo{}, Config: practice,
+		Metrics: observability.SelfStudyCounter{}}
+	recs := command.Recommendations{UoW: e.uow, Store: self, Wrong: self, Reader: self, Masteries: write.MasteryRepo{}, Delivery: delivery,
+		Students: read.SchoolSettings{}, Events: write.Publisher{W: e.writer}, Engine: recommendation.Default(), Config: practice, Clock: clk.Now,
+		Metrics: observability.SelfStudyCounter{}}
+	handlers.Hints = att
+	handlers.SelfStudy = query.SelfStudy{Session: e.read, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: codec, Clock: clk.Now}
+	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
 		Clock: clk.Now}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
-	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Clock: clk.Now}
+	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now}
@@ -233,7 +246,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons}
+		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

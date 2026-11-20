@@ -1,6 +1,6 @@
 # Feature Specification: F032 — Chế độ luyện tập, hỗ trợ tự học (gợi ý, chẩn đoán, `rapid_guess`), gợi ý ôn tập tự động
 
-**Feature Branch**: `032-self-study-practice` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` · **Mốc**: M-C3 · **Phụ thuộc**: F031
+**Feature Branch**: `032-self-study-practice` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `learning` · **Mốc**: M-C3 · **Phụ thuộc**: F031
 **Input**: Học sinh tự học không có người lớn theo dõi (ADR-0072): tự luyện có phản hồi ngay, gợi ý nhiều cấp, lọc đoán bừa, ôn câu sai, luyện trộn, bài chẩn đoán và gợi ý ôn tập tự động có giải thích. FR nguồn: FR-EXR-001, FR-EXR-003, FR-EXR-012…014, FR-PRG-004…008, NFR-A11Y-002.
 
 ## Clarifications
@@ -14,6 +14,22 @@
 ### Session 2026-11-20 (owner chốt — việc nhận từ OQ F030)
 
 - Question set theo quy tắc trong `startAdHocAttempt` → **Chốt:** `source.kind = question_set` nhận cả bộ tĩnh và bộ theo luật: bộ theo luật được chọn câu lúc bắt đầu bằng `selection.Select` theo luật của version đã ghim, ghim `question_version_id` từng câu (R31); thiếu câu → `422` theo pool stats của F024.
+
+### Session 2026-11-20 (triển khai — quyết định [Proposed], chờ owner xác nhận)
+
+- Tham số `rapid_guess_min_response_ms`, `interleave_mix`, `retry_wrong_schedule`, `diagnostic_prior`, `avoid_recent` (7 ngày) → **[Proposed]** giá trị mặc định có kiểu bằng đúng CONFIG_DEFAULTS (`command.DefaultPracticeConfig`), như `attempt.Policy` của F030, cho tới khi module learning đọc platform settings (danh mục settings của identity chưa có các khóa này).
+- `model_version` mới cho `w_hint`/`w_guess` (T008) → **[Proposed]** không cần: `we-1.0` của F031 đã có `w_hint`, `guess_coefficient` và bộ lọc evidence đã loại `rapid_guess`; F032 chỉ ghi cờ. Câu trả lời của bài chẩn đoán (`context = diagnostic`) không là evidence (LEARNING_ANALYTICS §3.1, §3.5).
+- `server_interval_ms` → **[Proposed]** không thêm cột `attempt_items.presented_at`: đo từ `last_activity_at` (bắt đầu, lần trả lời trước, resume) tới lúc nhận; mở gợi ý không đặt lại khoảng đo; phần pause đang mở bị loại (`paused_at − last_activity_at`). Hệ số ×1,5 của `g1_3` chỉ áp cho ngưỡng mặc định theo loại câu, không áp cho `min_response_ms` của câu; mini-game/competition không có ngưỡng cấu hình thì không gắn cờ.
+- Danh sách ôn câu sai → **[Proposed]** cập nhật trong transaction trả lời câu (`question.answered` là learning event, không có domain event trên NATS); chỉ mode `practice`, `retry_wrong`, `assignment`, `quest`; `rapid_guess` và lần thử lại không tính điểm không đổi entry; câu đúng của chính câu gốc (mode học) hoặc của câu anh em đang ôn entry đó đều tính; re-evaluate làm câu thành đúng thì entry `cleared` trong consumer `learning.mastery_on_graded`. `retry_wrong` lấy entry đến hạn trước rồi các entry còn lại (hạn gần nhất), tối đa `question_count`; không có entry → `422 QUESTION_POOL_INSUFFICIENT`.
+- Resume (F032-AC-08) → **[Proposed]** theo `(mode, context_type, context_id)`: selection lấy `objective_id` > `topic_id` > `subject_id`; luyện trộn lấy `subject_id` hoặc topic đầu; `retry_wrong` lấy `subject_id` hoặc id học sinh; `diagnostic` lấy `topic_id` hoặc `subject_id`.
+- Độ khó thích ứng (F032-AC-05) → **[Proposed]** chọn theo LO: level sau decay của LO đó; theo topic/môn: level của trung bình giá trị sau decay các LO có evidence; chưa có evidence → `beginning`.
+- Luyện trộn (F032-AC-24) → **[Proposed]** `topic_ids` (2–4) hoặc chỉ `subject_id` (server lấy topic đã có evidence, gần nhất trước); < 2 topic → `422 VALIDATION_FAILED`; `g1_3` với ≤ 5 câu chỉ trộn 2 topic.
+- Bài chẩn đoán (F032-AC-25, AC-26) → **[Proposed]** LO lấy từ version chương trình `published` khả dụng cho tenant; LO tiên quyết trực tiếp xếp trước; chia vòng (2 câu mỗi LO rồi câu thứ 3); kết quả mỗi item = lần trả lời có tính điểm cuối; LO tiên quyết nhận prior lan có `prior_source = propagated` (giá trị mới của CHECK) và cột `prior_value` giữ M0 để recompute/replay luôn bắt đầu từ prior.
+- Thời điểm tính lại gợi ý (F032-AC-30) → **[Proposed]** chạy trong cùng transaction của consumer `learning.mastery_on_graded` sau khi cập nhật mastery (`activity.graded`, `attempt.re_evaluated`) để rule thấy mastery mới, cộng job `recommendation-nightly` (24 giờ); không có consumer riêng cho `question.answered`/`activity.submitted`.
+- Đích gợi ý (F032-AC-29) → **[Proposed]** gợi ý luyện tập có `target_type = selection`, `target_id` là LO (R2, R3, R4), môn (R8, R9, R7 đầu năm) hoặc topic (R7 đầu chủ đề). R7 "đầu năm học" = chưa có evidence nào ở môn của khối; "topic mới" = topic có evidence gần nhất mà quá nửa LO chưa có evidence. Hết hạn sau 7 ngày; lưu tối đa 20 gợi ý `active`, hiển thị 3; cùng ưu tiên thì theo thứ tự Mây: R1, R7, R3, R2, R5, R9, R4, R8, R6. Khả dụng (F032-AC-31) = LO có ít nhất một câu published (không `exam_only`) trong pool của tenant.
+- "Bỏ qua" (F032-AC-31) → **[Proposed]** một attempt được chấm bắt đầu sau khi gợi ý sinh ra mà không theo gợi ý đó; 3 lần → `dismissed` và `(kind, target)` không được gợi ý lại.
+- Mã lỗi (F032-AC-09, AC-13) → **[Proposed]** nhân sự nhận `403 GAME_ACCESS_STUDENT_ONLY` (guard `game_player` theo AGENTS R23); attempt của người khác `404 ATTEMPT_NOT_FOUND` (mã của F030); `ITEM_POSITION_INVALID` không thêm vì F030 đã chốt `VALIDATION_FAILED` (RB-206).
+- `icon_code` (F032-AC-34) → **[Proposed]** dạng `<grade_band>.<level>` (game ánh xạ sang hình trạm/cây/sao); không biết khối → `g1_3`; `objective_name` = mô tả LO (≤ 255).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
