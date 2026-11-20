@@ -43,3 +43,13 @@ make test-contract
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail) package `lms`, trace_id kịch bản 1 và 7, bản ghi audit kịch bản 4, 7, 9, 11, 12, 15; dòng outbox kịch bản 11–12.
+
+## 5. Bằng chứng (2026-11-20, local, testcontainers PostgreSQL thật)
+
+| Phạm vi | Test tự động | Kết quả |
+|---|---|---|
+| US1 + US5 (course, cài đặt curriculum, phạm vi vai trò, If-Match, audit, SA/học sinh/tenant B; T044 lọc năm học) | `tests/integration/lms_test.go` TestLMSCoursesAndSettings | pass |
+| US2 (lộ trình ghim version, 409/403, mẫu, trạng thái node, mở khóa thủ công, sửa giữ `node_id`, course ẩn, R6) | TestLMSLearningPaths; domain `lms` TestNodeStates, TestCourseAndPathRules; `recommendation` TestR6 | pass |
+| US3 + US4 (lịch, xóa mềm + event, lịch từ `assignment.published` một lần, lịch học sinh; nhóm học tập, 409/422/428/412, event `study_group.*` hợp lệ schema) | `tests/integration/lms_group_test.go` TestLMSScheduleAndStudyGroups; domain TestStudyGroupRules | pass |
+
+Chạy tay trên stack compose: chưa làm (đăng nhập demo bị chặn ở phiên agent; màn portal thuộc F055, game F062).

@@ -98,6 +98,7 @@ type curEnv struct {
 	lessons command.Lessons         // F031 US6
 	rgd     command.Regrades        // F031 US4
 	recs    command.Recommendations // F032 US6
+	lms     command.LMS             // F040
 }
 
 // envOpt configures newCurEnv.
@@ -225,6 +226,12 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	recs := command.Recommendations{UoW: e.uow, Store: self, Wrong: self, Reader: self, Masteries: write.MasteryRepo{}, Delivery: delivery,
 		Students: read.SchoolSettings{}, Events: write.Publisher{W: e.writer}, Engine: recommendation.Default(), Config: practice, Clock: clk.Now,
 		Metrics: observability.SelfStudyCounter{}}
+	recs.Sources = []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}
+	recs.Engine.Register(recommendation.R6{})
+	lmsCmd := command.LMS{UoW: e.uow, Store: write.LMSRepo{}, Read: e.read, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
+		Clock: clk.Now, Metrics: observability.LMSCounter{}}
+	handlers.LMSCommands = lmsCmd
+	handlers.LMS = query.LMS{Session: e.read, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: codec, Clock: clk.Now}
 	handlers.Hints = att
 	handlers.SelfStudy = query.SelfStudy{Session: e.read, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: codec, Clock: clk.Now}
 	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
@@ -246,7 +253,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
-		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs}
+		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
+		lms: lmsCmd}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

@@ -5292,6 +5292,82 @@ paths:
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+  /lms/schools/{school_id}/curriculum-settings:
+    get:
+      x-service: learning
+      tags:
+        - lms
+      operationId: getSchoolCurriculumSettings
+      x-portal-action: action.school_lms.settings.view
+      summary: Curriculum version mặc định của trường theo năm học (và khối) — dùng khi tạo course (FR-CUR-008, F040) · lms.class.read
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - name: academic_year_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolCurriculumSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      x-service: learning
+      tags:
+        - lms
+      operationId: putSchoolCurriculumSettings
+      x-portal-action: action.school_lms.settings.edit_school
+      summary: Đặt curriculum version mặc định của trường theo năm học × khối (school.settings.write, If-Match) — chỉ áp cho course tạo sau (F040)
+      description: |
+        Mỗi mục là một version đã publish của curriculum thuộc tenant hoặc platform được gán (chưa publish → 409 CONTENT_NOT_PUBLISHED;
+        chưa gán → 403 RESOURCE_NOT_ASSIGNED). `items` thay toàn bộ cài đặt của các năm học có mặt trong body; ghi audit
+        `school_curriculum.set`. Course đã tạo giữ version của nó.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/SchoolId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchoolCurriculumSettingsInput'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolCurriculumSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /lms/reports:
     post:
       x-service: learning
@@ -7161,6 +7237,70 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /learning/my-learning-paths:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listMyLearningPaths
+      summary: Lộ trình học của mình theo course active của lớp (node khóa/mở/hoàn thành tính ở server, F040)
+      description: Học sinh (game_player) đọc lộ trình của các course `active` thuộc lớp đang học trong tenant phiên; course chưa có lộ trình riêng dùng lộ trình mẫu (`is_template`). Trạng thái node theo `unlock_mode` (`mastery_gate` mở khi mọi LO của node trước ≥ `developing` hoặc được nhà trường mở khóa).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyLearningPathList'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /learning/my-schedule:
+    get:
+      x-service: learning
+      tags:
+        - learning
+      operationId: listMySchedule
+      summary: Lịch học của mình (bài học, hạn nộp, đề) trong khoảng ngày ≤ 62 ngày (F040)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyScheduleList'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /learning/my-assignments:
     get:
       x-service: learning
@@ -11992,6 +12132,7 @@ components:
         - class_id
         - subject_id
         - academic_year_id
+        - curriculum_version_id
         - status
       properties:
         course_id:
@@ -12039,6 +12180,12 @@ components:
             is_template:
               type: boolean
               description: Path mẫu theo bộ sách (khi course chưa có path riêng)
+            textbook_series_id:
+              $ref: '#/components/schemas/Uuid'
+            version:
+              type: integer
+              minimum: 1
+              description: Khóa lạc quan (ETag) — lộ trình không có version nội dung (RB-216)
             updated_at:
               $ref: '#/components/schemas/Timestamp'
     LearningPathInput:
@@ -12245,6 +12392,56 @@ components:
           maxItems: 100
           items:
             $ref: '#/components/schemas/Uuid'
+    SchoolCurriculumSettings:
+      type: object
+      required:
+        - school_id
+        - items
+      properties:
+        school_id:
+          $ref: '#/components/schemas/Uuid'
+        items:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required:
+              - academic_year_id
+              - curriculum_version_id
+              - set_by
+              - updated_at
+            properties:
+              academic_year_id:
+                $ref: '#/components/schemas/Uuid'
+              grade_level:
+                $ref: '#/components/schemas/GradeLevel'
+              curriculum_version_id:
+                $ref: '#/components/schemas/Uuid'
+              set_by:
+                $ref: '#/components/schemas/Uuid'
+              updated_at:
+                $ref: '#/components/schemas/Timestamp'
+    SchoolCurriculumSettingsInput:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          maxItems: 13
+          items:
+            type: object
+            required:
+              - academic_year_id
+              - curriculum_version_id
+            properties:
+              academic_year_id:
+                $ref: '#/components/schemas/Uuid'
+              grade_level:
+                $ref: '#/components/schemas/GradeLevel'
+                description: Vắng mặt = mọi khối của năm học
+              curriculum_version_id:
+                $ref: '#/components/schemas/Uuid'
     LmsReportRequest:
       type: object
       required:
@@ -14079,6 +14276,130 @@ components:
         next_review_at:
           $ref: '#/components/schemas/Timestamp'
           description: Lịch ôn 1–3–7 ngày (LEARNING_EXPERIENCE)
+    MyLearningPathList:
+      type: object
+      description: Lộ trình của học sinh theo course (listMyLearningPaths, F040)
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required:
+              - course_id
+              - subject_id
+              - path_id
+              - title
+              - unlock_mode
+              - is_template
+              - nodes
+            properties:
+              course_id:
+                $ref: '#/components/schemas/Uuid'
+              subject_id:
+                $ref: '#/components/schemas/Uuid'
+              subject_name:
+                type: string
+                maxLength: 255
+              path_id:
+                $ref: '#/components/schemas/Uuid'
+              title:
+                type: string
+                maxLength: 255
+              unlock_mode:
+                type: string
+                enum:
+                  - sequential
+                  - free
+                  - mastery_gate
+              is_template:
+                type: boolean
+              nodes:
+                type: array
+                maxItems: 200
+                items:
+                  type: object
+                  required:
+                    - node_id
+                    - position
+                    - content_type
+                    - content_id
+                    - content_version_id
+                    - state
+                  properties:
+                    node_id:
+                      $ref: '#/components/schemas/Uuid'
+                    position:
+                      type: integer
+                      minimum: 1
+                    content_type:
+                      type: string
+                      enum:
+                        - lesson
+                        - activity
+                        - question_set
+                        - assessment_blueprint
+                        - quest
+                    content_id:
+                      $ref: '#/components/schemas/Uuid'
+                    content_version_id:
+                      $ref: '#/components/schemas/Uuid'
+                    title:
+                      type: string
+                      maxLength: 255
+                    state:
+                      type: string
+                      enum:
+                        - locked
+                        - unlocked
+                        - completed
+    MyScheduleList:
+      type: object
+      description: Lịch của học sinh (listMySchedule, F040)
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            required:
+              - schedule_item_id
+              - course_id
+              - date
+              - kind
+            properties:
+              schedule_item_id:
+                $ref: '#/components/schemas/Uuid'
+              course_id:
+                $ref: '#/components/schemas/Uuid'
+              subject_id:
+                $ref: '#/components/schemas/Uuid'
+              date:
+                type: string
+                format: date
+              period:
+                type: integer
+                minimum: 1
+                maximum: 15
+              kind:
+                type: string
+                enum:
+                  - lesson
+                  - assignment_due
+                  - exam
+                  - event
+              ref_type:
+                type: string
+                maxLength: 64
+              ref_id:
+                $ref: '#/components/schemas/Uuid'
+              title:
+                type: string
+                maxLength: 255
     MyAssignment:
       type: object
       required:

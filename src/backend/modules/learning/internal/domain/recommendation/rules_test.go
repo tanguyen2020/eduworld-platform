@@ -1,6 +1,7 @@
 package recommendation
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -145,5 +146,28 @@ func TestEngine(t *testing.T) {
 	blocked := got[2].Key()
 	if again := e.Run(s, func(c Candidate) bool { return c.Key() == blocked }); len(again) != len(got)-1 {
 		t.Fatalf("blocked: %v", codes(again))
+	}
+}
+
+// F040-AC-12 (T018): R6 recommends the earliest scheduled lesson without evidence of each subject, priority 4.
+func TestR6(t *testing.T) {
+	sub := uuid.New()
+	learned := lo(sub, uuid.New(), "developing", 2)
+	fresh := uuid.New()
+	l1, l2 := uuid.New(), uuid.New()
+	s := Snapshot{Now: now, Objectives: []Objective{learned}, Upcoming: []Upcoming{
+		{ContentType: "lesson", ContentID: l2, SubjectID: sub, Title: "Phép chia", ObjectiveIDs: []uuid.UUID{fresh}, Date: "2026-11-25"},
+		{ContentType: "lesson", ContentID: uuid.New(), SubjectID: sub, Title: "Đã học", ObjectiveIDs: []uuid.UUID{learned.ID}, Date: "2026-11-21"},
+		{ContentType: "activity", ContentID: l1, SubjectID: sub, Title: "Sớm hơn", ObjectiveIDs: []uuid.UUID{fresh}, Date: "2026-11-22"},
+	}}
+	got := (R6{}).Evaluate(s)
+	if len(got) != 1 || got[0].TargetID != l1 || got[0].Priority != 4 || got[0].Kind != KindActivity || got[0].TargetType != "activity" ||
+		got[0].Params["topic"] != "Sớm hơn" {
+		t.Fatalf("R6: %+v", got)
+	}
+	e := Default()
+	e.Register(R6{})
+	if !slices.Contains(e.Codes(), "R6") {
+		t.Fatal("R6 registered")
 	}
 }

@@ -15,17 +15,6 @@ import (
 //
 // TEST FIXTURE — không dùng trong runtime (R17): the table belongs to F040, which has not migrated it yet; the
 // curriculum read model reads it when it exists (F021 clarification 2026-11-19).
-func schoolSettingsFixture(ctx context.Context, t *testing.T, c *curEnv) {
-	t.Helper()
-	if _, err := c.migrator.ExecContext(ctx, `CREATE TABLE lms.school_curriculum_settings (
-		setting_id uuid PRIMARY KEY, tenant_id uuid NOT NULL, school_id uuid NOT NULL, academic_year_id uuid,
-		grade_level smallint, curriculum_version_id uuid NOT NULL, set_by uuid, created_at timestamptz NOT NULL DEFAULT now(),
-		deleted_at timestamptz, deleted_by uuid);
-		GRANT SELECT ON lms.school_curriculum_settings TO learning_app, learning_readonly`); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // publishedVersion publishes version n of a platform curriculum with an effective range (TEST helper).
 func (c *curEnv) publishVersion(t *testing.T, cur string, n int, from, to string) {
 	t.Helper()
@@ -98,10 +87,9 @@ func TestCurriculumPublicRead(t *testing.T) {
 	if len(los.items("data")) != 2 {
 		t.Fatalf("LOs of the applied version %s", los.raw)
 	}
-	// AC-19 with the school setting (F040 table, fixture): version 1 applies.
-	schoolSettingsFixture(ctx, t, c)
-	if _, err := c.migrator.ExecContext(ctx, `INSERT INTO lms.school_curriculum_settings (setting_id, tenant_id, school_id, curriculum_version_id)
-		VALUES ($1, $2, $3, $4)`, uuid.New(), c.tenantA, school, v1); err != nil {
+	// AC-19 with the school setting (table of F040; no academic year in the class projection: every year applies): version 1.
+	if _, err := c.platform.ExecContext(ctx, `INSERT INTO lms.school_curriculum_settings (setting_id, tenant_id, school_id, academic_year_id,
+		curriculum_version_id, set_by) VALUES ($1, $2, $3, $4, $5, $1)`, uuid.New(), c.tenantA, school, uuid.New(), v1); err != nil {
 		t.Fatal(err)
 	}
 	r = must(t, c.do(t, http.MethodGet, "/learning/curricula", hsAn, nil, nil), http.StatusOK, "curricula with setting")

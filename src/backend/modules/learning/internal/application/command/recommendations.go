@@ -46,6 +46,8 @@ type Recommendations struct {
 	Config    PracticeConfig
 	Clock     func() time.Time
 	Metrics   SelfStudyMetrics
+	// Sources fill the snapshot with the data of the rules of other features (F040 R6, F041 R1, F042 R5).
+	Sources []SnapshotSource
 }
 
 func (h Recommendations) now() time.Time { return now(h.Clock).UTC() }
@@ -328,6 +330,11 @@ func (h Recommendations) snapshot(ctx context.Context, studentID uuid.UUID, grad
 	slices.SortFunc(out.WrongDue, func(a, b recommendation.WrongDue) int { return compareID(a.SubjectID, b.SubjectID) })
 	if out.LastDiagnostic, err = h.Reader.LastDiagnostics(ctx, studentID); err != nil {
 		return out, err
+	}
+	for _, src := range h.Sources {
+		if err := src.Fill(ctx, studentID, &out.Snapshot); err != nil {
+			return out, err
+		}
 	}
 	return out, nil
 }

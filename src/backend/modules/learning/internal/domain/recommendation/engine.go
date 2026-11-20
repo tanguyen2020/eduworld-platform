@@ -101,6 +101,18 @@ type Snapshot struct {
 	WrongDue   []WrongDue
 	// LastDiagnostic is the start of the latest diagnostic attempt per subject or topic id.
 	LastDiagnostic map[uuid.UUID]time.Time
+	// Upcoming are the next lessons of the LMS schedule of the student's courses (filled by F040 for R6).
+	Upcoming []Upcoming
+}
+
+// Upcoming is a lesson (or activity) of the LMS schedule of a course of the student.
+type Upcoming struct {
+	ContentType  string
+	ContentID    uuid.UUID
+	SubjectID    uuid.UUID
+	Title        string
+	ObjectiveIDs []uuid.UUID
+	Date         string // YYYY-MM-DD
 }
 
 func (s Snapshot) objective(id uuid.UUID) (Objective, bool) {

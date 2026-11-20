@@ -89,3 +89,17 @@ const LessonCompletionName = "learning.lesson_completion"
 func LessonCompletionSubjects() []string {
 	return []string{natsx.EventSubject("learning", "activity.graded")}
 }
+
+// LMSCoursesName is the durable consumer that provisions the courses of a class from class.synced (F040-AC-01).
+const LMSCoursesName = "learning.lms_courses"
+
+// LMSCoursesSubjects are the filter subjects of learning.lms_courses (stream EVT_IDENTITY).
+func LMSCoursesSubjects() []string { return []string{natsx.EventSubject("identity", "class.synced")} }
+
+// LMSScheduleName is the durable consumer that adds the due dates and exams of a course to its schedule (F040-AC-15).
+const LMSScheduleName = "learning.lms_schedule"
+
+// LMSScheduleSubjects are the filter subjects of learning.lms_schedule (owner F041, F042).
+func LMSScheduleSubjects() []string {
+	return []string{natsx.EventSubject("learning", "assignment.published"), natsx.EventSubject("learning", "exam.opened")}
+}

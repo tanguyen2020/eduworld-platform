@@ -473,7 +473,7 @@ workspaces:
             label_key: portal.action.school_lms.settings.view
             title: Xem cài đặt tenant/trường (gồm giờ giới nghiêm platform và giới nghiêm hiệu lực)
             required_permissions: [tenant.settings.read, school.settings.read]
-            operation_ids: [getTenantSettings, getSchoolSettings]
+            operation_ids: [getTenantSettings, getSchoolSettings, getSchoolCurriculumSettings]
             can_disable: true
           - key: action.school_lms.settings.edit
             label_key: portal.action.school_lms.settings.edit
@@ -485,7 +485,7 @@ workspaces:
             label_key: portal.action.school_lms.settings.edit_school
             title: Sửa cài đặt trường — giờ truy cập, bảng xếp hạng, club, khung giới nghiêm trường (chỉ siết thêm)
             required_permissions: [school.settings.write]
-            operation_ids: [updateSchoolSettings]
+            operation_ids: [updateSchoolSettings, putSchoolCurriculumSettings]
             can_disable: true
           - key: action.school_lms.settings.cleanup_view
             label_key: portal.action.school_lms.settings.cleanup_view

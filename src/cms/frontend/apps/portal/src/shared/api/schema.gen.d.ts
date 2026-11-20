@@ -5674,6 +5674,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learning/my-learning-paths": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lộ trình học của mình theo course active của lớp (node khóa/mở/hoàn thành tính ở server, F040)
+         * @description Học sinh (game_player) đọc lộ trình của các course `active` thuộc lớp đang học trong tenant phiên; course chưa có lộ trình riêng dùng lộ trình mẫu (`is_template`). Trạng thái node theo `unlock_mode` (`mastery_gate` mở khi mọi LO của node trước ≥ `developing` hoặc được nhà trường mở khóa).
+         */
+        get: operations["listMyLearningPaths"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learning/my-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch học của mình (bài học, hạn nộp, đề) trong khoảng ngày ≤ 62 ngày (F040) */
+        get: operations["listMySchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/learning/objectives": {
         parameters: {
             query?: never;
@@ -6318,6 +6355,29 @@ export interface paths {
         /** Chuỗi thời gian học tập cấp trường (analytics.school.read) */
         get: operations["getSchoolAnalyticsSeries"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lms/schools/{school_id}/curriculum-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Curriculum version mặc định của trường theo năm học (và khối) — dùng khi tạo course (FR-CUR-008, F040) · lms.class.read */
+        get: operations["getSchoolCurriculumSettings"];
+        /**
+         * Đặt curriculum version mặc định của trường theo năm học × khối (school.settings.write, If-Match) — chỉ áp cho course tạo sau (F040)
+         * @description Mỗi mục là một version đã publish của curriculum thuộc tenant hoặc platform được gán (chưa publish → 409 CONTENT_NOT_PUBLISHED;
+         *     chưa gán → 403 RESOURCE_NOT_ASSIGNED). `items` thay toàn bộ cài đặt của các năm học có mặt trong body; ghi audit
+         *     `school_curriculum.set`. Course đã tạo giữ version của nó.
+         */
+        put: operations["putSchoolCurriculumSettings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -9430,7 +9490,7 @@ export interface components {
             class_id: components["schemas"]["Uuid"];
             class_name?: string;
             course_id: components["schemas"]["Uuid"];
-            curriculum_version_id?: components["schemas"]["Uuid"];
+            curriculum_version_id: components["schemas"]["Uuid"];
             school_id: components["schemas"]["Uuid"];
             /** @enum {string} */
             status: "active" | "hidden" | "archived";
@@ -10699,7 +10759,10 @@ export interface components {
             /** @description Path mẫu theo bộ sách (khi course chưa có path riêng) */
             is_template?: boolean;
             path_id: components["schemas"]["Uuid"];
+            textbook_series_id?: components["schemas"]["Uuid"];
             updated_at?: components["schemas"]["Timestamp"];
+            /** @description Khóa lạc quan (ETag) — lộ trình không có version nội dung (RB-216) */
+            version?: number;
         };
         LearningPathInput: {
             nodes: components["schemas"]["PathNode"][];
@@ -11291,6 +11354,30 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             title: string;
         };
+        /** @description Lộ trình của học sinh theo course (listMyLearningPaths, F040) */
+        MyLearningPathList: {
+            items: {
+                course_id: components["schemas"]["Uuid"];
+                is_template: boolean;
+                nodes: {
+                    content_id: components["schemas"]["Uuid"];
+                    /** @enum {string} */
+                    content_type: "lesson" | "activity" | "question_set" | "assessment_blueprint" | "quest";
+                    content_version_id: components["schemas"]["Uuid"];
+                    node_id: components["schemas"]["Uuid"];
+                    position: number;
+                    /** @enum {string} */
+                    state: "locked" | "unlocked" | "completed";
+                    title?: string;
+                }[];
+                path_id: components["schemas"]["Uuid"];
+                subject_id: components["schemas"]["Uuid"];
+                subject_name?: string;
+                title: string;
+                /** @enum {string} */
+                unlock_mode: "sequential" | "free" | "mastery_gate";
+            }[];
+        };
         /** @description Mastery của học sinh theo LO (getMyMastery, F032); `value` chỉ cho khối 6–9. */
         MyMasteryList: {
             grade_band: components["schemas"]["GradeBand"];
@@ -11306,6 +11393,22 @@ export interface components {
                 topic_id?: components["schemas"]["Uuid"];
                 /** @description Mastery sau decay (chỉ khối 6–9; khối 1–5 là null) */
                 value?: number | null;
+            }[];
+        };
+        /** @description Lịch của học sinh (listMySchedule, F040) */
+        MyScheduleList: {
+            items: {
+                course_id: components["schemas"]["Uuid"];
+                /** Format: date */
+                date: string;
+                /** @enum {string} */
+                kind: "lesson" | "assignment_due" | "exam" | "event";
+                period?: number;
+                ref_id?: components["schemas"]["Uuid"];
+                ref_type?: string;
+                schedule_item_id: components["schemas"]["Uuid"];
+                subject_id?: components["schemas"]["Uuid"];
+                title?: string;
             }[];
         };
         MyTenant: components["schemas"]["TenantSummary"] & {
@@ -12407,6 +12510,24 @@ export interface components {
             status: "pending_review" | "active" | "disabled";
             tenant_id: components["schemas"]["Uuid"];
             version?: number;
+        };
+        SchoolCurriculumSettings: {
+            items: {
+                academic_year_id: components["schemas"]["Uuid"];
+                curriculum_version_id: components["schemas"]["Uuid"];
+                grade_level?: components["schemas"]["GradeLevel"];
+                set_by: components["schemas"]["Uuid"];
+                updated_at: components["schemas"]["Timestamp"];
+            }[];
+            school_id: components["schemas"]["Uuid"];
+        };
+        SchoolCurriculumSettingsInput: {
+            items: {
+                academic_year_id: components["schemas"]["Uuid"];
+                curriculum_version_id: components["schemas"]["Uuid"];
+                /** @description Vắng mặt = mọi khối của năm học */
+                grade_level?: components["schemas"]["GradeLevel"];
+            }[];
         };
         SchoolDashboard: components["schemas"]["DashboardMeta"] & {
             class_id?: components["schemas"]["Uuid"];
@@ -28499,6 +28620,76 @@ export interface operations {
             403: components["responses"]["Forbidden"];
         };
     };
+    listMyLearningPaths: {
+        parameters: {
+            query?: {
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyLearningPathList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listMySchedule: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyScheduleList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     listLearningObjectives: {
         parameters: {
             query?: {
@@ -30280,6 +30471,83 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
             429: components["responses"]["DashboardBusy"];
             504: components["responses"]["DashboardTimeout"];
+        };
+    };
+    getSchoolCurriculumSettings: {
+        parameters: {
+            query?: {
+                academic_year_id?: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolCurriculumSettings"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    putSchoolCurriculumSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SchoolCurriculumSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolCurriculumSettings"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listStudyGroups: {

@@ -2545,6 +2545,18 @@
     ]
   },
   {
+    "operation_id": "getSchoolCurriculumSettings",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/curriculum-settings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getSchoolDashboard",
     "module": "learning",
     "method": "GET",
@@ -3763,10 +3775,32 @@
     ]
   },
   {
+    "operation_id": "listMyLearningPaths",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/my-learning-paths",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listMyMatches",
     "module": "competition",
     "method": "GET",
     "path": "/competition/matches",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMySchedule",
+    "module": "learning",
+    "method": "GET",
+    "path": "/learning/my-schedule",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
@@ -4691,6 +4725,18 @@
     "method": "PUT",
     "path": "/admin/settings/curfew",
     "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putSchoolCurriculumSettings",
+    "module": "learning",
+    "method": "PUT",
+    "path": "/lms/schools/{school_id}/curriculum-settings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
       "role_denied"
     ]
   },

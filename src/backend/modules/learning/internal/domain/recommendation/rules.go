@@ -3,6 +3,7 @@ package recommendation
 import (
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -297,3 +298,39 @@ func (R9) Evaluate(s Snapshot) []Candidate {
 
 // Default is the engine of F032 with R2, R3, R4, R7, R8 and R9 (R1, R5, R6 are registered by F041, F042, F040).
 func Default() *Engine { return NewEngine(R2{}, R3{}, R4{}, R7{}, R8{}, R9{}) }
+
+// R6 — the next lesson of the LMS schedule of a course whose objectives have no evidence yet: study it (priority 4,
+// LEARNING_ANALYTICS §6; registered by F040). One recommendation per subject, the earliest scheduled.
+type R6 struct{}
+
+// Code implements Rule.
+func (R6) Code() string { return "R6" }
+
+// Evaluate implements Rule.
+func (R6) Evaluate(s Snapshot) []Candidate {
+	evidence := map[uuid.UUID]bool{}
+	for _, o := range s.Objectives {
+		if o.EvidenceCount > 0 {
+			evidence[o.ID] = true
+		}
+	}
+	upcoming := slices.Clone(s.Upcoming)
+	slices.SortStableFunc(upcoming, func(a, b Upcoming) int { return strings.Compare(a.Date, b.Date) })
+	done := map[uuid.UUID]bool{}
+	var out []Candidate
+	for _, u := range upcoming {
+		if done[u.SubjectID] || len(u.ObjectiveIDs) == 0 || slices.ContainsFunc(u.ObjectiveIDs, func(id uuid.UUID) bool { return evidence[id] }) {
+			continue
+		}
+		done[u.SubjectID] = true
+		kind := KindActivity
+		if u.ContentType == "lesson" {
+			kind = KindLesson
+		}
+		sub := u.SubjectID
+		out = append(out, Candidate{RuleCode: "R6", Kind: kind, TargetType: u.ContentType, TargetID: u.ContentID, SubjectID: &sub,
+			ObjectiveIDs: u.ObjectiveIDs, Reason: "next_topic", ReasonCode: "rec.next_topic", Params: map[string]string{"topic": u.Title},
+			Priority: 4})
+	}
+	return out
+}

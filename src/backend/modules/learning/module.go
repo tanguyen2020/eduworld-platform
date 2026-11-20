@@ -145,6 +145,12 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.LessonCompletionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LessonCompletionOptions(consumer.LessonCompletion{Lessons: w.lessons}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.LMSCoursesName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LMSCoursesOptions(consumer.LMSCourses{Courses: w.lms}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.LMSScheduleName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LMSScheduleOptions(consumer.LMSSchedule{Schedule: w.lms}, core.UoW, core.App, js)
+	})
 	r.Consumer(messaging.ProgressDailyName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ProgressDailyOptions(consumer.ProgressDaily{Record: w.progress}, core.UoW, core.App, js)
 	})
@@ -184,6 +190,8 @@ type wiring struct {
 	lessons      command.Lessons
 	// F032: the rule engine of the recommendations (R1/R5/R6 are registered here by F041/F042/F040).
 	recommendations command.Recommendations
+	// F040: the school LMS (courses, paths, schedule, study groups).
+	lms command.LMS
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -230,6 +238,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterRegrade(reg)
 	observability.RegisterLessons(reg)
 	observability.RegisterSelfStudy(reg)
+	observability.RegisterLMS(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -294,7 +303,11 @@ func build(r *module.Registry) (*wiring, error) {
 		Metrics: observability.SelfStudyCounter{}}
 	recs := command.Recommendations{UoW: core.UoW, Store: selfRepo, Wrong: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{},
 		Delivery: delivery, Students: read.SchoolSettings{}, Events: events, Engine: recommendation.Default(), Config: practice,
-		Metrics: observability.SelfStudyCounter{}}
+		Metrics: observability.SelfStudyCounter{}, Sources: []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}}
+	// F040: R6 (next lesson of the LMS schedule) registers into the engine of F032.
+	recs.Engine.Register(recommendation.R6{})
+	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
+		Metrics: observability.LMSCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
 		Registry: activities, Cursors: cursors}
 
@@ -314,6 +327,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}},
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
 	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}}
+	h.LMSCommands = lmsCmd
+	h.LMS = query.LMS{Session: core.ReadSession, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: cursors}
 	h.SelfStudy = query.SelfStudy{Session: core.ReadSession, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: cursors}
 	learningRecord := write.MasteryRepo{}
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
@@ -336,5 +351,6 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
-		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs}, nil
+		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
+		lms: lmsCmd}, nil
 }
