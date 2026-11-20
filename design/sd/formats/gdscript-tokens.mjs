@@ -6,7 +6,7 @@ import { godotColor } from '../../lib/color.mjs';
 import { byPath, gdConstName, gdFloat, px, seconds } from '../../lib/names.mjs';
 
 /** Top-level groups that belong to 3D art (Art3dTokens) rather than UI (UiTokens). */
-export const ART_GROUPS = ['zone', 'toon', 'outline', 'light', 'env', 'vfx'];
+export const ART_GROUPS = ['avatar', 'zone', 'toon', 'outline', 'light', 'env', 'vfx'];
 
 export const resPath = (repoRel) => `res://${repoRel.replace(/^src\/game\//, '')}`;
 
@@ -78,11 +78,17 @@ ${dict('THEME_PATHS', DENSITY_BANDS.map((b) => [b, `"${themeDir}/${themeFile(b)}
 export function formatArt3dTokens(map, envZones, vfxKinds, version) {
   const paths = [...map.keys()].sort(byPath).filter((p) => ['zone', 'toon', 'outline', 'light'].includes(p.split('.')[0]));
   const rarity = [...map.keys()].sort(byPath).filter((p) => p.startsWith('color.rarity.'));
+  const avatar = (group) => [...map.keys()].sort(byPath).filter((p) => p.startsWith(`avatar.${group}.`))
+    .map((p) => [p.slice(`avatar.${group}.`.length), godotColor(map.get(p).value)]);
   const artDir = resPath(OUTPUTS.artDir);
-  return `${header('Art3dTokens', '3D art tokens: zone material palette, toon/outline shader uniforms, light, rarity glow (DESIGN_SYSTEM §5.3).', version)}${sections(map, paths)}
+  return `${header('Art3dTokens', '3D art tokens: zone material palette, toon/outline shader uniforms, light, rarity glow, avatar skin/hair palette (DESIGN_SYSTEM §5.3).', version)}${sections(map, paths)}
 
 # rarity glow / frame (shared-tokens, game variant)
 ${dict('RARITY_COLORS', rarity.map((p) => [p.slice('color.rarity.'.length), godotColor(map.get(p).value)]))}
+
+# avatar appearance palette keyed by the catalog codes (skin_tones, hair_colors; F070 T041)
+${dict('AVATAR_SKIN_TONES', avatar('skin_tone'))}
+${dict('AVATAR_HAIR_COLORS', avatar('hair_color'))}
 
 # generated resources
 ${dict('ENVIRONMENT_PATHS', envZones.map((z) => [z, `"${artDir}/env_${z}.tres"`]))}

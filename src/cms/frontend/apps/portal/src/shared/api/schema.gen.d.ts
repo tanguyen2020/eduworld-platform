@@ -10089,6 +10089,7 @@ export interface components {
             catalog_version_id: components["schemas"]["Uuid"];
             default_emote_ids: components["schemas"]["CatalogCode"][];
             default_item_ids: components["schemas"]["CatalogCode"][];
+            /** @description Mã màu tóc = khóa token design/game-tokens avatar.hair_color.<code> (OQ F070-2) */
             hair_colors: components["schemas"]["CatalogNamedCodes"];
             /** @description Tên vi/en và ô trang phục của mỗi item và emote mặc định (một mục cho mỗi mã của default_item_ids và default_emote_ids; OQ F070-1). Rỗng với version publish trước khi có tên — client hiển thị nhãn thứ tự. */
             items: components["schemas"]["CatalogItem"][];
@@ -10098,6 +10099,7 @@ export interface components {
                 preset_code: components["schemas"]["CatalogCode"];
                 thumbnail_asset_id?: components["schemas"]["Uuid"];
             }[];
+            /** @description Mã màu da = khóa token design/game-tokens avatar.skin_tone.<code>; client lấy màu từ token, danh mục không gửi mã màu (OQ F070-2) */
             skin_tones: components["schemas"]["CatalogNamedCodes"];
             version: number;
         };

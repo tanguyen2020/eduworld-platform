@@ -1,4 +1,26 @@
 {
+  "avatar": {
+    "$type": "color",
+    "$description": "Avatar appearance palette keyed by the catalog codes (character-catalog skin_tones/hair_colors, F070 T041). Generates Art3dTokens.AVATAR_SKIN_TONES and AVATAR_HAIR_COLORS.",
+    "skin_tone": {
+      "tone_01": { "$value": "{palette.avatar.tone-01}", "$description": "Skin tone 1 (lightest)." },
+      "tone_02": { "$value": "{palette.avatar.tone-02}", "$description": "Skin tone 2." },
+      "tone_03": { "$value": "{palette.avatar.tone-03}", "$description": "Skin tone 3." },
+      "tone_04": { "$value": "{palette.avatar.tone-04}", "$description": "Skin tone 4." },
+      "tone_05": { "$value": "{palette.avatar.tone-05}", "$description": "Skin tone 5." },
+      "tone_06": { "$value": "{palette.avatar.tone-06}", "$description": "Skin tone 6 (darkest)." }
+    },
+    "hair_color": {
+      "hair_col_01": { "$value": "{palette.avatar.hair-col-01}", "$description": "Hair black." },
+      "hair_col_02": { "$value": "{palette.avatar.hair-col-02}", "$description": "Hair dark brown." },
+      "hair_col_03": { "$value": "{palette.avatar.hair-col-03}", "$description": "Hair chestnut." },
+      "hair_col_04": { "$value": "{palette.avatar.hair-col-04}", "$description": "Hair honey." },
+      "hair_col_05": { "$value": "{palette.avatar.hair-col-05}", "$description": "Hair blond." },
+      "hair_col_06": { "$value": "{palette.avatar.hair-col-06}", "$description": "Hair ginger." },
+      "hair_col_07": { "$value": "{palette.avatar.hair-col-07}", "$description": "Hair blue." },
+      "hair_col_08": { "$value": "{palette.avatar.hair-col-08}", "$description": "Hair purple." }
+    }
+  },
   "zone": {
     "$type": "color",
     "$description": "Material palette per world zone (DESIGN_SYSTEM §5.3). Primary = shared subject color (game variant).",

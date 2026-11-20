@@ -1,8 +1,9 @@
 class_name ItemVisual
 extends Resource
 ## Display-only description of a cosmetic code (CHARACTER_SYSTEM §5.2): `res://resources/items/<item_id>.tres` for
-## items (hair, outfit, accessories, emotes) and `res://resources/avatar/<code>.tres` for appearance codes (body
-## type, skin tone, hair colour). It says how to draw the code — mesh/scene, material, tint, attach offset, icon,
+## items (hair, outfit, accessories, emotes) and `res://resources/avatar/<code>.tres` for body types. Skin tones and hair
+## colours are design tokens keyed by the catalog code (`Art3dTokens.AVATAR_SKIN_TONES` / `AVATAR_HAIR_COLORS`, from
+## design/game-tokens/art3d.json; F070 T041), read with `appearance_color()`. It says how to draw the code — mesh/scene, material, tint, attach offset, icon,
 ## emote clip — never whether the student owns it or where the server lets it be equipped (server-authoritative).
 ## Item codes, names and ownership come from the backend catalog; a code without a visual resource (cosmetic bundle
 ## not loaded yet) is drawn with the default item of the same slot (F070-AC-18).
@@ -16,6 +17,8 @@ const SLOT_SKIN_TONE: String = "skin_tone"
 const SLOT_HAIR_COLOR: String = "hair_color"
 const ITEMS_DIR: String = "res://resources/items"
 const APPEARANCE_DIR: String = "res://resources/avatar"
+## Colour of a skin tone / hair colour code the client has no token for (catalog newer than this client).
+const UNKNOWN_APPEARANCE_COLOR: Color = Color.WHITE
 ## Same pattern as the contract `CatalogCode`: server data never builds an arbitrary resource path.
 const CODE_PATTERN: String = "^[a-z0-9_]{1,64}$"
 
@@ -26,7 +29,7 @@ const CODE_PATTERN: String = "^[a-z0-9_]{1,64}$"
 @export var scene: PackedScene = null
 @export var mesh: Mesh = null
 @export var material_override: Material = null
-## Albedo of the generated material (skin tone, hair colour, placeholder item colour).
+## Albedo of the generated material (placeholder item colour). Skin tone / hair colour come from the tokens.
 @export var tint: Color = Color(1, 1, 1, 1)
 ## Position relative to the slot anchor.
 @export var offset: Vector3 = Vector3.ZERO
@@ -48,7 +51,22 @@ static func load_item(item_id: String) -> ItemVisual:
 	return _load(ITEMS_DIR, item_id)
 
 
-## Visual of an appearance code (body type, skin tone, hair colour); null when unavailable.
+## Colour of a skin tone or hair colour code from the avatar palette tokens (T041); `UNKNOWN_APPEARANCE_COLOR` when
+## this client has no token for the code.
+static func appearance_color(appearance_code: String) -> Color:
+	if Art3dTokens.AVATAR_SKIN_TONES.has(appearance_code):
+		return Art3dTokens.AVATAR_SKIN_TONES[appearance_code] as Color
+	if Art3dTokens.AVATAR_HAIR_COLORS.has(appearance_code):
+		return Art3dTokens.AVATAR_HAIR_COLORS[appearance_code] as Color
+	return UNKNOWN_APPEARANCE_COLOR
+
+
+## True when the avatar palette tokens have a colour for `appearance_code`.
+static func has_appearance_color(appearance_code: String) -> bool:
+	return Art3dTokens.AVATAR_SKIN_TONES.has(appearance_code) or Art3dTokens.AVATAR_HAIR_COLORS.has(appearance_code)
+
+
+## Visual of an appearance code (body type); null when unavailable.
 static func load_appearance(appearance_code: String) -> ItemVisual:
 	return _load(APPEARANCE_DIR, appearance_code)
 

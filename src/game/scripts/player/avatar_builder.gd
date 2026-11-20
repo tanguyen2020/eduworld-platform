@@ -4,7 +4,8 @@ extends Node3D
 ## Player, S02 Character Creation and the Wardrobe (CustomizationStudio); RemotePlayer and the profile card reuse it
 ## later (F092/F095). Display only and synchronous: no network, no ownership rule (the server decides), so every
 ## change of choice redraws the preview locally.
-## - body type → proportions, skin tone / hair colour → palette tint (`resources/avatar/<code>.tres`);
+## - body type → proportions (`resources/avatar/<code>.tres`), skin tone / hair colour → avatar palette tokens
+##   (`ItemVisual.appearance_color`, T041);
 ## - hair, outfit, accessories (head/face/back/hand) → visual of `resources/items/<item_id>.tres` on its slot anchor;
 ## - an equipped item without a visual on this client (cosmetic bundle not loaded) → the default item of the same slot
 ##   from the catalog, `visual_fallback_used` is emitted for the background bundle loader (F070-AC-18); unknown
@@ -78,10 +79,8 @@ func _apply_body(c: AvatarConfigModel) -> void:
 	var shape: ItemVisual = ItemVisual.load_appearance(c.body_type)
 	if proportions != null:
 		proportions.scale = shape.body_scale if shape != null else Vector3.ONE
-	var skin: ItemVisual = ItemVisual.load_appearance(c.skin_tone)
-	_skin_material.albedo_color = skin.tint if skin != null else Color(1, 1, 1, 1)
-	var hair: ItemVisual = ItemVisual.load_appearance(c.hair_color)
-	_hair_color = hair.tint if hair != null else Color(1, 1, 1, 1)
+	_skin_material.albedo_color = ItemVisual.appearance_color(c.skin_tone)
+	_hair_color = ItemVisual.appearance_color(c.hair_color)
 
 
 ## Draws `item_id` on `slot`, or the slot's default when the visual is missing / for another slot.

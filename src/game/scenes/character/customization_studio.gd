@@ -165,12 +165,11 @@ func _build_look(list: Array[Dictionary], setter: Callable, swatch: bool) -> voi
 		b.set_meta(&"look", true)
 		b.pressed.connect(setter.bind(code))
 		if swatch:
-			var visual: ItemVisual = ItemVisual.load_appearance(code)
 			var fill: ColorRect = ColorRect.new()
 			fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE,
 					UiTokens.SIZE_SPACE_8)
-			fill.color = visual.tint if visual != null else Color(1, 1, 1, 1)
+			fill.color = ItemVisual.appearance_color(code)
 			b.add_child(fill)
 			b.set_meta(&"swatch", true)
 

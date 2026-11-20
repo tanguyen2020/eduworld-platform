@@ -4978,8 +4978,10 @@ components:
           $ref: '#/components/schemas/CatalogNamedCodes'
         skin_tones:
           $ref: '#/components/schemas/CatalogNamedCodes'
+          description: Mã màu da = khóa token design/game-tokens avatar.skin_tone.<code>; client lấy màu từ token, danh mục không gửi mã màu (OQ F070-2)
         hair_colors:
           $ref: '#/components/schemas/CatalogNamedCodes'
+          description: Mã màu tóc = khóa token design/game-tokens avatar.hair_color.<code> (OQ F070-2)
         default_item_ids:
           type: array
           maxItems: 200

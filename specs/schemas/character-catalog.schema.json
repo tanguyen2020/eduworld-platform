@@ -26,8 +26,8 @@
       }
     },
     "body_types": { "$ref": "#/$defs/namedCodes" },
-    "skin_tones": { "$ref": "#/$defs/namedCodes" },
-    "hair_colors": { "$ref": "#/$defs/namedCodes" },
+    "skin_tones": { "$ref": "#/$defs/namedCodes", "description": "Mã màu da = khóa token design/game-tokens/art3d.json avatar.skin_tone.<code> (OQ F070-2, T041); danh mục không chứa mã màu hex." },
+    "hair_colors": { "$ref": "#/$defs/namedCodes", "description": "Mã màu tóc = khóa token design/game-tokens/art3d.json avatar.hair_color.<code> (OQ F070-2, T041)." },
     "default_item_ids": { "type": "array", "maxItems": 200, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
     "default_emote_ids": { "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
     "items": {

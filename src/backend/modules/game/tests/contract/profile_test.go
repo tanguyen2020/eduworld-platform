@@ -238,3 +238,35 @@ func TestProfileContractsHaveNoPII(t *testing.T) {
 		t.Fatal("GameProfileUpdate must refuse a free nickname (additionalProperties: false, F070-AC-10)")
 	}
 }
+
+// T041 (OQ F070-2): every skin tone and hair colour code of the seed catalog is a key of the avatar palette tokens
+// (design/game-tokens/art3d.json avatar.skin_tone / avatar.hair_color) and the catalog carries no colour value.
+func TestCatalogPaletteCodesAreDesignTokens(t *testing.T) {
+	var art struct {
+		Avatar struct {
+			SkinTone  map[string]json.RawMessage `json:"skin_tone"`
+			HairColor map[string]json.RawMessage `json:"hair_color"`
+		} `json:"avatar"`
+	}
+	if err := json.Unmarshal(read(t, "design", "game-tokens", "art3d.json"), &art); err != nil {
+		t.Fatal(err)
+	}
+	raw := read(t, "src", "backend", "modules", "game", "seed", "character_catalog.v1.json")
+	p, err := catalog.Parse(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range p.SkinTones {
+		if _, ok := art.Avatar.SkinTone[c.Code]; !ok {
+			t.Errorf("skin tone %s has no token avatar.skin_tone.%s", c.Code, c.Code)
+		}
+	}
+	for _, c := range p.HairColors {
+		if _, ok := art.Avatar.HairColor[c.Code]; !ok {
+			t.Errorf("hair colour %s has no token avatar.hair_color.%s", c.Code, c.Code)
+		}
+	}
+	if bytes.Contains(raw, []byte(`"#`)) {
+		t.Error("the catalog carries a colour value; use a palette key")
+	}
+}

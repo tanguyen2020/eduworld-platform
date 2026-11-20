@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## F070-AC-18 (T028, CHARACTER_SYSTEM §5.2): `avatar_builder.gd` draws an AvatarConfig from the display resources
-## (`resources/items`, `resources/avatar`) — skin tone and hair colour by palette, items on their slot anchors — and,
+## (`resources/items`, `resources/avatar`) — skin tone and hair colour from the avatar palette tokens (T041), items on their slot anchors — and,
 ## when an equipped item has no visual on this client (cosmetic bundle not loaded), shows the default item of the same
 ## slot without crashing. No network.
 
@@ -35,9 +35,8 @@ func test_every_slot_is_drawn_from_its_visual() -> void:
 	assert_array(Array(rig.missing)).is_empty()
 	assert_int(rig.slot_anchor("hair").get_child_count()).is_equal(1)
 	assert_int(rig.slot_anchor("head").get_child_count()).is_equal(0)
-	var skin: Color = ItemVisual.load_appearance("tone_04").tint
-	assert_object(rig.skin_color()).is_equal(skin)
-	assert_object(rig.hair_color()).is_equal(ItemVisual.load_appearance("hair_col_03").tint)
+	assert_object(rig.skin_color()).is_equal(Art3dTokens.AVATAR_SKIN_TONES["tone_04"] as Color)
+	assert_object(rig.hair_color()).is_equal(Art3dTokens.AVATAR_HAIR_COLORS["hair_col_03"] as Color)
 
 
 func test_missing_item_visual_shows_the_default_of_the_same_slot() -> void:
@@ -82,7 +81,7 @@ func test_reapplying_replaces_the_previous_parts() -> void:
 	assert_int(rig.slot_anchor("hair").get_child_count()).is_equal(1)
 	assert_int(rig.slot_anchor("face").get_child_count()).is_equal(0)
 	assert_str(String(rig.shown["hair"])).is_equal("hair_spiky_01")
-	assert_object(rig.hair_color()).is_equal(ItemVisual.load_appearance("hair_col_08").tint)
+	assert_object(rig.hair_color()).is_equal(ItemVisual.appearance_color("hair_col_08"))
 
 
 func test_every_seed_code_has_a_visual() -> void:
@@ -92,6 +91,19 @@ func test_every_seed_code_has_a_visual() -> void:
 		var visual: ItemVisual = ItemVisual.load_item(emote_id)
 		assert_object(visual).override_failure_message(emote_id).is_not_null()
 		assert_str(visual.slot).is_equal(ItemVisual.SLOT_EMOTE)
-	for list: Array[Dictionary] in [catalog.body_types, catalog.skin_tones, catalog.hair_colors]:
+	for code: String in CharacterCatalogModel.codes_of(catalog.body_types):
+		assert_object(ItemVisual.load_appearance(code)).override_failure_message(code).is_not_null()
+	# T041: every skin tone and hair colour of the catalog is a palette token key (no colour resource on the client).
+	for list: Array[Dictionary] in [catalog.skin_tones, catalog.hair_colors]:
 		for code: String in CharacterCatalogModel.codes_of(list):
-			assert_object(ItemVisual.load_appearance(code)).override_failure_message(code).is_not_null()
+			assert_bool(ItemVisual.has_appearance_color(code)).override_failure_message(code).is_true()
+			assert_bool(ResourceLoader.exists("%s/%s.tres" % [ItemVisual.APPEARANCE_DIR, code])).is_false()
+
+
+## T041: a code without a token (catalog newer than the client) draws the neutral colour instead of failing.
+func test_unknown_palette_code_uses_the_neutral_colour() -> void:
+	assert_object(ItemVisual.appearance_color("tone_99")).is_equal(ItemVisual.UNKNOWN_APPEARANCE_COLOR)
+	assert_bool(ItemVisual.has_appearance_color("tone_99")).is_false()
+	var rig: AvatarBuilder = _rig()
+	rig.apply(_config({"skin_tone": "tone_99"}), catalog)
+	assert_object(rig.skin_color()).is_equal(ItemVisual.UNKNOWN_APPEARANCE_COLOR)

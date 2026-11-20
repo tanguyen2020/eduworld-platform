@@ -152,7 +152,7 @@ func test_every_choice_redraws_the_preview_without_a_request() -> void:
 	assert_int(slowest_usec).override_failure_message("preview update %d us" % slowest_usec).is_less(100_000)
 	var tone: String = String(CharacterCatalogModel.codes_of(_model(screen).inventory.catalog.skin_tones)[5])
 	(screen.find_child("SkinTones", true, false).get_child(5) as Button).pressed.emit()
-	assert_object(rig.skin_color()).is_equal(ItemVisual.load_appearance(tone).tint)
+	assert_object(rig.skin_color()).is_equal(ItemVisual.appearance_color(tone))
 
 
 func test_catalog_names_label_the_choices() -> void:

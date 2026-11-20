@@ -55,6 +55,23 @@
       "gold": { "$value": "#FFC83D", "$description": "VFX reward gold." },
       "mint": { "$value": "#5CE1A1", "$description": "VFX correct mint." },
       "magenta": { "$value": "#FF5CC8", "$description": "VFX level-up magenta." }
+    },
+    "avatar": {
+      "$description": "Avatar skin tones and hair colours (CHARACTER_SYSTEM §5.0, F070 T041): art palette of the catalog codes skin_tones/hair_colors, not UI.",
+      "tone-01": { "$value": "#FFDEC4", "$description": "Skin tone 1 (lightest)." },
+      "tone-02": { "$value": "#F5CCAB", "$description": "Skin tone 2." },
+      "tone-03": { "$value": "#DEAD87", "$description": "Skin tone 3." },
+      "tone-04": { "$value": "#C28F66", "$description": "Skin tone 4." },
+      "tone-05": { "$value": "#996B4A", "$description": "Skin tone 5." },
+      "tone-06": { "$value": "#6B4A33", "$description": "Skin tone 6 (darkest)." },
+      "hair-col-01": { "$value": "#1A1717", "$description": "Hair black." },
+      "hair-col-02": { "$value": "#40291A", "$description": "Hair dark brown." },
+      "hair-col-03": { "$value": "#6B4526", "$description": "Hair chestnut." },
+      "hair-col-04": { "$value": "#9E7345", "$description": "Hair honey." },
+      "hair-col-05": { "$value": "#E6C773", "$description": "Hair blond." },
+      "hair-col-06": { "$value": "#B84026", "$description": "Hair ginger." },
+      "hair-col-07": { "$value": "#4073D9", "$description": "Hair blue." },
+      "hair-col-08": { "$value": "#8C59BF", "$description": "Hair purple." }
     }
   },
   "size": {

@@ -176,6 +176,7 @@ Mật độ là tập token ghi đè (`density/*.json`) sinh ra các Theme biế
 | Ánh sáng & môi trường | `env.<zone>.sky_top`, `env.<zone>.fog_color`, `light.sun_color` | `Environment` `.tres` theo zone |
 | VFX | `vfx.correct.gradient`, `vfx.reward.gradient`, `vfx.level_up.gradient` | `Gradient`/`GradientTexture1D` |
 | Độ hiếm | `rarity.common…legendary` (từ shared-tokens) | Màu viền/hào quang item, khung UI |
+| Bảng màu avatar | `avatar.skin_tone.<mã>`, `avatar.hair_color.<mã>` (alias `palette.avatar.*`; khóa = mã `skin_tones`/`hair_colors` của danh mục nhân vật, OQ F070-2) | `Art3dTokens.AVATAR_SKIN_TONES`/`AVATAR_HAIR_COLORS` cho `avatar_builder.gd` và ô màu S02/Tủ đồ |
 
 ### 5.4. UI 2D overlay và UI trong không gian 3D
 
