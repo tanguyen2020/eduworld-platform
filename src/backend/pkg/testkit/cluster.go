@@ -93,8 +93,9 @@ func StartCluster(ctx context.Context, t testing.TB, migrate bool) *Cluster {
 			Networks:       []string{net.Name},
 			NetworkAliases: map[string][]string{net.Name: {"postgres"}},
 			// The entrypoint restarts the server after init scripts: wait for the second "ready" line.
-			WaitingFor: wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).WithStartupTimeout(2 * time.Minute),
+			// The port wait too: Kiri opens the port-forward a moment after the ready log.
+			WaitingFor: wait.ForAll(wait.ForLog("database system is ready to accept connections").WithOccurrence(2),
+				wait.ForListeningPort("5432/tcp")).WithStartupTimeoutDefault(2 * time.Minute),
 		},
 		Started: true,
 	})
@@ -198,8 +199,10 @@ func StartNATS(ctx context.Context, t testing.TB) (testcontainers.Container, str
 func start(ctx context.Context, t testing.TB, image, port string, cmd []string, w wait.Strategy) (testcontainers.Container, string) {
 	t.Helper()
 	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{Image: image, ExposedPorts: []string{port}, Cmd: cmd, WaitingFor: w},
-		Started:          true,
+		// The port wait too: Kiri opens the port-forward a moment after the ready log.
+		ContainerRequest: testcontainers.ContainerRequest{Image: image, ExposedPorts: []string{port}, Cmd: cmd,
+			WaitingFor: wait.ForAll(w, wait.ForExposedPort()).WithStartupTimeoutDefault(time.Minute)},
+		Started: true,
 	})
 	if err != nil {
 		t.Fatalf("start %s: %v", image, err)
