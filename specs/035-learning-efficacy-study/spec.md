@@ -19,7 +19,7 @@
 - Câu hỏi mở 1 (ADR cho hạ tầng A/B) → **Chốt:** bổ sung ADR-0080 (T008) trước khi code US5; không cần ADR riêng.
 - Checklist "PRD chưa có FR riêng" → đã có FR-ANL-017…FR-ANL-023 trong PRD; spec đã dùng.
 
-### Session 2026-11-21 (quyết định khi triển khai — [Proposed], chờ owner xác nhận)
+### Session 2026-11-21 (quyết định khi triển khai — [Confirmed], owner chốt 2026-11-20)
 
 - Đợt kiểm tra tạo mọi ExamSession trong **một** transaction dưới `tenancy.Bypass(efficacy_study)` (có audit); trước mỗi lớp, session tenant của transaction được đặt bằng `set_config('app.tenant_id')` để store của exam engine (F042) ghi đúng tenant — không tách thành nhiều transaction (giữ idempotency và tính nguyên tử của đợt).
 - Công cụ đo hiệu quả không bao giờ được gán cho tenant (F035-AC-04), nên phiên tenant không đọc được chúng qua chính sách RLS của F022: migration thêm policy `efficacy_instrument_read` (chỉ version platform `efficacy_instrument` đã publish/archived) và đường giao đề/chấm của **ExamSession đo hiệu quả** đọc dưới bypass `efficacy_study`; pool, CMS và mọi đường chọn câu vẫn lọc `efficacy_instrument` và gán tenant ở tầng ứng dụng.
