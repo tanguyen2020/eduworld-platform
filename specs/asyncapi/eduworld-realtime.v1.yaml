@@ -534,6 +534,10 @@ components:
       minItems: 3
       maxItems: 3
       description: Vị trí mét [x, y, z], lượng tử hóa 1 cm.
+    PresenceStatus:
+      type: string
+      description: 'Enum presence duy nhất (MULTIPLAYER_GAMEPLAY §5), dùng chung AsyncAPI, PlayerCard và REST; nguồn specs/schemas/common/enums.schema.json.'
+      enum: [offline, online, in_activity, in_match, away]
     PublicPlayer:
       type: object
       description: Thông tin người chơi được phép hiển thị cho người khác (không PII).
@@ -1134,8 +1138,9 @@ components:
                 type: object
                 required: [status]
                 properties:
-                  status: { type: string, enum: [online, away, busy, invisible] }
+                  status: { type: string, enum: [online, in_activity, in_match, away], description: 'Tập con của PresenceStatus (MULTIPLAYER_GAMEPLAY §5); offline chỉ do gateway đặt khi không còn kết nối (F091-AC-22).' }
                   activity: { type: string, enum: [idle, learning, quest, battle, party_lobby, exam] }
+                  hidden: { type: boolean, description: 'Ẩn trạng thái: người không được thấy nhận offline (MULTIPLAYER_GAMEPLAY §5). Vắng = giữ giá trị hiện tại.' }
     PresenceFriendUpdated:
       name: presence.friend.updated
       summary: Chỉ gửi cho bạn bè/party/lớp theo policy; trong exam không lộ chi tiết hoạt động.
@@ -1150,7 +1155,7 @@ components:
                 required: [user_id, status]
                 properties:
                   user_id: { $ref: '#/components/schemas/Uuid' }
-                  status: { type: string, enum: [online, away, busy, offline] }
+                  status: { $ref: '#/components/schemas/PresenceStatus' }
                   activity: { type: string, maxLength: 64 }
                   area_id: { type: string, maxLength: 64 }
 
@@ -2068,6 +2073,7 @@ components:
                 properties:
                   area_id: { type: string, maxLength: 64, description: 'Danh sách chuẩn ở docs/01-game-design/WORLD_DESIGN.md §3: main_hub, practice_zone, social_zone, learning_zone.math|vietnamese|english|science|history, quest_zone.discovery_ocean, exam_zone, challenge_mountain, arena' }
                   spawn_point: { type: string, maxLength: 64 }
+                  follow_user_id: { $ref: '#/components/schemas/Uuid', description: 'Tham gia bạn (SOCIAL_SYSTEM §4.2): vào instance của bạn này nếu là bạn bè, không chặn nhau, cùng partition và còn chỗ; nếu không ROOM_FULL/PERMISSION_DENIED, không lộ vị trí (F091-AC-05).' }
     HubPlayerMove:
       name: hub.player.move
       summary: ≤10 Hz, chỉ khi thay đổi (+1 Hz khi đứng yên). Không ack. Server validate tốc độ/biên.

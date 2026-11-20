@@ -17984,7 +17984,7 @@ components:
         nickname: { type: string, maxLength: 32 }
         level: { type: integer }
         avatar_config: { $ref: '#/components/schemas/AvatarConfig' }
-        presence: { type: string, enum: [online, in_activity, offline] }
+        presence: { type: string, enum: [offline, online, in_activity, in_match, away], description: 'PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)' }
     GameSessionCreate:
       type: object
       required: [client_platform, client_version]

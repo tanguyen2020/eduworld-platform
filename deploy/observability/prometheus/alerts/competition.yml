@@ -1,0 +1,12 @@
+# Alert rules of module competition (F091 T032, REALTIME_ARCHITECTURE §8): room tick budget ≤ 5 ms for a hub of 40,
+# alert when the p99 goes over 20 ms. Loaded by prometheus.yml (rule_files).
+groups:
+  - name: competition-hub
+    rules:
+      - alert: CompetitionRoomTickSlow
+        expr: histogram_quantile(0.99, sum by (le, room_type) (rate(eduworld_room_tick_duration_seconds_bucket[5m]))) > 0.02
+        for: 10m
+        labels: { severity: warning, module: competition }
+        annotations:
+          summary: "Room tick p99 > 20 ms ({{ $labels.room_type }})"
+          description: "Budget ≤ 5 ms per tick for a hub instance of 40 (REALTIME_ARCHITECTURE §8). Check room count per core-api replica."

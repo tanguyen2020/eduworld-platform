@@ -17,6 +17,7 @@ services:
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--web.listen-address=:9095"]
     volumes:
       - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus/alerts:/etc/prometheus/alerts:ro
     ports: ["9095:9095"]
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9095/-/ready | grep -qi ready"]

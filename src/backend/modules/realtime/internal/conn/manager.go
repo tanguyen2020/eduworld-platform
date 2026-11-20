@@ -25,6 +25,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/presence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/protocol"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/ratelimit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/registry"
@@ -61,6 +62,7 @@ type Manager struct {
 	audit     *audit.Publisher
 	metrics   *observability.Metrics
 	validator *protocol.Validator
+	presence  *presence.Service
 	clock     func() time.Time
 	accept    *ratelimit.Bucket
 
@@ -95,6 +97,11 @@ func New(d Deps) (*Manager, error) {
 		clock: d.Now, accept: ratelimit.NewBucket(d.Config.AcceptRate, d.Config.AcceptRate), base: base, stop: stop,
 		conns: map[string]*Session{}}
 	m.hub = subs.NewHub(d.Valkey, m.onHubState)
+	// F091 US3: presence of the connected students (Valkey ew:gateway:presence:*, signal ew.rt.presence.<tenant>).
+	m.presence = presence.New(d.Valkey, d.NATS, d.Config.PresenceTTL, d.Config.Timeout, m.now, func(ctx context.Context, user uuid.UUID) (bool, error) {
+		h, err := m.registry.Holder(ctx, user)
+		return h != nil, err
+	})
 	return m, nil
 }
 
@@ -387,6 +394,9 @@ func (m *Manager) serve(ws *websocket.Conn, c rt.TicketClaims) {
 	s.enqueue(welcome) // first message (seq 1), before any event of the user channel
 	if err := m.hub.Subscribe(ctx, rt.UserChannel(c.UserID), s); err != nil {
 		slog.Warn("realtime: user channel subscribe deferred", "error", err)
+	}
+	if err := m.presence.Connected(ctx, s.presenceCaller()); err != nil { // F091-AC-21
+		slog.Warn("realtime: presence online failed", "error", err)
 	}
 	go s.writeLoop()
 	go s.timers()

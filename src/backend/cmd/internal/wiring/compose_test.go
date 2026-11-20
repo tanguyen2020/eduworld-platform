@@ -28,6 +28,10 @@ import (
 // wiredModules are the modules whose Done features are wired into the binaries (OQ F010-2).
 var wiredModules = []string{"identity", "learning", "game"}
 
+// workerModules are the modules with worker entry points (relay, consumers, jobs): competition has no public HTTP
+// operation yet but runs its consumers and jobs since F091.
+var workerModules = []string{"identity", "learning", "game", "competition"}
+
 // testEnv is a complete configuration of core-api/worker with unreachable endpoints: pools, Valkey and NATS are lazy
 // or test doubles, so composition runs without any container (values are TEST FIXTURES, not secrets).
 func testEnv(t *testing.T) func(string) string {
@@ -223,7 +227,8 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler"},
 		"learning": {"import-jobs", "translation-jobs", "content-scheduled-publish", "attempt-lifecycle", "learning-events-partitions", "regrade-runner",
 			"recommendation-nightly", "assignment-scheduler", "exam-window", "exam-autosubmit", "dashboard-day-close", "read-model-refresh"},
-		"game": {"session-timeout", "curfew-session-closer"},
+		"game":        {"session-timeout", "curfew-session-closer"},
+		"competition": {"close-idle-hub-instances"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {
 		t.Run(profile, func(t *testing.T) {
@@ -233,7 +238,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 			}
 			events, jobsOn := profile != "jobs", profile != "events"
 			relays, consumers, js := declarations(r, module.KindRelay), declarations(r, module.KindConsumer), declarations(r, module.KindJob)
-			for _, m := range wiredModules {
+			for _, m := range workerModules {
 				if d, ok := relays[m+".outbox-relay"]; !ok || d.Active != events {
 					t.Errorf("relay %s: %+v (want active=%v)", m, d, events)
 				}

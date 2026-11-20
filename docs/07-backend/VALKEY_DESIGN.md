@@ -50,7 +50,11 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:rt:room:<room_id>:lease` | STRING owner_node | 10 s | `competition · room` | Ephemeral |
 | `ew:rt:room:<room_id>:ckpt` | STRING (JSON) | 1 h | `competition · battle/coop` | Ephemeral (kết quả cuối ghi PG) |
 | `ew:rt:area:<area_id>:<tenant_id>:<school_id>:<grade_band>:instances` | ZSET room_id → số người | 2 h | `competition · room` | Ephemeral |
-| `ew:presence:user:<user_id>` | HASH {status (enum presence theo [MULTIPLAYER_GAMEPLAY §5](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#5-presence), dùng chung cho AsyncAPI và `PlayerCard`), area_id, room_id, activity, updated_at} | 90 s | `realtime · presence` (area/activity do module gửi qua `ew:rt:user`) | Ephemeral |
+| `ew:rt:room:<room_id>:members` | HASH user_id → JSON {eid, PublicPlayer, school_id, grade_band, game_session_id, node} — chỗ ngồi của room hub (gồm chỗ đang giữ khi mất kết nối), owner dựng lại khi failover (F091) | 2 h (gia hạn) | `competition · room` | Ephemeral |
+| `ew:rt:room:<room_id>:pos:<user_id>` | STRING [x,y,z] vị trí hợp lệ gần nhất (ghi ~1 Hz) — failover và facade khoảng cách của F071 | 5 s | `competition · room` | Ephemeral |
+| `ew:rt:rooms` | ZSET room_id → lần gia hạn lease cuối (ms) — watcher failover tìm room mất owner | Phần tử xóa khi room đóng | `competition · room` | Ephemeral |
+| `ew:rt:user:<user_id>` (module competition) | HASH {room_id, area_id} — hub instance học sinh đang giữ chỗ (vào lại, Tham gia bạn, đổi trang phục) | 2 h | `competition · room` | Ephemeral |
+| `ew:presence:user:<user_id>` | HASH {hidden (0/1, ẩn trạng thái — F091), status (enum presence theo [MULTIPLAYER_GAMEPLAY §5](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#5-presence), dùng chung cho AsyncAPI và `PlayerCard`), area_id, room_id, activity, updated_at} | 90 s | `realtime · presence` (area/activity do module gửi qua `ew:rt:user`) | Ephemeral |
 | `ew:presence:tenant:<tenant_id>:online` | ZSET user_id → last_seen_ms (lọc theo trường bằng presence user) | Tự dọn phần tử > 90 s | `realtime · presence` | Ephemeral |
 | `ew:party:<party_id>` | HASH (state realtime) | 24 h (gia hạn khi hoạt động) | `competition · party` | Rebuildable |
 | `ew:party:<party_id>:members` | HASH user_id → JSON {role, ready, status, joined_at} | 24 h | `competition · party` | Rebuildable |

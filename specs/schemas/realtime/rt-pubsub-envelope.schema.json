@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/realtime/rt-pubsub-envelope.schema.json",
   "title": "RtPubSubEnvelope v1",
-  "description": "Envelope của mọi message publish lên Valkey Pub/Sub cho gateway realtime (F090 research R1): kênh ew:rt:user:<id>, ew:rt:party:<id>, ew:rt:room:<id>:out, ew:chat:fanout:<id>, ew:rt:broadcast, ew:rt:node:<node_id>:in. Module dựng bằng src/backend/pkg/realtime. kind = message: gateway gán seq rồi giao `message` (ServerEnvelope của AsyncAPI không có seq) tới các kết nối local đã đăng ký kênh, lọc theo target; droppable = true cho snapshot/presence (bỏ trước khi hàng đợi gửi đầy, không vào buffer resume). kind = control: lệnh điều khiển kết nối (đóng 4403 khi thu hồi quyền, 4409 khi bị thay). Không PII, không token (AGENTS R14).",
+  "description": "Envelope của mọi message publish lên Valkey Pub/Sub cho gateway realtime (F090 research R1): kênh ew:rt:user:<id>, ew:rt:party:<id>, ew:rt:room:<id>:out, ew:chat:fanout:<id>, ew:rt:broadcast, ew:rt:node:<node_id>:in. Module dựng bằng src/backend/pkg/realtime. kind = message: gateway gán seq rồi giao `message` (ServerEnvelope của AsyncAPI không có seq) tới các kết nối local đã đăng ký kênh, lọc theo target; droppable = true cho snapshot/presence (bỏ trước khi hàng đợi gửi đầy, không vào buffer resume). kind = control: lệnh điều khiển kết nối (đóng 4403 khi thu hồi quyền, 4409 khi bị thay; presence.update: room host của module competition báo area_id/room_id cho presence của gateway, F091-AC-23). kind = bundle: snapshot theo người xem gộp theo gateway node (F091 research R4): mỗi item giao cho kết nối local của user_id tương ứng như một message `bundle.type`. Không PII, không token (AGENTS R14).",
   "type": "object",
   "additionalProperties": false,
   "required": ["v", "kind"],
   "properties": {
     "v": { "const": 1 },
-    "kind": { "type": "string", "enum": ["message", "control"] },
+    "kind": { "type": "string", "enum": ["message", "control", "bundle"] },
     "target": {
       "type": "object",
       "additionalProperties": false,
@@ -31,12 +31,45 @@
         "payload": { "type": "object" }
       }
     },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "items"],
+      "properties": {
+        "type": { "type": "string", "maxLength": 64, "pattern": "^[a-z_]+\\.[a-z_]+\\.[a-z_]+$" },
+        "ts": { "type": "integer", "minimum": 0 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["user_id", "payload"],
+            "properties": {
+              "user_id": { "type": "string", "format": "uuid" },
+              "payload": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
     "control": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["action", "code", "reason"],
+      "required": ["action"],
+      "description": "close cần code + reason; presence.update cần presence (kiểm bởi Envelope.Validate của src/backend/pkg/realtime)",
       "properties": {
-        "action": { "type": "string", "enum": ["close"] },
+        "action": { "type": "string", "enum": ["close", "presence.update"] },
+        "presence": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "presence.update (chỉ trên ew:rt:user:<id>): khu và room hiện tại; null = đã rời khu",
+          "properties": {
+            "area_id": { "type": ["string", "null"], "maxLength": 64 },
+            "room_id": { "type": ["string", "null"], "maxLength": 64 }
+          }
+        },
         "code": { "type": "integer", "enum": [4403, 4409, 4410] },
         "reason": {
           "type": "string",
@@ -48,10 +81,13 @@
   },
   "allOf": [
     { "if": { "properties": { "kind": { "const": "message" } }, "required": ["kind"] }, "then": { "properties": { "message": true }, "required": ["message"] } },
-    { "if": { "properties": { "kind": { "const": "control" } }, "required": ["kind"] }, "then": { "properties": { "control": true }, "required": ["control"] } }
+    { "if": { "properties": { "kind": { "const": "control" } }, "required": ["kind"] }, "then": { "properties": { "control": true }, "required": ["control"] } },
+    { "if": { "properties": { "kind": { "const": "bundle" } }, "required": ["kind"] }, "then": { "properties": { "bundle": true }, "required": ["bundle"] } }
   ],
   "examples": [
     { "v": 1, "kind": "message", "target": { "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001" }, "droppable": false, "message": { "type": "session.session.replaced", "ts": 1763190000123, "payload": { "game_session_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "replaced_at": 1763190000123, "new_device_platform": "android" } } },
-    { "v": 1, "kind": "control", "control": { "action": "close", "code": 4403, "reason": "account_locked" } }
+    { "v": 1, "kind": "control", "control": { "action": "close", "code": 4403, "reason": "account_locked" } },
+    { "v": 1, "kind": "control", "control": { "action": "presence.update", "presence": { "area_id": "main_hub", "room_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009" } } },
+    { "v": 1, "kind": "bundle", "droppable": true, "bundle": { "type": "hub.snapshot.updated", "ts": 1763190000123, "items": [ { "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "payload": { "room_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "tick": 42, "entities": [ { "eid": 2, "p": [1.5, 0, 3.25], "r": 0.5, "a": "walk" } ], "removed": [] } } ] } }
   ]
 }

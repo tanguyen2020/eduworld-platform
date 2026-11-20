@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/realtime/presence-changed.schema.json",
+  "title": "PresenceChanged v1",
+  "description": "Tín hiệu thay đổi presence do gateway realtime phát trên NATS core ew.rt.presence.<tenant_id> (F091 research R3, F091-AC-21): không JetStream, chấp nhận mất (ADR-0004). Consumer: module chat (F095, gửi presence.friend.updated cho bạn bè), module competition (giữ chỗ hub khi mất kết nối, F091-AC-09). Chỉ ID và trạng thái, không PII (AGENTS R14, R16); không bao giờ gửi thẳng cho client (F091-AC-25).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "user_id", "tenant_id", "status", "ts"],
+  "properties": {
+    "v": { "const": 1 },
+    "user_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "status": { "$ref": "../common/enums.schema.json#/$defs/PresenceStatus" },
+    "activity": { "type": "string", "enum": ["idle", "learning", "quest", "battle", "party_lobby", "exam"] },
+    "area_id": { "type": "string", "maxLength": 64 },
+    "room_id": { "type": "string", "maxLength": 64 },
+    "hidden": { "type": "boolean", "description": "Ẩn trạng thái: consumer hiển thị offline với người không được thấy (MULTIPLAYER_GAMEPLAY §5)" },
+    "reason": { "type": "string", "enum": ["connected", "disconnected", "timeout", "status_set", "area_changed"], "description": "Nguyên nhân thay đổi; timeout = đóng 4408 (away) hoặc hết ws_timeout không kết nối lại (offline)" },
+    "ts": { "type": "integer", "minimum": 0, "description": "Epoch ms phía gateway" }
+  },
+  "examples": [
+    { "v": 1, "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000003", "status": "online", "activity": "idle", "area_id": "main_hub", "room_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "hidden": false, "reason": "area_changed", "ts": 1763190000123 }
+  ]
+}

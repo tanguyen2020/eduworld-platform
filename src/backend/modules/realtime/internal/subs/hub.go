@@ -6,17 +6,26 @@ package subs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/valkey-io/valkey-go"
+
+	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
 
 // Receiver gets the messages of its channels; Deliver must not block (it runs on the Pub/Sub goroutine).
 type Receiver interface {
 	Deliver(channel string, data []byte)
+}
+
+// EnvelopeReceiver gets the envelope decoded once per node message (a room snapshot bundle goes to up to 40 local
+// connections, F091-AC-14); invalid envelopes are dropped before any receiver sees them.
+type EnvelopeReceiver interface {
+	DeliverEnvelope(channel string, e *rt.Envelope)
 }
 
 // Hub is the per-node subscription table.
@@ -101,8 +110,26 @@ func (h *Hub) deliver(m valkey.PubSubMessage) {
 	}
 	h.mu.Unlock()
 	data := []byte(m.Message)
+	var env *rt.Envelope
+	decoded := false
 	for _, r := range rs {
-		r.Deliver(m.Channel, data)
+		er, ok := r.(EnvelopeReceiver)
+		if !ok {
+			r.Deliver(m.Channel, data)
+			continue
+		}
+		if !decoded {
+			decoded = true
+			var e rt.Envelope
+			if json.Unmarshal(data, &e) == nil && e.Validate() == nil {
+				env = &e
+			} else {
+				slog.Debug("realtime: invalid pubsub envelope dropped")
+			}
+		}
+		if env != nil {
+			er.DeliverEnvelope(m.Channel, env)
+		}
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/presence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/protocol"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/ratelimit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/resume"
@@ -130,7 +131,39 @@ func (s *Session) Deliver(channel string, data []byte) {
 		slog.Debug("realtime: invalid pubsub envelope dropped", "channel_kind", channelKind(channel))
 		return
 	}
-	a := revocation.Decide(e, s.conn(), channel == rt.UserChannel(s.caller.UserID))
+	s.DeliverEnvelope(channel, &e)
+}
+
+// DeliverEnvelope implements subs.EnvelopeReceiver (envelope decoded once per node message). Never blocks.
+func (s *Session) DeliverEnvelope(channel string, ep *rt.Envelope) {
+	e := *ep
+	userChannel := channel == rt.UserChannel(s.caller.UserID)
+	switch {
+	case e.Kind == rt.KindBundle: // F091-AC-14: the viewer's own snapshot out of the node bundle
+		if p := e.Bundle.Item(s.caller.UserID); p != nil {
+			ts := e.Bundle.Ts
+			if ts == 0 {
+				ts = s.m.now().UnixMilli()
+			}
+			s.enqueue(protocol.Out{Type: e.Bundle.Type, Ts: ts, Payload: p, Droppable: e.Droppable})
+		}
+		return
+	case e.Kind == rt.KindControl && e.Control.Action == rt.ActionPresenceUpdate:
+		// F091-AC-23: area/room from the room host, recorded in presence only (never delivered, F091-AC-25).
+		if userChannel && s.m.presence != nil {
+			p := e.Control.Presence
+			area, room := "", ""
+			if p.AreaID != nil {
+				area = *p.AreaID
+			}
+			if p.RoomID != nil {
+				room = *p.RoomID
+			}
+			go s.presenceDo(func(ctx context.Context) error { return s.m.presence.SetArea(ctx, s.presenceCaller(), area, room) })
+		}
+		return
+	}
+	a := revocation.Decide(e, s.conn(), userChannel)
 	if a.ClearResume {
 		s.clearResume()
 	}
@@ -267,6 +300,9 @@ func (s *Session) heartbeat() {
 	ctx, cancel := context.WithTimeout(s.ctx, time.Second)
 	defer cancel()
 	_ = s.m.registry.Refresh(ctx, s.caller.UserID, s.caller.ConnID)
+	if s.m.presence != nil {
+		_ = s.m.presence.Refresh(ctx, s.presenceCaller()) // presence_ttl (F091-AC-21)
+	}
 }
 
 // readLoop reads client frames until the connection ends.
@@ -366,9 +402,55 @@ func (s *Session) local(env protocol.ClientEnvelope) {
 		s.enqueue(o)
 	case protocol.TypeResume:
 		s.resume(env)
+	case protocol.TypePresenceSet:
+		s.presenceSet(env)
 	default:
-		// presence.status.set: presence belongs to F091 (REALTIME_ARCHITECTURE §2.1 "Presence"); not available yet.
-		s.enqueue(protocol.Failed(env.ID, protocol.CodeUnavailable, "not available", 0, now))
+		s.enqueue(protocol.Failed(env.ID, protocol.CodeUnknownType, "", 0, now))
+	}
+}
+
+// presenceSet applies presence.status.set at the gateway (F091-AC-22): the validator already refused values outside
+// the enum; the service refuses them again (offline is set by the gateway only).
+func (s *Session) presenceSet(env protocol.ClientEnvelope) {
+	var p struct {
+		Status   string `json:"status"`
+		Activity string `json:"activity"`
+		Hidden   *bool  `json:"hidden"`
+	}
+	if json.Unmarshal(env.Payload, &p) != nil {
+		s.protocolError(&protocol.Rejection{Code: protocol.CodeValidationFailed, Ref: env.ID})
+		return
+	}
+	if s.m.presence == nil {
+		s.enqueue(protocol.Failed(env.ID, protocol.CodeUnavailable, "", time.Second, s.m.now()))
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(s.ctx, 2*time.Second)
+		defer cancel()
+		err := s.m.presence.SetStatus(ctx, s.presenceCaller(), p.Status, p.Activity, p.Hidden)
+		now := s.m.now()
+		switch {
+		case errors.Is(err, presence.ErrInvalid):
+			s.protocolError(&protocol.Rejection{Code: protocol.CodeValidationFailed, Ref: env.ID})
+		case err != nil:
+			s.enqueue(protocol.Failed(env.ID, protocol.CodeUnavailable, "", time.Second, now))
+		default:
+			s.enqueue(protocol.Acked(env.ID, nil, now))
+		}
+	}()
+}
+
+func (s *Session) presenceCaller() presence.Caller {
+	return presence.Caller{UserID: s.caller.UserID, TenantID: s.caller.TenantID, SchoolID: s.caller.SchoolID}
+}
+
+// presenceDo runs one presence write with its own deadline (presence is ephemeral: a failure is only logged).
+func (s *Session) presenceDo(fn func(ctx context.Context) error) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(s.ctx), 3*time.Second)
+	defer cancel()
+	if err := fn(ctx); err != nil {
+		slog.Warn("realtime: presence update failed", "error", err)
 	}
 }
 
@@ -573,6 +655,11 @@ func (s *Session) finish() {
 			s.m.hub.Unsubscribe(ctx, t, s)
 		}
 		_ = s.m.registry.Unregister(ctx, s.caller.UserID, s.caller.ConnID)
+		if s.m.presence != nil { // F091-AC-21, AC-24: offline, or away then offline after ws_timeout
+			if err := s.m.presence.Disconnected(ctx, s.presenceCaller(), int(s.closeCode.Load())); err != nil {
+				slog.Warn("realtime: presence disconnect failed", "error", err)
+			}
+		}
 		s.m.remove(s)
 		close(s.done)
 	})

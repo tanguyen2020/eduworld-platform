@@ -55,7 +55,21 @@ func TestEnvelopeMatchesSchema(t *testing.T) {
 	}
 	node := rt.Envelope{V: 1, Kind: rt.KindControl, Target: &rt.Target{ConnID: "c-1"},
 		Control: &rt.Control{Action: "close", Code: rt.CloseReplaced, Reason: "replaced"}}
-	for i, e := range []rt.Envelope{m.ForSession(session), revoke, node} {
+	// F091: presence.update control and the per-node snapshot bundle.
+	presence, err := rt.PresenceUpdate("main_hub", "room-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	left, err := rt.PresenceUpdate("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle := rt.Envelope{V: 1, Kind: rt.KindBundle, Droppable: true, Bundle: &rt.Bundle{Type: "hub.snapshot.updated", Ts: 1,
+		Items: []rt.BundleItem{{UserID: session, Payload: []byte(`{"room_id":"room-1","tick":1,"entities":[]}`)}}}}
+	if bundle.Bundle.Item(session) == nil || bundle.Bundle.Item(uuid.New()) != nil {
+		t.Fatal("bundle item lookup")
+	}
+	for i, e := range []rt.Envelope{m.ForSession(session), revoke, node, presence, left, bundle} {
 		if err := e.Validate(); err != nil {
 			t.Fatalf("%d: %v", i, err)
 		}
@@ -70,6 +84,10 @@ func TestEnvelopeMatchesSchema(t *testing.T) {
 		{V: 1, Kind: rt.KindMessage},
 		{V: 1, Kind: rt.KindControl, Control: &rt.Control{Action: "close", Code: 4403, Reason: "replaced"}},
 		{V: 1, Kind: rt.KindMessage, Message: &rt.Message{Type: "Bad", Payload: []byte(`{}`)}},
+		{V: 1, Kind: rt.KindControl, Control: &rt.Control{Action: rt.ActionPresenceUpdate}},
+		{V: 1, Kind: rt.KindControl, Control: &rt.Control{Action: rt.ActionPresenceUpdate, Code: 4403, Presence: &rt.Presence{}}},
+		{V: 1, Kind: rt.KindBundle, Bundle: &rt.Bundle{Type: "hub.snapshot.updated"}},
+		{V: 1, Kind: rt.KindBundle, Bundle: &rt.Bundle{Type: "hub.snapshot.updated", Items: []rt.BundleItem{{Payload: []byte(`{}`)}}}},
 	}
 	for i, e := range bad {
 		if e.Validate() == nil {

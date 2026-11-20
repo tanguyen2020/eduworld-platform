@@ -2423,9 +2423,12 @@ components:
         presence:
           type: string
           enum:
+            - offline
             - online
             - in_activity
-            - offline
+            - in_match
+            - away
+          description: PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
     InvitationStatus:
       type: string
       enum:

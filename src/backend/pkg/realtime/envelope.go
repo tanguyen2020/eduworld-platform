@@ -16,6 +16,13 @@ import (
 const (
 	KindMessage = "message"
 	KindControl = "control"
+	KindBundle  = "bundle" // per-viewer messages packed per gateway node (F091 research R4)
+)
+
+// Control actions.
+const (
+	ActionClose          = "close"
+	ActionPresenceUpdate = "presence.update" // area/room of the user for the gateway presence (F091-AC-23)
 )
 
 // Close codes of REALTIME_ARCHITECTURE §3.1 carried by control messages.
@@ -33,6 +40,34 @@ type Envelope struct {
 	Droppable bool     `json:"droppable,omitempty"`
 	Message   *Message `json:"message,omitempty"`
 	Control   *Control `json:"control,omitempty"`
+	Bundle    *Bundle  `json:"bundle,omitempty"`
+}
+
+// Bundle carries one message per viewer (snapshot of a hub room for the users of one gateway node): each connection
+// gets only the item of its user, as a message of type Type (F091-AC-14).
+type Bundle struct {
+	Type  string       `json:"type"`
+	Ts    int64        `json:"ts,omitempty"`
+	Items []BundleItem `json:"items"`
+}
+
+// BundleItem is the payload of one viewer.
+type BundleItem struct {
+	UserID  uuid.UUID       `json:"user_id"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+// Item returns the payload for user (nil when the bundle has none).
+func (b *Bundle) Item(user uuid.UUID) json.RawMessage {
+	if b == nil {
+		return nil
+	}
+	for _, it := range b.Items {
+		if it.UserID == user {
+			return it.Payload
+		}
+	}
+	return nil
 }
 
 // Target filters the local receivers of an envelope (nil: every local connection subscribed to the channel).
@@ -50,11 +85,32 @@ type Message struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-// Control is a connection command (close with a code and a reason).
+// Control is a connection command: close with a code and a reason, or presence.update (area and room of the user,
+// sent by the room host of module competition on ew:rt:user:<id>).
 type Control struct {
-	Action string `json:"action"` // close
-	Code   int    `json:"code"`
-	Reason string `json:"reason"`
+	Action   string    `json:"action"` // close | presence.update
+	Code     int       `json:"code,omitempty"`
+	Reason   string    `json:"reason,omitempty"`
+	Presence *Presence `json:"presence,omitempty"`
+}
+
+// Presence is the area and room of a user (nil pointers: left the area).
+type Presence struct {
+	AreaID *string `json:"area_id"`
+	RoomID *string `json:"room_id"`
+}
+
+// PresenceUpdate builds the control presence.update (area and room empty: the user left the hub).
+func PresenceUpdate(area, room string) (Envelope, error) {
+	p := &Presence{}
+	if area != "" {
+		p.AreaID = &area
+	}
+	if room != "" {
+		p.RoomID = &room
+	}
+	e := Envelope{V: 1, Kind: KindControl, Control: &Control{Action: ActionPresenceUpdate, Presence: p}}
+	return e, e.Validate()
 }
 
 var typeRe = regexp.MustCompile(`^[a-z_]+\.[a-z_]+\.[a-z_]+$`)
@@ -87,13 +143,28 @@ func (e Envelope) Validate() error {
 		if e.Control == nil {
 			return fmt.Errorf("%w: control", ErrInvalidEnvelope)
 		}
+	case KindBundle:
+		b := e.Bundle
+		if b == nil || !typeRe.MatchString(b.Type) || len(b.Type) > 64 || len(b.Items) == 0 || len(b.Items) > 500 {
+			return fmt.Errorf("%w: bundle", ErrInvalidEnvelope)
+		}
+		for _, it := range b.Items {
+			if it.UserID == uuid.Nil || len(it.Payload) == 0 || it.Payload[0] != '{' {
+				return fmt.Errorf("%w: bundle item", ErrInvalidEnvelope)
+			}
+		}
 	default:
 		return fmt.Errorf("%w: kind", ErrInvalidEnvelope)
 	}
 	if c := e.Control; c != nil {
-		ok := c.Action == "close" && ((c.Code == CloseRevoked && revocationReasons[c.Reason]) ||
+		ok := c.Action == ActionClose && c.Presence == nil && ((c.Code == CloseRevoked && revocationReasons[c.Reason]) ||
 			(c.Code == CloseReplaced && c.Reason == "replaced") ||
 			(c.Code == CloseSessionDone && (c.Reason == "curfew" || c.Reason == "daily_limit")))
+		if c.Action == ActionPresenceUpdate {
+			p := c.Presence
+			ok = p != nil && c.Code == 0 && c.Reason == "" && (p.AreaID == nil || len(*p.AreaID) <= 64) &&
+				(p.RoomID == nil || len(*p.RoomID) <= 64)
+		}
 		if !ok {
 			return fmt.Errorf("%w: control", ErrInvalidEnvelope)
 		}

@@ -43,6 +43,7 @@ const (
 	TypePong          = "system.heartbeat.pong"
 	TypePing          = "system.heartbeat.ping"
 	TypeResume        = "system.session.resume"
+	TypePresenceSet   = "presence.status.set" // handled by the gateway (F091-AC-22)
 	TypeResumed       = "system.session.resumed"
 	TypeResumeFailed  = "system.session.resume_failed"
 	TypeAcked         = "system.command.acked"

@@ -15,7 +15,7 @@
 |---|---|---|---|
 | Chat, typing, receipts, unread | Lệnh + fan-out | module chat | Lệnh: NATS request `ew.cmd.chat.*`; giao: Valkey `ew:chat:fanout:<channel>`, `ew:rt:user:<id>` |
 | Notification | Fan-out | module phát (module chat cho mention/tin; các module khác cho sự kiện của mình) | Valkey `ew:rt:user:<id>` |
-| Presence (online/area/activity) | Heartbeat + fan-out | realtime (online/offline) + module gửi area/activity | Valkey `ew:presence:*`, `ew:rt:user:<friend>` |
+| Presence (online/area/activity) | Heartbeat + fan-out | realtime (online/offline, `presence.status.set`) + room host gửi area/room bằng control `presence.update` trên `ew:rt:user:<id>` (F091) | Valkey `ew:presence:*`; mỗi thay đổi một tín hiệu NATS core `ew.rt.presence.<tenant_id>` (`specs/schemas/realtime/presence-changed.schema.json`, không JetStream, chấp nhận mất) cho module chat (F095) và room host (giữ chỗ hub khi mất kết nối); không gửi presence cho client trong F091 |
 | Party / Party Lobby | Lệnh + sự kiện | module competition | NATS request `ew.cmd.competition.party.*`; sự kiện fan-out tới `ew:rt:user:<member_id>` của từng thành viên |
 | Matchmaking events | Push trạng thái ticket/proposal | module competition (matchmaker trong profile `worker-jobs`) | NATS request `ew.cmd.competition.matchmaking.*`; Valkey `ew:rt:user:<id>` |
 | Hub sync | Input ≤10 Hz, snapshot 10 Hz | module competition (room host trong `core-api` giữ hub instance, state trong Valkey) | Input: NATS core `ew.in.room.<room_id>` (không request/reply); output: Valkey `ew:rt:room:<id>:out` |
@@ -229,7 +229,7 @@ ew:rt:room:<room_id>:lease  STRING owner_instance  EX 10   (gia hạn mỗi 3s b
 ew:rt:room:<room_id>:ckpt   STRING JSON checkpoint  EX 3600
 ```
 
-- Tạo room: module competition (trong `core-api`) xử lý lệnh, ghi room/match vào `eduworld_competition`, chọn owner = replica `core-api` có ít room nhất (ZSET tải `ew:cmp:instances`) → `SET lease NX`; replica owner subscribe NATS `ew.in.room.<room_id>` và `ew.cmd.competition.room.<room_id>.>` (queue group theo room).
+- Tạo room: module competition (trong `core-api`) xử lý lệnh, ghi room/match vào `eduworld_competition`, chọn owner = replica `core-api` có ít room nhất (ZSET tải `ew:cmp:instances`) → `SET lease NX`; replica owner subscribe NATS `ew.in.room.<room_id>` và `ew.int.competition.room.<room_id>.>` (thao tác nội bộ giữa replica: join/leave/emote/appearance — nằm ngoài `ew.cmd.>`/`ew.in.>` mà user NATS của gateway được publish). Hub instance (F091) [Proposed]: owner = replica xử lý lệnh tạo room; bản ghi phân phối `ew:rt:rooms` (lần gia hạn lease) cho watcher failover.
 - Owner mất lease (replica `core-api` chết hoặc bị thay khi rolling update): replica khác phát hiện qua watcher `SET lease NX` để nhận quyền.
   - **Hub instance:** state tái tạo được (vị trí từ input client gửi lại) → client nhận `hub.instance.migrated`.
   - **Battle/Co-op:** checkpoint sau mỗi chuyển trạng thái (câu hiện tại, điểm tạm, deadline). Owner mới khôi phục từ checkpoint; câu đang dở được **làm lại**. Không có checkpoint → match `aborted`, không tính rating ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)).

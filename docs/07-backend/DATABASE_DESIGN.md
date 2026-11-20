@@ -420,8 +420,8 @@ Nguồn: [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md). Bảng
 | `party_members` | `party_id`, `student_id`, `school_id`, `role`, `joined_at`, `left_at`, `left_reason` | **UNIQUE `(student_id) WHERE left_at IS NULL`** (1 active party/học sinh); **UNIQUE `(party_id, student_id) WHERE left_at IS NULL`** (chống duplicate membership) |
 | `party_invitations` | `invitation_id`, `party_id`, `school_id`, `inviter_id`, `invitee_id`, `status`, `expires_at`, `created_at`, `responded_at` | UNIQUE `(party_id, invitee_id) WHERE status='pending'` |
 | `party_activities` | `party_activity_id`, `party_id`, `activity_type`, `activity_ref`, `room_id`, `started_at`, `ended_at`, `result_summary jsonb` | lịch sử |
-| `rooms` | `room_id`, `room_type`, `area_id`, `school_id` (null cho match liên trường), `capacity`, `status`, `created_at`, `closed_at` | bản ghi tóm tắt; state live trong Valkey |
-| `session_memberships` | `room_id`, `student_id`, `school_id`, `joined_at`, `left_at`, `disconnects` | |
+| `rooms` | `room_id`, `room_type`, `area_id`, `school_id` (null cho match liên trường), `grade_band` (hub, F091), `capacity`, `status`, `created_at`, `closed_at` | bản ghi tóm tắt; state live trong bộ nhớ room host + registry Valkey; idx `rooms_partition_open_idx (tenant_id, area_id, school_id, grade_band) WHERE status = 'open'` |
+| `session_memberships` | `membership_id`, `room_id`, `room_type`, `student_id`, `school_id`, `game_session_id`, `party_id?`, `match_id?`, `encounter_id?`, `joined_at`, `left_at`, `leave_reason`, `disconnects` ([MULTIPLAYER_GAMEPLAY §10](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)) | UNIQUE `(room_id, student_id) WHERE left_at IS NULL`; `left_at`/`leave_reason` ghi một lần (trigger); hub chỉ ghi khi `audit_hub_membership` bật |
 
 ### 2.10. `competition` · DB `eduworld_competition`
 
@@ -568,7 +568,9 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 | `ref.provinces` | learning, game | identity · `province.updated` | `code varchar(64)`, `country_code varchar(2)`, `name_i18n jsonb`, `status varchar(64)` (báo cáo theo tỉnh) |
 | `ref.students` | learning, game, competition, chat | identity · `student.synced`, `student.cleaned_up`, `student.restored`, `user.status_changed` | `student_id`, `tenant_id`, `school_id`, `grade_level`, `status`, `deleted_at` |
 | `ref.enrollments` | learning, **game**, competition, chat | identity · `enrollment.changed` | `student_id`, `class_id`, `tenant_id`, `status`, `start_date`, `end_date` |
-| `ref.player_profiles` | competition, chat | game · `game_profile.updated` | `student_id`, `tenant_id`, `nickname varchar(32)`, `avatar_thumb_key varchar(512)`, `level` |
+| `ref.player_profiles` | competition, chat | game · `game_profile.updated` | `student_id`, `tenant_id`, `nickname varchar(32)`, `avatar_thumb_key varchar(512)`, `level`, `avatar_config jsonb` (≤ 4 KB, competition — hub F091) |
+| `ref.world_areas` | competition | game · `content.published`/`content.unpublished` (`item_type = world_area`, owner F071/F078) | `area_id varchar(64)` PK, `capacity` (1–40), `max_speed_mps numeric(5,2)`, `bounds jsonb` (`{min,max}` ≤ 16 KB), `spawn_points jsonb` (≤ 8 KB), `allowed_grade_bands varchar(64)[]`, `requires_unlock`, `status`, `source_version`; nội dung platform (G, không `tenant_id`, chỉ `competition_platform` ghi) — tạo ở F091, consumer thêm khi F071 chốt payload |
+| `ref.area_unlocks` | competition | game · `world.area_unlocked` (owner F071) | `tenant_id`, `student_id`, `area_id varchar(64)`, `unlocked_at`, `source_version`; PK `(student_id, area_id)` — tạo ở F091 |
 | `ref.parties` | chat | competition · `party.created/disbanded`, `party.member_joined/left` | `party_id`, `tenant_id`, `member_ids uuid[]`, `status` |
 | `ref.mastery_summary` | game | learning · `learning_objective.progressed` | `student_id`, `tenant_id`, `objective_id`, `level varchar(64)`, `value numeric(5,4)`, `source_version bigint`; PK `(student_id, objective_id)` (mở khóa khu/quest theo mastery) |
 | `ref.friendships` | competition | chat · `friend.added`, `friend.removed` | `user_low_id`, `user_high_id` (chuẩn hóa thứ tự như `social.friendships`), `tenant_id`, `active boolean`, `source_version bigint`; PK `(user_low_id, user_high_id)` (ưu tiên bạn bè trong hub, mời party) — tạo ở F091, F100/F104 chỉ đọc |

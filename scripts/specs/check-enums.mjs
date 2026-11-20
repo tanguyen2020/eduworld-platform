@@ -15,7 +15,7 @@ const yaml = require('js-yaml');
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
-const NAMES = ['QuestionType', 'ActivityType', 'FeedbackTiming', 'ResultRelease', 'AttemptMode', 'AttemptStatus', 'LearningContentType'];
+const NAMES = ['QuestionType', 'ActivityType', 'FeedbackTiming', 'ResultRelease', 'AttemptMode', 'AttemptStatus', 'LearningContentType', 'PresenceStatus'];
 const SOURCE = 'specs/schemas/common/enums.schema.json';
 const TARGETS = [
   'specs/openapi/eduworld-api.v1.yaml',

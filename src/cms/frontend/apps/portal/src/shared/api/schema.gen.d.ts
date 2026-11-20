@@ -12936,8 +12936,11 @@ export interface components {
             avatar_config?: components["schemas"]["AvatarConfig"];
             level?: number;
             nickname: string;
-            /** @enum {string} */
-            presence?: "online" | "in_activity" | "offline";
+            /**
+             * @description PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
+             * @enum {string}
+             */
+            presence?: "offline" | "online" | "in_activity" | "in_match" | "away";
             user_id: components["schemas"]["Uuid"];
         };
         PlayerClass: {
