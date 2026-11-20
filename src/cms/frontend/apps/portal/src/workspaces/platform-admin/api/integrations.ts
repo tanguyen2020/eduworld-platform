@@ -2,7 +2,7 @@
 // tenant (listSisConnections: `tenant_ids[]`, `status`, cursor), their schools (listSisConnectionSchools) and sync runs
 // (listSisSyncRuns). Responses carry no secret (`has_secret` only, F011-AC-27/F017-AC-04) and the screens render only
 // schema fields. getIntegrationOverview (OQ F059-2 resolved 2026-11-20): Keycloak issuer/realm/clients, platform MFA,
-// APISIX gateway URLs (null = not configured; route groups not provided — OQ F059-12), SIS counts by status, all from
+// APISIX gateway URLs (null = not configured) and route groups (generated from route-as-code, OQ F059-12), SIS counts by status, all from
 // the server configuration without any secret. No write operation here.
 import { useQuery } from '@tanstack/react-query';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';

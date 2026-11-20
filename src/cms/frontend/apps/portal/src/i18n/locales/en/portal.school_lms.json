@@ -262,6 +262,11 @@
     "initialRole": "Initial role",
     "roleRequired": "Select a role.",
     "searchHint": "Name, username, email",
+    "changeEmail": "Change email",
+    "changeEmailTitle": "Change the email of {{name}}",
+    "emailChanged": "Email changed.",
+    "emailUnverifiedNote": "The new email stays unverified on the sign-in system (SSO) until the user confirms it. The username cannot change; create a new account for another username.",
+    "reloaded": "The account was just changed by someone else; the list was reloaded.",
     "takenHint": "If this is the same person working in another unit, grant a role to the existing account instead of creating a new one."
   },
   "userRoles": {
@@ -361,6 +366,19 @@
     "mustCover": "The school window must contain the whole EduWorld curfew (it can only be extended).",
     "clear": "Remove the school window",
     "reloaded": "The settings were just changed by someone else; the new values were reloaded."
+  },
+  "dailyLimit": {
+    "title": "Daily play limit",
+    "current": "Current limit",
+    "off": "Off",
+    "minutes": "{{count}} minutes per day",
+    "common": "Not applied to the common tenant",
+    "note": "Applies to every student of the school, on the total game time of the day (Vietnam time). At the limit students are warned, their session ends and they can come back from 00:00 the next day.",
+    "edit": "Change the play limit",
+    "enabled": "Limit on",
+    "limit": "Minutes per day",
+    "unit": "min",
+    "range": "From {{min}} to {{max}} minutes."
   },
   "cleanup": {
     "tab": "Students to be cleaned up",

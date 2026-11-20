@@ -1,8 +1,9 @@
 // Tab "Tenant được gán" (F057 T021, F057-AC-05/06): listTenantAssignments of one platform record (cursor), button
 // "Gán cho tenant" (AssignToTenantsDialog) and per-tenant "Gỡ gán" after a confirmation stating that learning history
-// and assigned work are kept (ADMIN_PORTAL §9), then unassignFromTenants (optional reason ≤ 500, Idempotency-Key).
+// and assigned work are kept (ADMIN_PORTAL §9), then unassignFromTenants (optional reason ≤ 500, Idempotency-Key); the
+// checkbox "Bỏ luôn quy tắc gán mặc định" sends `remove_default: true` (OQ F045-9, F057 T054).
 // Exported for the record pages of workspaces A/B.
-import { App as AntApp, Button, Space, Table } from 'antd';
+import { App as AntApp, Button, Checkbox, Space, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +24,7 @@ export function AssignedTenantsTab({ resourceType, resourceId }: { resourceType:
   const unassign = useUnassign();
   const [assignOpen, setAssignOpen] = useState(false);
   const [removing, setRemoving] = useState<TenantAssignment | null>(null);
+  const [removeDefault, setRemoveDefault] = useState(false);
 
   const columns: ColumnsType<TenantAssignment> = [
     { key: 'tenant', title: t('platform.common.tenant'), render: (_, r) => r.tenant_name ?? r.tenant_id },
@@ -64,22 +66,32 @@ export function AssignedTenantsTab({ resourceType, resourceId }: { resourceType:
       <ReasonDialog
         open={!!removing}
         title={removing ? t('platform.assign.unassignTitle', { name: removing.tenant_name ?? removing.tenant_id }) : ''}
-        description={t('platform.assign.unassignContent')}
+        description={
+          <Space direction="vertical" size="small">
+            <span>{t('platform.assign.unassignContent')}</span>
+            <Checkbox checked={removeDefault} onChange={(e) => setRemoveDefault(e.target.checked)}>
+              {t('platform.assign.removeDefault')}
+            </Checkbox>
+            <Typography.Text type="secondary">{t('platform.assign.removeDefaultHint')}</Typography.Text>
+          </Space>
+        }
         maxLength={LIMITS.unassignReason.maxLength}
         confirmLoading={unassign.isPending}
         error={unassign.error ? <ProblemMessage error={unassign.error} /> : null}
         onCancel={() => {
           setRemoving(null);
+          setRemoveDefault(false);
           unassign.reset();
         }}
         onSubmit={(reason) =>
           removing &&
           unassign.mutate(
-            { resource_type: resourceType, resource_id: resourceId, tenant_ids: [removing.tenant_id], reason },
+            { resource_type: resourceType, resource_id: resourceId, tenant_ids: [removing.tenant_id], reason, ...(removeDefault ? { remove_default: true } : {}) },
             {
               onSuccess: () => {
                 message.success(t('platform.assign.unassigned'));
                 setRemoving(null);
+                setRemoveDefault(false);
               },
             },
           )

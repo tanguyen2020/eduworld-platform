@@ -92,7 +92,9 @@
     "unassign": "Gỡ gán",
     "unassignTitle": "Gỡ gán khỏi {{name}}?",
     "unassignContent": "Tenant sẽ không còn thấy dữ liệu này. Lịch sử học tập và bài đã giao giữ nguyên.",
-    "unassigned": "Đã gỡ gán."
+    "unassigned": "Đã gỡ gán.",
+    "removeDefault": "Bỏ luôn quy tắc gán mặc định cho tenant mới",
+    "removeDefaultHint": "Tenant tạo sau sẽ không còn được gán tự động dữ liệu này."
   },
   "clone": {
     "stepSource": "Nguồn",
@@ -583,6 +585,10 @@
     "notConfigured": "Chưa cấu hình",
     "routeGroups": "Nhóm route (prefix → service)",
     "noData": "Chưa có dữ liệu",
+    "routePrefix": "Prefix",
+    "routeGateway": "Gateway",
+    "routeService": "Service",
+    "gatewayKind": { "public": "Public", "internal": "Nội bộ" },
     "connectionsTotal": "Tổng số kết nối",
     "connectionsByStatus": "Theo trạng thái",
     "generatedAt": "Số liệu lúc {{at}}",

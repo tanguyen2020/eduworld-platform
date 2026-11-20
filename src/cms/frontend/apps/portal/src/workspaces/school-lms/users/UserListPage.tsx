@@ -1,6 +1,6 @@
 // "Người dùng" (F052 T032, F052-AC-12, F052-AC-13, F052-AC-16): listTenantUsers filtered by q / type / school / role;
 // students are read-only with the "SIS" tag and never get a portal-role action (ADR-0066); staff open their UserRole
-// panel. "Thêm nhân sự" behind ActionGate edit_users. Roles offered come from grantableRoles (display only).
+// panel and, with edit_users, "Đổi email" (OQ F012-1). "Thêm nhân sự" behind ActionGate edit_users. Roles offered come from grantableRoles (display only).
 import { Button, Flex, Form, Input, Select, Space } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ import { SchoolSelect } from '../common/SchoolSelect';
 import { SourceTag, StatusTag } from '../common/ui';
 import { useRoleList } from '../roles/useRoles';
 import { grantableRoles, grantMode } from './canGrant';
+import { ChangeEmailDialog } from './ChangeEmailDialog';
 import { CreateStaffForm } from './CreateStaffForm';
 import { UserRolesPanel } from './UserRolesPanel';
 import { useUserList, type User, type UserFilters } from './useUsers';
@@ -29,6 +30,7 @@ export function UserListPage() {
   const mode = grantMode(useMyPermissions().data?.roles);
   const [adding, setAdding] = useState(false);
   const [selected, setSelected] = useState<User | null>(null);
+  const [emailOf, setEmailOf] = useState<User | null>(null);
   const columns: ColumnType<User>[] = [
     { key: 'title', title: t('portal.school_lms.users.displayName'), render: (_, u) => u.display_name ?? u.username },
     { key: 'username', title: t('portal.school_lms.users.username'), dataIndex: 'username' },
@@ -42,11 +44,18 @@ export function UserListPage() {
       title: t('portal.school_lms.common.actions'),
       render: (_, u) =>
         u.user_type === 'staff' ? (
-          <ActionGate actionKey="action.school_lms.access_control.view_user_roles">
-            <Button size="small" onClick={() => setSelected(u)}>
-              {t('portal.school_lms.userRoles.manage')}
-            </Button>
-          </ActionGate>
+          <Space size="small" wrap>
+            <ActionGate actionKey="action.school_lms.access_control.view_user_roles">
+              <Button size="small" onClick={() => setSelected(u)}>
+                {t('portal.school_lms.userRoles.manage')}
+              </Button>
+            </ActionGate>
+            <ActionGate actionKey="action.school_lms.access_control.edit_users">
+              <Button size="small" onClick={() => setEmailOf(u)}>
+                {t('portal.school_lms.users.changeEmail')}
+              </Button>
+            </ActionGate>
+          </Space>
         ) : null,
     },
   ];
@@ -88,6 +97,7 @@ export function UserListPage() {
         onLoadMore={users.loadMore}
       />
       {adding ? <CreateStaffForm open roles={grantable} mode={mode} onClose={() => setAdding(false)} /> : null}
+      {emailOf ? <ChangeEmailDialog user={emailOf} onClose={() => setEmailOf(null)} /> : null}
       {selected ? <UserRolesPanel user={selected} roles={grantable} mode={mode} onClose={() => setSelected(null)} /> : null}
     </Space>
   );

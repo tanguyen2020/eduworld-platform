@@ -279,7 +279,15 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
           // outside the schema (must never be rendered, F059-AC-23)
           client_secret: 'kc-secret-should-not-show',
         },
-        apisix: { public_base_url: 'https://api.eduworld.local', internal_base_url: null },
+        apisix: {
+          public_base_url: 'https://api.eduworld.local',
+          internal_base_url: null,
+          route_groups: [
+            { prefix: '/api/v1/auth/', gateway: 'public', service: 'core-api' },
+            { prefix: '/realtime/v1', gateway: 'public', service: 'realtime' },
+            { prefix: '/api/v1/admin/', gateway: 'internal', service: 'core-api' },
+          ],
+        },
         sis: { connections_total: 3, connections_by_status: { active: 2, auth_error: 1 } },
       });
     }

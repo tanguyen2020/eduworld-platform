@@ -1,5 +1,5 @@
 // F059 T044/T045/T047/T048/T057 — F059-AC-22…25, F059-AC-28 (TC-CMS-AUTHZ-05, TC-CMS-WS-02, TC-CMS-MENU-02):
-// Integrations read only (Keycloak/APISIX reference from getIntegrationOverview, route groups "Chưa có dữ liệu" — OQ
+// Integrations read only (Keycloak/APISIX reference from getIntegrationOverview, route groups prefix → gateway → service — OQ
 // F059-12; SIS connections with schools and
 // sync runs; no input that writes, no secret/credential/token even when the response carries fields outside the
 // schema); F059 screens are platform-only (403 page, chunk D not loaded for ad.truong.a / cm.noidung / sm.antoan);
@@ -23,7 +23,7 @@ afterEach(() => {
 const F059_URLS = ['/platform-admin/access-control', '/platform-admin/audit-logs', '/platform-admin/student-activity', '/platform-admin/feature-toggles', '/platform-admin/integrations'];
 
 describe('Tích hợp chỉ xem (F059-AC-22/23)', () => {
-  it('reference tab shows getIntegrationOverview (route groups "Chưa có dữ liệu"); SIS tab lists connections, schools, runs; no secret, no write input', async () => {
+  it('reference tab shows getIntegrationOverview (route groups prefix → gateway → service, OQ F059-12); SIS tab lists connections, schools, runs; no secret, no write input', async () => {
     const { backend, user } = await renderAccess('/platform-admin/integrations');
     expect(await screen.findByText('https://sso.eduworld.local/realms/eduworld')).toBeInTheDocument();
     expect(backend.calls('GET', '/admin/integrations')[0]!.headers['x-tenant-id']).toBeUndefined();
@@ -33,7 +33,13 @@ describe('Tích hợp chỉ xem (F059-AC-22/23)', () => {
     expect(screen.getByText('900 giây')).toBeInTheDocument();
     expect(screen.getByText('https://api.eduworld.local')).toBeInTheDocument();
     expect(screen.getByText('Chưa cấu hình')).toBeInTheDocument();
-    expect(screen.getByText('Chưa có dữ liệu')).toBeInTheDocument();
+    const groups = within(screen.getByTestId('route-groups'));
+    expect(groups.getByText('/api/v1/admin/')).toBeInTheDocument();
+    expect(groups.getByText('/realtime/v1')).toBeInTheDocument();
+    expect(groups.getByText('realtime')).toBeInTheDocument();
+    expect(groups.getAllByText('Public').length).toBe(2);
+    expect(groups.getByText('Nội bộ')).toBeInTheDocument();
+    expect(screen.queryByText('Chưa có dữ liệu')).toBeNull();
     expect(screen.getByText('Lỗi xác thực: 1')).toBeInTheDocument();
     expect(document.body.innerHTML).not.toContain('kc-secret-should-not-show');
     await user.click(screen.getByRole('tab', { name: 'SIS' }));

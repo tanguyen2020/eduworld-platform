@@ -1,6 +1,7 @@
 // Users of the tenant (F052 T032, T033; F052-AC-12, F052-AC-13): listTenantUsers (q, user_type, school_id, role_code),
-// createTenantUser (Idempotency-Key per intent). Duplicate username/email is decided by the server (409).
-import { useQueryClient } from '@tanstack/react-query';
+// createTenantUser (Idempotency-Key per intent), updateTenantUser email (If-Match = W/"<version>" of the row, OQ F012-1).
+// Duplicate username/email is decided by the server (409).
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { PAGE_SIZE, qk, useApi, usePagedList, type Schemas } from '../common/api';
 import { useSchoolLmsScope } from '../common/scope';
@@ -39,6 +40,24 @@ export function useUserList(f: UserFilters) {
       ),
     scope.ready,
   );
+}
+
+/** updateTenantUser with the email only (the username never changes, OQ F012-1); the list reloads on success and on 412. */
+export function useUpdateStaffEmail() {
+  const api = useApi();
+  const scope = useSchoolLmsScope();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ user, email }: { user: User; email: string }) =>
+      api.call<User>(
+        api.client.PATCH('/tenant/users/{user_id}', {
+          params: { path: { user_id: user.user_id } },
+          body: { email },
+          headers: { ...scope.headers, ...(user.version ? { 'If-Match': `W/"${user.version}"` } : {}) },
+        }),
+      ),
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['school-lms', 'users', scope.key] }),
+  });
 }
 
 export function useCreateStaff() {

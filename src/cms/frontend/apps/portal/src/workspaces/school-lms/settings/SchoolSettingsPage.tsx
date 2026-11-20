@@ -1,6 +1,6 @@
 // School settings (F052 T042, F052-AC-22, F052-AC-29, F052-AC-30): access hours, class/school leaderboard,
 // `student_club_creation` — updateSchoolSettings (JSON Merge Patch of changed fields, If-Match) with errors at the
-// field — and the curfew card. A school of the `common` tenant (virtual school) shows only the platform curfew.
+// field — the curfew card and the daily play limit card (OQ-17). A school of the `common` tenant (virtual school) shows only the platform curfew.
 import { App, Button, Card, Form, Space, Spin, Switch } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { SchoolSelect } from '../common/SchoolSelect';
 import { useSchoolList } from '../schools/useSchools';
 import { AllowedHoursField } from './AllowedHoursField';
 import { CurfewSettingsCard } from './CurfewSettingsCard';
+import { DailyPlayLimitCard } from './DailyPlayLimitCard';
 import { useSchoolSettings, useUpdateSchoolSettings, type SchoolSettings } from './useSettings';
 
 type PolicyForm = Pick<SchoolSettings, 'allowed_hours' | 'class_leaderboard_enabled' | 'school_leaderboard_enabled' | 'student_club_creation'>;
@@ -82,6 +83,7 @@ export function SchoolSettingsPage() {
       {schoolId && q.data ? (
         <>
           <CurfewSettingsCard key={`${schoolId}-${q.dataUpdatedAt}`} schoolId={schoolId} settings={q.data} isCommon={!!school?.is_virtual} onReload={() => void q.refetch()} />
+          <DailyPlayLimitCard key={`d-${schoolId}-${q.dataUpdatedAt}`} schoolId={schoolId} settings={q.data} isCommon={!!school?.is_virtual} onReload={() => void q.refetch()} />
           <SchoolPolicy key={`p-${schoolId}-${q.dataUpdatedAt}`} schoolId={schoolId} settings={q.data} />
         </>
       ) : null}

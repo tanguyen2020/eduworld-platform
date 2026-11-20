@@ -92,7 +92,9 @@
     "unassign": "Unassign",
     "unassignTitle": "Unassign from {{name}}?",
     "unassignContent": "The tenant will no longer see this data. Learning history and existing assignments are kept.",
-    "unassigned": "Unassigned."
+    "unassigned": "Unassigned.",
+    "removeDefault": "Also remove the default assignment rule for new tenants",
+    "removeDefaultHint": "Tenants created later will no longer get this data automatically."
   },
   "clone": {
     "stepSource": "Source",
@@ -583,6 +585,10 @@
     "notConfigured": "Not configured",
     "routeGroups": "Route groups (prefix → service)",
     "noData": "No data yet",
+    "routePrefix": "Prefix",
+    "routeGateway": "Gateway",
+    "routeService": "Service",
+    "gatewayKind": { "public": "Public", "internal": "Internal" },
     "connectionsTotal": "Connections",
     "connectionsByStatus": "By status",
     "generatedAt": "Figures as of {{at}}",

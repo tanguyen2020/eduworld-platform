@@ -95,5 +95,14 @@ describe('Gỡ gán (F057-AC-06)', () => {
     expect(req.headers['idempotency-key']).toMatch(UUIDV7);
     await waitFor(() => expect(screen.queryByText('Phòng GD Demo')).toBeNull());
     expect(screen.getByText('TH Demo A')).toBeInTheDocument();
+    // OQ F045-9 (F057 T054): the checkbox also removes the default assignment rule (remove_default: true).
+    await user.click(within((await screen.findByText('TH Demo A')).closest('tr')!).getByRole('button', { name: 'Gỡ gán' }));
+    const second = await screen.findByRole('dialog');
+    await user.click(within(second).getByRole('checkbox', { name: 'Bỏ luôn quy tắc gán mặc định cho tenant mới' }));
+    fireEvent.change(within(second).getByLabelText('Lý do'), { target: { value: 'Bỏ gán mặc định' } });
+    await user.click(within(second).getByRole('button', { name: 'Xác nhận' }));
+    await waitFor(() => expect(backend.calls('DELETE', '/admin/tenant-assignments')).toHaveLength(2));
+    expect(backend.calls('DELETE', '/admin/tenant-assignments')[1]!.body).toEqual({ resource_type: 'question_set', resource_id: IDS.questionSet,
+      tenant_ids: [TENANTS.thDemoA.tenant_id], reason: 'Bỏ gán mặc định', remove_default: true });
   });
 });

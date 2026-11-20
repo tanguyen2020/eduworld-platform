@@ -262,7 +262,12 @@
     "initialRole": "Role ban đầu",
     "roleRequired": "Chọn role.",
     "searchHint": "Tên, tên đăng nhập, email",
-    "takenHint": "Nếu đây là cùng một người đang làm ở đơn vị khác, hãy gán role cho tài khoản sẵn có thay vì tạo tài khoản mới."
+    "takenHint": "Nếu đây là cùng một người đang làm ở đơn vị khác, hãy gán role cho tài khoản sẵn có thay vì tạo tài khoản mới.",
+    "changeEmail": "Đổi email",
+    "changeEmailTitle": "Đổi email của {{name}}",
+    "emailChanged": "Đã đổi email.",
+    "emailUnverifiedNote": "Email mới sẽ ở trạng thái chưa xác minh trên hệ thống đăng nhập (SSO) cho tới khi người dùng xác nhận. Tên đăng nhập không đổi được; cần tên khác thì tạo tài khoản mới.",
+    "reloaded": "Tài khoản vừa được người khác thay đổi; đã tải lại danh sách."
   },
   "userRoles": {
     "title": "Phân quyền: {{name}}",
@@ -361,6 +366,19 @@
     "mustCover": "Khung của trường phải chứa trọn giờ giới nghiêm của EduWorld (chỉ được mở rộng).",
     "clear": "Bỏ khung trường",
     "reloaded": "Cài đặt vừa được người khác thay đổi; đã tải lại giá trị mới."
+  },
+  "dailyLimit": {
+    "title": "Giới hạn chơi mỗi ngày",
+    "current": "Giới hạn hiện tại",
+    "off": "Tắt",
+    "minutes": "{{count}} phút mỗi ngày",
+    "common": "Không áp cho tenant chung",
+    "note": "Áp như nhau cho mọi học sinh của trường, tính trên tổng thời gian chơi game trong ngày (giờ Việt Nam). Khi đạt giới hạn, học sinh được báo trước rồi kết thúc lượt chơi và chỉ vào lại từ 00:00 hôm sau.",
+    "edit": "Đổi giới hạn chơi",
+    "enabled": "Bật giới hạn",
+    "limit": "Số phút mỗi ngày",
+    "unit": "phút",
+    "range": "Từ {{min}} đến {{max}} phút."
   },
   "cleanup": {
     "tab": "Học sinh sắp bị dọn",

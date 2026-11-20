@@ -140,7 +140,7 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
 - [ ] T053 **OQ chốt 2026-11-20** (OQ F057-1) Bước 3 wizard clone gọi `previewTenantClone` (đồ thị phụ thuộc, xung đột chặn bước tiếp), gỡ cờ `CLONE_PREVIEW_AVAILABLE`; sau task F045 — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/api/clones.ts`, `…/clones/` — kiểm: `make web-test` — cỡ M
-- [ ] T054 **OQ chốt 2026-11-20** (OQ F045-9) Ô `remove_default` trong hộp gỡ gán — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/assignments/` — kiểm: `make web-test` — cỡ S
+- [x] T054 **OQ chốt 2026-11-20** (OQ F045-9) Ô `remove_default` trong hộp gỡ gán — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/assignments/` — kiểm: `make web-test` — cỡ S — ✅ 2026-11-20: ô "Bỏ luôn quy tắc gán mặc định cho tenant mới" trong hộp gỡ gán → `remove_default: true` (chỉ gửi khi chọn), cùng action `action.platform_admin.tenant_data.assign`; test `AssignToTenantsDialog.test.tsx` "Gỡ gán" mở rộng PASS
 
 ## Dependencies & Execution Order
 

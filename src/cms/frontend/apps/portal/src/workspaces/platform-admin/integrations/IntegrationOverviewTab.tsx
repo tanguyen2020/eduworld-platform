@@ -1,17 +1,40 @@
 // Tab "Keycloak · APISIX" (F059 T046, F059-AC-22/23, FR-AUTH-012, ADMIN_PORTAL §10): getIntegrationOverview, read only —
 // Keycloak issuer/realm/clients (id + purpose), MFA of platform routes and the max auth age; APISIX public/internal
-// gateway URLs ("Chưa cấu hình" when null) and the route groups, which the backend does not provide yet (OQ F059-12:
-// shown as "Chưa có dữ liệu"); SIS connections by status. Only named schema fields are rendered (no secret, no field
+// gateway URLs ("Chưa cấu hình" when null) and the route groups prefix → gateway → service generated at build time from
+// the route-as-code file (OQ F059-12; "Chưa có dữ liệu" when the list is empty); SIS connections by status. Only named schema fields are rendered (no secret, no field
 // outside the schema); configuration changes go through realm-as-code / route-as-code (F004).
-import { Card, Descriptions, Space, Tag, Typography } from 'antd';
+import { Card, Descriptions, Space, Table, Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
-import { useIntegrationOverview } from '../api/integrations';
+import { useIntegrationOverview, type IntegrationOverview } from '../api/integrations';
 import { formatTime } from '../ui';
 
 function UrlValue({ url }: { url: string | null | undefined }) {
   const { t } = useTranslation();
   return url ? <Typography.Text code>{url}</Typography.Text> : <Typography.Text type="secondary">{t('platform.integrations.notConfigured')}</Typography.Text>;
+}
+
+type RouteGroup = IntegrationOverview['apisix']['route_groups'][number];
+
+function RouteGroups({ groups }: { groups: RouteGroup[] }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-label={t('platform.integrations.routeGroups')} data-testid="route-groups">
+      <Typography.Text strong>{t('platform.integrations.routeGroups')}</Typography.Text>
+      <Table<RouteGroup>
+        size="small"
+        rowKey={(g) => `${g.gateway} ${g.prefix}`}
+        dataSource={groups}
+        pagination={false}
+        locale={{ emptyText: t('platform.integrations.noData') }}
+        columns={[
+          { key: 'prefix', title: t('platform.integrations.routePrefix'), render: (_, g) => <Typography.Text code>{g.prefix}</Typography.Text> },
+          { key: 'gateway', title: t('platform.integrations.routeGateway'), render: (_, g) => <Tag>{t(`platform.integrations.gatewayKind.${g.gateway}`)}</Tag> },
+          { key: 'service', title: t('platform.integrations.routeService'), render: (_, g) => <Typography.Text code>{g.service}</Typography.Text> },
+        ]}
+      />
+    </section>
+  );
 }
 
 export function IntegrationOverviewTab({ enabled }: { enabled: boolean }) {
@@ -53,10 +76,8 @@ export function IntegrationOverviewTab({ enabled }: { enabled: boolean }) {
               <Descriptions.Item label={t('platform.integrations.internalGateway')}>
                 <UrlValue url={o.apisix.internal_base_url} />
               </Descriptions.Item>
-              <Descriptions.Item label={t('platform.integrations.routeGroups')}>
-                <Typography.Text type="secondary">{t('platform.integrations.noData')}</Typography.Text>
-              </Descriptions.Item>
             </Descriptions>
+            <RouteGroups groups={o.apisix.route_groups ?? []} />
           </Card>
           <Card title={t('platform.integrations.tabSis')} size="small">
             <Descriptions column={1} size="small">

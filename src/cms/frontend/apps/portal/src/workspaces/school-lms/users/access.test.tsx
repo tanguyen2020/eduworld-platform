@@ -91,6 +91,28 @@ describe('Người dùng & phân quyền', () => {
     expect(call.body).toMatchObject({ user_type: 'staff', initial_user_roles: [{ role_id: IDS.roleCustom, scope_type: 'tenant' }] });
   });
 
+  it('change email: If-Match of the row, 409 EMAIL_TAKEN at the field, unverified note, then saved (OQ F012-1, F052 T063)', async () => {
+    const { backend } = await renderSchoolLms('/school-lms/access-control', { account: unitAdmin() });
+    const staff = (await screen.findByText('Cán bộ B')).closest('tr')!;
+    fireEvent.click(within(staff).getByRole('button', { name: 'Đổi email' }));
+    const form = await screen.findByTestId('change-email-form');
+    const email = within(form).getByLabelText('Email');
+    expect(email).toHaveValue('qlcm.a@thdemo.edu.vn');
+    expect(email).toHaveAttribute('maxlength', '320');
+    expect(screen.getByText(/chưa xác minh trên hệ thống đăng nhập/)).toBeInTheDocument();
+    expect(within(form).queryByLabelText('Tên đăng nhập')).toBeNull();
+    fireEvent.change(email, { target: { value: 'AD.A@thdemo.edu.vn' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+    expect(await within(form).findByText('Email đã được dùng.')).toBeInTheDocument();
+    fireEvent.change(email, { target: { value: 'qlcm.moi@thdemo.edu.vn' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu' }));
+    await waitFor(() => expect(backend.calls('PATCH', `/tenant/users/${IDS.userQlcm}`)).toHaveLength(2));
+    const call = backend.calls('PATCH', `/tenant/users/${IDS.userQlcm}`)[1]!;
+    expect(call.body).toEqual({ email: 'qlcm.moi@thdemo.edu.vn' });
+    expect(call.headers['if-match']).toBe('W/"1"');
+    await waitFor(() => expect(screen.queryByTestId('change-email-form')).toBeNull());
+  });
+
   it('system role read-only with "Nhân bản"; custom role delete 409 → revoke hint (F052-AC-15, TC-CMS-RBAC-05)', async () => {
     const { backend } = await renderSchoolLms('/school-lms/access-control', { account: unitAdmin() });
     fireEvent.click(await screen.findByRole('tab', { name: 'Role' }));

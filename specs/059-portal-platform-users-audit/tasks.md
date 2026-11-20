@@ -139,9 +139,9 @@
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 
-Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Đã làm 2026-11-20.
 
-- [ ] T059 **OQ chốt 2026-11-20** (OQ F059-12) Bảng `route_groups[]` ở tab "Keycloak · APISIX" (F059-AC-22), sau task F012 — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/integrations/` — kiểm: `make web-test` — cỡ S
+- [x] T059 **OQ chốt 2026-11-20** (OQ F059-12) Bảng `route_groups[]` ở tab "Keycloak · APISIX" (F059-AC-22), sau task F012 — file: `src/cms/frontend/apps/portal/src/workspaces/platform-admin/integrations/` — kiểm: `make web-test` — cỡ S — ✅ 2026-11-20: bảng `route_groups` (Prefix · Gateway Public/Nội bộ · Service) ở tab "Keycloak · APISIX", "Chưa có dữ liệu" khi rỗng; test `IntegrationsGuard.test.tsx` cập nhật PASS
 
 ## Dependencies & Execution Order
 

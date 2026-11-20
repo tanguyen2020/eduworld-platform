@@ -84,6 +84,7 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
       student_club_creation: false,
       allowed_hours: { windows: [] },
       curfew_window: null,
+      daily_play_limit_minutes: null,
       platform_curfew: { start: '21:30', end: '06:30' },
       effective_curfew: { start: '21:30', end: '06:30' },
     },
@@ -178,6 +179,12 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
       state.resolveCalls++;
       state.issueStatus = (r.body as { resolution: string }).resolution === 'ignore' ? 'ignored' : 'resolved';
       return json(200, { issue_id: x[2], tenant_id: T_A, school_id: x[1], issue_type: 'duplicate_identifier', status: state.issueStatus, created_at: '2026-11-19T08:00:01Z' });
+    }
+    if ((x = /^\/tenant\/users\/([^/]+)$/.exec(p)) && m === 'PATCH') {
+      if (r.headers['if-match'] !== 'W/"1"') return problem(412, 'VERSION_MISMATCH');
+      const b = r.body as { email?: string };
+      if (b.email?.toLowerCase() === 'ad.a@thdemo.edu.vn') return problem(409, 'EMAIL_TAKEN');
+      return json(200, { user_id: x[1], user_type: 'staff', status: 'active', username: 'qlcm.truong.a', email: b.email, display_name: 'Cán bộ B', version: 2 });
     }
     if (p === '/tenant/users') {
       if (m === 'POST') {

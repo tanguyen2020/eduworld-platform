@@ -148,6 +148,62 @@ describe('Cài đặt trường + giờ giới nghiêm (F052-AC-22, F052-AC-29, 
   });
 });
 
+describe('Giới hạn chơi mỗi ngày (F052-AC-32, OQ-17)', () => {
+  const openSchoolTab = async () => fireEvent.click(await screen.findByRole('tab', { name: 'Cài đặt trường' }));
+
+  it('"Tắt" by default; on with minutes in the contract range + reason + If-Match; off again sends null; 422 at the field', async () => {
+    const { backend } = await renderSchoolLms('/school-lms/settings');
+    await openSchoolTab();
+    const card = await screen.findByTestId('daily-limit-card');
+    expect(within(card).getByTestId('daily-limit-value')).toHaveTextContent('Tắt');
+    fireEvent.click(within(card).getByRole('button', { name: 'Đổi giới hạn chơi' }));
+    const form = await within(card).findByTestId('daily-limit-form');
+    fireEvent.click(within(form).getByRole('switch', { name: 'Bật giới hạn' }));
+    const minutes = await within(form).findByRole('spinbutton', { name: 'Số phút mỗi ngày' });
+    expect(minutes).toHaveAttribute('aria-valuemin', '15');
+    expect(minutes).toHaveAttribute('aria-valuemax', '300');
+    fireEvent.change(minutes, { target: { value: '120' } });
+    fireEvent.change(within(form).getByLabelText('Lý do'), { target: { value: 'Họp phụ huynh đề nghị' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Lưu' }));
+    await waitFor(() => expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)).toHaveLength(1));
+    const call = backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)[0]!;
+    expect(call.body).toEqual({ daily_play_limit_minutes: 120, reason: 'Họp phụ huynh đề nghị' });
+    expect(call.headers['if-match']).toBe('"v1"');
+    expect(await screen.findByText('120 phút mỗi ngày', { selector: '[data-testid="daily-limit-value"]' })).toBeInTheDocument();
+    const card2 = screen.getByTestId('daily-limit-card');
+    fireEvent.click(within(card2).getByRole('button', { name: 'Đổi giới hạn chơi' }));
+    const form2 = await within(card2).findByTestId('daily-limit-form');
+    fireEvent.click(within(form2).getByRole('switch', { name: 'Bật giới hạn' }));
+    fireEvent.change(within(form2).getByLabelText('Lý do'), { target: { value: 'Tắt giới hạn' } });
+    fireEvent.click(within(form2).getByRole('button', { name: 'Lưu' }));
+    await waitFor(() => expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)).toHaveLength(2));
+    expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)[1]!.body).toEqual({ daily_play_limit_minutes: null, reason: 'Tắt giới hạn' });
+    expect(await screen.findByText('Tắt', { selector: '[data-testid="daily-limit-value"]' })).toBeInTheDocument();
+    // 422 VALIDATION_FAILED daily_play_limit_minutes → error at the field.
+    backend.overrides.unshift((r) =>
+      r.method === 'PATCH' && r.path === `/schools/${IDS.schoolA}/settings`
+        ? new Response(JSON.stringify({ status: 422, code: 'VALIDATION_FAILED', trace_id: 't', errors: [{ field: 'daily_play_limit_minutes', code: 'INVALID' }] }), { status: 422, headers: { 'Content-Type': 'application/problem+json' } })
+        : undefined,
+    );
+    const card3 = screen.getByTestId('daily-limit-card');
+    fireEvent.click(within(card3).getByRole('button', { name: 'Đổi giới hạn chơi' }));
+    const form3 = await within(card3).findByTestId('daily-limit-form');
+    fireEvent.click(within(form3).getByRole('switch', { name: 'Bật giới hạn' }));
+    fireEvent.change(await within(form3).findByRole('spinbutton', { name: 'Số phút mỗi ngày' }), { target: { value: '200' } });
+    fireEvent.change(within(form3).getByLabelText('Lý do'), { target: { value: 'Thử API' } });
+    fireEvent.click(within(form3).getByRole('button', { name: 'Lưu' }));
+    expect(await within(form3).findByText('Dữ liệu nhập chưa hợp lệ. Kiểm tra các trường được đánh dấu.')).toBeInTheDocument();
+  });
+
+  it('no edit without action.school_lms.settings.edit_school', async () => {
+    await renderSchoolLms('/school-lms/settings', { account: accountWith('qlcm.truong.a', TENANTS.thDemoA, READ_ONLY_PERMS) });
+    await openSchoolTab();
+    const card = await screen.findByTestId('daily-limit-card');
+    expect(within(card).getByTestId('daily-limit-value')).toHaveTextContent('Tắt');
+    expect(within(card).queryByRole('button', { name: 'Đổi giới hạn chơi' })).toBeNull();
+  });
+});
+
 describe('Học sinh sắp bị dọn (F052-AC-21)', () => {
   it('select → exclude with mandatory reason and an Idempotency-Key', async () => {
     const { backend } = await renderSchoolLms('/school-lms/settings', { account: tenantAdmin() });

@@ -1,5 +1,5 @@
 // Assignment hooks (F057 T020, F057-AC-05/06, ADR-0029): listTenantAssignments (cursor), assignToTenants and
-// unassignFromTenants with one Idempotency-Key per user intent. Platform data: no X-Tenant-Id (platform scope).
+// unassignFromTenants (optional `remove_default`, OQ F045-9) with one Idempotency-Key per user intent. Platform data: no X-Tenant-Id (platform scope).
 import { useQueryClient } from '@tanstack/react-query';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { pageQuery, useCursorList, usePlatformApi, type CursorPage, type ResourceType, type Schemas } from './common';
@@ -11,6 +11,8 @@ export interface UnassignRequest {
   resource_id: string;
   tenant_ids: string[];
   reason?: string;
+  /** Also soft-delete the default assignment rule (`apply_to_new_tenants`) of the resource (OQ F045-9). */
+  remove_default?: boolean;
 }
 
 /**

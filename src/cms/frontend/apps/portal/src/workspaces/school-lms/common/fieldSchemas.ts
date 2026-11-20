@@ -14,6 +14,7 @@ export const FIELDS = {
   schoolAddress: { source: 'schemas/SchoolUpdateRequest/properties/address', maxLength: 500 },
   username: { source: 'schemas/TenantUserCreateRequest/properties/username', minLength: 3, maxLength: 128, pattern: '^[A-Za-z0-9._-]{3,128}$' },
   email: { source: 'schemas/TenantUserCreateRequest/properties/email', maxLength: 320 },
+  emailUpdate: { source: 'schemas/TenantUserUpdateRequest/properties/email', maxLength: 320 },
   displayName: { source: 'schemas/TenantUserCreateRequest/properties/display_name', minLength: 1, maxLength: 128 },
   userSearch: { source: 'paths/listTenantUsers/q', minLength: 2, maxLength: 100 },
   classStudentSearch: { source: 'paths/listTenantClassStudents/q', minLength: 2, maxLength: 100 },
@@ -39,4 +40,6 @@ export const LIMITS = {
   cleanupDays: { source: 'schemas/TenantSettings/properties/inactive_student_cleanup_days', minimum: 0, maximum: 3650 },
   /** `TenantSettings.gameplay_chat_retention_days` (minimum 3, ADR-0033). */
   chatRetentionDays: { source: 'schemas/TenantSettings/properties/gameplay_chat_retention_days', minimum: 3, maximum: 365 },
+  /** `SchoolSettings.daily_play_limit_minutes` (null = off, OQ-17). */
+  dailyPlayLimit: { source: 'schemas/SchoolSettings/properties/daily_play_limit_minutes', minimum: 15, maximum: 300 },
 } as const;
