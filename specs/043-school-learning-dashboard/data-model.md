@@ -84,7 +84,7 @@ Không có cột `xp`, `rating`, nội dung chat trong mọi bảng trên (F043-
 
 ## 5. Ghi chú triển khai (2026-11-21)
 
-Migration `src/backend/modules/learning/migrations/20261223000001_f043_dashboard_rollups.sql` (viết tay như `progress_daily` của F031, không entity ent). Khác biệt so với §1 [Proposed, spec Session 2026-11-21]:
+Migration `src/backend/modules/learning/migrations/20261223000001_f043_dashboard_rollups.sql` (viết tay như `progress_daily` của F031, không entity ent). Khác biệt so với §1 [Confirmed, spec Session 2026-11-21]:
 
 | Bảng | Thay đổi |
 |---|---|
