@@ -29,7 +29,7 @@
 - Attempt đề không dùng được qua route `/learning/activity-attempts/*` (409 `CONFLICT`); danh sách attempt của học sinh ẩn điểm attempt đề [Confirmed].
 - Session của bài giao (AC-31): `exam_type = custom`, `is_official = true`, cửa sổ `open_at` → `due_at` (+ `late_window_hours` khi cho nộp muộn), đối tượng là snapshot học sinh của bài, chính sách công bố của bài (mặc định `graded_assignment_release_default`) [Confirmed].
 - `suspicious_speed`: đúng 100 % trên ≥ 10 câu với thời gian trung bình < 1,5 s/câu (CONFIG_DEFAULTS `suspicious_speed_flag`), ghi `assessment.integrity_signals`, không đổi điểm; `score_scale` thang 10 làm tròn 1 chữ số [Confirmed].
-- `ExamAttemptAnalysis.objective_breakdown[].mastery_level` trả `null` trong F042 (mức mastery đọc qua `getMyLearningProgress`); đề xuất ôn tập: 1–3 LO đúng < 60 % (thiếu thì LO có câu sai), `kind = practice` [Proposed].
+- `ExamAttemptAnalysis.objective_breakdown[].mastery_level` trả `null` trong F042 (mức mastery đọc qua `getMyLearningProgress`); đề xuất ôn tập: 1–3 LO đúng < 60 % (thiếu thì LO có câu sai), `kind = practice` [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 

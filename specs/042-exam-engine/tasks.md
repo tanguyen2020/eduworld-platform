@@ -170,4 +170,4 @@
 | T048 | `observability/exam_metrics.go` (4 metric, nhãn không ID); log use case không chứa câu trả lời | gate (golangci, ewlint) |
 | T049, T050 | CHANGELOG, CODE_PLAN, quickstart §5 | — |
 
-Phụ thuộc: `ExamAttemptAnalysis.mastery_level` trả `null` (spec Clarifications 2026-11-20 [Proposed]); cân bằng biến thể (`VariantBalancer`) và báo cáo đề thuộc F044.
+Phụ thuộc: `ExamAttemptAnalysis.mastery_level` trả `null` (spec Clarifications 2026-11-20 [Confirmed]); cân bằng biến thể (`VariantBalancer`) và báo cáo đề thuộc F044.
