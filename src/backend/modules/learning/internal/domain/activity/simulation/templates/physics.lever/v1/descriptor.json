@@ -1,0 +1,56 @@
+{
+  "template_code": "physics.lever",
+  "template_version": 1,
+  "simulation_kind": "physics",
+  "title": { "vi": "Cân bằng đòn bẩy", "en": "Balance the lever" },
+  "min_client_version": "0.1.0",
+  "status": "active",
+  "checker_available": true,
+  "constants": { "g": 9.8 },
+  "parameter_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["arm_length_m", "slots_per_side", "mass_1_kg", "mass_2_kg"],
+    "properties": {
+      "arm_length_m": { "type": "number", "minimum": 0.2, "maximum": 5, "title": "Chiều dài mỗi cánh tay đòn (m)" },
+      "slots_per_side": { "type": "integer", "minimum": 1, "maximum": 10, "title": "Số ô đặt vật mỗi bên" },
+      "mass_1_kg": { "type": "number", "minimum": 0.1, "maximum": 50, "title": "Khối lượng vật 1 (kg)" },
+      "mass_2_kg": { "type": "number", "minimum": 0.1, "maximum": 50, "title": "Khối lượng vật 2 (kg)" },
+      "mass_3_kg": { "type": "number", "minimum": 0.1, "maximum": 50, "title": "Khối lượng vật 3 (kg)" },
+      "mass_4_kg": { "type": "number", "minimum": 0.1, "maximum": 50, "title": "Khối lượng vật 4 (kg)" }
+    }
+  },
+  "actions": [
+    {
+      "action": "place_mass",
+      "args_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mass_index", "side", "slot"],
+        "properties": {
+          "mass_index": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "side": { "type": "string", "enum": ["left", "right"] },
+          "slot": { "type": "integer", "minimum": 1, "maximum": 10 }
+        }
+      }
+    },
+    {
+      "action": "remove_mass",
+      "args_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mass_index"],
+        "properties": { "mass_index": { "type": "integer", "minimum": 0, "maximum": 3 } }
+      }
+    },
+    { "action": "release", "args_schema": { "type": "object", "additionalProperties": false, "properties": {} } }
+  ],
+  "metrics": [
+    { "metric": "torque_left", "unit": "N·m", "display": true },
+    { "metric": "torque_right", "unit": "N·m", "display": true },
+    { "metric": "torque_diff", "unit": "N·m", "display": true },
+    { "metric": "balanced", "unit": "", "display": true },
+    { "metric": "masses_placed", "unit": "", "display": false }
+  ]
+}

@@ -187,3 +187,21 @@ type ReviewRecommendationView struct {
 	RefID            uuid.UUID `json:"ref_id"`
 	RecommendationID uuid.UUID `json:"recommendation_id"`
 }
+
+// GoalMetView is SimulationRunResult.goals_met[].
+type GoalMetView struct {
+	GoalID string `json:"goal_id"`
+	Met    bool   `json:"met"`
+}
+
+// SimulationRunResultView is SimulationRunResult (F066-AC-11…AC-15).
+type SimulationRunResultView struct {
+	RunID              uuid.UUID          `json:"run_id"`
+	Verified           bool               `json:"verified"`
+	GoalMet            bool               `json:"goal_met"`
+	VerifiedOutcome    map[string]float64 `json:"verified_outcome,omitempty"`
+	VerificationStatus string             `json:"verification_status"`
+	GoalsMet           []GoalMetView      `json:"goals_met"`
+	RunsUsed           int                `json:"runs_used"`
+	MaxRuns            *int               `json:"max_runs"`
+}

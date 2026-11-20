@@ -228,7 +228,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: registry,
 		Clock: clk.Now, Metrics: observability.AttemptCounter{}, Rate: o.rate, AnswerRate: o.answerRate,
 		// F065: media activities — progress, branch choices, ready check and signed URLs (TEST signer key).
-		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: testSigner, MediaMetrics: observability.VideoCounter{}}
+		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: testSigner, MediaMetrics: observability.VideoCounter{},
+		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}}
 	// F031 US6: lesson sessions pinned at the start of an attempt in the context of a lesson.
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{},
 		Events: write.Publisher{W: e.writer}, UoW: e.uow, Clock: clk.Now}
@@ -259,7 +260,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
-		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq,
+		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq, Runs: read.SimulationRunModel{},
 		Recommendations: read.SelfStudyModel{}}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.

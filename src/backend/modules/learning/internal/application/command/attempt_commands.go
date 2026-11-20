@@ -198,6 +198,14 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 	if err != nil {
 		return attempt.Attempt{}, nil, err
 	}
+	// Simulations (F066-AC-10): the items are the conclusion questions in order; the seed follows seed_policy.
+	if sp, ok := src.Plugin.(activity.Simulated); ok {
+		if qids, err = sp.SimulationQuestions(src.DomainVersion()); err != nil {
+			return attempt.Attempt{}, nil, err
+		}
+		seed = sp.Seed(src.DomainVersion(), seed)
+		media = true
+	}
 	if !media {
 		if qids, err = h.sourceQuestions(ctx, src.Config.Content.QuestionSource, src.Version.SubjectID, src.Version.GradeLevels, allowed, seed); err != nil {
 			return attempt.Attempt{}, nil, err
@@ -219,7 +227,7 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 	if err := h.Store.InsertAttempt(ctx, a); err != nil {
 		return a, nil, err
 	}
-	if media && h.Progress != nil {
+	if _, tl := src.Plugin.(activity.Timeline); tl && h.Progress != nil {
 		if err := h.Progress.SaveProgress(ctx, videolesson.NewProgress(a.ID, a.TenantID, a.SchoolID, now)); err != nil {
 			return a, nil, err
 		}
@@ -276,6 +284,9 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		}
 		if in.Kind == KindCueAnswer && !media {
 			return problem.Invalid("/kind", problem.SubInvalid, "cue_answer is only for media activities")
+		}
+		if in.Kind == KindSimulationQuestion && v.Type != activity.Simulation {
+			return problem.Invalid("/kind", problem.SubInvalid, "simulation_question is only for simulation activities")
 		}
 		if in.CueID != "" {
 			if in.Position = vc.CuePosition(in.CueID); in.Position == 0 {
@@ -440,6 +451,9 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 		if err := h.completed(ctx, a, outcome); err != nil {
 			return err
 		}
+		if err := h.simulationCompleted(ctx, a); err != nil {
+			return err
+		}
 		if _, visibleAt, err := h.resultRelease(ctx, a, h.now()); err != nil {
 			return err
 		} else if visibleAt == nil {
@@ -461,6 +475,21 @@ func (h Attempts) gradeAttempt(ctx context.Context, a *attempt.Attempt, reason s
 	}
 	row := a.RowVersion
 	res := plugin.Evaluate(v, a.ItemResults())
+	// Simulations (F066-AC-15, AC-16): the goals of the last verified run are added to the questions.
+	if sp, ok := plugin.(activity.Simulated); ok {
+		last, anyRun, err := h.lastRun(ctx, *a)
+		if err != nil {
+			return nil, nil, err
+		}
+		var done bool
+		res, done = sp.EvaluateRuns(v, a.ItemResults(), last, anyRun)
+		if res.MaxScore == 0 { // not verifiable and no question: scored by completion, like a media activity
+			res.MaxScore = max(v.Config.Evaluation.MaxScore, 1)
+			if done {
+				res.Score = res.MaxScore
+			}
+		}
+	}
 	// A media activity without embedded question is scored by its completion strategy (F065 [Proposed]): max_score of
 	// the version (≥ 1) when the completion rule is met, 0 otherwise — a score always has max > 0 (learning-event).
 	if res.MaxScore == 0 {

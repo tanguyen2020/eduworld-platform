@@ -7,6 +7,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -29,6 +30,21 @@ func (q ActivityTypes) List(ctx context.Context) (out []activity.Info, err error
 		return nil, err
 	}
 	return q.Registry.Infos(), nil
+}
+
+// Templates lists the simulation template versions shipped with the release (listSimulationTemplates, F066 research
+// R2): read-only, active and retired.
+func (q ActivityTypes) Templates(ctx context.Context) (out []simulation.Descriptor, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.ListSimulationTemplates")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{}); err != nil {
+		return nil, err
+	}
+	return simulation.Catalog(), nil
 }
 
 // CmsActivityView is an activity with its newest version and the number of its published release.

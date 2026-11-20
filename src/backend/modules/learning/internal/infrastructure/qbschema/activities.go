@@ -25,6 +25,8 @@ var (
 	VideoLessonSchemaJSON []byte
 	//go:embed audio-lesson.schema.json
 	AudioLessonSchemaJSON []byte
+	//go:embed simulation.schema.json
+	SimulationSchemaJSON []byte
 )
 
 const activitiesBase = contentBase + "activities/"
@@ -38,6 +40,7 @@ var activitySchemas = map[string]struct {
 	"interactive_exercise": {"interactive-exercise.schema.json", InteractiveExerciseSchemaJSON},
 	"video_lesson":         {"video-lesson.schema.json", VideoLessonSchemaJSON},
 	"audio_lesson":         {"audio-lesson.schema.json", AudioLessonSchemaJSON},
+	"simulation":           {"simulation.schema.json", SimulationSchemaJSON},
 }
 
 // configWrapper is the config of an ActivityDefinitionInput (content, interaction, evaluation, feedback, completion_rule)

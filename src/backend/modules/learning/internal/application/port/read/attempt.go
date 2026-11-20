@@ -47,3 +47,9 @@ type MediaProgressReadModel interface {
 	// Progress returns the progress of an attempt (nil when none).
 	Progress(ctx context.Context, attemptID uuid.UUID) (*videolesson.Progress, error)
 }
+
+// SimulationRunReadModel reads the runs of a simulation attempt (assessment.simulation_runs_live, F066).
+type SimulationRunReadModel interface {
+	// RunCount is the number of runs stored for an attempt (runs_used).
+	RunCount(ctx context.Context, attemptID uuid.UUID) (int, error)
+}

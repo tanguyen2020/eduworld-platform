@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 )
@@ -23,6 +26,7 @@ type CmsActivityQueries interface {
 // ActivityTypeQueries lists the Activity Registry (query.ActivityTypes).
 type ActivityTypeQueries interface {
 	List(ctx context.Context) ([]activity.Info, error)
+	Templates(ctx context.Context) ([]simulation.Descriptor, error)
 }
 
 const cmsActivities = "/cms/learning/activities"
@@ -36,6 +40,8 @@ func init() {
 		"createCmsActivityVersion": op("createCmsActivityVersion", http.MethodPost, cmsActivities+"/{activity_id}/versions", httpx.TenantOptional,
 			httpx.IdempotencyRequired, 201),
 		"listActivityTypes": op("listActivityTypes", http.MethodGet, "/cms/learning/activity-types", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+		"listSimulationTemplates": op("listSimulationTemplates", http.MethodGet, "/cms/learning/simulation-templates", httpx.TenantOptional,
+			httpx.IdempotencyNone, 200),
 	} {
 		Operations[id] = o
 	}
@@ -48,6 +54,7 @@ var cmsActivityRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Req
 	"updateCmsActivityDraft":   Handlers.updateCmsActivityDraft,
 	"createCmsActivityVersion": Handlers.createCmsActivityVersion,
 	"listActivityTypes":        Handlers.listActivityTypes,
+	"listSimulationTemplates":  Handlers.listSimulationTemplates,
 }
 
 // activityDefinition is ActivityDefinition (command.ActivityJSON, also the idempotent replay body).
@@ -186,6 +193,44 @@ func (h Handlers) listActivityTypes(w http.ResponseWriter, r *http.Request) {
 	for i, in := range infos {
 		data[i] = activityTypeInfo{ActivityType: string(in.Type), Label: in.Label, SchemaURL: in.SchemaURL, SchemaVersion: in.SchemaVersion,
 			EvaluationStrategies: in.Strategies, MinClientVersion: in.MinClientVersion, Status: string(in.Status)}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+type simulationTemplate struct {
+	TemplateCode     string                 `json:"template_code"`
+	TemplateVersion  int                    `json:"template_version"`
+	Title            string                 `json:"title"`
+	SimulationKind   string                 `json:"simulation_kind"`
+	ParameterSchema  json.RawMessage        `json:"parameter_schema"`
+	Actions          []simulation.ActionDef `json:"actions"`
+	Metrics          []simulation.MetricDef `json:"metrics"`
+	CheckerAvailable bool                   `json:"checker_available"`
+	Status           string                 `json:"status"`
+	MinClientVersion string                 `json:"min_client_version"`
+}
+
+// listSimulationTemplates lists the packaged template versions (F066-AC-26, research R2: read-only, shipped with the
+// release); the title follows Accept-Language (vi by default).
+func (h Handlers) listSimulationTemplates(w http.ResponseWriter, r *http.Request) {
+	list, err := h.ActivityTypes.Templates(r.Context())
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	lang := "vi"
+	if strings.HasPrefix(strings.ToLower(r.Header.Get("Accept-Language")), "en") {
+		lang = "en"
+	}
+	data := make([]simulationTemplate, len(list))
+	for i, d := range list {
+		title := d.Title[lang]
+		if title == "" {
+			title = d.Title["vi"]
+		}
+		data[i] = simulationTemplate{TemplateCode: d.TemplateCode, TemplateVersion: d.TemplateVersion, Title: title, SimulationKind: d.SimulationKind,
+			ParameterSchema: d.ParameterSchema, Actions: d.Actions, Metrics: d.Metrics, CheckerAvailable: d.CheckerAvailable, Status: d.Status,
+			MinClientVersion: d.MinClientVersion}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data})
 }

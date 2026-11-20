@@ -21,6 +21,7 @@ type AttemptCommands interface {
 	Respond(ctx context.Context, in command.RespondInput) (dto.ResponseResultView, error)
 	Branch(ctx context.Context, in command.BranchInput) (dto.ResponseResultView, error)
 	ReportProgress(ctx context.Context, in command.ProgressInput) (dto.ProgressStateView, error)
+	SubmitSimulationRun(ctx context.Context, in command.SimulationRunInput) (dto.SimulationRunResultView, error)
 	Pause(ctx context.Context, id uuid.UUID) (dto.AttemptView, error)
 	Submit(ctx context.Context, id uuid.UUID) (dto.AttemptView, error)
 }
@@ -53,6 +54,7 @@ func init() {
 		"getActivityAttempt":       player("getActivityAttempt", http.MethodGet, one, httpx.IdempotencyNone, 200),
 		"submitActivityResponse":   player("submitActivityResponse", http.MethodPost, one+"/responses", httpx.IdempotencyRequired, 200),
 		"reportActivityProgress":   player("reportActivityProgress", http.MethodPost, one+"/progress", httpx.IdempotencyNone, 200),
+		"submitSimulationRun":      player("submitSimulationRun", http.MethodPost, one+"/simulation-runs", httpx.IdempotencyRequired, 200),
 		"pauseActivityAttempt":     player("pauseActivityAttempt", http.MethodPost, one+":pause", httpx.IdempotencyRequired, 200),
 		"submitActivityAttempt":    player("submitActivityAttempt", http.MethodPost, one+":submit", httpx.IdempotencyRequired, 200),
 		"getActivityAttemptReview": player("getActivityAttemptReview", http.MethodGet, one+"/review", httpx.IdempotencyNone, 200),
@@ -69,6 +71,7 @@ var attemptRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request
 	"getActivityAttempt":       Handlers.getActivityAttempt,
 	"submitActivityResponse":   Handlers.submitActivityResponse,
 	"reportActivityProgress":   Handlers.reportActivityProgress,
+	"submitSimulationRun":      Handlers.submitSimulationRun,
 	"pauseActivityAttempt":     Handlers.pauseActivityAttempt,
 	"submitActivityAttempt":    Handlers.submitActivityAttempt,
 	"getActivityAttemptReview": Handlers.getActivityAttemptReview,
@@ -208,7 +211,7 @@ func (h Handlers) submitActivityResponse(w http.ResponseWriter, r *http.Request)
 	}
 	var v dto.ResponseResultView
 	switch b.Kind {
-	case "", command.KindQuestion, command.KindCueAnswer:
+	case "", command.KindQuestion, command.KindCueAnswer, command.KindSimulationQuestion:
 		if b.Kind == command.KindCueAnswer && b.CueID == "" && b.Position < 1 {
 			fail(w, r, problem.Invalid("/cue_id", problem.SubRequired, "is required for a cue answer"))
 			return
@@ -289,5 +292,34 @@ func (h Handlers) getActivityAttemptReview(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	displayLang(w, lang)
+	writeJSON(w, http.StatusOK, v)
+}
+
+// submitSimulationRun sends a run of a simulation to the server checker (F066-AC-11…AC-14): only the template, seed,
+// parameters, action log and the informative client outcome are read; the verified result is the server's.
+func (h Handlers) submitSimulationRun(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "attempt_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		TemplateCode    string          `json:"template_code"`
+		TemplateVersion int             `json:"template_version"`
+		Seed            int64           `json:"seed"`
+		Parameters      map[string]any  `json:"parameters"`
+		ActionLog       json.RawMessage `json:"action_log"`
+		ClientOutcome   map[string]any  `json:"client_outcome"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	v, err := h.Attempts.SubmitSimulationRun(r.Context(), command.SimulationRunInput{AttemptID: id, TemplateCode: b.TemplateCode,
+		TemplateVersion: b.TemplateVersion, Seed: b.Seed, Parameters: b.Parameters, ActionLog: b.ActionLog, ClientOutcome: b.ClientOutcome})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, v)
 }

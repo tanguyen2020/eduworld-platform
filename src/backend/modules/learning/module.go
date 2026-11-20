@@ -18,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
@@ -126,6 +127,8 @@ func Register(r *module.Registry) (*Module, error) {
 	// F030-AC-23: not ready while published content has an activity type without plugin (platform role: every tenant).
 	r.Health().Register("activity_registry:"+Name, health.Readiness,
 		learninghealth.RegistryCheck(w.activities, learninghealth.SQLPublishedTypes(learninghealth.FromSQL(w.core.Platform))))
+	// F066 research R2: not ready while a template declares a checker that is not registered.
+	r.Health().Register("simulation_checkers:"+Name, health.Readiness, func(context.Context) error { return simulation.Ready() })
 	r.HTTP(Name, func(s *httpx.Server) error { return learninghttp.Register(s, w.http) })
 	if err := r.Relay(Name); err != nil {
 		return nil, fmt.Errorf("learning: %w", err)
@@ -248,6 +251,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterRelease(reg)
 	observability.RegisterAttempts(reg)
 	observability.RegisterVideo(reg)
+	observability.RegisterSimulation(reg)
 	observability.RegisterMastery(reg)
 	observability.RegisterRegrade(reg)
 	observability.RegisterLessons(reg)
@@ -309,7 +313,8 @@ func build(r *module.Registry) (*wiring, error) {
 	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
 		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}},
-		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: signer, MediaMetrics: observability.VideoCounter{}}
+		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: signer, MediaMetrics: observability.VideoCounter{},
+		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}}
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		UoW: core.UoW, Metrics: observability.LessonCounter{}}
 	att.Lessons = lessons
@@ -332,7 +337,7 @@ func build(r *module.Registry) (*wiring, error) {
 	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
 		Metrics: observability.LMSCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
-		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq,
+		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq, Runs: read.SimulationRunModel{},
 		Recommendations: read.SelfStudyModel{}}
 
 	h := learninghttp.Handlers{Commands: cur,

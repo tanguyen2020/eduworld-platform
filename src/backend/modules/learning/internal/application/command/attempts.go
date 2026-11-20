@@ -80,6 +80,9 @@ type Attempts struct {
 	Media        write.MediaStore
 	Signer       port.URLSigner
 	MediaMetrics VideoMetrics
+	// Runs stores the runs of the simulation attempts (F066); SimMetrics may be nil.
+	Runs       write.SimulationRunStore
+	SimMetrics SimulationMetrics
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -549,7 +552,11 @@ func (h Attempts) view(ctx context.Context, a attempt.Attempt, rendered []questi
 		r := attemptview.Render(*src, h.Registry, a.DisplayLanguage)
 		render = &r
 	}
-	return h.withTimeline(ctx, a, src, attemptview.Attempt(a, attemptview.Items(a.Items, rendered), saved, render, ev, h.now()))
+	v, err := h.withTimeline(ctx, a, src, attemptview.Attempt(a, attemptview.Items(a.Items, rendered), saved, render, ev, h.now()))
+	if err != nil {
+		return v, err
+	}
+	return h.simulationView(ctx, a, v)
 }
 
 // learningScore is $defs/score of learning-event.schema.json ({raw, max, scaled}); the mastery outcome is raw / max.

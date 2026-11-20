@@ -7,12 +7,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/audio"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/interactive"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/quiz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/sim"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/video"
 )
 
 // All returns the plugins of the release.
 func All() []activity.Plugin {
-	return []activity.Plugin{quiz.New(), interactive.New(), video.New(), audio.New()}
+	return []activity.Plugin{quiz.New(), interactive.New(), video.New(), audio.New(), sim.New()}
 }
 
 // Registry returns the registry of the release; it never fails for the plugins above.

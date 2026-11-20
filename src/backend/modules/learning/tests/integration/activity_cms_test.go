@@ -57,8 +57,8 @@ func TestActivityRegistryAndConfig(t *testing.T) {
 
 	r := must(t, c.do(t, http.MethodGet, "/cms/learning/activity-types", qlcmA, nil, nil), http.StatusOK, "types")
 	types := r.items("data")
-	if len(types) != 4 || types[0]["activity_type"] != "audio_lesson" || types[1]["activity_type"] != "interactive_exercise" ||
-		types[2]["activity_type"] != "quiz" || types[3]["activity_type"] != "video_lesson" {
+	if len(types) != 5 || types[0]["activity_type"] != "audio_lesson" || types[1]["activity_type"] != "interactive_exercise" ||
+		types[2]["activity_type"] != "quiz" || types[3]["activity_type"] != "simulation" || types[4]["activity_type"] != "video_lesson" {
 		t.Fatalf("types: %s", r.raw)
 	}
 	for _, ty := range types {

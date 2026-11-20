@@ -230,6 +230,22 @@ type MediaCheck interface {
 	ValidateMedia(c Config, durationMS int64) contentmodel.Violations
 }
 
+// RunResult is the last verified run of a simulation attempt (F066-AC-16): nil when the attempt has none.
+type RunResult struct {
+	// Verifiable is false for a template without checker (runs not_verifiable: no score, no evidence).
+	Verifiable bool
+	GoalsMet   []bool
+}
+
+// Simulated is implemented by the simulation plugin (F066): the items are its conclusion questions (never shuffled),
+// the seed follows seed_policy, and the evaluation adds the goals of the last verified run.
+type Simulated interface {
+	SimulationQuestions(v Version) ([]uuid.UUID, error)
+	// Seed is the seed of an attempt: the fixed seed of the version, else random bounded for the client.
+	Seed(v Version, random int64) int64
+	EvaluateRuns(v Version, items []ItemResult, last *RunResult, anyRun bool) (Result, bool)
+}
+
 // ErrNotSupported is returned for a type outside the release or without plugin (ACTIVITY_TYPE_NOT_SUPPORTED).
 var ErrNotSupported = errors.New("activity: activity_type not supported")
 

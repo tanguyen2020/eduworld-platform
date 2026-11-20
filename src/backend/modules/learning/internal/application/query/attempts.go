@@ -37,6 +37,8 @@ type Attempts struct {
 	Media    read.MediaReadModel
 	Progress read.MediaProgressReadModel
 	Signer   port.URLSigner
+	// Runs counts the runs of a simulation attempt (runs_used, F066).
+	Runs read.SimulationRunReadModel
 	// Assignments tells whether the results of a school assignment are released (F041-AC-19); nil = no assignment.
 	Assignments AssignmentResults
 	// Recommendations reads the active recommendations of the student for the review (F063-AC-24); nil = none.
@@ -128,6 +130,8 @@ type loaded struct {
 	video    *videolesson.Config
 	assets   map[uuid.UUID]media.Asset
 	progress *videolesson.Progress
+	// runs is the number of runs of a simulation attempt.
+	runs int
 }
 
 // timeline loads the assets and progress of a media attempt (video_lesson F065, audio_lesson F066).
@@ -186,6 +190,11 @@ func (q Attempts) load(ctx context.Context, id uuid.UUID) (out loaded, err error
 				return err
 			}
 			out.src = &src
+		}
+		if q.Runs != nil && a.ActivityType == string(activity.Simulation) {
+			if out.runs, err = q.Runs.RunCount(ctx, a.ID); err != nil {
+				return err
+			}
 		}
 		return q.timeline(ctx, &out)
 	})
@@ -251,7 +260,7 @@ func (q Attempts) Get(ctx context.Context, id uuid.UUID) (out dto.AttemptView, l
 	if l.video != nil {
 		v = attemptview.WithTimeline(v, *l.video, l.assets, q.Signer, l.progress, q.now())
 	}
-	return v, l.a.DisplayLanguage, nil
+	return attemptview.WithSimulation(v, l.a, l.runs), l.a.DisplayLanguage, nil
 }
 
 // ListMineInput filters listMyActivityAttempts.
