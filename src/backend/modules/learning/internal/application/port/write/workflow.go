@@ -65,6 +65,7 @@ type Transition struct {
 	From, To         contentmodel.Status
 	ActorID          uuid.UUID
 	Note             string
+	FieldComments    json.RawMessage // reject only: [{path, comment}] (F025 T046)
 	IdempotencyKey   string
 	At               time.Time
 }

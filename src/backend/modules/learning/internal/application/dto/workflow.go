@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,6 +57,8 @@ type ReviewTaskView struct {
 	DueAt             *time.Time `json:"due_at,omitempty"`
 	ResolvedAt        *time.Time `json:"resolved_at,omitempty"`
 	AudioExemptReason string     `json:"audio_exempt_reason,omitempty"`
+	// FieldComments are the per-field comments of a rejected task (F025 T046).
+	FieldComments json.RawMessage `json:"field_comments,omitempty"`
 }
 
 // TranslationReport is TranslationJob.report.

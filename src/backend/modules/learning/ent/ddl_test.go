@@ -30,6 +30,7 @@ var migrations = map[string][]string{
 	"20261128000001_f025_workflow.sql":         {"review_tasks", "translation_jobs"},
 	"20261129000001_f026_release.sql":          {"scheduled_publications"},
 	"20261130000001_f030_activity_attempt.sql": {"activities", "activity_versions", "attempts", "attempt_items", "evaluations"},
+	"20261208000001_f025_field_comments.sql":   {},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -50,6 +51,7 @@ var added = map[string][]addition{
 		{"learning_material_versions", workflowColumns, nil},
 		{"assessment_blueprint_versions", workflowColumns, nil},
 	},
+	"20261208000001_f025_field_comments.sql": {{"content_transitions", []string{"field_comments"}, nil}},
 	"20261129000001_f026_release.sql": {
 		{"question_versions", []string{"published_by"}, nil},
 		{"question_set_versions", []string{"published_by"}, nil},

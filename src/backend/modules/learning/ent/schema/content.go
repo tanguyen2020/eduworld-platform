@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"time"
 
 	"entgo.io/ent"
@@ -70,6 +71,8 @@ func (ContentTransition) Fields() []ent.Field {
 		field.UUID("content_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.String("action").MaxLen(64).Optional().Nillable().Immutable(),
 		field.String("idempotency_key").MaxLen(64).Optional().Nillable().Immutable(),
+		// F025 T046 (OQ F054-1): per-field comments of a reject ([{path, comment}], CHECK in the migration).
+		field.JSON("field_comments", json.RawMessage{}).Optional().Immutable(),
 	}
 }
 func (ContentTransition) Indexes() []ent.Index {

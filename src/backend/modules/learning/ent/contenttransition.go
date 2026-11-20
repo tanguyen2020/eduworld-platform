@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"encoding/json"
+	"encoding/json/jsontext"
 	"fmt"
 	"strings"
 	"time"
@@ -44,7 +46,9 @@ type ContentTransition struct {
 	Action *string `json:"action,omitempty"`
 	// IdempotencyKey holds the value of the "idempotency_key" field.
 	IdempotencyKey *string `json:"idempotency_key,omitempty"`
-	selectValues   sql.SelectValues
+	// FieldComments holds the value of the "field_comments" field.
+	FieldComments jsontext.Value `json:"field_comments,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -54,6 +58,8 @@ func (*ContentTransition) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case contenttransition.FieldTenantID, contenttransition.FieldCreatedBy, contenttransition.FieldContentID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case contenttransition.FieldFieldComments:
+			values[i] = new([]byte)
 		case contenttransition.FieldContentType, contenttransition.FieldFromStatus, contenttransition.FieldToStatus, contenttransition.FieldNote, contenttransition.FieldAction, contenttransition.FieldIdempotencyKey:
 			values[i] = new(sql.NullString)
 		case contenttransition.FieldCreatedAt, contenttransition.FieldAt:
@@ -166,6 +172,14 @@ func (_m *ContentTransition) assignValues(columns []string, values []any) error 
 				_m.IdempotencyKey = new(string)
 				*_m.IdempotencyKey = value.String
 			}
+		case contenttransition.FieldFieldComments:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field field_comments", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.FieldComments); err != nil {
+					return fmt.Errorf("unmarshal field field_comments: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -254,6 +268,9 @@ func (_m *ContentTransition) String() string {
 		builder.WriteString("idempotency_key=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("field_comments=")
+	builder.WriteString(fmt.Sprintf("%v", _m.FieldComments))
 	builder.WriteByte(')')
 	return builder.String()
 }

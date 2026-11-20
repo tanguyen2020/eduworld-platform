@@ -936,6 +936,12 @@ paths:
                 audio_exemption_acknowledged:
                   type: boolean
                   description: Bắt buộc true khi approve version có audio_exempt_reason (CONTENT_MODEL §8.1, F025-AC-16); thiếu → 422 VALIDATION_FAILED
+                field_comments:
+                  type: array
+                  maxItems: 50
+                  description: Nhận xét theo trường của người duyệt (OQ F054-1, F025 T046); chỉ nhận với action reject (khác → 422 VALIDATION_FAILED). Lưu cùng review task và lịch sử transition, trả trong ContentReviewTask và ContentVersionSummary
+                  items:
+                    $ref: '#/components/schemas/ReviewFieldComment'
       responses:
         '200':
           description: Trạng thái mới
@@ -9817,6 +9823,21 @@ components:
           type: boolean
           default: false
           description: Câu đo hiệu quả (F035) — chỉ owner_scope = platform, exam_only = true, không tham số hóa (ngược lại 422 VALIDATION_FAILED); bị loại khỏi mọi lần chọn câu; chỉ đổi bằng version mới
+    ReviewFieldComment:
+      type: object
+      required:
+        - path
+        - comment
+      additionalProperties: false
+      properties:
+        path:
+          type: string
+          maxLength: 256
+          description: JSON pointer (RFC 6901) tới trường của version, vd. /stem/vi; rỗng = toàn bộ
+        comment:
+          type: string
+          minLength: 1
+          maxLength: 1000
     ContentVersionHistory:
       type: object
       required:
@@ -9869,6 +9890,12 @@ components:
           type: integer
           minimum: 0
           description: Số lượt chơi/học đang ghim version này (ước lượng)
+        field_comments:
+          type: array
+          maxItems: 50
+          description: Nhận xét theo trường của lần từ chối gần nhất của version (F025 T046)
+          items:
+            $ref: '#/components/schemas/ReviewFieldComment'
     ContentVersionDiff:
       type: object
       required:
@@ -10297,6 +10324,12 @@ components:
           type: string
           maxLength: 255
           description: Miễn trừ audio g1_3 cần reviewer xác nhận (F025-AC-16)
+        field_comments:
+          type: array
+          maxItems: 50
+          description: Nhận xét theo trường khi task bị từ chối (F025 T046)
+          items:
+            $ref: '#/components/schemas/ReviewFieldComment'
     Curriculum:
       type: object
       required:

@@ -437,6 +437,7 @@ var (
 		{Name: "content_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "action", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "idempotency_key", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "field_comments", Type: field.TypeJSON, Nullable: true},
 	}
 	// ContentTransitionsTable holds the schema information for the "content_transitions" table.
 	ContentTransitionsTable = &schema.Table{

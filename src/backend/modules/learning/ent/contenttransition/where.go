@@ -860,6 +860,16 @@ func IdempotencyKeyContainsFold(v string) predicate.ContentTransition {
 	return predicate.ContentTransition(sql.FieldContainsFold(FieldIdempotencyKey, v))
 }
 
+// FieldCommentsIsNil applies the IsNil predicate on the "field_comments" field.
+func FieldCommentsIsNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldIsNull(FieldFieldComments))
+}
+
+// FieldCommentsNotNil applies the NotNil predicate on the "field_comments" field.
+func FieldCommentsNotNil() predicate.ContentTransition {
+	return predicate.ContentTransition(sql.FieldNotNull(FieldFieldComments))
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.ContentTransition) predicate.ContentTransition {
 	return predicate.ContentTransition(sql.AndPredicates(predicates...))

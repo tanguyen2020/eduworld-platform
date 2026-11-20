@@ -37,6 +37,8 @@ type VersionSummary struct {
 	PublishedAt          *time.Time `json:"published_at,omitempty"`
 	PublishAt            *time.Time `json:"publish_at,omitempty"`
 	ActivePinnedSessions int        `json:"active_pinned_sessions"`
+	// FieldComments are the per-field comments of the latest reject of the version (F025 T046).
+	FieldComments json.RawMessage `json:"field_comments,omitempty"`
 }
 
 // ItemRef is the release state of an item.

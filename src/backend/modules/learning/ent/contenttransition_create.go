@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"encoding/json/jsontext"
 	"errors"
 	"fmt"
 	"time"
@@ -168,6 +169,12 @@ func (_c *ContentTransitionCreate) SetNillableIdempotencyKey(v *string) *Content
 	if v != nil {
 		_c.SetIdempotencyKey(*v)
 	}
+	return _c
+}
+
+// SetFieldComments sets the "field_comments" field.
+func (_c *ContentTransitionCreate) SetFieldComments(v jsontext.Value) *ContentTransitionCreate {
+	_c.mutation.SetFieldComments(v)
 	return _c
 }
 
@@ -383,6 +390,10 @@ func (_c *ContentTransitionCreate) createSpec() (*ContentTransition, *sqlgraph.C
 	if value, ok := _c.mutation.IdempotencyKey(); ok {
 		_spec.SetField(contenttransition.FieldIdempotencyKey, field.TypeString, value)
 		_node.IdempotencyKey = &value
+	}
+	if value, ok := _c.mutation.FieldComments(); ok {
+		_spec.SetField(contenttransition.FieldFieldComments, field.TypeJSON, value)
+		_node.FieldComments = value
 	}
 	return _node, _spec
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
 	entabv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/assessmentblueprintversion"
 	entcr "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contentrelease"
+	entct "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	entlmv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
 	entlv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lessonversion"
 	entqsi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
@@ -108,7 +109,33 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 	default:
 		return nil, problem.New(problem.Internal, "no version table for "+string(t))
 	}
-	return out, nil
+	return out, withFieldComments(ctx, out)
+}
+
+// withFieldComments adds the per-field comments of the latest reject of each version (F025 T046, OQ F054-1).
+func withFieldComments(ctx context.Context, out []dto.VersionSummary) error {
+	if len(out) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, len(out))
+	for i, v := range out {
+		ids[i] = v.ContentVersionID
+	}
+	rows, err := client(ctx).ContentTransition.Query().Where(entct.ContentVersionIDIn(ids...), entct.Action(string(contentmodel.ActionReject)),
+		entct.FieldCommentsNotNil()).Order(ent.Desc(entct.FieldAt)).All(ctx)
+	if err != nil {
+		return err
+	}
+	latest := map[uuid.UUID]json.RawMessage{}
+	for _, r := range rows {
+		if _, seen := latest[r.ContentVersionID]; !seen {
+			latest[r.ContentVersionID] = r.FieldComments
+		}
+	}
+	for i := range out {
+		out[i].FieldComments = latest[out[i].ContentVersionID]
+	}
+	return nil
 }
 
 // Releases implements read.ReleaseReadModel (newest first, keyset after a release id).

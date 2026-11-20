@@ -41,9 +41,10 @@ var workflowRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Reques
 }
 
 type transitionBody struct {
-	Action                     string `json:"action"`
-	Note                       string `json:"note"`
-	AudioExemptionAcknowledged bool   `json:"audio_exemption_acknowledged"`
+	Action                     string                 `json:"action"`
+	Note                       string                 `json:"note"`
+	AudioExemptionAcknowledged bool                   `json:"audio_exemption_acknowledged"`
+	FieldComments              []command.FieldComment `json:"field_comments"`
 }
 
 func (h Handlers) transitionContentVersion(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +69,8 @@ func (h Handlers) transitionContentVersion(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	out, err := h.Workflow.Transition(r.Context(), command.TransitionContentInput{Type: chi.URLParam(r, "content_type"), ContentID: id, VersionNo: n,
-		IfMatch: rv, Action: b.Action, Note: b.Note, AudioExemptionAcknowledged: b.AudioExemptionAcknowledged})
+		IfMatch: rv, Action: b.Action, Note: b.Note, AudioExemptionAcknowledged: b.AudioExemptionAcknowledged,
+		FieldComments: b.FieldComments})
 	if err != nil {
 		fail(w, r, err)
 		return

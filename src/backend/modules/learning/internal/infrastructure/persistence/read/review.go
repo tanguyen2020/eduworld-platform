@@ -49,5 +49,8 @@ func reviewTaskView(r *ent.ReviewTask) dto.ReviewTaskView {
 	if r.Title != nil {
 		v.Title = *r.Title
 	}
+	if len(r.Comments) > 0 && string(r.Comments) != "null" {
+		v.FieldComments = r.Comments
+	}
 	return v
 }

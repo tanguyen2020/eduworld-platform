@@ -181,8 +181,12 @@ func (WorkflowRepo) InsertTask(ctx context.Context, t write.ReviewTask) error {
 
 // ResolveTask implements write.ReviewStore.
 func (WorkflowRepo) ResolveTask(ctx context.Context, t write.ReviewTask) error {
-	n, err := client(ctx).ReviewTask.Update().Where(entrt.ID(t.ID), entrt.Status(string(workflow.TaskOpen))).SetStatus(string(t.Status)).
-		SetNillableResolvedAt(t.ResolvedAt).SetNillableResolvedBy(t.ResolvedBy).AddVersion(1).Save(ctx)
+	u := client(ctx).ReviewTask.Update().Where(entrt.ID(t.ID), entrt.Status(string(workflow.TaskOpen))).SetStatus(string(t.Status)).
+		SetNillableResolvedAt(t.ResolvedAt).SetNillableResolvedBy(t.ResolvedBy).AddVersion(1)
+	if present(t.Comments) {
+		u.SetComments(t.Comments) // F025 T046: the field comments of a reject
+	}
+	n, err := u.Save(ctx)
 	if err != nil {
 		return MapCurriculumErr(err)
 	}
@@ -212,6 +216,9 @@ func (WorkflowRepo) InsertTransition(ctx context.Context, t write.Transition) er
 	}
 	if t.IdempotencyKey != "" {
 		q.SetIdempotencyKey(t.IdempotencyKey)
+	}
+	if present(t.FieldComments) {
+		q.SetFieldComments(t.FieldComments)
 	}
 	if t.Owner.TenantID != nil {
 		q.SetTenantID(*t.Owner.TenantID)

@@ -41,6 +41,8 @@ const (
 	FieldAction = "action"
 	// FieldIdempotencyKey holds the string denoting the idempotency_key field in the database.
 	FieldIdempotencyKey = "idempotency_key"
+	// FieldFieldComments holds the string denoting the field_comments field in the database.
+	FieldFieldComments = "field_comments"
 	// Table holds the table name of the contenttransition in the database.
 	Table = "content_transitions"
 )
@@ -61,6 +63,7 @@ var Columns = []string{
 	FieldContentID,
 	FieldAction,
 	FieldIdempotencyKey,
+	FieldFieldComments,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

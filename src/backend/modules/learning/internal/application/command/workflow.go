@@ -67,6 +67,9 @@ func (h Workflow) trash() TrashDeps {
 	return TrashDeps{UoW: h.UoW, Events: h.Events, Audit: h.Audit, Clock: h.Clock}
 }
 
+// FieldComment is a reviewer comment on one field of a rejected version (workflow.FieldComment, F025 T046).
+type FieldComment = workflow.FieldComment
+
 // TransitionContentInput is the request of transitionContentVersion.
 type TransitionContentInput struct {
 	Type                       string
@@ -76,6 +79,8 @@ type TransitionContentInput struct {
 	Action                     string
 	Note                       string
 	AudioExemptionAcknowledged bool
+	// FieldComments are the per-field comments of a reject (F025 T046, OQ F054-1).
+	FieldComments []workflow.FieldComment
 }
 
 // WorkflowTypes are the content types with a workflow in this release (activity: F030; learning_path: F040).
@@ -413,6 +418,15 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 	if utf8.RuneCountInString(in.Note) > workflow.MaxNoteLen {
 		return out, problem.Invalid("note", problem.SubMaxLength, "is longer than 2000 characters")
 	}
+	if vs := workflow.CheckFieldComments(action, in.FieldComments); len(vs) > 0 {
+		return out, problemOfViolations(vs)
+	}
+	var comments json.RawMessage
+	if len(in.FieldComments) > 0 {
+		if comments, err = json.Marshal(in.FieldComments); err != nil {
+			return out, err
+		}
+	}
 	perm := ActionPermission(t, action)
 	p, err := authorize(ctx, perm)
 	if err != nil {
@@ -479,14 +493,14 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 			}
 		case workflow.TaskApproved, workflow.TaskRejected:
 			if hasTask {
-				task.Status, task.ResolvedAt, task.ResolvedBy = res.Task, &at, &p.UserID
+				task.Status, task.ResolvedAt, task.ResolvedBy, task.Comments = res.Task, &at, &p.UserID, comments
 				if err := h.Reviews.ResolveTask(ctx, task); err != nil {
 					return err
 				}
 			}
 		}
 		if err := h.Reviews.InsertTransition(ctx, write.Transition{Owner: s.Owner, ContentType: t, ContentID: s.ItemID, ContentVersionID: s.VersionID,
-			Action: action, From: res.From, To: res.To, ActorID: p.UserID, Note: in.Note, IdempotencyKey: key, At: at}); err != nil {
+			Action: action, From: res.From, To: res.To, ActorID: p.UserID, Note: in.Note, FieldComments: comments, IdempotencyKey: key, At: at}); err != nil {
 			return err
 		}
 		meta := map[string]any{"content_version_id": s.VersionID.String(), "version": s.VersionNo, "from_status": string(res.From),

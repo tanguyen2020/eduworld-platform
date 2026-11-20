@@ -6012,6 +6012,27 @@ components:
           type: integer
           minimum: 0
           description: Số lượt chơi/học đang ghim version này (ước lượng)
+        field_comments:
+          type: array
+          maxItems: 50
+          description: Nhận xét theo trường của lần từ chối gần nhất của version (F025 T046)
+          items:
+            $ref: '#/components/schemas/ReviewFieldComment'
+    ReviewFieldComment:
+      type: object
+      required:
+        - path
+        - comment
+      additionalProperties: false
+      properties:
+        path:
+          type: string
+          maxLength: 256
+          description: JSON pointer (RFC 6901) tới trường của version, vd. /stem/vi; rỗng = toàn bộ
+        comment:
+          type: string
+          minLength: 1
+          maxLength: 1000
     ContentVersionDiff:
       type: object
       required:

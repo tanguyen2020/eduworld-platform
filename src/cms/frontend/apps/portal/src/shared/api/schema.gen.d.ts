@@ -9370,6 +9370,8 @@ export interface components {
             content_type: components["schemas"]["LearningContentType"];
             content_version_id?: components["schemas"]["Uuid"];
             due_at?: components["schemas"]["Timestamp"];
+            /** @description Nhận xét theo trường khi task bị từ chối (F025 T046) */
+            field_comments?: components["schemas"]["ReviewFieldComment"][];
             /** @enum {string} */
             lane: "tenant" | "platform_learning";
             resolved_at?: components["schemas"]["Timestamp"];
@@ -9475,6 +9477,8 @@ export interface components {
             author_id?: components["schemas"]["Uuid"];
             change_note?: string;
             content_version_id?: components["schemas"]["Uuid"];
+            /** @description Nhận xét theo trường của lần từ chối gần nhất của version (F025 T046) */
+            field_comments?: components["schemas"]["ReviewFieldComment"][];
             /** @description true nếu là con trỏ release hiện hành */
             is_current?: boolean;
             publish_at?: components["schemas"]["Timestamp"];
@@ -12407,6 +12411,11 @@ export interface components {
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (hôm nay) */
             is_partial: boolean;
+        };
+        ReviewFieldComment: {
+            comment: string;
+            /** @description JSON pointer (RFC 6901) tới trường của version, vd. /stem/vi; rỗng = toàn bộ */
+            path: string;
         };
         RewardClaimResult: {
             claimed: boolean;
@@ -21063,6 +21072,8 @@ export interface operations {
                     action: "submit_review" | "approve" | "reject" | "revise" | "archive";
                     /** @description Bắt buộc true khi approve version có audio_exempt_reason (CONTENT_MODEL §8.1, F025-AC-16); thiếu → 422 VALIDATION_FAILED */
                     audio_exemption_acknowledged?: boolean;
+                    /** @description Nhận xét theo trường của người duyệt (OQ F054-1, F025 T046); chỉ nhận với action reject (khác → 422 VALIDATION_FAILED). Lưu cùng review task và lịch sử transition, trả trong ContentReviewTask và ContentVersionSummary */
+                    field_comments?: components["schemas"]["ReviewFieldComment"][];
                     note?: string;
                 };
             };

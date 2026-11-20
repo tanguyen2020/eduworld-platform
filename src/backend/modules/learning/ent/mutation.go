@@ -16441,26 +16441,28 @@ func (m *ContentReleaseMutation) ResetEdge(name string) error {
 // ContentTransitionMutation represents an operation that mutates the ContentTransition nodes in the graph.
 type ContentTransitionMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *uuid.UUID
-	tenant_id          *uuid.UUID
-	created_at         *time.Time
-	created_by         *uuid.UUID
-	content_type       *string
-	content_version_id *uuid.UUID
-	from_status        *string
-	to_status          *string
-	actor_id           *uuid.UUID
-	at                 *time.Time
-	note               *string
-	content_id         *uuid.UUID
-	action             *string
-	idempotency_key    *string
-	clearedFields      map[string]struct{}
-	done               bool
-	oldValue           func(context.Context) (*ContentTransition, error)
-	predicates         []predicate.ContentTransition
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	tenant_id            *uuid.UUID
+	created_at           *time.Time
+	created_by           *uuid.UUID
+	content_type         *string
+	content_version_id   *uuid.UUID
+	from_status          *string
+	to_status            *string
+	actor_id             *uuid.UUID
+	at                   *time.Time
+	note                 *string
+	content_id           *uuid.UUID
+	action               *string
+	idempotency_key      *string
+	field_comments       *jsontext.Value
+	appendfield_comments jsontext.Value
+	clearedFields        map[string]struct{}
+	done                 bool
+	oldValue             func(context.Context) (*ContentTransition, error)
+	predicates           []predicate.ContentTransition
 }
 
 var _ ent.Mutation = (*ContentTransitionMutation)(nil)
@@ -17126,6 +17128,71 @@ func (m *ContentTransitionMutation) ResetIdempotencyKey() {
 	delete(m.clearedFields, contenttransition.FieldIdempotencyKey)
 }
 
+// SetFieldComments sets the "field_comments" field.
+func (m *ContentTransitionMutation) SetFieldComments(j jsontext.Value) {
+	m.field_comments = &j
+	m.appendfield_comments = nil
+}
+
+// FieldComments returns the value of the "field_comments" field in the mutation.
+func (m *ContentTransitionMutation) FieldComments() (r jsontext.Value, exists bool) {
+	v := m.field_comments
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFieldComments returns the old "field_comments" field's value of the ContentTransition entity.
+// If the ContentTransition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContentTransitionMutation) OldFieldComments(ctx context.Context) (v jsontext.Value, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFieldComments is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFieldComments requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFieldComments: %w", err)
+	}
+	return oldValue.FieldComments, nil
+}
+
+// AppendFieldComments adds j to the "field_comments" field.
+func (m *ContentTransitionMutation) AppendFieldComments(j jsontext.Value) {
+	m.appendfield_comments = append(m.appendfield_comments, j...)
+}
+
+// AppendedFieldComments returns the list of values that were appended to the "field_comments" field in this mutation.
+func (m *ContentTransitionMutation) AppendedFieldComments() (jsontext.Value, bool) {
+	if len(m.appendfield_comments) == 0 {
+		return nil, false
+	}
+	return m.appendfield_comments, true
+}
+
+// ClearFieldComments clears the value of the "field_comments" field.
+func (m *ContentTransitionMutation) ClearFieldComments() {
+	m.field_comments = nil
+	m.appendfield_comments = nil
+	m.clearedFields[contenttransition.FieldFieldComments] = struct{}{}
+}
+
+// FieldCommentsCleared returns if the "field_comments" field was cleared in this mutation.
+func (m *ContentTransitionMutation) FieldCommentsCleared() bool {
+	_, ok := m.clearedFields[contenttransition.FieldFieldComments]
+	return ok
+}
+
+// ResetFieldComments resets all changes to the "field_comments" field.
+func (m *ContentTransitionMutation) ResetFieldComments() {
+	m.field_comments = nil
+	m.appendfield_comments = nil
+	delete(m.clearedFields, contenttransition.FieldFieldComments)
+}
+
 // Where appends a list predicates to the ContentTransitionMutation builder.
 func (m *ContentTransitionMutation) Where(ps ...predicate.ContentTransition) {
 	m.predicates = append(m.predicates, ps...)
@@ -17160,7 +17227,7 @@ func (m *ContentTransitionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ContentTransitionMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.tenant_id != nil {
 		fields = append(fields, contenttransition.FieldTenantID)
 	}
@@ -17200,6 +17267,9 @@ func (m *ContentTransitionMutation) Fields() []string {
 	if m.idempotency_key != nil {
 		fields = append(fields, contenttransition.FieldIdempotencyKey)
 	}
+	if m.field_comments != nil {
+		fields = append(fields, contenttransition.FieldFieldComments)
+	}
 	return fields
 }
 
@@ -17234,6 +17304,8 @@ func (m *ContentTransitionMutation) Field(name string) (ent.Value, bool) {
 		return m.Action()
 	case contenttransition.FieldIdempotencyKey:
 		return m.IdempotencyKey()
+	case contenttransition.FieldFieldComments:
+		return m.FieldComments()
 	}
 	return nil, false
 }
@@ -17269,6 +17341,8 @@ func (m *ContentTransitionMutation) OldField(ctx context.Context, name string) (
 		return m.OldAction(ctx)
 	case contenttransition.FieldIdempotencyKey:
 		return m.OldIdempotencyKey(ctx)
+	case contenttransition.FieldFieldComments:
+		return m.OldFieldComments(ctx)
 	}
 	return nil, fmt.Errorf("unknown ContentTransition field %s", name)
 }
@@ -17369,6 +17443,13 @@ func (m *ContentTransitionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetIdempotencyKey(v)
 		return nil
+	case contenttransition.FieldFieldComments:
+		v, ok := value.(jsontext.Value)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFieldComments(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ContentTransition field %s", name)
 }
@@ -17420,6 +17501,9 @@ func (m *ContentTransitionMutation) ClearedFields() []string {
 	if m.FieldCleared(contenttransition.FieldIdempotencyKey) {
 		fields = append(fields, contenttransition.FieldIdempotencyKey)
 	}
+	if m.FieldCleared(contenttransition.FieldFieldComments) {
+		fields = append(fields, contenttransition.FieldFieldComments)
+	}
 	return fields
 }
 
@@ -17454,6 +17538,9 @@ func (m *ContentTransitionMutation) ClearField(name string) error {
 		return nil
 	case contenttransition.FieldIdempotencyKey:
 		m.ClearIdempotencyKey()
+		return nil
+	case contenttransition.FieldFieldComments:
+		m.ClearFieldComments()
 		return nil
 	}
 	return fmt.Errorf("unknown ContentTransition nullable field %s", name)
@@ -17501,6 +17588,9 @@ func (m *ContentTransitionMutation) ResetField(name string) error {
 		return nil
 	case contenttransition.FieldIdempotencyKey:
 		m.ResetIdempotencyKey()
+		return nil
+	case contenttransition.FieldFieldComments:
+		m.ResetFieldComments()
 		return nil
 	}
 	return fmt.Errorf("unknown ContentTransition field %s", name)

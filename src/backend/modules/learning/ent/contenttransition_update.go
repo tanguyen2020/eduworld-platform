@@ -90,6 +90,9 @@ func (_u *ContentTransitionUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.IdempotencyKeyCleared() {
 		_spec.ClearField(contenttransition.FieldIdempotencyKey, field.TypeString)
 	}
+	if _u.mutation.FieldCommentsCleared() {
+		_spec.ClearField(contenttransition.FieldFieldComments, field.TypeJSON)
+	}
 	_spec.Node.Schema = _u.schemaConfig.ContentTransition
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -203,6 +206,9 @@ func (_u *ContentTransitionUpdateOne) sqlSave(ctx context.Context) (_node *Conte
 	}
 	if _u.mutation.IdempotencyKeyCleared() {
 		_spec.ClearField(contenttransition.FieldIdempotencyKey, field.TypeString)
+	}
+	if _u.mutation.FieldCommentsCleared() {
+		_spec.ClearField(contenttransition.FieldFieldComments, field.TypeJSON)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ContentTransition
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
