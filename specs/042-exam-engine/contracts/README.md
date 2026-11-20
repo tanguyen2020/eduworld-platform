@@ -37,7 +37,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `exam.started`, `exam.submitted`, `exam.graded`, `exam.results_released`, `exam.regraded` | Phát (`EVT_LEARNING`) | `specs/events/payloads/learning/<event>.v1.schema.json` | Cần thêm |
+| `exam.started`, `exam.submitted`, `exam.graded`, `exam.results_released`, `exam.regraded` | Phát (`EVT_LEARNING`) | `specs/events/payloads/learning/<event>.v1.schema.json` | Có (F042, 2026-11-20) |
 | `attempt.re_evaluated` | Phát | `specs/events/payloads/learning/attempt.re_evaluated.v1.schema.json` | Cần thêm (owner F031) |
 | `question.answered` (learning event) | Phát khi chấm | `specs/schemas/learning-event.schema.json` | Có sẵn |
 | `exam.opened`, `exam.closed` | Phát | `specs/events/payloads/learning/exam.opened.v1.schema.json`, `exam.closed.v1.schema.json` | Cần thêm |

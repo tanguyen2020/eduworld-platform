@@ -127,3 +127,9 @@ const AssignmentEnrollmentName = "learning.assignment_enrollment"
 func AssignmentEnrollmentSubjects() []string {
 	return []string{natsx.EventSubject("identity", "enrollment.changed"), natsx.EventSubject("identity", "user.access_revoked")}
 }
+
+// ExamGradeName is the durable consumer that grades the submitted exam attempts (worker exam.grade, F042-AC-19).
+const ExamGradeName = "learning.exam_grade"
+
+// ExamGradeSubjects are the filter subjects of learning.exam_grade.
+func ExamGradeSubjects() []string { return []string{natsx.EventSubject("learning", "exam.submitted")} }

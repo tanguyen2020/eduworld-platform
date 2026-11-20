@@ -413,6 +413,14 @@ func init() {
 	attemptDescIdempotencyKey := attemptFields[28].Descriptor()
 	// attempt.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
 	attempt.IdempotencyKeyValidator = attemptDescIdempotencyKey.Validators[0].(func(string) error)
+	// attemptDescActiveDeviceToken is the schema descriptor for active_device_token field.
+	attemptDescActiveDeviceToken := attemptFields[30].Descriptor()
+	// attempt.ActiveDeviceTokenValidator is a validator for the "active_device_token" field. It is called by the builders before save.
+	attempt.ActiveDeviceTokenValidator = attemptDescActiveDeviceToken.Validators[0].(func(string) error)
+	// attemptDescClientPlatform is the schema descriptor for client_platform field.
+	attemptDescClientPlatform := attemptFields[31].Descriptor()
+	// attempt.ClientPlatformValidator is a validator for the "client_platform" field. It is called by the builders before save.
+	attempt.ClientPlatformValidator = attemptDescClientPlatform.Validators[0].(func(string) error)
 	// attemptDescID is the schema descriptor for id field.
 	attemptDescID := attemptMixinFields0[0].Descriptor()
 	// attempt.DefaultID holds the default value on creation for the id field.

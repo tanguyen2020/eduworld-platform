@@ -12,12 +12,15 @@ import (
 
 // RegradeRequest is a row of assessment.regrade_requests (F031 US4).
 type RegradeRequest struct {
-	ID                 uuid.UUID
-	TenantID           *uuid.UUID // nil = platform request of content_admin
-	SubjectID          *uuid.UUID
-	Scope              string
-	QuestionVersionID  *uuid.UUID
-	ActivityVersionID  *uuid.UUID
+	ID                uuid.UUID
+	TenantID          *uuid.UUID // nil = platform request of content_admin
+	SubjectID         *uuid.UUID
+	Scope             string
+	QuestionVersionID *uuid.UUID
+	ActivityVersionID *uuid.UUID
+	// ExamSessionID and SchoolID are set by a request of scope exam_session (F042, with QuestionVersionID).
+	ExamSessionID      *uuid.UUID
+	SchoolID           *uuid.UUID
 	CorrectedVersionID *uuid.UUID
 	Action             evaluation.Action
 	Reason             string

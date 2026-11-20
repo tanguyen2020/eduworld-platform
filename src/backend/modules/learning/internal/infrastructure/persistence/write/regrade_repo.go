@@ -24,7 +24,7 @@ var _ write.RegradeStore = RegradeRepo{}
 
 const regradeColumns = `regrade_request_id, tenant_id, subject_id, scope, question_version_id, activity_version_id, corrected_version_id,
 	action, reason, status, affected_attempts, re_evaluated_attempts, requested_by, requested_role, idempotency_key, created_at, started_at,
-	finished_at`
+	finished_at, exam_session_id, school_id`
 
 func nullUUID(n uuid.NullUUID) *uuid.UUID {
 	if !n.Valid {
@@ -45,11 +45,12 @@ func nullTime(n sql.NullTime) *time.Time {
 // ScanRegrade scans regradeColumns.
 func scanRegrade(row interface{ Scan(...any) error }) (write.RegradeRequest, error) {
 	var r write.RegradeRequest
-	var tenant, subject, qv, av, cv uuid.NullUUID
+	var tenant, subject, qv, av, cv, es, school uuid.NullUUID
 	var started, finished sql.NullTime
 	var action string
 	err := row.Scan(&r.ID, &tenant, &subject, &r.Scope, &qv, &av, &cv, &action, &r.Reason, &r.Status, &r.Affected, &r.ReEvaluated,
-		&r.RequestedBy, &r.RequestedRole, &r.IdempotencyKey, &r.CreatedAt, &started, &finished)
+		&r.RequestedBy, &r.RequestedRole, &r.IdempotencyKey, &r.CreatedAt, &started, &finished, &es, &school)
+	r.ExamSessionID, r.SchoolID = nullUUID(es), nullUUID(school)
 	r.TenantID, r.SubjectID, r.QuestionVersionID, r.ActivityVersionID, r.CorrectedVersionID =
 		nullUUID(tenant), nullUUID(subject), nullUUID(qv), nullUUID(av), nullUUID(cv)
 	r.Action, r.StartedAt, r.FinishedAt = evaluation.Action(action), nullTime(started), nullTime(finished)
@@ -66,13 +67,13 @@ func (RegradeRepo) InsertRequest(ctx context.Context, r write.RegradeRequest) (b
 	// tenancyguard:ok insert of the session tenant or a platform row under PlatformScope; conflict on the active-request unique
 	res, err := tx.ExecContext(ctx, `INSERT INTO assessment.regrade_requests (regrade_request_id, tenant_id, subject_id, scope,
 		question_version_id, activity_version_id, corrected_version_id, action, reason, status, requested_by, requested_role, idempotency_key,
-		created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'queued', $10, $11, $12, $13, $13)
+		created_at, updated_at, exam_session_id, school_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'queued', $10, $11, $12, $13, $13, $14, $15)
 		ON CONFLICT ((coalesce(question_version_id, activity_version_id, exam_session_id)),
 			(coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid)))
 			WHERE status IN ('queued','running') AND deleted_at IS NULL DO NOTHING`,
 		r.ID, r.TenantID, r.SubjectID, r.Scope, r.QuestionVersionID, r.ActivityVersionID, r.CorrectedVersionID, string(r.Action), r.Reason,
-		r.RequestedBy, r.RequestedRole, r.IdempotencyKey, r.CreatedAt.UTC())
+		r.RequestedBy, r.RequestedRole, r.IdempotencyKey, r.CreatedAt.UTC(), r.ExamSessionID, r.SchoolID)
 	if err != nil {
 		return false, fmt.Errorf("insert regrade request: %w", err)
 	}
@@ -182,11 +183,14 @@ func (RegradeRepo) AffectedAttempts(ctx context.Context, r write.RegradeRequest)
 	}
 	// tenancyguard:ok job regrade-runner under tenancy.Bypass(re_evaluation): tenant of the request ($3) or every tenant, deleted_at IS NULL
 	rows, err := tx.QueryContext(ctx, `SELECT a.attempt_id, a.tenant_id FROM assessment.attempts a
-		WHERE a.status = 'graded' AND a.mode <> 'exam' AND a.deleted_at IS NULL AND ($3::uuid IS NULL OR a.tenant_id = $3)
-			AND (($1::uuid IS NOT NULL AND EXISTS (SELECT 1 FROM assessment.attempt_items i WHERE i.attempt_id = a.attempt_id
-					AND i.question_version_id = $1 AND i.deleted_at IS NULL))
-				OR ($2::uuid IS NOT NULL AND a.source_version_id = $2))
-		ORDER BY a.tenant_id, a.attempt_id`, r.QuestionVersionID, r.ActivityVersionID, r.TenantID)
+		WHERE a.status = 'graded' AND a.deleted_at IS NULL AND ($3::uuid IS NULL OR a.tenant_id = $3)
+			AND (($4::uuid IS NULL AND a.mode <> 'exam' AND (($1::uuid IS NOT NULL AND EXISTS (SELECT 1 FROM assessment.attempt_items i
+					WHERE i.attempt_id = a.attempt_id AND i.question_version_id = $1 AND i.deleted_at IS NULL))
+				OR ($2::uuid IS NOT NULL AND a.source_version_id = $2)))
+				OR ($4::uuid IS NOT NULL AND a.mode = 'exam' AND a.context_type = 'exam_session' AND a.context_id = $4
+					AND EXISTS (SELECT 1 FROM assessment.attempt_items i WHERE i.attempt_id = a.attempt_id AND i.question_version_id = $1
+						AND i.deleted_at IS NULL)))
+		ORDER BY a.tenant_id, a.attempt_id`, r.QuestionVersionID, r.ActivityVersionID, r.TenantID, r.ExamSessionID)
 	if err != nil {
 		return nil, fmt.Errorf("affected attempts: %w", err)
 	}

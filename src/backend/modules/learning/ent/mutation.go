@@ -9374,6 +9374,10 @@ type AttemptMutation struct {
 	appendobjective_ids  []uuid.UUID
 	recommendation_id    *uuid.UUID
 	idempotency_key      *string
+	exam_paper_id        *uuid.UUID
+	active_device_token  *string
+	client_platform      *string
+	game_session_id      *uuid.UUID
 	clearedFields        map[string]struct{}
 	done                 bool
 	oldValue             func(context.Context) (*Attempt, error)
@@ -11239,6 +11243,202 @@ func (m *AttemptMutation) ResetIdempotencyKey() {
 	m.idempotency_key = nil
 }
 
+// SetExamPaperID sets the "exam_paper_id" field.
+func (m *AttemptMutation) SetExamPaperID(u uuid.UUID) {
+	m.exam_paper_id = &u
+}
+
+// ExamPaperID returns the value of the "exam_paper_id" field in the mutation.
+func (m *AttemptMutation) ExamPaperID() (r uuid.UUID, exists bool) {
+	v := m.exam_paper_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExamPaperID returns the old "exam_paper_id" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldExamPaperID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExamPaperID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExamPaperID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExamPaperID: %w", err)
+	}
+	return oldValue.ExamPaperID, nil
+}
+
+// ClearExamPaperID clears the value of the "exam_paper_id" field.
+func (m *AttemptMutation) ClearExamPaperID() {
+	m.exam_paper_id = nil
+	m.clearedFields[attempt.FieldExamPaperID] = struct{}{}
+}
+
+// ExamPaperIDCleared returns if the "exam_paper_id" field was cleared in this mutation.
+func (m *AttemptMutation) ExamPaperIDCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldExamPaperID]
+	return ok
+}
+
+// ResetExamPaperID resets all changes to the "exam_paper_id" field.
+func (m *AttemptMutation) ResetExamPaperID() {
+	m.exam_paper_id = nil
+	delete(m.clearedFields, attempt.FieldExamPaperID)
+}
+
+// SetActiveDeviceToken sets the "active_device_token" field.
+func (m *AttemptMutation) SetActiveDeviceToken(s string) {
+	m.active_device_token = &s
+}
+
+// ActiveDeviceToken returns the value of the "active_device_token" field in the mutation.
+func (m *AttemptMutation) ActiveDeviceToken() (r string, exists bool) {
+	v := m.active_device_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActiveDeviceToken returns the old "active_device_token" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldActiveDeviceToken(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActiveDeviceToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActiveDeviceToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActiveDeviceToken: %w", err)
+	}
+	return oldValue.ActiveDeviceToken, nil
+}
+
+// ClearActiveDeviceToken clears the value of the "active_device_token" field.
+func (m *AttemptMutation) ClearActiveDeviceToken() {
+	m.active_device_token = nil
+	m.clearedFields[attempt.FieldActiveDeviceToken] = struct{}{}
+}
+
+// ActiveDeviceTokenCleared returns if the "active_device_token" field was cleared in this mutation.
+func (m *AttemptMutation) ActiveDeviceTokenCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldActiveDeviceToken]
+	return ok
+}
+
+// ResetActiveDeviceToken resets all changes to the "active_device_token" field.
+func (m *AttemptMutation) ResetActiveDeviceToken() {
+	m.active_device_token = nil
+	delete(m.clearedFields, attempt.FieldActiveDeviceToken)
+}
+
+// SetClientPlatform sets the "client_platform" field.
+func (m *AttemptMutation) SetClientPlatform(s string) {
+	m.client_platform = &s
+}
+
+// ClientPlatform returns the value of the "client_platform" field in the mutation.
+func (m *AttemptMutation) ClientPlatform() (r string, exists bool) {
+	v := m.client_platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientPlatform returns the old "client_platform" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldClientPlatform(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientPlatform: %w", err)
+	}
+	return oldValue.ClientPlatform, nil
+}
+
+// ClearClientPlatform clears the value of the "client_platform" field.
+func (m *AttemptMutation) ClearClientPlatform() {
+	m.client_platform = nil
+	m.clearedFields[attempt.FieldClientPlatform] = struct{}{}
+}
+
+// ClientPlatformCleared returns if the "client_platform" field was cleared in this mutation.
+func (m *AttemptMutation) ClientPlatformCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldClientPlatform]
+	return ok
+}
+
+// ResetClientPlatform resets all changes to the "client_platform" field.
+func (m *AttemptMutation) ResetClientPlatform() {
+	m.client_platform = nil
+	delete(m.clearedFields, attempt.FieldClientPlatform)
+}
+
+// SetGameSessionID sets the "game_session_id" field.
+func (m *AttemptMutation) SetGameSessionID(u uuid.UUID) {
+	m.game_session_id = &u
+}
+
+// GameSessionID returns the value of the "game_session_id" field in the mutation.
+func (m *AttemptMutation) GameSessionID() (r uuid.UUID, exists bool) {
+	v := m.game_session_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameSessionID returns the old "game_session_id" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldGameSessionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameSessionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameSessionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameSessionID: %w", err)
+	}
+	return oldValue.GameSessionID, nil
+}
+
+// ClearGameSessionID clears the value of the "game_session_id" field.
+func (m *AttemptMutation) ClearGameSessionID() {
+	m.game_session_id = nil
+	m.clearedFields[attempt.FieldGameSessionID] = struct{}{}
+}
+
+// GameSessionIDCleared returns if the "game_session_id" field was cleared in this mutation.
+func (m *AttemptMutation) GameSessionIDCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldGameSessionID]
+	return ok
+}
+
+// ResetGameSessionID resets all changes to the "game_session_id" field.
+func (m *AttemptMutation) ResetGameSessionID() {
+	m.game_session_id = nil
+	delete(m.clearedFields, attempt.FieldGameSessionID)
+}
+
 // Where appends a list predicates to the AttemptMutation builder.
 func (m *AttemptMutation) Where(ps ...predicate.Attempt) {
 	m.predicates = append(m.predicates, ps...)
@@ -11273,7 +11473,7 @@ func (m *AttemptMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AttemptMutation) Fields() []string {
-	fields := make([]string, 0, 38)
+	fields := make([]string, 0, 42)
 	if m.tenant_id != nil {
 		fields = append(fields, attempt.FieldTenantID)
 	}
@@ -11388,6 +11588,18 @@ func (m *AttemptMutation) Fields() []string {
 	if m.idempotency_key != nil {
 		fields = append(fields, attempt.FieldIdempotencyKey)
 	}
+	if m.exam_paper_id != nil {
+		fields = append(fields, attempt.FieldExamPaperID)
+	}
+	if m.active_device_token != nil {
+		fields = append(fields, attempt.FieldActiveDeviceToken)
+	}
+	if m.client_platform != nil {
+		fields = append(fields, attempt.FieldClientPlatform)
+	}
+	if m.game_session_id != nil {
+		fields = append(fields, attempt.FieldGameSessionID)
+	}
 	return fields
 }
 
@@ -11472,6 +11684,14 @@ func (m *AttemptMutation) Field(name string) (ent.Value, bool) {
 		return m.RecommendationID()
 	case attempt.FieldIdempotencyKey:
 		return m.IdempotencyKey()
+	case attempt.FieldExamPaperID:
+		return m.ExamPaperID()
+	case attempt.FieldActiveDeviceToken:
+		return m.ActiveDeviceToken()
+	case attempt.FieldClientPlatform:
+		return m.ClientPlatform()
+	case attempt.FieldGameSessionID:
+		return m.GameSessionID()
 	}
 	return nil, false
 }
@@ -11557,6 +11777,14 @@ func (m *AttemptMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldRecommendationID(ctx)
 	case attempt.FieldIdempotencyKey:
 		return m.OldIdempotencyKey(ctx)
+	case attempt.FieldExamPaperID:
+		return m.OldExamPaperID(ctx)
+	case attempt.FieldActiveDeviceToken:
+		return m.OldActiveDeviceToken(ctx)
+	case attempt.FieldClientPlatform:
+		return m.OldClientPlatform(ctx)
+	case attempt.FieldGameSessionID:
+		return m.OldGameSessionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Attempt field %s", name)
 }
@@ -11832,6 +12060,34 @@ func (m *AttemptMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetIdempotencyKey(v)
 		return nil
+	case attempt.FieldExamPaperID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExamPaperID(v)
+		return nil
+	case attempt.FieldActiveDeviceToken:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActiveDeviceToken(v)
+		return nil
+	case attempt.FieldClientPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientPlatform(v)
+		return nil
+	case attempt.FieldGameSessionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameSessionID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Attempt field %s", name)
 }
@@ -12009,6 +12265,18 @@ func (m *AttemptMutation) ClearedFields() []string {
 	if m.FieldCleared(attempt.FieldRecommendationID) {
 		fields = append(fields, attempt.FieldRecommendationID)
 	}
+	if m.FieldCleared(attempt.FieldExamPaperID) {
+		fields = append(fields, attempt.FieldExamPaperID)
+	}
+	if m.FieldCleared(attempt.FieldActiveDeviceToken) {
+		fields = append(fields, attempt.FieldActiveDeviceToken)
+	}
+	if m.FieldCleared(attempt.FieldClientPlatform) {
+		fields = append(fields, attempt.FieldClientPlatform)
+	}
+	if m.FieldCleared(attempt.FieldGameSessionID) {
+		fields = append(fields, attempt.FieldGameSessionID)
+	}
 	return fields
 }
 
@@ -12070,6 +12338,18 @@ func (m *AttemptMutation) ClearField(name string) error {
 		return nil
 	case attempt.FieldRecommendationID:
 		m.ClearRecommendationID()
+		return nil
+	case attempt.FieldExamPaperID:
+		m.ClearExamPaperID()
+		return nil
+	case attempt.FieldActiveDeviceToken:
+		m.ClearActiveDeviceToken()
+		return nil
+	case attempt.FieldClientPlatform:
+		m.ClearClientPlatform()
+		return nil
+	case attempt.FieldGameSessionID:
+		m.ClearGameSessionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Attempt nullable field %s", name)
@@ -12192,6 +12472,18 @@ func (m *AttemptMutation) ResetField(name string) error {
 		return nil
 	case attempt.FieldIdempotencyKey:
 		m.ResetIdempotencyKey()
+		return nil
+	case attempt.FieldExamPaperID:
+		m.ResetExamPaperID()
+		return nil
+	case attempt.FieldActiveDeviceToken:
+		m.ResetActiveDeviceToken()
+		return nil
+	case attempt.FieldClientPlatform:
+		m.ResetClientPlatform()
+		return nil
+	case attempt.FieldGameSessionID:
+		m.ResetGameSessionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Attempt field %s", name)

@@ -177,6 +177,10 @@ func (AttemptRepo) InsertAnswer(ctx context.Context, r write.AnswerRow) error {
 	if !ok {
 		return entx.ErrNoTransaction
 	}
+	var correct, score any = r.IsCorrect, r.Score
+	if r.Ungraded {
+		correct, score = nil, nil
+	}
 	var client *int64
 	if r.ClientElapsedMS != nil {
 		v := min(*r.ClientElapsedMS, int64(1<<31-1))
@@ -185,7 +189,7 @@ func (AttemptRepo) InsertAnswer(ctx context.Context, r write.AnswerRow) error {
 	_, err := tx.ExecContext(ctx, `INSERT INTO assessment.attempt_answers (attempt_answer_id, tenant_id, created_at, attempt_id, position,
 		school_id, question_version_id, response, is_correct, score, answered_at, client_elapsed_ms, response_ms, attempt_no, is_scored,
 		idempotency_key, hints_used, rapid_guess) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $3, $11, $12, $13, $14, $15, $16, $17)`,
-		r.ID, r.TenantID, r.AnsweredAt.UTC(), r.AttemptID, r.Position, r.SchoolID, r.QuestionVersionID, []byte(r.Response), r.IsCorrect, r.Score,
+		r.ID, r.TenantID, r.AnsweredAt.UTC(), r.AttemptID, r.Position, r.SchoolID, r.QuestionVersionID, []byte(r.Response), correct, score,
 		client, min(r.ResponseMS, int64(1<<31-1)), r.AttemptNo, r.IsScored, r.IdempotencyKey, r.HintsUsed, r.RapidGuess)
 	if err != nil {
 		return fmt.Errorf("attempt answer: %w", MapCurriculumErr(err))

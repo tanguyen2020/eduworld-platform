@@ -177,6 +177,9 @@ type ReviewView struct {
 	MaxScore       *float64         `json:"max_score"`
 	Items          []ReviewItemView `json:"items"`
 	WeakObjectives []uuid.UUID      `json:"weak_objectives"`
+	// ScoreScaled and SectionScores are set by getExamResult (F042-AC-22).
+	ScoreScaled   *float64               `json:"score_scaled,omitempty"`
+	SectionScores []ExamSectionScoreView `json:"section_scores,omitempty"`
 	// Recommendations are the active study recommendations of the student about the weak objectives (F063-AC-24).
 	Recommendations []ReviewRecommendationView `json:"recommendations,omitempty"`
 }

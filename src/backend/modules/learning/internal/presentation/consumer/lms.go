@@ -79,6 +79,7 @@ func (c LMSSchedule) Handle(ctx context.Context, e outbox.Envelope) error {
 		CourseID      *uuid.UUID `json:"course_id"`
 		DueAt         *time.Time `json:"due_at"`
 		OpenAt        *time.Time `json:"open_at"`
+		WindowStart   *time.Time `json:"window_start"`
 		CancelledBy   uuid.UUID  `json:"cancelled_by"`
 	}
 	if err := json.Unmarshal(e.Payload, &p); err != nil || e.TenantID == nil {
@@ -92,6 +93,9 @@ func (c LMSSchedule) Handle(ctx context.Context, e outbox.Envelope) error {
 	}
 	if p.CourseID == nil {
 		return nil
+	}
+	if p.OpenAt == nil {
+		p.OpenAt = p.WindowStart // exam.opened v1 (F042) carries window_start
 	}
 	ev := command.ScheduleFromEvent{EventID: e.EventID, TenantID: *e.TenantID, CourseID: *p.CourseID}
 	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")

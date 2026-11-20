@@ -323,3 +323,26 @@ func (d Delivery) Explanation(ctx context.Context, versionID uuid.UUID) (out jso
 	})
 	return out, err
 }
+
+// CorrectOptions returns the correct option ids of a choice question (single_choice, multiple_choice), shown by the exam
+// analysis once the results are released with show_correct_answers (F042-AC-22); other types return none. Server side
+// only: never part of a render payload (R6).
+func (d Delivery) CorrectOptions(ctx context.Context, versionID uuid.UUID) (out []string, err error) {
+	var c question.Content
+	if err := d.Session.Read(ctx, func(ctx context.Context) error {
+		var err error
+		c, err = d.Reader.Grading(ctx, versionID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	var key struct {
+		One  string   `json:"correct_option_id"`
+		Many []string `json:"correct_option_ids"`
+	}
+	_ = json.Unmarshal(c.AnswerKey, &key)
+	if key.One != "" {
+		return []string{key.One}, nil
+	}
+	return key.Many, nil
+}

@@ -3907,8 +3907,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Nộp bài thi */
+        /**
+         * Nộp bài thi
+         * @description Chuyển in_progress → submitted có điều kiện; chấm trong worker (exam.graded). Cùng Idempotency-Key → cùng kết quả; khác key sau khi đã nộp/tự nộp → 409 EXAM_ALREADY_SUBMITTED (F042-AC-18). Điểm chỉ có khi kết quả đã công bố.
+         */
         post: operations["submitExamAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exams/attempts/{attempt_id}/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Phân tích bài thi sau công bố — theo LO, câu sai, 1–3 LO yếu kèm đề xuất ôn tập (không xếp hạng với bạn)
+         * @description Học sinh chủ bài, school_admin/academic_manager trong phạm vi (lms.assignment.read). Trước công bố → 403 EXAM_RESULTS_NOT_RELEASED cho học sinh (F042-AC-20, AC-22; EXAM_ENGINE §10).
+         */
+        get: operations["getExamAttemptAnalysis"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3923,7 +3946,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Autosave câu trả lời (không trả đúng/sai) */
+        /**
+         * Autosave câu trả lời (không trả đúng/sai)
+         * @description Lưu append-only (bản mới nhất có hiệu lực), chấm khi nộp. Sau deadline_at + exam_offline_sync_grace, hoặc answered_at_client không trước deadline_at → 422 EXAM_TIME_OVER; thiết bị không còn active → 409 EXAM_ACTIVE_ON_OTHER_DEVICE (F042-AC-12, AC-14, AC-15).
+         */
         put: operations["saveExamAnswer"];
         post?: never;
         delete?: never;
@@ -3944,6 +3970,23 @@ export interface paths {
          * @description Attempt của ExamSession đo hiệu quả (F035) luôn trả 403 EXAM_RESULTS_NOT_RELEASED cho học sinh.
          */
         get: operations["getExamResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exams/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thư viện đề luyện — ExamSession practice_test/mock không chính thức đang mở của khối/đối tượng học sinh (F042-AC-26) */
+        get: operations["listExamLibrary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4025,8 +4068,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bắt đầu làm đề — sinh đề từ blueprint, deadline_at theo đồng hồ server */
+        /**
+         * Bắt đầu làm đề — sinh đề từ blueprint, deadline_at theo đồng hồ server
+         * @description Học sinh thuộc đối tượng (F042-AC-09…AC-14). Đã có attempt in_progress → trả attempt đó (deadline_at không đổi).
+         *     Biến thể theo hash(student_id, exam_session_id) mod N (per_student: rút riêng mỗi lượt). Lỗi 403 EXAM_NOT_ASSIGNED,
+         *     EXAM_NOT_OPEN, EXAM_WINDOW_CLOSED; 409 EXAM_MAX_ATTEMPTS; attempt đang mở trên thiết bị khác → 409
+         *     EXAM_ACTIVE_ON_OTHER_DEVICE trừ khi take_over = true (vô hiệu thiết bị cũ, audit exam_attempt.device_switched).
+         */
         post: operations["startExamAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exams/sessions/{exam_session_id}/papers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xem trước các biến thể đề đã khóa (câu, điểm) — người tạo đề trong phạm vi (lms.assignment.write); học sinh → 403 (F042-AC-04) */
+        get: operations["listExamSessionPapers"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8409,6 +8475,8 @@ export interface components {
         };
         /** @description Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. `response` bắt buộc với kind question/cue_answer/simulation_question (thiếu → 422 INVALID_RESPONSE); kind branch_choice gửi `branch_point_id` + `option_id`, không có response (F065-AC-24). */
         ActivityResponseSubmission: {
+            /** @description Đề (saveExamAnswer): thời điểm trả lời trên client khi gửi bù sau mất kết nối; nhận nếu trước deadline_at và server nhận trong exam_offline_sync_grace (EXAM_ENGINE §6) */
+            answered_at_client?: components["schemas"]["Timestamp"];
             branch_point_id?: string;
             /** @description Chỉ tham khảo; server dùng thời gian của server */
             client_elapsed_ms?: number;
@@ -9529,6 +9597,10 @@ export interface components {
                 title?: string;
             }[];
             score?: number | null;
+            /** @description Kết quả đề (getExamResult) — điểm theo score_scale */
+            score_scaled?: number | null;
+            /** @description Kết quả đề (getExamResult) — điểm theo section */
+            section_scores?: components["schemas"]["ExamSectionScore"][];
             weak_objectives?: components["schemas"]["Uuid"][];
         };
         /**
@@ -10819,39 +10891,150 @@ export interface components {
             }[];
             template_id: components["schemas"]["Uuid"];
         };
+        ExamAccommodation: {
+            extra_time_percent: number;
+            student_id: components["schemas"]["Uuid"];
+        };
+        ExamAttemptAnalysis: {
+            attempt_id: components["schemas"]["Uuid"];
+            duration_ms?: number;
+            exam_session_id?: components["schemas"]["Uuid"];
+            max_score?: number;
+            objective_breakdown: {
+                correct: number;
+                /** @enum {string|null} */
+                mastery_level?: "not_started" | "developing" | "approaching" | "proficient" | "mastered" | null;
+                objective_id: components["schemas"]["Uuid"];
+                total: number;
+            }[];
+            review_suggestions: {
+                correct_ratio?: number;
+                /** @enum {string} */
+                kind?: "practice" | "lesson" | "question_set" | "quest";
+                objective_id: components["schemas"]["Uuid"];
+                ref_id?: components["schemas"]["Uuid"];
+                title?: string;
+            }[];
+            score?: number;
+            /** @description Điểm theo score_scale (mặc định thang 10) */
+            score_scaled?: number;
+            section_scores?: components["schemas"]["ExamSectionScore"][];
+            wrong_items: {
+                /** @description Chỉ khi show_correct_answers (câu có phương án) */
+                correct_option_ids?: string[];
+                /** @description richContent giải thích (chỉ khi show_explanations) */
+                explanation?: {
+                    [key: string]: unknown;
+                } | null;
+                feedback?: components["schemas"]["AnswerFeedback"];
+                objective_ids?: components["schemas"]["Uuid"][];
+                position: number;
+                question?: components["schemas"]["QuestionRender"];
+                question_version_id: components["schemas"]["Uuid"];
+                response?: components["schemas"]["QuestionResponse"];
+            }[];
+        };
+        ExamAttemptStart: {
+            /**
+             * @description Chuyển attempt đang mở sang thiết bị này (vô hiệu thiết bị cũ)
+             * @default false
+             */
+            take_over: boolean;
+        };
+        /**
+         * @description until_window_end (mặc định) — deadline_at = min(started_at + thời lượng hiệu lực, window_end); full_duration — đủ thời lượng (EXAM_ENGINE §5)
+         * @enum {string}
+         */
+        ExamLateStartPolicy: "full_duration" | "until_window_end";
+        ExamPaper: {
+            exam_paper_id: components["schemas"]["Uuid"];
+            expected_p?: number | null;
+            sections: {
+                items: {
+                    points: number;
+                    position: number;
+                    question_version_id: components["schemas"]["Uuid"];
+                }[];
+                section_id: string;
+                title?: string;
+            }[];
+            /** @description Seed sinh đề (số nguyên dạng chuỗi) để tái lập */
+            seed?: string;
+            total_points?: number;
+            variant_no: number;
+        };
+        ExamSectionScore: {
+            max_score: number;
+            score: number;
+            section_id: string;
+            title?: string;
+        };
         ExamSession: {
+            /** @description Chỉ trả cho nhân sự */
+            accommodations?: components["schemas"]["ExamAccommodation"][];
             assessment_blueprint_version_id?: components["schemas"]["Uuid"];
+            assignment_id?: components["schemas"]["Uuid"];
             attempts_used?: number;
+            /** @enum {string} */
+            audience?: "assigned" | "library";
+            course_id?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["Timestamp"];
             duration_seconds: number;
+            /** @description Chỉ trả cho học sinh — thời lượng của mình sau gia hạn */
+            effective_duration_seconds?: number;
             exam_session_id: components["schemas"]["Uuid"];
             feedback_timing?: components["schemas"]["FeedbackTiming"];
             grade_level?: components["schemas"]["GradeLevel"];
             /** @description Chỉ trả cho nhân sự — true với ExamSession đo hiệu quả do F035 tạo (chỉ đọc, không công bố kết quả, không xuất đề/báo cáo). Không bao giờ có trong response cho học sinh; response không chứa study, arm, efficacy_wave_id */
             is_efficacy?: boolean;
             is_official: boolean;
+            late_start_policy?: components["schemas"]["ExamLateStartPolicy"];
             max_attempts?: number;
             question_count?: number;
             result_release?: components["schemas"]["ResultRelease"];
             results_released_at?: components["schemas"]["Timestamp"];
+            school_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            score_policy?: "best" | "last" | "first";
+            server_time?: components["schemas"]["Timestamp"];
+            show_correct_answers?: boolean;
+            show_explanations?: boolean;
             /** @enum {string} */
             status?: "scheduled" | "open" | "closed" | "results_released" | "cancelled";
             subject_id?: components["schemas"]["Uuid"];
             title?: string;
             type: components["schemas"]["ExamType"];
+            variant_count?: number;
+            /** @enum {string} */
+            variant_strategy?: "fixed" | "independent_draw" | "per_student";
             window_end?: components["schemas"]["Timestamp"];
             window_start?: components["schemas"]["Timestamp"];
         };
         ExamSessionCreate: {
+            accommodations?: components["schemas"]["ExamAccommodation"][];
             assessment_blueprint_version_id: components["schemas"]["Uuid"];
             /** @description Có khi tạo từ Assignment mode=graded */
             assignment_id?: components["schemas"]["Uuid"];
+            /**
+             * @description library = thư viện đề luyện (chỉ practice_test/mock không chính thức)
+             * @default assigned
+             * @enum {string}
+             */
+            audience: "assigned" | "library";
             course_id?: components["schemas"]["Uuid"];
+            /** @description Mặc định duration_sec của blueprint */
+            duration_seconds?: number;
             feedback_timing?: components["schemas"]["FeedbackTiming"];
-            /** @default false */
-            is_official: boolean;
-            /** @default 1 */
-            max_attempts: number;
+            /** @description Mặc định theo loại đề (EXAM_ENGINE §2: chapter/semester/subject chính thức) */
+            is_official?: boolean;
+            late_start_policy?: components["schemas"]["ExamLateStartPolicy"];
+            /** @description Mặc định theo loại đề (EXAM_ENGINE §2) */
+            max_attempts?: number;
             result_release?: components["schemas"]["ResultRelease"];
+            /** @enum {string} */
+            score_policy?: "best" | "last" | "first";
+            show_correct_answers?: boolean;
+            show_explanations?: boolean;
             targets: components["schemas"]["AssignmentTarget"][];
             title: string;
             type?: components["schemas"]["ExamType"];
@@ -14899,6 +15082,8 @@ export interface components {
         EncounterIdPath: components["schemas"]["Uuid"];
         EventIdPath: components["schemas"]["Uuid"];
         EventRunIdPath: components["schemas"]["Uuid"];
+        /** @description Token thiết bị đang làm đề do client sinh cho mỗi bản cài (lưu băm ở server, EXAM_ENGINE §12); một attempt đề chỉ có một thiết bị active (F042-AC-14). */
+        ExamDeviceToken: string;
         ExamSessionId: components["schemas"]["Uuid"];
         ExperimentIdPath: components["schemas"]["Uuid"];
         FunnelCodePath: string;
@@ -25422,6 +25607,8 @@ export interface operations {
                  *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
                  */
                 "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /** @description Token thiết bị đang làm đề do client sinh cho mỗi bản cài (lưu băm ở server, EXAM_ENGINE §12); một attempt đề chỉ có một thiết bị active (F042-AC-14). */
+                "X-Exam-Device-Token"?: components["parameters"]["ExamDeviceToken"];
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
                  *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
@@ -25451,12 +25638,49 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    getExamAttemptAnalysis: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                attempt_id: components["parameters"]["AttemptId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamAttemptAnalysis"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     saveExamAnswer: {
         parameters: {
             query?: never;
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /** @description Token thiết bị đang làm đề do client sinh cho mỗi bản cài (lưu băm ở server, EXAM_ENGINE §12); một attempt đề chỉ có một thiết bị active (F042-AC-14). */
+                "X-Exam-Device-Token"?: components["parameters"]["ExamDeviceToken"];
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
                  *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
@@ -25483,6 +25707,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
         };
@@ -25519,6 +25745,48 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listExamLibrary: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                grade_level?: components["schemas"]["GradeLevel"];
+                limit?: components["parameters"]["Limit"];
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+                type?: "practice_test" | "mock";
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExamSession"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listExamSessions: {
@@ -25693,6 +25961,47 @@ export interface operations {
                  *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
                  */
                 "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /** @description Token thiết bị đang làm đề do client sinh cho mỗi bản cài (lưu băm ở server, EXAM_ENGINE §12); một attempt đề chỉ có một thiết bị active (F042-AC-14). */
+                "X-Exam-Device-Token"?: components["parameters"]["ExamDeviceToken"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                exam_session_id: components["parameters"]["ExamSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ExamAttemptStart"];
+            };
+        };
+        responses: {
+            /** @description Attempt */
+            201: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attempt"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listExamSessionPapers: {
+        parameters: {
+            query?: never;
+            header?: {
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
                  *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
@@ -25707,19 +26016,20 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Attempt */
-            201: {
+            /** @description OK */
+            200: {
                 headers: {
-                    "Content-Language": components["headers"]["ContentLanguage"];
-                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Attempt"];
+                    "application/json": {
+                        data: components["schemas"]["ExamPaper"][];
+                    };
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            409: components["responses"]["Conflict"];
+            404: components["responses"]["NotFound"];
         };
     };
     listGameConfigs: {

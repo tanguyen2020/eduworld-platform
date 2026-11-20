@@ -83,6 +83,8 @@ type Attempts struct {
 	// Runs stores the runs of the simulation attempts (F066); SimMetrics may be nil.
 	Runs       write.SimulationRunStore
 	SimMetrics SimulationMetrics
+	// ExamRelease is the result release of an exam session and whether its results are visible (F042); nil = immediate.
+	ExamRelease func(ctx context.Context, sessionID uuid.UUID) (string, bool, error)
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -143,7 +145,8 @@ func randomSeed() int64 {
 	return int64(binary.LittleEndian.Uint64(b[:]) & (1<<62 - 1))
 }
 
-// loadOwn loads an attempt of the student of ctx (another student's attempt is 404 ATTEMPT_NOT_FOUND, F030-AC-06).
+// loadOwn loads an attempt of the student of ctx (another student's attempt is 404 ATTEMPT_NOT_FOUND, F030-AC-06); an exam
+// attempt is 409 CONFLICT (F042: only the exam routes act on it).
 func (h Attempts) loadOwn(ctx context.Context, p authz.Principal, id uuid.UUID) (attempt.Attempt, error) {
 	a, err := h.Store.Attempt(ctx, id)
 	if err != nil {
@@ -151,6 +154,10 @@ func (h Attempts) loadOwn(ctx context.Context, p authz.Principal, id uuid.UUID) 
 	}
 	if a.StudentID != p.UserID {
 		return attempt.Attempt{}, problem.New(problem.AttemptNotFound, "")
+	}
+	if a.Mode == attempt.ModeExam {
+		// F042: an exam attempt is answered, submitted and reviewed through /exams (deadline, device, release policy).
+		return attempt.Attempt{}, problem.New(problem.Conflict, "an exam attempt is answered through the exam routes")
 	}
 	return a, nil
 }
@@ -496,6 +503,13 @@ func assignmentOf(a attempt.Attempt) *uuid.UUID {
 // resultRelease is the ResultRelease of an attempt (immediate outside an assignment) and when its results are visible
 // (nil while an assignment has not released them, F041-AC-19).
 func (h Attempts) resultRelease(ctx context.Context, a attempt.Attempt, at time.Time) (string, *time.Time, error) {
+	if a.ContextType == examContextType && h.ExamRelease != nil {
+		release, visible, err := h.ExamRelease(ctx, a.ContextID)
+		if err != nil || !visible {
+			return release, nil, err
+		}
+		return release, &at, nil
+	}
 	id := assignmentOf(a)
 	if id == nil || h.Gate == nil {
 		return "immediate", &at, nil

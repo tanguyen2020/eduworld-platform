@@ -2009,6 +2009,18 @@
     ]
   },
   {
+    "operation_id": "getExamAttemptAnalysis",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/attempts/{attempt_id}/analysis",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getExamResult",
     "module": "learning",
     "method": "GET",
@@ -3495,6 +3507,29 @@
     "method": "GET",
     "path": "/lms/event-templates",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listExamLibrary",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/library",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listExamSessionPapers",
+    "module": "learning",
+    "method": "GET",
+    "path": "/exams/sessions/{exam_session_id}/papers",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

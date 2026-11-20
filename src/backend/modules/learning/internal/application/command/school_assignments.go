@@ -665,6 +665,9 @@ func (h Assignments) PublishAssignment(ctx context.Context, id uuid.UUID, ifMatc
 		if _, err := h.Store.InsertTargetStudents(ctx, *a, students); err != nil {
 			return err
 		}
+		if err := h.examSession(ctx, a, students); err != nil {
+			return err
+		}
 		now := h.now()
 		prev := a.Version
 		a.Status, a.PublishedAt, a.UpdatedBy = string(assignment.PublishStatus(a.OpenAt, now)), &now, &p.UserID
@@ -693,6 +696,31 @@ func (h Assignments) PublishAssignment(ctx context.Context, id uuid.UUID, ifMatc
 		return idempotency.SetResult(ctx, out)
 	})
 	return out, deniedOutside(ctx, err)
+}
+
+// examSession creates the exam session of an assignment on a blueprint in the publish transaction (F042-AC-31): the
+// students snapshotted, the window open_at → due_at (+ late window), the pinned blueprint version and the release
+// policy of the assignment; its id is stored on the assignment.
+func (h Assignments) examSession(ctx context.Context, a *write.AssignmentRow, students []write.TargetStudent) error {
+	if a.ContentType != assignment.ContentBlueprint || h.Exams == nil || !h.Exams.Available() || a.PinnedVersionID == nil {
+		return nil
+	}
+	ids := make([]uuid.UUID, len(students))
+	for i, s := range students {
+		ids[i] = s.StudentID
+	}
+	closeAt := a.DueAt
+	if a.AllowLate {
+		closeAt = closeAt.Add(time.Duration(a.LateHours) * time.Hour)
+	}
+	id, err := h.Exams.Create(ctx, port.ExamSessionRequest{AssignmentID: a.ID, TenantID: a.TenantID, SchoolID: a.SchoolID, CourseID: a.CourseID,
+		BlueprintID: a.ContentID, BlueprintVerID: *a.PinnedVersionID, OpenAt: a.OpenAt, CloseAt: closeAt, StudentIDs: ids,
+		FeedbackTiming: a.FeedbackTiming, ResultRelease: a.ResultRelease, Title: a.Title, MaxAttempts: a.MaxAttempts, ScorePolicy: a.ScorePolicy})
+	if err != nil {
+		return err
+	}
+	a.ExamSessionID = &id
+	return nil
 }
 
 // transition loads an assignment with perm, checks it with ok and saves it changed by apply, with audit (and the events

@@ -59,3 +59,24 @@ func (u AssignmentsDue) Fill(ctx context.Context, studentID uuid.UUID, s *recomm
 	}
 	return nil
 }
+
+// ExamFollowupWindow is how far back R5 looks at released exam results (two weeks) [Proposed].
+const ExamFollowupWindow = 14 * 24 * time.Hour
+
+// ExamFollowups is the SnapshotSource of F042: the objective results of the student's released exams (rule R5).
+type ExamFollowups struct {
+	Store write.ExamStore
+	Clock func() time.Time
+}
+
+// Fill implements SnapshotSource.
+func (u ExamFollowups) Fill(ctx context.Context, studentID uuid.UUID, s *recommendation.Snapshot) error {
+	xs, err := u.Store.ExamObjectiveResults(ctx, studentID, now(u.Clock).Add(-ExamFollowupWindow))
+	if err != nil {
+		return err
+	}
+	for _, x := range xs {
+		s.ExamResults = append(s.ExamResults, recommendation.ExamObjectiveResult{ObjectiveID: x.ObjectiveID, Correct: x.Correct, Total: x.Total})
+	}
+	return nil
+}

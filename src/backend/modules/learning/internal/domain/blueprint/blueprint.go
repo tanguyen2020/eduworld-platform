@@ -45,8 +45,10 @@ type Rule struct {
 
 // Section is a section of the paper.
 type Section struct {
-	ID    string `json:"id"`
-	Rules []Rule `json:"rules"`
+	ID           string          `json:"id"`
+	Title        json.RawMessage `json:"title,omitempty"`
+	ShuffleItems *bool           `json:"shuffle_items,omitempty"`
+	Rules        []Rule          `json:"rules"`
 }
 
 // Balance of the variants.
@@ -64,8 +66,16 @@ type Variants struct {
 
 // ResultRelease of the paper.
 type ResultRelease struct {
-	Mode           string `json:"mode"`
-	FeedbackTiming string `json:"feedback_timing,omitempty"`
+	Mode               string `json:"mode"`
+	FeedbackTiming     string `json:"feedback_timing,omitempty"`
+	ShowCorrectAnswers *bool  `json:"show_correct_answers,omitempty"`
+	ShowExplanations   *bool  `json:"show_explanations,omitempty"`
+}
+
+// AttemptPolicy of the paper.
+type AttemptPolicy struct {
+	MaxAttempts int    `json:"max_attempts"`
+	ScorePolicy string `json:"score_policy"`
 }
 
 // Definition is the matrix (the fields of assessment-blueprint.schema.json the rules read).
@@ -74,6 +84,8 @@ type Definition struct {
 	TotalPoints   float64        `json:"total_points"`
 	Variants      *Variants      `json:"variants,omitempty"`
 	ResultRelease *ResultRelease `json:"result_release,omitempty"`
+	DurationSec   int            `json:"duration_sec,omitempty"`
+	AttemptPolicy *AttemptPolicy `json:"attempt_policy,omitempty"`
 }
 
 // Parse decodes a definition.

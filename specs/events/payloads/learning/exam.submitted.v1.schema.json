@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/exam.submitted.v1.schema.json",
+  "title": "Payload exam.submitted v1 (module learning, owner F042)",
+  "description": "Attempt đề được nộp (học sinh, job exam.autosubmit khi hết giờ hoặc đóng cửa sổ); worker exam.grade chấm sau đó (EXAM_ENGINE §7). Không có điểm.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attempt_id",
+    "exam_session_id",
+    "school_id",
+    "student_id",
+    "exam_type",
+    "is_official",
+    "submit_reason",
+    "submitted_at"
+  ],
+  "properties": {
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_paper_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_type": {
+      "type": "string",
+      "enum": [
+        "practice_test",
+        "mock",
+        "chapter",
+        "semester",
+        "subject",
+        "custom"
+      ]
+    },
+    "is_official": {
+      "type": "boolean"
+    },
+    "assignment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "submit_reason": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto_timeout",
+        "window_closed"
+      ]
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "answered_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "examples": [
+    {
+      "attempt_id": "0193a1f0-0000-7000-8000-000000000410",
+      "exam_session_id": "0193a1f0-0000-7000-8000-000000000401",
+      "school_id": "0193a1f0-0000-7000-8000-000000000402",
+      "student_id": "0193a1f0-0000-7000-8000-000000000411",
+      "exam_paper_id": "0193a1f0-0000-7000-8000-000000000412",
+      "exam_type": "chapter",
+      "is_official": true,
+      "assignment_id": null,
+      "submit_reason": "auto_timeout",
+      "submitted_at": "2026-11-21T01:20:30Z",
+      "answered_count": 7
+    }
+  ]
+}

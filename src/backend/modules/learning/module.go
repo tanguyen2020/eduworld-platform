@@ -23,7 +23,6 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/readiness"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
@@ -68,6 +67,10 @@ const (
 	RecommendationNightlyInterval = 24 * time.Hour
 	// AssignmentSchedulerInterval: F041 T028 opens and closes the school assignments every minute.
 	AssignmentSchedulerInterval = time.Minute
+	// ExamWindowInterval: F042 T027 opens and closes the exam windows every 15 seconds; ExamAutoSubmitInterval is
+	// exam_autosubmit_interval (15 s [Confirmed], EXAM_ENGINE §7.2).
+	ExamWindowInterval     = 15 * time.Second
+	ExamAutoSubmitInterval = 15 * time.Second
 )
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
@@ -162,6 +165,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.AssignmentEnrollmentName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.AssignmentEnrollmentOptions(consumer.AssignmentEnrollment{Tracker: w.assignments}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.ExamGradeName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ExamGradeOptions(consumer.ExamGrade{Grader: w.exams}, core.UoW, core.App, js)
+	})
 	r.Consumer(messaging.LMSScheduleName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LMSScheduleOptions(consumer.LMSSchedule{Schedule: w.lms}, core.UoW, core.App, js)
 	})
@@ -185,6 +191,8 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, "learning-events-partitions", LearningPartitionsInterval, job.LearningEventsPartitions{Runner: parts}.RunOnce)
 	r.Job(Name, "recommendation-nightly", RecommendationNightlyInterval, job.RecommendationNightly{Runner: w.recommendations}.RunOnce)
 	r.Job(Name, "assignment-scheduler", AssignmentSchedulerInterval, job.AssignmentScheduler{Runner: w.assignments}.RunOnce)
+	r.Job(Name, "exam-window", ExamWindowInterval, job.ExamWindow{Runner: w.exams}.RunOnce)
+	r.Job(Name, "exam-autosubmit", ExamAutoSubmitInterval, job.ExamAutoSubmit{Runner: w.exams}.RunOnce)
 	return &Module{facade: w.facade}, nil
 }
 
@@ -208,6 +216,7 @@ type wiring struct {
 	// F040: the school LMS (courses, paths, schedule, study groups).
 	lms         command.LMS
 	assignments command.Assignments
+	exams       command.Exams
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -258,6 +267,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterSelfStudy(reg)
 	observability.RegisterLMS(reg)
 	observability.RegisterAssignments(reg)
+	observability.RegisterExams(reg)
 
 	resources, err := port.NewRegistry(append([]port.ResourceHandler{
 		command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
@@ -328,11 +338,19 @@ func build(r *module.Registry) (*wiring, error) {
 	// F040: R6 (next lesson of the LMS schedule) registers into the engine of F032.
 	recs.Engine.Register(recommendation.R6{})
 	// F041: school assignments (ExamSessionCreator "unavailable" until F042), R1 and the gate of the assignment attempts.
-	asg := command.Assignments{UoW: core.UoW, Store: write.SchoolAssignmentRepo{}, Read: core.ReadSession, Exams: examsession.Unavailable{},
+	asg := command.Assignments{UoW: core.UoW, Store: write.SchoolAssignmentRepo{}, Read: core.ReadSession,
 		Events: events, Audit: auditor, Metrics: observability.SchoolAssignmentCounter{}}
+	// F042: the exam engine; its adapter replaces the "unavailable" ExamSessionCreator of F041 (F042-AC-31).
+	exams := command.Exams{UoW: core.UoW, Store: write.ExamRepo{}, Events: events, Audit: auditor, Metrics: observability.ExamCounter{}}
+	att.ExamRelease = exams.ReleaseOf
+	asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	att.Gate = asg
+	exams.Asg, exams.Att = asg, att
 	recs.Sources = append(recs.Sources, command.AssignmentsDue{Store: write.SchoolAssignmentRepo{}})
 	recs.Engine.Register(recommendation.R1{})
+	// F042: R5 (objectives below 60 % in a released exam).
+	recs.Sources = append(recs.Sources, command.ExamFollowups{Store: write.ExamRepo{}})
+	recs.Engine.Register(recommendation.R5{})
 	asgq := query.SchoolAssignments{Session: core.ReadSession, Model: read.SchoolAssignmentModel{}, Cursors: cursors}
 	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
 		Metrics: observability.LMSCounter{}}
@@ -358,6 +376,7 @@ func build(r *module.Registry) (*wiring, error) {
 	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}}
 	h.LMSCommands = lmsCmd
 	h.AssignmentCommands, h.Assignments = asg, asgq
+	h.ExamCommands, h.ExamQueries = exams, query.Exams{Session: core.ReadSession, Model: read.ExamModel{}, Attempts: attq, Cursors: cursors}
 	h.LMS = query.LMS{Session: core.ReadSession, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: cursors}
 	h.SelfStudy = query.SelfStudy{Session: core.ReadSession, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: cursors}
 	learningRecord := write.MasteryRepo{}
@@ -366,7 +385,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Recommend: recs}
 	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}}
 	h.Lessons, h.LessonQueries = lessons, query.Lessons{Session: core.ReadSession, Model: read.LessonModel{}}
-	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}}
+	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}, Exams: exams}
 	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
@@ -383,5 +402,5 @@ func build(r *module.Registry) (*wiring, error) {
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd, assignments: asg}, nil
+		lms: lmsCmd, assignments: asg, exams: exams}, nil
 }

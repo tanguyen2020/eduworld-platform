@@ -18,7 +18,7 @@ import (
 // exist, graded defaults, invalid fields 422 by JSON pointer, graded on a blueprint 422 while exam sessions are unavailable.
 func TestAssignmentCreate(t *testing.T) {
 	ctx := context.Background()
-	c := newCurEnv(ctx, t)
+	c := newCurEnv(ctx, t, withoutExams) // F041-AC-09 with the "unavailable" ExamSessionCreator; F042-AC-31 covers the adapter
 	k := c.asgSetup(ctx, t)
 	authztest.Cover(t, "createAssignment", authztest.CrossTenant, authztest.RoleDenied)
 	r := must(t, c.createAsg(t, adA, c.asgBody(k, nil)), http.StatusCreated, "create")

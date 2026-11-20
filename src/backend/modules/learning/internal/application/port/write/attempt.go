@@ -30,6 +30,8 @@ type AnswerRow struct {
 	// HintsUsed and RapidGuess (F032): hint levels open before the answer; the answer was too fast to read the stem.
 	HintsUsed  int
 	RapidGuess bool
+	// Ungraded (F042 saveExamAnswer): the answer is graded at the submit, is_correct and score stay NULL.
+	Ungraded bool
 }
 
 // EvaluationRow is one row of assessment.evaluations.

@@ -91,6 +91,14 @@ const (
 	FieldRecommendationID = "recommendation_id"
 	// FieldIdempotencyKey holds the string denoting the idempotency_key field in the database.
 	FieldIdempotencyKey = "idempotency_key"
+	// FieldExamPaperID holds the string denoting the exam_paper_id field in the database.
+	FieldExamPaperID = "exam_paper_id"
+	// FieldActiveDeviceToken holds the string denoting the active_device_token field in the database.
+	FieldActiveDeviceToken = "active_device_token"
+	// FieldClientPlatform holds the string denoting the client_platform field in the database.
+	FieldClientPlatform = "client_platform"
+	// FieldGameSessionID holds the string denoting the game_session_id field in the database.
+	FieldGameSessionID = "game_session_id"
 	// Table holds the table name of the attempt in the database.
 	Table = "attempts"
 )
@@ -136,6 +144,10 @@ var Columns = []string{
 	FieldObjectiveIds,
 	FieldRecommendationID,
 	FieldIdempotencyKey,
+	FieldExamPaperID,
+	FieldActiveDeviceToken,
+	FieldClientPlatform,
+	FieldGameSessionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -192,6 +204,10 @@ var (
 	DefaultObjectiveIds []uuid.UUID
 	// IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
 	IdempotencyKeyValidator func(string) error
+	// ActiveDeviceTokenValidator is a validator for the "active_device_token" field. It is called by the builders before save.
+	ActiveDeviceTokenValidator func(string) error
+	// ClientPlatformValidator is a validator for the "client_platform" field. It is called by the builders before save.
+	ClientPlatformValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -387,4 +403,24 @@ func ByRecommendationID(opts ...sql.OrderTermOption) OrderOption {
 // ByIdempotencyKey orders the results by the idempotency_key field.
 func ByIdempotencyKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIdempotencyKey, opts...).ToFunc()
+}
+
+// ByExamPaperID orders the results by the exam_paper_id field.
+func ByExamPaperID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExamPaperID, opts...).ToFunc()
+}
+
+// ByActiveDeviceToken orders the results by the active_device_token field.
+func ByActiveDeviceToken(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActiveDeviceToken, opts...).ToFunc()
+}
+
+// ByClientPlatform orders the results by the client_platform field.
+func ByClientPlatform(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClientPlatform, opts...).ToFunc()
+}
+
+// ByGameSessionID orders the results by the game_session_id field.
+func ByGameSessionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGameSessionID, opts...).ToFunc()
 }

@@ -102,6 +102,8 @@ type curEnv struct {
 	lms     command.LMS             // F040
 	asg     command.Assignments     // F041
 	asgq    query.SchoolAssignments // F041
+	exams   command.Exams           // F042
+	examq   query.Exams             // F042
 }
 
 // envOpt configures newCurEnv.
@@ -111,7 +113,11 @@ type envOpts struct {
 	media      bool
 	rate       command.RateLimiter // F030 T053
 	answerRate command.AnswerRate
+	noExams    bool // F041-AC-09: the "unavailable" ExamSessionCreator of F041 instead of the F042 adapter
 }
+
+// withoutExams wires the "unavailable" ExamSessionCreator of F041 (graded + blueprint → 422, F041-AC-09).
+func withoutExams(o *envOpts) { o.noExams = true }
 
 // withMedia adds the media pipeline and the preview sessions of F027 (floci, Valkey, clamd test double).
 func withMedia(o *envOpts) { o.media = true }
@@ -243,10 +249,19 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Metrics: observability.SelfStudyCounter{}}
 	recs.Sources = []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}
 	recs.Engine.Register(recommendation.R6{})
-	// F041: school assignments with the test clock; exam sessions unavailable until F042.
+	// F041: school assignments with the test clock; F042: the exam engine and its ExamSessionCreator adapter.
 	asg := command.Assignments{UoW: e.uow, Store: write.SchoolAssignmentRepo{}, Read: e.read, Exams: examsession.Unavailable{},
 		Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Metrics: observability.SchoolAssignmentCounter{}}
+	exams := command.Exams{UoW: e.uow, Store: write.ExamRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
+		Clock: clk.Now, Metrics: observability.ExamCounter{}}
+	att.ExamRelease = exams.ReleaseOf
+	if !o.noExams {
+		asg.Exams = &command.ExamSessionCreator{Exams: &exams}
+	}
 	att.Gate = asg
+	exams.Asg, exams.Att = asg, att
+	recs.Sources = append(recs.Sources, command.ExamFollowups{Store: write.ExamRepo{}, Clock: clk.Now})
+	recs.Engine.Register(recommendation.R5{})
 	recs.Sources = append(recs.Sources, command.AssignmentsDue{Store: write.SchoolAssignmentRepo{}})
 	recs.Engine.Register(recommendation.R1{})
 	asgq := query.SchoolAssignments{Session: e.read, Model: read.SchoolAssignmentModel{}, Cursors: codec, Clock: clk.Now}
@@ -263,11 +278,13 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq, Runs: read.SimulationRunModel{},
 		Recommendations: read.SelfStudyModel{}}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
+	examq := query.Exams{Session: e.read, Model: read.ExamModel{}, Attempts: attq, Cursors: codec, Clock: clk.Now}
+	handlers.ExamCommands, handlers.ExamQueries = exams, examq
 	// F031 US3: progress reads with the test clock (decay) and the profile-view audit.
 	handlers.Progress = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
 	handlers.ProfileAudit = command.ProfileViews{UoW: e.uow, Audit: write.Auditor{R: e.rec}}
 	// F031 US4: re-evaluation with the test clock.
-	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now}
+	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
 	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
@@ -278,7 +295,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
-		lms: lmsCmd, asg: asg, asgq: asgq}
+		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

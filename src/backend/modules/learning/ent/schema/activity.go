@@ -86,6 +86,11 @@ func (Attempt) Fields() []ent.Field {
 		field.JSON("objective_ids", []uuid.UUID{}).Default([]uuid.UUID{}),
 		field.UUID("recommendation_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.String("idempotency_key").MaxLen(64).Immutable(),
+		// F042: the paper of an exam attempt, the device holding it (hash), the client platform and game session (EXAM_ENGINE §12).
+		field.UUID("exam_paper_id", uuid.UUID{}).Optional().Nillable(),
+		field.String("active_device_token").MaxLen(128).Optional().Nillable(),
+		field.String("client_platform").MaxLen(64).Optional().Nillable(),
+		field.UUID("game_session_id", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 func (Attempt) Indexes() []ent.Index {

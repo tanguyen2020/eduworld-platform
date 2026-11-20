@@ -417,6 +417,62 @@ func (_c *AttemptCreate) SetIdempotencyKey(v string) *AttemptCreate {
 	return _c
 }
 
+// SetExamPaperID sets the "exam_paper_id" field.
+func (_c *AttemptCreate) SetExamPaperID(v uuid.UUID) *AttemptCreate {
+	_c.mutation.SetExamPaperID(v)
+	return _c
+}
+
+// SetNillableExamPaperID sets the "exam_paper_id" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableExamPaperID(v *uuid.UUID) *AttemptCreate {
+	if v != nil {
+		_c.SetExamPaperID(*v)
+	}
+	return _c
+}
+
+// SetActiveDeviceToken sets the "active_device_token" field.
+func (_c *AttemptCreate) SetActiveDeviceToken(v string) *AttemptCreate {
+	_c.mutation.SetActiveDeviceToken(v)
+	return _c
+}
+
+// SetNillableActiveDeviceToken sets the "active_device_token" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableActiveDeviceToken(v *string) *AttemptCreate {
+	if v != nil {
+		_c.SetActiveDeviceToken(*v)
+	}
+	return _c
+}
+
+// SetClientPlatform sets the "client_platform" field.
+func (_c *AttemptCreate) SetClientPlatform(v string) *AttemptCreate {
+	_c.mutation.SetClientPlatform(v)
+	return _c
+}
+
+// SetNillableClientPlatform sets the "client_platform" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableClientPlatform(v *string) *AttemptCreate {
+	if v != nil {
+		_c.SetClientPlatform(*v)
+	}
+	return _c
+}
+
+// SetGameSessionID sets the "game_session_id" field.
+func (_c *AttemptCreate) SetGameSessionID(v uuid.UUID) *AttemptCreate {
+	_c.mutation.SetGameSessionID(v)
+	return _c
+}
+
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableGameSessionID(v *uuid.UUID) *AttemptCreate {
+	if v != nil {
+		_c.SetGameSessionID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *AttemptCreate) SetID(v uuid.UUID) *AttemptCreate {
 	_c.mutation.SetID(v)
@@ -631,6 +687,16 @@ func (_c *AttemptCreate) check() error {
 			return &ValidationError{Name: "idempotency_key", err: fmt.Errorf(`ent: validator failed for field "Attempt.idempotency_key": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.ActiveDeviceToken(); ok {
+		if err := attempt.ActiveDeviceTokenValidator(v); err != nil {
+			return &ValidationError{Name: "active_device_token", err: fmt.Errorf(`ent: validator failed for field "Attempt.active_device_token": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.ClientPlatform(); ok {
+		if err := attempt.ClientPlatformValidator(v); err != nil {
+			return &ValidationError{Name: "client_platform", err: fmt.Errorf(`ent: validator failed for field "Attempt.client_platform": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -818,6 +884,22 @@ func (_c *AttemptCreate) createSpec() (*Attempt, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IdempotencyKey(); ok {
 		_spec.SetField(attempt.FieldIdempotencyKey, field.TypeString, value)
 		_node.IdempotencyKey = value
+	}
+	if value, ok := _c.mutation.ExamPaperID(); ok {
+		_spec.SetField(attempt.FieldExamPaperID, field.TypeUUID, value)
+		_node.ExamPaperID = &value
+	}
+	if value, ok := _c.mutation.ActiveDeviceToken(); ok {
+		_spec.SetField(attempt.FieldActiveDeviceToken, field.TypeString, value)
+		_node.ActiveDeviceToken = &value
+	}
+	if value, ok := _c.mutation.ClientPlatform(); ok {
+		_spec.SetField(attempt.FieldClientPlatform, field.TypeString, value)
+		_node.ClientPlatform = &value
+	}
+	if value, ok := _c.mutation.GameSessionID(); ok {
+		_spec.SetField(attempt.FieldGameSessionID, field.TypeUUID, value)
+		_node.GameSessionID = &value
 	}
 	return _node, _spec
 }

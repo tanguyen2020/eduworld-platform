@@ -240,6 +240,26 @@ func IdempotencyKey(v string) predicate.Attempt {
 	return predicate.Attempt(sql.FieldEQ(FieldIdempotencyKey, v))
 }
 
+// ExamPaperID applies equality check predicate on the "exam_paper_id" field. It's identical to ExamPaperIDEQ.
+func ExamPaperID(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldExamPaperID, v))
+}
+
+// ActiveDeviceToken applies equality check predicate on the "active_device_token" field. It's identical to ActiveDeviceTokenEQ.
+func ActiveDeviceToken(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldActiveDeviceToken, v))
+}
+
+// ClientPlatform applies equality check predicate on the "client_platform" field. It's identical to ClientPlatformEQ.
+func ClientPlatform(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldClientPlatform, v))
+}
+
+// GameSessionID applies equality check predicate on the "game_session_id" field. It's identical to GameSessionIDEQ.
+func GameSessionID(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameSessionID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.Attempt {
 	return predicate.Attempt(sql.FieldEQ(FieldTenantID, v))
@@ -2128,6 +2148,256 @@ func IdempotencyKeyEqualFold(v string) predicate.Attempt {
 // IdempotencyKeyContainsFold applies the ContainsFold predicate on the "idempotency_key" field.
 func IdempotencyKeyContainsFold(v string) predicate.Attempt {
 	return predicate.Attempt(sql.FieldContainsFold(FieldIdempotencyKey, v))
+}
+
+// ExamPaperIDEQ applies the EQ predicate on the "exam_paper_id" field.
+func ExamPaperIDEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldExamPaperID, v))
+}
+
+// ExamPaperIDNEQ applies the NEQ predicate on the "exam_paper_id" field.
+func ExamPaperIDNEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldExamPaperID, v))
+}
+
+// ExamPaperIDIn applies the In predicate on the "exam_paper_id" field.
+func ExamPaperIDIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldExamPaperID, vs...))
+}
+
+// ExamPaperIDNotIn applies the NotIn predicate on the "exam_paper_id" field.
+func ExamPaperIDNotIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldExamPaperID, vs...))
+}
+
+// ExamPaperIDGT applies the GT predicate on the "exam_paper_id" field.
+func ExamPaperIDGT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldExamPaperID, v))
+}
+
+// ExamPaperIDGTE applies the GTE predicate on the "exam_paper_id" field.
+func ExamPaperIDGTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldExamPaperID, v))
+}
+
+// ExamPaperIDLT applies the LT predicate on the "exam_paper_id" field.
+func ExamPaperIDLT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldExamPaperID, v))
+}
+
+// ExamPaperIDLTE applies the LTE predicate on the "exam_paper_id" field.
+func ExamPaperIDLTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldExamPaperID, v))
+}
+
+// ExamPaperIDIsNil applies the IsNil predicate on the "exam_paper_id" field.
+func ExamPaperIDIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldExamPaperID))
+}
+
+// ExamPaperIDNotNil applies the NotNil predicate on the "exam_paper_id" field.
+func ExamPaperIDNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldExamPaperID))
+}
+
+// ActiveDeviceTokenEQ applies the EQ predicate on the "active_device_token" field.
+func ActiveDeviceTokenEQ(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenNEQ applies the NEQ predicate on the "active_device_token" field.
+func ActiveDeviceTokenNEQ(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenIn applies the In predicate on the "active_device_token" field.
+func ActiveDeviceTokenIn(vs ...string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldActiveDeviceToken, vs...))
+}
+
+// ActiveDeviceTokenNotIn applies the NotIn predicate on the "active_device_token" field.
+func ActiveDeviceTokenNotIn(vs ...string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldActiveDeviceToken, vs...))
+}
+
+// ActiveDeviceTokenGT applies the GT predicate on the "active_device_token" field.
+func ActiveDeviceTokenGT(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenGTE applies the GTE predicate on the "active_device_token" field.
+func ActiveDeviceTokenGTE(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenLT applies the LT predicate on the "active_device_token" field.
+func ActiveDeviceTokenLT(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenLTE applies the LTE predicate on the "active_device_token" field.
+func ActiveDeviceTokenLTE(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenContains applies the Contains predicate on the "active_device_token" field.
+func ActiveDeviceTokenContains(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldContains(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenHasPrefix applies the HasPrefix predicate on the "active_device_token" field.
+func ActiveDeviceTokenHasPrefix(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldHasPrefix(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenHasSuffix applies the HasSuffix predicate on the "active_device_token" field.
+func ActiveDeviceTokenHasSuffix(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldHasSuffix(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenIsNil applies the IsNil predicate on the "active_device_token" field.
+func ActiveDeviceTokenIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldActiveDeviceToken))
+}
+
+// ActiveDeviceTokenNotNil applies the NotNil predicate on the "active_device_token" field.
+func ActiveDeviceTokenNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldActiveDeviceToken))
+}
+
+// ActiveDeviceTokenEqualFold applies the EqualFold predicate on the "active_device_token" field.
+func ActiveDeviceTokenEqualFold(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEqualFold(FieldActiveDeviceToken, v))
+}
+
+// ActiveDeviceTokenContainsFold applies the ContainsFold predicate on the "active_device_token" field.
+func ActiveDeviceTokenContainsFold(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldContainsFold(FieldActiveDeviceToken, v))
+}
+
+// ClientPlatformEQ applies the EQ predicate on the "client_platform" field.
+func ClientPlatformEQ(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldClientPlatform, v))
+}
+
+// ClientPlatformNEQ applies the NEQ predicate on the "client_platform" field.
+func ClientPlatformNEQ(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldClientPlatform, v))
+}
+
+// ClientPlatformIn applies the In predicate on the "client_platform" field.
+func ClientPlatformIn(vs ...string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldClientPlatform, vs...))
+}
+
+// ClientPlatformNotIn applies the NotIn predicate on the "client_platform" field.
+func ClientPlatformNotIn(vs ...string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldClientPlatform, vs...))
+}
+
+// ClientPlatformGT applies the GT predicate on the "client_platform" field.
+func ClientPlatformGT(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldClientPlatform, v))
+}
+
+// ClientPlatformGTE applies the GTE predicate on the "client_platform" field.
+func ClientPlatformGTE(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldClientPlatform, v))
+}
+
+// ClientPlatformLT applies the LT predicate on the "client_platform" field.
+func ClientPlatformLT(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldClientPlatform, v))
+}
+
+// ClientPlatformLTE applies the LTE predicate on the "client_platform" field.
+func ClientPlatformLTE(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldClientPlatform, v))
+}
+
+// ClientPlatformContains applies the Contains predicate on the "client_platform" field.
+func ClientPlatformContains(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldContains(FieldClientPlatform, v))
+}
+
+// ClientPlatformHasPrefix applies the HasPrefix predicate on the "client_platform" field.
+func ClientPlatformHasPrefix(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldHasPrefix(FieldClientPlatform, v))
+}
+
+// ClientPlatformHasSuffix applies the HasSuffix predicate on the "client_platform" field.
+func ClientPlatformHasSuffix(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldHasSuffix(FieldClientPlatform, v))
+}
+
+// ClientPlatformIsNil applies the IsNil predicate on the "client_platform" field.
+func ClientPlatformIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldClientPlatform))
+}
+
+// ClientPlatformNotNil applies the NotNil predicate on the "client_platform" field.
+func ClientPlatformNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldClientPlatform))
+}
+
+// ClientPlatformEqualFold applies the EqualFold predicate on the "client_platform" field.
+func ClientPlatformEqualFold(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEqualFold(FieldClientPlatform, v))
+}
+
+// ClientPlatformContainsFold applies the ContainsFold predicate on the "client_platform" field.
+func ClientPlatformContainsFold(v string) predicate.Attempt {
+	return predicate.Attempt(sql.FieldContainsFold(FieldClientPlatform, v))
+}
+
+// GameSessionIDEQ applies the EQ predicate on the "game_session_id" field.
+func GameSessionIDEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameSessionID, v))
+}
+
+// GameSessionIDNEQ applies the NEQ predicate on the "game_session_id" field.
+func GameSessionIDNEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldGameSessionID, v))
+}
+
+// GameSessionIDIn applies the In predicate on the "game_session_id" field.
+func GameSessionIDIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldGameSessionID, vs...))
+}
+
+// GameSessionIDNotIn applies the NotIn predicate on the "game_session_id" field.
+func GameSessionIDNotIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldGameSessionID, vs...))
+}
+
+// GameSessionIDGT applies the GT predicate on the "game_session_id" field.
+func GameSessionIDGT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldGameSessionID, v))
+}
+
+// GameSessionIDGTE applies the GTE predicate on the "game_session_id" field.
+func GameSessionIDGTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldGameSessionID, v))
+}
+
+// GameSessionIDLT applies the LT predicate on the "game_session_id" field.
+func GameSessionIDLT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldGameSessionID, v))
+}
+
+// GameSessionIDLTE applies the LTE predicate on the "game_session_id" field.
+func GameSessionIDLTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldGameSessionID, v))
+}
+
+// GameSessionIDIsNil applies the IsNil predicate on the "game_session_id" field.
+func GameSessionIDIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldGameSessionID))
+}
+
+// GameSessionIDNotNil applies the NotNil predicate on the "game_session_id" field.
+func GameSessionIDNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldGameSessionID))
 }
 
 // And groups predicates with the AND operator between them.

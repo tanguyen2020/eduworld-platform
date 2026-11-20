@@ -222,7 +222,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 		"identity": {"partition-maintainer", "audit-retention", "student-inactive-cleanup", "saga-retry", "retention-anonymizer",
 			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler"},
 		"learning": {"import-jobs", "translation-jobs", "content-scheduled-publish", "attempt-lifecycle", "learning-events-partitions", "regrade-runner",
-			"recommendation-nightly", "assignment-scheduler"},
+			"recommendation-nightly", "assignment-scheduler", "exam-window", "exam-autosubmit"},
 		"game": {"session-timeout", "curfew-session-closer"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {

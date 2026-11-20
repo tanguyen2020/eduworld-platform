@@ -387,6 +387,86 @@ func (_u *AttemptUpdate) AppendObjectiveIds(v []uuid.UUID) *AttemptUpdate {
 	return _u
 }
 
+// SetExamPaperID sets the "exam_paper_id" field.
+func (_u *AttemptUpdate) SetExamPaperID(v uuid.UUID) *AttemptUpdate {
+	_u.mutation.SetExamPaperID(v)
+	return _u
+}
+
+// SetNillableExamPaperID sets the "exam_paper_id" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableExamPaperID(v *uuid.UUID) *AttemptUpdate {
+	if v != nil {
+		_u.SetExamPaperID(*v)
+	}
+	return _u
+}
+
+// ClearExamPaperID clears the value of the "exam_paper_id" field.
+func (_u *AttemptUpdate) ClearExamPaperID() *AttemptUpdate {
+	_u.mutation.ClearExamPaperID()
+	return _u
+}
+
+// SetActiveDeviceToken sets the "active_device_token" field.
+func (_u *AttemptUpdate) SetActiveDeviceToken(v string) *AttemptUpdate {
+	_u.mutation.SetActiveDeviceToken(v)
+	return _u
+}
+
+// SetNillableActiveDeviceToken sets the "active_device_token" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableActiveDeviceToken(v *string) *AttemptUpdate {
+	if v != nil {
+		_u.SetActiveDeviceToken(*v)
+	}
+	return _u
+}
+
+// ClearActiveDeviceToken clears the value of the "active_device_token" field.
+func (_u *AttemptUpdate) ClearActiveDeviceToken() *AttemptUpdate {
+	_u.mutation.ClearActiveDeviceToken()
+	return _u
+}
+
+// SetClientPlatform sets the "client_platform" field.
+func (_u *AttemptUpdate) SetClientPlatform(v string) *AttemptUpdate {
+	_u.mutation.SetClientPlatform(v)
+	return _u
+}
+
+// SetNillableClientPlatform sets the "client_platform" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableClientPlatform(v *string) *AttemptUpdate {
+	if v != nil {
+		_u.SetClientPlatform(*v)
+	}
+	return _u
+}
+
+// ClearClientPlatform clears the value of the "client_platform" field.
+func (_u *AttemptUpdate) ClearClientPlatform() *AttemptUpdate {
+	_u.mutation.ClearClientPlatform()
+	return _u
+}
+
+// SetGameSessionID sets the "game_session_id" field.
+func (_u *AttemptUpdate) SetGameSessionID(v uuid.UUID) *AttemptUpdate {
+	_u.mutation.SetGameSessionID(v)
+	return _u
+}
+
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableGameSessionID(v *uuid.UUID) *AttemptUpdate {
+	if v != nil {
+		_u.SetGameSessionID(*v)
+	}
+	return _u
+}
+
+// ClearGameSessionID clears the value of the "game_session_id" field.
+func (_u *AttemptUpdate) ClearGameSessionID() *AttemptUpdate {
+	_u.mutation.ClearGameSessionID()
+	return _u
+}
+
 // Mutation returns the AttemptMutation object of the builder.
 func (_u *AttemptUpdate) Mutation() *AttemptMutation {
 	return _u.mutation
@@ -449,6 +529,16 @@ func (_u *AttemptUpdate) check() error {
 	if v, ok := _u.mutation.SubmitReason(); ok {
 		if err := attempt.SubmitReasonValidator(v); err != nil {
 			return &ValidationError{Name: "submit_reason", err: fmt.Errorf(`ent: validator failed for field "Attempt.submit_reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ActiveDeviceToken(); ok {
+		if err := attempt.ActiveDeviceTokenValidator(v); err != nil {
+			return &ValidationError{Name: "active_device_token", err: fmt.Errorf(`ent: validator failed for field "Attempt.active_device_token": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ClientPlatform(); ok {
+		if err := attempt.ClientPlatformValidator(v); err != nil {
+			return &ValidationError{Name: "client_platform", err: fmt.Errorf(`ent: validator failed for field "Attempt.client_platform": %w`, err)}
 		}
 	}
 	return nil
@@ -590,6 +680,30 @@ func (_u *AttemptUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RecommendationIDCleared() {
 		_spec.ClearField(attempt.FieldRecommendationID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ExamPaperID(); ok {
+		_spec.SetField(attempt.FieldExamPaperID, field.TypeUUID, value)
+	}
+	if _u.mutation.ExamPaperIDCleared() {
+		_spec.ClearField(attempt.FieldExamPaperID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ActiveDeviceToken(); ok {
+		_spec.SetField(attempt.FieldActiveDeviceToken, field.TypeString, value)
+	}
+	if _u.mutation.ActiveDeviceTokenCleared() {
+		_spec.ClearField(attempt.FieldActiveDeviceToken, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClientPlatform(); ok {
+		_spec.SetField(attempt.FieldClientPlatform, field.TypeString, value)
+	}
+	if _u.mutation.ClientPlatformCleared() {
+		_spec.ClearField(attempt.FieldClientPlatform, field.TypeString)
+	}
+	if value, ok := _u.mutation.GameSessionID(); ok {
+		_spec.SetField(attempt.FieldGameSessionID, field.TypeUUID, value)
+	}
+	if _u.mutation.GameSessionIDCleared() {
+		_spec.ClearField(attempt.FieldGameSessionID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Attempt
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -969,6 +1083,86 @@ func (_u *AttemptUpdateOne) AppendObjectiveIds(v []uuid.UUID) *AttemptUpdateOne 
 	return _u
 }
 
+// SetExamPaperID sets the "exam_paper_id" field.
+func (_u *AttemptUpdateOne) SetExamPaperID(v uuid.UUID) *AttemptUpdateOne {
+	_u.mutation.SetExamPaperID(v)
+	return _u
+}
+
+// SetNillableExamPaperID sets the "exam_paper_id" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableExamPaperID(v *uuid.UUID) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetExamPaperID(*v)
+	}
+	return _u
+}
+
+// ClearExamPaperID clears the value of the "exam_paper_id" field.
+func (_u *AttemptUpdateOne) ClearExamPaperID() *AttemptUpdateOne {
+	_u.mutation.ClearExamPaperID()
+	return _u
+}
+
+// SetActiveDeviceToken sets the "active_device_token" field.
+func (_u *AttemptUpdateOne) SetActiveDeviceToken(v string) *AttemptUpdateOne {
+	_u.mutation.SetActiveDeviceToken(v)
+	return _u
+}
+
+// SetNillableActiveDeviceToken sets the "active_device_token" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableActiveDeviceToken(v *string) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetActiveDeviceToken(*v)
+	}
+	return _u
+}
+
+// ClearActiveDeviceToken clears the value of the "active_device_token" field.
+func (_u *AttemptUpdateOne) ClearActiveDeviceToken() *AttemptUpdateOne {
+	_u.mutation.ClearActiveDeviceToken()
+	return _u
+}
+
+// SetClientPlatform sets the "client_platform" field.
+func (_u *AttemptUpdateOne) SetClientPlatform(v string) *AttemptUpdateOne {
+	_u.mutation.SetClientPlatform(v)
+	return _u
+}
+
+// SetNillableClientPlatform sets the "client_platform" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableClientPlatform(v *string) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetClientPlatform(*v)
+	}
+	return _u
+}
+
+// ClearClientPlatform clears the value of the "client_platform" field.
+func (_u *AttemptUpdateOne) ClearClientPlatform() *AttemptUpdateOne {
+	_u.mutation.ClearClientPlatform()
+	return _u
+}
+
+// SetGameSessionID sets the "game_session_id" field.
+func (_u *AttemptUpdateOne) SetGameSessionID(v uuid.UUID) *AttemptUpdateOne {
+	_u.mutation.SetGameSessionID(v)
+	return _u
+}
+
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableGameSessionID(v *uuid.UUID) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetGameSessionID(*v)
+	}
+	return _u
+}
+
+// ClearGameSessionID clears the value of the "game_session_id" field.
+func (_u *AttemptUpdateOne) ClearGameSessionID() *AttemptUpdateOne {
+	_u.mutation.ClearGameSessionID()
+	return _u
+}
+
 // Mutation returns the AttemptMutation object of the builder.
 func (_u *AttemptUpdateOne) Mutation() *AttemptMutation {
 	return _u.mutation
@@ -1044,6 +1238,16 @@ func (_u *AttemptUpdateOne) check() error {
 	if v, ok := _u.mutation.SubmitReason(); ok {
 		if err := attempt.SubmitReasonValidator(v); err != nil {
 			return &ValidationError{Name: "submit_reason", err: fmt.Errorf(`ent: validator failed for field "Attempt.submit_reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ActiveDeviceToken(); ok {
+		if err := attempt.ActiveDeviceTokenValidator(v); err != nil {
+			return &ValidationError{Name: "active_device_token", err: fmt.Errorf(`ent: validator failed for field "Attempt.active_device_token": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ClientPlatform(); ok {
+		if err := attempt.ClientPlatformValidator(v); err != nil {
+			return &ValidationError{Name: "client_platform", err: fmt.Errorf(`ent: validator failed for field "Attempt.client_platform": %w`, err)}
 		}
 	}
 	return nil
@@ -1202,6 +1406,30 @@ func (_u *AttemptUpdateOne) sqlSave(ctx context.Context) (_node *Attempt, err er
 	}
 	if _u.mutation.RecommendationIDCleared() {
 		_spec.ClearField(attempt.FieldRecommendationID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ExamPaperID(); ok {
+		_spec.SetField(attempt.FieldExamPaperID, field.TypeUUID, value)
+	}
+	if _u.mutation.ExamPaperIDCleared() {
+		_spec.ClearField(attempt.FieldExamPaperID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ActiveDeviceToken(); ok {
+		_spec.SetField(attempt.FieldActiveDeviceToken, field.TypeString, value)
+	}
+	if _u.mutation.ActiveDeviceTokenCleared() {
+		_spec.ClearField(attempt.FieldActiveDeviceToken, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClientPlatform(); ok {
+		_spec.SetField(attempt.FieldClientPlatform, field.TypeString, value)
+	}
+	if _u.mutation.ClientPlatformCleared() {
+		_spec.ClearField(attempt.FieldClientPlatform, field.TypeString)
+	}
+	if value, ok := _u.mutation.GameSessionID(); ok {
+		_spec.SetField(attempt.FieldGameSessionID, field.TypeUUID, value)
+	}
+	if _u.mutation.GameSessionIDCleared() {
+		_spec.ClearField(attempt.FieldGameSessionID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Attempt
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

@@ -19,6 +19,18 @@
 
 - Q: Vòng phụ thuộc F041 ↔ F042 xử lý thế nào? → A: Technical Architect chốt thứ tự F040 → F041 → F042 ([CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý)). F041 sở hữu port `ExamSessionCreator` và trả `422 VALIDATION_FAILED` cho bài `graded` + blueprint khi chưa có adapter thật (F041-AC-09). F042 nhận phần còn lại của F041-AC-09 cũ: adapter gọi `CreateExamSession`/`CancelExamSession`, tạo ExamSession khi publish bài và lưu `exam_session_id`, hủy ExamSession khi hủy bài (F042-AC-31), cùng integration test tương ứng.
 
+### Session 2026-11-20 (triển khai)
+
+- Câu trả lời đề → `saveExamAnswer` lưu append-only với `is_correct`/`score` NULL; chấm từng câu khi nộp trong consumer `learning.exam_grade` (tiêu thụ `exam.submitted`), điểm câu theo `points` của paper. Chấm xong phát `exam.graded` và `activity.submitted`/`activity.graded` (mastery, progress) với `submit_reason = timeout` cho `auto_timeout`/`window_closed` (từ vựng F030) [Confirmed].
+- Thiết bị: header `X-Exam-Device-Token` (8–128 ký tự) trên start/save/submit, server chỉ lưu băm SHA-256 (`attempts.active_device_token`); start có body `ExamAttemptStart.take_over` [Confirmed].
+- Thứ tự mặc định chính sách: loại đề (EXAM_ENGINE §2) → blueprint (`result_release`, `feedback_timing`, `attempt_policy`, `variants`, `duration_sec`) → request; `ExamSessionCreate.is_official` bỏ `default: false` để mặc định theo loại đề; `per_student` luôn `immediate` + `after_submit` [Confirmed].
+- `attempt_score_revisions` (AC-28) dùng chuỗi `assessment.evaluations` của F031 (evaluation `re_evaluation` mới có `supersedes_evaluation_id`, `reason`, `triggered_by`; evaluation cũ giữ, `effective = false`); kết quả đề đọc điểm của evaluation hiệu lực; không thêm bảng [Confirmed].
+- `RegradeRequest` `scope = exam_session` cần `exam_session_id` + `question_version_id`; chạy trong job `regrade-runner` của F031 (lọc attempt đề của session chứa câu), phát `exam.regraded` sau khi chạy [Confirmed].
+- Attempt đề không dùng được qua route `/learning/activity-attempts/*` (409 `CONFLICT`); danh sách attempt của học sinh ẩn điểm attempt đề [Confirmed].
+- Session của bài giao (AC-31): `exam_type = custom`, `is_official = true`, cửa sổ `open_at` → `due_at` (+ `late_window_hours` khi cho nộp muộn), đối tượng là snapshot học sinh của bài, chính sách công bố của bài (mặc định `graded_assignment_release_default`) [Confirmed].
+- `suspicious_speed`: đúng 100 % trên ≥ 10 câu với thời gian trung bình < 1,5 s/câu (CONFIG_DEFAULTS `suspicious_speed_flag`), ghi `assessment.integrity_signals`, không đổi điểm; `score_scale` thang 10 làm tròn 1 chữ số [Confirmed].
+- `ExamAttemptAnalysis.objective_breakdown[].mastery_level` trả `null` trong F042 (mức mastery đọc qua `getMyLearningProgress`); đề xuất ôn tập: 1–3 LO đúng < 60 % (thiếu thì LO có câu sai), `kind = practice` [Proposed].
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo đề từ blueprint (Priority: P1)

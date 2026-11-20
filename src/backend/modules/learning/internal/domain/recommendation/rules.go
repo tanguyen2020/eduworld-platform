@@ -363,3 +363,33 @@ func (R1) Evaluate(s Snapshot) []Candidate {
 	}
 	return out
 }
+
+// R5ExamRatio is the share of correct items of an objective in an exam below which R5 recommends it (60 %, EXAM_ENGINE §10).
+const R5ExamRatio = 0.6
+
+// R5 — after an exam, an objective answered correctly less than 60 % of the time whose mastery is below proficient:
+// review it (priority 2, LEARNING_ANALYTICS §6, EXAM_ENGINE §10; registered by F042). One recommendation per objective.
+type R5 struct{}
+
+// Code implements Rule.
+func (R5) Code() string { return "R5" }
+
+// Evaluate implements Rule.
+func (R5) Evaluate(s Snapshot) []Candidate {
+	byID := map[uuid.UUID]Objective{}
+	for _, o := range s.Objectives {
+		byID[o.ID] = o
+	}
+	done := map[uuid.UUID]bool{}
+	var out []Candidate
+	for _, r := range s.ExamResults {
+		o, ok := byID[r.ObjectiveID]
+		if !ok || done[r.ObjectiveID] || r.Total == 0 || float64(r.Correct)/float64(r.Total) >= R5ExamRatio ||
+			o.Level == levelProficient || o.Level == levelMastered {
+			continue
+		}
+		done[r.ObjectiveID] = true
+		out = append(out, objectiveCandidate("R5", KindObjectiveReview, "exam_followup", o, 2))
+	}
+	return out
+}

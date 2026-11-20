@@ -155,13 +155,13 @@ workspaces:
             label_key: portal.action.school_lms.assignments.view
             title: Xem bài giao và bài nộp
             required_permissions: [lms.assignment.read, lms.assignment.write]
-            operation_ids: [listAssignments, getAssignment, listAssignmentSubmissions, listExamSessions, getExamSession]
+            operation_ids: [listAssignments, getAssignment, listAssignmentSubmissions, listExamSessions, getExamSession, getExamAttemptAnalysis]
             can_disable: true
           - key: action.school_lms.assignments.edit
             label_key: portal.action.school_lms.assignments.edit
             title: Tạo, sửa, giao, hủy, lưu trữ bài
             required_permissions: [lms.assignment.write]
-            operation_ids: [createAssignment, updateAssignment, publishAssignment, cancelAssignment, archiveAssignment, createExamSession]
+            operation_ids: [createAssignment, updateAssignment, publishAssignment, cancelAssignment, archiveAssignment, createExamSession, listExamSessionPapers]
             can_disable: true
           - key: action.school_lms.assignments.manage_students
             label_key: portal.action.school_lms.assignments.manage_students

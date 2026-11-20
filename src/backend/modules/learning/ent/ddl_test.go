@@ -31,6 +31,7 @@ var migrations = map[string][]string{
 	"20261129000001_f026_release.sql":          {"scheduled_publications"},
 	"20261130000001_f030_activity_attempt.sql": {"activities", "activity_versions", "attempts", "attempt_items", "evaluations"},
 	"20261208000001_f025_field_comments.sql":   {},
+	"20261222000001_f042_exam_engine.sql":      {},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -58,7 +59,8 @@ var added = map[string][]addition{
 		{"lesson_versions", []string{"published_by"}, nil},
 		{"learning_material_versions", []string{"published_by"}, nil},
 		{"assessment_blueprint_versions", []string{"published_by"}, nil},
-	},
+	}, // F042: the exam columns of the attempts.
+	"20261222000001_f042_exam_engine.sql": {{"attempts", []string{"exam_paper_id", "active_device_token", "client_platform", "game_session_id"}, nil}},
 }
 
 // withoutAdded drops from tables the columns/indexes added by migrations other than file.

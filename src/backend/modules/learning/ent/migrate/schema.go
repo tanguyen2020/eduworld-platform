@@ -250,6 +250,10 @@ var (
 		{Name: "objective_ids", Type: field.TypeJSON},
 		{Name: "recommendation_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+		{Name: "exam_paper_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "active_device_token", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "client_platform", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "game_session_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// AttemptsTable holds the schema information for the "attempts" table.
 	AttemptsTable = &schema.Table{

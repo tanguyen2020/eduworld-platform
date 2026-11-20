@@ -23,6 +23,9 @@ type ExamSessionRequest struct {
 	StudentIDs      []uuid.UUID
 	FeedbackTiming  string
 	ResultRelease   string
+	Title           string
+	MaxAttempts     int
+	ScorePolicy     string
 }
 
 // ExamSessionCreator is owned by F041 (CODE_PLAN §4.1: F040 → F041 → F042): the assignment use cases create and cancel

@@ -154,7 +154,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2 → US3 → US4, US5 (song song) → US6 → Polish.
-- T014 cần F040 (`StudyGroupMemberReader`); khi chưa có, đối tượng `study_group` trả `422` theo Assumptions của spec. F041 không phụ thuộc F042: graded + blueprint trả `422` (F041-AC-09) cho tới khi F042 T052 thay adapter (thứ tự F040 → F041 → F042, CODE_PLAN §4.1).
+- T014 cần F040 (`StudyGroupMemberReader`); khi chưa có, đối tượng `study_group` trả `422` theo Assumptions của spec. F041 không phụ thuộc F042: graded + blueprint trả `422` (F041-AC-09) cho tới khi F042 T052 thay adapter (thứ tự F040 → F041 → F042, CODE_PLAN §4.1). **2026-11-20: F042 T052 Done** — adapter `command.ExamSessionCreator` được nối trong `module.go`; `TestAssignmentCreate` giữ adapter "chưa khả dụng" (`withoutExams`) để kiểm F041-AC-09, `TestExamSessionOfAssignment` kiểm F042-AC-31.
 - T041 nhận dữ liệu thật khi F078 phát event (T049 chờ F078 T006/T034, OQ F041-2); T042 cần interface `Rule` của F032.
 
 ## Definition of Done

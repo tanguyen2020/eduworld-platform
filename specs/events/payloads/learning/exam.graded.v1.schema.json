@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/exam.graded.v1.schema.json",
+  "title": "Payload exam.graded v1 (module learning, owner F042)",
+  "description": "Attempt đề đã chấm bằng grader server theo version ghim (F042-AC-19). Mastery lấy evidence từ event này (EVENT_DESIGN §4.3); điểm chỉ hiện cho học sinh khi kết quả công bố (results_visible_at).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attempt_id",
+    "evaluation_id",
+    "exam_session_id",
+    "school_id",
+    "student_id",
+    "exam_type",
+    "is_official",
+    "score",
+    "max_score",
+    "result_release",
+    "objective_ids"
+  ],
+  "properties": {
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_paper_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "exam_type": {
+      "type": "string",
+      "enum": [
+        "practice_test",
+        "mock",
+        "chapter",
+        "semester",
+        "subject",
+        "custom"
+      ]
+    },
+    "is_official": {
+      "type": "boolean"
+    },
+    "assignment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "evaluation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "correct_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "item_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "result_release": {
+      "type": "string",
+      "enum": [
+        "immediate",
+        "after_close",
+        "manual"
+      ]
+    },
+    "results_visible_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "submit_reason": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto_timeout",
+        "window_closed"
+      ]
+    },
+    "suspicious_speed": {
+      "type": "boolean"
+    },
+    "objective_ids": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    }
+  },
+  "examples": [
+    {
+      "attempt_id": "0193a1f0-0000-7000-8000-000000000410",
+      "exam_session_id": "0193a1f0-0000-7000-8000-000000000401",
+      "school_id": "0193a1f0-0000-7000-8000-000000000402",
+      "student_id": "0193a1f0-0000-7000-8000-000000000411",
+      "exam_paper_id": "0193a1f0-0000-7000-8000-000000000412",
+      "exam_type": "chapter",
+      "is_official": true,
+      "assignment_id": null,
+      "evaluation_id": "0193a1f0-0000-7000-8000-000000000413",
+      "score": 8.5,
+      "max_score": 10,
+      "correct_count": 9,
+      "item_count": 11,
+      "result_release": "after_close",
+      "results_visible_at": null,
+      "submit_reason": "manual",
+      "suspicious_speed": false,
+      "objective_ids": [
+        "0193a1f0-0000-7000-8000-000000000414"
+      ]
+    }
+  ]
+}

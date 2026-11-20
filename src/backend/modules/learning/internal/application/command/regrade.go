@@ -49,6 +49,15 @@ type Regrades struct {
 	Audit    write.Auditor
 	Clock    func() time.Time
 	Metrics  RegradeMetrics
+	// Exams resolves the session of a request of scope exam_session (F042); nil = the scope is refused.
+	Exams ExamRegradeTarget
+}
+
+// ExamRegradeTarget is the exam engine seen from the re-evaluation (F042-AC-28): the school and subject of a session of
+// the session tenant whose papers hold a question version, and the exam.regraded event after a run.
+type ExamRegradeTarget interface {
+	RegradeTarget(ctx context.Context, sessionID, questionVersionID uuid.UUID) (school, subject uuid.UUID, err error)
+	Regraded(ctx context.Context, r write.RegradeRequest, attempts []uuid.UUID) error
 }
 
 func (h Regrades) now() time.Time { return now(h.Clock).UTC() }
@@ -99,9 +108,15 @@ func (in *CreateRegradeInput) validate() error {
 			return problem.Invalid("/action", problem.SubInvalid, "scope activity_version supports accept_all only; use scope question_version")
 		}
 	case "exam_session":
-		return problem.Invalid("/scope", problem.SubInvalid, "exam_session re-evaluation belongs to the exam engine (F042)")
+		// F042-AC-28: one question of the papers of an exam session.
+		if in.ExamSessionID == nil {
+			return problem.Invalid("/exam_session_id", problem.SubRequired, "is required for scope exam_session")
+		}
+		if in.QuestionVersionID == nil {
+			return problem.Invalid("/question_version_id", problem.SubRequired, "is required for scope exam_session")
+		}
 	default:
-		return problem.Invalid("/scope", problem.SubInvalid, "must be question_version or activity_version")
+		return problem.Invalid("/scope", problem.SubInvalid, "must be question_version, activity_version or exam_session")
 	}
 	if in.Action == string(evaluation.UseNewKey) && in.CorrectedVersionID == nil {
 		return problem.Invalid("/corrected_version_id", problem.SubRequired, "is required for use_new_key")
@@ -150,7 +165,22 @@ func (h Regrades) Create(ctx context.Context, in CreateRegradeInput) (out dto.Re
 			return err
 		}
 		var v *write.VersionInfo
-		if in.Scope == "question_version" {
+		var school *uuid.UUID
+		if in.Scope == "exam_session" {
+			if h.Exams == nil || p.TenantID == nil {
+				return problem.New(problem.NotFound, "")
+			}
+			sch, subject, err := h.Exams.RegradeTarget(ctx, *in.ExamSessionID, *in.QuestionVersionID)
+			if err != nil {
+				return err
+			}
+			if err := authz.Require(ctx, p, authz.PermLearningContentReEvaluate, authz.Resource{TenantID: p.TenantID, SchoolID: &sch,
+				SubjectID: &subject}); err != nil {
+				return err
+			}
+			school = &sch
+		}
+		if in.Scope == "question_version" || in.Scope == "exam_session" {
 			v, err = h.Store.QuestionVersion(ctx, *in.QuestionVersionID)
 		} else {
 			v, err = h.Store.ActivityVersion(ctx, *in.ActivityVersionID)
@@ -176,6 +206,7 @@ func (h Regrades) Create(ctx context.Context, in CreateRegradeInput) (out dto.Re
 		}
 		r := write.RegradeRequest{ID: ids.New(), TenantID: p.TenantID, SubjectID: v.SubjectID, Scope: in.Scope,
 			QuestionVersionID: in.QuestionVersionID, ActivityVersionID: in.ActivityVersionID, CorrectedVersionID: in.CorrectedVersionID,
+			ExamSessionID: in.ExamSessionID, SchoolID: school,
 			Action: evaluation.Action(in.Action), Reason: in.Reason, Status: RegradeQueued, RequestedBy: p.UserID, RequestedRole: role,
 			IdempotencyKey: key, CreatedAt: h.now()}
 		ok, err := h.Store.InsertRequest(ctx, r)
@@ -229,6 +260,19 @@ func (h Regrades) RunOnce(ctx context.Context) (n int, err error) {
 		if changed {
 			n++
 			tenants[a.TenantID]++
+		}
+	}
+	if req.Scope == "exam_session" && h.Exams != nil && req.TenantID != nil && failure == nil {
+		var ids []uuid.UUID
+		for _, a := range affected {
+			ids = append(ids, a.ID)
+		}
+		sc, err := authz.EventScope(*req.TenantID)
+		if err == nil {
+			err = h.UoW.Do(tenancy.WithScope(ctx, sc), func(ctx context.Context) error { return h.Exams.Regraded(ctx, *req, ids) })
+		}
+		if err != nil {
+			failure = err
 		}
 	}
 	for t, count := range tenants {

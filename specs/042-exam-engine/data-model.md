@@ -110,10 +110,10 @@ Attempt đề: `in_progress → submitted → graded`; `in_progress → expired 
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `exam.started` | Start attempt | Cần thêm `specs/events/payloads/learning/exam.started.v1.schema.json` |
-| `exam.submitted` | Nộp (manual/timeout) | Cần thêm `exam.submitted.v1` |
-| `exam.graded` | Chấm xong | Cần thêm `exam.graded.v1` |
-| `exam.results_released` | Công bố | Cần thêm `exam.results_released.v1` |
-| `exam.regraded` | Chạy xong regrade | Cần thêm `exam.regraded.v1` |
+| `exam.started` | Start attempt | `specs/events/payloads/learning/exam.started.v1.schema.json` |
+| `exam.submitted` | Nộp (manual/timeout) | `exam.submitted.v1` |
+| `exam.graded` | Chấm xong | `exam.graded.v1` |
+| `exam.results_released` | Công bố | `exam.results_released.v1` |
+| `exam.regraded` | Chạy xong regrade | `exam.regraded.v1` |
 | `attempt.re_evaluated` | Mỗi attempt chấm lại | Schema owner F031 — F042 phát cùng schema khi chấm lại đề |
-| `exam.opened`, `exam.closed` | Chuyển trạng thái cửa sổ | Cần thêm `exam.opened.v1`, `exam.closed.v1` (EVENT_DESIGN §4.3) |
+| `exam.opened`, `exam.closed` | Chuyển trạng thái cửa sổ | `exam.opened.v1`, `exam.closed.v1` (EVENT_DESIGN §4.3) |

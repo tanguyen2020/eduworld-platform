@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/exam.results_released.v1.schema.json",
+  "title": "Payload exam.results_released v1 (module learning, owner F042)",
+  "description": "Kết quả ExamSession được công bố (manual qua releaseExamResults, hoặc after_close khi cửa sổ đóng; EXAM_ENGINE §8). Consumer: thông báo, LMS, realtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exam_session_id",
+    "school_id",
+    "released_at",
+    "mode"
+  ],
+  "properties": {
+    "exam_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assignment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "released_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "immediate",
+        "after_close",
+        "manual"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "exam_session_id": "0193a1f0-0000-7000-8000-000000000401",
+      "school_id": "0193a1f0-0000-7000-8000-000000000402",
+      "assignment_id": null,
+      "released_at": "2026-11-21T03:00:00Z",
+      "released_by": "0193a1f0-0000-7000-8000-000000000420",
+      "mode": "manual"
+    }
+  ]
+}

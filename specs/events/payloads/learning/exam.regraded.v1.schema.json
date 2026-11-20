@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/exam.regraded.v1.schema.json",
+  "title": "Payload exam.regraded v1 (module learning, owner F042)",
+  "description": "Chấm lại đề (RegradeRequest scope exam_session, F042-AC-28) đã chạy xong; mỗi attempt bị ảnh hưởng có attempt.re_evaluated riêng.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exam_session_id",
+    "regrade_request_id",
+    "question_version_id",
+    "action",
+    "affected_attempt_ids"
+  ],
+  "properties": {
+    "exam_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "regrade_request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "question_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "corrected_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "accept_all",
+        "use_new_key",
+        "drop_item"
+      ]
+    },
+    "affected_attempt_ids": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    }
+  },
+  "examples": [
+    {
+      "exam_session_id": "0193a1f0-0000-7000-8000-000000000401",
+      "school_id": "0193a1f0-0000-7000-8000-000000000402",
+      "regrade_request_id": "0193a1f0-0000-7000-8000-000000000430",
+      "question_version_id": "0193a1f0-0000-7000-8000-000000000431",
+      "corrected_version_id": null,
+      "action": "drop_item",
+      "affected_attempt_ids": [
+        "0193a1f0-0000-7000-8000-000000000410"
+      ]
+    }
+  ]
+}

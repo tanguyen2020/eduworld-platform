@@ -177,6 +177,10 @@ func (q Attempts) load(ctx context.Context, id uuid.UUID) (out loaded, err error
 		if a.StudentID != p.UserID {
 			return problem.New(problem.AttemptNotFound, "")
 		}
+		if a.Mode == attempt.ModeExam {
+			// F042: an exam attempt is read through /exams (release policy of the session, F042-AC-20).
+			return problem.New(problem.Conflict, "an exam attempt is read through the exam routes")
+		}
 		out.a = a
 		if out.answers, err = q.Model.LastAnswers(ctx, id); err != nil {
 			return err
@@ -299,6 +303,9 @@ func (q Attempts) ListMine(ctx context.Context, in ListMineInput) (out Page[dto.
 		for _, a := range as {
 			s := dto.AttemptSummaryView{AttemptID: a.ID, ActivityID: a.ActivityID, ActivityType: a.ActivityType, Mode: string(a.Mode),
 				Status: string(a.Status), StartedAt: a.StartedAt, SubmittedAt: a.SubmittedAt, Score: a.Score, MaxScore: a.MaxScore}
+			if a.Mode == attempt.ModeExam {
+				s.Score, s.MaxScore = nil, nil // F042: exam results are read through getExamResult (release policy)
+			}
 			if a.ContextType == "assignment" && q.Assignments != nil {
 				visible, err := q.Assignments.ResultsVisible(ctx, a.ContextID)
 				if err != nil {

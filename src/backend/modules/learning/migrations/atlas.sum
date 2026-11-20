@@ -1,4 +1,4 @@
-h1:kSBN9kOmKP/maNamqIpPXhPcweB6AEm4r+ZLtaztMRQ=
+h1:K3/LAyw1A1+QDD0Z73q+/OKevKNxOc4ILoKHUeUgLf0=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -22,3 +22,4 @@ h1:kSBN9kOmKP/maNamqIpPXhPcweB6AEm4r+ZLtaztMRQ=
 20261216000001_f041_assignments.sql h1:a2KBIc5MiNPupDbNv5AAylm3Mvj71j9Htqo42WdB05k=
 20261220000001_f066_audio_simulation.sql h1:ITcdKQrNtDBCBA5rd+/M7DRLx/HA8eaiqmv3aUhPOVA=
 20261221000001_f027_subtitle_kind.sql h1:3YBblxTFS0LY8IJwgyzTzTGrYvOB8u3zY1IWtQkADtg=
+20261222000001_f042_exam_engine.sql h1:/JXCgV2Au5LzePX/T/mgeJMBzw801Gz2FRpKuQZmoaM=

@@ -95,7 +95,15 @@ type Attempt struct {
 	RecommendationID *uuid.UUID `json:"recommendation_id,omitempty"`
 	// IdempotencyKey holds the value of the "idempotency_key" field.
 	IdempotencyKey string `json:"idempotency_key,omitempty"`
-	selectValues   sql.SelectValues
+	// ExamPaperID holds the value of the "exam_paper_id" field.
+	ExamPaperID *uuid.UUID `json:"exam_paper_id,omitempty"`
+	// ActiveDeviceToken holds the value of the "active_device_token" field.
+	ActiveDeviceToken *string `json:"active_device_token,omitempty"`
+	// ClientPlatform holds the value of the "client_platform" field.
+	ClientPlatform *string `json:"client_platform,omitempty"`
+	// GameSessionID holds the value of the "game_session_id" field.
+	GameSessionID *uuid.UUID `json:"game_session_id,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -103,7 +111,7 @@ func (*Attempt) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case attempt.FieldCreatedBy, attempt.FieldUpdatedBy, attempt.FieldDeletedBy, attempt.FieldActivityID, attempt.FieldRecommendationID:
+		case attempt.FieldCreatedBy, attempt.FieldUpdatedBy, attempt.FieldDeletedBy, attempt.FieldActivityID, attempt.FieldRecommendationID, attempt.FieldExamPaperID, attempt.FieldGameSessionID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case attempt.FieldObjectiveIds:
 			values[i] = new([]byte)
@@ -111,7 +119,7 @@ func (*Attempt) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case attempt.FieldVersion, attempt.FieldSeed, attempt.FieldPausedMs, attempt.FieldDurationMs, attempt.FieldClientElapsedMs, attempt.FieldItemCount:
 			values[i] = new(sql.NullInt64)
-		case attempt.FieldDeleteReason, attempt.FieldMode, attempt.FieldContextType, attempt.FieldActivityType, attempt.FieldSourceKind, attempt.FieldStatus, attempt.FieldFeedbackTiming, attempt.FieldDisplayLanguage, attempt.FieldSubmitReason, attempt.FieldIdempotencyKey:
+		case attempt.FieldDeleteReason, attempt.FieldMode, attempt.FieldContextType, attempt.FieldActivityType, attempt.FieldSourceKind, attempt.FieldStatus, attempt.FieldFeedbackTiming, attempt.FieldDisplayLanguage, attempt.FieldSubmitReason, attempt.FieldIdempotencyKey, attempt.FieldActiveDeviceToken, attempt.FieldClientPlatform:
 			values[i] = new(sql.NullString)
 		case attempt.FieldCreatedAt, attempt.FieldUpdatedAt, attempt.FieldDeletedAt, attempt.FieldStartedAt, attempt.FieldDeadlineAt, attempt.FieldSubmittedAt, attempt.FieldGradedAt, attempt.FieldPausedAt, attempt.FieldLastActivityAt:
 			values[i] = new(sql.NullTime)
@@ -384,6 +392,34 @@ func (_m *Attempt) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.IdempotencyKey = value.String
 			}
+		case attempt.FieldExamPaperID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field exam_paper_id", values[i])
+			} else if value.Valid {
+				_m.ExamPaperID = new(uuid.UUID)
+				*_m.ExamPaperID = *value.S.(*uuid.UUID)
+			}
+		case attempt.FieldActiveDeviceToken:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field active_device_token", values[i])
+			} else if value.Valid {
+				_m.ActiveDeviceToken = new(string)
+				*_m.ActiveDeviceToken = value.String
+			}
+		case attempt.FieldClientPlatform:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field client_platform", values[i])
+			} else if value.Valid {
+				_m.ClientPlatform = new(string)
+				*_m.ClientPlatform = value.String
+			}
+		case attempt.FieldGameSessionID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field game_session_id", values[i])
+			} else if value.Valid {
+				_m.GameSessionID = new(uuid.UUID)
+				*_m.GameSessionID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -565,6 +601,26 @@ func (_m *Attempt) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("idempotency_key=")
 	builder.WriteString(_m.IdempotencyKey)
+	builder.WriteString(", ")
+	if v := _m.ExamPaperID; v != nil {
+		builder.WriteString("exam_paper_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.ActiveDeviceToken; v != nil {
+		builder.WriteString("active_device_token=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ClientPlatform; v != nil {
+		builder.WriteString("client_platform=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.GameSessionID; v != nil {
+		builder.WriteString("game_session_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -45,3 +45,10 @@ make migrate-lint MOD=learning
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail package `exam`, trace_id của kịch bản 6, 8, 17; log job `exam.autosubmit`; xác nhận log không chứa câu trả lời.
+
+## 5. Bằng chứng (2026-11-20, local)
+
+- Integration (testcontainers, `go test -tags integration -run TestExam ./modules/learning/tests/integration/`): `TestExamSessionCreate` (kịch bản 1–4), `TestExamAttemptFlow` (5–8, 11, 18), `TestExamResultRelease` (9–15), `TestExamLibraryPerStudent` (16), `TestExamRegrade` (17), `TestExamSessionOfAssignment` (19) — PASS; bộ integration learning đầy đủ PASS.
+- Unit: `internal/domain/exam/...`, `TestCheckMatrix`, `TestMigrationMatchesEnt` PASS.
+- Kịch bản 14 (Valkey): đường đọc kết quả chỉ dùng PostgreSQL (`assessment.attempts/attempt_items/evaluations`), không có cache.
+- Gate: gofmt, vet, golangci (default + arch), tenancyguard, ewlint, entlint, archgen, routematrix, allowedcallers, facadegen, problemgen, check-features/cross-features/portal-catalog/problem-codes/maxlength/enums, validate-schemas, split-public, game fixtures, RTM — 0 lỗi.

@@ -105,6 +105,15 @@ type Snapshot struct {
 	Upcoming []Upcoming
 	// Assignments are the open school assignments the student has not submitted (filled by F041 for R1).
 	Assignments []PendingAssignment
+	// ExamResults are the objective results of the student's recent exams whose results are released (filled by F042 for R5).
+	ExamResults []ExamObjectiveResult
+}
+
+// ExamObjectiveResult is the share of correct items of one objective in a released exam attempt.
+type ExamObjectiveResult struct {
+	ObjectiveID uuid.UUID
+	Correct     int
+	Total       int
 }
 
 // PendingAssignment is an open school assignment of the student not submitted yet, with its personal due date.
