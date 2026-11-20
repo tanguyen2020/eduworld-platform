@@ -12,7 +12,7 @@ import { applyIdempotency, IdempotencyKeys } from './middleware/idempotency';
 import { applyIfMatch, EtagCache } from './middleware/ifmatch';
 import { applyLanguage } from './middleware/language';
 import { ApiError, i18nKeyFor, peekProblem, peekProblemCode, toApiError, type HasTranslation } from './middleware/problem';
-import { backoffMs, isRetryable, MAX_RETRIES, MAX_RETRY_AFTER_MS, parseRetryAfter, RETRYABLE_STATUS } from './middleware/retry';
+import { backoffMs, isRetryable, MAX_RETRIES, MAX_RETRY_AFTER_MS, NOT_REPEATED_CODES, parseRetryAfter, RETRYABLE_STATUS, wait429 } from './middleware/retry';
 import { applyTenant, scopeSearch } from './middleware/tenant';
 import { findOperation, gatewayForPath } from './operations';
 import type { paths } from './schema.gen';
@@ -115,12 +115,12 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         throw new ApiError({ status: 0, code: 'NETWORK_ERROR', i18nKey: i18nKeyFor('NETWORK_ERROR', opts.hasTranslation), operationId, retryable: true });
       }
 
-      if (RETRYABLE_STATUS.has(res.status) && retryable && attempt < MAX_RETRIES) {
+      if (RETRYABLE_STATUS.has(res.status) && retryable && attempt < MAX_RETRIES && !NOT_REPEATED_CODES.has((await peekProblemCode(res)) ?? '')) {
         await sleep(backoffMs(attempt++, random));
         continue;
       }
       if (res.status === 429) {
-        const wait = parseRetryAfter(res.headers.get('Retry-After'), now()) ?? backoffMs(attempt, random);
+        const wait = wait429(await peekProblemCode(res), parseRetryAfter(res.headers.get('Retry-After'), now()), backoffMs(attempt, random));
         if (retryable && attempt < MAX_RETRIES && wait <= MAX_RETRY_AFTER_MS) {
           attempt++;
           await sleep(wait);

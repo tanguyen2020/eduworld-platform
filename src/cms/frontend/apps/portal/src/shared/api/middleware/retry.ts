@@ -6,6 +6,20 @@ export const BASE_BACKOFF_MS = 100;
 /** Retry-After longer than this is not waited for automatically: the error goes back to the caller. */
 export const MAX_RETRY_AFTER_MS = 30_000;
 export const RETRYABLE_STATUS = new Set([502, 503, 504]);
+/**
+ * Dashboard rules (ADMIN_PORTAL §3.14.1, F056-AC-04): `429 DASHBOARD_BUSY` is retried after 2–5 s (Retry-After clamped to
+ * this window), still at most MAX_RETRIES times; `504 DASHBOARD_QUERY_TIMEOUT` is never repeated — the screen asks to
+ * narrow the scope instead (the query was cancelled by the database statement timeout).
+ */
+export const DASHBOARD_BUSY_WAIT_MS = { min: 2000, max: 5000 } as const;
+export const NOT_REPEATED_CODES: ReadonlySet<string> = new Set(['DASHBOARD_QUERY_TIMEOUT']);
+
+/** Wait before retrying a 429: Retry-After (or the backoff), clamped to 2–5 s for DASHBOARD_BUSY. */
+export function wait429(code: string | undefined, retryAfterMs: number | null, fallbackMs: number): number {
+  const wait = retryAfterMs ?? fallbackMs;
+  if (code !== 'DASHBOARD_BUSY') return wait;
+  return Math.min(DASHBOARD_BUSY_WAIT_MS.max, Math.max(DASHBOARD_BUSY_WAIT_MS.min, wait));
+}
 
 export function isRetryable(method: string, headers: Headers): boolean {
   return method.toUpperCase() === 'GET' || headers.has('Idempotency-Key');

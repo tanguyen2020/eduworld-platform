@@ -26,3 +26,7 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 // exercised in Storybook / Playwright.
 vi.mock('mathlive', () => ({ MathfieldElement: { fontsDirectory: null, soundsDirectory: null } }));
 vi.mock('mathlive/fonts.css', () => ({}));
+
+// MOCK (test only, AGENTS R17): jsdom has no 2D canvas; the chart library (ECharts SVG renderer, F056 DashboardChart)
+// measures text through it and falls back to an estimate when no context is returned. Real charts: Storybook/Playwright.
+if (typeof HTMLCanvasElement !== 'undefined') HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;

@@ -318,5 +318,74 @@
     "blanks": "{{n}} chỗ trống để học sinh điền",
     "trueFalse": "Học sinh chọn Đúng hoặc Sai",
     "numeric": "Học sinh nhập một số {{unit}}"
+  },
+  "dashboard": {
+    "suppressed": {
+      "text": "< 5",
+      "tooltip": "Nhóm dưới 5 học sinh: số liệu được ẩn để bảo vệ học sinh.",
+      "aria": "Dưới 5 học sinh, số liệu được ẩn"
+    },
+    "meta": {
+      "updatedAt": "Cập nhật lúc {{time}}",
+      "partial": "Tạm tính"
+    },
+    "grain": {
+      "day": "Theo ngày",
+      "week": "Theo tuần",
+      "month": "Theo tháng"
+    },
+    "error": {
+      "rangeTooLarge": "Khoảng thời gian quá dài. Hãy thu hẹp khoảng thời gian.",
+      "queryTimeout": "Truy vấn mất quá nhiều thời gian. Hãy thu hẹp phạm vi (ví dụ chọn một lớp thay vì cả trường).",
+      "busy": "Hệ thống đang bận. Số liệu sẽ được tải lại sau ít giây.",
+      "generic": "Không tải được số liệu."
+    },
+    "empty": "Chưa có số liệu cho phạm vi này.",
+    "metric": {
+      "computing": "Đang tính số liệu…",
+      "noData": "Chưa có số liệu",
+      "minutes": "{{value}} phút"
+    },
+    "range": {
+      "label": "Khoảng thời gian",
+      "custom": "Khoảng tùy chọn",
+      "grain": "Độ hạt",
+      "grainAuto": "Độ hạt tự động",
+      "noCalendar": "Chưa có lịch năm học của trường",
+      "preset": {
+        "today": "Hôm nay",
+        "7d": "7 ngày",
+        "30d": "30 ngày",
+        "term": "Học kỳ này",
+        "school_year": "Năm học này",
+        "12m": "12 tháng"
+      }
+    },
+    "heatmap": {
+      "noData": "Không có dữ liệu",
+      "legend": "Chú giải mức thành thạo"
+    },
+    "mastery": {
+      "not_started": "Chưa bắt đầu",
+      "beginning": "Mới bắt đầu",
+      "developing": "Đang tiến bộ",
+      "proficient": "Thành thạo",
+      "mastered": "Xuất sắc"
+    },
+    "export": {
+      "button": "Xuất báo cáo",
+      "recreate": "Tạo lại báo cáo",
+      "preparing": "Đang chuẩn bị báo cáo…",
+      "download": "Tải báo cáo",
+      "expiresAt": "Link hết hạn lúc {{time}}",
+      "expired": "Link tải đã hết hạn. Bấm để tạo lại báo cáo.",
+      "failed": {
+        "export_failed": "Không tạo được báo cáo. Vui lòng thử lại.",
+        "too_many_rows": "Báo cáo quá lớn. Hãy thu hẹp phạm vi.",
+        "storage_unavailable": "Kho lưu tệp tạm thời không sẵn sàng. Vui lòng thử lại sau.",
+        "replica_unavailable": "Nguồn số liệu tạm thời không sẵn sàng. Vui lòng thử lại sau.",
+        "query_timeout": "Truy vấn quá lâu. Hãy thu hẹp phạm vi."
+      }
+    }
   }
 }

@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { PUBLIC, problem, testClient } from '../test-utils';
-import { backoffMs, MAX_RETRIES, parseRetryAfter } from './retry';
+import { backoffMs, MAX_RETRIES, parseRetryAfter, wait429 } from './retry';
 
 let calls = 0;
 const server = setupServer();
@@ -69,6 +69,30 @@ describe('retry policy', () => {
     const { api } = testClient();
     await api.client.GET('/me/tenants', {});
     expect(calls).toBe(1);
+  });
+
+  // F056-AC-04 (TC-DASH-006, ADMIN_PORTAL §3.14.1): one retry layer for dashboards — the apiClient.
+  it('429 DASHBOARD_BUSY → retried after 2–5 s (Retry-After clamped), at most MAX_RETRIES times', async () => {
+    always('get', '/me/tenants', () => {
+      const r = problem(429, 'DASHBOARD_BUSY');
+      return new Response(r.body, { status: 429, headers: { 'Content-Type': 'application/problem+json', 'Retry-After': calls === 1 ? '1' : '30' } });
+    });
+    const { api, sleeps } = testClient();
+    const { response } = await api.client.GET('/me/tenants', {});
+    expect(response.status).toBe(429);
+    expect(calls).toBe(1 + MAX_RETRIES);
+    expect(sleeps).toEqual([2000, 5000]);
+    expect(wait429('RATE_LIMITED', 30_000, 100)).toBe(30_000);
+    expect(wait429('DASHBOARD_BUSY', null, 150)).toBe(2000);
+  });
+
+  it('504 DASHBOARD_QUERY_TIMEOUT is not repeated (the screen asks to narrow the scope)', async () => {
+    always('get', '/me/tenants', () => problem(504, 'DASHBOARD_QUERY_TIMEOUT'));
+    const { api, sleeps } = testClient();
+    const { response } = await api.client.GET('/me/tenants', {});
+    expect(response.status).toBe(504);
+    expect(calls).toBe(1);
+    expect(sleeps).toEqual([]);
   });
 
   it('backoff is bounded and Retry-After parses seconds and dates', () => {

@@ -318,5 +318,74 @@
     "blanks": "{{n}} blanks for the student",
     "trueFalse": "The student picks True or False",
     "numeric": "The student enters a number {{unit}}"
+  },
+  "dashboard": {
+    "suppressed": {
+      "text": "< 5",
+      "tooltip": "Group of fewer than 5 students: the value is hidden to protect students.",
+      "aria": "Fewer than 5 students, value hidden"
+    },
+    "meta": {
+      "updatedAt": "Updated at {{time}}",
+      "partial": "Provisional"
+    },
+    "grain": {
+      "day": "Daily",
+      "week": "Weekly",
+      "month": "Monthly"
+    },
+    "error": {
+      "rangeTooLarge": "The date range is too long. Please narrow it.",
+      "queryTimeout": "The query took too long. Please narrow the scope (e.g. one class instead of the whole school).",
+      "busy": "The system is busy. The data will reload in a few seconds.",
+      "generic": "Could not load the data."
+    },
+    "empty": "No data for this scope yet.",
+    "metric": {
+      "computing": "Computing…",
+      "noData": "No data yet",
+      "minutes": "{{value}} min"
+    },
+    "range": {
+      "label": "Date range",
+      "custom": "Custom range",
+      "grain": "Granularity",
+      "grainAuto": "Automatic granularity",
+      "noCalendar": "The school calendar is not available",
+      "preset": {
+        "today": "Today",
+        "7d": "7 days",
+        "30d": "30 days",
+        "term": "This term",
+        "school_year": "This school year",
+        "12m": "12 months"
+      }
+    },
+    "heatmap": {
+      "noData": "No data",
+      "legend": "Mastery level legend"
+    },
+    "mastery": {
+      "not_started": "Not started",
+      "beginning": "Beginning",
+      "developing": "Developing",
+      "proficient": "Proficient",
+      "mastered": "Excellent"
+    },
+    "export": {
+      "button": "Export report",
+      "recreate": "Create the report again",
+      "preparing": "Preparing the report…",
+      "download": "Download report",
+      "expiresAt": "Link expires at {{time}}",
+      "expired": "The download link has expired. Click to create the report again.",
+      "failed": {
+        "export_failed": "The report could not be created. Please try again.",
+        "too_many_rows": "The report is too large. Please narrow the scope.",
+        "storage_unavailable": "File storage is temporarily unavailable. Please try later.",
+        "replica_unavailable": "The data source is temporarily unavailable. Please try later.",
+        "query_timeout": "The query took too long. Please narrow the scope."
+      }
+    }
   }
 }
